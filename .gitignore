@@ -1,7 +1,11 @@
-*.class
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# Development File #
+node
+node_modules
+dist
+.tmp
+.sass-cache
+bower_components
+target
 
 # Package Files #
 *.jar
