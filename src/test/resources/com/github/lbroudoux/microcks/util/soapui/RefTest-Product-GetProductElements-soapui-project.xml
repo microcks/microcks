@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project activeEnvironment="Default" name="Product_GetProductElements" resourceRoot="" soapui-version="4.5.1" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="execute_pttBinding_GetProductElements" type="wsdl" bindingName="{http://lbroudoux.github.com/Product/GetProductElements}execute_pttBinding_GetProductElements" soapVersion="1_1" anonymous="optional" definition="http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements?wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements?wsdl"><con:part><con:url>http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements?wsdl</con:url><con:content><![CDATA[<wsdl:definitions name="Product_GetProductElements" targetNamespace="http://lbroudoux.github.com/Product/GetProductElements" xmlns:tns="http://lbroudoux.github.com/Product/GetProductElements" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:fault="http://oracle.com/MMA-SDM/commonschemas/public" xmlns:type="http://lbroudoux.github.com/Datatype">
+  <wsdl:documentation>
+    <abstractWSDL>http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements!1.0/SAM/Product_GetProductElements_v1.0.wsdl</abstractWSDL>
+  </wsdl:documentation>
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://lbroudoux.github.com/Product/GetProductElements" elementFormDefault="qualified" xmlns:com="http://lbroudoux.github.com/Product/Commun" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:import namespace="http://lbroudoux.github.com/Product/Commun" schemaLocation="http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements?XSD=xsd/Product_Anomalie_v1.0.xsd"/>
+      <xsd:element name="input">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="dateTraitement" type="xsd:date" minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="nomUsage" type="xsd:string" minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="versionUsage" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="dateReference" type="xsd:date" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="numeroProduit" type="xsd:int" minOccurs="1" maxOccurs="1"/>
+            <xsd:element name="structureDemandee" type="xsd:int" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="typologie" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="output">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="structure" type="xsd:anyType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="structureDelta" type="xsd:anyType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="anomaliesInformatives" type="com:Anomalie" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="anomaliesBloquantes" type="com:Anomalie" minOccurs="0" maxOccurs="1"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+      <xsd:element name="fault">
+        <xsd:complexType>
+          <xsd:sequence>
+            <xsd:element name="code" type="xsd:string"/>
+            <xsd:element name="string" type="xsd:string"/>
+            <xsd:element name="detail" minOccurs="0" type="xsd:string"/>
+          </xsd:sequence>
+        </xsd:complexType>
+      </xsd:element>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="requestMessage">
+    <wsdl:part name="part1" element="tns:input"/>
+  </wsdl:message>
+  <wsdl:message name="replyMessage">
+    <wsdl:part name="part1" element="tns:output"/>
+  </wsdl:message>
+  <wsdl:message name="faultMessage">
+    <wsdl:part name="part1" element="tns:fault"/>
+  </wsdl:message>
+  <wsdl:portType name="execute_ptt">
+    <wsdl:operation name="GetProductElements">
+      <wsdl:input message="tns:requestMessage"/>
+      <wsdl:output message="tns:replyMessage"/>
+      <wsdl:fault name="fault" message="tns:faultMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="execute_pttBinding_GetProductElements" type="tns:execute_ptt">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetProductElements">
+      <soap:operation style="document" soapAction="GetProductElements"/>
+      <wsdl:input>
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="fault">
+        <soap:fault name="fault" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="GetProductElements">
+    <wsdl:port name="execute_pt" binding="tns:execute_pttBinding_GetProductElements">
+      <soap:address location="http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements"/>
+    </wsdl:port>
+  </wsdl:service>
+  <wsdl:service name="Product_GetProductElements">
+    <wsdl:port name="execute_pt" binding="tns:execute_pttBinding_GetProductElements">
+      <soap:address location="http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part><con:part><con:url>http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements?XSD=xsd/Product_Anomalie_v1.0.xsd</con:url><con:content><![CDATA[<xsd:schema version="1.0" elementFormDefault="qualified" targetNamespace="http://lbroudoux.github.com/Product/Commun" xmlns="http://lbroudoux.github.com/Product/Commun" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <xsd:element name="Anomalie" type="Anomalie"/>
+  <xsd:complexType name="Anomalie">
+    <xsd:sequence>
+      <xsd:element name="type" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="niveau" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      <xsd:element name="libelle" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+    </xsd:sequence>
+  </xsd:complexType>
+</xsd:schema>]]></con:content><con:type>http://www.w3.org/2001/XMLSchema</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements</con:endpoint><con:endpoint>http://snl09705:8088/mockexecute_pttBinding_GetProductElements</con:endpoint></con:endpoints><con:operation isOneWay="false" action="GetProductElements" name="GetProductElements" bindingOperationName="GetProductElements" type="Request-Response" inputName="" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="Request 1"><con:settings/><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:57002/soa-infra/services/Product-10/Product_GetProductElements/Product_GetProductElements</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sam="http://lbroudoux.github.com/Product/GetProductElements">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <sam:input>
+         <sam:dateTraitement>?</sam:dateTraitement>
+         <sam:nomUsage>?</sam:nomUsage>
+         <!--Optional:-->
+         <sam:versionUsage>?</sam:versionUsage>
+         <!--Optional:-->
+         <sam:dateReference>?</sam:dateReference>
+         <sam:numeroProduit>?</sam:numeroProduit>
+         <!--Optional:-->
+         <sam:structureDemandee>?</sam:structureDemandee>
+         <!--Optional:-->
+         <sam:typologie>?</sam:typologie>
+      </sam:input>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="GetProductElements"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:mockService port="8088" path="/mockexecute_pttBinding_GetProductElements" host="snl09705" name="execute_pttBinding_GetProductElements MockService"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.mock.WsdlMockService@require-soap-action">false</con:setting></con:settings><con:mockOperation name="GetProductElements" interface="execute_pttBinding_GetProductElements" operation="GetProductElements"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:defaultResponse>Response 1</con:defaultResponse><con:response name="Response 1" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:sam="http://lbroudoux.github.com/Product/GetProductElements" xmlns:com="http://lbroudoux.github.com/Product/Commun">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <sam:output>
+         <!--Optional:-->
+         <sam:structure>?</sam:structure>
+         <!--Optional:-->
+         <sam:structureDelta>?</sam:structureDelta>
+         <!--Optional:-->
+         <sam:anomaliesInformatives>
+            <!--Optional:-->
+            <com:type>?</com:type>
+            <!--Optional:-->
+            <com:niveau>?</com:niveau>
+            <!--Optional:-->
+            <com:libelle>?</com:libelle>
+         </sam:anomaliesInformatives>
+         <!--Optional:-->
+         <sam:anomaliesBloquantes>
+            <!--Optional:-->
+            <com:type>?</com:type>
+            <!--Optional:-->
+            <com:niveau>?</com:niveau>
+            <!--Optional:-->
+            <com:libelle>?</com:libelle>
+         </sam:anomaliesBloquantes>
+      </sam:output>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="GetProductElements"/></con:response><con:dispatchConfig/></con:mockOperation><con:properties/></con:mockService><con:properties/><con:wssContainer/></con:soapui-project>

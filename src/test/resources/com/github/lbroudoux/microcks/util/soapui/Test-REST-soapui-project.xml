@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project activeEnvironment="Default" name="Test REST" resourceRoot="" soapui-version="5.0.0" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:RestService" wadlVersion="http://wadl.dev.java.net/2009/02" name="Whabed" type="rest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart=""/><con:endpoints><con:endpoint>http://localhost:8080/whabed</con:endpoint><con:endpoint>http://localhost:8088/mockwhabed</con:endpoint><con:endpoint>http://snl09705:8080/</con:endpoint></con:endpoints><con:resource name="Deployment" path="/deployment"><con:settings/><con:parameters/><con:resource name="byComponent" path="byComponent/{component}/{version}.json"><con:settings/><con:parameters><con:parameter required="true"><con:name>component</con:name><con:value>component</con:value><con:style>TEMPLATE</con:style><con:default>component</con:default></con:parameter><con:parameter required="true"><con:name>version</con:name><con:value>version</con:value><con:style>TEMPLATE</con:style><con:default>version</con:default></con:parameter></con:parameters><con:method name="byComponent" method="GET"><con:settings/><con:parameters/><con:representation type="FAULT"><con:mediaType>text/html;charset=UTF-8</con:mediaType><con:status>404</con:status><con:params/><con:element>html</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json;charset=UTF-8</con:mediaType><con:status>200</con:status><con:params/><con:element xmlns:json="http://localhost/whabed/deployment/testREST/1.2.json">json:Response</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>text/html;charset=UTF-8</con:mediaType><con:status>200</con:status><con:params/><con:element>html</con:element></con:representation><con:representation type="FAULT"><con:mediaType xsi:nil="true"/><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="FAULT"><con:mediaType xsi:nil="true"/><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json</con:mediaType><con:status>200</con:status><con:params/><con:element xmlns:json="http://localhost/whabed/deployment/testREST/1.2.json">json:Response</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>text/html; charset=iso-8859-1</con:mediaType><con:status>200</con:status><con:params/><con:element>html</con:element></con:representation><con:request name="deploymentsForTestREST1.2 Request" mediaType="application/json"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8088/mockwhabed</con:endpoint><con:request/><con:originalUri>http://localhost/whabed/deployment/testREST/1.2.json</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters>
+  <con:entry key="component" value="testREST"/>
+  <con:entry key="version" value="1.2"/>
+</con:parameters></con:request><con:request name="deploymentsForTestREST1.3 Request" mediaType="application/json"><con:settings/><con:endpoint>http://localhost:8080/whabed</con:endpoint><con:request/><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters>
+  <con:entry key="component" value="testREST"/>
+  <con:entry key="version" value="1.3"/>
+</con:parameters></con:request></con:method></con:resource><con:resource name="byEnvironment" path="byEnvironment/{environment}/{qualifier}.json"><con:settings/><con:parameters><con:parameter><con:name>environment</con:name><con:value>environment</con:value><con:style>TEMPLATE</con:style><con:default>environment</con:default></con:parameter><con:parameter><con:name>qualifier</con:name><con:value>qualifier</con:value><con:style>TEMPLATE</con:style><con:default>qualifier</con:default></con:parameter></con:parameters><con:method name="byEnvironment" method="GET"><con:settings/><con:parameters><con:parameter required="true"><con:name>startDate</con:name><con:value>2013-09-25</con:value><con:style>QUERY</con:style><con:default>2013-09-25</con:default></con:parameter><con:parameter required="true"><con:name>endDate</con:name><con:value>2013-09-27</con:value><con:style>QUERY</con:style><con:default>2013-09-27</con:default></con:parameter></con:parameters><con:representation type="RESPONSE"><con:mediaType>application/json</con:mediaType><con:status>200</con:status><con:params/></con:representation><con:representation type="FAULT"><con:mediaType xsi:nil="true"/><con:status>404</con:status><con:params/><con:element>data</con:element></con:representation><con:request name="deploymentsForQUALIF2cdsm Request" mediaType="application/json"><con:settings/><con:endpoint>http://localhost:8080/whabed</con:endpoint><con:request/><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters>
+  <con:entry key="environment" value="QUALIF2"/>
+  <con:entry key="qualifier" value="cdsm"/>
+</con:parameters><con:parameterOrder><con:entry>environment</con:entry><con:entry>qualifier</con:entry><con:entry>startDate</con:entry><con:entry>endDate</con:entry></con:parameterOrder></con:request></con:method></con:resource><con:method name="create" method="POST"><con:settings/><con:parameters/><con:representation type="FAULT"><con:mediaType>text/html;charset=UTF-8</con:mediaType><con:status>404 500</con:status><con:params/><con:element>html</con:element></con:representation><con:representation type="RESPONSE"><con:mediaType>application/json;charset=UTF-8</con:mediaType><con:status>200</con:status><con:params/><con:element>Response</con:element></con:representation><con:representation type="REQUEST"><con:mediaType>application/json</con:mediaType><con:params/></con:representation><con:request name="testREST Request" mediaType="application/json" postQueryString="false"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;entry key="Content-Type" value="application/json" xmlns="http://eviware.com/soapui/config"/></con:setting></con:settings><con:endpoint>http://localhost:8080/whabed</con:endpoint><con:request>{
+"component" : {"name":"testREST", "version":"1.2"}, 
+"environment" : {"name":"QUALIF2", "qualifier":"p9"}, 
+"agent" : {"name":"soapui", "version":"5.0.0"}
+}</con:request><con:originalUri>http://localhost/whabed/deployment</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:request></con:method></con:resource></con:interface><con:testSuite name="TestSuite from Request"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="TestCase 1" searchProperties="true"><con:settings/><con:testStep type="restrequest" name="deploymentsForTestREST1.2 Request"><con:settings/><con:config service="Whabed" resourcePath="/deployment/byComponent/{component}/{version}.json" methodName="byComponent" xsi:type="con:RestRequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:restRequest name="byComponent - deploymentsForTestREST1.2Request" mediaType="application/json"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://localhost:8088/mockwhabed</con:endpoint><con:request/><con:originalUri>http://localhost/whabed/deployment/testREST/1.2.json</con:originalUri><con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="Simple Contains" name="Contains"><con:configuration><token>(?s).*deployments.*</token><ignoreCase>false</ignoreCase><useRegEx>true</useRegEx></con:configuration></con:assertion><con:assertion type="GroovyScriptAssertion" name="Script Assertion"><con:configuration><scriptText>import com.eviware.soapui.support.XmlHolder
+
+assert messageExchange.responseHeaders["Content-Type"].contains("application/json;charset=UTF-8")
+
+log.info messageExchange.responseContentAsXml
+
+def holder = new XmlHolder(messageExchange.responseContentAsXml)
+holder.namespaces["tns"] = "http://localhost/whabed/deployment/testREST/1.2.json"
+
+assert holder["count(//tns:deployments/tns:e)"] == "7"</scriptText></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters>
+  <con:entry key="component" value="testREST"/>
+  <con:entry key="version" value="1.2"/>
+</con:parameters></con:restRequest></con:config></con:testStep><con:testStep type="restrequest" name="deploymentsForTestREST1.3 Request"><con:settings/><con:config service="Whabed" resourcePath="/deployment/byComponent/{component}/{version}.json" methodName="byComponent" xsi:type="con:RestRequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:restRequest name="byComponent - deploymentsForTestREST1.3 Request" mediaType="application/json"><con:settings/><con:endpoint>http://localhost:8080/whabed</con:endpoint><con:request/><con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters>
+  <con:entry key="component" value="testREST"/>
+  <con:entry key="version" value="1.3"/>
+</con:parameters></con:restRequest></con:config></con:testStep><con:testStep type="restrequest" name="deploymentsForQUALIF2cdsm Request"><con:settings/><con:config service="Whabed" methodName="byEnvironment" resourcePath="/deployment/byEnvironment/{environment}/{qualifier}.json" xsi:type="con:RestRequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:restRequest name="deploymentsForQUALIF2cdsm Request" mediaType="application/json"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8088/mockwhabed</con:endpoint><con:request/><con:originalUri>http://localhost/mockwhabed/deployment/byEnvironment/QUALIF2/cdsm.json</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters>
+  <con:entry key="startDate" value="2013-09-25"/>
+  <con:entry key="environment" value="QUALIF2"/>
+  <con:entry key="endDate" value="2013-09-27"/>
+  <con:entry key="qualifier" value="cdsm"/>
+</con:parameters></con:restRequest></con:config></con:testStep><con:testStep type="restrequest" name="deploymentsForQUALIF2cdsm2 Request"><con:settings/><con:config service="Whabed" methodName="byEnvironment" resourcePath="/deployment/byEnvironment/{environment}/{qualifier}.json" xsi:type="con:RestRequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:restRequest name="deploymentsForQUALIF2cdsm2 Request" mediaType="application/json"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8088/mockwhabed</con:endpoint><con:request/><con:originalUri>http://localhost/mockwhabed/deployment/byEnvironment/QUALIF2/cdsm.json</con:originalUri><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters>
+  <con:entry key="startDate" value="2013-10-25"/>
+  <con:entry key="environment" value="QUALIF2"/>
+  <con:entry key="endDate" value="2013-10-27"/>
+  <con:entry key="qualifier" value="cdsm"/>
+</con:parameters></con:restRequest></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:restMockService port="8088" path="/mockwhabed" host="snl09705" name="Whabed MockService" docroot=""><con:settings/><con:properties><con:property><con:name>version</con:name><con:value>0.0.1</con:value></con:property></con:properties><con:restMockAction name="/deployment" method="POST" resourcePath="/deployment"><con:settings/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:dispatchPath>/*
+// Examples showing how to match based on path, query param and header
+// Match based on path
+def requestPath = mockRequest.getPath()
+log.info "Path: "+ requestPath
+
+if( requestPath.contains("json") )
+{
+    // return the name of the response you want to dispatch
+    return "JSON Response"
+}
+
+
+// Match based on query parameter
+def queryString = mockRequest.getRequest().getQueryString()
+log.info "QueryString: " + queryString
+
+if( queryString.contains("stockholm") )
+{
+    // return the name of the response you want to dispatch
+    return "Response Stockholm"
+}
+else if( queryString.contains("london") )
+{
+    // return the name of the response you want to dispatch
+    return "Response London"
+}
+
+
+// Match based on header
+def acceptEncodingHeadeList = mockRequest.getRequestHeaders().get("Accept-Encoding")
+log.info "AcceptEncodig Header List: " + acceptEncodingHeadeList
+
+if( acceptEncodingHeadeList.contains("gzip,deflate") )
+{
+    // return the name of the response you want to dispatch
+    return "GZiped Response"
+}
+
+*/
+</con:dispatchPath><con:response name="testREST Response" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{}</con:responseContent></con:response></con:restMockAction><con:restMockAction name="/deployment/byComponent/{component}/{version}.json" method="GET" resourcePath="/deployment/byComponent/testREST/1.2.json"><con:settings/><con:defaultResponse xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:dispatchPath>/*
+// Examples showing how to match based on path, query param and header
+// Match based on path
+def requestPath = mockRequest.getPath()
+log.info "Path: "+ requestPath
+
+if( requestPath.contains("json") )
+{
+    // return the name of the response you want to dispatch
+    return "JSON Response"
+}
+
+
+// Match based on query parameter
+def queryString = mockRequest.getRequest().getQueryString()
+log.info "QueryString: " + queryString
+
+if( queryString.contains("stockholm") )
+{
+    // return the name of the response you want to dispatch
+    return "Response Stockholm"
+}
+else if( queryString.contains("london") )
+{
+    // return the name of the response you want to dispatch
+    return "Response London"
+}
+
+
+// Match based on header
+def acceptEncodingHeadeList = mockRequest.getRequestHeaders().get("Accept-Encoding")
+log.info "AcceptEncodig Header List: " + acceptEncodingHeadeList
+
+if( acceptEncodingHeadeList.contains("gzip,deflate") )
+{
+    // return the name of the response you want to dispatch
+    return "GZiped Response"
+}
+
+*/
+</con:dispatchPath><con:response name="deploymentsForTestREST1.2 Response" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{"deployments":[{"startDate":1411635297497,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"p9","deployments":[]}},{"startDate":1411636274845,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"p9","deployments":[]}},{"startDate":1411636383627,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"p9","deployments":[]}},{"startDate":1411636400887,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"p9","deployments":[]}},{"startDate":1411636406559,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"p9","deployments":[]}},{"startDate":1411636412826,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"p9","deployments":[]}},{"startDate":1411636753587,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"p9","deployments":[]}}]}</con:responseContent></con:response></con:restMockAction><con:restMockAction name="/deployment/byComponent/{component}/{version}.json" method="GET" resourcePath="/deployment/byComponent/testREST/1.3.json"><con:settings/><con:defaultResponse xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/><con:dispatchStyle>SEQUENCE</con:dispatchStyle><con:dispatchPath>def requestPath = mockRequest.getPath()
+log.info "Path: "+ requestPath
+
+/*
+// Examples showing how to match based on path, query param and header
+// Match based on path
+def requestPath = mockRequest.getPath()
+log.info "Path: "+ requestPath
+
+if( requestPath.contains("json") )
+{
+    // return the name of the response you want to dispatch
+    return "JSON Response"
+}
+
+
+// Match based on query parameter
+def queryString = mockRequest.getRequest().getQueryString()
+log.info "QueryString: " + queryString
+
+if( queryString.contains("stockholm") )
+{
+    // return the name of the response you want to dispatch
+    return "Response Stockholm"
+}
+else if( queryString.contains("london") )
+{
+    // return the name of the response you want to dispatch
+    return "Response London"
+}
+
+
+// Match based on header
+def acceptEncodingHeadeList = mockRequest.getRequestHeaders().get("Accept-Encoding")
+log.info "AcceptEncodig Header List: " + acceptEncodingHeadeList
+
+if( acceptEncodingHeadeList.contains("gzip,deflate") )
+{
+    // return the name of the response you want to dispatch
+    return "GZiped Response"
+}
+
+*/
+</con:dispatchPath><con:response name="deploymentsForTestREST1.3 Response" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{"deployments":[]}</con:responseContent></con:response></con:restMockAction><con:restMockAction name="/deployment/byEnvironment/{environment}/{qualifier}.json" method="GET" resourcePath="/deployment/byEnvironment/QUALIF2/cdsm.json"><con:settings/><con:defaultResponse>deploymentsForQUALIF2cdsm2 Response</con:defaultResponse><con:dispatchStyle>SCRIPT</con:dispatchStyle><con:dispatchPath>
+
+// Match based on query parameter
+def queryString = mockRequest.getRequest().getQueryString()
+log.info "QueryString: " + queryString
+
+if ( queryString.contains("startDate=2013-09") ){
+    // return the name of the response you want to dispatch
+    log.info "Returning deploymentsForQUALIF2cdsm Response"
+    return "deploymentsForQUALIF2cdsm Response"
+}
+else if ( queryString.contains("startDate=2013-10") ){
+    // return the name of the response you want to dispatch
+    log.info "Returning deploymentsForQUALIF2cdsm2 Response"
+    return "deploymentsForQUALIF2cdsm2 Response"
+}
+</con:dispatchPath><con:response name="deploymentsForQUALIF2cdsm Response" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{"deployments":[{"startDate":1411635297497,"agent":{"name":"soapui","version":"5.0.0","deployments":[]},"component":{"name":"testREST","version":"1.2","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"cdsm","deployments":[]}}}]}</con:responseContent></con:response><con:response name="deploymentsForQUALIF2cdsm2 Response" httpResponseStatus="200" mediaType="application/json"><con:settings/><con:responseContent>{"deployments":[{"startDate":1411635297497,"agent":{"name":"soapui","version":"5.1.0","deployments":[]},"component":{"name":"testREST","version":"1.3","deployments":[]},"environment":{"name":"QUALIF2","qualifier":"cdsm","deployments":[]}}}]}</con:responseContent></con:response></con:restMockAction></con:restMockService><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/></con:soapui-project>
