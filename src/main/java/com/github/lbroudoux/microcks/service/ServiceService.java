@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Value;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.Authenticator;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -177,8 +176,7 @@ public class ServiceService {
     * @param delay The new delay value for operation
     * @return True if operation has been found and updated, false otherwise.
     */
-   public Boolean updateOperationDelay(BigInteger id, String operationName, int delay) {
-      /*
+   public Boolean updateOperationDelay(String id, String operationName, Long delay) {
       Service service = serviceRepository.findOne(id);
       for (Operation operation : service.getOperations()){
          if (operation.getName().equals(operationName)){
@@ -187,7 +185,6 @@ public class ServiceService {
             return true;
          }
       }
-      */
       return false;
    }
 
