@@ -1,0 +1,30 @@
+<h2>Tests history for '{{ service.name }} - {{ service.version }}'</h2>
+
+<table class="table table-hover">
+  <thead>
+    <tr>
+      <th>N°</th>
+      <th>Date</th>
+      <th>Endpoint</th>
+      <th>Runner</th>
+      <th>Status</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr ng-repeat="test in tests">
+      <td>{{ test.testNumber }}</td>
+      <td>{{ test.testDate | date : 'short'}}</td>
+      <td><code>{{ test.testedEndpoint }}</code></td>
+      <td><span class="badge alert-info">{{ test.runnerType }}</span></td>
+      <td>
+        <span id="status" class="badge alert-warning" ng-show="{{ test.inProgress }}">In progress</span>
+        <span id="status" class="badge alert-success" ng-show="{{ test.success }}">Success</span>
+        <span id="status" class="badge alert-important" ng-show="{{ !test.success }}">Success</span>
+      </td>
+      <td>
+        <a href="/test/{{ test.id }}">Details</a>
+      </td>
+    </tr>
+  </tbody>
+</table>

@@ -1,0 +1,41 @@
+<h2>New test</h2>
+
+<form class="form-horizontal well">
+  <input type="hidden" id="serviceId" name="serviceId" value="{{ service.id }}"/>
+  <fieldset>
+    <legend>Test properties</legend>
+    <div class="control-group form-inline">
+      <label class="control-label" for="service">Service under test</label>
+      <div class="controls">
+        <input id="service" class="form-control" readonly value="{{ service.name }}"/>
+        <div class="input-group">
+          <span class="input-group-addon">v.</span>
+          <span id="version" name="version" class="form-control" readonly>{{ service.version }}</span>
+        </div>
+        <p class="help-block">The service and its version we're going to test.</p>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="testEndpoint">Test Endpoint</label>
+      <div class="controls">
+        <input type="url" placeholder="e. http://" id="testEndpoint" name="testEndpoint" class="form-control" ng-model="testEndpoint" required/>
+        <p class="help-block">A valid endpoint to use for testing (may be service Http URL for WebServices).</p>
+      </div>
+    </div>
+    <div class="control-group">
+      <label class="control-label" for="runnerType">Runner</label>
+      <div class="controls">
+        <select id="runnerType" name="runnerType" class="form-control" ng-model="runnerType">
+          <option value="HTTP">HTTP</option>
+          <option value="SOAP">SOAP</option>
+          <option value="SOAP_UI">SOAP UI</option>
+        </select>
+        <p class="help-block">The runner to use for this test (test only HTTP return code, test also SOAP compliance or use SOAP UI assertions).</p>
+      </div>
+    </div>
+    <div class="form-actions">
+      <input type="button" class="btn" ng-click="cancel()" value="Cancel"/>
+      <input type="button" class="btn btn-primary" ng-click="createTest()" ng-disable="form.$invalid" value="Launch test !"/>
+    </div>
+  </fieldset>
+</form>

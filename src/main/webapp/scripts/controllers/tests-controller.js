@@ -19,13 +19,15 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('ServiceController', function ($rootScope, $scope, $location, service, Service) {
+  .controller('TestsController', function ($rootScope, $scope, tests, service, TestsService) {
   
-  $scope.view = service;
+  $scope.page = 0;
+  $scope.pageSize = 20;
+  $scope.tests = tests;
+  $scope.service = service;
   
-  $scope.newTest = function() {
-    $rootScope.service = $scope.view.service;
-    $location.path('/tests/create');
+  $scope.listPage = function(page) {
+    $scope.tests = TestsService.listByService(service.id, page, $scope.pageSize); 
   }
-});
   
+});

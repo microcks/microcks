@@ -19,13 +19,26 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('ServiceController', function ($rootScope, $scope, $location, service, Service) {
+  .controller('TestController', function ($rootScope, $scope, $location, notify, TestsService) {
   
-  $scope.view = service;
+  $scope.service = $rootScope.service;
+  $scope.testEndpoint;
+  $scope.runnerType;
   
-  $scope.newTest = function() {
-    $rootScope.service = $scope.view.service;
-    $location.path('/tests/create');
+  $scope.cancel = function() {
+    $location.path('/service/' + $scope.service.id);
+  }
+  
+  $scope.createTest = function() {
+    var test = {serviceId: $scope.service.id, 
+                testEndpoint: $scope.testEndpoint, 
+                runnerType: $scope.runnerType};
+    TestsService.create(test).then(function(result) {
+      notify({
+        message: 'Test for "' + $scope.testEndpoint + '" has been created !',
+        classes: 'alert-success'
+      });
+    });
+    $location.path('/service/' + $scope.service.id);
   }
 });
-  
