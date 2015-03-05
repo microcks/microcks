@@ -71,16 +71,22 @@ public class ServiceController {
    }
 
    @RequestMapping(value = "/services/{id}", method = RequestMethod.GET)
-   public ResponseEntity<ServiceViewDTO> getService(@PathVariable("id") String serviceId) {
+   public ResponseEntity<?> getService(
+         @PathVariable("id") String serviceId,
+         @RequestParam(value = "messages", required = false, defaultValue = "true") boolean messages
+      ) {
       log.debug("Retrieving service with id {}", serviceId);
       Service service = serviceRepository.findOne(serviceId);
 
-      Map<String, List<RequestResponsePair>> messagesMap = new HashMap<String, List<RequestResponsePair>>();
-      for (Operation operation : service.getOperations()) {
-         List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
-               IdBuilder.buildOperationId(service, operation));
-         messagesMap.put(operation.getName(), pairs);
+      if (messages) {
+         Map<String, List<RequestResponsePair>> messagesMap = new HashMap<String, List<RequestResponsePair>>();
+         for (Operation operation : service.getOperations()) {
+            List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
+                  IdBuilder.buildOperationId(service, operation));
+            messagesMap.put(operation.getName(), pairs);
+         }
+         return new ResponseEntity<>(new ServiceViewDTO(service, messagesMap), HttpStatus.OK);
       }
-      return new ResponseEntity<>(new ServiceViewDTO(service, messagesMap), HttpStatus.OK);
+      return new ResponseEntity<>(service, HttpStatus.OK);
    }
 }

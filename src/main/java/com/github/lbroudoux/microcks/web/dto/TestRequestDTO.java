@@ -16,23 +16,27 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.github.lbroudoux.microcks.repository;
-
-import com.github.lbroudoux.microcks.domain.TestResult;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-
-import java.util.List;
+package com.github.lbroudoux.microcks.web.dto;
 
 /**
- * Repository interface for TestResult domain objects.
+ * Data Transfer object for grouping base information to launch a test (and thus create a TestResult).
  * @author laurent
  */
-public interface TestResultRepository extends MongoRepository<TestResult, String> {
+public class TestRequestDTO {
 
-   List<TestResult> findByServiceId(String serviceId, PageRequest page);
+   private String serviceId;
+   private String testEndpoint;
+   private String runnerType;
 
-   @Query(value = "{ 'serviceId' : ?0}}", count = true)
-   long countByServiceId(String serviceId);
+   public String getServiceId() {
+      return serviceId;
+   }
+
+   public String getTestEndpoint() {
+      return testEndpoint;
+   }
+
+   public String getRunnerType() {
+      return runnerType;
+   }
 }
