@@ -32,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 
@@ -89,7 +90,7 @@ public class TestService {
    @Async
    private Future<TestResult> launchTests(TestResult testResult, Service service, TestRunnerType runnerType){
       // Found next build number for this test.
-      List<TestResult> older = testResultRepository.findByServiceId(service.getId(), new PageRequest(0, 2, Sort.Direction.DESC, "testNumber"));
+      List<TestResult> older = testResultRepository.findByServiceId(service.getId(), new PageRequest(0, 2, Sort.Direction.ASC, "testNumber"));
       if (older != null && !older.isEmpty() && older.get(0).getTestNumber() != null){
          testResult.setTestNumber(older.get(0).getTestNumber() + 1);
       } else {
@@ -120,7 +121,7 @@ public class TestService {
             testResult.getTestCaseResults().add(testCaseResult);
             break;
          } catch (Throwable t) {
-
+            log.error("Throwable while testing operation {}", operation.getName(),  t);
          }
 
          // Prepare a bunch of flag we're going to complete.
@@ -139,8 +140,9 @@ public class TestService {
             }
 
             // Extract, complete and store response and request.
-            responses.add(testReturn.getResponse());
+            testReturn.getResponse().setTestCaseId(testCaseId);
             testReturn.getRequest().setTestCaseId(testCaseId);
+            responses.add(testReturn.getResponse());
             actualRequests.add(testReturn.getRequest());
 
             testCaseResult.getTestStepResults().add(testStepResult);
@@ -176,7 +178,7 @@ public class TestService {
       testResult.setElapsedTime(totalElapsedTime);
       testResultRepository.save(testResult);
 
-      return new AsyncResult<TestResult>(testResult);
+      return new AsyncResult<>(testResult);
    }
 
 
@@ -198,11 +200,18 @@ public class TestService {
 
    /** Retrieve correct test runner according given type. */
    private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType){
+      // TODO: remove this ugly initialization later.
+      SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+      factory.setConnectTimeout(200);
+      factory.setReadTimeout(10000);
+
       switch (runnerType){
          case SOAP_HTTP:
          case SOAP_UI:
          default:
-            return new HttpTestRunner();
+            HttpTestRunner runner = new HttpTestRunner();
+            runner.setClientHttpRequestFactory(factory);
+            return runner;
       }
    }
 }
