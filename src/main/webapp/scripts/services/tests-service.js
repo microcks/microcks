@@ -32,7 +32,7 @@ services.factory('TestsService', function($http, $q) {
     },
     get: function(id) {
       var delay = $q.defer(); 
-      $http.get('/api/tests/' + testId)
+      $http.get('/api/tests/' + id)
       .success(function(data) {
         delay.resolve(data);
       });
@@ -41,6 +41,15 @@ services.factory('TestsService', function($http, $q) {
     create: function(test) {
       var delay = $q.defer(); 
       $http.post('/api/tests', test)
+      .success(function(data) {
+        delay.resolve(data);
+      });
+      return delay.promise;
+    },
+    getMessages: function(test, operation) {
+      var delay = $q.defer();
+      var testCaseId = test.id + '-' + test.testNumber + '-' + operation;
+      $http.get('/api/tests/' + test.id + '/messages/' + testCaseId)
       .success(function(data) {
         delay.resolve(data);
       });

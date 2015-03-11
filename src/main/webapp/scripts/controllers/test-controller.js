@@ -19,11 +19,13 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('TestController', function ($rootScope, $scope, $location, notify, TestsService) {
+  .controller('TestController', function ($rootScope, $scope, $location, $routeParams, notify, TestsService) {
   
   $scope.service = $rootScope.service;
+  $scope.test;
   $scope.testEndpoint;
   $scope.runnerType;
+  
   
   $scope.cancel = function() {
     $location.path('/service/' + $scope.service.id);
@@ -40,5 +42,16 @@ angular.module('microcksApp')
       });
     });
     $location.path('/service/' + $scope.service.id);
+  }
+  
+  $scope.loadTest = function() {
+    TestsService.get($routeParams.id).then(function(result) {
+      $scope.test = result;
+    });
+  }
+  
+  $scope.loadMessages = function(operation) {
+    console.log("Loading messages for operation: " + operation); 
+    TestsService.getMessages($scope.test, operation);
   }
 });
