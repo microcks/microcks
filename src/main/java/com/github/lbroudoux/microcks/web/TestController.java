@@ -70,7 +70,7 @@ public class TestController {
       ) {
       log.debug("Getting tests list for service {}, page {} and size {}", serviceId, page, size);
       return testResultRepository.findByServiceId(serviceId,
-            new PageRequest(page, size, new Sort(Sort.Direction.DESC, "testNumber")));
+            new PageRequest(page, size, new Sort(Sort.Direction.ASC, "testNumber")));
    }
 
    @RequestMapping(value = "/tests", method = RequestMethod.POST)
