@@ -1,0 +1,34 @@
+<td ng-show="pair != null">
+  <div hljs source="pair.request.content"></div>
+  <table class='table-condensed' width='100%' ng-show="pair.request.headers != null">
+    <thead>
+      <tr>
+        <th>Header name</th>
+        <th>Values</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="header in pair.request.headers">
+        <td>{{ header.name }}</td>
+        <td><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+      </tr>
+    </tbody>
+  </table>
+</td>
+<td ng-show="pair != null">
+  <div hljs source="pair.response.content"></div>
+  <table class='table-condensed' width='100%' ng-show="pair.response.headers != null">
+    <thead>
+      <tr>
+        <th>Header name</th>
+        <th>Values</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="header in pair.response.headers">
+        <td>{{ header.name }}</td>
+        <td><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+      </tr>
+    </tbody>
+  </table>
+</td>
