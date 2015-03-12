@@ -35,7 +35,7 @@ public class Operation {
 
    private String dispatcher;
    private String dispatcherRules;
-   private int defaultDelay;
+   private Long defaultDelay;
 
    private List<String> resourcePaths;
 
@@ -87,11 +87,11 @@ public class Operation {
       this.dispatcherRules = dispatcherRules;
    }
 
-   public int getDefaultDelay() {
+   public Long getDefaultDelay() {
       return defaultDelay;
    }
 
-   public void setDefaultDelay(int defaultDelay) {
+   public void setDefaultDelay(Long defaultDelay) {
       this.defaultDelay = defaultDelay;
    }
 
