@@ -25,6 +25,7 @@ angular.module('microcksApp')
   $scope.test;
   $scope.testEndpoint;
   $scope.runnerType;
+  $scope.testMessages = {};
   
   
   $scope.cancel = function() {
@@ -51,7 +52,8 @@ angular.module('microcksApp')
   }
   
   $scope.loadMessages = function(operation) {
-    console.log("Loading messages for operation: " + operation); 
-    TestsService.getMessages($scope.test, operation);
+    TestsService.getMessages($scope.test, operation).then(function(result) {
+      $scope.testMessages[operation] = result;
+    });
   }
 });

@@ -25,7 +25,7 @@ angular.module('microcksApp')
   $scope.pageSize = 20;
   
   $scope.listPage = function(page) {
-    $scope.services = Service.query({page: page, pageSize: $scope.PageSize}); 
+    $scope.services = Service.query({page: page, pageSize: $scope.pageSize}); 
   }
   
 });
