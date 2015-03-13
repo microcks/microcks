@@ -1,0 +1,23 @@
+<div class="control-group" ng-init="getInvocationStats(day); getTopInvocations(day)">
+  <label class="control-label" for="day">Pick a day</label>
+  <div class="controls">
+    <div id="dayPicker" class="input-append date">
+      <input id="day" name="day" data-format="yyyy-MM-dd" type="text" required="true"/>
+      <span class="add-on">
+        <i data-time-icon="icon-time" data-date-icon="icon-calendar">&#160;</i>
+      </span>
+      <a id="go" class="btn btn-warning">Go</a>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-sm-6">
+    <h3>Day invocations</h3>
+    <day-invocations-bar-chart stats="invocationStats"></day-invocations-bar-chart>
+  </div>
+  <div class="col-sm-6 text-right">
+    <h3>Top invocations for this day</h3>
+    <top-invocations stats="topInvocations"></top-invocations>
+  </div>
+</div>
