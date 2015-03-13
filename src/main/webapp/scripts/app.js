@@ -97,6 +97,10 @@ angular
         templateUrl: 'views/import.html',
         controller: 'AdminController'
       })
+      .when('/admin/delays', {
+        templateUrl: 'views/delays.html',
+        controller: 'AdminController'
+      })
       .otherwise({
         redirectTo: '/'
       });

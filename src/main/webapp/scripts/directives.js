@@ -26,10 +26,10 @@ angular.module('microcksApp.directives', [])
       templateUrl: 'directives/messages-row.html',
       link: function(scope, element, attrs) {
         scope.$watch(attrs.messages, function(messages) {
-          if (messages != null){
-            scope.pair = messages.find(function(item, index, array) {
+          if (messages != null) {
+            scope.pair = messages.filter(function(item, index, array) {
               return item.request.name == attrs.request;
-            });
+            })[0];  // Took the first result only.
           } else {
             scope.pair = null; 
           }
@@ -96,4 +96,156 @@ angular.module('microcksApp.directives', [])
         }); 
       }
     };
+  })
+  .directive('dayInvocationsBarChart', function() {
+    var tip = d3.tip().attr('class', 'd3-tip')
+        .html(function(d) { return '<span>' + d.total + '</span>' + ' invocations' })
+        .offset([-12, 0]);
+    
+    var width = 460, height = 300,
+        padt = 20, padr = 20, padb = 60, padl = 30,
+        x = d3.scale.ordinal().rangeRoundBands([0, width - padl - padr], 0.1),
+        y = d3.scale.linear().range([height, 0]),
+        yAxis = d3.svg.axis().scale(y).orient('left').tickSize(-width + padl + padr),
+        xAxis = d3.svg.axis().scale(x).orient('bottom');
+  
+    return {
+      restrict: 'E',
+      scope: {
+        stats: '='
+      },
+      link: function(scope, element, attrs) {
+        var vis = d3.select(element[0])
+          .append('svg')
+            .attr('width', width)
+            .attr('height', height + padt + padb)
+          .append('g')
+            .attr('transform', 'translate(' + padl + ',' + padt + ')');
+        
+        scope.$watch('stats', function(newStatistics, oldStatistics) {
+          // clear the elements inside of the directive
+          vis.selectAll('*').remove();
+          
+          // if 'val' is undefined, exit
+          if (!newStatistics) {
+            return;
+          }
+          
+          var max = d3.max(d3.values(newStatistics.hourlyCount));
+          x.domain(d3.range(24));
+          y.domain([0, max]);
+          
+          // transform hourly object into an array of object(k, v) ascending sorted.
+          var hourlyData = d3.entries(newStatistics.hourlyCount).sort(function(a, b) { return d3.ascending(parseInt(a.key), parseInt(b.key)); })
+          hourlyData  = $.map(hourlyData, function(d, i) { return {'total': d.value} })
+          
+          vis.call(tip);
+          vis.append("g").attr("class", "y axis").call(yAxis);
+    
+          vis.append("g").attr("class", "x axis")
+            .attr('transform', 'translate(0,' + height + ')').call(xAxis)
+              .selectAll('.x.axis g')
+                .style('display', function (d, i) { return i % 3 != 0 ? 'none' : 'block' });
+          
+          var bars = vis.selectAll('g.bar')
+            .data(hourlyData)
+               .enter().append('g').attr('class', 'bar').attr('transform', function (d, i) { return "translate(" + x(i) + ", 0)" });
+    
+          bars.append('rect')
+            .attr('width', function() { return x.rangeBand() })
+            .attr('height', function(d) { return height - y(d.total) })
+            .attr('y', function(d) { return y(d.total) })
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide)
+        });
+      }
+    };
+  })
+  .directive('hourInvocationsBarChart', function() {
+    var tip = d3.tip().attr('class', 'd3-tip')
+        .html(function(d) { return '<span>' + d.total + '</span>' + ' invocations' })
+        .offset([-12, 0]);
+    
+    var width = 460, height = 300,
+        padt = 20, padr = 20, padb = 60, padl = 30,
+        x = d3.scale.ordinal().rangeRoundBands([0, width - padl - padr], 0.1),
+        y = d3.scale.linear().range([height, 0]),
+        yAxis = d3.svg.axis().scale(y).orient('left').tickSize(-width + padl + padr),
+        xAxis = d3.svg.axis().scale(x).orient('bottom');
+  
+    return {
+      restrict: 'E',
+      replace: true,
+      scope: {
+        stats: '=',
+        hour: '='
+      },
+      link: function(scope, element, attrs) {
+        var vis = d3.select(element[0])
+          .append('svg')
+            .attr('width', width)
+            .attr('height', height + padt + padb)
+          .append('g')
+            .attr('transform', 'translate(' + padl + ',' + padt + ')');
+        
+        scope.$watch('stats', function(newStatistics, oldStatistics) {
+          // clear the elements inside of the directive
+          vis.selectAll('*').remove();
+        });
+        
+        scope.$watch('hour', function(newHour, oldHour) {
+          // clear the elements inside of the directive
+          vis.selectAll('*').remove();
+          
+          // if 'val' is undefined, exit
+          if (!newHour) {
+            return;
+          }
+          
+          // transform minute object into an array of object(k, v) ascending sorted.
+	      var minuteData = d3.entries(scope.stats.minuteCount).sort(function(a, b) { return d3.ascending(parseInt(a.key), parseInt(b.key)); })
+	      minuteData  = $.map(minuteData, function(d, i) { return {'total': d.value} }).slice(startIndex, endIndex)
+          
+          var max = d3.max(minuteData, function(d) { return d.total });
+          x.domain(d3.range(60));
+          y.domain([0, max]);
+          
+          vis.call(tip);
+          vis.append("g").attr("class", "y axis").call(yAxis);
+    
+          vis.append("g").attr("class", "x axis")
+            .attr('transform', 'translate(0,' + height + ')').call(xAxis)
+              .selectAll('.x.axis g')
+                .style('display', function (d, i) { return i % 3 != 0 ? 'none' : 'block' });
+          
+          var bars = vis.selectAll('g.bar')
+            .data(minuteData)
+               .enter().append('g').attr('class', 'bar').attr('transform', function (d, i) { return "translate(" + x(i) + ", 0)" });
+    
+          bars.append('rect')
+            .attr('width', function() { return x.rangeBand() })
+            .attr('height', function(d) { return height - y(d.total) })
+            .attr('y', function(d) { return y(d.total) })
+            .on('mouseover', tip.show)
+            .on('mouseout', tip.hide)
+        });
+      }
+    };
+  })
+  .directive('topInvocations', function() {
+    return {
+      restrict: 'E',
+      replace: true,
+      templateUrl: 'directives/top-invocations.html',
+      scope: {
+        stats: '=',
+      },
+      link: function(scope, element, attrs) {
+        scope.$watch('stats', function(topInvocations) {
+          if (topInvocations != null) {
+            scope.topInvocations = topInvocations;
+          }
+        });
+      }
+    }
 });
