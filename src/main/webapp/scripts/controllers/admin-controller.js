@@ -19,11 +19,14 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('AdminController', function ($rootScope, $scope, $modal, notify, Service, InvocationsService) {
+  .controller('AdminController', function ($rootScope, $scope, $modal, notify, FileUploader, Service, InvocationsService) {
 
   $scope.day;
   $scope.invocationStats = null;
   $scope.selectedServices = { ids: {} };
+  $scope.uploader = new FileUploader( {
+    url: '/api/import'
+  });
   
   $scope.getAllServices = function() {
     $scope.services = Service.query();
@@ -49,5 +52,15 @@ angular.module('microcksApp')
     });
     console.log(downloadPath);
     window.open(downloadPath, '_blank', ''); 
+  }
+  
+  $scope.import = function() {
+    var fileName = $scope.uploader.queue[0].file.name;
+    $scope.uploader.queue[0].upload();
+    notify({
+      message: 'File "' + fileName + '" has been imported !',
+      classes: 'alert-success'
+    });
+    $scope.uploader.queue = [];
   }
 });
