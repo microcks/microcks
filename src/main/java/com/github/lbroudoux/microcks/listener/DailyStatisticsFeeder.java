@@ -32,7 +32,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 /**
- * 
+ * Application event listener that updates daily statistics on incoming event.
  * @author laurent
  */
 @Component
