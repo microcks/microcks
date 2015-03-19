@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <title></title>
     <meta name="description" content="">
-    <meta name="viewport" content="width=device-width, initia-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css(.) styles/vendor.css -->
     <!-- bower:css -->
     <link rel="stylesheet" href="../../bower_components/bootstrap/dist/css/bootstrap.css" />
     <link rel="stylesheet" href="../../bower_components/angular-notify/dist/angular-notify.css" />
-    <link rel="stylesheet" href="../../bower_components/highlightjs/styles/solarized_dark.css" />
+    <link rel="stylesheet" href="../../bower_components/highlightjs/styles/default.css" />
     <link rel="stylesheet" href="../../bower_components/font-awesome/css/font-awesome.css" />
     <!-- endbower -->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootswatch/3.3.2/paper/bootstrap.min.css" />
@@ -49,15 +49,15 @@
                 Administration <span class="caret"></span>
               </a>
               <ul class="dropdown-menu">
-                <li><a href="#">Export repository <i class="glyphicon glyphicon-share"></i></a></li>
-                <li><a href="#">Import repository <i class="glyphicon glyphicon-edit"></i></a></li>
-                <li><a href="#">Configure delays <i class="glyphicon glyphicon-time"></i></a></li>
-                <li><a href="#">Invocation stats <i class="glyphicon glyphicon-signal"></i></a></li>
+                <li><a href="#/admin/export">Export repository <i class="glyphicon glyphicon-share"></i></a></li>
+                <li><a href="#/admin/import">Import repository <i class="glyphicon glyphicon-edit"></i></a></li>
+                <li><a href="#/admin/delays">Configure delays <i class="glyphicon glyphicon-time"></i></a></li>
+                <li><a href="#/admin/invocations">Invocation stats <i class="glyphicon glyphicon-signal"></i></a></li>
               </ul>
             </li>
             <li>
-              <form class="navbar-form" role="search">
-                <input type="text" class="form-control" placeholder="Search"/>
+              <form ng-submit="searchServices()" class="navbar-form" role="search">
+                <input type="text" class="form-control" ng-model="searchTerm" placeholder="Search"/>
               </form>
             </li>
           </ul>
@@ -106,9 +106,11 @@
     <script src="../../bower_components/angular-sanitize/angular-sanitize.js"></script>
     <script src="../../bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
     <script src="../../bower_components/angular-notify/dist/angular-notify.js"></script>
+    <script src="../../bower_components/angular-file-upload/angular-file-upload.js"></script>
     <script src="../../bower_components/highlightjs/highlight.pack.js"></script>
     <script src="../../bower_components/angular-highlightjs/angular-highlightjs.js"></script>
     <script src="../../bower_components/d3/d3.js"></script>
+    <script src="../../bower_components/d3-tip/index.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -116,9 +118,8 @@
     <script src="scripts/app.js"></script>
     <script src="scripts/directives.js"></script>
     <script src="scripts/controllers/main.js"></script>
-    <script src="scripts/controllers/about.js"></script>
     <script src="scripts/controllers/root-controller.js"></script>
-    <script src="scripts/services/mickrocks-services.js"></script>
+    <script src="scripts/services/microcks-services.js"></script>
     <script src="scripts/controllers/services-controller.js"></script>
     <script src="scripts/controllers/service-controller.js"></script>
     <script src="scripts/services/service-service.js"></script>
@@ -127,6 +128,8 @@
     <script src="scripts/services/tests-service.js"></script>
     <script src="scripts/controllers/jobs-controller.js"></script>
     <script src="scripts/services/job-service.js"></script>
+    <script src="scripts/controllers/admin-controller.js"></script>
+    <script src="scripts/services/invocations-service.js"></script>
     <!-- endbuild -->
 </body>
 </html>
