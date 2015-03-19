@@ -22,6 +22,8 @@ var services = angular.module('microcksApp.services');
 
 services.factory('Service', function($resource) {
   //var rootUrl = 'http://localhost:8080';
-  return $resource('/api/services/:serviceId', {serviceId: '@id'});
+  return $resource('/api/services/:serviceId', {serviceId: '@id'}, {
+            search: {method: 'GET', url: '/api/services/search', isArray: true},
+            count: {method: 'GET', url: '/api/services/count'}
+  });
 });
-

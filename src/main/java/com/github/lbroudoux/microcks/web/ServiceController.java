@@ -70,6 +70,20 @@ public class ServiceController {
             new Sort(Sort.Direction.ASC, "name", "version"))).getContent();
    }
 
+   @RequestMapping(value = "/services/search", method = RequestMethod.GET)
+   public List<Service> searchServices(@RequestParam(value = "name") String name) {
+      log.debug("Searching services corresponding to {}", name);
+      return serviceRepository.findByNameLike(name);
+   }
+
+   @RequestMapping(value = "/services/count", method = RequestMethod.GET)
+   public Map<String, Long> countServices() {
+      log.debug("Counting services...");
+      Map<String, Long> counter = new HashMap<>();
+      counter.put("counter", serviceRepository.count());
+      return counter;
+   }
+
    @RequestMapping(value = "/services/{id}", method = RequestMethod.GET)
    public ResponseEntity<?> getService(
          @PathVariable("id") String serviceId,

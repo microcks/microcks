@@ -27,5 +27,18 @@ angular.module('microcksApp')
   $scope.serviceTests = function() {
     return TestsService.listByService($scope.view.service.id, 0, 20);
   }
+  
+  $scope.formatRequestUrl = function(operationName, dispatchCriteria) {
+    var params = {};
+    dispatchCriteria.split('/').forEach(function(element, index, array) {
+      if (element){
+        params[element.split('=')[0]] = element.split('=')[1];
+      }
+    });
+    operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
+      return params[p1];
+    });
+    return operationName;
+  }
 });
   

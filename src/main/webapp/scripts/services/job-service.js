@@ -25,6 +25,7 @@ services.factory('Job', function($resource) {
   return $resource('/api/jobs/:jobId', {jobId: '@id'}, {
             activate: {method: 'PUT', url: '/api/jobs/:jobId/activate'},
             start: {method: 'PUT', url: '/api/jobs/:jobId/start'},
-            stop: {method: 'PUT', url: '/api/jobs/:jobId/stop'}
+            stop: {method: 'PUT', url: '/api/jobs/:jobId/stop'},
+            count: {method: 'GET', url: '/api/jobs/count'}
   });
 });

@@ -36,7 +36,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author laurent
@@ -58,11 +60,23 @@ public class JobController {
    @RequestMapping(value = "/jobs", method = RequestMethod.GET)
    public List<ImportJob> listJobs(
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size
+         @RequestParam(value = "size", required = false, defaultValue = "20") int size,
+         @RequestParam(value = "name", required = false) String name
       ) {
       log.debug("Getting job list for page {} and size {}", page, size);
+      if (name != null) {
+         return jobRepository.findByNameLike(name);
+      }
       return jobRepository.findAll(new PageRequest(page, size, new Sort(Sort.Direction.ASC, "name")))
             .getContent();
+   }
+
+   @RequestMapping(value = "/jobs/count", method = RequestMethod.GET)
+   public Map<String, Long> countJobs() {
+      log.debug("Counting jobs...");
+      Map<String, Long> counter = new HashMap<>();
+      counter.put("counter", jobRepository.count());
+      return counter;
    }
 
    @RequestMapping(value = "/jobs", method = RequestMethod.POST)
@@ -88,7 +102,7 @@ public class JobController {
 
    @RequestMapping(value = "/jobs/{id}/start", method = RequestMethod.PUT)
    public ResponseEntity<ImportJob> startJob(@PathVariable("id") String jobId) {
-      log.debug("Activating job with id {}", jobId);
+      log.debug("Starting job with id {}", jobId);
       ImportJob job = jobRepository.findOne(jobId);
       job.setActive(true);
       jobService.doImportJob(job);
@@ -97,7 +111,7 @@ public class JobController {
 
    @RequestMapping(value = "/jobs/{id}/stop", method = RequestMethod.PUT)
    public ResponseEntity<ImportJob> stopJob(@PathVariable("id") String jobId) {
-      log.debug("Activating job with id {}", jobId);
+      log.debug("Stopping job with id {}", jobId);
       ImportJob job = jobRepository.findOne(jobId);
       job.setActive(false);
       return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);

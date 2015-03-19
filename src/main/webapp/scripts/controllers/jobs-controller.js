@@ -21,14 +21,30 @@
 angular.module('microcksApp')
   .controller('JobsController', function ($rootScope, $scope, $modal, $location, notify, Job) {
   
-  $scope.page = 0;
+  $scope.page = 1;
   $scope.pageSize = 20;
   
-  $scope.jobsCount = 100;
+  if (!$scope.filterTerm) {
+    // We need to paginate...
+    Job.count().$promise.then(function(result) {
+      $scope.count = result.counter;
+    });
+  }
   
   $scope.listPage = function(page) {
-    $scope.jobs = Job.query({page: page, pageSize: $scope.pageSize}); 
+    $scope.jobs = Job.query({page: page-1, size: $scope.pageSize}); 
   }
+  
+  $scope.filterJobs = function() {
+    console.log('In filterJobs');
+    $scope.jobs = Job.query({name: $scope.filterTerm}); 
+  }
+  
+  $scope.$watch('page', function(newValue, oldValue) {
+    if (newValue != oldValue){
+      $scope.jobs = Job.query({page: newValue-1, size: $scope.pageSize}); 
+    }
+  });
   
   $scope.addJob = function(job) {
     job = new Job({name: "", repositoryUrl: ""});

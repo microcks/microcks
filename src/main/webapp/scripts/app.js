@@ -32,7 +32,8 @@ angular
     'ngSanitize',
     'ui.bootstrap',
     'cgNotify', 
-    'hljs'
+    'hljs',
+    'angularFileUpload'
   ])
   .config(function ($routeProvider) {
     $routeProvider
@@ -46,7 +47,16 @@ angular
       })
       .when('/services', {
         templateUrl: 'views/services.html',
-        controller: 'ServicesController'
+        controller: 'ServicesController',
+        resolve: {
+          services: function ($location, Service) {
+            var searchObject = $location.search();
+            if (Object.keys(searchObject).indexOf('searchTerm') != -1) {
+              return Service.search({name: searchObject.searchTerm});
+            }
+            return Service.query({size: 20});
+          }
+        }
       })
       .when('/service/:id', {
         templateUrl: 'views/service.html',

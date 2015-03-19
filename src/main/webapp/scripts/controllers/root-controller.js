@@ -19,27 +19,31 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('RootController', function ($rootScope, $scope, $http) {
+  .controller('RootController', function ($rootScope, $scope, $http, $location) {
   
-    $rootScope.isViewLoading = false;
+  $scope.searchTerm;
+  $rootScope.isViewLoading = false;
   
-    $rootScope.isProcessingData = function() {
-      return $http.pendingRequests.some(function(config) {
-        if (config.method !== 'GET') {
-          console.log(config);
-          return true;
-        }
-      });
-    };
-  
-    $rootScope.$on('$routeChangeStart', function () {
-      $rootScope.isViewLoading = true;
-    });
-    $rootScope.$on('$routeChangeSuccess', function (event, routeData) {
-      $rootScope.isViewLoading = false;
-      if (routeData.$$route && routeData.$$route.section) {
-        $rootScope.section = routeData.$$route.section;
+  $rootScope.isProcessingData = function() {
+    return $http.pendingRequests.some(function(config) {
+      if (config.method !== 'GET') {
+        console.log(config);
+        return true;
       }
     });
-  
+  };
+
+  $rootScope.$on('$routeChangeStart', function () {
+    $rootScope.isViewLoading = true;
   });
+  $rootScope.$on('$routeChangeSuccess', function (event, routeData) {
+    $rootScope.isViewLoading = false;
+    if (routeData.$$route && routeData.$$route.section) {
+      $rootScope.section = routeData.$$route.section;
+    }
+  });
+
+  $scope.searchServices = function() {
+    $location.url('services?searchTerm=' + $scope.searchTerm);
+  };
+});
