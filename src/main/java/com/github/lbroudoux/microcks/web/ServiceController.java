@@ -23,6 +23,7 @@ import com.github.lbroudoux.microcks.domain.Service;
 import com.github.lbroudoux.microcks.repository.ServiceRepository;
 import com.github.lbroudoux.microcks.service.MessageService;
 import com.github.lbroudoux.microcks.service.RequestResponsePair;
+import com.github.lbroudoux.microcks.service.ServiceService;
 import com.github.lbroudoux.microcks.util.IdBuilder;
 import com.github.lbroudoux.microcks.web.dto.ServiceViewDTO;
 import org.slf4j.Logger;
@@ -52,6 +53,9 @@ public class ServiceController {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(ServiceController.class);
+
+   @Autowired
+   private ServiceService serviceService;
 
    @Autowired
    private ServiceRepository serviceRepository;
@@ -102,5 +106,19 @@ public class ServiceController {
          return new ResponseEntity<>(new ServiceViewDTO(service, messagesMap), HttpStatus.OK);
       }
       return new ResponseEntity<>(service, HttpStatus.OK);
+   }
+
+   @RequestMapping(value = "/services/{id}/operationDelay", method = RequestMethod.PUT)
+   public ResponseEntity<?> updateServiceOperationDelay(
+         @PathVariable("id") String serviceId,
+         @RequestParam(value = "operationName") String operationName,
+         @RequestParam(value = "delay") Long delay
+      ) {
+      log.debug("Updating delay for operation {} of service {}", operationName, serviceId);
+      boolean result = serviceService.updateOperationDelay(serviceId, operationName, delay);
+      if (result){
+         return new ResponseEntity<>(HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
    }
 }

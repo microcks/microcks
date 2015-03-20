@@ -1,0 +1,38 @@
+<h2>Configuring services response time</h2>
+
+<div class="row well" ng-init="getAllServices()">
+  <p class="help-block">
+     Assign default response time (in milliseconds) for services operations<br/><br/>
+     <label class="checkbox">
+        <input id="expcol" type="checkbox"/> Expand / Collapse all
+     </label>
+  </p>
+  <br/>
+  <div class="col-md-5">
+    <accordion>
+      <accordion-group ng-repeat="service in halfServices" heading="{{service.name}} - {{service.version}}">
+        <div class="row" ng-repeat="operation in service.operations">
+          <div class="col-sm-6">
+            <i class="glyphicon glyphicon-cog"></i> {{ operation.name }}
+          </div>
+          <div class="col-sm-4">
+            <div class="input-group">
+              <input type="text" class="form-control" ng-model="operation.defaultDelay"
+                     ng-blur="updateOperationDelay(service, operation)">
+              <span class="input-group-addon">ms</span>
+            </div>
+          </div>
+        </div>
+      </accordion-group>
+    </accordion>
+  </div>
+  <div class="col-md-5">
+    <accordion>
+      <accordion-group ng-repeat="service in secondHalfServices" heading="{{service.name}}">
+        <div class="row" ng-repease="operation in service.operations">
+        
+        </div>
+      </accordion-group>
+    </accordion>
+  </div>
+</div>

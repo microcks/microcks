@@ -30,6 +30,10 @@ angular.module('microcksApp')
   
   $scope.getAllServices = function() {
     $scope.services = Service.query();
+    $scope.services.$promise.then(function(result) {
+      $scope.halfServices = $scope.services.slice(0, ($scope.services.length / 2) + 1);
+      $scope.secondHalfServices = $scope.services.slice($scope.halfServices.length);
+    })
   };
   
   $scope.getInvocationStats = function(day) {
@@ -44,13 +48,17 @@ angular.module('microcksApp')
     }) 
   }
   
+  $scope.updateOperationDelay = function(service, operation) {
+    console.log("New operation delay is: " + operation.defaultDelay);
+    var data = { operationName: operation.name, delay: operation.defaultDelay };
+    service.$updateOperationDelay(data);
+  }
+  
   $scope.export = function() {
-    console.log('In export for serviceIds: ' + JSON.stringify($scope.selectedServices.ids));
     var downloadPath = '/api/export?';
     Object.keys($scope.selectedServices.ids).forEach(function(element, index, array) {
       downloadPath += '&serviceIds=' + element;
     });
-    console.log(downloadPath);
     window.open(downloadPath, '_blank', ''); 
   }
   

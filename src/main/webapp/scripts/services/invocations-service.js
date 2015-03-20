@@ -20,11 +20,24 @@
 
 var services = angular.module('microcksApp.services');
 
-services.factory('Service', function($resource) {
-  //var rootUrl = 'http://localhost:8080';
-  return $resource('/api/services/:serviceId', {serviceId: '@id'}, {
-            search: {method: 'GET', url: '/api/services/search', isArray: true},
-            count: {method: 'GET', url: '/api/services/count'},
-            updateOperationDelay: {method: 'PUT', url: '/api/services/:serviceId/operationDelay'}
-  });
+services.factory('InvocationsService', function($http, $q) {
+  var invocationService = {
+    getInvocationStats: function(day) {
+      var delay = $q.defer();
+      $http.get('/api/invocations/global', {day: day})
+      .success(function(data) {
+        delay.resolve(data)
+      });
+      return delay.promise;
+    },
+    getTopInvocations: function(day) {
+      var delay = $q.defer();
+      $http.get('/api/invocations/top', {day: day})
+      .success(function(data) {
+        delay.resolve(data)
+      });
+      return delay.promise;
+    }
+  }
+  return invocationService;
 });

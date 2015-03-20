@@ -1,0 +1,125 @@
+<h2>'{{ view.service.name }}' - {{ view.service.version }}</h2>
+
+<section id="properties">
+  <h3>Properties</h3>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="row">
+        <div class="col-sm-2" align="right">Version</div>
+        <div class="col-sm-7">{{ view.service.version }}</div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2" align="right">Type</div>
+        <div class="col-sm-7">{{ view.service.type }}</div>
+      </div>
+      <div class="row">
+        <div class="col-sm-2" align="right">Statistics</div>
+        <div class="col-sm-7"><a href="#/admin/invocations/{{ view.service.name }}/{{ view.service.version }}">Invocations</a></div>
+      </div>
+    </div>
+    <div class="col-md-4 pull-right text-right">
+      <h4>Latest tests trend</h4>
+      <test-bar-chart chart="testChart" data="serviceTests()"></test-bar-chart>
+      <div id="testChart"></div>
+      <br/>
+      <a href="#/tests/service/{{ view.service.id }}"><i class="glyphicon glyphicon-time"></i> History</a>
+      <a href="#/tests/create" class="btn btn-warning"><i class="glyphicon glyphicon-fire"></i> New Test...</a>
+    </div>
+  </div>
+</section>
+
+<section id="operations">
+  <h3>Operations</h3>
+  
+  <div ng-repeat="operation in view.service.operations">
+    <h4><i class="glyphicon glyphicon-cog"></i> Operation {{ operation.name }}</h4>
+    
+    <div class="row" ng-show="{{ view.service.type == 'SOAP_HTTP' }}">
+      <div class="col-sm-3" align="right">Input Name</div>
+      <div class="col-sm-9"><code>{{ operation.inputName }}</code></div>
+    </div>
+    <div class="row" ng-show="{{ view.service.type == 'SOAP_HTTP' }}">
+      <div class="col-sm-3" align="right">Output Name</div>
+      <div class="col-sm-9"><code>{{ operation.outputName }}</code></div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3" align="right">Dispatcher</div>
+      <div class="col-sm-9">{{ operation.dispatcher }}</div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3" align="right">Dispatching Rules</div>
+      <div class="col-sm-9">
+        <a ng-click="rules = !rules">
+          <i class="glyphicon glyphicon-option-horizontal"></i>
+        </a>
+        <div collapse="rules == null || rules">
+          <pre>{{ operation.dispatcherRules }}</pre>
+        </div>
+      </div>
+    </div>
+    <div class="row" ng-show="{{ view.service.type == 'REST' }}">
+      <div class="col-sm-3" align="right">Operation Verb</div>
+      <div class="col-sm-9">
+        <code>{{ operation.method }}</code>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3" align="right">Mocks URL</div>
+      <div class="col-sm-9">
+        <code ng-show="{{ view.service.type == 'SOAP_HTTP' }}">/soap/{{ view.service.name }}/{{ view.service.version }}/{{ operation.name }}</code>
+        <code ng-show="{{ view.service.type == 'REST' }}">/rest/{{ view.service.name }}/{{ view.service.version }}{{ operation.name }}</code>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3" align="right">Default delay</div>
+      <div class="col-sm-9">{{ operation.defaultDelay || 0 }} ms</div>
+    </div>
+    <br/>
+    <tabset role="tabpanel">
+      <tab ng-repeat="pair in view.messagesMap[operation.name]" heading="{{ pair.request.name }}">
+        <div class="row">
+          <div class="col-md-6">
+            <span ng-show="{{ view.service.type == 'REST' && operation.dispatcher == 'SEQUENCE'}}">
+              <code>{{operation.method}} /rest/{{ view.service.name }}/{{ view.service.version }}{{formatRequestUrl(operation.name, pair.response.dispatchCriteria)}}</code>
+            </span>
+            <div hljs no-escape source="pair.request.content"></div>
+            <table class="table table-condensed" width="100%" ng-show="pair.request.headers">
+              <thead>
+                <tr>
+                  <th>Header name</th>
+                  <th>Values</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="header in pair.request.headers">
+                  <td>{{ header.name }}</td>
+                  <td><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <span ng-show="{{ view.service.type == 'REST' }}">
+              <code>{{ pair.response.status }}: {{pair.response.mediaType}}</code>
+            </span>
+            <div hljs source="pair.response.content"></div>
+            <table class="table table-condensed" width="100%" ng-show="pair.response.headers">
+              <thead>
+                <tr>
+                  <th>Header name</th>
+                  <th>Values</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr ng-repeat="header in pair.response.headers">
+                  <td>{{ header.name }}</td>
+                  <td><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </tab>
+    </tabset>
+  </div>
+</section>
