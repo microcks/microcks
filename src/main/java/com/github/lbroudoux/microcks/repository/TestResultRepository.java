@@ -19,7 +19,7 @@
 package com.github.lbroudoux.microcks.repository;
 
 import com.github.lbroudoux.microcks.domain.TestResult;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -31,7 +31,9 @@ import java.util.List;
  */
 public interface TestResultRepository extends MongoRepository<TestResult, String> {
 
-   List<TestResult> findByServiceId(String serviceId, PageRequest page);
+   List<TestResult> findByServiceId(String serviceId);
+
+   List<TestResult> findByServiceId(String serviceId, Pageable page);
 
    @Query(value = "{ 'serviceId' : ?0}}", count = true)
    long countByServiceId(String serviceId);
