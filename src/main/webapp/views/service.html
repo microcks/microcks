@@ -1,9 +1,9 @@
 <h2>'{{ view.service.name }}' - {{ view.service.version }}</h2>
 
 <section id="properties">
-  <h3>Properties</h3>
   <div class="row">
     <div class="col-md-8">
+      <h3>Properties</h3>
       <div class="row">
         <div class="col-sm-2" align="right">Version</div>
         <div class="col-sm-7">{{ view.service.version }}</div>
@@ -11,6 +11,18 @@
       <div class="row">
         <div class="col-sm-2" align="right">Type</div>
         <div class="col-sm-7">{{ view.service.type }}</div>
+      </div>
+      <div class="row" ng-show="{{ view.service.type == 'SOAP_HTTP' }}">
+        <div class="col-sm-2" align="right">Namespace</div>
+        <div class="col-sm-7"><code>{{ view.service.xmlNS }}</code></div>
+      </div>
+      <div class="row" ng-show="{{ view.service.type == 'SOAP_HTTP' }}">
+        <div class="col-sm-2" align="right">Resources</div>
+        <div class="col-sm-7">
+          <a href="/api/resource/{{ view.service.name }}-{{ view.service.version }}.wsdl" target="new" alt="Service WSDL">
+            WSDL Contract <i class="glyphicon glyphicon-globe"></i>
+          </a>
+        </div>
       </div>
       <div class="row">
         <div class="col-sm-2" align="right">Statistics</div>
