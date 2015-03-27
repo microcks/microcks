@@ -21,7 +21,8 @@ module.exports = function (grunt) {
   var appConfig = {
     app: require('./bower.json').appPath || 'app',
     src: 'src/main/webapp',
-    dist: 'src/main/webapp/dist'
+    dist: 'src/main/webapp/dist',
+    test: 'src/test/webapp',
   };
 
   // Define the configuration for all the tasks
@@ -44,7 +45,7 @@ module.exports = function (grunt) {
         }
       },
       jsTest: {
-        files: ['test/spec/{,*/}*.js'],
+        files: ['<%= yeoman.test %>/spec/{,*/}*.js'],
         tasks: ['newer:jshint:test', 'karma']
       },
       styles: {
@@ -136,9 +137,9 @@ module.exports = function (grunt) {
       },
       test: {
         options: {
-          jshintrc: 'test/.jshintrc'
+          jshintrc: '<%= yeoman.test %>/.jshintrc'
         },
-        src: ['test/spec/{,*/}*.js']
+        src: ['<%= yeoman.test %>/spec/{,*/}*.js']
       }
     },
 
@@ -199,15 +200,19 @@ module.exports = function (grunt) {
       html: '<%= yeoman.src %>/index.html',
       options: {
         dest: '<%= yeoman.dist %>',
+        
+        
+        /* Not necessary from meanTest ?
         flow: {
           html: {
             steps: {
               js: ['concat', 'uglifyjs'],
-              css: ['cssmin']
+              css: ['concat', 'cssmin']
             },
             post: {}
           }
         }
+        */
       }
     },
 
@@ -215,6 +220,7 @@ module.exports = function (grunt) {
     usemin: {
       html: ['<%= yeoman.dist %>/{,*/}*.html'],
       css: ['<%= yeoman.dist %>/styles/{,*/}*.css'],
+      js: ['<%= yeoman.dist %>/scripts/{,*/}*.js'],
       options: {
         assetsDirs: ['<%= yeoman.dist %>','<%= yeoman.dist %>/images']
       }
@@ -339,17 +345,6 @@ module.exports = function (grunt) {
           cwd: 'bower_components/font-awesome/fonts/',
           dest: '<%= yeoman.dist %>/fonts',
           src: [ '**' ]
-        }, {
-          expand: true,
-          dot: true,
-          cwd: '<%= yeoman.src %>/styles/fonts/SourceSansPro/',
-          dest: '<%= yeoman.dist %>/fonts',
-          src: [ '**', '!*.less', '!*.txt' ]
-        }, {
-          expand: true,
-          cwd: '<%= yeoman.src %>/styles',
-          dest: '<%= yeoman.dist %>/styles/',
-          src: 'img/**/*.svg'
         }]
       },
       styles: {
@@ -387,7 +382,7 @@ module.exports = function (grunt) {
     // Test settings
     karma: {
       unit: {
-        configFile: 'test/karma.conf.js',
+        configFile: '<%= yeoman.test %>/karma.conf.js',
         singleRun: true
       }
     }
