@@ -36,7 +36,6 @@ angular.module('microcksApp')
   }
   
   $scope.filterJobs = function() {
-    console.log('In filterJobs');
     $scope.jobs = Job.query({name: $scope.filterTerm}); 
   }
   
