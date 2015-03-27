@@ -96,7 +96,7 @@ angular
         controller: 'AdminController'
       })
       .when('/admin/invocations/:serviceName/:serviceVersion', {
-        templateUrl: 'views/invocations.html',
+        templateUrl: 'views/service-invocations.html',
         controller: 'AdminController'
       })
       .when('/admin/export', {

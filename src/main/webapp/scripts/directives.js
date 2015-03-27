@@ -111,8 +111,10 @@ angular.module('microcksApp.directives', [])
   
     return {
       restrict: 'E',
+      replace: true,
       scope: {
-        stats: '='
+        stats: '=',
+        hour: '='
       },
       link: function(scope, element, attrs) {
         var vis = d3.select(element[0])
@@ -157,6 +159,10 @@ angular.module('microcksApp.directives', [])
             .attr('y', function(d) { return y(d.total) })
             .on('mouseover', tip.show)
             .on('mouseout', tip.hide)
+            .on('click', function(d, i) {
+              scope.hour = i;
+              scope.$apply();  // very important to apply cause link has finished rendering and we need to tell angular something has changed !
+            });
         });
       }
     };
@@ -201,6 +207,10 @@ angular.module('microcksApp.directives', [])
           if (!newHour) {
             return;
           }
+          
+          // compute index for extracting stats
+          var startIndex = newHour * 60;
+	      var endIndex = ((newHour + 1) * 60) - 1;
           
           // transform minute object into an array of object(k, v) ascending sorted.
 	      var minuteData = d3.entries(scope.stats.minuteCount).sort(function(a, b) { return d3.ascending(parseInt(a.key), parseInt(b.key)); })

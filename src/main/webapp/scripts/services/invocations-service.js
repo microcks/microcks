@@ -24,16 +24,27 @@ services.factory('InvocationsService', function($http, $q) {
   var invocationService = {
     getInvocationStats: function(day) {
       var delay = $q.defer();
-      $http.get('/api/invocations/global', {day: day})
-      .success(function(data) {
+      var url = '/api/invocations/global';
+      if (day) url += '?day=' + day.toLocaleFormat('%Y%m%d'); // 20150326;
+      $http.get(url).success(function(data) {
         delay.resolve(data)
       });
       return delay.promise;
     },
     getTopInvocations: function(day) {
       var delay = $q.defer();
-      $http.get('/api/invocations/top', {day: day})
-      .success(function(data) {
+      var url = '/api/invocations/top';
+      if (day) url += '?day=' + day.toLocaleFormat('%Y%m%d'); // 20150326;
+      $http.get(url).success(function(data) {
+        delay.resolve(data)
+      });
+      return delay.promise;
+    },
+    getServiceInvocationStats: function(service, version, day) {
+      var delay = $q.defer();
+      var url = '/api/invocations/' + service + "/" + version;
+      if (day) url += '?day=' + day.toLocaleFormat('%Y%m%d'); // 20150326;
+      $http.get(url).success(function(data) {
         delay.resolve(data)
       });
       return delay.promise;

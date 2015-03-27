@@ -1,3 +1,4 @@
+/* For tests summary chart */
 .bar {
   display: inline-block;
   border: 1px;
@@ -16,12 +17,73 @@
   background: #d41e24;
 }
 
+/* */
+table.table-condensed {
+  font-size: 12px;
+}
+
+/* For D3 charts on invocations */
+.d3-tip {
+  line-height: 1;
+  font-weight: bold;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.d3-tip:after {
+  box-sizing: border-box;
+  display: inline;
+  font-size: 10px;
+  width: 100%;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.8);
+  position: absolute;
+  pointer-events: none;
+}
+/* Northward tooltips */
+.d3-tip.n:after {
+  content: "\25BC";
+  margin: -1px 0 0 0;
+  top: 100%;
+  left: 0;
+  text-align: center;
+}
+.d3-tip span {
+  color: #ff00c7;
+}
+.domain {
+  display: none;
+}
+.axis line {
+  stroke-width: 1px;
+  stroke: #eee;
+  shape-rendering: crispedges;
+}
+.axis text {
+  fill: #888;
+}
+rect {
+   fill: #339cff;
+   fill-opacity: 0.7;
+}
+rect:hover {
+   fill-opacity: 1;
+}
+
+/* Base style for code and bootstrap badges */
 pre, code {
   background: #f9f2f4;
   font-size: 12pt;
   font-family: Ubuntu Mono, monospace;
 }
-
+span.alert-info {
+  color: #e1bee7; 
+}
+span.alert-success {
+  color: #dff0d8;
+}
 
 /* Space out content a bit */
 body {

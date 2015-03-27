@@ -19,9 +19,13 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('AdminController', function ($rootScope, $scope, $modal, notify, FileUploader, Service, InvocationsService) {
+  .controller('AdminController', function ($rootScope, $scope, $routeParams, notify, FileUploader, Service, InvocationsService) {
 
   $scope.day;
+  $scope.hour = 0;
+  $scope.serviceName = $routeParams.serviceName;
+  $scope.serviceVersion = $routeParams.serviceVersion;
+  
   $scope.invocationStats = null;
   $scope.selectedServices = { ids: {} };
   $scope.uploader = new FileUploader( {
@@ -36,8 +40,19 @@ angular.module('microcksApp')
     })
   };
   
+  $scope.openDatePicker = function($event) {
+    $event.preventDefault();
+    $event.stopPropagation();
+    $scope.pickerOpened = true;
+  };
+  
+  $scope.updateInvocationStats = function() {
+    $scope.getInvocationStats($scope.day);
+    $scope.getTopInvocations($scope.day);
+  }
+  
   $scope.getInvocationStats = function(day) {
-    InvocationsService.getInvocationStats(day).then(function(result) {
+    InvocationsService.getInvocationStats($scope.service, $scope.version, day).then(function(result) {
       $scope.invocationStats = result;
     }); 
   }
@@ -48,8 +63,17 @@ angular.module('microcksApp')
     }) 
   }
   
+  $scope.updateServiceInvocationStats = function() {
+    $scope.getServiceInvocationStats($scope.day);
+  }
+  
+  $scope.getServiceInvocationStats = function(day) {
+    InvocationsService.getInvocationStats(day).then(function(result) {
+      $scope.invocationStats = result  
+    });
+  }
+  
   $scope.updateOperationDelay = function(service, operation) {
-    console.log("New operation delay is: " + operation.defaultDelay);
     var data = { operationName: operation.name, delay: operation.defaultDelay };
     service.$updateOperationDelay(data);
   }
