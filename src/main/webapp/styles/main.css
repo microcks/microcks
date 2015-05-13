@@ -111,6 +111,20 @@ body {
   padding-bottom: 19px;
 }
 
+.logo {
+  position: absolute;
+  display: block;
+  top: -0.2em; 
+  left: 0.2em;
+}
+
+.arvo {
+  font-family: 'Arvo', serif;
+}
+.hl {
+  color: #2196f3;
+}
+
 /* Custom page footer */
 .footer {
   padding-top: 19px;
@@ -119,6 +133,12 @@ body {
 }
 
 /* Customize container */
+@media (min-width: 758px) {
+  #navbar-menu {
+    padding-left: 80px;
+  }
+}
+
 @media (min-width: 768px) {
   .container {
     max-width: 730px;
@@ -136,24 +156,6 @@ body {
 }
 .container-narrow > hr {
   margin: 30px 0;
-}
-
-/* Main marketing message and sign up button */
-.jumbotron {
-  text-align: center;
-  border-bottom: 1px solid #e5e5e5;
-}
-.jumbotron .btn {
-  font-size: 21px;
-  padding: 14px 24px;
-}
-
-/* Supporting marketing content */
-.marketing {
-  margin: 40px 0;
-}
-.marketing p + h4 {
-  margin-top: 28px;
 }
 
 /* Responsive: Portrait tablets and up */

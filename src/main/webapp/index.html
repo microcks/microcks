@@ -2,7 +2,7 @@
 <html class="no-js">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Microcks : Mocks for your Micro-services</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
@@ -15,6 +15,7 @@
     <!-- endbower -->
     <!-- endbuild -->
     <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootswatch/3.3.2/paper/bootstrap.min.css" />
+    <link rel='stylesheet' href="http://fonts.googleapis.com/css?family=Arvo" />
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
@@ -25,7 +26,7 @@
     <![endif]-->
 
     <!-- Add your site or application content here -->
-    <nav class="navbar navbar-inverse navbar-fixed-top">
+    <nav class="navbar navbar-default navbar-fixed-top">
       <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-menu">
@@ -34,7 +35,11 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="#">Microcks</a>
+          <a class="navbar-brand" href="#">
+            <h1 class="logo">
+              <img alt="Microcks" src="images/microcks.png"/>
+            </h1>
+          </a>
         </div>
         
         <div class="collapse navbar-collapse" id="navbar-menu">
@@ -69,7 +74,7 @@
       <div ng-view=""></div>
 
       <div class="footer">
-        <p><span class="glyphicon glyphicon-heart"></span> from the Yeoman team</p>
+        <p><span class="glyphicon glyphicon-heart"></span> from the <a href="http://microcks.github.io">Microcks</a> team</p>
       </div>
     </div>
 
