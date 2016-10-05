@@ -92,6 +92,12 @@ public class JobController {
       return new ResponseEntity<>(jobRepository.findOne(jobId), HttpStatus.OK);
    }
 
+   @RequestMapping(value = "/jobs/{id}", method = RequestMethod.POST)
+   public ResponseEntity<ImportJob> saveJob(@RequestBody ImportJob job) {
+      log.debug("Saving existing job: {}", job);
+      return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+   }
+
    @RequestMapping(value = "/jobs/{id}/activate", method = RequestMethod.PUT)
    public ResponseEntity<ImportJob> activateJob(@PathVariable("id") String jobId) {
       log.debug("Activating job with id {}", jobId);
