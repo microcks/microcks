@@ -1,3 +1,10 @@
+/* For notification tooltips */
+.cg-notify-message {
+  color: #ffffff !important;
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
 /* For tests summary chart */
 .bar {
   display: inline-block;
@@ -79,7 +86,7 @@ pre, code {
   font-family: Ubuntu Mono, monospace;
 }
 span.alert-info {
-  color: #e1bee7; 
+  color: #e1bee7;
 }
 span.alert-success {
   color: #dff0d8;
@@ -112,7 +119,7 @@ body {
 .logo {
   position: absolute;
   display: block;
-  top: -0.2em; 
+  top: -0.2em;
   left: 0.2em;
 }
 

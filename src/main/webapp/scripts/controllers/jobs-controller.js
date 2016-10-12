@@ -20,31 +20,31 @@
 
 angular.module('microcksApp')
   .controller('JobsController', function ($rootScope, $scope, $modal, $location, notify, Job) {
-  
+
   $scope.page = 1;
   $scope.pageSize = 20;
-  
+
   if (!$scope.filterTerm) {
     // We need to paginate...
     Job.count().$promise.then(function(result) {
       $scope.count = result.counter;
     });
   }
-  
+
   $scope.listPage = function(page) {
-    $scope.jobs = Job.query({page: page-1, size: $scope.pageSize}); 
+    $scope.jobs = Job.query({page: page-1, size: $scope.pageSize});
   }
-  
+
   $scope.filterJobs = function() {
-    $scope.jobs = Job.query({name: $scope.filterTerm}); 
+    $scope.jobs = Job.query({name: $scope.filterTerm});
   }
-  
+
   $scope.$watch('page', function(newValue, oldValue) {
     if (newValue != oldValue){
-      $scope.jobs = Job.query({page: newValue-1, size: $scope.pageSize}); 
+      $scope.jobs = Job.query({page: newValue-1, size: $scope.pageSize});
     }
   });
-  
+
   $scope.addJob = function(job) {
     job = new Job({name: "", repositoryUrl: ""});
     var modalInstance = show(job, 'edit-job.html');
@@ -55,10 +55,12 @@ angular.module('microcksApp')
           message: 'Job "' + job.name + '" has been created !',
           classes: 'alert-success'
         });
+        $scope.page = 1;
+        $scope.listPage(1);
       });
     });
   }
-  
+
   $scope.editJob = function(job) {
     var modalInstance = show(job, 'edit-job.html');
     modalInstance.result.then(function(result) {
@@ -68,13 +70,21 @@ angular.module('microcksApp')
       });
     });
   }
-  
-  $scope.startJob = function(job) {
-    job.$start(function(result) {
-       notify('Job "' + job.name + '" has been executed !');          
+
+  $scope.activateJob = function(job) {
+    var original = job;
+    job.$activate(function(result) {
+       notify('Job "' + job.name + '" has been activated !');
+       original.active = true;
     });
   }
-  
+
+  $scope.startJob = function(job) {
+    job.$start(function(result) {
+       notify('Job "' + job.name + '" has been executed !');
+    });
+  }
+
   $scope.deleteJob = function(job) {
     job.$remove(function(result) {
       for (var i in $scope.jobs) {
@@ -88,7 +98,7 @@ angular.module('microcksApp')
       });
     });
   }
-  
+
   function show(job, template) {
     return $modal.open({
       templateUrl: 'views/dialogs/' + template,
@@ -100,7 +110,7 @@ angular.module('microcksApp')
       }
     });
   }
-  
+
   function modalController($scope, $modalInstance, job) {
     $scope.job = job;
     $scope.ok = function(job) {
