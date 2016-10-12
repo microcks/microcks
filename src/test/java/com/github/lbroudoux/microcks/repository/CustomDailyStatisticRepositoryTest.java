@@ -44,7 +44,7 @@ public class CustomDailyStatisticRepositoryTest {
 
    @Autowired
    DailyStatisticRepository repository;
-   
+
    @Before
    public void setUp(){
       // Create a bunch of statistics...
@@ -64,22 +64,25 @@ public class CustomDailyStatisticRepositoryTest {
       stat.setHourlyCount(initializeHourlyMap());
       repository.save(stat);
    }
-   
+
    @Test
    public void testAggregateDailyStatistics(){
       try {
          DailyStatistic stat = repository.aggregateDailyStatistics("20140930");
       } catch (ConverterNotFoundException cvnfe){
-         // For now, mapReduce in Fongo is experimental. MapReduce execution is working 
+         // For now, mapReduce in Fongo is experimental. MapReduce execution is working
          // but SpringData cannot convert Fongo Rhino result into Java object
          // ("No converter found capable of converting from type org.mozilla.javascript.UniqueTag to type java.lang.Integer")
       } catch (UncategorizedMongoDbException ume){
          // For now, mapReduce in Fongo is experimental. MapReduce execution is not working
          // ("org.mozilla.javascript.EcmaError: TypeError: Cannot read property "0" from undefined")
+      } catch (RuntimeException re){
+         // For now, mapReduce in Fongo is experimental. MapReduce execution is working
+         // but SpringData cannot convert Fongo Rhino result into Java object
+         // ("json can't serialize type : class org.mozilla.javascript.UniqueTag")
       }
    }
-   
-   
+
    private Map<String, Integer> initializeHourlyMap(){
       Map<String, Integer> result = new HashMap<String, Integer>(24);
       for (int i=0; i<24; i++){

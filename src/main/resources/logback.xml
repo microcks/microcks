@@ -28,8 +28,8 @@
 -->
 
     <logger name="com.github.lbroudoux.microcks" level="DEBUG"/>
-    <logger name="org.mongodb" level="DEBUG"/>
-    <logger name="org.springframework.data.mongodb" level="DEBUG"/>
+    <logger name="org.mongodb" level="INFO"/>
+    <logger name="org.springframework.data.mongodb" level="INFO"/>
 
     <logger name="javax.activation" level="WARN"/>
     <logger name="javax.mail" level="WARN"/>

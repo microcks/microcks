@@ -200,8 +200,8 @@ module.exports = function (grunt) {
       html: '<%= yeoman.src %>/index.html',
       options: {
         dest: '<%= yeoman.dist %>',
-        
-        
+
+
         /* Not necessary from meanTest ?
         flow: {
           html: {

@@ -11,7 +11,10 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>1.7</java.version>
-    <spring-boot.version>1.1.10.RELEASE</spring-boot.version>
+    <junit.version>4.12</junit.version>
+    <!-- <spring-boot.version>1.1.10.RELEASE</spring-boot.version> -->
+    <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
+    <fongo.version>2.0.6</fongo.version>
     <soapui.version>5.1.1</soapui.version>
   </properties>
 
@@ -56,6 +59,12 @@
 
     <!-- Test related dependencies -->
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <version>${spring-boot.version}</version>
@@ -64,7 +73,7 @@
     <dependency>
       <groupId>com.github.fakemongo</groupId>
       <artifactId>fongo</artifactId>
-      <version>1.5.10</version>
+      <version>${fongo.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -83,6 +92,7 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
       </plugin>
     </plugins>
   </build>
@@ -148,19 +158,62 @@
             </configuration>
           </plugin>
           <plugin>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.0.1</version>
+            <executions>
+              <execution>
+                <id>copy-resources</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>copy-resources</goal>
+                </goals>
+                <configuration>
+                  <outputDirectory>target/classes/public</outputDirectory>
+                  <resources>
+                    <resource>
+                      <directory>src/main/webapp/dist</directory>
+                      <filtering>true</filtering>
+                    </resource>
+                    <resource>
+                      <directory>${basedir}</directory>
+                      <filtering>false</filtering>
+                      <includes>
+                        <include>bower_components/**</include>
+                      </includes>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring-boot.version}</version>
             <configuration>
+              <addResources>true</addResources>
+              <profiles>
+                <profile>prod</profile>
+              </profiles>
               <arguments>
                 <argument>--spring.profiles.active=prod</argument>
               </arguments>
             </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>repackage</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
       <properties>
         <!-- log configuration -->
         <logback.loglevel>INFO</logback.loglevel>
+        <!-- default Spring profiles -->
+        <spring.profiles.active>prod</spring.profiles.active>
       </properties>
     </profile>
   </profiles>

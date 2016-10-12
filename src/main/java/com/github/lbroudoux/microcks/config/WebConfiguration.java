@@ -53,7 +53,7 @@ public class WebConfiguration implements ServletContextInitializer {
       EnumSet<DispatcherType> disps = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD, DispatcherType.ASYNC);
       initCORSFilter(servletContext, disps);
       if (env.acceptsProfiles(ConfigurationConstants.PROFILE_PRODUCTION)) {
-         initStaticResourcesFilter(servletContext, disps);
+         //initStaticResourcesFilter(servletContext, disps);
       }
       log.info("Web application fully configured");
    }
@@ -67,6 +67,7 @@ public class WebConfiguration implements ServletContextInitializer {
 
    /** */
    private void initStaticResourcesFilter(ServletContext servletContext, EnumSet<DispatcherType> disps) {
+      log.debug("Registering static resources production Filter");
       FilterRegistration.Dynamic resFilter = servletContext.addFilter("staticResourcesFilter", new StaticResourcesFilter());
       resFilter.addMappingForUrlPatterns(disps, true, "/");
       resFilter.addMappingForUrlPatterns(disps, true, "/index.html");
@@ -74,6 +75,7 @@ public class WebConfiguration implements ServletContextInitializer {
       resFilter.addMappingForUrlPatterns(disps, true, "/images/*");
       resFilter.addMappingForUrlPatterns(disps, true, "/styles/*");
       resFilter.addMappingForUrlPatterns(disps, true, "/views/*");
+      resFilter.addMappingForUrlPatterns(disps, true, "/bower_components/*");
       resFilter.setAsyncSupported(true);
    }
 }

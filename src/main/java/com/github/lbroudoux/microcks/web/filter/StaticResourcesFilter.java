@@ -19,6 +19,8 @@
 package com.github.lbroudoux.microcks.web.filter;
 
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
@@ -30,6 +32,9 @@ import java.io.IOException;
  * @author laurent
  */
 public class StaticResourcesFilter implements Filter {
+
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(StaticResourcesFilter.class);
 
    @Override
    public void init(FilterConfig filterConfig) throws ServletException {
@@ -50,6 +55,7 @@ public class StaticResourcesFilter implements Filter {
          requestURI = "/index.html";
       }
       String newURI = "/dist" + requestURI;
+      log.debug("Dispatching to URI: {}", newURI);
       servletRequest.getRequestDispatcher(newURI).forward(servletRequest, servletResponse);
    }
 }
