@@ -6,11 +6,11 @@
   <div class="col-md-10">
     <div class="row">
       <div class="col-md-2" align="right">Service</div>
-      <div class="col-md-10">'{{ service.name }}'</div>
+      <div class="col-md-10"><a href="#/service/{{ service.id }}">'{{ service.name }} - {{ service.version }}'</a></div>
     </div>
     <div class="row">
       <div class="col-md-2" align="right">Test Number</div>
-      <div class="col-md-10">{{ test.testNumber }}</div>
+      <div class="col-md-10"><em>{{ test.testNumber }}</em></div>
     </div>
     <div class="row">
       <div class="col-md-2" align="right">Test Date</div>
@@ -19,6 +19,10 @@
     <div class="row">
       <div class="col-md-2" align="right">Test Endpoint</div>
       <div class="col-md-10"><code>{{ test.testedEndpoint }}</code></div>
+    </div>
+    <div class="row">
+      <div class="col-md-2" align="right">Test Results</div>
+      <div class="col-md-8"><a href="#/test/{{ test.id }}">Full results</a></div>
     </div>
   </div>
   <div class="col-md-2">
