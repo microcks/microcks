@@ -19,15 +19,16 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('ServiceController', function ($rootScope, $scope, $location, service, Service, TestsService) {
-  
+  .controller('ServiceController', ['$rootScope', '$scope', '$location', 'service', 'Service', 'TestsService',
+      function ($rootScope, $scope, $location, service, Service, TestsService) {
+
   $scope.view = service;
   $rootScope.service = $scope.view.service;
-  
+
   $scope.serviceTests = function() {
     return TestsService.listByService($scope.view.service.id, 0, 20);
   }
-  
+
   $scope.formatRequestUrl = function(operationName, dispatchCriteria) {
     var params = {};
     dispatchCriteria.split('/').forEach(function(element, index, array) {
@@ -40,5 +41,4 @@ angular.module('microcksApp')
     });
     return operationName;
   }
-});
-  
+}]);

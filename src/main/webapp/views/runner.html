@@ -1,0 +1,58 @@
+<h2 ng-init="loadTest()">Test '{{ test.id }}'</h2>
+
+<h3>Service under Test</h3>
+
+<div class="row">
+  <div class="col-md-10">
+    <div class="row">
+      <div class="col-md-2" align="right">Service</div>
+      <div class="col-md-10">'{{ service.name }}'</div>
+    </div>
+    <div class="row">
+      <div class="col-md-2" align="right">Test Number</div>
+      <div class="col-md-10">{{ test.testNumber }}</div>
+    </div>
+    <div class="row">
+      <div class="col-md-2" align="right">Test Date</div>
+      <div class="col-md-10">{{ test.testDate | date : 'short' }}</div>
+    </div>
+    <div class="row">
+      <div class="col-md-2" align="right">Test Endpoint</div>
+      <div class="col-md-10"><code>{{ test.testedEndpoint }}</code></div>
+    </div>
+  </div>
+  <div class="col-md-2">
+    <span class="badge alert-info">{{ test.runnerType }}</span> &#160;
+    <span id="status" class="badge alert-warning" ng-show="test.inProgress">In progress</span>
+    <span id="status" class="badge alert-success" ng-show="test.success">Success</span>
+    <span id="status" class="badge alert-danger" ng-show="!test.success">Failure</span>
+  </div>
+</div>
+
+<h3>Results</h3>
+
+<table class="table" ng-repeat="testCase in test.testCaseResults">
+  <tr class="{{ test.inProgress ? 'warning' : (testCase.success ? 'success' : 'error')}}">
+    <td width="50%">
+      <h4><i class="glyphicon glyphicon-cog"></i> Operation {{ testCase.operationName }}</h4>
+    </td>
+    <td>
+      <div class="pull-right text-right">
+        {{ testCase.elapsedTime }} ms.<br/>
+      </div>
+    </td>
+  </tr>
+  <tbody ng-repeat="testStep in testCase.testStepResults">
+  <tr>
+    <td>
+      <h6>{{ testStep.requestName }}</h6>
+    </td>
+    <td>
+        <span class="{{ test.inProgress ? 'alert-warning' : (testStep.success ? 'alert-success' : 'alert-error')}} pull-right">
+          <i ng-show="testStep.success" class="glyphicon glyphicon-ok-circle"></i>
+          {{ testStep.elapsedTime }} ms.
+        </span>
+    </td>
+  </tr>
+  </tbody>
+</table>

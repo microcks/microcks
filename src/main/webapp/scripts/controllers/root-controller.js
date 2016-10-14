@@ -19,11 +19,11 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('RootController', function ($rootScope, $scope, $http, $location) {
-  
+  .controller('RootController', ['$rootScope', '$scope', '$http', '$location', function ($rootScope, $scope, $http, $location) {
+
   $scope.searchTerm;
   $rootScope.isViewLoading = false;
-  
+
   $rootScope.isProcessingData = function() {
     return $http.pendingRequests.some(function(config) {
       if (config.method !== 'GET') {
@@ -46,4 +46,4 @@ angular.module('microcksApp')
   $scope.searchServices = function() {
     $location.url('services?searchTerm=' + $scope.searchTerm);
   };
-});
+}]);

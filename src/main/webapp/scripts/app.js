@@ -31,11 +31,11 @@ angular
     'ngRoute',
     'ngSanitize',
     'ui.bootstrap',
-    'cgNotify', 
+    'cgNotify',
     'hljs',
     'angularFileUpload'
   ])
-  .config(function ($routeProvider) {
+  .config(['$routeProvider', function ($routeProvider) {
     $routeProvider
       .when('/', {
         templateUrl: 'views/main.html',
@@ -49,22 +49,22 @@ angular
         templateUrl: 'views/services.html',
         controller: 'ServicesController',
         resolve: {
-          services: function ($location, Service) {
+          services: ['$location', 'Service', function ($location, Service) {
             var searchObject = $location.search();
             if (Object.keys(searchObject).indexOf('searchTerm') != -1) {
               return Service.search({name: searchObject.searchTerm});
             }
             return Service.query({size: 20});
-          }
+          }]
         }
       })
       .when('/service/:id', {
         templateUrl: 'views/service.html',
         controller: 'ServiceController',
         resolve: {
-          service: function ($route, Service) {
+          service: ['$route', 'Service', function ($route, Service) {
             return Service.get({serviceId: $route.current.params.id}).$promise;
-          }
+          }]
         }
       })
       .when('/tests/create', {
@@ -75,17 +75,21 @@ angular
         templateUrl: 'views/tests.html',
         controller: 'TestsController',
         resolve: {
-          tests: function ($route, TestsService) {
+          tests: ['$route', 'TestsService', function ($route, TestsService) {
             return TestsService.listByService($route.current.params.serviceId, 0, 20);
-          },
-          service: function ($route, Service) {
+          }],
+          service: ['$route', 'Service', function ($route, Service) {
             return Service.get({serviceId: $route.current.params.serviceId, messages: false}).$promise;
-          }
+          }]
         }
       })
       .when('/test/:id', {
         templateUrl: 'views/test.html',
         controller: 'TestController'
+      })
+      .when('/runner/:id', {
+        templateUrl: 'views/runner.html',
+        controller: 'RunnerController'
       })
       .when('/jobs', {
         templateUrl: 'views/jobs.html',
@@ -114,10 +118,10 @@ angular
       .otherwise({
         redirectTo: '/'
       });
-    })
-    .config(function (hljsServiceProvider) {
+    }])
+    .config(['hljsServiceProvider', function (hljsServiceProvider) {
       hljsServiceProvider.setOptions({
         tabReplace: '  ',
         languages: ['xml', 'json']
       });
-  });
+  }]);

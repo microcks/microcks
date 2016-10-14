@@ -19,41 +19,43 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('TestController', function ($rootScope, $scope, $location, $routeParams, notify, TestsService) {
-  
+  .controller('TestController', ['$rootScope', '$scope', '$location', '$routeParams', 'notify', 'TestsService',
+      function ($rootScope, $scope, $location, $routeParams, notify, TestsService) {
+
   $scope.service = $rootScope.service;
   $scope.test;
   $scope.testEndpoint;
   $scope.runnerType;
   $scope.testMessages = {};
-  
-  
+
+
   $scope.cancel = function() {
     $location.path('/service/' + $scope.service.id);
   }
-  
+
   $scope.createTest = function() {
-    var test = {serviceId: $scope.service.id, 
-                testEndpoint: $scope.testEndpoint, 
+    var test = {serviceId: $scope.service.id,
+                testEndpoint: $scope.testEndpoint,
                 runnerType: $scope.runnerType};
     TestsService.create(test).then(function(result) {
       notify({
         message: 'Test for "' + $scope.testEndpoint + '" has been created !',
         classes: 'alert-success'
       });
+      $location.path('/runner/' + result.id);
     });
-    $location.path('/service/' + $scope.service.id);
+    //$location.path('/service/' + $scope.service.id);
   }
-  
+
   $scope.loadTest = function() {
     TestsService.get($routeParams.id).then(function(result) {
       $scope.test = result;
     });
   }
-  
+
   $scope.loadMessages = function(operation) {
     TestsService.getMessages($scope.test, operation).then(function(result) {
       $scope.testMessages[operation] = result;
     });
   }
-});
+}]);

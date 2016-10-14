@@ -20,7 +20,7 @@
 
 var services = angular.module('microcksApp.services');
 
-services.factory('TestsService', function($http, $q) {
+services.factory('TestsService', ['$http', '$q', function($http, $q) {
   var testService = {
     listByService: function(serviceId, page, pageSize) {
       var delay = $q.defer();
@@ -31,7 +31,7 @@ services.factory('TestsService', function($http, $q) {
       return delay.promise;
     },
     get: function(id) {
-      var delay = $q.defer(); 
+      var delay = $q.defer();
       $http.get('/api/tests/' + id)
       .success(function(data) {
         delay.resolve(data);
@@ -39,7 +39,7 @@ services.factory('TestsService', function($http, $q) {
       return delay.promise;
     },
     create: function(test) {
-      var delay = $q.defer(); 
+      var delay = $q.defer();
       $http.post('/api/tests', test)
       .success(function(data) {
         delay.resolve(data);
@@ -57,4 +57,4 @@ services.factory('TestsService', function($http, $q) {
     }
   }
   return testService;
-});
+}]);

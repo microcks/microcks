@@ -19,17 +19,18 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('JobController', function ($rootScope, $scope, $modal, $location, notify, Job) {
-  
+  .controller('JobController', ['$rootScope', '$scope', '$modal', '$location', 'notify', 'Job',
+      function ($rootScope, $scope, $modal, $location, notify, Job) {
+
   $scope.page = 0;
   $scope.pageSize = 20;
-  
+
   $scope.jobsCount = 100;
-  
+
   $scope.listPage = function(page) {
-    $scope.jobs = Job.query({page: page, pageSize: $scope.pageSize}); 
+    $scope.jobs = Job.query({page: page, pageSize: $scope.pageSize});
   }
-  
+
   $scope.addJob = function(job) {
     job = new Job({name: "", repositoryUrl: ""});
     var modalInstance = show(job, 'edit-job.html');
@@ -43,7 +44,7 @@ angular.module('microcksApp')
       });
     });
   }
-  
+
   $scope.editJob = function(job) {
     var modalInstance = show(job, 'edit-job.html');
     modalInstance.result.then(function(result) {
@@ -53,7 +54,7 @@ angular.module('microcksApp')
       });
     });
   }
-  
+
   $scope.deleteJob = function(job) {
     job.$remove(function(result) {
       for (var i in $scope.jobs) {
@@ -67,7 +68,7 @@ angular.module('microcksApp')
       });
     });
   }
-  
+
   function show(job, template) {
     return $modal.open({
       templateUrl: 'views/dialogs/' + template,
@@ -79,7 +80,7 @@ angular.module('microcksApp')
       }
     });
   }
-  
+
   function modalController($scope, $modalInstance, job) {
     $scope.job = job;
     $scope.ok = function(job) {
@@ -91,4 +92,4 @@ angular.module('microcksApp')
       $modalInstance.dismiss('cancel');
     };
   }
-});
+}]);

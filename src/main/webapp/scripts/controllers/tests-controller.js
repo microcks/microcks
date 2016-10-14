@@ -19,15 +19,16 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('TestsController', function ($rootScope, $scope, tests, service, TestsService) {
-  
+  .controller('TestsController', ['$rootScope', '$scope', 'tests', 'service', 'TestsService',
+      function ($rootScope, $scope, tests, service, TestsService) {
+
   $scope.page = 0;
   $scope.pageSize = 20;
   $scope.tests = tests;
   $scope.service = service;
-  
+
   $scope.listPage = function(page) {
-    $scope.tests = TestsService.listByService(service.id, page, $scope.pageSize); 
+    $scope.tests = TestsService.listByService(service.id, page, $scope.pageSize);
   }
-  
-});
+
+}]);

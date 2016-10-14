@@ -19,19 +19,20 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('AdminController', function ($rootScope, $scope, $routeParams, notify, FileUploader, Service, InvocationsService) {
+  .controller('AdminController', ['$rootScope', '$scope', '$routeParams', 'notify', 'FileUploader', 'Service', 'InvocationsService',
+      function ($rootScope, $scope, $routeParams, notify, FileUploader, Service, InvocationsService) {
 
   $scope.day;
   $scope.hour = 0;
   $scope.serviceName = $routeParams.serviceName;
   $scope.serviceVersion = $routeParams.serviceVersion;
-  
+
   $scope.invocationStats = null;
   $scope.selectedServices = { ids: {} };
   $scope.uploader = new FileUploader( {
     url: '/api/import'
   });
-  
+
   $scope.getAllServices = function() {
     $scope.services = Service.query();
     $scope.services.$promise.then(function(result) {
@@ -39,53 +40,53 @@ angular.module('microcksApp')
       $scope.secondHalfServices = $scope.services.slice($scope.halfServices.length);
     })
   };
-  
+
   $scope.openDatePicker = function($event) {
     $event.preventDefault();
     $event.stopPropagation();
     $scope.pickerOpened = true;
   };
-  
+
   $scope.updateInvocationStats = function() {
     $scope.getInvocationStats($scope.day);
     $scope.getTopInvocations($scope.day);
   }
-  
+
   $scope.getInvocationStats = function(day) {
     InvocationsService.getInvocationStats($scope.service, $scope.version, day).then(function(result) {
       $scope.invocationStats = result;
-    }); 
+    });
   }
-  
+
   $scope.getTopInvocations = function(day) {
     InvocationsService.getTopInvocations(day).then(function(result) {
       $scope.topInvocations = result;
-    }) 
+    })
   }
-  
+
   $scope.updateServiceInvocationStats = function() {
     $scope.getServiceInvocationStats($scope.day);
   }
-  
+
   $scope.getServiceInvocationStats = function(day) {
     InvocationsService.getInvocationStats(day).then(function(result) {
-      $scope.invocationStats = result  
+      $scope.invocationStats = result
     });
   }
-  
+
   $scope.updateOperationDelay = function(service, operation) {
     var data = { operationName: operation.name, delay: operation.defaultDelay };
     service.$updateOperationDelay(data);
   }
-  
+
   $scope.export = function() {
     var downloadPath = '/api/export?';
     Object.keys($scope.selectedServices.ids).forEach(function(element, index, array) {
       downloadPath += '&serviceIds=' + element;
     });
-    window.open(downloadPath, '_blank', ''); 
+    window.open(downloadPath, '_blank', '');
   }
-  
+
   $scope.import = function() {
     var fileName = $scope.uploader.queue[0].file.name;
     $scope.uploader.queue[0].upload();
@@ -95,4 +96,4 @@ angular.module('microcksApp')
     });
     $scope.uploader.queue = [];
   }
-});
+}]);

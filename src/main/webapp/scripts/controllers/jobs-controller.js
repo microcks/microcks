@@ -19,7 +19,8 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('JobsController', function ($rootScope, $scope, $modal, $location, notify, Job) {
+  .controller('JobsController', ['$rootScope', '$scope', '$modal', '$location', 'notify', 'Job',
+      function ($rootScope, $scope, $modal, $location, notify, Job) {
 
   $scope.page = 1;
   $scope.pageSize = 20;
@@ -102,7 +103,8 @@ angular.module('microcksApp')
   function show(job, template) {
     return $modal.open({
       templateUrl: 'views/dialogs/' + template,
-      controller: modalController,
+      //controller: modalController,
+      controller: 'JobsModalController',
       resolve: {
         job: function () {
           return job;
@@ -111,6 +113,7 @@ angular.module('microcksApp')
     });
   }
 
+  /*
   function modalController($scope, $modalInstance, job) {
     $scope.job = job;
     $scope.ok = function(job) {
@@ -122,4 +125,19 @@ angular.module('microcksApp')
       $modalInstance.dismiss('cancel');
     };
   }
-});
+  */
+}]);
+
+angular.module('microcksApp')
+  .controller('JobsModalController', ['$scope', '$modalInstance', 'job', function ($scope, $modalInstance, job) {
+
+    $scope.job = job;
+    $scope.ok = function(job) {
+      $modalInstance.close({
+        job: job
+      });
+    };
+    $scope.cancel = function() {
+      $modalInstance.dismiss('cancel');
+    };
+  }]);

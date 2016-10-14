@@ -20,7 +20,7 @@
 
 var services = angular.module('microcksApp.services');
 
-services.factory('Job', function($resource) {
+services.factory('Job', ['$resource', function($resource) {
   //var rootUrl = 'http://localhost:8080';
   return $resource('/api/jobs/:jobId', {jobId: '@id'}, {
             activate: {method: 'PUT', url: '/api/jobs/:jobId/activate'},
@@ -28,4 +28,4 @@ services.factory('Job', function($resource) {
             stop: {method: 'PUT', url: '/api/jobs/:jobId/stop'},
             count: {method: 'GET', url: '/api/jobs/count'}
   });
-});
+}]);

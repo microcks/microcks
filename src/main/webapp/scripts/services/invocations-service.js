@@ -20,7 +20,7 @@
 
 var services = angular.module('microcksApp.services');
 
-services.factory('InvocationsService', function($http, $q) {
+services.factory('InvocationsService', ['$http', '$q', function($http, $q) {
   var invocationService = {
     getInvocationStats: function(day) {
       var delay = $q.defer();
@@ -51,4 +51,4 @@ services.factory('InvocationsService', function($http, $q) {
     }
   }
   return invocationService;
-});
+}]);

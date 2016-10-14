@@ -90,9 +90,9 @@ public class TestService {
    @Async
    private Future<TestResult> launchTests(TestResult testResult, Service service, TestRunnerType runnerType){
       // Found next build number for this test.
-      List<TestResult> older = testResultRepository.findByServiceId(service.getId(), new PageRequest(0, 2, Sort.Direction.ASC, "testNumber"));
+      List<TestResult> older = testResultRepository.findByServiceId(service.getId(), new PageRequest(0, 2, Sort.Direction.DESC, "testNumber"));
       if (older != null && !older.isEmpty() && older.get(0).getTestNumber() != null){
-         testResult.setTestNumber(older.get(0).getTestNumber() + 1);
+         testResult.setTestNumber(older.get(0).getTestNumber() + 1L);
       } else {
          testResult.setTestNumber(1L);
       }
