@@ -25,7 +25,8 @@ services.factory('InvocationsService', ['$http', '$q', function($http, $q) {
     getInvocationStats: function(day) {
       var delay = $q.defer();
       var url = '/api/invocations/global';
-      if (day) url += '?day=' + day.toLocaleFormat('%Y%m%d'); // 20150326;
+      if (day) url += '?day=' + formatDayDate(day); // day.toLocaleFormat('%Y%m%d'); // 20150326;
+      console.log('URL: ' + url);
       $http.get(url).success(function(data) {
         delay.resolve(data)
       });
@@ -34,7 +35,8 @@ services.factory('InvocationsService', ['$http', '$q', function($http, $q) {
     getTopInvocations: function(day) {
       var delay = $q.defer();
       var url = '/api/invocations/top';
-      if (day) url += '?day=' + day.toLocaleFormat('%Y%m%d'); // 20150326;
+      if (day) url += '?day=' + formatDayDate(day); // day.toLocaleFormat('%Y%m%d'); // 20150326;
+      console.log('URL: ' + url);
       $http.get(url).success(function(data) {
         delay.resolve(data)
       });
@@ -42,8 +44,8 @@ services.factory('InvocationsService', ['$http', '$q', function($http, $q) {
     },
     getServiceInvocationStats: function(service, version, day) {
       var delay = $q.defer();
-      var url = '/api/invocations/' + service + "/" + version;
-      if (day) url += '?day=' + day.toLocaleFormat('%Y%m%d'); // 20150326;
+      var url = '/api/invocations/' + service + '/' + version + '/';
+      if (day) url += '?day=' + formatDayDate(day); // day.toLocaleFormat('%Y%m%d'); // 20150326;
       $http.get(url).success(function(data) {
         delay.resolve(data)
       });
@@ -52,3 +54,10 @@ services.factory('InvocationsService', ['$http', '$q', function($http, $q) {
   }
   return invocationService;
 }]);
+
+function formatDayDate(day) {
+  var result = day.getFullYear().toString();
+  result += day.getMonth() < 9 ? '0' + (day.getMonth()+1).toString() : (day.getMonth()+1).toString();
+  result += day.getDate() < 10 ? '0' + day.getDate().toString() : day.getDate().toString();
+  return result;
+}

@@ -25,8 +25,7 @@ angular.module('microcksApp')
   $scope.service = $rootScope.service;
   $scope.testStepResults = {};
 
-  var stop = true;
-  var stopTime = $interval(function() {
+  var stop = $interval(function() {
     TestsService.get($routeParams.id).then(function(result) {
       $scope.test = result;
       if (!$scope.test.inProgress) {

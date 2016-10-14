@@ -50,34 +50,38 @@ angular.module('microcksApp')
   $scope.updateInvocationStats = function() {
     $scope.getInvocationStats($scope.day);
     $scope.getTopInvocations($scope.day);
-  }
+  };
 
   $scope.getInvocationStats = function(day) {
-    InvocationsService.getInvocationStats($scope.service, $scope.version, day).then(function(result) {
+    InvocationsService.getInvocationStats(day).then(function(result) {
       $scope.invocationStats = result;
     });
-  }
+  };
 
   $scope.getTopInvocations = function(day) {
     InvocationsService.getTopInvocations(day).then(function(result) {
       $scope.topInvocations = result;
     })
-  }
+  };
 
   $scope.updateServiceInvocationStats = function() {
     $scope.getServiceInvocationStats($scope.day);
-  }
+  };
 
   $scope.getServiceInvocationStats = function(day) {
-    InvocationsService.getInvocationStats(day).then(function(result) {
+    console.log('$scope.service: ' + $scope.service);
+    console.log('$scope.serviceName: ' + $scope.serviceName);
+    console.log('day: ' + day);
+    console.log('$scope.day: ' + $scope.day);
+    InvocationsService.getServiceInvocationStats($scope.serviceName, $scope.serviceVersion, day).then(function(result) {
       $scope.invocationStats = result
     });
-  }
+  };
 
   $scope.updateOperationDelay = function(service, operation) {
     var data = { operationName: operation.name, delay: operation.defaultDelay };
     service.$updateOperationDelay(data);
-  }
+  };
 
   $scope.export = function() {
     var downloadPath = '/api/export?';
@@ -85,7 +89,7 @@ angular.module('microcksApp')
       downloadPath += '&serviceIds=' + element;
     });
     window.open(downloadPath, '_blank', '');
-  }
+  };
 
   $scope.import = function() {
     var fileName = $scope.uploader.queue[0].file.name;
@@ -95,5 +99,5 @@ angular.module('microcksApp')
       classes: 'alert-success'
     });
     $scope.uploader.queue = [];
-  }
+  };
 }]);

@@ -26,7 +26,9 @@
       </div>
       <div class="row">
         <div class="col-sm-2" align="right">Statistics</div>
-        <div class="col-sm-7"><a href="#/admin/invocations/{{ view.service.name }}/{{ view.service.version }}">Invocations</a></div>
+        <div class="col-sm-7">
+          <a href="#/admin/invocations/{{ view.service.name }}/{{ view.service.version }}">Invocations <i class="glyphicon glyphicon-signal"></i></a>
+        </div>
       </div>
     </div>
     <div class="col-md-4 pull-right text-right">
@@ -42,10 +44,10 @@
 
 <section id="operations">
   <h3>Operations</h3>
-  
+
   <div ng-repeat="operation in view.service.operations">
     <h4><i class="glyphicon glyphicon-cog"></i> Operation {{ operation.name }}</h4>
-    
+
     <div class="row" ng-show="{{ view.service.type == 'SOAP_HTTP' }}">
       <div class="col-sm-3" align="right">Input Name</div>
       <div class="col-sm-9"><code>{{ operation.inputName }}</code></div>
