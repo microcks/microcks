@@ -69,13 +69,17 @@ angular.module('microcksApp')
   };
 
   $scope.getServiceInvocationStats = function(day) {
-    console.log('$scope.service: ' + $scope.service);
-    console.log('$scope.serviceName: ' + $scope.serviceName);
-    console.log('day: ' + day);
-    console.log('$scope.day: ' + $scope.day);
     InvocationsService.getServiceInvocationStats($scope.serviceName, $scope.serviceVersion, day).then(function(result) {
       $scope.invocationStats = result
     });
+  };
+
+  $scope.expandCollapseServices = function() {
+    if ($('#expcol').is(':checked')) {
+      $('.panel .collapse').collapse('show');
+    } else {
+      $('.panel .collapse').collapse('hide');
+    }
   };
 
   $scope.updateOperationDelay = function(service, operation) {
