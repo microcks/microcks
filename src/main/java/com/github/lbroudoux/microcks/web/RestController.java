@@ -29,6 +29,7 @@ import com.github.lbroudoux.microcks.util.DispatchCriteriaHelper;
 import com.github.lbroudoux.microcks.util.DispatchStyles;
 import com.github.lbroudoux.microcks.util.IdBuilder;
 import com.github.lbroudoux.microcks.util.soapui.SoapUIScriptEngineBinder;
+import org.apache.http.protocol.HTTP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +78,7 @@ public class RestController {
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
          @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody String body,
+         @RequestBody(required=false) String body,
          HttpServletRequest request
       ) {
 
@@ -143,59 +144,62 @@ public class RestController {
             response = responses.get(0);
          }
 
-         // Setting delay to default one if not set.
-         if (delay == null && rOperation.getDefaultDelay() != null) {
-            delay = rOperation.getDefaultDelay();
-         }
+         if (response != null) {
+            // Setting delay to default one if not set.
+            if (delay == null && rOperation.getDefaultDelay() != null) {
+               delay = rOperation.getDefaultDelay();
+            }
 
-         if (delay != null && delay > -1) {
-            log.debug("Mock delay is turned on, waiting if necessary...");
-            long duration = System.currentTimeMillis() - startTime;
-            if (duration < delay) {
-               Object semaphore = new Object();
-               synchronized (semaphore) {
-                  try {
-                     semaphore.wait(delay - duration);
-                  } catch (Exception e) {
-                     log.debug("Delay semaphore was interrupted");
+            if (delay != null && delay > -1) {
+               log.debug("Mock delay is turned on, waiting if necessary...");
+               long duration = System.currentTimeMillis() - startTime;
+               if (duration < delay) {
+                  Object semaphore = new Object();
+                  synchronized (semaphore) {
+                     try {
+                        semaphore.wait(delay - duration);
+                     } catch (Exception e) {
+                        log.debug("Delay semaphore was interrupted");
+                     }
+                  }
+                }
+                log.debug("Delay now expired, releasing response !");
+            }
+
+            // Publish an invocation event before returning.
+            MockInvocationEvent event = new MockInvocationEvent(this, service.getName(), version,
+               response.getName(), new Date(startTime), startTime - System.currentTimeMillis());
+            applicationContext.publishEvent(event);
+            log.debug("Mock invocation event has been published");
+
+            HttpStatus status = (response.getStatus() != null ?
+                HttpStatus.valueOf(Integer.parseInt(response.getStatus())) : HttpStatus.OK);
+
+            // Deal with specific headers (content-type and redirect directive).
+            HttpHeaders responseHeaders = new HttpHeaders();
+            if (response.getMediaType() != null) {
+               responseHeaders.setContentType(MediaType.valueOf(response.getMediaType() + ";charset=UTF-8"));
+            }
+
+            // Adding other generic headers (caching directives and so on...)
+            if (response.getHeaders() != null) {
+               for (Header header : response.getHeaders()) {
+                  if ("Location".equals(header.getName())) {
+                     // We should process location in order to make relative URI specified an absolute one from
+                     // the client perspective.
+                     String location = "http://" + request.getServerName() + ":" + request.getServerPort()
+                        + request.getContextPath() + "/rest"
+                        + serviceAndVersion + header.getValues().iterator().next();
+                     responseHeaders.add(header.getName(), location);
+                  } else {
+                     responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
                   }
                }
             }
-            log.debug("Delay now expired, releasing response !");
+            return new ResponseEntity<Object>(response.getContent(), responseHeaders, status);
          }
-
-         // Publish an invocation event before returning.
-         MockInvocationEvent event = new MockInvocationEvent(this, service.getName(), version,
-               response.getName(), new Date(startTime), startTime - System.currentTimeMillis());
-         applicationContext.publishEvent(event);
-         log.debug("Mock invocation event has been published");
-
-         HttpStatus status = (response.getStatus() != null ?
-               HttpStatus.valueOf(Integer.parseInt(response.getStatus())) : HttpStatus.OK);
-
-         // Deal with specific headers (content-type and redirect directive).
-         HttpHeaders responseHeaders = new HttpHeaders();
-         if (response.getMediaType() != null){
-            responseHeaders.setContentType(MediaType.valueOf(response.getMediaType() + ";charset=UTF-8"));
-         }
-
-         // Adding other generic headers (caching directives and so on...)
-         for (Header header : response.getHeaders()){
-            if ("Location".equals(header.getName())){
-               // We should process location in order to make relative URI specified an absolute one from
-               // the client perspective.
-               String location = "http://" + request.getServerName() + ":" + request.getServerPort()
-                     + request.getContextPath() + "/rest"
-                     + serviceAndVersion + header.getValues().iterator().next();
-               responseHeaders.add(header.getName(), location);
-            } else {
-               responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
-            }
-         }
-
-         return new ResponseEntity<Object>(response.getContent(), responseHeaders, status);
+         return new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
       }
-
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
    }
 }
