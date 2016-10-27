@@ -1,0 +1,68 @@
+{
+  "swagger":"2.0",
+  "info":{
+    "description":"This is a sample Hello API",
+    "version":"0.9",
+    "title":"Hello API",
+    "termsOfService":"http://swagger.io/terms/",
+    "contact":{
+      "email":"lbroudoux@github.io"
+    },
+    "license":{
+      "name":"Apache 2.0",
+      "url":"http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host":"api.example.com",
+  "basePath":"/v1",
+  "tags":[
+    {
+      "name":"hello",
+      "description":"Simple Hello World sample"
+    },
+    {
+      "name":"sample",
+      "description":"Simple Hello World sample"
+    }
+  ],
+  "schemes":["http"],
+  "paths":{
+    "/hello":{
+      "get":{
+        "tags":["hello"],
+        "summary":"Get a new greeting message",
+        "description":"Get a new greeting message",
+        "operationId":"getGreeting",
+        "produces":["application/xml","application/json"],
+        "parameters":[
+          {
+            "name":"name",
+            "in":"query",
+            "description":"Name of people to greet",
+            "required":true,
+            "type":"string"
+          }
+        ],
+        "responses":{
+          "200":{
+            "description":"successful operation",
+            "schema":{"$ref":"#/definitions/ApiResponse"}
+          },
+          "405":{
+            "description":"Invalid input"
+          }
+        }
+      }
+    }
+  },
+  "definitions":{
+    "ApiResponse":{
+      "type":"object",
+      "properties":{
+        "name":{"type":"string"},
+        "greeting":{"type":"string"}
+      }
+    }
+  },
+  "externalDocs":{"description":"Find out more about Swagger","url":"http://swagger.io"}
+}

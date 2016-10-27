@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <hel:sayHelloResponse>
+         <sayHello>Hello Karla !</sayHello>
+      </hel:sayHelloResponse>
+   </soapenv:Body>
+</soapenv:Envelope>
