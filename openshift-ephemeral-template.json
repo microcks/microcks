@@ -240,7 +240,7 @@
                   },
                   {
                     "name": "SPRING_DATA_MONGODB_URI",
-                    "value": "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${DATABASE_SERVICE_NAME}:27017"
+                    "value": "mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${DATABASE_SERVICE_NAME}:27017/${SPRING_DATA_MONGODB_DATABASE}"
                   },
                   {
                     "name": "SPRING_DATA_MONGODB_DATABASE",
