@@ -1,0 +1,263 @@
+/*
+ * Licensed to Laurent Broudoux (the "Author") under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. Author licenses this
+ * file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+package com.github.lbroudoux.microcks.util.postman;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.lbroudoux.microcks.domain.*;
+import com.github.lbroudoux.microcks.util.DispatchCriteriaHelper;
+import com.github.lbroudoux.microcks.util.DispatchStyles;
+import com.github.lbroudoux.microcks.util.MockRepositoryImportException;
+import com.github.lbroudoux.microcks.util.MockRepositoryImporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.*;
+
+/**
+ * Implement of MockRepositoryImporter that uses a Postman collection for building
+ * domain objects.
+ */
+public class PostmanCollectionImporter implements MockRepositoryImporter {
+
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(PostmanCollectionImporter.class);
+
+   /** Postman collection property that references service version property. */
+   public static final String SERVICE_VERSION_PROPERTY = "version";
+
+   private JsonNode collection;
+
+   /**
+    * Build a new importer.
+    * @param collectionFilePath The path to local SoapUI project file
+    * @throws IOException if project file cannot be found or read.
+    */
+   public PostmanCollectionImporter(String collectionFilePath) throws IOException {
+      try {
+         // Read Json bytes.
+         byte[] jsonBytes = Files.readAllBytes(Paths.get(collectionFilePath));
+         // Convert them to Node using Jackson object mapper.
+         ObjectMapper mapper = new ObjectMapper();
+         collection = mapper.readTree(jsonBytes);
+      } catch (Exception e) {
+         throw new IOException("Postman collection file");
+      }
+   }
+
+   @Override
+   public List<Service> getServiceDefinitions() {
+      List<Service> result = new ArrayList<>();
+
+      // Build a new service.
+      Service service = new Service();
+      service.setName(collection.path("info").path("name").asText());
+      service.setType(ServiceType.REST);
+
+      // Then build its operations.
+      service.setOperations(extractOperations());
+
+      result.add(service);
+      return result;
+   }
+
+   @Override
+   public List<Resource> getResourceDefinitions(Service service) {
+      List<Resource> results = new ArrayList<>();
+      // Non-sense on Postman collection. Just return empty result.
+      return results;
+   }
+
+   @Override
+   public Map<Request, Response> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+      Map<Request, Response> result = new HashMap<Request, Response>();
+
+      Iterator<JsonNode> items = collection.path("item").elements();
+      while (items.hasNext()) {
+         JsonNode item = items.next();
+         String method = item.path("request").path("method").asText();
+         String url = item.path("request").path("url").asText();
+         String resourcePath = extractResourcePath(url);
+
+         // Select item based onto operation Http verb (GET, POST, PUT, etc ...)
+         if (operation.getMethod().equals(method)) {
+            // ... then check is we have a matching resource path.
+            if (operation.getResourcePaths().contains(resourcePath)) {
+               JsonNode requestNode = item.path("request");
+               JsonNode responseNode = item.path("response").get(0);
+
+               String dispatchCriteria = null;
+
+               if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
+               } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getName(), resourcePath);
+               } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getName(), resourcePath);
+                  dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
+               }
+
+               Request request = buildRequest(requestNode, item.path("name").asText());
+               Response response = buildResponse(responseNode, dispatchCriteria);
+               result.put(request, response);
+            }
+         }
+      }
+      return result;
+   }
+
+   private Request buildRequest(JsonNode requestNode, String name) {
+      Request request = new Request();
+      request.setName(name);
+      request.setHeaders(buildHeaders(requestNode.path("header")));
+      return request;
+   }
+
+   private Response buildResponse(JsonNode responseNode, String dispatchCriteria) {
+      Response response = new Response();
+      response.setName(responseNode.path("name").asText());
+      response.setStatus(responseNode.path("code").asText());
+      response.setHeaders(buildHeaders(responseNode.path("header")));
+      if (response.getHeaders() != null) {
+         for (Header header : response.getHeaders()) {
+            if (header.getName().equalsIgnoreCase("Content-Type")) {
+               response.setMediaType(header.getValues().toArray(new String[]{})[0]);
+            }
+         }
+      }
+      response.setContent(responseNode.path("body").asText());
+      response.setDispatchCriteria(dispatchCriteria);
+      return response;
+   }
+
+   private Set<Header> buildHeaders(JsonNode headerNode) {
+      if (headerNode == null || headerNode.size() == 0) {
+         return null;
+      }
+
+      // Prepare and map the set of headers.
+      Set<Header> headers = new HashSet<>();
+      Iterator<JsonNode> items = headerNode.elements();
+      while (items.hasNext()) {
+         JsonNode item = items.next();
+         Header header = new Header();
+         header.setName(item.path("key").asText());
+         Set<String> values = new HashSet<>();
+         values.add(item.path("value").asText());
+         header.setValues(values);
+         headers.add(header);
+      }
+      return headers;
+   }
+
+   /**
+    * Extract the list of operations from Collection.
+    */
+   private List<Operation> extractOperations() {
+      // Items corresponding to same operations may be defined multiple times in Postman
+      // with different names and resource path. We have to track them to complete them in second step.
+      Map<String, Operation> collectedOperations = new HashMap<String, Operation>();
+
+      Iterator<JsonNode> items = collection.path("item").elements();
+      while (items.hasNext()) {
+         JsonNode item = items.next();
+         String itemName = item.path("name").asText();
+         // findByStatus (status=available) => findByStatus
+         String operationName = itemName.substring(0, itemName.indexOf(' '));
+
+         Operation operation = collectedOperations.get(operationName);
+         String url = item.path("request").path("url").asText();
+
+         if (operation == null) {
+            // Build a new operation.
+            operation = new Operation();
+            operation.setName(operationName);
+
+            // Complete with REST specific fields.
+            operation.setMethod(item.path("request").path("method").asText());
+
+            // Deal with dispatcher stuffs.
+            if (urlHasParameters(url)) {
+               operation.setDispatcherRules(DispatchCriteriaHelper.extractParamsFromURI(url));
+               operation.setDispatcher(DispatchStyles.URI_PARAMS);
+            }
+         }
+
+         // Extract resource path from complete URL found in collection.
+         String resourcePath = extractResourcePath(url);
+         operation.addResourcePath(resourcePath);
+         collectedOperations.put(operationName, operation);
+      }
+
+      // Check operations: if we got multiple resource paths for an Operation, we should
+      // extracts the variable parts of the path and update dispatch criteria accordingly.
+      // We can also update the operation name so that it reflects the resource path
+      for (Operation operation : collectedOperations.values()) {
+         if (operation.getResourcePaths().size() > 1) {
+            String partsCriteria = DispatchCriteriaHelper.extractPartsFromURIs(operation.getResourcePaths());
+
+            if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
+               operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
+               operation.setDispatcherRules(partsCriteria + " ?? " + operation.getDispatcherRules());
+            } else {
+               operation.setDispatcher(DispatchStyles.URI_PARTS);
+               operation.setDispatcherRules(partsCriteria);
+            }
+
+            // Replace operation name by templatized url.
+            int numOfParts = partsCriteria.split("&&").length;
+            String templatizedName = DispatchCriteriaHelper.extractCommonPrefix(operation.getResourcePaths());
+            for (int i=1; i<numOfParts+1; i++) {
+               templatizedName += "/{part" + i + "}";
+            }
+            operation.setName(templatizedName);
+         } else {
+            operation.setName(operation.getResourcePaths().get(0));
+         }
+      }
+
+      return new ArrayList<>(collectedOperations.values());
+   }
+
+   /**
+    * Extract a resource path from a complete url.
+    * https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available => /v2/pet/findByStatus
+    */
+   private String extractResourcePath(String url) {
+      String result = url;
+      if (result.startsWith("https://") || result.startsWith("http://")) {
+         result = result.substring("https://".length());
+      }
+      // Remove host and port specification.
+      result = result.substring(result.indexOf('/'));
+      // Remove trailing parameters.
+      if (result.indexOf('?') != -1) {
+         result = result.substring(0, result.indexOf('?'));
+      }
+      return result;
+   }
+
+   /** Check parameters presence into given url. */
+   private static boolean urlHasParameters(String url) {
+      return url.indexOf('?') != -1 && url.indexOf('=') != -1;
+   }
+}

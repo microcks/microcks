@@ -30,6 +30,15 @@ public class DispatchStyles{
    /** Constant for SCRIPT dispatch style. */
    public static final String SCRIPT = "SCRIPT";
    
-   /** Constant for SEQUENCE dispacth style. */
+   /** Constant for SEQUENCE dispatch style. */
    public static final String SEQUENCE = "SEQUENCE";
+
+   /** Constant for URI_PARAMS dispatch style. */
+   public static final String URI_PARAMS = "URI_PARAMS";
+
+   /** Constant for URI_PARTS dispatch style. */
+   public static final String URI_PARTS = "URI_PARTS";
+
+   /** Constant for URI_ELEMENTS dispatch style (PARTS and PARAMS). */
+   public static final String URI_ELEMENTS = "URI_ELEMENTS";
 }
