@@ -48,6 +48,7 @@ import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * A controller for mocking Soap responses.
@@ -73,16 +74,15 @@ public class SoapController {
    private final String resourceUrl = null;
 
 
-   @RequestMapping(value = "/{service}/{version}/{operation}", method = RequestMethod.POST)
+   @RequestMapping(value = "/{service}/{version}", method = RequestMethod.POST)
    public ResponseEntity<?> execute(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
-         @PathVariable("operation") String operationName,
          @RequestParam(value="validate", required=false) Boolean validate,
          @RequestParam(value="delay", required=false) Long delay,
          @RequestBody String body
       ) {
-      log.info("Servicing mock response for service [{}, {}] on operation {}", serviceName, version, operationName);
+      log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: " + body);
 
       long startTime = System.currentTimeMillis();
@@ -91,7 +91,13 @@ public class SoapController {
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
       for (Operation operation : service.getOperations()) {
-         if (operationName.equals(operation.getName())){
+         // Enhancement : try getting operation from soap:body directly!
+         String openingPattern = "(.*):Body>(\\s*)<(\\w+):" + operation.getInputName() + ">(.*)";
+         String closingPattern = "(.*)</(\\w+):" + operation.getInputName() + ">(\\s*)</(\\w+):Body>(.*)";
+         Pattern op = Pattern.compile(openingPattern, Pattern.DOTALL);
+         Pattern cp = Pattern.compile(closingPattern, Pattern.DOTALL);
+
+         if (op.matcher(body).matches() && cp.matcher(body).matches()) {
             rOperation = operation;
             break;
          }
