@@ -21,11 +21,49 @@ package com.github.lbroudoux.microcks.util;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Pattern;
+
 /**
  * This is a test case for DispatchCriteriaHelper class.
  * @author laurent
  */
 public class DispatchCriteriaHelperTest {
+
+   @Test
+   public void testExtractParamsFromURI(){
+      // Check with parameters.
+      String requestPath = "/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available";
+
+      // Dispatch string params are sorted.
+      String dispatchCriteria = DispatchCriteriaHelper.extractParamsFromURI(requestPath);
+      assertEquals("user_key && status", dispatchCriteria);
+   }
+
+   @Test
+   public void testExtractPartsFromURIs() {
+      // Prepare a bunch of uri paths.
+      List<String> resourcePaths = new ArrayList<>();
+      resourcePaths.add("/v2/pet/findByDate/2017");
+      resourcePaths.add("/v2/pet/findByDate/2016/12");
+      resourcePaths.add("/v2/pet/findByDate/2016/12/20");
+
+      // Dispatch parts in natural order.
+      // Should be deduced to something like "/v2/pet/findByDate/{part1}/{part2}/{part3}"
+      String dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIs(resourcePaths);
+      assertEquals("part1 && part2 && part3", dispatchCriteria);
+   }
+
+   @Test
+   public void testExtractPartsFromURIPattern(){
+      // Check with single URI pattern.
+      String operationName = "/deployment/byComponent/{component}/{version}";
+
+      String dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIPattern(operationName);
+      assertEquals("component && version", dispatchCriteria);
+   }
 
    @Test
    public void testExtractFromURIPattern(){
@@ -58,5 +96,19 @@ public class DispatchCriteriaHelperTest {
       // Dispatch string parts are sorted.
       String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
       assertEquals("/component=myComp/version=1.2", dispatchCriteria);
+   }
+
+   @Test
+   public void testExtractFromURIParams(){
+      // Check with parameters in no particular order.
+      String requestPath = "/v2/pet/findByDate/2017/01/04?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available";
+
+      // Only 1 parameter should be taken into account according to rules.
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams("user_key", requestPath);
+      assertEquals("?user_key=998bac0775b1d5f588e0a6ca7c11b852", dispatchCriteria);
+
+      // 2 parameters should be considered and sorted according to rules.
+      dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams("user_key && status", requestPath);
+      assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", dispatchCriteria);
    }
 }

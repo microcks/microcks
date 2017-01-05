@@ -18,15 +18,16 @@
  */
 package com.github.lbroudoux.microcks.util;
 
+import com.github.lbroudoux.microcks.util.postman.PostmanCollectionImporter;
 import com.github.lbroudoux.microcks.util.soapui.SoapUIProjectImporter;
 
 import java.io.File;
 import java.io.IOException;
 
 /**
- * Factory for building/retieving mock repository importer implementations
- * (just a place holder for now, cause only SoapUI is supported at time
- * of writing)
+ * Factory for building/retieving mock repository importer implementations. For now, it implements
+ * a very simple algorithm : if repository is a JSON file, it assume repository it implemented as a Postman
+ * collection and then uses PostmanCollectionImporter; otherwise it uses SoapUIProjectImporter.
  * @author laurent
  */
 public class MockRepositoryImporterFactory {
@@ -38,6 +39,11 @@ public class MockRepositoryImporterFactory {
     * @throws IOException
     */
    public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository) throws IOException {
+      // Postman will deal with .json collection files.
+      if (mockRepository.getName().endsWith(".json")) {
+         return new PostmanCollectionImporter(mockRepository.getPath());
+      }
+      // Else default to SoapUI importer.
       return new SoapUIProjectImporter(mockRepository.getPath());
    }
 }
