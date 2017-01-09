@@ -30,12 +30,28 @@
         <span class="label label-default" ng-show="{{ !job.lastImportDate }}">Inactive</span>
         <span class="label label-success" ng-show="{{ job.active }}">Scanned</span>
         <span class="label label-primary" ng-show="{{ !job.active }}">Not scanned</span>
-        <a data-toggle="tooltip" data-title="{{ job.lastImportError }}" ng-show="{{ job.lastImportError }}">
+        <a href="#" tooltip="{{ job.lastImportError }}" ng-show="{{ job.lastImportError }}">
           <span class="label label-danger">Import error</span>
         </a>
-        <a data-toggle="tooltip" data-title="Hello" ng-show="{{ job.serviceRefs }}">
+        <a ng-click="openServices(job.serviceRefs)" ng-show="{{ job.serviceRefs }}">
           <span class="label label-warning">Services</span>
         </a>
+
+        <script type="text/ng-template" id="services-modal.html">
+          <div class="modal-header">
+            <h3 class="modal-title" id="modal-title">Services</h3>
+          </div>
+          <div class="modal-body" id="modal-body">
+            <ul>
+              <li ng-repeat="service in services">
+                <a ng-href="#/service/{{ service.serviceId }}">{{ service.name }} - {{ service.version }}</a>
+              </li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-primary" type="button" ng-click="cancel()">OK</button>
+          </div>
+        </script>
       </td>
       <td>
         <div class="btn-group pull-right">

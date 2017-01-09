@@ -46,6 +46,19 @@ angular.module('microcksApp')
     }
   });
 
+  $scope.openServices = function(serviceRefs) {
+    var modalInstance = $modal.open({
+      templateUrl: 'services-modal.html',
+      controller: 'ServicesModalController',
+      resolve: {
+        services: function() {
+          return serviceRefs;
+        }
+      }
+    });
+    modalInstance.result.then(function(result) {});
+  }
+
   $scope.addJob = function(job) {
     job = new Job({name: "", repositoryUrl: ""});
     var modalInstance = show(job, 'edit-job.html');
@@ -127,6 +140,15 @@ angular.module('microcksApp')
   }
   */
 }]);
+
+angular.module('microcksApp')
+  .controller('ServicesModalController', ['$scope', '$modalInstance', 'services', function ($scope, $modalInstance, services) {
+
+    $scope.services = services;
+    $scope.cancel = function() {
+      $modalInstance.dismiss('cancel');
+    };
+  }]);
 
 angular.module('microcksApp')
   .controller('JobsModalController', ['$scope', '$modalInstance', 'job', function ($scope, $modalInstance, job) {
