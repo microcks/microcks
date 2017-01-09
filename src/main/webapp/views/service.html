@@ -41,7 +41,7 @@
     </div>
   </div>
 </section>
-
+<br/>
 <section id="operations">
   <h3>Operations</h3>
 
@@ -80,7 +80,7 @@
     <div class="row">
       <div class="col-sm-3" align="right">Mocks URL</div>
       <div class="col-sm-9">
-        <code ng-show="{{ view.service.type == 'SOAP_HTTP' }}">/soap/{{ view.service.name }}/{{ view.service.version }}/{{ operation.name }}</code>
+        <code ng-show="{{ view.service.type == 'SOAP_HTTP' }}">/soap/{{ view.service.name }}/{{ view.service.version }}/</code>
         <code ng-show="{{ view.service.type == 'REST' }}">/rest/{{ view.service.name }}/{{ view.service.version }}{{ operation.name }}</code>
       </div>
     </div>

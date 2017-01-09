@@ -82,8 +82,10 @@ rect:hover {
 /* Base style for code and bootstrap badges */
 pre, code {
   background: #f9f2f4;
+  /*
   font-size: 12pt;
   font-family: Ubuntu Mono, monospace;
+  */
 }
 span.alert-info {
   color: #e1bee7;
