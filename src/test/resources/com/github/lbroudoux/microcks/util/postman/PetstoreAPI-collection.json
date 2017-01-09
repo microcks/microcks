@@ -3,7 +3,7 @@
   "info": {
     "name": "Petstore API",
     "_postman_id": "b70174e2-0525-8fcd-da9b-578f9dd9cfb4",
-    "description": "",
+    "description": "version=1.0 - This is a PetStore API description",
     "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
   },
   "item": [

@@ -50,6 +50,8 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Petstore API", service.getName());
+      assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);

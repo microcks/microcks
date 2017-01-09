@@ -73,6 +73,20 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       service.setName(collection.path("info").path("name").asText());
       service.setType(ServiceType.REST);
 
+      String version = null;
+      String description = collection.path("info").path("description").asText();
+      if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
+         description = description.substring(description.indexOf(SERVICE_VERSION_PROPERTY + "="));
+         description = description.substring(0, description.indexOf(' '));
+         if (description.split("=").length > 1) {
+            version = description.split("=")[1];
+         }
+      }
+      if (version == null){
+         // TODO Throw a typed exception here...
+      }
+      service.setVersion(version);
+
       // Then build its operations.
       service.setOperations(extractOperations());
 
