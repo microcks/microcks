@@ -69,8 +69,8 @@ angular.module('microcksApp.directives', [])
           //var div = angular.element('<div id="'+attrs.chart+'"></div>');
           //element.prepend(div);
           
-          var vis = d3.select('#'+attrs.chart).selectAll("div").data(chartData);
-          vis.enter().append("div").attr("class", function(d) {
+          var vis = d3.select('#'+attrs.chart).selectAll('div').data(chartData);
+          vis.enter().append('div').attr('class', function(d) {
               if (d.success === true) {
                 return "bar bar-success tooltipaware";
               } else {
@@ -79,15 +79,15 @@ angular.module('microcksApp.directives', [])
             });
           vis.exit().remove();
 
-          vis.style("height", function(d) {
+          vis.style('height', function(d) {
               if (d.elapsedTime == 0){
                 d.elapsedTime = 1;
               }
               var h = d.elapsedTime * baseHeight / maxval;
-              return h + "px";
-          }).style("width", function(d) {
+              return h + 'px';
+          }).style('width', function(d) {
               var w = baseWidth / chartData.length;
-              return w + "px";
+              return w + 'px';
           }).attr('data-placement', 'left').attr('title', function(d) {
               return "[" + d.testDate.toISOString() + "] : " + d.elapsedTime + " ms";
           }).on('click', function(d) {
@@ -98,9 +98,7 @@ angular.module('microcksApp.directives', [])
     };
   })
   .directive('dayInvocationsBarChart', function() {
-    var tip = d3.tip().attr('class', 'd3-tip')
-        .html(function(d) { return '<span>' + d.total + '</span>' + ' invocations' })
-        .offset([-12, 0]);
+    var tip = d3.tip().attr('class', 'd3-tip').html(function(d) { return '<span>' + d.total + '</span>' + ' invocations' }).offset([-12, 0]);
     
     var width = 460, height = 300,
         padt = 20, padr = 20, padb = 60, padl = 30,
@@ -142,9 +140,9 @@ angular.module('microcksApp.directives', [])
           hourlyData  = $.map(hourlyData, function(d, i) { return {'total': d.value} })
           
           vis.call(tip);
-          vis.append("g").attr("class", "y axis").call(yAxis);
+          vis.append('g').attr('class', 'y axis').call(yAxis);
     
-          vis.append("g").attr("class", "x axis")
+          vis.append('g').attr('class', 'x axis')
             .attr('transform', 'translate(0,' + height + ')').call(xAxis)
               .selectAll('.x.axis g')
                 .style('display', function (d, i) { return i % 3 != 0 ? 'none' : 'block' });
@@ -221,9 +219,9 @@ angular.module('microcksApp.directives', [])
           y.domain([0, max]);
           
           vis.call(tip);
-          vis.append("g").attr("class", "y axis").call(yAxis);
+          vis.append('g').attr('class', 'y axis').call(yAxis);
     
-          vis.append("g").attr("class", "x axis")
+          vis.append('g').attr('class', "x axis")
             .attr('transform', 'translate(0,' + height + ')').call(xAxis)
               .selectAll('.x.axis g')
                 .style('display', function (d, i) { return i % 3 != 0 ? 'none' : 'block' });
