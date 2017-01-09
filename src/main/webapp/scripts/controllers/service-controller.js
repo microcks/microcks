@@ -30,15 +30,25 @@ angular.module('microcksApp')
   }
 
   $scope.formatRequestUrl = function(operationName, dispatchCriteria) {
+    var parts = {};
     var params = {};
-    dispatchCriteria.split('/').forEach(function(element, index, array) {
+    var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
+    var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
+    partsCriteria.split('/').forEach(function(element, index, array) {
       if (element){
-        params[element.split('=')[0]] = element.split('=')[1];
+        parts[element.split('=')[0]] = element.split('=')[1];
       }
     });
     operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
-      return params[p1];
+      return parts[p1];
     });
+    if (paramsCriteria != null) {
+      operationName += '?' + paramsCriteria.replace('?', '&');
+    }
     return operationName;
+  }
+
+  $scope.encodeUrl = function(url) {
+    return url.replace(' ', '%20');
   }
 }]);

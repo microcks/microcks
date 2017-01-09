@@ -80,8 +80,8 @@
     <div class="row">
       <div class="col-sm-3" align="right">Mocks URL</div>
       <div class="col-sm-9">
-        <code ng-show="{{ view.service.type == 'SOAP_HTTP' }}">/soap/{{ view.service.name }}/{{ view.service.version }}/</code>
-        <code ng-show="{{ view.service.type == 'REST' }}">/rest/{{ view.service.name }}/{{ view.service.version }}{{ operation.name }}</code>
+        <code ng-show="{{ view.service.type == 'SOAP_HTTP' }}">/soap/{{encodeUrl(view.service.name)}}/{{ view.service.version }}/</code>
+        <code ng-show="{{ view.service.type == 'REST' }}">/rest/{{encodeUrl(view.service.name)}}/{{ view.service.version }}{{ operation.name }}</code>
       </div>
     </div>
     <div class="row">
@@ -94,7 +94,16 @@
         <div class="row">
           <div class="col-md-6">
             <span ng-show="{{ view.service.type == 'REST' && operation.dispatcher == 'SEQUENCE'}}">
-              <code><small>{{operation.method}} /rest/{{ view.service.name }}/{{ view.service.version }}{{formatRequestUrl(operation.name, pair.response.dispatchCriteria)}}</small></code>
+              <code><small>{{operation.method}} /rest/{{encodeUrl(view.service.name)}}/{{ view.service.version }}{{formatRequestUrl(operation.name, pair.response.dispatchCriteria)}}</small></code>
+            </span>
+            <span ng-show="{{ view.service.type == 'REST' && operation.dispatcher == 'URI_PARAMS'}}">
+              <code><small>{{operation.method}} /rest/{{encoreUrl(view.service.name)}}/{{ view.service.version }}{{formatRequestUrl(operation.name, pair.response.dispatchCriteria)}}</small></code>
+            </span>
+            <span ng-show="{{ view.service.type == 'REST' && operation.dispatcher == 'URI_PARTS'}}">
+              <code><small>{{operation.method}} /rest/{{encodeUrl(view.service.name)}}/{{ view.service.version }}{{formatRequestUrl(operation.name, pair.response.dispatchCriteria)}}</small></code>
+            </span>
+            <span ng-show="{{ view.service.type == 'REST' && operation.dispatcher == 'URI_ELEMENTS'}}">
+              <code><small>{{operation.method}} /rest/{{encodeUrl(view.service.name)}}/{{ view.service.version }}{{formatRequestUrl(operation.name, pair.response.dispatchCriteria)}}</small></code>
             </span>
             <div hljs no-escape source="pair.request.content"></div>
             <table class="table table-condensed" width="100%" ng-show="pair.request.headers">
