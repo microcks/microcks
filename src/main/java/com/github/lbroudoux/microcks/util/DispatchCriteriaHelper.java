@@ -194,7 +194,6 @@ public class DispatchCriteriaHelper{
 
       if (uri.contains("?") && uri.contains("=")) {
          String parameters = uri.substring(uri.indexOf("?") + 1);
-         StringBuilder params = new StringBuilder();
 
          for (String parameter : parameters.split("&")){
             String[] pair = parameter.split("=");

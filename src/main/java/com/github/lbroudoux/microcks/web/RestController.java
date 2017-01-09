@@ -136,6 +136,19 @@ public class RestController {
                log.error("Error during Script evaluation", e);
             }
          }
+         // New cases related to services/operations/messages coming from a postman collection file.
+         else if (DispatchStyles.URI_PARAMS.equals(rOperation.getDispatcher())){
+            String fullURI = request.getRequestURL() + "?" + request.getQueryString();
+            dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
+         }
+         else if (DispatchStyles.URI_PARTS.equals(rOperation.getDispatcher())){
+            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rOperation.getName(), resourcePath);
+         }
+         else if (DispatchStyles.URI_ELEMENTS.equals(rOperation.getDispatcher())){
+            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rOperation.getName(), resourcePath);
+            String fullURI = request.getRequestURL() + "?" + request.getQueryString();
+            dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
+         }
 
          log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
