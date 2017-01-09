@@ -57,7 +57,7 @@ public class JobService {
       job.setServiceRefs(null);
       List<Service> services = null;
       try {
-         serviceService.importServiceDefinition(job.getRepositoryUrl());
+         services = serviceService.importServiceDefinition(job.getRepositoryUrl());
       } catch (MockRepositoryImportException mrie) {
          log.warn("MockRepositoryImportException while importing job '{}' : {}", job.getName(), mrie.getMessage());
          job.setLastImportError(mrie.getMessage());
