@@ -33,14 +33,15 @@ import com.eviware.soapui.model.testsuite.TestStepResult.TestStepStatus;
 import com.eviware.soapui.model.testsuite.TestSuite;
 import com.eviware.soapui.support.types.StringToObjectMap;
 import com.eviware.soapui.support.types.StringToStringsMap;
-import com.github.lbroudoux.microcks.domain.Header;
-import com.github.lbroudoux.microcks.domain.Request;
-import com.github.lbroudoux.microcks.domain.Response;
+import com.github.lbroudoux.microcks.domain.*;
+import com.github.lbroudoux.microcks.util.test.AbstractTestRunner;
 import com.github.lbroudoux.microcks.util.test.TestReturn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +55,7 @@ import java.util.Set;
  * For now, this class only runs SoapUI test steps corresponding to Request Test Steps (either SOAP, REST or HTTP).
  * @author laurent
  */
-public class SoapUITestStepsRunner{
+public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(SoapUITestStepsRunner.class);
@@ -73,7 +74,17 @@ public class SoapUITestStepsRunner{
          throw new IOException("SoapUI project file cannot be found or accessed");
       }
    }
-   
+
+   @Override
+   public List<TestReturn> runTest(Service service, Operation operation, List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
+      return runAllTestSteps(endpointUrl);
+   }
+
+   @Override
+   public HttpMethod buildMethod(String method) {
+      return null;
+   }
+
    /**
     * Run all the test steps defined into the SoapUI project.
     * @param endpointUrl The URL of the endpoint to use for request test steps.

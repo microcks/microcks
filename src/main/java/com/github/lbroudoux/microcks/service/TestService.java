@@ -19,16 +19,21 @@
 package com.github.lbroudoux.microcks.service;
 
 import com.github.lbroudoux.microcks.domain.*;
+import com.github.lbroudoux.microcks.repository.ImportJobRepository;
 import com.github.lbroudoux.microcks.repository.RequestRepository;
 import com.github.lbroudoux.microcks.repository.ResponseRepository;
 import com.github.lbroudoux.microcks.repository.TestResultRepository;
 import com.github.lbroudoux.microcks.util.IdBuilder;
+import com.github.lbroudoux.microcks.util.UsernamePasswordAuthenticator;
+import com.github.lbroudoux.microcks.util.soapui.SoapUITestStepsRunner;
 import com.github.lbroudoux.microcks.util.test.AbstractTestRunner;
 import com.github.lbroudoux.microcks.util.test.HttpTestRunner;
+import com.github.lbroudoux.microcks.util.test.SoapHttpTestRunner;
 import com.github.lbroudoux.microcks.util.test.TestReturn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpMethod;
@@ -36,7 +41,13 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.AsyncResult;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.Authenticator;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -59,6 +70,16 @@ public class TestService {
 
    @Autowired
    private TestResultRepository testResultRepository;
+
+   @Autowired
+   private ImportJobRepository jobRepository;
+
+   @Value("${network.username}")
+   private final String username = null;
+
+   @Value("${network.password}")
+   private final String password = null;
+
 
    /**
     *
@@ -108,7 +129,7 @@ public class TestService {
          requests = cloneRequestsForTestCase(requests, testCaseId);
 
          List<TestReturn> results = new ArrayList<TestReturn>();
-         AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType);
+         AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, service.getId());
          try {
             HttpMethod method = testRunner.buildMethod(operation.getMethod());
             results = testRunner.runTest(service, operation, requests, testResult.getTestedEndpoint(), method);
@@ -199,7 +220,7 @@ public class TestService {
    }
 
    /** Retrieve correct test runner according given type. */
-   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType){
+   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, String serviceId){
       // TODO: remove this ugly initialization later.
       SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
       factory.setConnectTimeout(200);
@@ -207,11 +228,49 @@ public class TestService {
 
       switch (runnerType){
          case SOAP_HTTP:
+            SoapHttpTestRunner soapRunner = new SoapHttpTestRunner();
+            soapRunner.setClientHttpRequestFactory(factory);
+            return soapRunner;
          case SOAP_UI:
+            // Handle local download of correct project file.
+            List<ImportJob> jobs = jobRepository.findByServiceRefId(serviceId);
+            if (jobs != null && !jobs.isEmpty()) {
+               try {
+                  String projectFile = handleRemoteFileDownload(jobs.get(0).getRepositoryUrl());
+                  SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(projectFile);
+                  return soapUIRunner;
+               } catch (IOException ioe) {
+                  log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
+               }
+            }
          default:
-            HttpTestRunner runner = new HttpTestRunner();
-            runner.setClientHttpRequestFactory(factory);
-            return runner;
+            HttpTestRunner httpRunner = new HttpTestRunner();
+            httpRunner.setClientHttpRequestFactory(factory);
+            return httpRunner;
       }
+   }
+
+   /** Download a remote HTTP URL into a temporary local file. */
+   private String handleRemoteFileDownload(String remoteUrl) throws IOException {
+      // Build remote Url and local file.
+      URL website = new URL(remoteUrl);
+      String localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis() + ".project";
+      // Set authenticator instance.
+      Authenticator.setDefault(new UsernamePasswordAuthenticator(username, password));
+      ReadableByteChannel rbc = null;
+      FileOutputStream fos = null;
+      try {
+         rbc = Channels.newChannel(website.openStream());
+         // Transfer file to local.
+         fos = new FileOutputStream(localFile);
+         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+      }
+      finally {
+         if (fos != null)
+            fos.close();
+         if (rbc != null)
+            rbc.close();
+      }
+      return localFile;
    }
 }
