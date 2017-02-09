@@ -1,0 +1,225 @@
+{
+  "variables": [],
+  "info": {
+    "name": "Petstore API",
+    "_postman_id": "b70174e2-0525-8fcd-da9b-578f9dd9cfb4",
+    "description": "version=1.0 - This is a PetStore API description",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "findByStatus available",
+      "request": {
+        "url": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available",
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": []
+        },
+        "description": ""
+      },
+      "response": [
+        {
+          "id": "20be7555-3661-4ee4-9e94-0384867a12d1",
+          "name": "available response",
+          "originalRequest": {
+            "url": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=70f735676ec46351c6699c4bb767878a&status=available",
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "_postman_previewtype": "text",
+          "header": [
+            {
+              "name": "Access-Control-Allow-Headers",
+              "key": "Access-Control-Allow-Headers",
+              "value": "Content-Type, api_key, Authorization",
+              "description": "Used in response to a preflight request to indicate which HTTP headers can be used when making the actual request."
+            },
+            {
+              "name": "Access-Control-Allow-Methods",
+              "key": "Access-Control-Allow-Methods",
+              "value": "GET, POST, DELETE, PUT",
+              "description": "Specifies the method or methods allowed when accessing the resource. This is used in response to a preflight request."
+            },
+            {
+              "name": "Access-Control-Allow-Origin",
+              "key": "Access-Control-Allow-Origin",
+              "value": "*",
+              "description": "Specifies a URI that may access the resource. For requests without credentials, the server may specify '*' as a wildcard, thereby allowing any origin to access the resource."
+            },
+            {
+              "name": "Connection",
+              "key": "Connection",
+              "value": "keep-alive",
+              "description": "Options that are desired for the connection"
+            },
+            {
+              "name": "Content-Type",
+              "key": "Content-Type",
+              "value": "application/json",
+              "description": "The mime type of this content"
+            },
+            {
+              "name": "Date",
+              "key": "Date",
+              "value": "Wed, 07 Dec 2016 15:31:45 GMT",
+              "description": "The date and time that the message was sent"
+            },
+            {
+              "name": "Server",
+              "key": "Server",
+              "value": "openresty/1.9.15.1",
+              "description": "A name for the server"
+            },
+            {
+              "name": "X-Powered-By",
+              "key": "X-Powered-By",
+              "value": "3scale API Management - http://www.3scale.net",
+              "description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+            },
+            {
+              "name": "transfer-encoding",
+              "key": "transfer-encoding",
+              "value": "chunked",
+              "description": "The form of encoding used to safely transfer the entity to the user. Currently defined methods are: chunked, compress, deflate, gzip, identity."
+            }
+          ],
+          "cookie": [],
+          "responseTime": 1466,
+          "body": "[{\"id\":190192062,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192063,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192285,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192654,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192671,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192727,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192736,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192768,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192878,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190192907,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":190193000,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"},{\"id\":-98125093,\"category\":{\"id\":-517488397,\"name\":\"EJvNbK\"},\"name\":\"LuEfMZATrHz\",\"photoUrls\":[\"XCXOVVkaxa\",\"gNwYqHEmC\",\"nvCvphDeuqztysUBNed\",\"W\",\"vmrxRIViyXqumolLIeoB\",\"JRqHVxk\",\"tCUGbegVHoXajm\",\"UiHppQn\"],\"tags\":[{\"id\":727599428,\"name\":\"RemggEDzxPljbrlktdWf\"},{\"id\":1987753751,\"name\":\"zWqdKAGHMmhPPlomljaNtuvm\"},{\"id\":1251632392,\"name\":\"BAgtgtKOxZGdsS\"},{\"id\":-1813025208,\"name\":\"OkKxtfAkCMEICbbQDVPi\"},{\"id\":-730110346,\"name\":\"WshDF\"},{\"id\":2100951153,\"name\":\"yxUFSknQEleIAQCoocl\"},{\"id\":-2135188117,\"name\":\"M\"},{\"id\":1352243140,\"name\":\"koKHsjysHXW\"},{\"id\":1696778814,\"name\":\"KaihiyarcZkIzkkquWPZ\"},{\"id\":659492963,\"name\":\"xqIzulcBPzWMyUpQwQK\"},{\"id\":-2118372841,\"name\":\"naYFGuHmqDqOpfHH\"}],\"status\":\"available\"},{\"id\":8739826599258110549,\"category\":{\"id\":0,\"name\":\"string\"},\"name\":\"doggie\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":0,\"name\":\"string\"}],\"status\":\"available\"}]"
+        }
+      ]
+    },
+    {
+      "name": "findById 2",
+      "request": {
+        "url": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/2?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": []
+        },
+        "description": ""
+      },
+      "response": [
+        {
+          "id": "010df50f-46a4-4bc3-9ef1-42b4faf84179",
+          "name": "2 response",
+          "originalRequest": {
+            "url": "https://petstore-api-2445581593402.staging.apicast.io:443/v2/pet/2?user_key=70f735676ec46351c6699c4bb767878a",
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "_postman_previewtype": "text",
+          "header": [
+            {
+              "name": "Access-Control-Allow-Headers",
+              "key": "Access-Control-Allow-Headers",
+              "value": "Content-Type, api_key, Authorization",
+              "description": "Used in response to a preflight request to indicate which HTTP headers can be used when making the actual request."
+            },
+            {
+              "name": "Access-Control-Allow-Methods",
+              "key": "Access-Control-Allow-Methods",
+              "value": "GET, POST, DELETE, PUT",
+              "description": "Specifies the method or methods allowed when accessing the resource. This is used in response to a preflight request."
+            },
+            {
+              "name": "Access-Control-Allow-Origin",
+              "key": "Access-Control-Allow-Origin",
+              "value": "*",
+              "description": "Specifies a URI that may access the resource. For requests without credentials, the server may specify '*' as a wildcard, thereby allowing any origin to access the resource."
+            },
+            {
+              "name": "Connection",
+              "key": "Connection",
+              "value": "keep-alive",
+              "description": "Options that are desired for the connection"
+            },
+            {
+              "name": "Content-Length",
+              "key": "Content-Length",
+              "value": "137",
+              "description": "The length of the response body in octets (8-bit bytes)"
+            },
+            {
+              "name": "Content-Type",
+              "key": "Content-Type",
+              "value": "application/json",
+              "description": "The mime type of this content"
+            },
+            {
+              "name": "Date",
+              "key": "Date",
+              "value": "Wed, 07 Dec 2016 15:27:18 GMT",
+              "description": "The date and time that the message was sent"
+            },
+            {
+              "name": "Server",
+              "key": "Server",
+              "value": "openresty/1.9.7.4",
+              "description": "A name for the server"
+            },
+            {
+              "name": "X-Powered-By",
+              "key": "X-Powered-By",
+              "value": "3scale API Management - http://www.3scale.net",
+              "description": "Specifies the technology (ASP.NET, PHP, JBoss, e.g.) supporting the web application (version details are often in X-Runtime, X-Version, or X-AspNet-Version)"
+            }
+          ],
+          "cookie": [],
+          "responseTime": 233,
+          "body": "{\"id\":2,\"category\":{\"id\":1,\"name\":\"Animal\"},\"name\":\"cat\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":1,\"name\":\"domestic\"}],\"status\":\"available\"}"
+        }
+      ]
+    },
+    {
+      "name": "findById 1 (404)",
+      "request": {
+        "url": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/1?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+        "method": "GET",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": []
+        },
+        "description": ""
+      },
+      "response": [
+        {
+          "id": "010df50f-46a4-4bc3-9ef1-42b4faf84180",
+          "name": "1 response",
+          "originalRequest": {
+            "url": "https://petstore-api-2445581593402.staging.apicast.io:443/v2/pet/1?user_key=70f735676ec46351c6699c4bb767878a",
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": []
+            }
+          },
+          "status": "Not Found",
+          "code": 404,
+          "_postman_previewlanguage": "json",
+          "_postman_previewtype": "text"
+        }
+      ]
+    }
+  ]
+}
