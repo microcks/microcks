@@ -11,7 +11,7 @@
       "tags": "instant-app"
     },
     "labels": {},
-    "name": "microcks"
+    "name": "microcks-persistent"
   },
   "parameters": [
     {
@@ -178,6 +178,27 @@
       }
     },
     {
+      "kind": "Route",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APP_NAME}",
+        "labels": {
+          "component": "${APP_NAME}",
+          "project": "${APP_NAME}",
+          "group": "microcks"
+        }
+      },
+      "spec": {
+        "to": {
+          "kind": "Service",
+          "name": "${APP_NAME}"
+        },
+        "port": {
+          "targetPort": "spring"
+        }
+      }
+    },
+    {
       "kind": "DeploymentConfig",
       "apiVersion": "v1",
       "metadata": {
@@ -261,11 +282,11 @@
                 },
                 "livenessProbe": {
                   "httpGet": {
-                    "path": "/",
+                    "path": "/api/jobs",
                     "port": 8080,
                     "scheme": "HTTP"
                   },
-                  "initialDelaySeconds": 120,
+                  "initialDelaySeconds": 15,
                   "timeoutSeconds": 3,
                   "periodSeconds": 10,
                   "successThreshold": 1,
@@ -273,7 +294,7 @@
                 },
                 "readinessProbe": {
                   "httpGet": {
-                    "path": "/",
+                    "path": "/api/jobs",
                     "port": 8080,
                     "scheme": "HTTP"
                   },
@@ -298,7 +319,7 @@
       "kind": "DeploymentConfig",
       "apiVersion": "v1",
       "metadata": {
-        "name": "mongodb",
+        "name": "${APP_NAME}-mongodb",
         "labels": {
           "container": "mongodb",
           "component": "${APP_NAME}",
