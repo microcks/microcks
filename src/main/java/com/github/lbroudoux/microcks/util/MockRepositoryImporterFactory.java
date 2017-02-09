@@ -54,6 +54,9 @@ public class MockRepositoryImporterFactory {
          if (line.startsWith("{") || line.startsWith("[")) {
             importer  = new PostmanCollectionImporter(mockRepository.getPath());
             break;
+         } else if (line.startsWith("<?xml")) {
+            importer = new SoapUIProjectImporter(mockRepository.getPath());
+            break;
          }
       }
       reader.close();
