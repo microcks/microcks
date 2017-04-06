@@ -29,7 +29,7 @@ import com.github.lbroudoux.microcks.util.DispatchCriteriaHelper;
 import com.github.lbroudoux.microcks.util.DispatchStyles;
 import com.github.lbroudoux.microcks.util.IdBuilder;
 import com.github.lbroudoux.microcks.util.soapui.SoapUIScriptEngineBinder;
-import org.apache.http.protocol.HTTP;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -205,7 +205,9 @@ public class RestController {
                         + serviceAndVersion + header.getValues().iterator().next();
                      responseHeaders.add(header.getName(), location);
                   } else {
-                     responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
+                     if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
+                        responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
+                     }
                   }
                }
             }
