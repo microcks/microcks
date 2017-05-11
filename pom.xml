@@ -175,13 +175,13 @@
                   <resources>
                     <resource>
                       <directory>src/main/webapp/dist</directory>
-                      <filtering>true</filtering>
+                      <filtering>false</filtering>
                     </resource>
                     <resource>
                       <directory>${basedir}</directory>
                       <filtering>false</filtering>
                       <includes>
-                        <include>bower_components/**</include>
+                        <include>bower_components/bootstrap/**</include>
                       </includes>
                     </resource>
                   </resources>
