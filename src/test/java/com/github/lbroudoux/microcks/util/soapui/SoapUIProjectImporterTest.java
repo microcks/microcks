@@ -8,6 +8,8 @@ import com.github.lbroudoux.microcks.domain.ResourceType;
 import com.github.lbroudoux.microcks.domain.Response;
 import com.github.lbroudoux.microcks.domain.Service;
 import com.github.lbroudoux.microcks.domain.Operation;
+import com.github.lbroudoux.microcks.util.MockRepositoryImporter;
+import com.github.lbroudoux.microcks.util.MockRepositoryImporterFactory;
 import org.junit.Test;
 
 import java.util.List;
@@ -280,5 +282,20 @@ public class SoapUIProjectImporterTest {
          }
          
       }
+   }
+
+   @Test
+   public void testHelloAPIProjectImport() {
+      MockRepositoryImporter importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(
+               new java.io.File("target/test-classes/com/github/lbroudoux/microcks/util/soapui/HelloAPI-soapui-project.xml"));
+      } catch (Exception e) {
+         e.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties are there.
+      List<Service> services = importer.getServiceDefinitions();
+      assertEquals(1, services.size());
    }
 }
