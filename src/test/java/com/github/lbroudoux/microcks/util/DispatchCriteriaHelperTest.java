@@ -43,7 +43,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractPartsFromURIs() {
+   public void testExtractPartsFromURIs(){
       // Prepare a bunch of uri paths.
       List<String> resourcePaths = new ArrayList<>();
       resourcePaths.add("/v2/pet/findByDate/2017");
@@ -54,6 +54,15 @@ public class DispatchCriteriaHelperTest {
       // Should be deduced to something like "/v2/pet/findByDate/{part1}/{part2}/{part3}"
       String dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIs(resourcePaths);
       assertEquals("part1 && part2 && part3", dispatchCriteria);
+
+      // 2nd case: variable part is not terminating.
+      resourcePaths = new ArrayList<>();
+      resourcePaths.add("/v2/pet/1/tattoos");
+      resourcePaths.add("/v2/pet/23/tattoos");
+
+      // Should be deduced to something like "/v2/pet/{part1}/tattoos"
+      dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIs(resourcePaths);
+      assertEquals("part1", dispatchCriteria);
    }
 
    @Test

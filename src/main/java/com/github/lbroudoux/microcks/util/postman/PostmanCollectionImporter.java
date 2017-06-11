@@ -247,6 +247,13 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             }
          }
       }
+      // For V1 Collection, if no Content-Type header but response expressed as a language,
+      // assume it is its content-type.
+      if (!isV2Collection && response.getMediaType() == null) {
+         if ("json".equals(responseNode.path("language").asText())) {
+            response.setMediaType("application/json");
+         }
+      }
       response.setContent(responseNode.path("body").asText());
       response.setDispatchCriteria(dispatchCriteria);
       return response;
@@ -388,8 +395,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             // Replace operation name by templatized url.
             int numOfParts = partsCriteria.split("&&").length;
             String templatizedName = DispatchCriteriaHelper.extractCommonPrefix(operation.getResourcePaths());
+            String commonSuffix = DispatchCriteriaHelper.extractCommonSuffix(operation.getResourcePaths());
             for (int i=1; i<numOfParts+1; i++) {
                templatizedName += "/{part" + i + "}";
+            }
+            if (commonSuffix != null) {
+               templatizedName += commonSuffix;
             }
             operation.setName(templatizedName);
          } else {

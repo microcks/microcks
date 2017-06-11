@@ -75,8 +75,34 @@ public class DispatchCriteriaHelper{
                   uris.get(i).charAt(prefixLen) != c ) {
                // Mismatch found.
                String commonString = uris.get(i).substring(0, prefixLen);
-               commonURIPath = commonString.substring(0, commonString.lastIndexOf('/'));
-               break;
+               return commonString.substring(0, commonString.lastIndexOf('/'));
+            }
+         }
+      }
+      return commonURIPath;
+   }
+
+   /**
+    * Extract the common suffix between a set of URIs
+    * @param uris A set of URIs that are expected to share a common suffix
+    * @return A string representing the common suffix of given URIs
+    */
+   public static String extractCommonSuffix(List<String> uris){
+      String commonURIPath = null;
+
+      // 1st pass on collection: find a common suffix.
+      for (int suffixLen = 0;  suffixLen < uris.get(0).length(); suffixLen++) {
+         char c = uris.get(0).charAt(uris.get(0).length() - suffixLen - 1);
+         for (int i = 1; i < uris.size(); i++) {
+            if ( suffixLen >= uris.get(i).length() ||
+                  uris.get(i).charAt(uris.get(i).length() - suffixLen - 1) != c ) {
+               // Mismatch found. Have we found at least one common char ?
+               if (suffixLen > 0) {
+                  String commonString = uris.get(i).substring(uris.get(i).length() - suffixLen - 1);
+                  return commonString.substring(commonString.indexOf('/'));
+               } else {
+                  return null;
+               }
             }
          }
       }
@@ -86,7 +112,7 @@ public class DispatchCriteriaHelper{
    /**
     * Extract from given URIs a dispatching rule representing the number of variable parts
     * in this different URIs. For example, given 'http://s/r/f//d/m/s' and 'http://s/r/f/d', method
-    * will detect 2 variable parts ('m' and 's'). Because it does not anything about the semantics of this
+    * will detect 2 variable parts ('m' and 's'). Because it does know anything about the semantics of this
     * parts, it produces a generic dispatch rule 'part1 && part2' telling that URIs can be templatized
     * like 'http://s/r/f/d/{part1}/{part2} and that this 2 parts should be taken into account when
     * disoatching request to response.
@@ -97,10 +123,16 @@ public class DispatchCriteriaHelper{
       // 1st pass on collection: find a common prefix.
       String commonURIPath = extractCommonPrefix(uris);
 
-      // 2nd pass on collection: guess the max number of part.
+      // 2nd pass on collection: find a comming suffix.
+      String commonURIEnd = extractCommonSuffix(uris);
+
+      // 3rd pass on collection: guess the max number of part.
       int partsLen = 0;
       for (String uri : uris) {
          String parts = uri.substring(commonURIPath.length() + 1);
+         if (commonURIEnd != null) {
+            parts = parts.substring(0, parts.lastIndexOf(commonURIEnd));
+         }
          int numOfParts = parts.split("/").length;
          if (numOfParts > partsLen) {
             partsLen = numOfParts;
