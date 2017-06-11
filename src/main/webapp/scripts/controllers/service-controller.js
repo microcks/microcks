@@ -49,6 +49,6 @@ angular.module('microcksApp')
   }
 
   $scope.encodeUrl = function(url) {
-    return url.replace(' ', '%20');
+    return url.replace(/\s/g, '%20');
   }
 }]);
