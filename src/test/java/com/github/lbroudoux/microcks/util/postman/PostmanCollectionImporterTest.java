@@ -27,9 +27,7 @@ import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * This is a test case for class PostmanCollectionImporter.
@@ -220,6 +218,130 @@ public class PostmanCollectionImporterTest {
                   fail("Unknown request name: " + request.getName());
                }
             }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   @Test
+   public void testOpenBankAPIImport() {
+      PostmanCollectionImporter importer = null;
+      try {
+         importer = new PostmanCollectionImporter("target/test-classes/com/github/lbroudoux/microcks/util/postman/OpenBankAPI.postman_collection.json");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties are there.
+      List<Service> services = importer.getServiceDefinitions();
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Random Open Bank Project API", service.getName());
+      assertEquals(ServiceType.REST, service.getType());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+
+      // Check that operations and and input/output have been found.
+      assertEquals(3, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("/banks/random/accounts/{part1}/account".equals(operation.getName())) {
+            // assertions for account.
+            assertEquals("GET", operation.getMethod());
+            assertEquals(2, operation.getResourcePaths().size());
+            assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+            assertTrue("/banks/random/accounts/123/account".equals(operation.getResourcePaths().get(0))
+                  || "/banks/random/accounts/456/account".equals(operation.getResourcePaths().get(0)));
+            assertTrue("/banks/random/accounts/123/account".equals(operation.getResourcePaths().get(1))
+                  || "/banks/random/accounts/456/account".equals(operation.getResourcePaths().get(1)));
+
+            // Check that messages have been correctly found.
+            Map<Request, Response> messages = null;
+            try{
+               messages = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e){
+               e.printStackTrace();
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(2, messages.size());
+            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
+               Request request = entry.getKey();
+               Response response = entry.getValue();
+               assertNotNull(request);
+               assertNotNull(response);
+               if ("GetAccountById (Full - 123)".equals(request.getName())) {
+                  assertEquals("123 response", response.getName());
+                  assertNull(response.getHeaders());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertEquals("/part1=123", response.getDispatchCriteria());
+                  assertNotNull(response.getContent());
+               } else if ("GetAccountById (Full - 456)".equals(request.getName())) {
+                  assertEquals("404", response.getStatus());
+                  assertEquals("/part1=456", response.getDispatchCriteria());
+               } else {
+                  fail("Unknown request name: " + request.getName());
+               }
+            }
+         }
+         else if ("/banks/random/accounts/{part1}/transactions".equals(operation.getName())) {
+            // assertions for transactions.
+            assertEquals("GET", operation.getMethod());
+            assertEquals(2, operation.getResourcePaths().size());
+            assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+            assertTrue("/banks/random/accounts/123/transactions".equals(operation.getResourcePaths().get(0))
+                  || "/banks/random/accounts/456/transactions".equals(operation.getResourcePaths().get(0)));
+            assertTrue("/banks/random/accounts/123/transactions".equals(operation.getResourcePaths().get(1))
+                  || "/banks/random/accounts/456/transactions".equals(operation.getResourcePaths().get(1)));
+
+            // Check that messages have been correctly found.
+            Map<Request, Response> messages = null;
+            try{
+               messages = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e){
+               e.printStackTrace();
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(2, messages.size());
+            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
+               Request request = entry.getKey();
+               Response response = entry.getValue();
+               assertNotNull(request);
+               assertNotNull(response);
+               if ("GetTransactionsForAccount (123)".equals(request.getName())) {
+                  assertEquals("123 response", response.getName());
+                  assertNull(response.getHeaders());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertEquals("/part1=123", response.getDispatchCriteria());
+                  assertNotNull(response.getContent());
+               } else if ("GetTransactionsForAccount (456)".equals(request.getName())) {
+                  assertEquals("404", response.getStatus());
+                  assertEquals("/part1=456", response.getDispatchCriteria());
+               } else {
+                  fail("Unknown request name: " + request.getName());
+               }
+            }
+         }
+         else if ("/banks/random/accounts/{part1}/transaction-request-types/SEPA/transaction-requests".equals(operation.getName())) {
+            // assertions for transactions.
+            assertEquals("POST", operation.getMethod());
+            assertEquals(2, operation.getResourcePaths().size());
+            assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+            assertTrue("/banks/random/accounts/123/transaction-request-types/SEPA/transaction-requests".equals(operation.getResourcePaths().get(0))
+                  || "/banks/random/accounts/456/transaction-request-types/SEPA/transaction-requests".equals(operation.getResourcePaths().get(0)));
+            assertTrue("/banks/random/accounts/123/transaction-request-types/SEPA/transaction-requests".equals(operation.getResourcePaths().get(1))
+                  || "/banks/random/accounts/456/transaction-request-types/SEPA/transaction-requests".equals(operation.getResourcePaths().get(1)));
+
+            // Check that messages have been correctly found.
+            Map<Request, Response> messages = null;
+            try{
+               messages = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e){
+               e.printStackTrace();
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(2, messages.size());
          } else {
             fail("Unknown operation name: " + operation.getName());
          }

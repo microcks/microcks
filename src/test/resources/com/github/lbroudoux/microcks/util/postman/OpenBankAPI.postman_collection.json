@@ -1,0 +1,472 @@
+{
+	"id": "a4caef00-030a-702e-1f27-4b1ff1341abc",
+	"name": "Random Open Bank Project API",
+	"description": "An API based on the Open Bank project. (C) Unisystems 2017, (c) TESOBE Ltd. 2011 - 2016. Licensed under the AGPL and commercial licences.",
+	"order": [],
+	"folders": [
+		{
+			"id": "b5bf75f5-3e73-f221-a078-226910ff483b",
+			"name": "banks",
+			"description": "Folder for banks",
+			"order": [
+				"7867bc19-ed7f-0b85-d46a-50967e459f88",
+				"7460e640-ced5-ca36-a88f-d647576f49a8",
+				"fb619a9d-4439-972f-ada5-dea756a79e46",
+				"e7aa9c34-efa1-3af7-afe1-f29714c8c450",
+				"afc8ab76-8e9e-61a0-cfad-014bffdbe7ba",
+				"7fbe0e22-b54c-2bd0-c424-6f52ab53dfeb"
+			],
+			"owner": "1278651",
+			"collectionId": "a4caef00-030a-702e-1f27-4b1ff1341abc"
+		}
+	],
+	"timestamp": 1413302258635,
+	"owner": "1278651",
+	"public": false,
+	"requests": [
+		{
+			"id": "7460e640-ced5-ca36-a88f-d647576f49a8",
+			"headers": "",
+			"headerData": [],
+			"url": "https:///banks/random/accounts/456/account",
+			"queryParams": [],
+			"preRequestScript": "",
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1497024977867,
+			"name": "GetAccountById (Full - 456)",
+			"description": "<p>Information returned about an account specified by ACCOUNT_ID:</p><ul>  <li>Number</li>  <li>Type</li>  <li>Balance</li>  <li>IBAN</li>  </ul><p><p/>PSD2 Context: PSD2 requires customers to have access to their account information via third party applications. This call provides balance and other account information via delegated authentication using OAuth.</p><p>OAuth authentication is required.</p>",
+			"collectionId": "a4caef00-030a-702e-1f27-4b1ff1341abc",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 404,
+						"name": "Not Found"
+					},
+					"time": 0,
+					"headers": [],
+					"cookies": [],
+					"mime": "",
+					"text": "",
+					"language": "json",
+					"rawDataType": "",
+					"previewType": "parsed",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"id": "3dd559cb-edbf-0f8c-5687-7c6fa127ff1f",
+					"name": "456 response",
+					"isSample": true,
+					"scrollToResult": false,
+					"runTests": false,
+					"request": {
+						"url": "https:///banks/random/accounts/:ACCOUNT_ID/account",
+						"pathVariables": {
+							"ACCOUNT_ID": "456"
+						},
+						"pathVariableData": [
+							{
+								"description": "",
+								"key": "ACCOUNT_ID",
+								"value": "456"
+							}
+						],
+						"queryParams": [],
+						"headerData": [],
+						"headers": "",
+						"data": [],
+						"method": "GET",
+						"dataMode": "params"
+					}
+				}
+			]
+		},
+		{
+			"id": "7867bc19-ed7f-0b85-d46a-50967e459f88",
+			"headers": "",
+			"headerData": [],
+			"url": "https:///banks/random/accounts/123/account",
+			"queryParams": [],
+			"preRequestScript": "",
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1497024969239,
+			"name": "GetAccountById (Full - 123)",
+			"description": "<p>Information returned about an account specified by ACCOUNT_ID:</p><ul>  <li>Number</li>  <li>Type</li>  <li>Balance</li>  <li>IBAN</li>  </ul><p><p/>PSD2 Context: PSD2 requires customers to have access to their account information via third party applications. This call provides balance and other account information via delegated authentication using OAuth.</p><p>OAuth authentication is required.</p>",
+			"collectionId": "a4caef00-030a-702e-1f27-4b1ff1341abc",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 200,
+						"name": "OK"
+					},
+					"time": 0,
+					"headers": [],
+					"cookies": [],
+					"mime": "",
+					"text": "{\n\t\"Number\": 123,\n\t\"IBAN\": \"azertyuiop\",\n\t\"Type\": \"AccountType\",\n\t\"Balance\": 1000.00\n}",
+					"language": "json",
+					"rawDataType": "",
+					"previewType": "parsed",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"id": "d198b9c1-49fd-9590-c21e-2c6702c72669",
+					"name": "123 response",
+					"isSample": true,
+					"scrollToResult": false,
+					"runTests": false,
+					"request": {
+						"url": "https:///banks/random/accounts/:ACCOUNT_ID/account",
+						"pathVariables": {
+							"ACCOUNT_ID": "123"
+						},
+						"pathVariableData": [
+							{
+								"description": "",
+								"key": "ACCOUNT_ID",
+								"value": "123"
+							}
+						],
+						"queryParams": [],
+						"headerData": [],
+						"headers": "",
+						"data": [],
+						"method": "GET",
+						"dataMode": "params"
+					}
+				}
+			]
+		},
+		{
+			"id": "7fbe0e22-b54c-2bd0-c424-6f52ab53dfeb",
+			"headers": "obp_from_date: 2017-01-01'T'12:00:00.000'Z'\nobp_to_date: 2017-06-01'T'12:00:00.000'Z'\n",
+			"headerData": [
+				{
+					"key": "obp_from_date",
+					"value": "2017-01-01'T'12:00:00.000'Z'",
+					"description": "",
+					"enabled": true
+				},
+				{
+					"key": "obp_to_date",
+					"value": "2017-06-01'T'12:00:00.000'Z'",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"url": "https:///banks/random/accounts/456/transactions",
+			"queryParams": [],
+			"preRequestScript": "",
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1497024997617,
+			"name": "GetTransactionsForAccount (456)",
+			"description": "<p>Returns transactions list of the account specified by ACCOUNT_ID.</p><p>Authentication via OAuth is required.</p><p>Possible custom headers for pagination:</p><ul>  <li>obp_from_date=DATE =&gt; default value: date of the oldest transaction registered (format below)</li>  <li>obp_to_date=DATE =&gt; default value: date of the newest transaction registered (format below)</li></ul><p><strong>Date format parameter</strong>: \"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'\" (2014-07-01T00:00:00.000Z) ==&gt; time zone is UTC.</p>",
+			"collectionId": "a4caef00-030a-702e-1f27-4b1ff1341abc",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 404,
+						"name": "Not Found"
+					},
+					"time": 0,
+					"headers": [],
+					"cookies": [],
+					"mime": "",
+					"text": "",
+					"language": "",
+					"rawDataType": "",
+					"previewType": "parsed",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"id": "06169598-b643-4072-5cbb-31e2f4326f6c",
+					"name": "456 response",
+					"isSample": true,
+					"scrollToResult": false,
+					"runTests": false,
+					"request": {
+						"url": "https:///banks/random/accounts/:ACCOUNT_ID/transactions",
+						"pathVariables": {
+							"ACCOUNT_ID": "456"
+						},
+						"pathVariableData": [
+							{
+								"description": "",
+								"key": "ACCOUNT_ID",
+								"value": "456"
+							}
+						],
+						"queryParams": [],
+						"headerData": [
+							{
+								"key": "obp_from_date",
+								"value": "2017-01-01'T'12:00:00.000'Z'",
+								"description": "",
+								"enabled": true,
+								"warning": ""
+							},
+							{
+								"key": "obp_to_date",
+								"value": "2017-06-01'T'12:00:00.000'Z'",
+								"description": "",
+								"enabled": true,
+								"warning": ""
+							}
+						],
+						"headers": "obp_from_date: 2017-01-01'T'12:00:00.000'Z'\nobp_to_date: 2017-06-01'T'12:00:00.000'Z'\n",
+						"data": [],
+						"method": "GET",
+						"dataMode": "params"
+					}
+				}
+			]
+		},
+		{
+			"id": "afc8ab76-8e9e-61a0-cfad-014bffdbe7ba",
+			"headers": "obp_from_date: 2017-01-01'T'12:00:00.000'Z'\nobp_to_date: 2017-06-01'T'12:00:00.000'Z'\n",
+			"headerData": [
+				{
+					"key": "obp_from_date",
+					"value": "2017-01-01'T'12:00:00.000'Z'",
+					"description": "",
+					"enabled": true
+				},
+				{
+					"key": "obp_to_date",
+					"value": "2017-06-01'T'12:00:00.000'Z'",
+					"description": "",
+					"enabled": true
+				}
+			],
+			"url": "https:///banks/random/accounts/123/transactions",
+			"queryParams": [],
+			"preRequestScript": "",
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "GET",
+			"data": [],
+			"dataMode": "params",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1497024987734,
+			"name": "GetTransactionsForAccount (123)",
+			"description": "<p>Returns transactions list of the account specified by ACCOUNT_ID.</p><p>Authentication via OAuth is required.</p><p>Possible custom headers for pagination:</p><ul>  <li>obp_from_date=DATE =&gt; default value: date of the oldest transaction registered (format below)</li>  <li>obp_to_date=DATE =&gt; default value: date of the newest transaction registered (format below)</li></ul><p><strong>Date format parameter</strong>: \"yyyy-MM-dd'T'HH:mm:ss.SSS'Z'\" (2014-07-01T00:00:00.000Z) ==&gt; time zone is UTC.</p>",
+			"collectionId": "a4caef00-030a-702e-1f27-4b1ff1341abc",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 200,
+						"name": "OK"
+					},
+					"time": 0,
+					"headers": [],
+					"cookies": [],
+					"mime": "",
+					"text": "[\n\t{\"tx\": 0},\n\t{\"tx\": 1}\n]",
+					"language": "json",
+					"rawDataType": "",
+					"previewType": "parsed",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"id": "8f1cb68b-8dc5-7a16-b0fe-d70378c8cfb9",
+					"name": "123 response",
+					"isSample": true,
+					"scrollToResult": false,
+					"runTests": false,
+					"request": {
+						"url": "https:///banks/random/accounts/:ACCOUNT_ID/transactions",
+						"pathVariables": {
+							"ACCOUNT_ID": "123"
+						},
+						"pathVariableData": [
+							{
+								"description": "",
+								"key": "ACCOUNT_ID",
+								"value": "123"
+							}
+						],
+						"queryParams": [],
+						"headerData": [
+							{
+								"key": "obp_from_date",
+								"value": "2017-01-01'T'12:00:00.000'Z'",
+								"enabled": true,
+								"description": ""
+							},
+							{
+								"key": "obp_to_date",
+								"value": "2017-06-01'T'12:00:00.000'Z'",
+								"enabled": true,
+								"description": ""
+							}
+						],
+						"headers": "obp_from_date: 2017-01-01'T'12:00:00.000'Z'\nobp_to_date: 2017-06-01'T'12:00:00.000'Z'\n",
+						"data": [],
+						"method": "GET",
+						"dataMode": "params"
+					}
+				}
+			]
+		},
+		{
+			"id": "e7aa9c34-efa1-3af7-afe1-f29714c8c450",
+			"headers": "",
+			"headerData": [],
+			"url": "https:///banks/random/accounts/456/transaction-request-types/SEPA/transaction-requests",
+			"queryParams": [],
+			"preRequestScript": "",
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1497025541125,
+			"name": "CreateTransactionRequest (SEPA - 456)",
+			"description": "<p>Initiate a Payment via creating a Transaction Request.</p><p>In OBP, a <code>transaction request</code> may or may not result in a <code>transaction</code>. However, a <code>transaction</code> only has one possible state: completed.</p><p><code>Transactions</code> are modeled on items in a bank statement that represent the movement of money.</p><p><code>Transaction Requests</code> are requests to move money which may or may not succeeed and thus result in a <code>Transaction</code>.</p><p>Authentication is Mandatory</p>",
+			"collectionId": "a4caef00-030a-702e-1f27-4b1ff1341abc",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 400,
+						"name": "Bad Request"
+					},
+					"time": 0,
+					"headers": [],
+					"cookies": [],
+					"mime": "",
+					"text": "",
+					"language": "text",
+					"rawDataType": "",
+					"previewType": "parsed",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"id": "a56ee1aa-192e-a39f-f9fa-ba95b248bc5f",
+					"name": "456 response",
+					"isSample": true,
+					"scrollToResult": false,
+					"runTests": false,
+					"request": {
+						"url": "https:///banks/random/accounts/123/transaction-request-types/SEPA/transaction-requests",
+						"pathVariables": {},
+						"pathVariableData": [],
+						"queryParams": [],
+						"headerData": [],
+						"headers": "",
+						"data": "BANK_BODY",
+						"method": "POST",
+						"dataMode": "raw"
+					}
+				}
+			],
+			"rawModeData": "BANK_BODY"
+		},
+		{
+			"id": "fb619a9d-4439-972f-ada5-dea756a79e46",
+			"headers": "",
+			"headerData": [],
+			"url": "https:///banks/random/accounts/123/transaction-request-types/SEPA/transaction-requests",
+			"queryParams": [],
+			"preRequestScript": "",
+			"pathVariables": {},
+			"pathVariableData": [],
+			"method": "POST",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": "",
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1497025653147,
+			"name": "CreateTransactionRequest (SEPA - 123)",
+			"description": "<p>Initiate a Payment via creating a Transaction Request.</p><p>In OBP, a <code>transaction request</code> may or may not result in a <code>transaction</code>. However, a <code>transaction</code> only has one possible state: completed.</p><p><code>Transactions</code> are modeled on items in a bank statement that represent the movement of money.</p><p><code>Transaction Requests</code> are requests to move money which may or may not succeeed and thus result in a <code>Transaction</code>.</p><p>Authentication is Mandatory</p>",
+			"collectionId": "a4caef00-030a-702e-1f27-4b1ff1341abc",
+			"responses": [
+				{
+					"status": "",
+					"responseCode": {
+						"code": 201,
+						"name": "Created"
+					},
+					"time": 0,
+					"headers": [],
+					"cookies": [],
+					"mime": "",
+					"text": "{\n\t\"tx\": 0\n}",
+					"language": "json",
+					"rawDataType": "",
+					"previewType": "parsed",
+					"searchResultScrolledTo": -1,
+					"forceNoPretty": false,
+					"write": true,
+					"empty": false,
+					"failed": false,
+					"name": "123 response",
+					"id": "fa1e706e-64b6-eac1-8114-fbdda8543733",
+					"isSample": true,
+					"scrollToResult": false,
+					"runTests": false,
+					"request": {
+						"url": "https:///banks/random/accounts/123/transaction-request-types/SEPA/transaction-requests",
+						"pathVariables": {},
+						"pathVariableData": [],
+						"queryParams": [],
+						"headerData": [],
+						"headers": "",
+						"data": "BANK_BODY",
+						"method": "POST",
+						"dataMode": "raw"
+					}
+				}
+			],
+			"rawModeData": "BANK_BODY"
+		}
+	]
+}
+]
+}
