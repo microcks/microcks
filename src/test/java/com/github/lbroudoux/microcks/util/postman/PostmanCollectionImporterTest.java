@@ -238,6 +238,7 @@ public class PostmanCollectionImporterTest {
       Service service = services.get(0);
       assertEquals("Random Open Bank Project API", service.getName());
       assertEquals(ServiceType.REST, service.getType());
+      assertEquals("0.0.1", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -276,6 +277,7 @@ public class PostmanCollectionImporterTest {
                   assertEquals("application/json", response.getMediaType());
                   assertEquals("/part1=123", response.getDispatchCriteria());
                   assertNotNull(response.getContent());
+                  System.err.println("content: " + response.getContent());
                } else if ("GetAccountById (Full - 456)".equals(request.getName())) {
                   assertEquals("404", response.getStatus());
                   assertEquals("/part1=456", response.getDispatchCriteria());

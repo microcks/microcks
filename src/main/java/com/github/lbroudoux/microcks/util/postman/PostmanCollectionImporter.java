@@ -236,9 +236,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       if (isV2Collection) {
          response.setStatus(responseNode.path("code").asText());
          response.setHeaders(buildHeaders(responseNode.path("header")));
+         response.setContent(responseNode.path("body").asText());
       } else {
          response.setStatus(responseNode.path("responseCode").path("code").asText());
          response.setHeaders(buildHeaders(responseNode.path("headers")));
+         response.setContent(responseNode.path("text").asText());
       }
       if (response.getHeaders() != null) {
          for (Header header : response.getHeaders()) {
@@ -254,7 +256,6 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             response.setMediaType("application/json");
          }
       }
-      response.setContent(responseNode.path("body").asText());
       response.setDispatchCriteria(dispatchCriteria);
       return response;
    }
