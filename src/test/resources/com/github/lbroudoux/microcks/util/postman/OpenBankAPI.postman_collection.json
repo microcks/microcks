@@ -1,7 +1,7 @@
 {
 	"id": "a4caef00-030a-702e-1f27-4b1ff1341abc",
 	"name": "Random Open Bank Project API",
-	"description": "An API based on the Open Bank project. (C) Unisystems 2017, (c) TESOBE Ltd. 2011 - 2016. Licensed under the AGPL and commercial licences.",
+	"description": "version=0.0.1 - An API based on the Open Bank project. (C) Unisystems 2017, (c) TESOBE Ltd. 2011 - 2016. Licensed under the AGPL and commercial licences.",
 	"order": [],
 	"folders": [
 		{
