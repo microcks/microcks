@@ -83,6 +83,14 @@ public class DispatchCriteriaHelperTest {
       // Dispatch string parts are sorted.
       String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
       assertEquals("/component=myComp/version=1.2", dispatchCriteria);
+
+      // Check with parts expressed using swagger/postman syntax.
+      requestPath = "/deployment/byComponent/myComp/1.2";
+      operationName = "/deployment/byComponent/:component/:version";
+
+      // Dispatch string parts are sorted.
+      dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
+      assertEquals("/component=myComp/version=1.2", dispatchCriteria);
    }
    
    @Test

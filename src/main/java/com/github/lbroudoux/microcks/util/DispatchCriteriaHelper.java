@@ -123,7 +123,7 @@ public class DispatchCriteriaHelper{
       // 1st pass on collection: find a common prefix.
       String commonURIPath = extractCommonPrefix(uris);
 
-      // 2nd pass on collection: find a comming suffix.
+      // 2nd pass on collection: find a common suffix.
       String commonURIEnd = extractCommonSuffix(uris);
 
       // 3rd pass on collection: guess the max number of part.
@@ -188,14 +188,22 @@ public class DispatchCriteriaHelper{
     */
    public static String extractFromURIPattern(String pattern, String realURI){
       Map<String, String> criteriaMap = new TreeMap<String, String>();
-      
-      // Build a pattern for extracting parts from pattern.
-      String partsPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "\\\\{(.+)\\\\}");
+
+      // Build a pattern for extracting parts from pattern and a pattern for extracting values
+      // from realURI. Supporting both {id} and :id.
+      String partsPattern = null;
+      String valuesPattern = null;
+      if (pattern.indexOf("/{") != -1) {
+         partsPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "\\\\{(.+)\\\\}");
+         valuesPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "(.+)");
+      } else {
+         partsPattern = pattern.replaceAll("(:[^:^/]+)", "\\:(.+)");
+         valuesPattern = pattern.replaceAll("(:[^:^/]+)", "(.+)");
+      }
+
       Pattern partsP = Pattern.compile(partsPattern);
       Matcher partsM = partsP.matcher(pattern);
-      
-      // Build a pattern for extracting values from realURI.
-      String valuesPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "(.+)");
+
       Pattern valuesP = Pattern.compile(valuesPattern);
       Matcher valuesM = valuesP.matcher(realURI);
       
@@ -207,6 +215,23 @@ public class DispatchCriteriaHelper{
          }
       }
       
+      // Just appends sorted entries, separating them with /.
+      StringBuilder result = new StringBuilder();
+      for (String criteria : criteriaMap.keySet()){
+         result.append("/").append(criteria).append("=").append(criteriaMap.get(criteria));
+      }
+      return result.toString();
+   }
+
+   /**
+    * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
+    * @param partsMap The Map containing parts (not necessarily sorted)
+    * @return A string representing dispatch criteria for the corresponding incoming request.
+    */
+   public static String buildFromPartsMap(Map<String, String> partsMap) {
+      Map<String, String> criteriaMap = new TreeMap<String, String>();
+      criteriaMap.putAll(partsMap);
+
       // Just appends sorted entries, separating them with /.
       StringBuilder result = new StringBuilder();
       for (String criteria : criteriaMap.keySet()){

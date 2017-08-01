@@ -119,11 +119,12 @@ public class RestController {
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
 
          Response response = null;
+         String uriPattern = getURIPattern(rOperation.getName());
          String dispatchCriteria = null;
 
          // Depending on dispatcher, evaluate request with rules.
          if (DispatchStyles.SEQUENCE.equals(rOperation.getDispatcher())){
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rOperation.getName(), resourcePath);
+            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
          }
          else if (DispatchStyles.SCRIPT.equals(rOperation.getDispatcher())){
             ScriptEngineManager sem = new ScriptEngineManager();
@@ -142,7 +143,7 @@ public class RestController {
             dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
          }
          else if (DispatchStyles.URI_PARTS.equals(rOperation.getDispatcher())){
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rOperation.getName(), resourcePath);
+            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
          }
          else if (DispatchStyles.URI_ELEMENTS.equals(rOperation.getDispatcher())){
             dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rOperation.getName(), resourcePath);
@@ -216,5 +217,14 @@ public class RestController {
          return new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
       }
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+   }
+
+
+   private String getURIPattern(String operationName) {
+      if (operationName.startsWith("GET ") || operationName.startsWith("POST ")
+            || operationName.startsWith("PUT ") || operationName.startsWith("DELETE ")) {
+         return operationName.substring(operationName.indexOf(' ') + 1);
+      }
+      return operationName;
    }
 }

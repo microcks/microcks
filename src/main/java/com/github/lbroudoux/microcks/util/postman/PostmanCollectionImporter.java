@@ -35,7 +35,7 @@ import java.util.*;
 
 /**
  * Implement of MockRepositoryImporter that uses a Postman collection for building
- * domain objects.
+ * domain objects. Only v2 collection format is supported.
  */
 public class PostmanCollectionImporter implements MockRepositoryImporter {
 
@@ -68,7 +68,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public List<Service> getServiceDefinitions() {
+   public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
       List<Service> result = new ArrayList<>();
 
       // Build a new service.
@@ -77,9 +77,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       // Collection V2 as an info node.
       if (collection.has("info")) {
          isV2Collection = true;
-         fillServiceDefinitionV2(service);
+         fillServiceDefinition(service);
       } else {
-         fillServiceDefinitionV1(service);
+         throw new MockRepositoryImportException("Only Postman v2 Collection are supported.");
       }
 
       // Then build its operations.
@@ -89,26 +89,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return result;
    }
 
-   private void fillServiceDefinitionV1(Service service) {
-      service.setName(collection.path("name").asText());
-      service.setType(ServiceType.REST);
-
-      String version = null;
-      String description = collection.path("description").asText();
-      if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
-         description = description.substring(description.indexOf(SERVICE_VERSION_PROPERTY + "="));
-         description = description.substring(0, description.indexOf(' '));
-         if (description.split("=").length > 1) {
-            version = description.split("=")[1];
-         }
-      }
-      if (version == null){
-         // TODO Throw a typed exception here...
-      }
-      service.setVersion(version);
-   }
-
-   private void fillServiceDefinitionV2(Service service) {
+   private void fillServiceDefinition(Service service) {
       service.setName(collection.path("info").path("name").asText());
       service.setType(ServiceType.REST);
 
@@ -140,44 +121,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       if (isV2Collection) {
          return getMessageDefinitionsV2(service, operation);
       } else {
-         return getMessageDefinitionsV1(service, operation);
+         throw new MockRepositoryImportException("Only Postman v2 Collection are supported.");
       }
-   }
-
-   private Map<Request, Response> getMessageDefinitionsV1(Service service, Operation operation) {
-      Map<Request, Response> result = new HashMap<Request, Response>();
-
-      Iterator<JsonNode> requests = collection.path("requests").elements();
-      while (requests.hasNext()) {
-         JsonNode requestNode = requests.next();
-         String method = requestNode.path("method").asText();
-         String url = requestNode.path("url").asText();
-         String resourcePath = extractResourcePath(url);
-
-         // Select item based onto operation Http verb (GET, POST, PUT, etc ...)
-         if (operation.getMethod().equals(method)) {
-            // ... then check is we have a matching resource path.
-            if (operation.getResourcePaths().contains(resourcePath)) {
-               JsonNode responseNode = requestNode.path("responses").get(0);
-
-               String dispatchCriteria = null;
-
-               if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
-               } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getName(), resourcePath);
-               } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getName(), resourcePath);
-                  dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
-               }
-
-               Request request = buildRequest(requestNode, requestNode.path("name").asText());
-               Response response = buildResponse(responseNode, dispatchCriteria);
-               result.put(request, response);
-            }
-         }
-      }
-      return result;
    }
 
    private Map<Request, Response> getMessageDefinitionsV2(Service service, Operation operation) {
@@ -186,29 +131,55 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       Iterator<JsonNode> items = collection.path("item").elements();
       while (items.hasNext()) {
          JsonNode item = items.next();
-         String method = item.path("request").path("method").asText();
-         String url = item.path("request").path("url").asText();
-         String resourcePath = extractResourcePath(url);
+         result.putAll(getMessageDefinitionsV2("", item, operation));
+      }
+      return result;
+   }
 
-         // Select item based onto operation Http verb (GET, POST, PUT, etc ...)
-         if (operation.getMethod().equals(method)) {
-            // ... then check is we have a matching resource path.
-            if (operation.getResourcePaths().contains(resourcePath)) {
-               JsonNode requestNode = item.path("request");
-               JsonNode responseNode = item.path("response").get(0);
+   private Map<Request, Response> getMessageDefinitionsV2(String operationNameRadix, JsonNode itemNode, Operation operation) {
+      Map<Request, Response> result = new HashMap<Request, Response>();
+      String itemNodeName = itemNode.path("name").asText();
 
+      if (!itemNode.has("request")) {
+         // Item is simply a folder that may contain some other folders recursively.
+         Iterator<JsonNode> items = itemNode.path("item").elements();
+         while (items.hasNext()) {
+            JsonNode item = items.next();
+            result.putAll(getMessageDefinitionsV2(operationNameRadix + "/" + itemNodeName, item, operation));
+         }
+      } else {
+         // Item is here an operation description.
+         String operationName = buildOperationName(itemNode, operationNameRadix);
+
+         // Select item based onto operation name.
+         if (operationName.equals(operation.getName())) {
+            Iterator<JsonNode> responses = itemNode.path("response").elements();
+            while (responses.hasNext()) {
+               JsonNode responseNode = responses.next();
+               JsonNode requestNode = responseNode.path("originalRequest");
+
+               // Build dispatchCriteria and complete operation resourcePaths.
                String dispatchCriteria = null;
+               String requestUrl = requestNode.path("url").path("raw").asText();
 
                if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
                } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getName(), resourcePath);
+                  Map<String, String> parts = buildRequestParts(requestNode);
+                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                  // We should complete resourcePath here.
+                  String resourcePath = extractResourcePath(requestUrl);
+                  operation.addResourcePath(buildResourcePath(parts, resourcePath));
                } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getName(), resourcePath);
-                  dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
+                  Map<String, String> parts = buildRequestParts(requestNode);
+                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                  dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
+                  // We should complete resourcePath here.
+                  String resourcePath = extractResourcePath(requestUrl);
+                  operation.addResourcePath(buildResourcePath(parts, resourcePath));
                }
 
-               Request request = buildRequest(requestNode, item.path("name").asText());
+               Request request = buildRequest(requestNode, responseNode.path("name").asText());
                Response response = buildResponse(responseNode, dispatchCriteria);
                result.put(request, response);
             }
@@ -223,10 +194,25 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
       if (isV2Collection) {
          request.setHeaders(buildHeaders(requestNode.path("header")));
+         if (requestNode.has("body") && requestNode.path("body").has("raw")) {
+            request.setContent(requestNode.path("body").path("raw").asText());
+         }
       } else {
          request.setHeaders(buildHeaders(requestNode.path("headers")));
       }
       return request;
+   }
+
+   private Map<String, String> buildRequestParts(JsonNode requestNode) {
+      Map<String, String> parts = new HashMap<>();
+      if (requestNode.has("url") && requestNode.path("url").has("variable")) {
+         Iterator<JsonNode> variables = requestNode.path("url").path("variable").elements();
+         while (variables.hasNext()) {
+            JsonNode variable = variables.next();
+            parts.put(variable.path("key").asText(), variable.path("value").asText());
+         }
+      }
+      return parts;
    }
 
    private Response buildResponse(JsonNode responseNode, String dispatchCriteria) {
@@ -253,6 +239,13 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       // assume it is its content-type.
       if (!isV2Collection && response.getMediaType() == null) {
          if ("json".equals(responseNode.path("language").asText())) {
+            response.setMediaType("application/json");
+         }
+      }
+      // For V1 Collection, if no Content-Type header but response expressed as a language,
+      // assume it is its content-type.
+      if (isV2Collection && response.getMediaType() == null) {
+         if ("json".equals(responseNode.path("_postman_previewlanguage").asText())) {
             response.setMediaType("application/json");
          }
       }
@@ -283,57 +276,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    /**
     * Extract the list of operations from Collection.
     */
-   private List<Operation> extractOperations() {
+   private List<Operation> extractOperations() throws MockRepositoryImportException {
 
       if (isV2Collection) {
          return extractOperationsV2();
-      } else {
-         return extractOperationsV1();
       }
-   }
-
-   private List<Operation> extractOperationsV1() {
-      // Items corresponding to same operations may be defined multiple times in Postman
-      // with different names and resource path. We have to track them to complete them in second step.
-      Map<String, Operation> collectedOperations = new HashMap<String, Operation>();
-
-      Iterator<JsonNode> requests = collection.path("requests").elements();
-      while (requests.hasNext()) {
-         JsonNode request = requests.next();
-         String requestName = request.path("name").asText();
-         // findByStatus (status=available) => findByStatus
-         String operationName = requestName.substring(0, requestName.indexOf(' '));
-
-         Operation operation = collectedOperations.get(operationName);
-         String url = request.path("url").asText();
-
-         if (operation == null) {
-            // Build a new operation.
-            operation = new Operation();
-            operation.setName(operationName);
-
-            // Complete with REST specific fields.
-            operation.setMethod(request.path("method").asText());
-
-            // Deal with dispatcher stuffs.
-            if (urlHasParameters(url)) {
-               operation.setDispatcherRules(DispatchCriteriaHelper.extractParamsFromURI(url));
-               operation.setDispatcher(DispatchStyles.URI_PARAMS);
-            }
-         }
-
-         // Extract resource path from complete URL found in collection.
-         String resourcePath = extractResourcePath(url);
-         operation.addResourcePath(resourcePath);
-         collectedOperations.put(operationName, operation);
-      }
-
-      // Check operations: if we got multiple resource paths for an Operation, we should
-      // extracts the variable parts of the path and update dispatch criteria accordingly.
-      // We can also update the operation name so that it reflects the resource path
-      sanitizeCollectedOperations(collectedOperations);
-
-      return new ArrayList<>(collectedOperations.values());
+      throw new MockRepositoryImportException("Only Postman v2 Collection are supported.");
    }
 
    private List<Operation> extractOperationsV2() {
@@ -344,12 +292,31 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       Iterator<JsonNode> items = collection.path("item").elements();
       while (items.hasNext()) {
          JsonNode item = items.next();
-         String itemName = item.path("name").asText();
-         // findByStatus (status=available) => findByStatus
-         String operationName = itemName.substring(0, itemName.indexOf(' '));
+         extractOperationV2("", item, collectedOperations);
+      }
 
+      return new ArrayList<>(collectedOperations.values());
+   }
+
+   private void extractOperationV2(String operationNameRadix, JsonNode itemNode, Map<String, Operation> collectedOperations) {
+      String itemNodeName = itemNode.path("name").asText();
+
+      // Item may be a folder or an operation description.
+      if (!itemNode.has("request")) {
+         // Item is simply a folder that may contain some other folders recursively.
+         Iterator<JsonNode> items = itemNode.path("item").elements();
+         while (items.hasNext()) {
+            JsonNode item = items.next();
+            extractOperationV2(operationNameRadix + "/" + itemNodeName, item, collectedOperations);
+         }
+      } else {
+         // Item is here an operation description.
+         String operationName = buildOperationName(itemNode, operationNameRadix);
          Operation operation = collectedOperations.get(operationName);
-         String url = item.path("request").path("url").asText();
+         String url = itemNode.path("request").path("url").asText("");
+         if ("".equals(url)) {
+            url = itemNode.path("request").path("url").path("raw").asText("");
+         }
 
          if (operation == null) {
             // Build a new operation.
@@ -357,57 +324,42 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             operation.setName(operationName);
 
             // Complete with REST specific fields.
-            operation.setMethod(item.path("request").path("method").asText());
+            operation.setMethod(itemNode.path("request").path("method").asText());
 
             // Deal with dispatcher stuffs.
-            if (urlHasParameters(url)) {
+            if (urlHasParameters(url) && urlHasParts(url)) {
+               operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url)
+                     + " ?? " + DispatchCriteriaHelper.extractParamsFromURI(url));
+               operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
+            } else if (urlHasParameters(url)) {
                operation.setDispatcherRules(DispatchCriteriaHelper.extractParamsFromURI(url));
                operation.setDispatcher(DispatchStyles.URI_PARAMS);
+               operation.addResourcePath(extractResourcePath(url));
+            } else if (urlHasParts(url)) {
+               operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url));
+               operation.setDispatcher(DispatchStyles.URI_PARTS);
+            } else {
+               operation.addResourcePath(extractResourcePath(url));
             }
          }
 
-         // Extract resource path from complete URL found in collection.
-         String resourcePath = extractResourcePath(url);
-         operation.addResourcePath(resourcePath);
+         // Do not deal with resource path now as it will be done when extracting messages.
          collectedOperations.put(operationName, operation);
       }
-
-      // Check operations: if we got multiple resource paths for an Operation, we should
-      // extracts the variable parts of the path and update dispatch criteria accordingly.
-      // We can also update the operation name so that it reflects the resource path
-      sanitizeCollectedOperations(collectedOperations);
-
-      return new ArrayList<>(collectedOperations.values());
    }
 
-   private void sanitizeCollectedOperations(Map<String, Operation> collectedOperations) {
-      for (Operation operation : collectedOperations.values()) {
-         if (operation.getResourcePaths().size() > 1) {
-            String partsCriteria = DispatchCriteriaHelper.extractPartsFromURIs(operation.getResourcePaths());
-
-            if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
-               operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
-               operation.setDispatcherRules(partsCriteria + " ?? " + operation.getDispatcherRules());
-            } else {
-               operation.setDispatcher(DispatchStyles.URI_PARTS);
-               operation.setDispatcherRules(partsCriteria);
-            }
-
-            // Replace operation name by templatized url.
-            int numOfParts = partsCriteria.split("&&").length;
-            String templatizedName = DispatchCriteriaHelper.extractCommonPrefix(operation.getResourcePaths());
-            String commonSuffix = DispatchCriteriaHelper.extractCommonSuffix(operation.getResourcePaths());
-            for (int i=1; i<numOfParts+1; i++) {
-               templatizedName += "/{part" + i + "}";
-            }
-            if (commonSuffix != null) {
-               templatizedName += commonSuffix;
-            }
-            operation.setName(templatizedName);
-         } else {
-            operation.setName(operation.getResourcePaths().get(0));
-         }
+   private String buildOperationName(JsonNode operationNode, String operationNameRadix) {
+      String url = operationNode.path("request").path("url").asText("");
+      if ("".equals(url)) {
+         url = operationNode.path("request").path("url").path("raw").asText();
       }
+      String nameSuffix = url.substring(url.lastIndexOf(operationNameRadix) + operationNameRadix.length());
+      if (nameSuffix.indexOf('?') != -1) {
+         nameSuffix = nameSuffix.substring(0, nameSuffix.indexOf('?'));
+      }
+      operationNameRadix += nameSuffix;
+
+      return operationNode.path("request").path("method").asText() + " " + operationNameRadix;
    }
 
    /**
@@ -416,8 +368,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
     */
    private String extractResourcePath(String url) {
       String result = url;
-      if (result.startsWith("https://") || result.startsWith("http://")) {
+      if (result.startsWith("https://")) {
          result = result.substring("https://".length());
+      }
+      if (result.startsWith("http://")) {
+         result = result.substring("http://".length());
       }
       // Remove host and port specification.
       result = result.substring(result.indexOf('/'));
@@ -428,8 +383,29 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return result;
    }
 
+   /**
+    * Build a resource path a Map for parts and a patter url
+    * <(id:123)> && /order/:id => /order/123
+    */
+   private String buildResourcePath(Map<String, String> parts, String patternUrl) {
+      StringBuilder result = new StringBuilder();
+      for (String token : patternUrl.split("/")) {
+         if (token.startsWith(":") && token.length() > 1) {
+            result.append("/").append(parts.get(token.substring(1)));
+         } else if (token.length() > 0) {
+            result.append("/").append(token);
+         }
+      }
+      return result.toString();
+   }
+
    /** Check parameters presence into given url. */
    private static boolean urlHasParameters(String url) {
       return url.indexOf('?') != -1 && url.indexOf('=') != -1;
+   }
+
+   /** Check variables parts presence into given url. */
+   private static boolean urlHasParts(String url) {
+      return url.indexOf("/:") != -1;
    }
 }

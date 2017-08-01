@@ -30,7 +30,8 @@ import java.util.Map;
 /**
  * Interface definition for loading Microcks domain objects definitions from a
  * source repository. Source repositories may have different forms : SoapUI project
- * file, custom XML format, directory structure with naming conventions, and so on ...<br/>
+ * file, Postman collection v2 file, custom XML format, directory structure with naming conventions,
+ * and so on ...<br/>
  * After usage of the companion factory, user should call the following methods in order :
  * <ul>
  *    <ol><code>getServiceDefinitions()</code>,</ol>
@@ -47,23 +48,25 @@ public interface MockRepositoryImporter {
     * should return the definitions of Service domain objects as found
     * into the target imported repository.
     * @return The list of found Services into repository. May be empty.
+    * @throws MockRepositoryImportException
     */
-   List<Service> getServiceDefinitions();
+   List<Service> getServiceDefinitions() throws MockRepositoryImportException;
 
    /**
     * Once Service definition has been initialized, attahed resources may be
     * identified and retrieved.
     * @param service The service to get resources for
     * @return The list of found Resources into repository. May be empty.
+    * @throws MockRepositoryImportException
     */
-   List<Resource> getResourceDefinitions(Service service);
+   List<Resource> getResourceDefinitions(Service service) throws MockRepositoryImportException;
 
    /**
     * For any operation of a service a map of associated Request and Response
     * should be retrieve for full definition of a Service.
     * @param service The service to get messages for
     * @param operation The service operation/actions to get messages for
-    * @return A map of corralated Request/Response. May be empty.
+    * @return A map of correlated Request/Response. May be empty.
     * @throws MockRepositoryImportException
     */
    Map<Request, Response> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException;

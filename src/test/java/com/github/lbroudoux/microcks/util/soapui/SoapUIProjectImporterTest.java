@@ -8,6 +8,7 @@ import com.github.lbroudoux.microcks.domain.ResourceType;
 import com.github.lbroudoux.microcks.domain.Response;
 import com.github.lbroudoux.microcks.domain.Service;
 import com.github.lbroudoux.microcks.domain.Operation;
+import com.github.lbroudoux.microcks.util.MockRepositoryImportException;
 import com.github.lbroudoux.microcks.util.MockRepositoryImporter;
 import com.github.lbroudoux.microcks.util.MockRepositoryImporterFactory;
 import org.junit.Test;
@@ -295,7 +296,13 @@ public class SoapUIProjectImporterTest {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
-      List<Service> services = importer.getServiceDefinitions();
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         e.printStackTrace();
+         fail("Exception should not be thrown");
+      }
       assertEquals(1, services.size());
    }
 }

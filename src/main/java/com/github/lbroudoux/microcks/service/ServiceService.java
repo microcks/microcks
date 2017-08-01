@@ -138,6 +138,10 @@ public class ServiceService {
             }
             requestRepository.save(messages.keySet());
          }
+
+         // When extracting message informations, we may have modified Operation because discovered new resource paths
+         // depending on variable URI parts. As a consequence, we got to update Service in repository.
+         serviceRepository.save(service);
       }
       log.info("Having imported {} services definitions into repository", services.size());
       return services;
