@@ -13,8 +13,75 @@
 			"item": [
 				{
 					"name": "http:///order?status={{status}}&page={{page}}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"console.log(\"status: \" + environment.status);",
+									"console.log(\"page: \" + environment.page);",
+									"",
+									"var schema = {",
+									" \"type\": \"array\",",
+									" \"items\": {",
+									"   \"type\": \"object\",",
+									"   \"properties\": {",
+									"      \"id\": { \"type\": \"string\" },",
+									"      \"status\": { \"type\": \"string\", \"enum\": [\"pending_approval\"] }",
+									"   }",
+									" }",
+									"};",
+									"",
+									"tests[\"Valid response\"] = tv4.validate(jsonData, schema);",
+									"console.log(\"Validation failed: \", tv4.error);",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.setEnvironmentVariable(\"status\", \"pending_approval\");",
+									"postman.setEnvironmentVariable(\"page\", \"0\");"
+								]
+							}
+						}
+					],
 					"request": {
-						"url": "http:///order?status={{status}}&page={{page}}",
+						"url": {
+							"raw": "http://localhost:8080/rest/Test%20API/0.0.1/order?status=pending_approval&page=0",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"Test%20API",
+								"0.0.1",
+								"order"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "pending_approval",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
 						"method": "GET",
 						"header": [],
 						"body": {},
@@ -22,7 +89,7 @@
 					},
 					"response": [
 						{
-							"id": "b573c11f-814a-437c-ab00-d2ecb3fca639",
+							"id": "3f0597ff-975b-492e-927b-bcec40b491f0",
 							"name": "list-pending_approval",
 							"originalRequest": {
 								"url": {
@@ -63,10 +130,10 @@
 							"header": [],
 							"cookie": [],
 							"responseTime": 0,
-							"body": "[\n    {\n    \t\"id\": \"123456\",\n\t    \"status\": \"pending_approval\",\n\t    \"devise\": \"EUR\",\n\t    \"amount\": 50,\n\t    \"items\": [\n\t        {\n\t            \"price\": 40,\n\t            \"quantity\": 2,\n\t            \"item\": {\n\t                \"id\": \"1\",\n\t                \"label\": \"Foo\",\n\t                \"price\": 20\n\t            }\n\t        },\n\t        {\n\t            \"price\": 10,\n\t            \"quantity\": 5,\n\t            \"item\": {\n\t                \"id\": \"2\",\n\t                \"label\": \"Bar\",\n\t                \"price\": 2\n\t            }\n\t        }\n\t    ]\n    },\n    {\n        \"id\": 7891011,\n        \"status\": \"pending_approval\",\n        \"devise\": \"EUR\",\n        \"amount\": 20,\n        \"items\": [\n            {\n                \"price\": 20,\n                \"quantity\": 10,\n                \"item\": {\n                    \"id\": \"2\",\n                    \"label\": \"Bar\",\n                    \"price\": 2\n                }\n            }\n        ]\n    }\n]"
+							"body": "[\n    {\n        \"id\": \"123456\",\n        \"status\": \"pending_approval\",\n        \"devise\": \"EUR\",\n        \"amount\": 50,\n        \"items\": [\n            {\n                \"price\": 40,\n                \"quantity\": 2,\n                \"item\": {\n                    \"id\": \"1\",\n                    \"label\": \"Foo\",\n                    \"price\": 20\n                }\n            },\n            {\n                \"price\": 10,\n                \"quantity\": 5,\n                \"item\": {\n                    \"id\": \"2\",\n                    \"label\": \"Bar\",\n                    \"price\": 2\n                }\n            }\n        ]\n    },\n    {\n        \"id\": \"7891011\",\n        \"status\": \"pending_approval\",\n        \"devise\": \"EUR\",\n        \"amount\": 20,\n        \"items\": [\n            {\n                \"price\": 20,\n                \"quantity\": 10,\n                \"item\": {\n                    \"id\": \"2\",\n                    \"label\": \"Bar\",\n                    \"price\": 2\n                }\n            }\n        ]\n    }\n]"
 						},
 						{
-							"id": "48e1e952-6d52-4144-a9c5-885fde1cdecf",
+							"id": "80668c70-e9cc-436e-bae1-056f018261cb",
 							"name": "list-approved",
 							"originalRequest": {
 								"url": {
@@ -107,7 +174,7 @@
 							"header": [],
 							"cookie": [],
 							"responseTime": 0,
-							"body": "[\n    \"id\": \"121314\",\n    \"status\": \"approved\",\n    \"devise\": \"EUR\",\n    \"amount\": 4.0,\n    \"items\": [\n        {\n            \"price\": 4.0,\n            \"quantity\": 2,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2\n            }\n        }\n    ]\n]"
+							"body": "[\n\t{\n\t    \"id\": \"121314\",\n\t    \"status\": \"approved\",\n\t    \"price\": 4,\n\t    \"quantity\": 2,\n\t    \"item\": {\n\t        \"id\": \"2\",\n\t        \"label\": \"Bar\",\n\t        \"price\": 2\n\t    }\n\t}\n]"
 						}
 					]
 				},
@@ -125,7 +192,7 @@
 					},
 					"response": [
 						{
-							"id": "dd7386eb-22b5-4ad0-a7f5-782bd92c7625",
+							"id": "709884b2-7fc9-400c-b632-3f99689ae788",
 							"name": "create-123456",
 							"originalRequest": {
 								"url": "http:///order",
@@ -152,7 +219,7 @@
 							"body": "{\n    \"id\": \"123456\",\n    \"status\": \"pending_approval\",\n    \"devise\": \"EUR\",\n    \"amount\": 50.0,\n    \"items\": [\n        {\n            \"price\": 40.0,\n            \"quantity\": 2,\n            \"item\": {\n                \"id\": \"1\",\n                \"label\": \"Foo\",\n                \"price\": 20.0\n            }\n        },\n        {\n            \"price\": 10.0,\n            \"quantity\": 5,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2.0\n            }\n        }\n    ]\n}"
 						},
 						{
-							"id": "0a572504-37cf-457d-9bcf-d4a4b0accf51",
+							"id": "f36d1b1c-17a5-45e6-a575-db148ac26c17",
 							"name": "create-7891011",
 							"originalRequest": {
 								"url": "http:///order",
@@ -182,8 +249,53 @@
 				},
 				{
 					"name": "http:///order/:id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var expectedId = request.url.slice(request.url.lastIndexOf('/order/') + 7);",
+									"tests[\"Check id value\"] = jsonData.id === expectedId;"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"",
+									""
+								]
+							}
+						}
+					],
 					"request": {
-						"url": "http:///order/:id",
+						"url": {
+							"raw": "http://localhost:8080/rest/Test%20API/0.0.1/order/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"Test%20API",
+								"0.0.1",
+								"order",
+								":id"
+							],
+							"query": [],
+							"variable": [
+								{
+									"description": "",
+									"key": "id",
+									"value": "123456"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"body": {},
@@ -191,7 +303,7 @@
 					},
 					"response": [
 						{
-							"id": "ae2b09ab-1bdc-4508-9cc8-2b647ac83029",
+							"id": "b06c6433-2409-4332-8b43-c2980fc609cd",
 							"name": "get-123456",
 							"originalRequest": {
 								"url": {
@@ -229,7 +341,7 @@
 							"body": "{\n    \"id\": \"123456\",\n    \"status\": \"pending_approval\",\n    \"devise\": \"EUR\",\n    \"amount\": 50,\n    \"items\": [\n        {\n            \"price\": 40,\n            \"quantity\": 2,\n            \"item\": {\n                \"id\": \"1\",\n                \"label\": \"Foo\",\n                \"price\": 20\n            }\n        },\n        {\n            \"price\": 10,\n            \"quantity\": 5,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2\n            }\n        }\n    ]\n}"
 						},
 						{
-							"id": "a947eab2-6cba-4fd0-84d1-cb5a78b88a07",
+							"id": "297e7f99-8727-497c-a3ba-c735ff65b62a",
 							"name": "get-7891011",
 							"originalRequest": {
 								"url": {
