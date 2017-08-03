@@ -50,10 +50,12 @@ angular.module('microcksApp.directives', [])
       link: function(scope, element, attrs) {
         scope.dataPromise().then(function(testsData) {
           var maxval = 0;
+          var quinte = 0;
           var minval = Number.MAX_VALUE;
           var chartData = testsData.slice(0, testsData.length).reverse()
             .map(function(item) {
               maxval = Math.max(maxval, item.elapsedTime);
+              quinte = Math.max(maxval / 5, item.elapsedTime);
               minval = Math.min(minval, item.elapsedTime);
               return {
                 'id' : item.id,
@@ -65,7 +67,6 @@ angular.module('microcksApp.directives', [])
           if (maxval == 0){
             maxval = 1;
           }
-          
           //var div = angular.element('<div id="'+attrs.chart+'"></div>');
           //element.prepend(div);
           
@@ -84,6 +85,10 @@ angular.module('microcksApp.directives', [])
                 d.elapsedTime = 1;
               }
               var h = d.elapsedTime * baseHeight / maxval;
+              // Enhanced display of lower value so that they're still visible.
+              if (d.elapsedTime < quinte) {
+                h = d.elapsedTime * baseHeight / quinte;
+              }
               return h + 'px';
           }).style('width', function(d) {
               var w = baseWidth / chartData.length;

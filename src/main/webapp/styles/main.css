@@ -96,6 +96,9 @@ span.alert-info {
 span.alert-success {
   color: #dff0d8;
 }
+span.alert-danger {
+  color: #e1bee7;
+}
 
 .panel{
   box-shadow: 0 0px 0px rgba(0,0,0,0.0) !important;
