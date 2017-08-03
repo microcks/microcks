@@ -72,7 +72,7 @@ public class PostmanCollectionImporterTest {
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
-            assertEquals("/v2/pet/findByStatus", operation.getResourcePaths().get(0));
+            assertEquals("/pet/findByStatus", operation.getResourcePaths().get(0));
 
             // Check that messages have been correctly found.
             Map<Request, Response> messages = null;
@@ -118,10 +118,10 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, messages.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
+            assertTrue("/pet/1".equals(operation.getResourcePaths().get(0))
+                  || "/pet/2".equals(operation.getResourcePaths().get(0)));
+            assertTrue("/pet/1".equals(operation.getResourcePaths().get(1))
+                  || "/pet/2".equals(operation.getResourcePaths().get(1)));
 
             for (Map.Entry<Request, Response> entry : messages.entrySet()) {
                Request request = entry.getKey();

@@ -168,14 +168,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   Map<String, String> parts = buildRequestParts(requestNode);
                   dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                   // We should complete resourcePath here.
-                  String resourcePath = extractResourcePath(requestUrl);
+                  String resourcePath = extractResourcePath(requestUrl, operationNameRadix);
                   operation.addResourcePath(buildResourcePath(parts, resourcePath));
                } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
                   Map<String, String> parts = buildRequestParts(requestNode);
                   dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                   dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
                   // We should complete resourcePath here.
-                  String resourcePath = extractResourcePath(requestUrl);
+                  String resourcePath = extractResourcePath(requestUrl, operationNameRadix);
                   operation.addResourcePath(buildResourcePath(parts, resourcePath));
                }
 
@@ -318,10 +318,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             url = itemNode.path("request").path("url").path("raw").asText("");
          }
 
-         // Collection may have been used for testing so it may contain a valid URL with prefix that will
-         // bother us. Ex: http://localhost:8080/prefix1/prefix2/order/123456. Trim it.
-         if (url.indexOf(operationNameRadix) != -1) {
-            url = url.substring(url.indexOf(operationNameRadix));
+         // Collection may have been used for testing so it may contain a valid URL with prefix that will bother us.
+         // Ex: http://localhost:8080/prefix1/prefix2/order/123456 or http://petstore.swagger.io/v2/pet/1. Trim it.
+         if (url.indexOf(operationNameRadix + "/") != -1) {
+            url = url.substring(url.indexOf(operationNameRadix + "/"));
          }
 
          if (operation == null) {
@@ -340,12 +340,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             } else if (urlHasParameters(url)) {
                operation.setDispatcherRules(DispatchCriteriaHelper.extractParamsFromURI(url));
                operation.setDispatcher(DispatchStyles.URI_PARAMS);
-               operation.addResourcePath(extractResourcePath(url));
+               operation.addResourcePath(extractResourcePath(url, operationNameRadix));
             } else if (urlHasParts(url)) {
                operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url));
                operation.setDispatcher(DispatchStyles.URI_PARTS);
             } else {
-               operation.addResourcePath(extractResourcePath(url));
+               operation.addResourcePath(extractResourcePath(url, operationNameRadix));
             }
          }
 
@@ -369,10 +369,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    /**
-    * Extract a resource path from a complete url.
-    * https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available => /v2/pet/findByStatus
+    * Extract a resource path from a complete url and an optional operationName radix (context or subcontext).
+    * https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available
+    *    => /v2/pet/findByStatus if no operationNameRadix
+    *    => /pet/findByStatus if operationNameRadix=/pet
     */
-   private String extractResourcePath(String url) {
+   private String extractResourcePath(String url, String operationNameRadix) {
       String result = url;
       if (result.startsWith("https://")) {
          result = result.substring("https://".length());
@@ -385,6 +387,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       // Remove trailing parameters.
       if (result.indexOf('?') != -1) {
          result = result.substring(0, result.indexOf('?'));
+      }
+      // Remove prefix of radix if specified.
+      if (operationNameRadix != null && result.indexOf(operationNameRadix) != -1) {
+         result = result.substring(result.indexOf(operationNameRadix));
       }
       return result;
    }
