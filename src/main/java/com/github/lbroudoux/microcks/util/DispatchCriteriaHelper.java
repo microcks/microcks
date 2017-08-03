@@ -155,21 +155,27 @@ public class DispatchCriteriaHelper{
    /**
     * Extract a dispatch rule string from URI pattern (containing variable parts within
     * {}) in order to explain which parts are variables.
-    * @param pattern The URI pattern containing variables parts ({})
+    * @param pattern The URI pattern containing variables parts ({} or :part patterns)
     * @return A string representing dispatch rules for the corresponding incoming request.
     */
    public static String extractPartsFromURIPattern(String pattern){
-      if (pattern.contains("{") && pattern.contains("}")){
-         // Build a pattern for extracting parts from pattern.
-         String partsPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "\\\\{(.+)\\\\}");
+      // Build a pattern for extracting parts from pattern.
+      String partsPattern = null;
+      if (pattern.contains("/{")) {
+         partsPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "\\\\{(.+)\\\\}");
+      } else if (pattern.contains("/:")) {
+         // We should add a leading / to avoid getting port number ;-)
+         partsPattern = pattern.replaceAll("(/:[^:^/]+)", "\\/:(.+)");
+      }
+      if (partsPattern != null) {
          Pattern partsP = Pattern.compile(partsPattern);
          Matcher partsM = partsP.matcher(pattern);
-         
-         if (partsM.matches()){
+
+         if (partsM.matches()) {
             StringBuilder parts = new StringBuilder();
-            for (int i=1; i<partsM.groupCount()+1; i++){
+            for (int i = 1; i < partsM.groupCount() + 1; i++) {
                parts.append(partsM.group(i));
-               if (i<partsM.groupCount()){
+               if (i < partsM.groupCount()) {
                   parts.append(" && ");
                }
             }

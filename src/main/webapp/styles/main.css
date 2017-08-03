@@ -87,11 +87,29 @@ pre, code {
   font-family: Ubuntu Mono, monospace;
   */
 }
+code.hljs {
+  background: #f9f2f4 !important;
+}
 span.alert-info {
   color: #e1bee7;
 }
 span.alert-success {
   color: #dff0d8;
+}
+
+.panel{
+  box-shadow: 0 0px 0px rgba(0,0,0,0.0) !important;
+  border-color: #2196f3 !important;
+}
+.panel-default>.panel-heading {
+  color: #444444 !important;
+  padding: 15px 15px;
+  background-color: #e5f1fb !important;
+  border-color: #2196f3 !important;
+  border: 1px solid #2196f3 !important;
+}
+.panel-default>.panel-collapse {
+  border: 1px solid #2196f3 !important;
 }
 
 /* Space out content a bit */

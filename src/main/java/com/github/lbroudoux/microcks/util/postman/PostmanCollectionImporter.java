@@ -318,6 +318,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             url = itemNode.path("request").path("url").path("raw").asText("");
          }
 
+         // Collection may have been used for testing so it may contain a valid URL with prefix that will
+         // bother us. Ex: http://localhost:8080/prefix1/prefix2/order/123456. Trim it.
+         if (url.indexOf(operationNameRadix) != -1) {
+            url = url.substring(url.indexOf(operationNameRadix));
+         }
+
          if (operation == null) {
             // Build a new operation.
             operation = new Operation();

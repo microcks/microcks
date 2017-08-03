@@ -42,8 +42,26 @@ angular.module('microcksApp')
     operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
       return parts[p1];
     });
+    // Support also Postman syntax with /:part
+    operationName = operationName.replace(/:(\w+)/g, function(match, p1, string) {
+      return parts[p1];
+    });
     if (paramsCriteria != null) {
       operationName += '?' + paramsCriteria.replace('?', '&');
+    }
+
+    // Remove leading VERB in Postman import case.
+    operationName = $scope.removeVerbInUrl(operationName);
+    return operationName;
+  }
+
+  $scope.removeVerbInUrl = function(operationName) {
+    if (operationName.startsWith("GET ") || operationName.startsWith("PUT ")) {
+      operationName = operationName.slice(4);
+    } else if (operationName.startsWith("POST ")) {
+      operationName = operationName.slice(5);
+    } else if (operationName.startsWith("DELETE ")) {
+      operationName = operationName.slice(7);
     }
     return operationName;
   }
