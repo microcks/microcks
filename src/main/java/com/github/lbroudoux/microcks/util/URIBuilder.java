@@ -35,28 +35,29 @@ public class URIBuilder{
     * @return The instanciated URI from template and parameters
     */
    public static String buildURIFromPattern(String pattern, List<Parameter> parameters){
-      // Browse parameters and choose between template or query one.
-      for (Parameter parameter : parameters){
-         String wadltemplate = "{" + parameter.getName() + "}";
-         String swaggerTemplate = "/:" + parameter.getName();
-         if (pattern.contains(wadltemplate)){
-            // It's a template parameter.
-            pattern = pattern.replace(wadltemplate, parameter.getValue());
-         } else if (pattern.contains(swaggerTemplate)) {
-            // It's a template parameter.
-            pattern = pattern.replace(":" + parameter.getName(), parameter.getValue());
-         } else {
-            // It's a query parameter, ensure we have started delimiting them.
-            if (!pattern.contains("?")){
-               pattern += "?";
+      if (parameters != null) {
+         // Browse parameters and choose between template or query one.
+         for (Parameter parameter : parameters) {
+            String wadltemplate = "{" + parameter.getName() + "}";
+            String swaggerTemplate = "/:" + parameter.getName();
+            if (pattern.contains(wadltemplate)) {
+               // It's a template parameter.
+               pattern = pattern.replace(wadltemplate, parameter.getValue());
+            } else if (pattern.contains(swaggerTemplate)) {
+               // It's a template parameter.
+               pattern = pattern.replace(":" + parameter.getName(), parameter.getValue());
+            } else {
+               // It's a query parameter, ensure we have started delimiting them.
+               if (!pattern.contains("?")) {
+                  pattern += "?";
+               }
+               if (pattern.contains("=")) {
+                  pattern += "&";
+               }
+               pattern += parameter.getName() + "=" + parameter.getValue();
             }
-            if (pattern.contains("=")){
-               pattern += "&";
-            }
-            pattern += parameter.getName() + "=" + parameter.getValue();
          }
       }
-      
       return pattern;
    }
 }

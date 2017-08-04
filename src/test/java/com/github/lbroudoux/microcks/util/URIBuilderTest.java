@@ -25,12 +25,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * This is a Test for URIBuidler class
  * @laurent
  */
 public class URIBuilderTest {
+
+   @Test
+   public void tesBuildURIFromPatternWithNullParameters() {
+      String pattern = "http://localhost:8080/blog/{year}/{month}";
+      try {
+         String uri = URIBuilder.buildURIFromPattern(pattern, null);
+      } catch (NullPointerException npe) {
+         fail("buildURIFromPattern should not fail with null parameters");
+      }
+   }
 
    @Test
    public void testBuildURIFromPattern() {
