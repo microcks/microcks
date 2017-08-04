@@ -25,5 +25,6 @@ package com.github.lbroudoux.microcks.domain;
 public enum TestRunnerType {
    HTTP,
    SOAP_HTTP,
-   SOAP_UI
+   SOAP_UI,
+   POSTMAN
 }

@@ -25,6 +25,7 @@ import com.github.lbroudoux.microcks.repository.ResponseRepository;
 import com.github.lbroudoux.microcks.repository.TestResultRepository;
 import com.github.lbroudoux.microcks.util.IdBuilder;
 import com.github.lbroudoux.microcks.util.UsernamePasswordAuthenticator;
+import com.github.lbroudoux.microcks.util.postman.PostmanTestStepsRunner;
 import com.github.lbroudoux.microcks.util.soapui.SoapUITestStepsRunner;
 import com.github.lbroudoux.microcks.util.test.AbstractTestRunner;
 import com.github.lbroudoux.microcks.util.test.HttpTestRunner;
@@ -179,8 +180,11 @@ public class TestService {
          requestRepository.save(actualRequests);
 
          // Update and save the completed TestCaseResult.
-         testCaseResult.setSuccess(successFlag);
-         testCaseResult.setElapsedTime(caseElapsedTime);
+         // We cannot consider as success if we have no TestStepResults associated...
+         if (testCaseResult.getTestStepResults().size() > 0) {
+            testCaseResult.setSuccess(successFlag);
+            testCaseResult.setElapsedTime(caseElapsedTime);
+         }
          testResult.getTestCaseResults().add(testCaseResult);
          testResultRepository.save(testResult);
       }
@@ -194,9 +198,13 @@ public class TestService {
             globalSuccessFlag = false;
          }
       }
-      testResult.setInProgress(false);
-      testResult.setSuccess(globalSuccessFlag);
-      testResult.setElapsedTime(totalElapsedTime);
+      // We may have a totalElapsedTime == 0 if running of tests is async.
+      // We have to let the TestResult as 'in progress' in that case.
+      if (totalElapsedTime > 0) {
+         testResult.setInProgress(false);
+         testResult.setSuccess(globalSuccessFlag);
+         testResult.setElapsedTime(totalElapsedTime);
+      }
       testResultRepository.save(testResult);
 
       return new AsyncResult<>(testResult);
@@ -239,6 +247,19 @@ public class TestService {
                   String projectFile = handleRemoteFileDownload(jobs.get(0).getRepositoryUrl());
                   SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(projectFile);
                   return soapUIRunner;
+               } catch (IOException ioe) {
+                  log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
+               }
+            }
+         case POSTMAN:
+            // Handle local download of correct project file.
+            jobs = jobRepository.findByServiceRefId(serviceId);
+            if (jobs != null && !jobs.isEmpty()) {
+               try {
+                  String collectionFile = handleRemoteFileDownload(jobs.get(0).getRepositoryUrl());
+                  PostmanTestStepsRunner postmanRunner = new PostmanTestStepsRunner(collectionFile);
+                  postmanRunner.setClientHttpRequestFactory(factory);
+                  return postmanRunner;
                } catch (IOException ioe) {
                   log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
                }
