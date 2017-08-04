@@ -197,6 +197,24 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          if (requestNode.has("body") && requestNode.path("body").has("raw")) {
             request.setContent(requestNode.path("body").path("raw").asText());
          }
+         if (requestNode.path("url").has("variable")) {
+            JsonNode variablesNode = requestNode.path("url").path("variable");
+            for (JsonNode variableNode : variablesNode) {
+               Parameter param = new Parameter();
+               param.setName(variableNode.path("key").asText());
+               param.setValue(variableNode.path("value").asText());
+               request.addQueryParameter(param);
+            }
+         }
+         if (requestNode.path("url").has("query")) {
+            JsonNode queryNode = requestNode.path("url").path("query");
+            for (JsonNode variableNode : queryNode) {
+               Parameter param = new Parameter();
+               param.setName(variableNode.path("key").asText());
+               param.setValue(variableNode.path("value").asText());
+               request.addQueryParameter(param);
+            }
+         }
       } else {
          request.setHeaders(buildHeaders(requestNode.path("headers")));
       }
@@ -354,7 +372,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       }
    }
 
-   private String buildOperationName(JsonNode operationNode, String operationNameRadix) {
+   /**
+    * Build a coherent operation name from the JsonNode of collection representing operation (ie. having a
+    * request item) and an operationNameRadix (ie. a subcontext or nested subcontext folder where operation
+    * is stored).
+    */
+   public static String buildOperationName(JsonNode operationNode, String operationNameRadix) {
       String url = operationNode.path("request").path("url").asText("");
       if ("".equals(url)) {
          url = operationNode.path("request").path("url").path("raw").asText();
