@@ -91,7 +91,8 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    @Override
-   public List<TestReturn> runTest(Service service, Operation operation, List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
+   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
+                                   List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
       if (log. isDebugEnabled()){
          log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
       }
@@ -103,6 +104,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
       // Microcks-postman-runner interface object building.
       JsonNode jsonArg = mapper.createObjectNode();
       ((ObjectNode) jsonArg).put("operation", operation.getName());
+      ((ObjectNode) jsonArg).put("callbackUrl", "http://localhost:8080/api/tests/" + testResult.getId() + "/testCaseResult");
 
       // First we have to retrieved and add the test script for this operation from within Postman collection.
       JsonNode testScript = extractOperationTestScript(operation);
@@ -111,7 +113,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          ((ObjectNode) jsonArg).set("testScript", testScript);
       }
 
-      // Then we have to add the corresponding 'requests' objetcts.
+      // Then we have to add the corresponding 'requests' objects.
       ArrayNode jsonRequests = mapper.createArrayNode();
       for (Request request : requests) {
          JsonNode jsonRequest = mapper.createObjectNode();
@@ -122,6 +124,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
          ((ObjectNode) jsonRequest).put("endpointUrl", customizedEndpointUrl);
          ((ObjectNode) jsonRequest).put("method", operation.getMethod());
+         ((ObjectNode) jsonRequest).put("name", request.getName());
 
          if (request.getContent() != null && request.getContent().length() > 0) {
             ((ObjectNode) jsonRequest).put("body", request.getContent());
@@ -139,7 +142,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
       }
       ((ObjectNode) jsonArg).set("requests", jsonRequests);
 
-      URI postmanRunnerURI = new URI("http://localhost:3000/tests/123456");
+      URI postmanRunnerURI = new URI("http://localhost:3000/tests/" + testResult.getId());
       ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(postmanRunnerURI, HttpMethod.POST);
       httpRequest.getBody().write(mapper.writeValueAsBytes(jsonArg));
       httpRequest.getHeaders().add("Content-Type", "application/json");

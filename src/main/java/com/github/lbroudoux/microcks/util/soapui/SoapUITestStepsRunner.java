@@ -76,7 +76,8 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    @Override
-   public List<TestReturn> runTest(Service service, Operation operation, List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
+   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
+                                   List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
       return runAllTestSteps(endpointUrl);
    }
 

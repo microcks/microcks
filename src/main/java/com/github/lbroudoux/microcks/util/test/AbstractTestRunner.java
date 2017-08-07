@@ -21,6 +21,7 @@ package com.github.lbroudoux.microcks.util.test;
 import com.github.lbroudoux.microcks.domain.Operation;
 import com.github.lbroudoux.microcks.domain.Request;
 import com.github.lbroudoux.microcks.domain.Service;
+import com.github.lbroudoux.microcks.domain.TestResult;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -40,15 +41,17 @@ public abstract class AbstractTestRunner<T>{
     * Run a test for a specified service and operation.
     * @param service The service under test
     * @param operation The operation to test
+    * @param testResult The container for test results
     * @param requests A set of reference requests for operation
     * @param endpointUrl The URL of endpoint to test
     * @param method The method that applies for requesting service (retrieved using buildMethod() method) 
     * @return A list of TestReturn corresponding to the result of test for each reference requests. Returns indices
-    * matches refernce request indices.
+    * matches reference request indices.
     * @throws java.net.URISyntaxException
     * @throws java.io.IOException
     */
-   public abstract List<TestReturn> runTest(Service service, Operation operation, List<Request> requests, String endpointUrl, T method) throws URISyntaxException, IOException;
+   public abstract List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
+                                            List<Request> requests, String endpointUrl, T method) throws URISyntaxException, IOException;
    
    /**
     * (interpretation is subject to implementation)

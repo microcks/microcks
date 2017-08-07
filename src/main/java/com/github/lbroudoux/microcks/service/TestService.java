@@ -104,6 +104,37 @@ public class TestService {
 
    /**
     *
+    * @param testResultId
+    * @param operationName
+    * @param testReturns
+    * @return
+    */
+   public TestCaseResult reportTestCaseResult(String testResultId, String operationName, List<TestReturn> testReturns) {
+      log.info("Reporting a TestCaseResult for testResult {} on operation '{}'", testResultId, operationName);
+      TestResult testResult = testResultRepository.findOne(testResultId);
+      TestCaseResult updatedTestCaseResult = null;
+
+      for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
+         // Find the testCaseResult matching operation name.
+         if (testCaseResult.getOperationName().equals(operationName)) {
+            updatedTestCaseResult = testCaseResult;
+            if (testReturns == null || testReturns.isEmpty()) {
+               testCaseResult.setElapsedTime(-1);
+               testCaseResult.setSuccess(false);
+            } else {
+               String testCaseId = IdBuilder.buildTestCaseId(testResult, operationName);
+               updateTestCaseResultWithReturns(testCaseResult, testReturns, testCaseId);
+            }
+         }
+      }
+
+      // Finally, Update success, progress indicators and total time before saving and returning.
+      updateTestResult(testResult);
+      return updatedTestCaseResult;
+   }
+
+   /**
+    *
     * @param testResult
     * @param service
     * @param runnerType
@@ -133,7 +164,7 @@ public class TestService {
          AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, service.getId());
          try {
             HttpMethod method = testRunner.buildMethod(operation.getMethod());
-            results = testRunner.runTest(service, operation, requests, testResult.getTestedEndpoint(), method);
+            results = testRunner.runTest(service, operation, testResult, requests, testResult.getTestedEndpoint(), method);
          } catch (URISyntaxException use) {
             log.error("URISyntaxException on endpoint {}, aborting current tests",
                   testResult.getTestedEndpoint(), use);
@@ -146,70 +177,91 @@ public class TestService {
             log.error("Throwable while testing operation {}", operation.getName(),  t);
          }
 
-         // Prepare a bunch of flag we're going to complete.
-         boolean successFlag = true;
-         long caseElapsedTime = 0;
-         List<Response> responses = new ArrayList<Response>();
-         List<Request> actualRequests = new ArrayList<Request>();
-
-         // Iterate over test results to complete flags and extracted responses.
-         for (TestReturn testReturn : results){
-            // Deal with elapsed time and success flag.
-            caseElapsedTime += testReturn.getElapsedTime();
-            TestStepResult testStepResult = testReturn.buildTestStepResult();
-            if (!testStepResult.isSuccess()){
-               successFlag = false;
-            }
-
-            // Extract, complete and store response and request.
-            testReturn.getResponse().setTestCaseId(testCaseId);
-            testReturn.getRequest().setTestCaseId(testCaseId);
-            responses.add(testReturn.getResponse());
-            actualRequests.add(testReturn.getRequest());
-
-            testCaseResult.getTestStepResults().add(testStepResult);
-         }
-
-         // Save the responses into repository to get their ids.
-         responseRepository.save(responses);
-
-         // Associate responses to requests before saving requests.
-         for (int i=0; i<actualRequests.size(); i++){
-            actualRequests.get(i).setResponseId(responses.get(i).getId());
-         }
-         requestRepository.save(actualRequests);
-
-         // Update and save the completed TestCaseResult.
-         // We cannot consider as success if we have no TestStepResults associated...
-         if (testCaseResult.getTestStepResults().size() > 0) {
-            testCaseResult.setSuccess(successFlag);
-            testCaseResult.setElapsedTime(caseElapsedTime);
-         }
+         //
+         updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
          testResult.getTestCaseResults().add(testCaseResult);
          testResultRepository.save(testResult);
       }
 
       // Update success, progress indicators and total time before saving and returning.
+      updateTestResult(testResult);
+
+      return new AsyncResult<>(testResult);
+   }
+
+
+   /**
+    *
+    */
+   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult,
+                                     List<TestReturn> testReturns, String testCaseId) {
+      // Prepare a bunch of flag we're going to complete.
+      boolean successFlag = true;
+      long caseElapsedTime = 0;
+      List<Response> responses = new ArrayList<Response>();
+      List<Request> actualRequests = new ArrayList<Request>();
+
+      for (TestReturn testReturn : testReturns) {
+         // Deal with elapsed time and success flag.
+         caseElapsedTime += testReturn.getElapsedTime();
+         TestStepResult testStepResult = testReturn.buildTestStepResult();
+         if (!testStepResult.isSuccess()){
+            successFlag = false;
+         }
+
+         // Extract, complete and store response and request.
+         testReturn.getResponse().setTestCaseId(testCaseId);
+         testReturn.getRequest().setTestCaseId(testCaseId);
+         responses.add(testReturn.getResponse());
+         actualRequests.add(testReturn.getRequest());
+
+         testCaseResult.getTestStepResults().add(testStepResult);
+      }
+
+      // Save the responses into repository to get their ids.
+      log.debug("Saving {} responses with testCaseId {}", responses.size(), testCaseId);
+      responseRepository.save(responses);
+
+      // Associate responses to requests before saving requests.
+      for (int i=0; i<actualRequests.size(); i++){
+         actualRequests.get(i).setResponseId(responses.get(i).getId());
+      }
+      log.debug("Saving {} requests with testCaseId {}", responses.size(), testCaseId);
+      requestRepository.save(actualRequests);
+
+      // Update and save the completed TestCaseResult.
+      // We cannot consider as success if we have no TestStepResults associated...
+      if (testCaseResult.getTestStepResults().size() > 0) {
+         testCaseResult.setSuccess(successFlag);
+      }
+      testCaseResult.setElapsedTime(caseElapsedTime);
+   }
+
+   /**
+    *
+    */
+   private void updateTestResult(TestResult testResult) {
+      // Update success, progress indicators and total time before saving and returning.
       boolean globalSuccessFlag = true;
+      boolean globalProgressFlag = false;
       long totalElapsedTime = 0;
       for (TestCaseResult testCaseResult : testResult.getTestCaseResults()){
          totalElapsedTime += testCaseResult.getElapsedTime();
          if (!testCaseResult.isSuccess()){
             globalSuccessFlag = false;
          }
+         if (testCaseResult.getElapsedTime() == 0) {
+            globalProgressFlag = true;
+         }
       }
-      // We may have a totalElapsedTime == 0 if running of tests is async.
-      // We have to let the TestResult as 'in progress' in that case.
-      if (totalElapsedTime > 0) {
-         testResult.setInProgress(false);
-         testResult.setSuccess(globalSuccessFlag);
-         testResult.setElapsedTime(totalElapsedTime);
-      }
+
+      // Update aggregated flags before saving whole testResult.
+      testResult.setSuccess(globalSuccessFlag);
+      testResult.setInProgress(globalProgressFlag);
+      testResult.setElapsedTime(totalElapsedTime);
+
       testResultRepository.save(testResult);
-
-      return new AsyncResult<>(testResult);
    }
-
 
    /** Clone and prepare request for a test case usage. */
    private List<Request> cloneRequestsForTestCase(List<Request> requests, String testCaseId){

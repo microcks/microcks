@@ -36,7 +36,11 @@ public class TestReturn{
    private String message;
    private Request request;
    private Response response;
-   
+
+   /** Default constructor for enabling bean serialization. */
+   public TestReturn() {
+   }
+
    /**
     * Build a TestReturn with its code and response.
     * @param code The code (may be success of failure)

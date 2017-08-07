@@ -47,4 +47,14 @@ public class IdBuilder{
    public static String buildTestCaseId(TestResult testResult, Operation operation){
       return testResult.getId() + "-" + testResult.getTestNumber() + "-" + operation.getName();
    }
+
+   /**
+    * Build a unique TestCase Id from test result and operation.
+    * @param testResult The domain testResult holding test case
+    * @param operationName A string representing matching operation name case
+    * @return A unique identifier for test case.
+    */
+   public static String buildTestCaseId(TestResult testResult, String operationName){
+      return testResult.getId() + "-" + testResult.getTestNumber() + "-" + operationName;
+   }
 }

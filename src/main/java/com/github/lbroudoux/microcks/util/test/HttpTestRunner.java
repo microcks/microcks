@@ -69,7 +69,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
    }
    
    @Override
-   public List<TestReturn> runTest(Service service, Operation operation, List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException{
+   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
+                                   List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException{
       if (log. isDebugEnabled()){
          log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
       }

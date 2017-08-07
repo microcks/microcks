@@ -19,6 +19,7 @@
 package com.github.lbroudoux.microcks.web;
 
 import com.github.lbroudoux.microcks.domain.Service;
+import com.github.lbroudoux.microcks.domain.TestCaseResult;
 import com.github.lbroudoux.microcks.domain.TestResult;
 import com.github.lbroudoux.microcks.domain.TestRunnerType;
 import com.github.lbroudoux.microcks.repository.ServiceRepository;
@@ -26,6 +27,7 @@ import com.github.lbroudoux.microcks.repository.TestResultRepository;
 import com.github.lbroudoux.microcks.service.MessageService;
 import com.github.lbroudoux.microcks.service.RequestResponsePair;
 import com.github.lbroudoux.microcks.service.TestService;
+import com.github.lbroudoux.microcks.web.dto.TestCaseReturnDTO;
 import com.github.lbroudoux.microcks.web.dto.TestRequestDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +38,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Rest controller for API defined on test results.
@@ -70,7 +77,17 @@ public class TestController {
       ) {
       log.debug("Getting tests list for service {}, page {} and size {}", serviceId, page, size);
       return testResultRepository.findByServiceId(serviceId,
-            new PageRequest(page, size, new Sort(Sort.Direction.ASC, "testNumber")));
+            new PageRequest(page, size, new Sort(Sort.Direction.DESC, "testNumber")));
+   }
+
+   @RequestMapping(value = "/tests/service/{serviceId}/count", method = RequestMethod.GET)
+   public Map<String, Long> countTestsByService(
+         @PathVariable("serviceId") String serviceId
+      ) {
+      log.debug("Counting tests for service...");
+      Map<String, Long> counter = new HashMap<>();
+      counter.put("counter", testResultRepository.countByServiceId(serviceId));
+      return counter;
    }
 
    @RequestMapping(value = "/tests", method = RequestMethod.POST)
@@ -93,7 +110,28 @@ public class TestController {
          @PathVariable("id") String testResultId,
          @PathVariable("testCaseId") String testCaseId
       ) {
+      // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
+      try {
+         testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
+         testCaseId = testCaseId.replace('_', '/');
+      } catch (UnsupportedEncodingException e) {
+         return null;
+      }
       log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
       return messageService.getRequestResponseByTestCase(testCaseId);
+   }
+
+   @RequestMapping(value = "tests/{id}/testCaseResult", method = RequestMethod.POST)
+   public ResponseEntity<TestCaseResult> reportTestCaseResult(
+         @PathVariable("id") String testResultId,
+         @RequestBody TestCaseReturnDTO testCaseReturn
+         ) {
+      log.debug("Reporting testCase results on test {}", testResultId);
+      TestCaseResult testCaseResult = testService.reportTestCaseResult(
+            testResultId, testCaseReturn.getOperationName(), testCaseReturn.getTestReturns());
+      if (testCaseResult != null) {
+         return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
+      }
+      return new ResponseEntity<TestCaseResult>(HttpStatus.BAD_REQUEST);
    }
 }
