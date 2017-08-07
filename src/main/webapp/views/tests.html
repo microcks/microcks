@@ -1,6 +1,6 @@
 <h2>Tests history for '{{ service.name }} - {{ service.version }}'</h2>
 
-<table class="table table-hover">
+<table class="table table-hover" ng-init="getNumberOfPages()">
   <thead>
     <tr>
       <th>N°</th>
@@ -28,3 +28,10 @@
     </tr>
   </tbody>
 </table>
+
+<div class="text-center">
+  <pagination total-items="count" ng-model="page" items-per-page="pageSize"
+              class="pagination-sm" boundary-links="false" rotate="false"
+              num-pages="numPages" ng-change="listPage(page)">
+  </pagination>
+</div>

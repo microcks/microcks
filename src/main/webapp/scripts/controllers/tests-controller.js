@@ -22,13 +22,22 @@ angular.module('microcksApp')
   .controller('TestsController', ['$rootScope', '$scope', 'tests', 'service', 'TestsService',
       function ($rootScope, $scope, tests, service, TestsService) {
 
-  $scope.page = 0;
+  $scope.page = 1;
   $scope.pageSize = 20;
   $scope.tests = tests;
   $scope.service = service;
 
-  $scope.listPage = function(page) {
-    $scope.tests = TestsService.listByService(service.id, page, $scope.pageSize);
+  $scope.getNumberOfPages = function() {
+    // Do we need to paginate ?
+    TestsService.countByService(service.id).then(function(result) {
+      $scope.count = result.counter;
+    });
   }
 
+  $scope.listPage = function(page) {
+    console.log('listPage called with ' + page);
+    TestsService.listByService(service.id, page - 1, $scope.pageSize).then(function(result) {
+      $scope.tests = result;
+    });
+  }
 }]);

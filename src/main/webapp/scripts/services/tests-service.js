@@ -24,7 +24,15 @@ services.factory('TestsService', ['$http', '$q', function($http, $q) {
   var testService = {
     listByService: function(serviceId, page, pageSize) {
       var delay = $q.defer();
-      $http.get('/api/tests/service/' + serviceId, {page: page, size: pageSize})
+      $http.get('/api/tests/service/' + serviceId, {params: {page: page, size: pageSize}})
+      .success(function(data) {
+        delay.resolve(data);
+      });
+      return delay.promise;
+    },
+    countByService: function(serviceId) {
+      var delay = $q.defer();
+      $http.get('/api/tests/service/' + serviceId + '/count')
       .success(function(data) {
         delay.resolve(data);
       });
