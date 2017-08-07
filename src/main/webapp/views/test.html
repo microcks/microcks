@@ -24,15 +24,15 @@
   <div class="col-md-2">
     <span class="badge alert-info">{{ test.runnerType }}</span> &#160;
     <span id="status" class="badge alert-warning" ng-show="test.inProgress">In progress</span>
-    <span id="status" class="badge alert-success" ng-show="test.success">Success</span>
-    <span id="status" class="badge alert-danger" ng-show="!test.success">Failure</span>
+    <span id="status" class="badge alert-success" ng-show="!test.inProgress && test.success">Success</span>
+    <span id="status" class="badge alert-danger" ng-show="!test.inProgress && !test.success">Failure</span>
   </div>
 </div>
 
 <h3>Results</h3>
 
 <table class="table" ng-repeat="testCase in test.testCaseResults">
-  <tr class="{{ testCase.success ? 'success' : 'error'}}">
+  <tr class="{{testCase.success ? 'success' : 'danger'}}">
     <td width="50%">
       <h4><i class="glyphicon glyphicon-cog"></i> Operation {{ testCase.operationName }}</h4>
     </td>
@@ -50,17 +50,17 @@
         <h6>{{ testStep.requestName }}</h6>
       </td>
       <td>
-        <span class="{{ testStep.success ? 'alert-success' : 'alert-error'}} pull-right">
+        <span class="{{ testStep.success ? 'alert-success' : 'alert-danger'}} pull-right">
           <i ng-show="testStep.success" class="glyphicon glyphicon-ok-circle"></i>
           <span ng-hide="testStep.success">
-            <button popover="{{testStep.message}}" popover-title="Test messages" class="btn">
+            <button popover="{{testStep.message}}" popover-title="Failure messages" class="btn btn-default btn-xs">
               <i class="glyphicon glyphicon-exclamation-sign"></i>
             </button>
           </span>
           {{ testStep.elapsedTime }} ms.
         </span>
       </td>
-      <tr messages-row request="{{ testStep.requestName }}" messages="testMessages.{{testCase.operationName}}"></tr>
+      <tr messages-row request="{{ testStep.requestName }}" messages="testMessages.{{encode(testCase.operationName)}}"></tr>
     </tr>
   </tbody>
 </table>

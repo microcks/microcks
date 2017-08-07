@@ -56,7 +56,10 @@ services.factory('TestsService', ['$http', '$q', function($http, $q) {
     },
     getMessages: function(test, operation) {
       var delay = $q.defer();
-      var testCaseId = test.id + '-' + test.testNumber + '-' + operation;
+      // operation may contain / that are forbidden within encoded URI.
+      // Replace them by "_" and implement same protocole on server-side.
+      operation = operation.replace(/\//g, '_');
+      var testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
       $http.get('/api/tests/' + test.id + '/messages/' + testCaseId)
       .success(function(data) {
         delay.resolve(data);

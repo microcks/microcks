@@ -91,13 +91,16 @@ code.hljs {
   background: #f9f2f4 !important;
 }
 span.alert-info {
-  color: #e1bee7;
+  color: #eeeeee;
 }
 span.alert-success {
-  color: #dff0d8;
+  color: #eeeeee;
 }
 span.alert-danger {
-  color: #e1bee7;
+  color: #eeeeee;
+}
+span.alert-warning {
+  color: #eeeeee;
 }
 
 .panel{
@@ -113,6 +116,10 @@ span.alert-danger {
 }
 .panel-default>.panel-collapse {
   border: 1px solid #2196f3 !important;
+}
+
+.popover-content {
+  color: #444444 !important;
 }
 
 /* Space out content a bit */

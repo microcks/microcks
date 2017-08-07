@@ -55,7 +55,14 @@ angular.module('microcksApp')
 
   $scope.loadMessages = function(operation) {
     TestsService.getMessages($scope.test, operation).then(function(result) {
-      $scope.testMessages[operation] = result;
+      $scope.testMessages[$scope.encode(operation)] = result;
     });
+  }
+
+  $scope.encode = function(operation) {
+    operation = operation.replace(/\//g, '');
+    operation = operation.replace(/\s/g, '');
+    operation = operation.replace(/:/g, '');
+    return encodeURIComponent(operation);
   }
 }]);

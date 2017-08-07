@@ -36,7 +36,7 @@
 <h3>Results</h3>
 
 <table class="table" ng-repeat="testCase in test.testCaseResults">
-  <tr class="{{ test.inProgress ? 'warning' : (testCase.success ? 'success' : 'error')}}">
+  <tr class="{{ test.inProgress ? 'warning' : (testCase.success ? 'success' : 'danger')}}">
     <td width="50%">
       <h4><i class="glyphicon glyphicon-cog"></i> Operation {{ testCase.operationName }}</h4>
     </td>
