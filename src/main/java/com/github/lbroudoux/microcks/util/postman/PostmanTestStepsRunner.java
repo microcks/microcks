@@ -57,6 +57,10 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    private ClientHttpRequestFactory clientHttpRequestFactory;
 
+   private String testsCallbackUrl = null;
+
+   private String postmanRunnerUrl = null;
+
    /**
     * Build a new PostmanTestStepsRunner for a collection.
     * @param collectionFilePath The path to SoapUI project file
@@ -75,19 +79,19 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    /**
-    * Get the ClientHttpRequestFactory used for reaching endpoint.
-    * @return The ClientHttpRequestFactory used for reaching endpoint
-    */
-   public ClientHttpRequestFactory getClientHttpRequestFactory() {
-      return clientHttpRequestFactory;
-   }
-
-   /**
     * Set the ClientHttpRequestFactory used for reaching endpoint.
     * @param clientHttpRequestFactory The ClientHttpRequestFactory used for reaching endpoint
     */
    public void setClientHttpRequestFactory( ClientHttpRequestFactory clientHttpRequestFactory) {
       this.clientHttpRequestFactory = clientHttpRequestFactory;
+   }
+
+   public void setTestsCallbackUrl(String testsCallbackUrl) {
+      this.testsCallbackUrl = testsCallbackUrl;
+   }
+
+   public void setPostmanRunnerUrl(String postmanRunnerUrl) {
+      this.postmanRunnerUrl = postmanRunnerUrl;
    }
 
    @Override
@@ -104,7 +108,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
       // Microcks-postman-runner interface object building.
       JsonNode jsonArg = mapper.createObjectNode();
       ((ObjectNode) jsonArg).put("operation", operation.getName());
-      ((ObjectNode) jsonArg).put("callbackUrl", "http://localhost:8080/api/tests/" + testResult.getId() + "/testCaseResult");
+      ((ObjectNode) jsonArg).put("callbackUrl", testsCallbackUrl + "/api/tests/" + testResult.getId() + "/testCaseResult");
 
       // First we have to retrieved and add the test script for this operation from within Postman collection.
       JsonNode testScript = extractOperationTestScript(operation);
@@ -142,7 +146,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
       }
       ((ObjectNode) jsonArg).set("requests", jsonRequests);
 
-      URI postmanRunnerURI = new URI("http://localhost:3000/tests/" + testResult.getId());
+      URI postmanRunnerURI = new URI(postmanRunnerUrl + "/tests/" + testResult.getId());
       ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(postmanRunnerURI, HttpMethod.POST);
       httpRequest.getBody().write(mapper.writeValueAsBytes(jsonArg));
       httpRequest.getHeaders().add("Content-Type", "application/json");

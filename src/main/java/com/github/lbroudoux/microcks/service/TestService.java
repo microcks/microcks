@@ -81,6 +81,11 @@ public class TestService {
    @Value("${network.password}")
    private final String password = null;
 
+   @Value("${tests-callback.url}")
+   private final String testsCallbackUrl = null;
+
+   @Value("${postman-runner.url}")
+   private final String postmanRunnerUrl = null;
 
    /**
     *
@@ -311,6 +316,9 @@ public class TestService {
                   String collectionFile = handleRemoteFileDownload(jobs.get(0).getRepositoryUrl());
                   PostmanTestStepsRunner postmanRunner = new PostmanTestStepsRunner(collectionFile);
                   postmanRunner.setClientHttpRequestFactory(factory);
+                  System.err.println("testsCallbackUrl: " + testsCallbackUrl);
+                  postmanRunner.setTestsCallbackUrl(testsCallbackUrl);
+                  postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
                   return postmanRunner;
                } catch (IOException ioe) {
                   log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
