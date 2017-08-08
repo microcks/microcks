@@ -103,6 +103,30 @@
       }
     },
     {
+      "kind": "ImageStream",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APP_NAME}-postman-runtime",
+        "labels": {
+          "app": "${APP_NAME}",
+          "component": "${APP_NAME}",
+          "project": "${APP_NAME}",
+          "group": "microcks"
+        }
+      },
+      "spec": {
+        "tags": [
+          {
+            "name": "latest",
+            "from": {
+              "kind": "DockerImage",
+              "name": "lbroudoux/microcks-postman-runtime:latest"
+            }
+          }
+        ]
+      }
+    },
+    {
       "kind": "Service",
       "apiVersion": "v1",
       "metadata": {
@@ -128,6 +152,38 @@
         "sessionAffinity": "None",
         "selector": {
           "container": "spring",
+          "project": "${APP_NAME}",
+          "component": "${APP_NAME}",
+          "group": "microcks"
+        }
+      }
+    },
+    {
+      "kind": "Service",
+      "apiVersion": "v1",
+      "metadata": {
+        "annotations": {},
+        "labels": {
+          "container": "postman-runtime",
+          "component": "${APP_NAME}",
+          "project": "${APP_NAME}",
+          "group": "microcks"
+        },
+        "name": "${APP_NAME}-postman-runtime"
+      },
+      "spec": {
+        "ports": [
+          {
+            "protocol": "TCP",
+            "port": 8080,
+            "targetPort": 3000,
+            "name": "postman-runtime"
+          }
+        ],
+        "type": "ClusterIP",
+        "sessionAffinity": "None",
+        "selector": {
+          "container": "postman-runtime",
           "project": "${APP_NAME}",
           "component": "${APP_NAME}",
           "group": "microcks"
@@ -266,6 +322,14 @@
                   {
                     "name": "SPRING_DATA_MONGODB_DATABASE",
                     "value": "${APP_NAME}"
+                  },
+                  {
+                    "name": "POSTMAN_RUNNER_URL",
+                    "value": "http://${APP_NAME}-postman-runtime:8080"
+                  },
+                  {
+                    "name": "TEST_CALLBACK_URL",
+                    "value": "http://${APP_NAME}:8080"
                   }
                 ],
                 "resources": {
@@ -294,6 +358,115 @@
                   "initialDelaySeconds": 20,
                   "timeoutSeconds": 3,
                   "periodSeconds": 10,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "terminationMessagePath": "/dev/termination-log",
+                "imagePullPolicy": "IfNotPresent"
+              }
+            ],
+            "restartPolicy": "Always",
+            "terminationGracePeriodSeconds": 30,
+            "dnsPolicy": "ClusterFirst"
+          }
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${APP_NAME}-postman-runtime",
+        "labels": {
+          "container": "postman-runtime",
+          "project": "${APP_NAME}",
+          "component": "${APP_NAME}",
+          "group": "microcks"
+        }
+      },
+      "spec": {
+        "strategy": {
+          "type": "Recreate"
+        },
+        "triggers": [
+          {
+            "type": "ConfigChange"
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": [
+                "postman-runtime"
+              ],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${APP_NAME}-postman-runtime:latest"
+              }
+            }
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "deploymentconfig": "${APP_NAME}-postman-runtime",
+          "container": "postman-runtime",
+          "project": "${APP_NAME}",
+          "component": "${APP_NAME}",
+          "group": "microcks"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "deploymentconfig": "${APP_NAME}-postman-runtime",
+              "container": "postman-runtime",
+              "project": "${APP_NAME}",
+              "component": "${APP_NAME}",
+              "group": "microcks"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "postman-runtime",
+                "image": "${APP_NAME}-postman-runtime",
+                "ports": [
+                  {
+                    "containerPort": 3000,
+                    "protocol": "TCP"
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "LOG_LEVEL",
+                    "value": "info"
+                  }
+                ],
+                "resources": {
+                  "limits": {
+                    "memory": "256Mi"
+                  }
+                },
+                "livenessProbe": {
+                  "httpGet": {
+                    "path": "/heath",
+                    "port": 3000,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 4,
+                  "timeoutSeconds": 3,
+                  "periodSeconds": 20,
+                  "successThreshold": 1,
+                  "failureThreshold": 3
+                },
+                "readinessProbe": {
+                  "httpGet": {
+                    "path": "/health",
+                    "port": 3000,
+                    "scheme": "HTTP"
+                  },
+                  "initialDelaySeconds": 5,
+                  "timeoutSeconds": 3,
+                  "periodSeconds": 20,
                   "successThreshold": 1,
                   "failureThreshold": 3
                 },
