@@ -448,7 +448,7 @@
                 },
                 "livenessProbe": {
                   "httpGet": {
-                    "path": "/heath",
+                    "path": "/health",
                     "port": 3000,
                     "scheme": "HTTP"
                   },
