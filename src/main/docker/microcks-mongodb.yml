@@ -1,13 +1,27 @@
 version: '2'
+networks:
+  main:
 services:
   mongo:
     image: mongo:3.3.12
     container_name: microcks-mongo
     volumes:
       - "~/tmp/microcks-data:/data/db"
+    networks:
+      main:
+        aliases:
+          - mongo
+  postman:
+    image: lbroudoux/microcks-postman-runtime:latest
+    container_name: microcks-postman-runtime
+    networks:
+      main:
+        aliases:
+          - postman
   app:
     depends_on:
       - mongo
+      - postman
     image: lbroudoux/microcks:latest
     container_name: microcks
     ports:
@@ -16,5 +30,9 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
-    links:
-      - mongo:mongo
+      - POSTMAN_RUNNER_URL=http://postman:3000
+      - TEST_CALLBACK_URL=http://microcks:8080
+    networks:
+      main:
+        aliases:
+          - microcks
