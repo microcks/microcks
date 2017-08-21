@@ -102,11 +102,13 @@ public class TestRunnerService {
          testResult.setTestNumber(1L);
       }
 
-      for (Operation operation : service.getOperations()){
+      for (Operation operation : service.getOperations()) {
          // Prepare result container for operation tests.
          TestCaseResult testCaseResult = new TestCaseResult();
          testCaseResult.setOperationName(operation.getName());
          String testCaseId = IdBuilder.buildTestCaseId(testResult, operation);
+         testResult.getTestCaseResults().add(testCaseResult);
+         testResultRepository.save(testResult);
 
          // Prepare collection of requests to launch.
          List<Request> requests = requestRepository.findByOperationId(IdBuilder.buildOperationId(service, operation));
@@ -123,16 +125,18 @@ public class TestRunnerService {
             // Set flags and add to results before exiting loop.
             testCaseResult.setSuccess(false);
             testCaseResult.setElapsedTime(0);
-            testResult.getTestCaseResults().add(testCaseResult);
+            testResultRepository.save(testResult);
             break;
          } catch (Throwable t) {
-            log.error("Throwable while testing operation {}", operation.getName(),  t);
+            log.error("Throwable while testing operation {}", operation.getName(), t);
          }
 
-         //
-         updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
-         testResult.getTestCaseResults().add(testCaseResult);
-         testResultRepository.save(testResult);
+         // Update result if we got returns.
+         if (results != null && !results.isEmpty()) {
+            updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
+            testResult.getTestCaseResults().add(testCaseResult);
+            testResultRepository.save(testResult);
+         }
       }
 
       // Update success, progress indicators and total time before saving and returning.
@@ -263,7 +267,6 @@ public class TestRunnerService {
                   String collectionFile = handleRemoteFileDownload(jobs.get(0).getRepositoryUrl());
                   PostmanTestStepsRunner postmanRunner = new PostmanTestStepsRunner(collectionFile);
                   postmanRunner.setClientHttpRequestFactory(factory);
-                  System.err.println("testsCallbackUrl: " + testsCallbackUrl);
                   postmanRunner.setTestsCallbackUrl(testsCallbackUrl);
                   postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
                   return postmanRunner;

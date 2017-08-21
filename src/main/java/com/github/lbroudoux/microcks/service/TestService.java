@@ -19,7 +19,6 @@
 package com.github.lbroudoux.microcks.service;
 
 import com.github.lbroudoux.microcks.domain.*;
-import com.github.lbroudoux.microcks.repository.ImportJobRepository;
 import com.github.lbroudoux.microcks.repository.RequestRepository;
 import com.github.lbroudoux.microcks.repository.ResponseRepository;
 import com.github.lbroudoux.microcks.repository.TestResultRepository;
@@ -28,7 +27,6 @@ import com.github.lbroudoux.microcks.util.test.TestReturn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.ArrayList;
 import java.util.Date;

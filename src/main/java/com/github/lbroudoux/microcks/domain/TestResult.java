@@ -19,6 +19,7 @@
 package com.github.lbroudoux.microcks.domain;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,6 +37,8 @@ public class TestResult {
 
    @Id
    private String id;
+   @Version
+   Long version;
    private Long testNumber;
    private Date testDate;
    private String testedEndpoint;
@@ -53,6 +56,14 @@ public class TestResult {
 
    public void setId(String id) {
       this.id = id;
+   }
+
+   public Long getVersion() {
+      return version;
+   }
+
+   public void setVersion(Long version) {
+      this.version = version;
    }
 
    public Long getTestNumber() {
