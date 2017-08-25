@@ -148,6 +148,68 @@ public class ServiceService {
    }
 
    /**
+    * Create a new Service concerning a GenericResource for dynamic mocking.
+    * @param name The name of the new Service to create
+    * @param version The version of the new Service to create
+    * @param resource The resource that will be exposed as CRUD operations for this service
+    * @return The newly created Service object
+    * @throws EntityAlreadyExistsException if a Service with same name and version is already present in store
+    */
+   public Service createGenericResourceService(String name, String version, String resource)
+         throws EntityAlreadyExistsException {
+      log.info("Creating a new Service '{}-{}' for generic resource {}", name, version, resource);
+
+      // Check if corresponding Service already exists.
+      Service existingService = serviceRepository.findByNameAndVersion(name, version);
+      if (existingService != null) {
+         log.warn("A Service '{}-{}' is already existing. Throwing an Exception", name, version);
+         throw new EntityAlreadyExistsException(String.format("Service '%s-%s' is already present in store", name, version));
+      }
+      // Create new service with GENERIC_REST type.
+      Service service = new Service();
+      service.setName(name);
+      service.setVersion(version);
+      service.setType(ServiceType.GENERIC_REST);
+
+      // Now create basic crud operations for the resource.
+      Operation createOp = new Operation();
+      createOp.setName("POST /" + resource);
+      createOp.setMethod("POST");
+      service.addOperation(createOp);
+
+      Operation getOp = new Operation();
+      getOp.setName("GET /" + resource + "/:id");
+      getOp.setMethod("GET");
+      getOp.setDispatcher(DispatchStyles.URI_PARTS);
+      getOp.setDispatcherRules("id");
+      service.addOperation(getOp);
+
+      Operation updateOp = new Operation();
+      updateOp.setName("PUT /" + resource + "/:id");
+      updateOp.setMethod("PUT");
+      updateOp.setDispatcher(DispatchStyles.URI_PARTS);
+      updateOp.setDispatcherRules("id");
+      service.addOperation(updateOp);
+
+      Operation listOp = new Operation();
+      listOp.setName("GET /" + resource);
+      listOp.setMethod("GET");
+      service.addOperation(listOp);
+
+      Operation delOp = new Operation();
+      delOp.setName("DELETE /" + resource + "/:id");
+      delOp.setMethod("DELETE");
+      delOp.setDispatcher(DispatchStyles.URI_PARTS);
+      delOp.setDispatcherRules("id");
+      service.addOperation(delOp);
+
+      serviceRepository.save(service);
+      log.info("Having create Service '{}' for generic resource {}", service.getId(), resource);
+
+      return service;
+   }
+
+   /**
     * Remove a Service and its bound documents using the service id.
     * @param id The identifier of service to remove.
     */

@@ -24,7 +24,9 @@ import com.github.lbroudoux.microcks.repository.ServiceRepository;
 import com.github.lbroudoux.microcks.service.MessageService;
 import com.github.lbroudoux.microcks.service.RequestResponsePair;
 import com.github.lbroudoux.microcks.service.ServiceService;
+import com.github.lbroudoux.microcks.util.EntityAlreadyExistsException;
 import com.github.lbroudoux.microcks.util.IdBuilder;
+import com.github.lbroudoux.microcks.web.dto.GenericResourceServiceDTO;
 import com.github.lbroudoux.microcks.web.dto.ServiceViewDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +35,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
@@ -106,6 +105,19 @@ public class ServiceController {
          return new ResponseEntity<>(new ServiceViewDTO(service, messagesMap), HttpStatus.OK);
       }
       return new ResponseEntity<>(service, HttpStatus.OK);
+   }
+
+   @RequestMapping(value = "/services/generic", method = RequestMethod.POST)
+   public ResponseEntity<Service> createGenericResourceService(@RequestBody GenericResourceServiceDTO serviceDTO) {
+      log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(), serviceDTO.getVersion(), serviceDTO.getResource());
+
+      try{
+         Service service = serviceService.createGenericResourceService(serviceDTO.getName(), serviceDTO.getVersion(), serviceDTO.getResource());
+         return new ResponseEntity<>(service, HttpStatus.CREATED);
+      } catch (EntityAlreadyExistsException eaee) {
+         log.error("Service '{}-{} already exists'", serviceDTO.getName(), serviceDTO.getVersion());
+         return new ResponseEntity<>(HttpStatus.CONFLICT);
+      }
    }
 
    @RequestMapping(value = "/services/{id}/operationDelay", method = RequestMethod.PUT)

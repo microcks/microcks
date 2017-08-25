@@ -1,0 +1,41 @@
+<form name="form" class="modal-content">
+  <div class="modal-header">
+    <button type="button" class="close" aria-hidden="false" ng-click="cancel()">
+      <span class="glyphicon glyphicon-close"></span>
+    </button>
+    <h3 class="modal-title">
+      <i class="fa fa-cubes"></i> Add Generic Resource Service
+    </h3>
+  </div>
+  <div class="modal-body">
+    <div class="form-horizontal">
+      <fieldset>
+        <legend>Service properties</legend>
+        <div class="control-group">
+          <label class="control-label" for="name">Service Name & Version</label>
+          <div class="controls row">
+            <div class="col-xs-6">
+              <input type="text" placeholder="eg. Order Service" id="name" name="name" class="form-control" size="20" ng-model="service.name" required/>
+            </div>
+            <div class="input-group col-xs-2">
+              <span class="input-group-addon">v.</span>
+              <input type="text" placeholder="1.0" id="version" name="version" class="form-control" ng-model="service.version" required/>
+            </div>
+          </div>
+          <p class="help-block">The name and version of the Service to create (should be unique).</p>
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="resource">Resource</label>
+          <div class="controls">
+            <input type="text" placeholder="eg. order" id="resource" name="resource" class="form-control" ng-model="service.resource" required/>
+            <p class="help-block">The resource this Service will expose (will be used for default CRUD API operations).</p>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div class="modal-footer">
+      <input type="button" class="btn btn-default" ng-click="cancel()" value="Cancel"/>
+      <input type="submit" class="btn btn-primary" ng-click="ok(service)" ng-disabled="form.$invalid" value="Add"/>
+    </div>
+  </div>
+</form>

@@ -19,8 +19,8 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('ServicesController', ['$rootScope', '$scope', '$location', 'notify', 'services', 'Service',
-      function ($rootScope, $scope, $location, notify, services, Service) {
+  .controller('ServicesController', ['$rootScope', '$scope', '$modal', '$location', 'notify', 'services', 'Service',
+      function ($rootScope, $scope, $modal, $location, notify, services, Service) {
 
   $scope.page = 1;
   $scope.pageSize = 20;
@@ -40,4 +40,53 @@ angular.module('microcksApp')
       $scope.services = Service.query({page: newValue-1, size: $scope.pageSize});
     }
   });
+
+  $scope.addDynamicService = function(service) {
+    service = new Service({name: "", version: "", resource: ""});
+    var modalInstance = show(service, 'edit-genericservice.html');
+    modalInstance.result.then(function(result) {
+      var service = result.service;
+      service.$createDynamic(function(result) {
+          notify({
+            message: 'Dynamic service "' + service.name + "' has been created !",
+            classes: 'alert-success'
+          });
+        }, function(result) {
+          console.log('result: ' + JSON.stringify(result));
+          if (result.status == 409) {
+            notify({
+              message: 'Service "' + service.name + "' already exists with version " + service.version,
+              classes: 'alert-warning'
+            });
+          }
+        });
+    });
+  };
+
+  function show(service, template) {
+    return $modal.open({
+      templateUrl: 'views/dialogs/' + template,
+      controller: 'ServiceModalController',
+      resolve: {
+        service: function () {
+          return service;
+        }
+      }
+    });
+  }
+
 }]);
+
+angular.module('microcksApp')
+  .controller('ServiceModalController', ['$scope', '$modalInstance', 'service', function ($scope, $modalInstance, service) {
+
+    $scope.service = service;
+    $scope.ok = function(service) {
+      $modalInstance.close({
+        service: service
+      });
+    };
+    $scope.cancel = function() {
+      $modalInstance.dismiss('cancel');
+    };
+  }]);

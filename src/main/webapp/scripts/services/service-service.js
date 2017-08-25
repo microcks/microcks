@@ -25,6 +25,7 @@ services.factory('Service', ['$resource', function($resource) {
   return $resource('/api/services/:serviceId', {serviceId: '@id'}, {
             search: {method: 'GET', url: '/api/services/search', isArray: true},
             count: {method: 'GET', url: '/api/services/count'},
-            updateOperationDelay: {method: 'PUT', url: '/api/services/:serviceId/operationDelay'}
+            updateOperationDelay: {method: 'PUT', url: '/api/services/:serviceId/operationDelay'},
+            createDynamic: {method: 'POST', url: '/api/services/generic'}
   });
 }]);

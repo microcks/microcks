@@ -74,7 +74,7 @@
             </div>
           </div>
         </div>
-        <div class="row" ng-show="{{ view.service.type == 'REST' }}">
+        <div class="row" ng-show="{{ view.service.type != 'SOAP_HTTP' }}">
           <div class="col-sm-3" align="right">Operation Verb</div>
           <div class="col-sm-9">
             <code>{{ operation.method }}</code>
@@ -85,6 +85,7 @@
           <div class="col-sm-9">
             <code ng-show="{{ view.service.type == 'SOAP_HTTP' }}">/soap/{{encodeUrl(view.service.name)}}/{{ view.service.version }}/</code>
             <code ng-show="{{ view.service.type == 'REST' }}">/rest/{{encodeUrl(view.service.name)}}/{{ view.service.version }}{{ removeVerbInUrl(operation.name) }}</code>
+            <code ng-show="{{ view.service.type == 'GENERIC_REST' }}">/dynarest/{{encodeUrl(view.service.name)}}/{{ view.service.version }}{{ removeVerbInUrl(operation.name) }}</code>
           </div>
         </div>
         <div class="row">

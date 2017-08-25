@@ -16,14 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package com.github.lbroudoux.microcks.domain;
+package com.github.lbroudoux.microcks.web.dto;
 
 /**
- * Types for managed Microservices.
+ * This is DTO bean for handling creation of Service for GenericResource and dynamic mocking.
  * @author laurent
  */
-public enum ServiceType {
-   SOAP_HTTP,
-   REST,
-   GENERIC_REST
+public class GenericResourceServiceDTO {
+
+   private String name;
+   private String version;
+   private String resource;
+
+   public GenericResourceServiceDTO() {
+   }
+
+   public String getName() {
+      return name;
+   }
+   public void setName(String name) {
+      this.name = name;
+   }
+
+   public String getVersion() {
+      return version;
+   }
+   public void setVersion(String version) {
+      this.version = version;
+   }
+
+   public String getResource() {
+      return resource;
+   }
+   public void setResource(String resource) {
+      this.resource = resource;
+   }
 }
