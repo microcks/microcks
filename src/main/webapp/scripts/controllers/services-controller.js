@@ -52,7 +52,6 @@ angular.module('microcksApp')
             classes: 'alert-success'
           });
         }, function(result) {
-          console.log('result: ' + JSON.stringify(result));
           if (result.status == 409) {
             notify({
               message: 'Service "' + service.name + "' already exists with version " + service.version,
