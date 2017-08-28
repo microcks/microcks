@@ -19,8 +19,8 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('ServicesController', ['$rootScope', '$scope', '$modal', '$location', 'notify', 'services', 'Service',
-      function ($rootScope, $scope, $modal, $location, notify, services, Service) {
+  .controller('ServicesController', ['$rootScope', '$scope', '$modal', '$location', '$timeout', 'notify', 'services', 'Service',
+      function ($rootScope, $scope, $modal, $location, $timeout, notify, services, Service) {
 
   $scope.page = 1;
   $scope.pageSize = 20;
@@ -62,6 +62,16 @@ angular.module('microcksApp')
         });
     });
   };
+
+  $scope.$watch('$viewContentLoaded', function(){
+    // Here your view content is fully loaded !!
+    if ($scope.term != undefined) {
+      // Put hightlighting in the rendering queue using timeout.
+      $timeout(function(){
+        $('#services').highlight($scope.term);
+      }, 0);
+    }
+  });
 
   function show(service, template) {
     return $modal.open({
