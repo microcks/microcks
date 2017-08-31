@@ -24,6 +24,14 @@
           </a>
         </div>
       </div>
+      <div class="row" ng-show="{{ view.service.type == 'GENERIC_REST' }}">
+        <div class="col-sm-2" align="right">Resources</div>
+        <div class="col-sm-7">
+          <a href="/api/resources/{{ view.service.id }}/swagger_20" target="new" alt="Swagger 2.0 spec">
+            Swagger 2.0 spec <i class="glyphicon glyphicon-globe"></i>
+          </a>
+        </div>
+      </div>
       <div class="row">
         <div class="col-sm-2" align="right">Statistics</div>
         <div class="col-sm-7">
