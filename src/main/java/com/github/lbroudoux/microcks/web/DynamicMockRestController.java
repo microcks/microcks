@@ -140,30 +140,6 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-
-
-   @RequestMapping(value = "/{service}/{version}/{resource}/count", method = RequestMethod.GET)
-   public Map<String, Long> countResources(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @PathVariable("resource") String resource,
-         @RequestParam(value="delay", required=false) Long delay
-   ) {
-      log.debug("Counting resources for service '{}-{}'", serviceName, version);
-      long startTime = System.currentTimeMillis();
-
-      Map<String, Long> counter = new HashMap<>();
-      MockContext mockContext = getMockContext(serviceName, version, "GET /" + resource);
-      if (mockContext != null) {
-         counter.put("counter", genericResourceRepository.countByServiceId(mockContext.service.getId()));
-      } else {
-         // Return a 0 code : now resources.
-         counter.put("counter", 0L);
-      }
-
-      return counter;
-   }
-
    @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.GET)
    public ResponseEntity<String> getResource(
          @PathVariable("service") String serviceName,

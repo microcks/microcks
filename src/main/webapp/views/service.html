@@ -50,8 +50,13 @@
   </div>
 </section>
 <br/>
+
 <section id="operations">
-  <h3>Operations</h3>
+  <h3>Operations
+    <span ng-show="{{ view.service.type == 'GENERIC_REST' }}" class="pull-right text-right">
+      <a class="btn btn-success" ng-click="openResources(view.service)"><i class="glyphicon glyphicon-transfer"></i> Resources</a>
+    </span>
+  </h3>
 
   <div ng-repeat="operation in view.service.operations">
     <accordion>

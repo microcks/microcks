@@ -19,8 +19,8 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('ServiceController', ['$rootScope', '$scope', '$location', 'service', 'Service', 'TestsService',
-      function ($rootScope, $scope, $location, service, Service, TestsService) {
+  .controller('ServiceController', ['$rootScope', '$scope', '$modal', '$location', 'service', 'Service', 'TestsService',
+      function ($rootScope, $scope, $modal, $location, service, Service, TestsService) {
 
   $scope.view = service;
   $rootScope.service = $scope.view.service;
@@ -69,4 +69,47 @@ angular.module('microcksApp')
   $scope.encodeUrl = function(url) {
     return url.replace(/\s/g, '%20');
   }
+
+  $scope.openResources = function(service) {
+    var modalInstance = $modal.open({
+      size: 'lg',
+      templateUrl: 'views/dialogs/view-genericresources.html',
+      controller: 'ResourcesModalController',
+      resolve: {
+        service: function() {
+          return service;
+        }
+      }
+    });
+    modalInstance.result.then(function(result) {});
+  }
+
 }]);
+
+angular.module('microcksApp')
+  .controller('ResourcesModalController', ['$scope', '$modalInstance', 'service', 'GenericResourcesService',
+        function ($scope, $modalInstance, service, GenericResourcesService) {
+
+    $scope.service = service;
+    $scope.page = 1;
+    $scope.pageSize = 10;
+
+    $scope.listPage = function(page) {
+      GenericResourcesService.listByService(service.id, page - 1, $scope.pageSize).then(function(result) {
+        $scope.resources = result;
+      });
+    };
+
+    $scope.getNumberOfPages = function() {
+      // Do we need to paginate ?
+      GenericResourcesService.countByService(service.id).then(function(result) {
+        $scope.count = result.counter;
+      });
+    };
+
+    $scope.ok = function() {
+      $modalInstance.dismiss('cancel');
+    };
+
+    $scope.listPage(1);
+  }]);

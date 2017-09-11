@@ -18,25 +18,26 @@
 */
 'use strict';
 
-angular.module('microcksApp')
-  .controller('TestsController', ['$rootScope', '$scope', 'tests', 'service', 'TestsService',
-      function ($rootScope, $scope, tests, service, TestsService) {
+var services = angular.module('microcksApp.services');
 
-  $scope.page = 1;
-  $scope.pageSize = 20;
-  $scope.tests = tests;
-  $scope.service = service;
-
-  $scope.getNumberOfPages = function() {
-    // Do we need to paginate ?
-    TestsService.countByService(service.id).then(function(result) {
-      $scope.count = result.counter;
-    });
+services.factory('GenericResourcesService', ['$http', '$q', function($http, $q) {
+  var resourceService = {
+    listByService: function(serviceId, page, pageSize) {
+      var delay = $q.defer();
+      $http.get('/api/genericresources/service/' + serviceId, {params: {page: page, size: pageSize}})
+      .success(function(data) {
+        delay.resolve(data);
+      });
+      return delay.promise;
+    },
+    countByService: function(serviceId) {
+      var delay = $q.defer();
+      $http.get('/api/genericresources/service/' + serviceId + '/count')
+      .success(function(data) {
+        delay.resolve(data);
+      });
+      return delay.promise;
+    }
   }
-
-  $scope.listPage = function(page) {
-    TestsService.listByService(service.id, page - 1, $scope.pageSize).then(function(result) {
-      $scope.tests = result;
-    });
-  }
+  return resourceService;
 }]);
