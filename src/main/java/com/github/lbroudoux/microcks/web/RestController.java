@@ -146,7 +146,7 @@ public class RestController {
             dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
          }
          else if (DispatchStyles.URI_ELEMENTS.equals(rOperation.getDispatcher())){
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rOperation.getName(), resourcePath);
+            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
             String fullURI = request.getRequestURL() + "?" + request.getQueryString();
             dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
          }
