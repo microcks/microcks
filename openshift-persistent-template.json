@@ -38,7 +38,7 @@
       "name": "MEMORY_LIMIT",
       "displayName": "Memory Limit",
       "description": "Maximum amount of memory the container can use.",
-      "value": "768Mi"
+      "value": "1Gi"
     },
     {
       "name": "MONGODB_MEMORY_LIMIT",
