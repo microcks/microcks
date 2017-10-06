@@ -1,0 +1,36 @@
+<div class="modal-header">
+  <button type="button" class="close" aria-hidden="false" ng-click="cancel()">
+    <span class="glyphicon glyphicon-close"></span>
+  </button>
+  <h3 class="modal-title">
+    <i class="glyphicon glyphicon-transfer"></i> Resources List
+  </h3>
+</div>
+<div class="modal-body">
+  <table class="table table-hover table-striped" ng-init="getNumberOfPages()">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Payload</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="resource in resources">
+        <td>{{ resource.id }}</td>
+        <td><div hljs no-escape source="'{{ resource.payload }}'"></div></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="text-center">
+    <pagination total-items="count" ng-model="page" items-per-page="pageSize"
+                class="pagination-sm" boundary-links="false" rotate="false"
+                num-pages="numPages" ng-change="listPage(page)">
+    </pagination>
+  </div>
+  <br/>
+  <div class="modal-footer">
+    <input type="button" class="btn btn-primary" ng-click="ok()" value="Close" />
+  </div>
+</div>

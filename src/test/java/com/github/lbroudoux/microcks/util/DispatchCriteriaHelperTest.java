@@ -92,6 +92,21 @@ public class DispatchCriteriaHelperTest {
       dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
       assertEquals("/component=myComp/version=1.2", dispatchCriteria);
    }
+
+   @Test
+   public void testExtractFromURIPattern2() {
+      String resourcePath = "/pet/2";
+      String operationName = "/pet/:petId";
+
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, resourcePath);
+      assertEquals("/petId=2", dispatchCriteria);
+
+      resourcePath = "/order/123456";
+      operationName = "/order/:id";
+
+      dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, resourcePath);
+      assertEquals("/id=123456", dispatchCriteria);
+   }
    
    @Test
    public void testExtractFromURIPatternUnsorted(){
