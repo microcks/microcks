@@ -38,7 +38,7 @@
       "name": "MEMORY_LIMIT",
       "displayName": "Memory Limit",
       "description": "Maximum amount of memory the container can use.",
-      "value": "1Gi"
+      "value": "512Mi"
     },
     {
       "name": "MONGODB_MEMORY_LIMIT",
@@ -96,7 +96,7 @@
             "name": "latest",
             "from": {
               "kind": "DockerImage",
-              "name": "lbroudoux/microcks:latest"
+              "name": "microcks/microcks:latest"
             }
           }
         ]
@@ -120,7 +120,7 @@
             "name": "latest",
             "from": {
               "kind": "DockerImage",
-              "name": "lbroudoux/microcks-postman-runtime:latest"
+              "name": "microcks/microcks-postman-runtime:latest"
             }
           }
         ]
@@ -311,6 +311,10 @@
                   }
                 ],
                 "env": [
+                  {
+                    "name": "JAVA_OPTS",
+                    "value": "-Xmx300m"
+                  },
                   {
                     "name": "SPRING_PROFILES_ACTIVE",
                     "value": "prod"

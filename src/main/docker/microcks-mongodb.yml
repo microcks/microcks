@@ -12,7 +12,7 @@ services:
         aliases:
           - mongo
   postman:
-    image: lbroudoux/microcks-postman-runtime:latest
+    image: microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
     networks:
       main:
@@ -22,7 +22,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: lbroudoux/microcks:latest
+    image: microcks/microcks:latest
     container_name: microcks
     ports:
       - "8080:8080"

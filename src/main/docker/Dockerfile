@@ -1,5 +1,12 @@
-FROM java:8
+FROM openjdk:8-jre-alpine
+
+MAINTAINER Laurent Broudoux <laurent.broudoux@gmail.com>
+
 VOLUME /tmp
+
+# Copy files and install dependencies
 ADD *.jar app.jar
-RUN sh -c 'touch /app.jar'
-ENTRYPOINT ["java","-Dspring.profiles.active=prod -Djava.security.egd=file:/dev/./urandom","-jar","/app.jar"]
+
+ENV JAVA_OPTS=""
+
+ENTRYPOINT exec java $JAVA_OPTS -Dspring.profiles.active=prod -Djava.security.egd=file:/dev/./urandom -jar /app.jar
