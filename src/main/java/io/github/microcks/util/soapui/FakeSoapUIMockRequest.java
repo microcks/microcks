@@ -27,7 +27,6 @@ import com.eviware.soapui.support.types.StringToStringsMap;
  * for explanations on how they are used).
  * Such object should follow contract exposed by http://www.soapui.org/apidocs/com/eviware/soapui/impl/wsdl/mock/WsdlMockRequest.html,
  * and because it's Groovy dynamic stuff we do not have to implement a particular interface.
- * <br/>
  * Groovy !! isn't it ??
  * @author laurent
  */

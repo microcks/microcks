@@ -47,20 +47,24 @@ public abstract class AbstractTestRunner<T>{
     * @param method The method that applies for requesting service (retrieved using buildMethod() method) 
     * @return A list of TestReturn corresponding to the result of test for each reference requests. Returns indices
     * matches reference request indices.
-    * @throws java.net.URISyntaxException
-    * @throws java.io.IOException
+    * @throws java.net.URISyntaxException if endpointUrl cannot be trasnformed as URI
+    * @throws java.io.IOException in case of network failure mainly
     */
    public abstract List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
                                             List<Request> requests, String endpointUrl, T method) throws URISyntaxException, IOException;
    
    /**
     * (interpretation is subject to implementation)
-    * @param method
-    * @return
+    * @param method String representation of method
+    * @return Object representing method
     */
    public abstract T buildMethod(String method);
    
-   /** Build a single string value from values set. */
+   /**
+    * Build a single string value from values set.
+    * @param values Strings to build value from
+    * @return Comma separated string of values
+    */
    protected String buildValue(Set<String> values){
       if (values == null || values.isEmpty()){
          return null;

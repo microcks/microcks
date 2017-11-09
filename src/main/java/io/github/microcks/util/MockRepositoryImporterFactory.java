@@ -36,10 +36,10 @@ import java.nio.file.Files;
 public class MockRepositoryImporterFactory {
 
    /**
-    *
-    * @param mockRepository
-    * @return
-    * @throws IOException
+    * Create the right MockRepsoitoryImporter implementation depending on repository type.
+    * @param mockRepository The file representing the repository type
+    * @return An instance of MockRepositoryImporter implementation
+    * @throws IOException in case of file access
     */
    public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository) throws IOException {
       MockRepositoryImporter importer = null;

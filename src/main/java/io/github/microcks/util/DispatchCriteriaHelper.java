@@ -113,9 +113,9 @@ public class DispatchCriteriaHelper{
     * Extract from given URIs a dispatching rule representing the number of variable parts
     * in this different URIs. For example, given 'http://s/r/f//d/m/s' and 'http://s/r/f/d', method
     * will detect 2 variable parts ('m' and 's'). Because it does know anything about the semantics of this
-    * parts, it produces a generic dispatch rule 'part1 && part2' telling that URIs can be templatized
+    * parts, it produces a generic dispatch rule <code>'part1 &amp;&amp; part2'</code> telling that URIs can be templatized
     * like 'http://s/r/f/d/{part1}/{part2} and that this 2 parts should be taken into account when
-    * disoatching request to response.
+    * dispatching request to response.
     * @param uris A set of URIs that are expected to share a common prefix
     * @return A string representing dispatch rules for the corresponding incoming request.
     */

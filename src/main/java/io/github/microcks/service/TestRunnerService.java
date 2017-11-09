@@ -87,10 +87,10 @@ public class TestRunnerService {
 
    /**
     *
-    * @param testResult
-    * @param service
-    * @param runnerType
-    * @return
+    * @param testResult TestResults to aggregate results within
+    * @param service Service to test
+    * @param runnerType Type of runner for launching the tests
+    * @return A Future wrapping test results
     */
    @Async
    public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service, TestRunnerType runnerType){

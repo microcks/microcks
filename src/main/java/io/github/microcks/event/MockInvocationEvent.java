@@ -39,13 +39,13 @@ public class MockInvocationEvent extends ApplicationEvent{
    private final long duration;
 
    /**
-    * 
-    * @param source
-    * @param serviceName
-    * @param serviceVersion
-    * @param mockResponse
-    * @param invocationTimestamp
-    * @param duration
+    * Create a new mock invocation event.
+    * @param source Source object for event
+    * @param serviceName Name of invoked service
+    * @param serviceVersion Version of invoked service
+    * @param mockResponse Mock response returned during invocation
+    * @param invocationTimestamp Timestamp of invocation
+    * @param duration Duration of invocation
     */
    public MockInvocationEvent(Object source, String serviceName, String serviceVersion, String mockResponse,
          Date invocationTimestamp, long duration){

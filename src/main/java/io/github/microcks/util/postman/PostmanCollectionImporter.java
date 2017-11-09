@@ -376,6 +376,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
     * Build a coherent operation name from the JsonNode of collection representing operation (ie. having a
     * request item) and an operationNameRadix (ie. a subcontext or nested subcontext folder where operation
     * is stored).
+    * @param operationNode JSON node for operation
+    * @param operationNameRadix String representing radix of operation name
+    * @return Operation name
     */
    public static String buildOperationName(JsonNode operationNode, String operationNameRadix) {
       String url = operationNode.path("request").path("url").asText("");

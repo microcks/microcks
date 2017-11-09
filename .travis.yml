@@ -19,5 +19,5 @@ after_success:
     npm install -g grunt-cli bower;
     mvn -DskipTests -Dyo.test.skip=true -Pprod package docker:build;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker push microcks/microcks-postman-runtime:$TRAVIS_TAG;
+    docker push microcks/microcks:$TRAVIS_TAG;
     fi

@@ -51,7 +51,7 @@ import java.util.Set;
 /**
  * This is a utility class for running Service tests using assertions defined under a corresponding SoapUI
  * project. Simply build a new SoapUITestStepsRunner referencing the local path to project file and
- * call <i>runAllTestSteps()</i> or <i>runTestSteps()</i> to pick only some of them.<br/> 
+ * call <i>runAllTestSteps()</i> or <i>runTestSteps()</i> to pick only some of them.
  * For now, this class only runs SoapUI test steps corresponding to Request Test Steps (either SOAP, REST or HTTP).
  * @author laurent
  */

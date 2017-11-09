@@ -55,11 +55,11 @@ public class TestService {
 
 
    /**
-    *
-    * @param service
-    * @param testEndpoint
-    * @param runnerType
-    * @return
+    * Launch tests for a Service on dediated endpoint URI.
+    * @param service Service to launch tests for
+    * @param testEndpoint Endpoint URI for running the tests
+    * @param runnerType The type of runner fo tests
+    * @return An initialized TestResults (mostly empty for now since tests run asynchronously)
     */
    public TestResult launchTests(Service service, String testEndpoint, TestRunnerType runnerType){
       TestResult testResult = new TestResult();
@@ -77,11 +77,11 @@ public class TestService {
    }
 
    /**
-    *
-    * @param testResultId
-    * @param operationName
-    * @param testReturns
-    * @return
+    * Endpoint for reporting test case results
+    * @param testResultId Unique identifier of test results we report results for
+    * @param operationName Name of operation to report a result for
+    * @param testReturns List of test returns to add to this test case.
+    * @return A completed TestCaseResult object
     */
    public TestCaseResult reportTestCaseResult(String testResultId, String operationName, List<TestReturn> testReturns) {
       log.info("Reporting a TestCaseResult for testResult {} on operation '{}'", testResultId, operationName);
