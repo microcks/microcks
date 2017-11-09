@@ -8,6 +8,7 @@
 
   <name>Microcks</name>
   <description>Mirocks: easy mocks for your microservices</description>
+  <url>http://microcks.github.io</url>
   <organization>
     <name>Microcks</name>
     <url>http://microcks.github.io</url>
