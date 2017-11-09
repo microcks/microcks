@@ -18,6 +18,7 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "$TRAVIS_TAG" ]; then
     npm install -g grunt-cli bower;
     mvn -DskipTests -Dyo.test.skip=true -Pprod package docker:build;
+    docker tag microcks/microcks microcks/microcks:$TRAVIS_TAG;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:$TRAVIS_TAG;
     fi

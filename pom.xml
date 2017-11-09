@@ -6,6 +6,29 @@
   <artifactId>microcks</artifactId>
   <version>0.1.2-SNAPSHOT</version>
 
+  <name>Microcks</name>
+  <description>Mirocks: easy mocks for your microservices</description>
+  <organization>
+    <name>Microcks</name>
+    <url>http://microcks.github.io</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>microcks</id>
+      <name>Microcks Development Team</name>
+      <organizationUrl>https://microcks.github.io/</organizationUrl>
+    </developer>
+  </developers>
+
   <scm>
     <connection>scm:git:https://github.com/microcks/microcks.git</connection>
     <developerConnection>scm:git:https://github.com/microcks/microcks.git</developerConnection>
@@ -154,6 +177,15 @@
             <configuration>
               <passphrase>${gpg.passphrase}</passphrase>
             </configuration>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
           </plugin>
         </plugins>
       </build>
