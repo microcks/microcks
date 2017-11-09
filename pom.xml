@@ -4,13 +4,13 @@
 
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
-  <version>0.1.1-SNAPSHOT</version>
+  <version>0.1.1</version>
 
   <scm>
     <connection>scm:git:https://github.com/microcks/microcks.git</connection>
     <developerConnection>scm:git:https://github.com/microcks/microcks.git</developerConnection>
     <url>http://github.com/microcks/microcks/</url>
-    <tag>HEAD</tag>
+    <tag>0.1.1</tag>
   </scm>
 
   <distributionManagement>
