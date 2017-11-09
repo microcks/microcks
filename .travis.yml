@@ -3,12 +3,14 @@ sudo: required
 language: java
 jdk:
   - oraclejdk8
+node_js: "6.11.0"
 
 services:
   - docker
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
+    npm install -g grunt-cli bower;
     mvn -DskipTests -Dyo.test.skip=true -Pprod package docker:build;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:latest;
