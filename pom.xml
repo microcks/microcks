@@ -8,6 +8,23 @@
   <artifactId>microcks</artifactId>
   <version>0.1.0-SNAPSHOT</version>
 
+  <scm>
+    <connection>scm:git:git@github.com:microcks/microcks.git</connection>
+    <developerConnection>scm:git:git@github.com:microcks/microcks.git</developerConnection>
+    <url>http://github.com/microcks/microcks/</url>
+  </scm>
+
+  <distributionManagement>
+    <snapshotRepository>
+      <id>oss-sonatype-staging</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </snapshotRepository>
+    <repository>
+      <id>oss-sonatype-staging</id>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+  </distributionManagement>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
@@ -95,6 +112,17 @@
         <artifactId>spring-boot-maven-plugin</artifactId>
         <version>${spring-boot.version}</version>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.5.3</version>
+        <configuration>
+          <autoVersionSubmodules>true</autoVersionSubmodules>
+          <useReleaseProfile>true</useReleaseProfile>
+          <releaseProfiles>release</releaseProfiles>
+          <goals>deploy</goals>
+        </configuration>
+      </plugin>
     </plugins>
   </build>
 
@@ -117,6 +145,19 @@
 
   <profiles>
     <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <configuration>
+              <passphrase>${gpg.passphrase}</passphrase>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>prod</id>
       <build>
         <plugins>
@@ -134,6 +175,7 @@
                 <configuration>
                   <buildTool>grunt</buildTool>
                   <buildArgs>build --force --no-color</buildArgs>
+                  <skipTests>true</skipTests>
                 </configuration>
               </execution>
             </executions>
