@@ -9,7 +9,7 @@ services:
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
-    mvn -Pprod docker:build
+    mvn -DskipTests -Dyo.test.skip=true -Pprod package docker:build;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:latest;
     fi
