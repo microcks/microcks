@@ -30,9 +30,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.util.UriUtils;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.List;
 
@@ -79,15 +81,15 @@ public class SoapHttpTestRunner extends HttpTestRunner{
 	protected int extractTestReturnCode(Service service, Operation operation, Request request, ClientHttpResponse httpResponse){
 		int code = TestReturn.SUCCESS_CODE;
 
-		// Vérification du code retour HTTP : délégation à la super-classe.
+		// Checking HTTP return code: delegating to super class.
 		code = super.extractTestReturnCode(service, operation, request, httpResponse);
-		// Si le test est en erreur, pas la peine de continuer...
+		// If test is already a failure (40x code), no need to pursue...
 		if (TestReturn.FAILURE_CODE == code){
 			return code;
 		}
 
-		// Identification du jeu de caractères de la Réponse.
-		String charset = null;	// par défaut : jeu de caractères par défaut de la plateforme.
+		// Getting the character set used. Default is the one from platform.
+		String charset = null;
 		MediaType mediaType = httpResponse.getHeaders().getContentType();
 		if (mediaType != null){
 			Charset cs = mediaType.getCharSet();
@@ -109,13 +111,16 @@ public class SoapHttpTestRunner extends HttpTestRunner{
 			// Validate Soap message body according to operation output part.
 			List<XmlError> errors = SoapMessageValidator.validateSoapMessage(
                operation.getOutputName(), service.getXmlNS(), writer.toString(), resourceUrl
-                     + service.getName() + "-" + service.getVersion() + ".wsdl", true
+                     +  UriUtils.encodeFragment(service.getName(), "UTF-8") + "-" + service.getVersion() + ".wsdl", true
          );
 
 			if (!errors.isEmpty()){
 				log.debug("Soap validation errors found " + errors.size() + ", marking test as failed.");
 				return TestReturn.FAILURE_CODE;
 			}
+		} catch (UnsupportedEncodingException uee) {
+			log.debug("UnsupportedEncodingException while encoding Wsdl URL", uee);
+			return TestReturn.FAILURE_CODE;
 		} catch (XmlException e) {
 			log.debug("XmlException while validating Soap response message", e);
 			return TestReturn.FAILURE_CODE;

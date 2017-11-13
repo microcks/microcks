@@ -85,6 +85,9 @@ public class TestRunnerService {
    @Value("${postman-runner.url}")
    private final String postmanRunnerUrl = null;
 
+   @Value("${validation.resourceUrl}")
+   private final String validationResourceUrl = null;
+
    /**
     *
     * @param testResult TestResults to aggregate results within
@@ -246,6 +249,7 @@ public class TestRunnerService {
          case SOAP_HTTP:
             SoapHttpTestRunner soapRunner = new SoapHttpTestRunner();
             soapRunner.setClientHttpRequestFactory(factory);
+            soapRunner.setResourceUrl(validationResourceUrl);
             return soapRunner;
          case SOAP_UI:
             // Handle local download of correct project file.

@@ -78,10 +78,10 @@ public class SoapMessageValidator {
          xmlOptions.setLoadLineNumbers( XmlOptions.LOAD_LINE_NUMBERS_END_ELEMENT );
          XmlObject xml = XmlUtils.createXmlObject(message, xmlOptions);
 
-         // Build the QName string of the part name. Ex: {http://www.mma.fr/test/service}sayHello
+         // Build the QName string of the part name. Ex: {http://www.github.com/lbroudoux/service}sayHello
          String fullPartName = "{" + partNamespace + "}" + partName;
          
-         // Extract the corrsponding part from soap body.
+         // Extract the corresponding part from soap body.
          XmlObject[] paths = xml.selectPath( "declare namespace env='" + ctx.getSoapVersion().getEnvelopeNamespace() + "';" 
                + "declare namespace ns='" + partNamespace + "';" + "$this/env:Envelope/env:Body/ns:" + partName);
             
