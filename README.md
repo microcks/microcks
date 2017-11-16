@@ -2,7 +2,7 @@
 
 ## Build Status
 
-Current development version is `0.0.1-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
+Current development version is `0.1.4-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
 
 ## Installation
 
@@ -14,7 +14,7 @@ For development purposes, frontend GUI and backend APIs have been separated and 
 
 ### Pre-requisites
 
-* NodeJS (version >= 4.0) and associated tools : NPM, Bower and Grunt-cli
+* NodeJS (version >= 6.0) and associated tools : NPM, Bower and Grunt-cli
 * Java Development Kit (version 8) and Apache Maven (version >= 3.0)
 * MongoDB 3.2
 
@@ -45,7 +45,7 @@ $ mvn -Pprod package -Dyo.test.skip=true
 ```
 
 ```
-$ java -jar target/microcks-0.0.1-SNAPSHOT.jar
+$ java -jar target/microcks-0.1.4-SNAPSHOT.jar
 ```
 
 ### Build and run Docker image
