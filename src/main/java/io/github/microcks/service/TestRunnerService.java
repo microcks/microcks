@@ -137,7 +137,6 @@ public class TestRunnerService {
          // Update result if we got returns.
          if (results != null && !results.isEmpty()) {
             updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
-            testResult.getTestCaseResults().add(testCaseResult);
             testResultRepository.save(testResult);
          }
       }
