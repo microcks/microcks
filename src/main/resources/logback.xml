@@ -27,7 +27,8 @@
     </appender>
 -->
 
-    <logger name="com.github.lbroudoux.microcks" level="DEBUG"/>
+    <logger name="io.github.microcks" level="INFO"/>
+    <!-- Change com.mongodb to org.mongodb so that com.mongodb.FongoDBCollection is ignored, set to debug and tests do not fail... -->
     <logger name="org.mongodb" level="INFO"/>
     <logger name="org.springframework.data.mongodb" level="INFO"/>
 
