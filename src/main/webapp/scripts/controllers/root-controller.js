@@ -19,7 +19,7 @@
 'use strict';
 
 angular.module('microcksApp')
-  .controller('RootController', ['$rootScope', '$scope', '$http', '$location', function ($rootScope, $scope, $http, $location) {
+  .controller('RootController', ['$rootScope', '$scope', '$http', '$location', 'Auth', function ($rootScope, $scope, $http, $location, Auth) {
 
   $scope.searchTerm;
   $rootScope.isViewLoading = false;
@@ -45,5 +45,20 @@ angular.module('microcksApp')
 
   $scope.searchServices = function() {
     $location.url('services?searchTerm=' + $scope.searchTerm);
+  };
+
+  $scope.hasRole = function(role) {
+    console.log('hasRole invoked');
+    return Auth.keycloak.hasRealmRole(role);
+  };
+
+  $scope.username = Auth.keycloak.idTokenParsed.name;
+
+  $scope.logout = function() {
+    Auth.logout();
+  };
+
+  $scope.goToAccountManagement = function() {
+    window.location = Auth.keycloak.authServerUrl + '/realms/' + Auth.keycloak.realm + '/account?referrer=microcks-app-js';
   };
 }]);

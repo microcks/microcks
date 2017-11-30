@@ -1,0 +1,106 @@
+{
+  "id": "microcks",
+  "realm": "microcks",
+  "displayName": "Microcks",
+  "notBefore": 0,
+  "revokeRefreshToken": false,
+  "refreshTokenMaxReuse": 0,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 900,
+  "ssoSessionIdleTimeout": 1800,
+  "ssoSessionMaxLifespan": 36000,
+  "offlineSessionIdleTimeout": 2592000,
+  "accessCodeLifespan": 60,
+  "accessCodeLifespanUserAction": 300,
+  "accessCodeLifespanLogin": 1800,
+  "actionTokenGeneratedByAdminLifespan": 43200,
+  "actionTokenGeneratedByUserLifespan": 300,
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "registrationEmailAsUsername": false,
+  "rememberMe": false,
+  "verifyEmail": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": false,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 30,
+  "users" : [
+    {
+      "username" : "admin",
+      "enabled": true,
+      "credentials" : [
+        { "type" : "password",
+          "value" : "123" }
+      ],
+      "requiredActions": [
+        "UPDATE_PASSWORD"
+      ],
+      "realmRoles": [ "admin" ],
+      "applicationRoles": {
+        "realm-management": [ "realm-admin" ],
+        "account": [ "manage-account" ]
+      }
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "admin",
+        "scopeParamRequired": false,
+        "composite": false,
+        "clientRole": false,
+        "containerId": "microcks"
+      },
+      {
+        "name": "manager",
+        "scopeParamRequired": false,
+        "composite": false,
+        "clientRole": false,
+        "containerId": "microcks"
+      },
+      {
+        "name": "user",
+        "scopeParamRequired": false,
+        "composite": false,
+        "clientRole": false,
+        "containerId": "microcks"
+      }
+    ]
+  },
+  "defaultRoles": [ "user" ],
+  "requiredCredentials": [ "password" ],
+  "scopeMappings": [
+    {
+      "client": "microcks-app-js",
+      "roles": ["admin", "manager", "user"]
+    }
+  ],
+  "applications": [
+    {
+      "name": "microcks-app",
+      "enabled": true,
+      "bearerOnly": true
+    },
+    {
+      "name": "microcks-app-js",
+      "enabled": true,
+      "publicClient": true,
+      "webOrigins": [
+        "+"
+      ],
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ]
+    }
+  ],
+  "keycloakVersion": "3.4.0.Final"
+}

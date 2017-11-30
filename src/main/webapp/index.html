@@ -20,13 +20,13 @@
     <link rel="stylesheet" href="styles/main.css">
     <!-- endbuild -->
   </head>
-  <body ng-app="microcksApp" ng-controller="RootController">
+  <body ng-controller="RootController">
     <!--[if lt IE 7]>
       <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
     <![endif]-->
 
     <!-- Add your site or application content here -->
-    <nav class="navbar navbar-default navbar-fixed-top">
+    <nav class="navbar navbar-default navbar-fixed-top ng-cloak">
       <div class="container-fluid">
         <div class="navbar-header">
           <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-menu">
@@ -54,9 +54,9 @@
                 Administration <span class="caret"></span>
               </a>
               <ul class="dropdown-menu">
-                <li><a href="#/admin/export">Export repository <i class="glyphicon glyphicon-share"></i></a></li>
-                <li><a href="#/admin/import">Import repository <i class="glyphicon glyphicon-edit"></i></a></li>
-                <li><a href="#/admin/delays">Configure delays <i class="glyphicon glyphicon-time"></i></a></li>
+                <li ng-show="hasRole('admin')"><a href="#/admin/export">Export repository <i class="glyphicon glyphicon-share"></i></a></li>
+                <li ng-show="hasRole('admin')"><a href="#/admin/import">Import repository <i class="glyphicon glyphicon-edit"></i></a></li>
+                <li ng-show="hasRole('admin')"><a href="#/admin/delays">Configure delays <i class="glyphicon glyphicon-time"></i></a></li>
                 <li><a href="#/admin/invocations">Invocation stats <i class="glyphicon glyphicon-signal"></i></a></li>
               </ul>
             </li>
@@ -64,6 +64,17 @@
               <form ng-submit="searchServices()" class="navbar-form" role="search">
                 <input type="text" class="form-control" ng-model="searchTerm" placeholder="Search"/>
               </form>
+            </li>
+            <li class="dropdown">
+              <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                <span class="glyphicon glyphicon-user"></span> &nbsp;
+                {{ username }} <b class="caret"></b>
+              </a>
+              <ul class="dropdown-menu">
+                <li><a href ng-click="goToAccountManagement()">Account management <i class="glyphicon glyphicon-edit"></i></a></li>
+                <li class="divider"></li>
+                <li><a href ng-click="logout()">Logout <i class="glyphicon glyphicon-log-out"></i></a></li>
+              </ul>
             </li>
           </ul>
         </div>
@@ -118,6 +129,7 @@
     <script src="../../bower_components/d3/d3.js"></script>
     <script src="../../bower_components/d3-tip/index.js"></script>
     <script src="../../bower_components/jquery-highlight/jquery.highlight.js"></script>
+    <script src="../../bower_components/keycloak/dist/keycloak.js"></script>
     <!-- endbower -->
     <!-- endbuild -->
 
@@ -139,6 +151,10 @@
     <script src="scripts/services/genericresources-service.js"></script>
     <script src="scripts/controllers/admin-controller.js"></script>
     <script src="scripts/services/invocations-service.js"></script>
+    <!-- endbuild -->
+
+    <!-- build:js(src/main/webapp) scripts/keycloak-init.js -->
+    <script src="scripts/keycloak-init.js"></script>
     <!-- endbuild -->
 </body>
 </html>

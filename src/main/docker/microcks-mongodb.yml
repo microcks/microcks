@@ -18,11 +18,27 @@ services:
       main:
         aliases:
           - postman
+  keycloak:
+    image: jboss/keycloak:3.4.0.Final
+    command: "-b 0.0.0.0 -Dkeycloak.import=/microcks-keycloak-config/microcks-realm-sample.json"
+    container_name: microcks-keycloak
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak-realm:/microcks-keycloak-config
+    environment:
+      KEYCLOAK_USER: "admin"
+      KEYCLOAK_PASSWORD: "123"
+    networks:
+      main:
+        aliases:
+          - keycloak
   app:
     depends_on:
       - mongo
       - postman
-    image: microcks/microcks:latest
+      - keycloak
+    image: lbroudoux/microcks:latest
     container_name: microcks
     ports:
       - "8080:8080"
@@ -32,6 +48,7 @@ services:
       - SPRING_DATA_MONGODB_DATABASE=microcks
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
+      - KEYCLOAK_URL=http://localhost:8180/auth
     networks:
       main:
         aliases:

@@ -50,14 +50,27 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <docker.image.prefix>microcks</docker.image.prefix>
+    <docker.image.prefix>lbroudoux</docker.image.prefix>
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
     <!-- <spring-boot.version>1.1.10.RELEASE</spring-boot.version> -->
     <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
+    <keycloak.version>3.4.0.Final</keycloak.version>
     <fongo.version>2.0.6</fongo.version>
     <soapui.version>5.1.1</soapui.version>
   </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.keycloak.bom</groupId>
+        <artifactId>keycloak-adapter-bom</artifactId>
+        <version>${keycloak.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <dependencies>
     <dependency>
@@ -81,6 +94,10 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
       <version>${spring-boot.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.keycloak</groupId>
+      <artifactId>keycloak-spring-boot-starter</artifactId>
     </dependency>
     <dependency>
       <groupId>com.smartbear.soapui</groupId>
