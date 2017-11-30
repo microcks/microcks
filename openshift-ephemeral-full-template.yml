@@ -107,7 +107,7 @@ objects:
     - name: latest
       from:
         kind: DockerImage
-        name: lbroudoux/microcks:latest
+        name: microcks/microcks:latest
 - kind: ImageStream
   apiVersion: v1
   metadata:

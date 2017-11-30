@@ -22,7 +22,7 @@ parameters:
   value: https://192.168.99.100:8443
   required: true
 - name: OPENSHIFT_OAUTH_CLIENT_NAME
-  displayName: OpenSHift OAuth client name
+  displayName: OpenShift OAuth client name
   description: Unique name of OAuthClient that will be associated to Microcks.
   required: true
 - name: OPENSHIFT_OAUTH_CLIENT_SECRET
