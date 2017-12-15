@@ -2,14 +2,14 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: microcks-ephemeral-template
+  template: microcks-persistent-template
 metadata:
   annotations:
     description: Template for Microcks application (see http://microcks.github.io)
     iconClass: icon-java
     tags: instant-app
   labels: {}
-  name: microcks-ephemeral
+  name: microcks-persistent
 parameters:
 - name: APP_NAME
   value: microcks
