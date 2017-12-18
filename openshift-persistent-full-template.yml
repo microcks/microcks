@@ -672,7 +672,7 @@ objects:
             "authenticateByDefault": true,
             "firstBrokerLoginFlowAlias": "first broker login",
             "config": {
-              "openshiftUrl": "${OPENSHIFT_MASTER}",
+              "baseUrl": "${OPENSHIFT_MASTER}",
               "clientSecret": "${OPENSHIFT_OAUTH_CLIENT_SECRET}",
               "clientId": "${APP_NAME}-keycloak-client",
               "defaultScope": "user:full",
