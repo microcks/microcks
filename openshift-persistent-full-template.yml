@@ -104,8 +104,6 @@ objects:
     name: "${APP_NAME}"
     labels:
       app: "${APP_NAME}"
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   spec:
     tags:
@@ -119,8 +117,6 @@ objects:
     name: "${APP_NAME}-postman-runtime"
     labels:
       app: "${APP_NAME}"
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   spec:
     tags:
@@ -133,9 +129,8 @@ objects:
   metadata:
     name: "${APP_NAME}"
     labels:
+      app: "${APP_NAME}"
       container: spring
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   spec:
     ports:
@@ -146,18 +141,16 @@ objects:
     type: ClusterIP
     sessionAffinity: None
     selector:
+      app: "${APP_NAME}"
       container: spring
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
 - kind: Service
   apiVersion: v1
   metadata:
     name: "${APP_NAME}-postman-runtime"
     labels:
+      app: "${APP_NAME}"
       container: postman-runtime
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   spec:
     ports:
@@ -168,18 +161,16 @@ objects:
     type: ClusterIP
     sessionAffinity: None
     selector:
+      name: "${APP_NAME}"
       container: postman-runtime
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
 - kind: Service
   apiVersion: v1
   metadata:
     name: "${APP_NAME}-mongodb"
     labels:
+      app: "${APP_NAME}"
       container: mongodb
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     creationTimestamp:
   spec:
@@ -190,9 +181,8 @@ objects:
       targetPort: 27017
       nodePort: 0
     selector:
+      name: "${APP_NAME}"
       container: mongodb
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
     type: ClusterIP
     sessionAffinity: None
@@ -203,9 +193,8 @@ objects:
   metadata:
     name: "${APP_NAME}-keycloak"
     labels:
+      app: "${APP_NAME}"
       container: keycloak
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   spec:
     ports:
@@ -216,18 +205,16 @@ objects:
     type: ClusterIP
     sessionAffinity: None
     selector:
+      name: "${APP_NAME}-keycloak"
       container: keycloak
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
 - kind: Service
   apiVersion: v1
   metadata:
     name: "${APP_NAME}-keycloak-postgresql"
     labels:
+      app: "${APP_NAME}"
       container: keycloak-postgresql
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     creationTimestamp:
   spec:
@@ -238,9 +225,8 @@ objects:
       targetPort: 5432
       nodePort: 0
     selector:
+      name: "${APP_NAME}keycloak-postgresql"
       container: keycloak-postgresql
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
     type: ClusterIP
     sessionAffinity: None
@@ -251,10 +237,10 @@ objects:
   metadata:
     name: "${APP_NAME}"
     labels:
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
+      app: "${APP_NAME}"
       group: microcks
   spec:
+    host: "${APP_ROUTE_HOSTNAME}"
     to:
       kind: Service
       name: "${APP_NAME}"
@@ -265,10 +251,10 @@ objects:
   metadata:
     name: keycloak
     labels:
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
+      app: "${APP_NAME}"
       group: microcks
   spec:
+    host: "${KEYCLOAK_ROUTE_HOSTNAME}"
     to:
       kind: Service
       name: "${APP_NAME}-keycloak"
@@ -279,9 +265,8 @@ objects:
   metadata:
     name: "${APP_NAME}"
     labels:
+      app: "${APP_NAME}"
       container: spring
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
   spec:
     strategy:
@@ -298,18 +283,16 @@ objects:
           name: "${APP_NAME}:latest"
     replicas: 1
     selector:
+      app: "${APP_NAME}"
       deploymentconfig: "${APP_NAME}"
       container: spring
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
     template:
       metadata:
         labels:
+          app: "${APP_NAME}"
           deploymentconfig: "${APP_NAME}"
           container: spring
-          project: "${APP_NAME}"
-          component: "${APP_NAME}"
           group: microcks
       spec:
         containers:
@@ -366,9 +349,8 @@ objects:
   metadata:
     name: "${APP_NAME}-postman-runtime"
     labels:
+      app: "${APP_NAME}"
       container: postman-runtime
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
   spec:
     strategy:
@@ -385,18 +367,16 @@ objects:
           name: "${APP_NAME}-postman-runtime:latest"
     replicas: 1
     selector:
+      app: "${APP_NAME}"
       deploymentconfig: "${APP_NAME}-postman-runtime"
       container: postman-runtime
-      project: "${APP_NAME}"
-      component: "${APP_NAME}"
       group: microcks
     template:
       metadata:
         labels:
+          app: "${APP_NAME}"
           deploymentconfig: "${APP_NAME}-postman-runtime"
           container: postman-runtime
-          project: "${APP_NAME}"
-          component: "${APP_NAME}"
           group: microcks
       spec:
         containers:
@@ -441,9 +421,8 @@ objects:
   metadata:
     name: "${APP_NAME}-mongodb"
     labels:
+      app: "${APP_NAME}"
       container: mongodb
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     creationTimestamp:
   spec:
@@ -463,19 +442,17 @@ objects:
     - type: ConfigChange
     replicas: 1
     selector:
+      app: "${APP_NAME}"
       deploymentconfig: mongodb
       container: mongodb
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     template:
       metadata:
         creationTimestamp:
         labels:
+          app: "${APP_NAME}"
           deploymentconfig: mongodb
           container: mongodb
-          component: "${APP_NAME}"
-          project: "${APP_NAME}"
           group: microcks
       spec:
         containers:
@@ -531,6 +508,10 @@ objects:
   apiVersion: v1
   metadata:
     name: "${APP_NAME}-mongodb"
+    labels:
+      app: "${APP_NAME}"
+      container: mongodb
+      group: microcks
   spec:
     accessModes:
       - ReadWriteOnce
@@ -540,11 +521,10 @@ objects:
 - kind: OAuthClient
   apiVersion: v1
   metadata:
-    name: "${APP_NAME}-keycloak-client"
+    name: "${OPENSHIFT_OAUTH_CLIENT_NAME}"
     labels:
+      app: "${APP_NAME}"
       container: keycloak
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   secret: ${OPENSHIFT_OAUTH_CLIENT_SECRET}
   redirectURIs:
@@ -555,9 +535,8 @@ objects:
   metadata:
     name: "${APP_NAME}-keycloak-admin"
     labels:
+      group: microcks
       container: keycloak
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   type: kubernetes.io/basic-auth
   stringData:
@@ -568,9 +547,8 @@ objects:
   metadata:
     name: "${APP_NAME}-keycloak-config"
     labels:
+      group: microcks
       container: keycloak
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
   data:
     microcks-realm.json: |-
@@ -687,9 +665,8 @@ objects:
   metadata:
     name: "${APP_NAME}-keycloak"
     labels:
+      app: "${APP_NAME}"
       container: keycloak
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     creationTimestamp:
   spec:
@@ -699,19 +676,17 @@ objects:
     - type: ConfigChange
     replicas: 1
     selector:
+      app: "${APP_NAME}"
       deploymentconfig: keycloak
       container: keycloak
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     template:
       metadata:
         creationTimestamp:
         labels:
+          app: "${APP_NAME}"
           deploymentconfig: keycloak
           container: keycloak
-          component: "${APP_NAME}"
-          project: "${APP_NAME}"
           group: microcks
       spec:
         initContainers:
@@ -803,9 +778,8 @@ objects:
   metadata:
     name: "${APP_NAME}-keycloak-postgresql"
     labels:
+      app: "${APP_NAME}"
       container: keycloak-postgresql
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     creationTimestamp:
   spec:
@@ -824,19 +798,17 @@ objects:
     - type: ConfigChange
     replicas: 1
     selector:
+      app: "${APP_NAME}"
       deploymentconfig: keycloak-postgresql
       container: keycloak-postgresql
-      component: "${APP_NAME}"
-      project: "${APP_NAME}"
       group: microcks
     template:
       metadata:
         creationTimestamp:
         labels:
+          app: "${APP_NAME}"
           deploymentconfig: keycloak-postgresql
           container: keycloak-postgresql
-          component: "${APP_NAME}"
-          project: "${APP_NAME}"
           group: microcks
       spec:
         terminationGracePeriodSeconds: 60
@@ -884,6 +856,10 @@ objects:
   apiVersion: v1
   metadata:
     name: "${APP_NAME}-keycloak-postgresql"
+    labels:
+      app: "${APP_NAME}"
+      container: keycloak-postgresql
+      group: microcks
   spec:
     accessModes:
       - ReadWriteOnce
