@@ -1,0 +1,1266 @@
+{
+	"variables": [],
+	"info": {
+		"name": "dbapi",
+		"_postman_id": "31b06080-0610-e694-527d-2002eab46fc3",
+		"description": "version=1.0 - dbAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "v1",
+			"description": "",
+			"item": [
+				{
+					"name": "Reads all addresses of the current user.",
+					"request": {
+						"url": "https://simulator-api.db.com:443/gw/dbapi/v1/addresses",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Reads all addresses of the current user. There might be several private and business addresses. AddressType can be BUSINESS_ADDRESS or PRIVATE_ADDRESS. Country format is ISO code."
+					},
+					"response": [
+						{
+							"id": "95ab2e32-e052-43d4-9ce5-3c6131d3d841",
+							"name": "Reads all addresses of the current user.",
+							"originalRequest": {
+								"url": "https://simulator-api.db.com:443/gw/dbapi/v1/addresses",
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"description": ""
+									},
+									{
+										"key": "Authorization",
+										"name": "Authorization",
+										"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMTk3MTUsImlhdCI6MTUxMzExOTExNiwianRpIjoiMzA4Nzc3NWItMzc3Zi00MGVjLWE2NDYtNjdkOGU1ZDJkZWI2In0.ElB0hmtcAWpG325D6kQ6Efg_AgaGWZ70N6MQ39PiAX9DlEanFsNmXWQ6luwth0K7P7F2Acpy4aXNGs28WOI8Km7OuGScB6PWkk2ecZcS88ln5_yMLyjKdNF5mzv-egb2wILglnhOWK38ZsyH1m0pJXOQ07YmPTnY8ZOIzCOmTwoK86DzxHkoti3QxSstp_opUwhD4gyC88DdwVZghC6hL0qDA9yVidqQBiWdVRNYbpKzvCGpjhLL4Zsac81KUa91fj7hkftZnIjj7gB3Q0Wac3SEzKYJDVhlArIfo4nZTo2iGZZhBV81YgbCSjn6JwhMDGsxUsEShP-L7jx91Ad34Q",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"name": "cache-control",
+									"key": "cache-control",
+									"value": "private",
+									"description": "Tells all caching mechanisms from server to client whether they may cache this object. It is measured in seconds"
+								},
+								{
+									"name": "connection",
+									"key": "connection",
+									"value": "Keep-Alive",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"name": "content-length",
+									"key": "content-length",
+									"value": "305",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"name": "content-type",
+									"key": "content-type",
+									"value": "application/json",
+									"description": "The mime type of this content"
+								},
+								{
+									"name": "date",
+									"key": "date",
+									"value": "Tue, 12 Dec 2017 22:52:22 GMT",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"name": "db-nickname",
+									"key": "db-nickname",
+									"value": "VTJGc2RHVmtYMS9qQk1MQ2NMV08rV092WmI1bnFidGtpSGVRTUoyTE91MD0=",
+									"description": "Custom header"
+								},
+								{
+									"name": "expires",
+									"key": "expires",
+									"value": "Thu, 01 Jan 1970 01:00:00 GMT",
+									"description": "Gives the date/time after which the response is considered stale"
+								},
+								{
+									"name": "keep-alive",
+									"key": "keep-alive",
+									"value": "timeout=5, max=100",
+									"description": "Custom header"
+								},
+								{
+									"name": "message_id",
+									"key": "message_id",
+									"value": "b1aa6de3-d563-43bc-888e-91e3376e36c6",
+									"description": "Custom header"
+								},
+								{
+									"name": "server",
+									"key": "server",
+									"value": "Apache-Coyote/1.1",
+									"description": "A name for the server"
+								},
+								{
+									"name": "strict-transport-security",
+									"key": "strict-transport-security",
+									"value": "max-age=31536000",
+									"description": "A HSTS Policy informing the HTTP client how long to cache the HTTPS only policy and whether this applies to subdomains."
+								},
+								{
+									"name": "x-content-type-options",
+									"key": "x-content-type-options",
+									"value": "nosniff",
+									"description": "The only defined value, \"nosniff\", prevents Internet Explorer from MIME-sniffing a response away from the declared content-type"
+								},
+								{
+									"name": "x-db-nar",
+									"key": "x-db-nar",
+									"value": "101235-1",
+									"description": "Custom header"
+								},
+								{
+									"name": "x-frame-options",
+									"key": "x-frame-options",
+									"value": "DENY",
+									"description": "Clickjacking protection: \"deny\" - no rendering within a frame, \"sameorigin\" - no rendering if origin mismatch"
+								},
+								{
+									"name": "x-xss-protection",
+									"key": "x-xss-protection",
+									"value": "1; mode=block",
+									"description": "Cross-site scripting (XSS) filter"
+								}
+							],
+							"cookie": [],
+							"responseTime": 367,
+							"body": "[{\"street\":\"Am Sandtorkai\",\"houseNumber\":\"4\",\"zip\":\"20457\",\"city\":\"Hamburg\",\"country\":\"DEU\",\"addressType\":\"PRIVATE_ADDRESS\",\"registeredResidence\":true},{\"street\":\"Am Sandtorkai\",\"houseNumber\":\"4\",\"zip\":\"20457\",\"city\":\"Hamburg\",\"country\":\"DEU\",\"addressType\":\"BUSINESS_ADDRESS\",\"registeredResidence\":false}]"
+						}
+					]
+				},
+				{
+					"name": "Reads all cash accounts of the current user.",
+					"request": {
+						"url": {
+							"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/cashAccounts?iban={{iban}}&currencyCode={{currencyCode}}",
+							"protocol": "https",
+							"host": [
+								"simulator-api",
+								"db",
+								"com"
+							],
+							"port": "443",
+							"path": [
+								"gw",
+								"dbapi",
+								"v1",
+								"cashAccounts"
+							],
+							"query": [
+								{
+									"key": "iban",
+									"value": "{{iban}}"
+								},
+								{
+									"key": "currencyCode",
+									"value": "{{currencyCode}}"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Reads all cash accounts of the current user. Only current accounts and accounts in the currency EUR are returned. If given IBAN is not valid or does not represent an account of the current user, an empty result is returned."
+					},
+					"response": [
+						{
+							"id": "08c4e35c-d639-4d75-9329-e2ab2d358b17",
+							"name": "Reads all cash accounts of the current user.",
+							"originalRequest": {
+								"url": {
+									"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/cashAccounts?iban=DE10000000000000002783",
+									"protocol": "https",
+									"host": [
+										"simulator-api",
+										"db",
+										"com"
+									],
+									"port": "443",
+									"path": [
+										"gw",
+										"dbapi",
+										"v1",
+										"cashAccounts"
+									],
+									"query": [
+										{
+											"key": "iban",
+											"value": "DE10000000000000002783",
+											"equals": true,
+											"description": ""
+										}
+									],
+									"variable": []
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"description": ""
+									},
+									{
+										"key": "Authorization",
+										"name": "Authorization",
+										"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMTk3MTUsImlhdCI6MTUxMzExOTExNiwianRpIjoiMzA4Nzc3NWItMzc3Zi00MGVjLWE2NDYtNjdkOGU1ZDJkZWI2In0.ElB0hmtcAWpG325D6kQ6Efg_AgaGWZ70N6MQ39PiAX9DlEanFsNmXWQ6luwth0K7P7F2Acpy4aXNGs28WOI8Km7OuGScB6PWkk2ecZcS88ln5_yMLyjKdNF5mzv-egb2wILglnhOWK38ZsyH1m0pJXOQ07YmPTnY8ZOIzCOmTwoK86DzxHkoti3QxSstp_opUwhD4gyC88DdwVZghC6hL0qDA9yVidqQBiWdVRNYbpKzvCGpjhLL4Zsac81KUa91fj7hkftZnIjj7gB3Q0Wac3SEzKYJDVhlArIfo4nZTo2iGZZhBV81YgbCSjn6JwhMDGsxUsEShP-L7jx91Ad34Q",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"name": "cache-control",
+									"key": "cache-control",
+									"value": "private",
+									"description": "Tells all caching mechanisms from server to client whether they may cache this object. It is measured in seconds"
+								},
+								{
+									"name": "connection",
+									"key": "connection",
+									"value": "Keep-Alive",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"name": "content-length",
+									"key": "content-length",
+									"value": "156",
+									"description": "The length of the response body in octets (8-bit bytes)"
+								},
+								{
+									"name": "content-type",
+									"key": "content-type",
+									"value": "application/json",
+									"description": "The mime type of this content"
+								},
+								{
+									"name": "date",
+									"key": "date",
+									"value": "Tue, 12 Dec 2017 22:52:49 GMT",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"name": "db-nickname",
+									"key": "db-nickname",
+									"value": "VTJGc2RHVmtYMS9qQk1MQ2NMV08rV092WmI1bnFidGtpSGVRTUoyTE91MD0=",
+									"description": "Custom header"
+								},
+								{
+									"name": "expires",
+									"key": "expires",
+									"value": "Thu, 01 Jan 1970 01:00:00 GMT",
+									"description": "Gives the date/time after which the response is considered stale"
+								},
+								{
+									"name": "keep-alive",
+									"key": "keep-alive",
+									"value": "timeout=5, max=100",
+									"description": "Custom header"
+								},
+								{
+									"name": "message_id",
+									"key": "message_id",
+									"value": "ee226b69-f578-4f8d-b159-551e5ff928e7",
+									"description": "Custom header"
+								},
+								{
+									"name": "server",
+									"key": "server",
+									"value": "Apache-Coyote/1.1",
+									"description": "A name for the server"
+								},
+								{
+									"name": "strict-transport-security",
+									"key": "strict-transport-security",
+									"value": "max-age=31536000",
+									"description": "A HSTS Policy informing the HTTP client how long to cache the HTTPS only policy and whether this applies to subdomains."
+								},
+								{
+									"name": "x-content-type-options",
+									"key": "x-content-type-options",
+									"value": "nosniff",
+									"description": "The only defined value, \"nosniff\", prevents Internet Explorer from MIME-sniffing a response away from the declared content-type"
+								},
+								{
+									"name": "x-db-nar",
+									"key": "x-db-nar",
+									"value": "101235-1",
+									"description": "Custom header"
+								},
+								{
+									"name": "x-frame-options",
+									"key": "x-frame-options",
+									"value": "DENY",
+									"description": "Clickjacking protection: \"deny\" - no rendering within a frame, \"sameorigin\" - no rendering if origin mismatch"
+								},
+								{
+									"name": "x-xss-protection",
+									"key": "x-xss-protection",
+									"value": "1; mode=block",
+									"description": "Cross-site scripting (XSS) filter"
+								}
+							],
+							"cookie": [],
+							"responseTime": 285,
+							"body": "[{\"iban\":\"DE10000000000000002783\",\"currencyCode\":\"EUR\",\"accountType\":\"CURRENT_ACCOUNT\",\"currentBalance\":1400.95,\"productDescription\":\"persönliches Konto\"}]"
+						}
+					]
+				},
+				{
+					"name": "Create a processing order",
+					"request": {
+						"url": "https://simulator-api.db.com:443/gw/dbapi/v1/processingOrders",
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "multipart/form-data",
+								"description": ""
+							},
+							{
+								"key": "Idempotency-ID",
+								"value": "{{Idempotency-ID}}",
+								"description": ""
+							},
+							{
+								"key": "Process-ID",
+								"value": "{{Process-ID}}",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "processingOrder",
+									"value": "{{processingOrder}}",
+									"type": "text"
+								},
+								{
+									"key": "documentData",
+									"value": "{{documentData}}",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Create a processing order. This endpoint has limited access for special consumers only. It’s possible to start manual processes only."
+					},
+					"response": []
+				},
+				{
+					"name": "Reads all transactions of the current cash account.",
+					"request": {
+						"url": {
+							"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/transactions?iban={{iban}}&currencyCode={{currencyCode}}&bookingDateFrom={{bookingDateFrom}}&bookingDateTo={{bookingDateTo}}&sortBy={{sortBy}}",
+							"protocol": "https",
+							"host": [
+								"simulator-api",
+								"db",
+								"com"
+							],
+							"port": "443",
+							"path": [
+								"gw",
+								"dbapi",
+								"v1",
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "iban",
+									"value": "{{iban}}",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "currencyCode",
+									"value": "{{currencyCode}}",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "bookingDateFrom",
+									"value": "{{bookingDateFrom}}",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "bookingDateTo",
+									"value": "{{bookingDateTo}}",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "sortBy",
+									"value": "{{sortBy}}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTI2NDg0NTcsImlhdCI6MTUxMjY0Nzg1NywianRpIjoiOGRjOTUzZjYtZGFhNS00NmYyLWFiMDYtMjUxNzQ0YzgxYmIxIn0.bhDoU7MPk5D9WaPIJHnYAnikR0DTquc6m9QygkmYm1PqoSBnJTL80A60X9Jv0Ylq4mwxykGx9XvlTuhzlHgaD1TyAgpQrCjJeUEr1cgscppFyLd7G71BJWoRHGx-AZFruN9hDZUMSyVh5i_iN5EJ4Zlsoc79xwYn-PNJyuC2v6tsnKHc7BS3su69hZCPKKUvLDeLkBmkc6NhtlQJ4dvJ9-NAnrR5HnESUDrWQqhbKWh_p4ra7wa66GmsaBAZVNzFKLB2mestDCfQAczmA2n745m6fq2XqHdPe8q02eZCM72_PfkfiI6vCkhg00C1EV-QWwcMskhanURsCHlQNIlHTw",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Reads all transactions for a specific account of the current user. If given IBAN is not valid or does not represent an account of the current user, an empty result is returned. It is not apparent who issued a transaction, only whether the user gained or lost money by it (based on whether the amount is positive or negative respectively). The maximum number of transactions returned is 200."
+					},
+					"response": [
+						{
+							"id": "a44be83e-3ce0-4a87-adeb-fc563628b003",
+							"name": "Reads all transactions of the current cash account.",
+							"originalRequest": {
+								"url": {
+									"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/transactions?iban=DE10000000000000002783",
+									"protocol": "https",
+									"host": [
+										"simulator-api",
+										"db",
+										"com"
+									],
+									"port": "443",
+									"path": [
+										"gw",
+										"dbapi",
+										"v1",
+										"transactions"
+									],
+									"query": [
+										{
+											"key": "iban",
+											"value": "DE10000000000000002783",
+											"equals": true,
+											"description": ""
+										}
+									],
+									"variable": []
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"description": ""
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"name": "Authorization",
+										"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMTk3MTUsImlhdCI6MTUxMzExOTExNiwianRpIjoiMzA4Nzc3NWItMzc3Zi00MGVjLWE2NDYtNjdkOGU1ZDJkZWI2In0.ElB0hmtcAWpG325D6kQ6Efg_AgaGWZ70N6MQ39PiAX9DlEanFsNmXWQ6luwth0K7P7F2Acpy4aXNGs28WOI8Km7OuGScB6PWkk2ecZcS88ln5_yMLyjKdNF5mzv-egb2wILglnhOWK38ZsyH1m0pJXOQ07YmPTnY8ZOIzCOmTwoK86DzxHkoti3QxSstp_opUwhD4gyC88DdwVZghC6hL0qDA9yVidqQBiWdVRNYbpKzvCGpjhLL4Zsac81KUa91fj7hkftZnIjj7gB3Q0Wac3SEzKYJDVhlArIfo4nZTo2iGZZhBV81YgbCSjn6JwhMDGsxUsEShP-L7jx91Ad34Q",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "text",
+							"header": [
+								{
+									"name": "cache-control",
+									"key": "cache-control",
+									"value": "private",
+									"description": "Tells all caching mechanisms from server to client whether they may cache this object. It is measured in seconds"
+								},
+								{
+									"name": "connection",
+									"key": "connection",
+									"value": "Keep-Alive",
+									"description": "Options that are desired for the connection"
+								},
+								{
+									"name": "content-type",
+									"key": "content-type",
+									"value": "application/json",
+									"description": "The mime type of this content"
+								},
+								{
+									"name": "date",
+									"key": "date",
+									"value": "Tue, 12 Dec 2017 22:52:02 GMT",
+									"description": "The date and time that the message was sent"
+								},
+								{
+									"name": "db-nickname",
+									"key": "db-nickname",
+									"value": "VTJGc2RHVmtYMS9qQk1MQ2NMV08rV092WmI1bnFidGtpSGVRTUoyTE91MD0=",
+									"description": "Custom header"
+								},
+								{
+									"name": "expires",
+									"key": "expires",
+									"value": "Thu, 01 Jan 1970 01:00:00 GMT",
+									"description": "Gives the date/time after which the response is considered stale"
+								},
+								{
+									"name": "keep-alive",
+									"key": "keep-alive",
+									"value": "timeout=5, max=100",
+									"description": "Custom header"
+								},
+								{
+									"name": "message_id",
+									"key": "message_id",
+									"value": "37ea2cfb-8718-4e1f-bbb1-d8a027264d6e",
+									"description": "Custom header"
+								},
+								{
+									"name": "server",
+									"key": "server",
+									"value": "Apache-Coyote/1.1",
+									"description": "A name for the server"
+								},
+								{
+									"name": "strict-transport-security",
+									"key": "strict-transport-security",
+									"value": "max-age=31536000",
+									"description": "A HSTS Policy informing the HTTP client how long to cache the HTTPS only policy and whether this applies to subdomains."
+								},
+								{
+									"name": "transfer-encoding",
+									"key": "transfer-encoding",
+									"value": "chunked",
+									"description": "The form of encoding used to safely transfer the entity to the user. Currently defined methods are: chunked, compress, deflate, gzip, identity."
+								},
+								{
+									"name": "x-content-type-options",
+									"key": "x-content-type-options",
+									"value": "nosniff",
+									"description": "The only defined value, \"nosniff\", prevents Internet Explorer from MIME-sniffing a response away from the declared content-type"
+								},
+								{
+									"name": "x-db-nar",
+									"key": "x-db-nar",
+									"value": "101235-1",
+									"description": "Custom header"
+								},
+								{
+									"name": "x-frame-options",
+									"key": "x-frame-options",
+									"value": "DENY",
+									"description": "Clickjacking protection: \"deny\" - no rendering within a frame, \"sameorigin\" - no rendering if origin mismatch"
+								},
+								{
+									"name": "x-xss-protection",
+									"key": "x-xss-protection",
+									"value": "1; mode=block",
+									"description": "Cross-site scripting (XSS) filter"
+								}
+							],
+							"cookie": [],
+							"responseTime": 345,
+							"body": "[{\"originIban\":\"DE10000000000000002783\",\"amount\":-1080.00,\"counterPartyName\":\"Hans Felsenkamp\",\"counterPartyIban\":\"DE55201900030000675488\",\"paymentReference\":\"Miete\",\"bookingDate\":\"2017-05-11\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-52.50,\"counterPartyName\":\"GEZ\",\"paymentReference\":\"02/2016\",\"bookingDate\":\"2017-05-11\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-4.99,\"counterPartyName\":\"Kaffeestand Hamburg HBF\",\"paymentReference\":\"POS MIT PIN. Rechnung 56791873\",\"bookingDate\":\"2017-05-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-16.24,\"counterPartyName\":\"L'Osteria Frankfurt HBF\",\"paymentReference\":\"POS MIT PIN. rechnungs Nr. 21665723123\",\"bookingDate\":\"2017-05-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-123.46,\"counterPartyName\":\"Deutsche Bahn AG\",\"paymentReference\":\"POS MIT PIN. Ticket Hamburg-Freiburg\",\"bookingDate\":\"2017-05-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Allianz AG\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Lebens Ref8876885\",\"bookingDate\":\"2017-05-13\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-34.53,\"counterPartyName\":\"I do! Die Hochzeitsmesse\",\"paymentReference\":\"POS MIT PIN. Ticket für die I do! Freiburg\",\"bookingDate\":\"2017-05-13\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-10.23,\"counterPartyName\":\"Subway\",\"paymentReference\":\"POS MIT PIN. Eat Fresh!\",\"bookingDate\":\"2017-05-13\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-9.95,\"counterPartyName\":\"Deutsche Bahn Bordbistro\",\"paymentReference\":\"POS MIT PIN. 3453463567\",\"bookingDate\":\"2017-05-14\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-34.53,\"counterPartyName\":\"Deutsche Bahn AG\",\"paymentReference\":\"POS MIT PIN. Ticket Freiburg-Hamburg\",\"bookingDate\":\"2017-05-14\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-125.89,\"counterPartyName\":\"InterCityHotel Freiburg\",\"paymentReference\":\"POS MIT PIN. Rechnungsnummer 2353462462457\",\"bookingDate\":\"2017-05-14\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-8.86,\"counterPartyName\":\"Deutsche Telekom AG\",\"paymentReference\":\"Hotspot 1 Tag\",\"bookingDate\":\"2017-05-14\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-34.53,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-05-19\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-34.53,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-05-19\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Innenstadt\",\"bookingDate\":\"2017-05-19\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-34.33,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-05-19\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-39.99,\"counterPartyName\":\"O2\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Galaxy S7 + All Flat 0172-5688779 VTRG 554154879\",\"bookingDate\":\"2017-05-23\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-51.22,\"counterPartyName\":\"PayPal Europe\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Ebay 661165\",\"bookingDate\":\"2017-05-23\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":2504.70,\"counterPartyName\":\"Gruner + Jahr\",\"paymentReference\":\"Gehalt\",\"bookingDate\":\"2017-05-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"153\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"SALA\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Innenstadt\",\"bookingDate\":\"2017-05-25\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-45.62,\"counterPartyName\":\"Netto\",\"paymentReference\":\"Einkauf\",\"bookingDate\":\"2017-05-25\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-31.05,\"counterPartyName\":\"REWE\",\"paymentReference\":\"POS MIT PIN. Innenstadt\",\"bookingDate\":\"2017-05-28\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-1080.00,\"counterPartyName\":\"Hans Felsenkamp\",\"counterPartyIban\":\"DE55201900030000675488\",\"paymentReference\":\"Miete\",\"bookingDate\":\"2017-06-10\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Allianz AG\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Lebens Ref8876885\",\"bookingDate\":\"2017-06-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-39.99,\"counterPartyName\":\"O2\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Galaxy S7 + All Flat 0172-5688779 VTRG 554154879\",\"bookingDate\":\"2017-06-20\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-51.22,\"counterPartyName\":\"Netto\",\"paymentReference\":\"Einkauf\",\"bookingDate\":\"2017-06-22\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-300.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Altona\",\"bookingDate\":\"2017-06-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":2504.70,\"counterPartyName\":\"Gruner + Jahr\",\"paymentReference\":\"Gehalt\",\"bookingDate\":\"2017-06-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"153\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"SALA\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":50.00,\"counterPartyName\":\"hochzeitfoto.de\",\"paymentReference\":\"Storno Rechnung 76543\",\"bookingDate\":\"2017-06-25\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-32.68,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-06-25\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-21.25,\"counterPartyName\":\"REWE\",\"paymentReference\":\"POS MIT PIN. Innenstadt\",\"bookingDate\":\"2017-06-26\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-15.56,\"counterPartyName\":\"PayPal Europe\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Ebay 6658765\",\"bookingDate\":\"2017-07-06\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-1080.00,\"counterPartyName\":\"Hans Felsenkamp\",\"counterPartyIban\":\"DE55201900030000675488\",\"paymentReference\":\"Miete\",\"bookingDate\":\"2017-07-11\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Allianz AG\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Lebens Ref8876885\",\"bookingDate\":\"2017-07-13\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-12.67,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-07-16\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-39.99,\"counterPartyName\":\"O2\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Galaxy S7 + All Flat 0172-5688779 VTRG 554154879\",\"bookingDate\":\"2017-07-22\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-150.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Altona\",\"bookingDate\":\"2017-07-22\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-15.85,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-07-22\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-29.92,\"counterPartyName\":\"REWE\",\"paymentReference\":\"POS MIT PIN. Innenstadt\",\"bookingDate\":\"2017-07-22\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-37.95,\"counterPartyName\":\"Aldi Nord\",\"paymentReference\":\"POS MIT PIN. Hamburg Mitte\",\"bookingDate\":\"2017-07-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":2504.70,\"counterPartyName\":\"Gruner + Jahr\",\"paymentReference\":\"Gehalt\",\"bookingDate\":\"2017-07-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"153\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"SALA\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-52.50,\"counterPartyName\":\"GEZ\",\"paymentReference\":\"03/2016\",\"bookingDate\":\"2017-08-10\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-1080.00,\"counterPartyName\":\"Hans Felsenkamp\",\"counterPartyIban\":\"DE55201900030000675488\",\"paymentReference\":\"Miete\",\"bookingDate\":\"2017-08-10\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-13.45,\"counterPartyName\":\"Kaisers Tengelmann\",\"paymentReference\":\"POS MIT PIN. Einkauf\",\"bookingDate\":\"2017-08-11\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-12.67,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-08-11\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Allianz AG\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Lebens Ref8876885\",\"bookingDate\":\"2017-08-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-300.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Innenstadt\",\"bookingDate\":\"2017-08-17\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-22.24,\"counterPartyName\":\"PayPal Europe\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Ebay 667865\",\"bookingDate\":\"2017-08-18\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-39.99,\"counterPartyName\":\"O2\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Galaxy S7 + All Flat 0172-5688779 VTRG 554154879\",\"bookingDate\":\"2017-08-20\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-300.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Innenstadt\",\"bookingDate\":\"2017-08-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":2504.70,\"counterPartyName\":\"Gruner + Jahr\",\"paymentReference\":\"Gehalt\",\"bookingDate\":\"2017-08-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"153\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"SALA\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-1080.00,\"counterPartyName\":\"Hans Felsenkamp\",\"counterPartyIban\":\"DE55201900030000675488\",\"paymentReference\":\"Miete\",\"bookingDate\":\"2017-09-10\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-13.45,\"counterPartyName\":\"Kaisers Tengelmann\",\"paymentReference\":\"POS MIT PIN. Einkauf\",\"bookingDate\":\"2017-09-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-37.95,\"counterPartyName\":\"Aldi Nord\",\"paymentReference\":\"POS MIT PIN. Hamburg Mitte\",\"bookingDate\":\"2017-09-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Allianz AG\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Lebens Ref8876885\",\"bookingDate\":\"2017-09-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-12.67,\"counterPartyName\":\"Penny-Markt\",\"paymentReference\":\"POS MIT PIN. Besuchen Sie uns wieder.\",\"bookingDate\":\"2017-09-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-149.00,\"counterPartyName\":\"Zalando Online\",\"paymentReference\":\"RCHNR 4565570\",\"bookingDate\":\"2017-09-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-39.99,\"counterPartyName\":\"O2\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Galaxy S7 + All Flat 0172-5688779 VTRG 554154879\",\"bookingDate\":\"2017-09-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":2504.70,\"counterPartyName\":\"Gruner + Jahr\",\"paymentReference\":\"Gehalt\",\"bookingDate\":\"2017-09-23\",\"currencyCode\":\"EUR\",\"transactionCode\":\"153\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"SALA\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-300.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Altona\",\"bookingDate\":\"2017-10-02\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-72.23,\"counterPartyName\":\"hochzeitideal.de\",\"paymentReference\":\"REF 56778990\",\"bookingDate\":\"2017-10-04\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-36.96,\"counterPartyName\":\"Aldi Nord\",\"paymentReference\":\"POS MIT PIN. Hamburg Mitte\",\"bookingDate\":\"2017-10-05\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-1080.00,\"counterPartyName\":\"Hans Felsenkamp\",\"counterPartyIban\":\"DE55201900030000675488\",\"paymentReference\":\"Miete\",\"bookingDate\":\"2017-10-11\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Allianz AG\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Lebens Ref8876885\",\"bookingDate\":\"2017-10-13\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-851.00,\"counterPartyName\":\"Air China\",\"paymentReference\":\"HAM-HKG\",\"bookingDate\":\"2017-10-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-1069.00,\"counterPartyName\":\"Hainan Airlines\",\"paymentReference\":\"HKG-HAM\",\"bookingDate\":\"2017-10-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-675.67,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Withdrawl HK, Wedding Market ATM\",\"bookingDate\":\"2017-10-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-15.21,\"counterPartyName\":\"Netto\",\"paymentReference\":\"Einkauf\",\"bookingDate\":\"2017-10-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-39.99,\"counterPartyName\":\"O2\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Galaxy S7 + All Flat 0172-5688779 VTRG 554154879\",\"bookingDate\":\"2017-10-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-59.99,\"counterPartyName\":\"Douglas\",\"paymentReference\":\"POS mit PIN\",\"bookingDate\":\"2017-10-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-33.85,\"counterPartyName\":\"Kaisers Tengelmann\",\"paymentReference\":\"POS MIT PIN. Einkauf\",\"bookingDate\":\"2017-10-21\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":2504.70,\"counterPartyName\":\"Gruner + Jahr\",\"paymentReference\":\"Gehalt\",\"bookingDate\":\"2017-10-23\",\"currencyCode\":\"EUR\",\"transactionCode\":\"153\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"SALA\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-175.98,\"counterPartyName\":\"Karstadt AG\",\"paymentReference\":\"POS mit PIN\",\"bookingDate\":\"2017-11-04\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-52.50,\"counterPartyName\":\"GEZ\",\"paymentReference\":\"04/2016\",\"bookingDate\":\"2017-11-10\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-1080.00,\"counterPartyName\":\"Hans Felsenkamp\",\"counterPartyIban\":\"DE55201900030000675488\",\"paymentReference\":\"Miete\",\"bookingDate\":\"2017-11-10\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-200.00,\"counterPartyName\":\"Allianz AG\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Lebens Ref8876885\",\"bookingDate\":\"2017-11-12\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-155.23,\"counterPartyName\":\"hochzeitideal.de\",\"paymentReference\":\"REF 56981990\",\"bookingDate\":\"2017-11-18\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-50.00,\"counterPartyName\":\"hochzeitfoto.de\",\"paymentReference\":\"Rechnung 76543\",\"bookingDate\":\"2017-11-18\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-115.95,\"counterPartyName\":\"Netto\",\"paymentReference\":\"POS MIT PIN. Einkauf\",\"bookingDate\":\"2017-11-19\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-13.45,\"counterPartyName\":\"Kaisers Tengelmann\",\"paymentReference\":\"POS MIT PIN. Einkauf\",\"bookingDate\":\"2017-11-20\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MA005734466\",\"creditorId\":\"DE17ZZZ00046235285\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-88.22,\"counterPartyName\":\"PayPal Europe\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Ebay 666665\",\"bookingDate\":\"2017-11-20\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-39.99,\"counterPartyName\":\"O2\",\"paymentReference\":\"SEPA-BASISLASTSCHRIFT Galaxy S7 + All Flat 0172-5688779 VTRG 554154879\",\"bookingDate\":\"2017-11-20\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":2504.70,\"counterPartyName\":\"Gruner + Jahr\",\"paymentReference\":\"Gehalt\",\"bookingDate\":\"2017-11-23\",\"currencyCode\":\"EUR\",\"transactionCode\":\"153\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"SALA\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-400.00,\"counterPartyName\":\"Deutsche Bank\",\"paymentReference\":\"Barauszahlung, Innenstadt\",\"bookingDate\":\"2017-11-24\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"ABMX0355443\",\"creditorId\":\"DE0111100004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/XC:121600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-199.00,\"counterPartyName\":\"Zalando Online\",\"paymentReference\":\"RCHNR 4567890\",\"bookingDate\":\"2017-12-02\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"GIRO007535511\",\"creditorId\":\"DE19ZZZ00000899991\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"ZKLE 911/TN:171600 ABC\"},{\"originIban\":\"DE10000000000000002783\",\"amount\":-175.98,\"counterPartyName\":\"Karstadt AG\",\"paymentReference\":\"POS mit PIN\",\"bookingDate\":\"2017-12-06\",\"currencyCode\":\"EUR\",\"transactionCode\":\"123\",\"externalBankTransactionDomainCode\":\"D001\",\"externalBankTransactionFamilyCode\":\"CCRD\",\"externalBankTransactionSubFamilyCode\":\"CWDL\",\"mandateReference\":\"MX0355443\",\"creditorId\":\"DE0222200004544221\",\"e2eReference\":\"E2E - Reference\",\"paymentIdentification\":\"212+ZKLE 911/696682-X-ABC\"}]"
+						}
+					]
+				},
+				{
+					"name": "Age Certificate",
+					"request": {
+						"url": {
+							"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/ageCertificate?certificationMethod={{certificationMethod}}",
+							"protocol": "https",
+							"host": [
+								"simulator-api",
+								"db",
+								"com"
+							],
+							"port": "443",
+							"path": [
+								"gw",
+								"dbapi",
+								"v1",
+								"ageCertificate"
+							],
+							"query": [
+								{
+									"key": "certificationMethod",
+									"value": "{{certificationMethod}}"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "'AgeCertificate' validates whether your Deutsche Bank customer is compliant with given age restrictions - based on the bank's records. Please note: This endpoint is currently only available in our APIs simulator stack and ready for you to test it. Don't hesitate to submit us your feedback and stay tuned on our future product development."
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieves personal information about the current partner.",
+					"request": {
+						"url": "https://simulator-api.db.com:443/gw/dbapi/v1/partners",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMTkyODEsImlhdCI6MTUxMzExODY4MiwianRpIjoiZTM0ZDJkNmYtNmNjZS00ZDhlLTkyOWQtMDVkMWMxNTlmNjdmIn0.dLChnDbiVellMCmsYfW01wvLJpfE5QTlFGiUPvigsGhWQtuC-UEgJzYUX03jOR97CBgTho9l-Zv8_-tu00wJLOWXT_H5mW4E2msI5IfwAho8yrmczCOXnHx2pWt6FZid7GoyF-WxPQdnr6f5-b9OuGTauuaGQpN3byzJPNyQhJQPPSYsdE2TsJFfvuoyFbAaf15abtxmJF7NOGEdLO9dZpzJqEigCPAvS__5juTB6hcooVluaCShaAbYo-WSEAzmfN8NDFrazbCvugvayk5b27NDMvCKJO9efy7vMp7itABENwpXmlTqH48AojyhOOVDa8Y618oFx0kmV0fXEpidxg"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Retrieves personal information (e.g. first name, last name, date of birth) about the current partner."
+					},
+					"response": [
+						{
+							"id": "95d7421a-aa22-4e1a-83a5-1b44db0d49fe",
+							"name": "Retrieves personal information about the current partner.",
+							"originalRequest": {
+								"url": "https://simulator-api.db.com:443/gw/dbapi/v1/partners",
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"description": ""
+									},
+									{
+										"key": "Authorization",
+										"name": "Authorization",
+										"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMTkyODEsImlhdCI6MTUxMzExODY4MiwianRpIjoiZTM0ZDJkNmYtNmNjZS00ZDhlLTkyOWQtMDVkMWMxNTlmNjdmIn0.dLChnDbiVellMCmsYfW01wvLJpfE5QTlFGiUPvigsGhWQtuC-UEgJzYUX03jOR97CBgTho9l-Zv8_-tu00wJLOWXT_H5mW4E2msI5IfwAho8yrmczCOXnHx2pWt6FZid7GoyF-WxPQdnr6f5-b9OuGTauuaGQpN3byzJPNyQhJQPPSYsdE2TsJFfvuoyFbAaf15abtxmJF7NOGEdLO9dZpzJqEigCPAvS__5juTB6hcooVluaCShaAbYo-WSEAzmfN8NDFrazbCvugvayk5b27NDMvCKJO9efy7vMp7itABENwpXmlTqH48AojyhOOVDa8Y618oFx0kmV0fXEpidxg",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "html",
+							"header": [
+								{
+									"name": "cache-control",
+									"key": "cache-control",
+									"value": "private",
+									"description": ""
+								},
+								{
+									"name": "connection",
+									"key": "connection",
+									"value": "Keep-Alive",
+									"description": ""
+								},
+								{
+									"name": "content-length",
+									"key": "content-length",
+									"value": "596",
+									"description": ""
+								},
+								{
+									"name": "content-type",
+									"key": "content-type",
+									"value": "application/json",
+									"description": ""
+								},
+								{
+									"name": "date",
+									"key": "date",
+									"value": "Tue, 12 Dec 2017 22:48:11 GMT",
+									"description": ""
+								},
+								{
+									"name": "db-nickname",
+									"key": "db-nickname",
+									"value": "VTJGc2RHVmtYMS9qQk1MQ2NMV08rV092WmI1bnFidGtpSGVRTUoyTE91MD0=",
+									"description": ""
+								},
+								{
+									"name": "expires",
+									"key": "expires",
+									"value": "Thu, 01 Jan 1970 01:00:00 GMT",
+									"description": ""
+								},
+								{
+									"name": "keep-alive",
+									"key": "keep-alive",
+									"value": "timeout=5, max=100",
+									"description": ""
+								},
+								{
+									"name": "message_id",
+									"key": "message_id",
+									"value": "83dfbab6-052f-410f-8ca1-973111ca4529",
+									"description": ""
+								},
+								{
+									"name": "server",
+									"key": "server",
+									"value": "Apache-Coyote/1.1",
+									"description": ""
+								},
+								{
+									"name": "strict-transport-security",
+									"key": "strict-transport-security",
+									"value": "max-age=31536000",
+									"description": ""
+								},
+								{
+									"name": "x-content-type-options",
+									"key": "x-content-type-options",
+									"value": "nosniff",
+									"description": ""
+								},
+								{
+									"name": "x-db-nar",
+									"key": "x-db-nar",
+									"value": "101235-1",
+									"description": ""
+								},
+								{
+									"name": "x-frame-options",
+									"key": "x-frame-options",
+									"value": "DENY",
+									"description": ""
+								},
+								{
+									"name": "x-xss-protection",
+									"key": "x-xss-protection",
+									"value": "1; mode=block",
+									"description": ""
+								}
+							],
+							"cookie": [],
+							"responseTime": "329",
+							"body": "{\"partnerType\":\"NATURAL_PERSON\",\"naturalPerson\":{\"firstName\":\"Kim\",\"lastName\":\"Schmid\",\"dateOfBirth\":\"1986-08-05\",\"gender\":\"FEMALE\",\"nationality\":\"DEU\",\"birthName\":\"Müller\",\"birthPlace\":\"München\",\"legitimation\":{\"documentType\":1,\"documentNumber\":\"ee1234\",\"documentIssueDate\":\"2005-05-05\",\"documentIssuingAuthority\":\"EEE Authority\",\"documentExpirationDate\":\"2555-05-05\"}},\"emailAddresses\":[{\"emailAddressType\":\"BUSINESS_ADDRESS\",\"emailAddress\":\"KimSchmid@test.com\"}],\"phoneNumbers\":[{\"communicationType\":\"MOBILE_PHONE\",\"internationalAreaCode\":\"+49\",\"areaCode\":\"170\",\"telephoneNumber\":\"123456\"}]}"
+						}
+					]
+				},
+				{
+					"name": "Checks the solvency for the current customer for a given account.",
+					"request": {
+						"url": {
+							"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/customerSolvency?iban=DE10000000000000002783",
+							"protocol": "https",
+							"host": [
+								"simulator-api",
+								"db",
+								"com"
+							],
+							"port": "443",
+							"path": [
+								"gw",
+								"dbapi",
+								"v1",
+								"customerSolvency"
+							],
+							"query": [
+								{
+									"key": "iban",
+									"value": "DE10000000000000002783",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJkZXZlbG9wZXJwb3J0YWwiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMjIxODIsImlhdCI6MTUxMzExODU4MiwianRpIjoiYTcxMmYxYmMtMDgxNC00ZTAxLWFkZDAtYTcyM2RlM2ZmNWI4In0.WyqhWSL1XurGQLzLg5OAO9wIHEJzMADjgh4QRq_mkcsWuFM1997i61UPwxA4FlUG3_SrtV7L9guTsY9x1DQjszqa1Q7k8GKyBSDUiVHS4fRpnQ47JCjNFBCn7_cGz91SkQ-XjObzB_HtnHqryDkXCdpfvIQbdF-0tvDNJ5Q2-ik6YzxsRag8KXx60S2xb59oRxW6j0P-QMI7g0nH0FCspKedpKTwKn2Wc20v3_yTML83S_eCHzy7oInuXv-iX5EwVXs_F2TyE2qkYzjhSjVZXt3HsxTdlTJivgUApiylo5Yr2vm-aeMI9Is1o4_xQcqnmaKVzxUVqGyGuF9sNIpjGQ",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "CustomerSolvency does the background check of a customer’s creditworthiness based on past transactions and account data. A score of solvency is returned, providing you with more security that your customer is likely to pay his bill. Please note: This endpoint is currently only available in our APIs simulator stack and ready for you to test it. Don't hesitate to submit us your feedback and stay tuned on our future product development."
+					},
+					"response": [
+						{
+							"id": "94cd24d4-46b7-4006-927a-87af47c7bc6f",
+							"name": "Checks the solvency for the current customer for a given account.",
+							"originalRequest": {
+								"url": {
+									"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/customerSolvency?iban=DE10000000000000002783",
+									"protocol": "https",
+									"host": [
+										"simulator-api",
+										"db",
+										"com"
+									],
+									"port": "443",
+									"path": [
+										"gw",
+										"dbapi",
+										"v1",
+										"customerSolvency"
+									],
+									"query": [
+										{
+											"key": "iban",
+											"value": "DE10000000000000002783",
+											"equals": true,
+											"description": ""
+										}
+									],
+									"variable": []
+								},
+								"method": "GET",
+								"header": [
+									{
+										"key": "Accept",
+										"value": "application/json",
+										"description": "",
+										"warning": ""
+									},
+									{
+										"key": "Authorization",
+										"type": "text",
+										"name": "Authorization",
+										"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMTkyODEsImlhdCI6MTUxMzExODY4MiwianRpIjoiZTM0ZDJkNmYtNmNjZS00ZDhlLTkyOWQtMDVkMWMxNTlmNjdmIn0.dLChnDbiVellMCmsYfW01wvLJpfE5QTlFGiUPvigsGhWQtuC-UEgJzYUX03jOR97CBgTho9l-Zv8_-tu00wJLOWXT_H5mW4E2msI5IfwAho8yrmczCOXnHx2pWt6FZid7GoyF-WxPQdnr6f5-b9OuGTauuaGQpN3byzJPNyQhJQPPSYsdE2TsJFfvuoyFbAaf15abtxmJF7NOGEdLO9dZpzJqEigCPAvS__5juTB6hcooVluaCShaAbYo-WSEAzmfN8NDFrazbCvugvayk5b27NDMvCKJO9efy7vMp7itABENwpXmlTqH48AojyhOOVDa8Y618oFx0kmV0fXEpidxg",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"description": ""
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "html",
+							"header": [
+								{
+									"name": "cache-control",
+									"key": "cache-control",
+									"value": "private",
+									"description": ""
+								},
+								{
+									"name": "connection",
+									"key": "connection",
+									"value": "Keep-Alive",
+									"description": ""
+								},
+								{
+									"name": "content-length",
+									"key": "content-length",
+									"value": "15",
+									"description": ""
+								},
+								{
+									"name": "content-type",
+									"key": "content-type",
+									"value": "application/json",
+									"description": ""
+								},
+								{
+									"name": "date",
+									"key": "date",
+									"value": "Tue, 12 Dec 2017 22:44:46 GMT",
+									"description": ""
+								},
+								{
+									"name": "db-nickname",
+									"key": "db-nickname",
+									"value": "VTJGc2RHVmtYMS9qQk1MQ2NMV08rV092WmI1bnFidGtpSGVRTUoyTE91MD0=",
+									"description": ""
+								},
+								{
+									"name": "expires",
+									"key": "expires",
+									"value": "Thu, 01 Jan 1970 01:00:00 GMT",
+									"description": ""
+								},
+								{
+									"name": "keep-alive",
+									"key": "keep-alive",
+									"value": "timeout=5, max=99",
+									"description": ""
+								},
+								{
+									"name": "message_id",
+									"key": "message_id",
+									"value": "1243a611-fa53-42b3-9973-765ae3a5a2fd",
+									"description": ""
+								},
+								{
+									"name": "server",
+									"key": "server",
+									"value": "Apache-Coyote/1.1",
+									"description": ""
+								},
+								{
+									"name": "strict-transport-security",
+									"key": "strict-transport-security",
+									"value": "max-age=31536000",
+									"description": ""
+								},
+								{
+									"name": "x-content-type-options",
+									"key": "x-content-type-options",
+									"value": "nosniff",
+									"description": ""
+								},
+								{
+									"name": "x-db-nar",
+									"key": "x-db-nar",
+									"value": "101235-1",
+									"description": ""
+								},
+								{
+									"name": "x-frame-options",
+									"key": "x-frame-options",
+									"value": "DENY",
+									"description": ""
+								},
+								{
+									"name": "x-xss-protection",
+									"key": "x-xss-protection",
+									"value": "1; mode=block",
+									"description": ""
+								}
+							],
+							"cookie": [],
+							"responseTime": "3225",
+							"body": "{\"solvency\":21}"
+						}
+					]
+				},
+				{
+					"name": "Transaction Certificate",
+					"request": {
+						"url": {
+							"raw": "https://simulator-api.db.com:443/gw/dbapi/v1/transactionCertificate?iban={{iban}}&amount={{amount}}&currencyCode={{currencyCode}}&certificationMethod={{certificationMethod}}",
+							"protocol": "https",
+							"host": [
+								"simulator-api",
+								"db",
+								"com"
+							],
+							"port": "443",
+							"path": [
+								"gw",
+								"dbapi",
+								"v1",
+								"transactionCertificate"
+							],
+							"query": [
+								{
+									"key": "iban",
+									"value": "{{iban}}"
+								},
+								{
+									"key": "amount",
+									"value": "{{amount}}"
+								},
+								{
+									"key": "currencyCode",
+									"value": "{{currencyCode}}"
+								},
+								{
+									"key": "certificationMethod",
+									"value": "{{certificationMethod}}"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Signing new contracts such as a lease contract often require the customer to provide a salary certificate from their bank. Getting hold of such a proof can be time consuming and annoying. TransactionCertificate automates this process and provides all the necessary data instantly. All parties save time on concluding contracts. Please note: This endpoint is currently only available in our APIs simulator stack and ready for you to test it. Don't hesitate to submit us your feedback and stay tuned on our future product development."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "v2",
+			"description": "",
+			"item": [
+				{
+					"name": "Reads all addresses of the current user.",
+					"request": {
+						"url": "https://simulator-api.db.com:443/gw/dbapi/v2/addresses",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Reads all addresses of the current user. There might be several private and business addresses. AddressType can be BUSINESS_ADDRESS or PRIVATE_ADDRESS. Country format is ISO code."
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieves personal information about the current partner.",
+					"request": {
+						"url": "https://simulator-api.db.com:443/gw/dbapi/v2/partners",
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Retrieves personal information (e.g. first name, last name, date of birth) about the current partner."
+					},
+					"response": []
+				},
+				{
+					"name": "Reads all transactions of the current cash account.",
+					"request": {
+						"url": {
+							"raw": "https://simulator-api.db.com:443/gw/dbapi/v2/transactions?iban={{iban}}&currencyCode={{currencyCode}}&bookingDateFrom={{bookingDateFrom}}&bookingDateTo={{bookingDateTo}}&sortBy=bookingDate[ASC]&limit=10&offset=0",
+							"protocol": "https",
+							"host": [
+								"simulator-api",
+								"db",
+								"com"
+							],
+							"port": "443",
+							"path": [
+								"gw",
+								"dbapi",
+								"v2",
+								"transactions"
+							],
+							"query": [
+								{
+									"key": "iban",
+									"value": "{{iban}}"
+								},
+								{
+									"key": "currencyCode",
+									"value": "{{currencyCode}}"
+								},
+								{
+									"key": "bookingDateFrom",
+									"value": "{{bookingDateFrom}}"
+								},
+								{
+									"key": "bookingDateTo",
+									"value": "{{bookingDateTo}}"
+								},
+								{
+									"key": "sortBy",
+									"value": "bookingDate[ASC]"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Reads all transactions for a specific account of the current user. If given IBAN is not valid or does not represent an account of the current user, an empty result is returned. It is not apparent who issued a transaction, only whether the user gained or lost money by it (based on whether the amount is positive or negative respectively). The maximum number of transactions returned is 200."
+					},
+					"response": []
+				},
+				{
+					"name": "Reads all cash accounts of the current user.",
+					"request": {
+						"url": {
+							"raw": "https://simulator-api.db.com:443/gw/dbapi/v2/cashAccounts?iban={{iban}}&currencyCode={{currencyCode}}&limit=10&offset=0",
+							"protocol": "https",
+							"host": [
+								"simulator-api",
+								"db",
+								"com"
+							],
+							"port": "443",
+							"path": [
+								"gw",
+								"dbapi",
+								"v2",
+								"cashAccounts"
+							],
+							"query": [
+								{
+									"key": "iban",
+									"value": "{{iban}}"
+								},
+								{
+									"key": "currencyCode",
+									"value": "{{currencyCode}}"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"description": ""
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"description": "Reads all cash accounts of the current user. Only current accounts and accounts in the currency EUR are returned. If given IBAN is not valid or does not represent an account of the current user, an empty result is returned."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3scale Reads all addresses of the current user.",
+			"request": {
+				"url": "https://db-api-gateway.app.test.openshift.es/gw/dbapi/v1/addresses",
+				"method": "GET",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"description": ""
+					},
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJraWQiOiJyc2ExIiwiYWxnIjoiUlM1MTIifQ.eyJhdWQiOiJmM2JjZDlkYi1lMGY4LTQxY2UtOGUxNS00ODVjYjBiMWJjYjgiLCJpc3MiOiJodHRwczpcL1wvc2ltdWxhdG9yLWFwaS5kYi5jb21cL2d3XC9vaWRjXC8iLCJleHAiOjE1MTMxMjI0MTEsImlhdCI6MTUxMzEyMTgxMSwianRpIjoiY2E3MzUzNDQtMmU0Ni00MGY1LTk2MjEtYjMyOGZkMTM4N2JlIn0.ODLmiiixM8BKZmNM869t08cpFVVavuWE9AsCNnGxwuHyoKcNDJaHDxYhdAnY1Q5AbzAcyIVUwmNHZ-QPhV8MUe3PD-UnEVWr0XMfw6jLuflTzg-Pur730djiVuM4hv5bZSSID98PPH2KKt2tkY437cZek0sSKeNRLeQ_SBREw49HKp84Y8F87JgUTRigWxYXpoXdAr-gjie9eNARp8CZXw_CLDeYv2cUH3tzXVTg5qhB0iJGqm0vRaNJennyYjv7eOWvN_o3ccojGSTtm06dFKl2kC1nDcq1GFKniVS1W0va3ZNWK--jAHpyG-MKitqbuh8u45KdJbAjsACpqd0-TQ",
+						"description": ""
+					},
+					{
+						"key": "user-key",
+						"value": "dcd6b0554d1b38fff2b4bc43fad96048",
+						"description": ""
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"description": "Reads all addresses of the current user. There might be several private and business addresses. AddressType can be BUSINESS_ADDRESS or PRIVATE_ADDRESS. Country format is ISO code."
+			},
+			"response": []
+		}
+	]
+}
