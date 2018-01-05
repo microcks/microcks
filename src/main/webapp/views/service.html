@@ -133,7 +133,7 @@
                   <tbody>
                   <tr ng-repeat="header in pair.request.headers">
                     <td>{{ header.name }}</td>
-                    <td><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                    <td style="max-width:200px; word-wrap:break-word"><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
                   </tr>
                   </tbody>
                 </table>
@@ -153,7 +153,7 @@
                   <tbody>
                   <tr ng-repeat="header in pair.response.headers">
                     <td>{{ header.name }}</td>
-                    <td><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                    <td style="max-width:200px; word-wrap:break-word"><span ng-repeat="v in header.values">{{ v }}{{ $last ? '':', '}}</span></td>
                   </tr>
                   </tbody>
                 </table>
