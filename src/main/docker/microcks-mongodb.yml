@@ -38,7 +38,7 @@ services:
       - mongo
       - postman
       - keycloak
-    image: lbroudoux/microcks:latest
+    image: microcks/microcks:latest
     container_name: microcks
     ports:
       - "8080:8080"
