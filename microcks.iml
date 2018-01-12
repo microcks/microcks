@@ -52,6 +52,17 @@
     <orderEntry type="library" name="Maven: org.slf4j:jcl-over-slf4j:1.7.21" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-starter-actuator:1.4.1.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.springframework.boot:spring-boot-actuator:1.4.1.RELEASE" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-spring-boot-starter:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-spring-boot-adapter:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-core:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-common:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcpkix-jdk15on:1.56" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-authz-client:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:spring-boot-container-bundle:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-spring-security-adapter:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-adapter-spi:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.keycloak:keycloak-adapter-core:3.4.0.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk15on:1.56" level="project" />
     <orderEntry type="library" name="Maven: com.smartbear.soapui:soapui:5.1.1" level="project" />
     <orderEntry type="library" name="Maven: xmlbeans:xbean:fixed-2.4.0" level="project" />
     <orderEntry type="library" name="Maven: xmlbeans:xbean_xpath:2.4.0" level="project" />
