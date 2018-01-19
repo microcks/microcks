@@ -31,6 +31,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * @author laurent
@@ -159,25 +160,53 @@ public class TestService {
     *
     */
    private void updateTestResult(TestResult testResult) {
-      // Update success, progress indicators and total time before saving and returning.
-      boolean globalSuccessFlag = true;
-      boolean globalProgressFlag = false;
-      long totalElapsedTime = 0;
-      for (TestCaseResult testCaseResult : testResult.getTestCaseResults()){
-         totalElapsedTime += testCaseResult.getElapsedTime();
-         if (!testCaseResult.isSuccess()){
-            globalSuccessFlag = false;
+      // There may be a race condition while updating testResult at each testReturn report.
+      // So be prepared to catch a org.springframework.dao.OptimisticLockingFailureException and retry
+      // saving a bunch of time. Hopefully, we'll succeed. It does not matter if it takes time because
+      // everything runs asynchronously.
+      int times = 0;
+      boolean saved = false;
+
+      while (!saved && times < 5) {
+         // Update success, progress indicators and total time before saving and returning.
+         boolean globalSuccessFlag = true;
+         boolean globalProgressFlag = false;
+         long totalElapsedTime = 0;
+         for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
+            totalElapsedTime += testCaseResult.getElapsedTime();
+            if (!testCaseResult.isSuccess()) {
+               globalSuccessFlag = false;
+            }
+            if (testCaseResult.getElapsedTime() == 0) {
+               globalProgressFlag = true;
+            }
          }
-         if (testCaseResult.getElapsedTime() == 0) {
-            globalProgressFlag = true;
+
+         // Update aggregated flags before saving whole testResult.
+         testResult.setSuccess(globalSuccessFlag);
+         testResult.setInProgress(globalProgressFlag);
+         testResult.setElapsedTime(totalElapsedTime);
+
+         try {
+            log.debug("Trying to update testResult {}", testResult.getId());
+            testResultRepository.save(testResult);
+            saved = true;
+         } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
+            // Update counter and refresh domain object.
+            log.debug("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
+            waitSomeRandomMS(5, 50);
+            testResult = testResultRepository.findOne(testResult.getId());
+            times++;
          }
       }
+   }
 
-      // Update aggregated flags before saving whole testResult.
-      testResult.setSuccess(globalSuccessFlag);
-      testResult.setInProgress(globalProgressFlag);
-      testResult.setElapsedTime(totalElapsedTime);
-
-      testResultRepository.save(testResult);
+   private void waitSomeRandomMS(int min, int max) {
+      Object semaphore = new Object();
+      long timeout = ThreadLocalRandom.current().nextInt(min, max + 1);
+      try {
+         semaphore.wait(timeout);
+      } catch (InterruptedException ie) {
+      }
    }
 }
