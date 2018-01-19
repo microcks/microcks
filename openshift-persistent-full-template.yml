@@ -161,7 +161,7 @@ objects:
     type: ClusterIP
     sessionAffinity: None
     selector:
-      name: "${APP_NAME}"
+      app: "${APP_NAME}"
       container: postman-runtime
       group: microcks
 - kind: Service
@@ -181,7 +181,7 @@ objects:
       targetPort: 27017
       nodePort: 0
     selector:
-      name: "${APP_NAME}"
+      app: "${APP_NAME}"
       container: mongodb
       group: microcks
     type: ClusterIP
@@ -205,7 +205,7 @@ objects:
     type: ClusterIP
     sessionAffinity: None
     selector:
-      name: "${APP_NAME}-keycloak"
+      app: "${APP_NAME}"
       container: keycloak
       group: microcks
 - kind: Service
@@ -225,7 +225,7 @@ objects:
       targetPort: 5432
       nodePort: 0
     selector:
-      name: "${APP_NAME}keycloak-postgresql"
+      name: "${APP_NAME}"
       container: keycloak-postgresql
       group: microcks
     type: ClusterIP
