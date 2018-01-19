@@ -93,7 +93,15 @@ public class TestController {
    @RequestMapping(value = "/tests", method = RequestMethod.POST)
    public ResponseEntity<TestResult> createTest(@RequestBody TestRequestDTO test) {
       log.debug("Creating new test for {} on endpoint {}", test.getServiceId(), test.getTestEndpoint());
-      Service service = serviceRepository.findOne(test.getServiceId());
+      Service service = null;
+      // serviceId may have the form of <service_name>:<service_version>
+      if (test.getServiceId().contains(":")) {
+         String name = test.getServiceId().substring(0, test.getServiceId().indexOf(':'));
+         String version = test.getServiceId().substring(test.getServiceId().indexOf(':') + 1);
+         service = serviceRepository.findByNameAndVersion(name, version);
+      } else {
+         service = serviceRepository.findOne(test.getServiceId());
+      }
       TestRunnerType testRunner = TestRunnerType.valueOf(test.getRunnerType());
       TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner);
       return new ResponseEntity<TestResult>(testResult, HttpStatus.CREATED);
