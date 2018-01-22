@@ -652,7 +652,7 @@ objects:
             "config": {
               "baseUrl": "${OPENSHIFT_MASTER}",
               "clientSecret": "${OPENSHIFT_OAUTH_CLIENT_SECRET}",
-              "clientId": "${APP_NAME}-keycloak-client",
+              "clientId": "${OPENSHIFT_OAUTH_CLIENT_NAME}",
               "defaultScope": "user:full",
               "useJwksUrl": "true"
             }
