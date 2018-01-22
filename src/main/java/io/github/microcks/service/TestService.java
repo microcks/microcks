@@ -204,9 +204,12 @@ public class TestService {
    private void waitSomeRandomMS(int min, int max) {
       Object semaphore = new Object();
       long timeout = ThreadLocalRandom.current().nextInt(min, max + 1);
-      try {
-         semaphore.wait(timeout);
-      } catch (InterruptedException ie) {
+      synchronized (semaphore) {
+         try {
+            semaphore.wait(timeout);
+         } catch (Exception e) {
+            log.debug("waitSomeRandomMS semaphore was interrupted");
+         }
       }
    }
 }
