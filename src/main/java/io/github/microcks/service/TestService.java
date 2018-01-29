@@ -89,52 +89,75 @@ public class TestService {
       TestResult testResult = testResultRepository.findOne(testResultId);
       TestCaseResult updatedTestCaseResult = null;
 
+      // This part can be done safely with no race condition because we only
+      // record new requests/responses corresponding to testReturns.
+      // So just find the correct testCase to build a suitable id and then createTestReturns.
+
       for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
-         // Find the testCaseResult matching operation name.
+         // Ensure we have a testCaseResult matching operation name.
          if (testCaseResult.getOperationName().equals(operationName)) {
-            updatedTestCaseResult = testCaseResult;
-            if (testReturns == null || testReturns.isEmpty()) {
-               testCaseResult.setElapsedTime(-1);
-               testCaseResult.setSuccess(false);
-            } else {
+            // If results, we need to create requests/responses pairs and associate them to testCase.
+            if (testReturns != null && !testReturns.isEmpty()) {
                String testCaseId = IdBuilder.buildTestCaseId(testResult, operationName);
-               updateTestCaseResultWithReturns(testCaseResult, testReturns, testCaseId);
+               createTestReturns(testReturns, testCaseId);
             }
+            break;
          }
       }
 
-      // Finally, Update success, progress indicators and total time before saving and returning.
-      updateTestResult(testResult);
+      // There may be a race condition while updating testResult at each testReturn report.
+      // So be prepared to catch a org.springframework.dao.OptimisticLockingFailureException and retry
+      // saving a bunch of time. Hopefully, we'll succeed. It does not matter if it takes time because
+      // everything runs asynchronously.
+      int times = 0;
+      boolean saved = false;
+
+      while (!saved && times < 5) {
+
+         for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
+            // Ensure we have a testCaseResult matching operation name.
+            if (testCaseResult.getOperationName().equals(operationName)) {
+               updatedTestCaseResult = testCaseResult;
+               // If results we now update the success flag and elapsed time of testCase?
+               if (testReturns == null || testReturns.isEmpty()) {
+                  testCaseResult.setElapsedTime(-1);
+                  testCaseResult.setSuccess(false);
+               } else {
+                  updateTestCaseResultWithReturns(testCaseResult, testReturns);
+               }
+               break;
+            }
+         }
+
+         // Finally, update success, progress indicators and total time before saving and returning.
+         try {
+            updateTestResult(testResult);
+            saved = true;
+         } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
+            // Update counter and refresh domain object.
+            log.warn("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
+            saved = false;
+            waitSomeRandomMS(5, 50);
+            testResult = testResultRepository.findOne(testResult.getId());
+            times++;
+         }
+      }
       return updatedTestCaseResult;
    }
-
 
    /**
     *
     */
-   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult,
-                                     List<TestReturn> testReturns, String testCaseId) {
-      // Prepare a bunch of flag we're going to complete.
-      boolean successFlag = true;
-      long caseElapsedTime = 0;
+   private void createTestReturns(List<TestReturn> testReturns, String testCaseId) {
       List<Response> responses = new ArrayList<Response>();
       List<Request> actualRequests = new ArrayList<Request>();
 
       for (TestReturn testReturn : testReturns) {
-         // Deal with elapsed time and success flag.
-         caseElapsedTime += testReturn.getElapsedTime();
-         TestStepResult testStepResult = testReturn.buildTestStepResult();
-         if (!testStepResult.isSuccess()){
-            successFlag = false;
-         }
-
          // Extract, complete and store response and request.
          testReturn.getResponse().setTestCaseId(testCaseId);
          testReturn.getRequest().setTestCaseId(testCaseId);
          responses.add(testReturn.getResponse());
          actualRequests.add(testReturn.getRequest());
-
-         testCaseResult.getTestStepResults().add(testStepResult);
       }
 
       // Save the responses into repository to get their ids.
@@ -147,6 +170,28 @@ public class TestService {
       }
       log.debug("Saving {} requests with testCaseId {}", responses.size(), testCaseId);
       requestRepository.save(actualRequests);
+   }
+   
+   /**
+    *
+    */
+   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult, List<TestReturn> testReturns) {
+
+      // Prepare a bunch of flag we're going to complete.
+      boolean successFlag = true;
+      long caseElapsedTime = 0;
+
+      for (TestReturn testReturn : testReturns) {
+         // Deal with elapsed time and success flag.
+         caseElapsedTime += testReturn.getElapsedTime();
+         TestStepResult testStepResult = testReturn.buildTestStepResult();
+         if (!testStepResult.isSuccess()){
+            successFlag = false;
+         }
+
+         // Add testStepResult to testCase.
+         testCaseResult.getTestStepResults().add(testStepResult);
+      }
 
       // Update and save the completed TestCaseResult.
       // We cannot consider as success if we have no TestStepResults associated...
@@ -160,45 +205,28 @@ public class TestService {
     *
     */
    private void updateTestResult(TestResult testResult) {
-      // There may be a race condition while updating testResult at each testReturn report.
-      // So be prepared to catch a org.springframework.dao.OptimisticLockingFailureException and retry
-      // saving a bunch of time. Hopefully, we'll succeed. It does not matter if it takes time because
-      // everything runs asynchronously.
-      int times = 0;
-      boolean saved = false;
-
-      while (!saved && times < 5) {
-         // Update success, progress indicators and total time before saving and returning.
-         boolean globalSuccessFlag = true;
-         boolean globalProgressFlag = false;
-         long totalElapsedTime = 0;
-         for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
-            totalElapsedTime += testCaseResult.getElapsedTime();
-            if (!testCaseResult.isSuccess()) {
-               globalSuccessFlag = false;
-            }
-            if (testCaseResult.getElapsedTime() == 0) {
-               globalProgressFlag = true;
-            }
+      // Update success, progress indicators and total time before saving and returning.
+      boolean globalSuccessFlag = true;
+      boolean globalProgressFlag = false;
+      long totalElapsedTime = 0;
+      for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
+         totalElapsedTime += testCaseResult.getElapsedTime();
+         if (!testCaseResult.isSuccess()) {
+            globalSuccessFlag = false;
          }
-
-         // Update aggregated flags before saving whole testResult.
-         testResult.setSuccess(globalSuccessFlag);
-         testResult.setInProgress(globalProgressFlag);
-         testResult.setElapsedTime(totalElapsedTime);
-
-         try {
-            log.debug("Trying to update testResult {}", testResult.getId());
-            testResultRepository.save(testResult);
-            saved = true;
-         } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
-            // Update counter and refresh domain object.
-            log.debug("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
-            waitSomeRandomMS(5, 50);
-            testResult = testResultRepository.findOne(testResult.getId());
-            times++;
+         if (testCaseResult.getElapsedTime() == 0) {
+            globalProgressFlag = true;
          }
       }
+
+      // Update aggregated flags before saving whole testResult.
+      testResult.setSuccess(globalSuccessFlag);
+      testResult.setInProgress(globalProgressFlag);
+      testResult.setElapsedTime(totalElapsedTime);
+
+      log.debug("Trying to update testResult {}", testResult.getId());
+      testResultRepository.save(testResult);
+
    }
 
    private void waitSomeRandomMS(int min, int max) {
