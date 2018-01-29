@@ -225,7 +225,7 @@ objects:
       targetPort: 5432
       nodePort: 0
     selector:
-      name: "${APP_NAME}"
+      app: "${APP_NAME}"
       container: keycloak-postgresql
       group: microcks
     type: ClusterIP
