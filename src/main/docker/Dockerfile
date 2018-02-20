@@ -2,7 +2,7 @@ FROM openjdk:8-jre-alpine
 
 MAINTAINER Laurent Broudoux <laurent.broudoux@gmail.com>
 
-VOLUME /tmp
+VOLUME /config
 
 # Copy files and install dependencies
 ADD *.jar app.jar

@@ -38,8 +38,10 @@ services:
       - mongo
       - postman
       - keycloak
-    image: microcks/microcks:latest
+    image: lbroudoux/microcks:latest
     container_name: microcks
+    volumes:
+      - ./config:/config
     ports:
       - "8080:8080"
     environment:
