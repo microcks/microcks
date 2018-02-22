@@ -335,8 +335,15 @@ objects:
             periodSeconds: 10
             successThreshold: 1
             failureThreshold: 3
+          volumeMounts:
+            - name: "${APP_NAME}-config"
+              mountPath: "/config"
           terminationMessagePath: "/dev/termination-log"
           imagePullPolicy: IfNotPresent
+        volumes:
+          - name: "${APP_NAME}-config"
+            configMap:
+              name: "${APP_NAME}-config"
         restartPolicy: Always
         terminationGracePeriodSeconds: 30
         dnsPolicy: ClusterFirst
@@ -524,6 +531,95 @@ objects:
   stringData:
     username: "${KEYCLOAK_ADMIN_USERNAME}"
     password: "${KEYCLOAK_ADMIN_PASSWORD}"
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-config"
+    labels:
+      app: "${APP_NAME}"
+      container: spring
+      group: microcks
+  data:
+    application.properties: |-
+      # Application configuration properties
+      tests-callback.url=${TEST_CALLBACK_URL}
+      postman-runner.url=${POSTMAN_RUNNER_URL}
+
+      network.username=
+      network.password=
+
+      validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
+
+      # Logging configuration properties
+      logging.config=/config/logback.xml
+
+      # Keycloak configuration properties
+      keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180/auth}
+      keycloak.realm=microcks
+      keycloak.resource=microcks-app
+      keycloak.bearer-only=true
+      keycloak.ssl-required=external
+
+      keycloak.security-constraints[0].authRoles[0]=admin
+      keycloak.security-constraints[0].authRoles[1]=manager
+      keycloak.security-constraints[0].authRoles[2]=user
+      keycloak.security-constraints[0].securityCollections[0].name=Insecure stuffs
+      keycloak.security-constraints[0].securityCollections[0].patterns[0]=/api/services
+      keycloak.security-constraints[0].securityCollections[0].patterns[1]=/api/services/count
+      keycloak.security-constraints[0].securityCollections[0].patterns[2]=/api/jobs
+      keycloak.security-constraints[0].securityCollections[0].patterns[3]=/api/jobs/count
+    logback.xml: |-
+      <?xml version="1.0" encoding="UTF-8"?>
+
+      <configuration scan="true">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+          <encoder>
+            <charset>utf-8</charset>
+            <Pattern>[%p] %c - %m%n</Pattern>
+          </encoder>
+        </appender>
+
+        <logger name="io.github.microcks" level="INFO"/>
+        <!-- Change com.mongodb to org.mongodb so that com.mongodb.FongoDBCollection is ignored, set to debug and tests do not fail... -->
+        <logger name="org.mongodb" level="INFO"/>
+        <logger name="org.springframework.data.mongodb" level="INFO"/>
+        <logger name="org.keycloak" level="INFO"/>
+
+        <logger name="javax.activation" level="WARN"/>
+        <logger name="javax.mail" level="WARN"/>
+        <logger name="javax.xml.bind" level="WARN"/>
+        <logger name="ch.qos.logback" level="WARN"/>
+        <logger name="com.codahale.metrics" level="WARN"/>
+        <logger name="com.ryantenney" level="WARN"/>
+        <logger name="com.sun.xml.internal.bind" level="WARN"/>
+        <logger name="com.zaxxer" level="WARN"/>
+        <logger name="io.undertow" level="WARN"/>
+        <logger name="org.apache" level="WARN"/>
+        <logger name="org.apache.catalina.startup.DigesterFactory" level="OFF"/>
+        <logger name="org.bson" level="WARN"/>
+        <logger name="org.hibernate.validator" level="WARN"/>
+        <logger name="org.hibernate" level="WARN"/>
+        <logger name="org.hibernate.ejb.HibernatePersistence" level="OFF"/>
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.springframework.aop" level="WARN"/>
+        <logger name="org.springframework.web" level="WARN"/>
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.springframework.cache" level="WARN"/>
+        <logger name="org.springframework.scheduling" level="WARN"/>
+        <logger name="org.thymeleaf" level="WARN"/>
+        <logger name="org.xnio" level="WARN"/>
+        <logger name="com.mangofactory.swagger" level="WARN"/>
+        <logger name="com.wordnik.swagger" level="warn"/>
+        <logger name="sun.rmi.transport" level="warn"/>
+
+        <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+          <resetJUL>true</resetJUL>
+        </contextListener>
+
+        <root level="${logback.loglevel}">
+          <appender-ref ref="CONSOLE"/>
+        </root>
+      </configuration>
 - kind: ConfigMap
   apiVersion: v1
   metadata:
