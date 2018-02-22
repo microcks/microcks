@@ -2,7 +2,7 @@
 
 ## Build Status
 
-Current development version is `0.1.4-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
+Current development version is `0.5.1-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
 
 ## Installation
 
@@ -45,7 +45,7 @@ $ mvn -Pprod package -Dyo.test.skip=true
 ```
 
 ```
-$ java -jar target/microcks-0.1.4-SNAPSHOT.jar
+$ java -jar target/microcks-0.5.1-SNAPSHOT.jar
 ```
 
 ### Build and run Docker image
