@@ -1,0 +1,15 @@
+apiVersion: v1
+name: microcks
+version: 0.5.1.1
+description:
+keywords:
+  - mocks
+  - microservice
+  - api
+  - test
+home: https://microcks.github.io
+sources:
+  - http://github.com/microcks/microcks
+maintainers:
+  - name: Laurent Broudoux
+appVersion: 0.5.1-SNAPSHOT
