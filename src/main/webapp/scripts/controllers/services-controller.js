@@ -68,7 +68,7 @@ angular.module('microcksApp')
       // Put hightlighting in the rendering queue using timeout.
       $timeout(function(){
         $('#services').highlight($scope.term);
-      }, 0);
+      }, 100);
     }
   });
 

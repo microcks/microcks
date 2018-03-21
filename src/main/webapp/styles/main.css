@@ -102,6 +102,9 @@ span.alert-danger {
 span.alert-warning {
   color: #eeeeee;
 }
+.highlight {
+  background: #ffe0b3;
+}
 
 .panel{
   box-shadow: 0 0px 0px rgba(0,0,0,0.0) !important;
