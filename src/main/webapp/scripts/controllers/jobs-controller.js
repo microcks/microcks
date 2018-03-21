@@ -86,16 +86,26 @@ angular.module('microcksApp')
   }
 
   $scope.activateJob = function(job) {
-    var original = job;
     job.$activate(function(result) {
        notify('Job "' + job.name + '" has been activated !');
-       original.active = true;
+       job = result;
     });
   }
 
   $scope.startJob = function(job) {
     job.$start(function(result) {
        notify('Job "' + job.name + '" has been executed !');
+       job = result;
+    });
+  }
+
+  $scope.stopJob = function(job) {
+    job.$stop(function(result) {
+       notify({
+          message: 'Job "' + job.name + '" has been deactivated !',
+          classes: 'alert-danger'
+       });
+       job = result;
     });
   }
 
