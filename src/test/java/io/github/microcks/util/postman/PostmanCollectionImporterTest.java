@@ -41,7 +41,6 @@ public class PostmanCollectionImporterTest {
    public void testSimpleProjectImportV2() {
       PostmanCollectionImporter importer = null;
       try {
-         //importer = new PostmanCollectionImporter("target/test-classes/com/github/lbroudoux/microcks/util/postman/PetstoreAPI-collection.json");
          importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -55,7 +54,6 @@ public class PostmanCollectionImporterTest {
       }
       assertEquals(1, services.size());
       Service service = services.get(0);
-      //assertEquals("Petstore API", service.getName());
       assertEquals("Swagger Petstore", service.getName());
       Assert.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
@@ -67,13 +65,12 @@ public class PostmanCollectionImporterTest {
       assertEquals(2, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
 
-         //if ("/v2/pet/findByStatus".equals(operation.getName())) {
-         if ("GET /pet/findByStatus".equals(operation.getName())) {
+         if ("GET /v2/pet/findByStatus".equals(operation.getName())) {
             // assertions for findByStatus.
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
             Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
-            assertEquals("/pet/findByStatus", operation.getResourcePaths().get(0));
+            assertEquals("/v2/pet/findByStatus", operation.getResourcePaths().get(0));
 
             // Check that messages have been correctly found.
             Map<Request, Response> messages = null;
@@ -89,8 +86,6 @@ public class PostmanCollectionImporterTest {
             Response response = entry.getValue();
             assertNotNull(request);
             assertNotNull(response);
-            //assertEquals("available response", response.getName());
-            //assertEquals(9, response.getHeaders().size());
             assertEquals("findbystatus-available", response.getName());
             assertEquals(1, response.getHeaders().size());
             assertEquals("200", response.getStatus());
@@ -98,18 +93,12 @@ public class PostmanCollectionImporterTest {
             assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
             assertNotNull(response.getContent());
          }
-         //else if ("/v2/pet/{part1}".equals(operation.getName())) {
-         else if ("GET /pet/:petId".equals(operation.getName())) {
+         else if ("GET /v2/pet/:petId".equals(operation.getName())) {
             // assertions for findById.
             assertEquals("GET", operation.getMethod());
             //assertEquals(2, operation.getResourcePaths().size());
             assertEquals(DispatchStyles.URI_ELEMENTS, operation.getDispatcher());
-/*
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
-*/
+
             // Check that messages have been correctly found.
             Map<Request, Response> messages = null;
             try {
@@ -119,30 +108,25 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, messages.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue("/pet/1".equals(operation.getResourcePaths().get(0))
-                  || "/pet/2".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/pet/1".equals(operation.getResourcePaths().get(1))
-                  || "/pet/2".equals(operation.getResourcePaths().get(1)));
+            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
+                  || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
+            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
+                  || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
 
             for (Map.Entry<Request, Response> entry : messages.entrySet()) {
                Request request = entry.getKey();
                Response response = entry.getValue();
                assertNotNull(request);
                assertNotNull(response);
-               //if ("findById 2".equals(request.getName())) {
                if ("findbyid-2".equals(request.getName())) {
                   assertEquals("findbyid-2", response.getName());
-                  //assertEquals(9, response.getHeaders().size());
                   assertEquals(1, response.getHeaders().size());
                   assertEquals("200", response.getStatus());
                   assertEquals("application/json", response.getMediaType());
-                  //assertEquals("/part1=2?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
                   assertEquals("/petId=2?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
                   assertNotNull(response.getContent());
-               //} else if ("findById 1 (404)".equals(request.getName())) {
                } else if ("findbyid-1".equals(request.getName())) {
                   assertEquals("404", response.getStatus());
-                  //assertEquals("/part1=1?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
                   assertEquals("/petId=1?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
                } else {
                   fail("Unknown request name: " + request.getName());

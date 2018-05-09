@@ -136,7 +136,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return result;
    }
 
-   private Map<Request, Response> getMessageDefinitionsV2(String operationNameRadix, JsonNode itemNode, Operation operation) {
+   private Map<Request, Response> getMessageDefinitionsV2(String folderName, JsonNode itemNode, Operation operation) {
+      log.debug("Extracting message definitions in folder " + folderName);
       Map<Request, Response> result = new HashMap<Request, Response>();
       String itemNodeName = itemNode.path("name").asText();
 
@@ -145,11 +146,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          Iterator<JsonNode> items = itemNode.path("item").elements();
          while (items.hasNext()) {
             JsonNode item = items.next();
-            result.putAll(getMessageDefinitionsV2(operationNameRadix + "/" + itemNodeName, item, operation));
+            result.putAll(getMessageDefinitionsV2(folderName + "/" + itemNodeName, item, operation));
          }
       } else {
          // Item is here an operation description.
-         String operationName = buildOperationName(itemNode, operationNameRadix);
+         String operationName = buildOperationName(itemNode, folderName);
 
          // Select item based onto operation name.
          if (operationName.equals(operation.getName())) {
@@ -168,14 +169,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   Map<String, String> parts = buildRequestParts(requestNode);
                   dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                   // We should complete resourcePath here.
-                  String resourcePath = extractResourcePath(requestUrl, operationNameRadix);
+                  String resourcePath = extractResourcePath(requestUrl, null);
                   operation.addResourcePath(buildResourcePath(parts, resourcePath));
                } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
                   Map<String, String> parts = buildRequestParts(requestNode);
                   dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                   dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
                   // We should complete resourcePath here.
-                  String resourcePath = extractResourcePath(requestUrl, operationNameRadix);
+                  String resourcePath = extractResourcePath(requestUrl, null);
                   operation.addResourcePath(buildResourcePath(parts, resourcePath));
                }
 
@@ -316,7 +317,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return new ArrayList<>(collectedOperations.values());
    }
 
-   private void extractOperationV2(String operationNameRadix, JsonNode itemNode, Map<String, Operation> collectedOperations) {
+   private void extractOperationV2(String folderName, JsonNode itemNode, Map<String, Operation> collectedOperations) {
+      log.debug("Extracting operation in folder " + folderName);
       String itemNodeName = itemNode.path("name").asText();
 
       // Item may be a folder or an operation description.
@@ -325,11 +327,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          Iterator<JsonNode> items = itemNode.path("item").elements();
          while (items.hasNext()) {
             JsonNode item = items.next();
-            extractOperationV2(operationNameRadix + "/" + itemNodeName, item, collectedOperations);
+            extractOperationV2(folderName + "/" + itemNodeName, item, collectedOperations);
          }
       } else {
          // Item is here an operation description.
-         String operationName = buildOperationName(itemNode, operationNameRadix);
+         String operationName = buildOperationName(itemNode, folderName);
          Operation operation = collectedOperations.get(operationName);
          String url = itemNode.path("request").path("url").asText("");
          if ("".equals(url)) {
@@ -338,8 +340,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
          // Collection may have been used for testing so it may contain a valid URL with prefix that will bother us.
          // Ex: http://localhost:8080/prefix1/prefix2/order/123456 or http://petstore.swagger.io/v2/pet/1. Trim it.
-         if (url.indexOf(operationNameRadix + "/") != -1) {
-            url = url.substring(url.indexOf(operationNameRadix + "/"));
+         if (url.indexOf(folderName + "/") != -1) {
+            url = removeProtocolAndHostPort(url);
          }
 
          if (operation == null) {
@@ -358,12 +360,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             } else if (urlHasParameters(url)) {
                operation.setDispatcherRules(DispatchCriteriaHelper.extractParamsFromURI(url));
                operation.setDispatcher(DispatchStyles.URI_PARAMS);
-               operation.addResourcePath(extractResourcePath(url, operationNameRadix));
+               operation.addResourcePath(extractResourcePath(url, null));
             } else if (urlHasParts(url)) {
                operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url));
                operation.setDispatcher(DispatchStyles.URI_PARTS);
             } else {
-               operation.addResourcePath(extractResourcePath(url, operationNameRadix));
+               operation.addResourcePath(extractResourcePath(url, null));
             }
          }
 
@@ -377,21 +379,33 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
     * request item) and an operationNameRadix (ie. a subcontext or nested subcontext folder where operation
     * is stored).
     * @param operationNode JSON node for operation
-    * @param operationNameRadix String representing radix of operation name
+    * @param folderName String representing radix of operation name
     * @return Operation name
     */
-   public static String buildOperationName(JsonNode operationNode, String operationNameRadix) {
+   public static String buildOperationName(JsonNode operationNode, String folderName) {
       String url = operationNode.path("request").path("url").asText("");
       if ("".equals(url)) {
          url = operationNode.path("request").path("url").path("raw").asText();
       }
+
+      /*
+      // Old way ot computing operation name.
       String nameSuffix = url.substring(url.lastIndexOf(operationNameRadix) + operationNameRadix.length());
       if (nameSuffix.indexOf('?') != -1) {
          nameSuffix = nameSuffix.substring(0, nameSuffix.indexOf('?'));
       }
       operationNameRadix += nameSuffix;
-
       return operationNode.path("request").path("method").asText() + " " + operationNameRadix;
+      */
+
+      // New way of computing operation name.
+      if (url.indexOf('?') != - 1) {
+         // Remove query parameters.
+         url = url.substring(0, url.indexOf('?'));
+      }
+      // Remove protocol pragma and host/port stuffs.
+      url = removeProtocolAndHostPort(url);
+      return operationNode.path("request").path("method").asText() + " " + url;
    }
 
    /**
@@ -401,15 +415,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
     *    => /pet/findByStatus if operationNameRadix=/pet
     */
    private String extractResourcePath(String url, String operationNameRadix) {
-      String result = url;
-      if (result.startsWith("https://")) {
-         result = result.substring("https://".length());
-      }
-      if (result.startsWith("http://")) {
-         result = result.substring("http://".length());
-      }
-      // Remove host and port specification.
-      result = result.substring(result.indexOf('/'));
+      // Remove protocol, host and port specification.
+      String result = removeProtocolAndHostPort(url);
       // Remove trailing parameters.
       if (result.indexOf('?') != -1) {
          result = result.substring(0, result.indexOf('?'));
@@ -445,5 +452,17 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    /** Check variables parts presence into given url. */
    private static boolean urlHasParts(String url) {
       return url.indexOf("/:") != -1;
+   }
+
+   private static String removeProtocolAndHostPort(String url) {
+      if (url.startsWith("https://")) {
+         url = url.substring("https://".length());
+      }
+      if (url.startsWith("http://")) {
+         url = url.substring("http://".length());
+      }
+      // Remove host and port specification.
+      url = url.substring(url.indexOf('/'));
+      return url;
    }
 }
