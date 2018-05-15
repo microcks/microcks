@@ -23,7 +23,9 @@ import static org.junit.Assert.*;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This is a test case for DispatchCriteriaHelper class.
@@ -141,5 +143,32 @@ public class DispatchCriteriaHelperTest {
       // 2 parameters should be considered and sorted according to rules.
       dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams("user_key && status", requestPath);
       assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", dispatchCriteria);
+   }
+
+   @Test
+   public void testBuildFromPartsMap() {
+      Map<String, String> partsMap = new HashMap<>();
+      partsMap.put("year", "2018");
+      partsMap.put("month", "05");
+
+      // Dispatch string parts are sorted.
+      String dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(partsMap);
+      assertEquals("/month=05/year=2018", dispatchCriteria);
+   }
+
+   @Test
+   public void testBuildFromParamsMap() {
+      Map<String, String> paramsMap = new HashMap<>();
+      paramsMap.put("page", "1");
+      paramsMap.put("limit", "20");
+      paramsMap.put("status", "available");
+
+      // Only 1 parameter should be taken into account according to rules.
+      String dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page", paramsMap);
+      assertEquals("?page=1", dispatchCriteria);
+
+      // 2 parameters should be considered and sorted according to rules.
+      dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && limit", paramsMap);
+      assertEquals("?limit=20?page=1", dispatchCriteria);
    }
 }

@@ -50,11 +50,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <docker.image.prefix>microcks</docker.image.prefix>
+    <docker.image.prefix>lbroudoux</docker.image.prefix>
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
     <!-- <spring-boot.version>1.1.10.RELEASE</spring-boot.version> -->
     <spring-boot.version>1.4.1.RELEASE</spring-boot.version>
+    <jackson.version>2.8.3</jackson.version>
     <keycloak.version>3.4.0.Final</keycloak.version>
     <fongo.version>2.0.6</fongo.version>
     <soapui.version>5.1.1</soapui.version>
@@ -96,8 +97,18 @@
       <version>${spring-boot.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-yaml</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient</artifactId>
+      <version>4.5.2</version>
     </dependency>
     <dependency>
       <groupId>com.smartbear.soapui</groupId>

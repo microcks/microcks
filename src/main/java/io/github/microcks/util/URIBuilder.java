@@ -21,6 +21,8 @@ package io.github.microcks.util;
 import io.github.microcks.domain.Parameter;
 
 import java.util.List;
+import java.util.Map;
+
 /**
  * Helper class for building URIs from various objects.
  * @author laurent
@@ -28,13 +30,13 @@ import java.util.List;
 public class URIBuilder{
 
    /**
-    * Build a URI from a URI pattern (using {} marked variable parts) and using
+    * Build a URI from a URI pattern (using {} or /: for marked variable parts) and using
     * other query parameters
     * @param pattern The URI pattern to use
-    * @param parameters THe set of parameters (whether template or query based)
+    * @param parameters The set of parameters (whether template or query based)
     * @return The instanciated URI from template and parameters
     */
-   public static String buildURIFromPattern(String pattern, List<Parameter> parameters){
+   public static String buildURIFromPattern(String pattern, List<Parameter> parameters) {
       if (parameters != null) {
          // Browse parameters and choose between template or query one.
          for (Parameter parameter : parameters) {
@@ -55,6 +57,40 @@ public class URIBuilder{
                   pattern += "&";
                }
                pattern += parameter.getName() + "=" + parameter.getValue();
+            }
+         }
+      }
+      return pattern;
+   }
+
+   /**
+    * Build a URI from a URI pattern (using {} or /: for marked variable parts) and using
+    * other query parameters
+    * @param pattern The URI pattern to use
+    * @param parameters The map of parameters K/V (whether template or query based)
+    * @return The instanciated URI from template and parameters
+    */
+   public static String buildURIFromPattern(String pattern, Map<String, String> parameters) {
+      if (parameters != null) {
+         // Browse parameters and choose from template of query one.
+         for (String parameterName : parameters.keySet()) {
+            String wadltemplate = "{" + parameterName + "}";
+            String swaggerTemplate = "/:" + parameterName;
+            if (pattern.contains(wadltemplate)) {
+               // It's a template parameter.
+               pattern = pattern.replace(wadltemplate, parameters.get(parameterName));
+            } else if (pattern.contains(swaggerTemplate)) {
+               // It's a template parameter.
+               pattern = pattern.replace(":" + parameterName, parameters.get(parameterName));
+            } else {
+               // It's a query parameter, ensure we have started delimiting them.
+               if (!pattern.contains("?")) {
+                  pattern += "?";
+               }
+               if (pattern.contains("=")) {
+                  pattern += "&";
+               }
+               pattern += parameterName + "=" + parameters.get(parameterName);
             }
          }
       }

@@ -18,6 +18,7 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
 
@@ -55,6 +56,9 @@ public class MockRepositoryImporterFactory {
             break;
          } else if (line.startsWith("<?xml")) {
             importer = new SoapUIProjectImporter(mockRepository.getPath());
+            break;
+         } else if (line.startsWith("openapi: 3")) {
+            importer = new OpenAPIImporter(mockRepository.getPath());
             break;
          }
       }

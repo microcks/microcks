@@ -187,7 +187,7 @@ public class DispatchCriteriaHelper{
    
    /**
     * Extract and build a dispatch criteria string from URI pattern (containing variable parts within
-    * {}), projected onto a real instanciated URI.
+    * {} or prefixed with :), projected onto a real instanciated URI.
     * @param pattern The URI pattern containing variables parts ({})
     * @param realURI The real URI that should match pattern.
     * @return A string representing dispatch criteria for the corresponding incoming request.
@@ -247,6 +247,29 @@ public class DispatchCriteriaHelper{
    }
 
    /**
+    * Build a dispatch criteria string from URI parameters contained into a map
+    * @param paramsRule Map<String, String> criteriaMap = new TreeMap<String, String>();
+    * @param paramsMap The Map containing URI params (not necessarily sorted)
+    * @return A string representing a dispatch criteria for the corresponding incoming request.
+    */
+   public static String buildFromParamsMap(String paramsRule, Map<String, String> paramsMap) {
+      if (paramsMap != null && !paramsMap.isEmpty()) {
+         Map<String, String> criteriaMap = new TreeMap<String, String>();
+         criteriaMap.putAll(paramsMap);
+
+         // Just appends sorted entries, separating them with ?.
+         StringBuilder result = new StringBuilder();
+         for (String criteria : criteriaMap.keySet()) {
+            if (paramsRule.contains(criteria)) {
+               result.append("?").append(criteria).append("=").append(criteriaMap.get(criteria));
+            }
+         }
+         return result.toString();
+      }
+      return "";
+   }
+
+   /**
     * Extract and build a dispatch criteria string from URI parameters
     * @param paramsRule The dispatch rules referencing parameters to consider
     * @param uri The URI from which we should build a specific dispatch criteria
@@ -269,7 +292,7 @@ public class DispatchCriteriaHelper{
             }
          }
 
-         // Just appends sorted entries, separating them with /.
+         // Just appends sorted entries, separating them with ?.
          StringBuilder result = new StringBuilder();
          for (String criteria : criteriaMap.keySet()){
             if (paramsRule.contains(criteria)) {

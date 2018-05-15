@@ -22,30 +22,32 @@ import io.github.microcks.domain.Parameter;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * This is a Test for URIBuidler class
+ * This is a Test for URIBuilder class
  * @laurent
  */
 public class URIBuilderTest {
 
    @Test
-   public void tesBuildURIFromPatternWithNullParameters() {
+   public void tesBuildURIFromPatternWithNoParameters() {
       String pattern = "http://localhost:8080/blog/{year}/{month}";
       try {
-         String uri = URIBuilder.buildURIFromPattern(pattern, null);
+         String uri = URIBuilder.buildURIFromPattern(pattern, new ArrayList<Parameter>());
       } catch (NullPointerException npe) {
-         fail("buildURIFromPattern should not fail with null parameters");
+         fail("buildURIFromPattern should not fail with no parameters");
       }
    }
 
    @Test
    public void testBuildURIFromPattern() {
-      // Prepare a bundh of parameters.
+      // Prepare a bunch of parameters.
       Parameter yearParam = new Parameter();
       yearParam.setName("year");
       yearParam.setValue("2017");
@@ -79,5 +81,27 @@ public class URIBuilderTest {
       uri = URIBuilder.buildURIFromPattern(pattern, parameters);
       assertTrue("http://localhost:8080/blog/2017/08?page=0&status=published".equals(uri)
             || "http://localhost:8080/blog/2017/08?status=published&page=0".equals(uri));
+   }
+
+   @Test
+   public void testBuildURIFromPatternWithMap() {
+      // Prepare a bunch of parameters.
+      Map<String, String> parameters = new HashMap<>();
+      parameters.put("year", "2018");
+      parameters.put("month", "05");
+      parameters.put("status", "published");
+      parameters.put("page", "0");
+
+      // Test with old wadl like template format.
+      String pattern = "http://localhost:8080/blog/{year}/{month}";
+      String uri = URIBuilder.buildURIFromPattern(pattern, parameters);
+      assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published".equals(uri)
+            || "http://localhost:8080/blog/2018/05?status=published&page=0".equals(uri));
+
+      // Test with new swagger like template format.
+      pattern = "http://localhost:8080/blog/:year/:month";
+      uri = URIBuilder.buildURIFromPattern(pattern, parameters);
+      assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published".equals(uri)
+            || "http://localhost:8080/blog/2018/05?status=published&page=0".equals(uri));
    }
 }
