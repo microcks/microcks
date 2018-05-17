@@ -26,7 +26,10 @@ import io.github.microcks.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -51,10 +54,34 @@ public class OpenAPIImporter implements MockRepositoryImporter {
     */
    public OpenAPIImporter(String specificationFilePath) throws IOException {
       try {
+         boolean isYaml = true;
+
+         // Analyse first lines of file content to guess repository type.
+         String line = null;
+         BufferedReader reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), Charset.forName("UTF-8"));
+         while ((line = reader.readLine()) != null) {
+            line = line.trim();
+            // Check is we start with json object or array definition.
+            if (line.startsWith("{") || line.startsWith("[")) {
+               isYaml = false;
+               break;
+            }
+            if (line.startsWith("---")) {
+               isYaml = true;
+               break;
+            }
+         }
+         reader.close();
+
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
          // Convert them to Node using Jackson object mapper.
-         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+         ObjectMapper mapper = null;
+         if (isYaml) {
+            mapper = new ObjectMapper(new YAMLFactory());
+         } else {
+            mapper = new ObjectMapper();
+         }
          spec = mapper.readTree(bytes);
       } catch (Exception e) {
          throw new IOException("OpenAPI spec file");

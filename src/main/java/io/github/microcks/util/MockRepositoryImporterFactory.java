@@ -51,13 +51,14 @@ public class MockRepositoryImporterFactory {
       while ((line = reader.readLine()) != null) {
          line = line.trim();
          // Check is we start with json object or array definition.
-         if (line.startsWith("{") || line.startsWith("[")) {
+         if (line.startsWith("\"_postman_id\":")) {
             importer  = new PostmanCollectionImporter(mockRepository.getPath());
             break;
          } else if (line.startsWith("<?xml")) {
             importer = new SoapUIProjectImporter(mockRepository.getPath());
             break;
-         } else if (line.startsWith("openapi: 3")) {
+         } else if (line.startsWith("openapi: 3")
+               || line.startsWith("\"openapi\": \"3") || line.startsWith("'openapi': '3")) {
             importer = new OpenAPIImporter(mockRepository.getPath());
             break;
          }

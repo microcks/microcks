@@ -39,13 +39,31 @@ import static org.junit.Assert.fail;
 public class OpenAPIImporterTest {
 
    @Test
-   public void testSimpleOpenAPIImport() {
+   public void testSimpleOpenAPIImportYAML() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
+
+      importAndAssertOnSimpleOpenAPI(importer);
+   }
+
+   @Test
+   public void testSimpleOpenAPIImportJSON() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi.json");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnSimpleOpenAPI(importer);
+   }
+
+
+   private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {
       // Check that basic service properties are there.
       List<Service> services = null;
       try {
