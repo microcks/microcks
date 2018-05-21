@@ -45,7 +45,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
     */
    private static Logger log = LoggerFactory.getLogger(OpenAPIImporter.class);
 
+   private boolean isYaml = true;
    private JsonNode spec;
+   private String specContent;
 
    /**
     * Build a new importer.
@@ -54,8 +56,6 @@ public class OpenAPIImporter implements MockRepositoryImporter {
     */
    public OpenAPIImporter(String specificationFilePath) throws IOException {
       try {
-         boolean isYaml = true;
-
          // Analyse first lines of file content to guess repository type.
          String line = null;
          BufferedReader reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), Charset.forName("UTF-8"));
@@ -75,6 +75,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
+         specContent = new String(bytes);
          // Convert them to Node using Jackson object mapper.
          ObjectMapper mapper = null;
          if (isYaml) {
@@ -109,7 +110,22 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    @Override
    public List<Resource> getResourceDefinitions(Service service) {
       List<Resource> results = new ArrayList<>();
-      // Non-sense on Postman collection. Just return empty result.
+
+      // Build a suitable name.
+      String name = service.getName() + "-" + service.getVersion();
+      if (isYaml) {
+         name += ".yaml";
+      } else {
+         name += ".json";
+      }
+
+      // Build a brand new resource just with spec content.
+      Resource resource = new Resource();
+      resource.setName(name);
+      resource.setType(ResourceType.OPEN_API_SPEC);
+      resource.setContent(specContent);
+      results.add(resource);
+
       return results;
    }
 

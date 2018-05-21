@@ -27,5 +27,6 @@ public enum ResourceType {
    XSD,
    JSON_SCHEMA,
    SWAGGER,
-   RAML
+   RAML,
+   OPEN_API_SPEC
 }

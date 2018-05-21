@@ -30,6 +30,7 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -79,6 +80,10 @@ public class OpenAPIImporterTest {
 
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+      assertEquals(ResourceType.OPEN_API_SPEC, resources.get(0).getType());
+      assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
+      assertNotNull(resources.get(0).getContent());
 
       // Check that operations and and input/output have been found.
       assertEquals(3, service.getOperations().size());
