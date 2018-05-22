@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Car",
+  "description": "A description of a Car",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Name of the car",
+      "type": "string"
+    },
+    "year": {
+      "description": "Build year",
+      "type": "integer",
+      "minimum": 1950,
+      "exclusiveMinimum": true
+    },
+    "model": {
+      "description": "Model of the car",
+      "type": "string"
+    }
+  },
+  "required": ["name"]
+}

@@ -1,0 +1,29 @@
+{
+  "type": "array",
+  "items": {
+    "$ref": "#/components/schemas/Car"
+  },
+  "components": {
+    "schemas": {
+      "Car": {
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "description": "Name of the car",
+            "type": "string"
+          },
+          "year": {
+            "description": "Build year",
+            "type": "integer"
+          },
+          "model": {
+            "description": "Model of the car",
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
