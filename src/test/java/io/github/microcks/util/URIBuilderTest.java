@@ -36,7 +36,7 @@ import static org.junit.Assert.fail;
 public class URIBuilderTest {
 
    @Test
-   public void tesBuildURIFromPatternWithNoParameters() {
+   public void testBuildURIFromPatternWithNoParameters() {
       String pattern = "http://localhost:8080/blog/{year}/{month}";
       try {
          String uri = URIBuilder.buildURIFromPattern(pattern, new ArrayList<Parameter>());

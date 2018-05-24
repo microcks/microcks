@@ -19,12 +19,10 @@
 package io.github.microcks.service;
 
 import io.github.microcks.domain.*;
-import io.github.microcks.repository.ImportJobRepository;
-import io.github.microcks.repository.RequestRepository;
-import io.github.microcks.repository.ResponseRepository;
-import io.github.microcks.repository.TestResultRepository;
+import io.github.microcks.repository.*;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.UsernamePasswordAuthenticator;
+import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.postman.PostmanTestStepsRunner;
 import io.github.microcks.util.soapui.SoapUITestStepsRunner;
 import io.github.microcks.util.test.AbstractTestRunner;
@@ -60,6 +58,9 @@ public class TestRunnerService {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(TestRunnerService.class);
+
+   @Autowired
+   private ResourceRepository resourceRepository;
 
    @Autowired
    private RequestRepository requestRepository;
@@ -134,9 +135,14 @@ public class TestRunnerService {
             log.error("Throwable while testing operation {}", operation.getName(), t);
          }
 
-         // Update result if we got returns.
+         // Update result if we got returns. If no returns, it means that there's no
+         // sample request for that operation.
          if (results != null && !results.isEmpty()) {
             updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
+            testResultRepository.save(testResult);
+         } else {
+            testCaseResult.setSuccess(false);
+            testCaseResult.setElapsedTime(0);
             testResultRepository.save(testResult);
          }
       }
@@ -199,6 +205,7 @@ public class TestRunnerService {
     *
     */
    private void updateTestResult(TestResult testResult) {
+      log.debug("Updating total testResult");
       // Update success, progress indicators and total time before saving and returning.
       boolean globalSuccessFlag = true;
       boolean globalProgressFlag = false;
@@ -208,7 +215,10 @@ public class TestRunnerService {
          if (!testCaseResult.isSuccess()){
             globalSuccessFlag = false;
          }
-         if (testCaseResult.getElapsedTime() == 0) {
+         // -1 is default elapsed time for testcase so its mean that still in
+         // progress because not updated yet.
+         if (testCaseResult.getElapsedTime() == -1) {
+            log.debug("testCaseResult.elapsedTime is -1, set globalProgressFlag to true");
             globalProgressFlag = true;
          }
       }
@@ -277,6 +287,10 @@ public class TestRunnerService {
                   log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
                }
             }
+         case OPEN_API_SCHEMA:
+            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, false);
+            openApiRunner.setClientHttpRequestFactory(factory);
+            return openApiRunner;
          default:
             HttpTestRunner httpRunner = new HttpTestRunner();
             httpRunner.setClientHttpRequestFactory(factory);

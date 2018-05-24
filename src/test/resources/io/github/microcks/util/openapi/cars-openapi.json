@@ -17,7 +17,7 @@
   "paths": {
     "/owner/{owner}/car": {
       "get": {
-        "summary": "List all cats of owner",
+        "summary": "List all cars of owner",
         "description": "List all cars of owner description",
         "operationId": "getCarsOp",
         "parameters": [

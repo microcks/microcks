@@ -63,6 +63,8 @@ angular.module('microcksApp')
     operation = operation.replace(/\//g, '');
     operation = operation.replace(/\s/g, '');
     operation = operation.replace(/:/g, '');
+    operation = operation.replace(/{/g, '');
+    operation = operation.replace(/}/g, '');
     return encodeURIComponent(operation);
   }
 }]);

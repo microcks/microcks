@@ -22,20 +22,15 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Service;
 import io.github.microcks.util.SoapMessageValidator;
-import org.apache.commons.io.IOUtils;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.util.UriUtils;
 
-import java.io.IOException;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 import java.util.List;
 
 /**
@@ -78,39 +73,21 @@ public class SoapHttpTestRunner extends HttpTestRunner{
    }
 	
 	@Override
-	protected int extractTestReturnCode(Service service, Operation operation, Request request, ClientHttpResponse httpResponse){
+	protected int extractTestReturnCode(Service service, Operation operation, Request request,
+													ClientHttpResponse httpResponse, String responseContent){
 		int code = TestReturn.SUCCESS_CODE;
 
 		// Checking HTTP return code: delegating to super class.
-		code = super.extractTestReturnCode(service, operation, request, httpResponse);
+		code = super.extractTestReturnCode(service, operation, request, httpResponse, responseContent);
 		// If test is already a failure (40x code), no need to pursue...
 		if (TestReturn.FAILURE_CODE == code){
 			return code;
 		}
 
-		// Getting the character set used. Default is the one from platform.
-		String charset = null;
-		MediaType mediaType = httpResponse.getHeaders().getContentType();
-		if (mediaType != null){
-			Charset cs = mediaType.getCharSet();
-			if (cs != null){
-				charset = cs.name();
-			}
-		}
-
-		// Extract body response.
-		StringWriter writer = new StringWriter();
-		try{
-			IOUtils.copy(httpResponse.getBody(), writer, charset);
-		} catch (IOException ioe) {
-			log.debug("IOException while getting body content into response", ioe);
-			return TestReturn.FAILURE_CODE;
-		}
-
 		try{
 			// Validate Soap message body according to operation output part.
 			List<XmlError> errors = SoapMessageValidator.validateSoapMessage(
-               operation.getOutputName(), service.getXmlNS(), writer.toString(), resourceUrl
+               operation.getOutputName(), service.getXmlNS(), responseContent, resourceUrl
                      +  UriUtils.encodeFragment(service.getName(), "UTF-8") + "-" + service.getVersion() + ".wsdl", true
          );
 

@@ -19,14 +19,18 @@
 package io.github.microcks.util.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import io.github.microcks.util.JsonSchemaValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -77,7 +81,7 @@ public class OpenAPISchemaValidator {
     * @throws IOException if json string representations cannot be parsed
     */
    public static List<String> validateJson(String schemaText, String jsonText) throws IOException {
-      return validateJson(JsonSchemaValidator.getJsonNode(schemaText), JsonSchemaValidator.getJsonNode(jsonText));
+      return validateJson(getJsonNodeForSchema(schemaText), JsonSchemaValidator.getJsonNode(jsonText));
    }
 
    /**
@@ -102,6 +106,57 @@ public class OpenAPISchemaValidator {
          return errors;
       }
    }
+
+   /**
+    *
+    * @param jsonText
+    * @return
+    * @throws IOException
+    */
+   public static JsonNode getJsonNode(String jsonText) throws IOException {
+      return JsonSchemaValidator.getJsonNode(jsonText);
+   }
+
+   /**
+    * Get a Jackson JsonNode representation for OpenAPI schema text. This handles
+    * the fact that OpenAPI spec may be formatted in YAML. In that case, it handles the
+    * conversion.
+    * @param schemaText The JSON or YAML string for OpenAPI schema
+    * @return The Jackson JsonNode corresponding to OpenAPI schema string
+    * @throws IOException if schema string representation cannot be parsed
+    */
+   public static JsonNode getJsonNodeForSchema(String schemaText) throws IOException {
+      boolean isYaml = true;
+
+      // Analyse first lines of content to guess content format.
+      String line = null;
+      BufferedReader reader = new BufferedReader(new StringReader(schemaText));
+      while ((line = reader.readLine()) != null) {
+         line = line.trim();
+         // Check is we start with json object or array definition.
+         if (line.startsWith("{") || line.startsWith("[")) {
+            isYaml = false;
+            break;
+         }
+         if (line.startsWith("---")) {
+            isYaml = true;
+            break;
+         }
+      }
+      reader.close();
+
+      // Convert them to Node using Jackson object mapper.
+      ObjectMapper mapper = null;
+      if (isYaml) {
+         log.debug("Guessing OpenAPI spec format is YAML");
+         mapper = new ObjectMapper(new YAMLFactory());
+      } else {
+         log.debug("Guessing OpenAPI spec format is JSON");
+         mapper = new ObjectMapper();
+      }
+      return mapper.readTree(schemaText);
+   }
+
 
    /** Entry point method for converting an OpenAPU schema node to Json schem */
    private static JsonNode convertOpenAPISchemaToJsonSchema(JsonNode jsonNode) {

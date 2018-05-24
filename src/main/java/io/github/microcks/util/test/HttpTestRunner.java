@@ -77,14 +77,20 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
       
       // Initialize result container.
       List<TestReturn> result = new ArrayList<TestReturn>();
-      
+
       for (Request request : requests){
          // Reset status code, message and request each time.
          int code = TestReturn.SUCCESS_CODE;
          String message = null;
          String customizedEndpointUrl = endpointUrl;
          if (service.getType().equals(ServiceType.REST)){
-            customizedEndpointUrl += URIBuilder.buildURIFromPattern(operation.getName(), request.getQueryParameters());
+            String operationName = operation.getName();
+            // Name may start with verb, remove it if present.
+            if (operationName.indexOf(' ') > 0 && operationName.indexOf(' ') < operationName.length()) {
+               operationName = operationName.split(" ")[1];
+            }
+
+            customizedEndpointUrl += URIBuilder.buildURIFromPattern(operationName, request.getQueryParameters());
             log.debug("Using customized endpoint url: " + customizedEndpointUrl);
          }
          ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(new URI(customizedEndpointUrl), method);
@@ -96,7 +102,10 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
                httpRequest.getHeaders().add(header.getName(), buildValue(header.getValues()));
             }
          }
-         httpRequest.getBody().write(request.getContent().getBytes());
+         // If there's input content, add it to request.
+         if (request.getContent() != null) {
+            httpRequest.getBody().write(request.getContent().getBytes());
+         }
          
          // Actually execute request.
          long startTime = System.currentTimeMillis();
@@ -109,22 +118,27 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             message = ioe.getMessage();
          }
          long duration = System.currentTimeMillis() - startTime;
-         
+
+         // Extract and store response body so that stream may not be consumed more than o1 time ;-)
+         String responseContent = null;
+         if (httpResponse != null){
+            StringWriter writer = new StringWriter();
+            IOUtils.copy(httpResponse.getBody(), writer);
+            responseContent = writer.toString();
+         }
+
          // If still in success, check if http code is out of correct ranges (20x and 30x).
          if (code == TestReturn.SUCCESS_CODE){
-            code = extractTestReturnCode(service, operation, request, httpResponse);
+            code = extractTestReturnCode(service, operation, request, httpResponse, responseContent);
             message = extractTestReturnMessage(service, operation, request, httpResponse);
          }
          
          // Create a Response object for returning.
          Response response = new Response();
-         
-         // Extract response body and headers if there's one.
          if (httpResponse != null){
-            StringWriter writer = new StringWriter();
-            IOUtils.copy(httpResponse.getBody(), writer);
-            response.setContent(writer.toString());
-            
+            response.setContent(responseContent);
+            response.setStatus(String.valueOf(httpResponse.getRawStatusCode()));
+            response.setMediaType(httpResponse.getHeaders().getContentType().toString());
             headers = buildHeaders(httpResponse);
             if (headers != null){
                response.setHeaders(headers);
@@ -162,9 +176,11 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
     * @param operation The tested operation
     * @param request The tested reference request
     * @param httpResponse The received response from endpoint
+    * @param responseContent The response body content if any (may be null)
     * @return The test result code, wether TestReturn.SUCCESS_CODE or TestReturn.FAILURE_CODE 
     */
-   protected int extractTestReturnCode(Service service, Operation operation, Request request, ClientHttpResponse httpResponse){
+   protected int extractTestReturnCode(Service service, Operation operation, Request request,
+                                       ClientHttpResponse httpResponse, String responseContent){
       int code = TestReturn.SUCCESS_CODE;
       // Set code to failure if http code out of correct ranges (20x and 30x).
       try{

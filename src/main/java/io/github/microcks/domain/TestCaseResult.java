@@ -31,7 +31,7 @@ import java.util.List;
 public class TestCaseResult {
 
    private boolean success = false;
-   private long elapsedTime;
+   private long elapsedTime = -1;
    private String operationName;
 
    private List<TestStepResult> testStepResults = new ArrayList<>();

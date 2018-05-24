@@ -72,12 +72,10 @@ public abstract class AbstractTestRunner<T>{
       StringBuilder result = new StringBuilder();
       Iterator<String> iterator = values.iterator();
       result.append(iterator.next());
-      do {
+      while (iterator.hasNext()) {
          result.append(",");
-         if (iterator.hasNext()){
-            result.append(iterator.next());
-         }
-      } while (iterator.hasNext());
+         result.append(iterator.next());
+      }
       
       return result.toString();
    }
