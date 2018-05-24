@@ -18,6 +18,9 @@
  */
 package io.github.microcks.util.openapi;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.microcks.domain.*;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
@@ -25,6 +28,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +66,29 @@ public class OpenAPIImporterTest {
       }
 
       importAndAssertOnSimpleOpenAPI(importer);
+   }
+
+   @Test
+   public void testOpenAPIJsonPointer() {
+      try {
+         ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+         byte[] bytes = Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml"));
+         JsonNode openapiSpec = mapper.readTree(bytes);
+
+         String verb = "get";
+         String path = "/owner/{owner}/car";
+
+         String pointer = "/paths/" + path.replace("/", "~1") + "/" + verb
+               + "/responses/200/content/" + "application/json".replace("/", "~1");
+         //pointer = "/paths/~1owner~1{owner}~1car";
+         System.err.println("pointer: " + pointer);
+
+         JsonNode responseNode = openapiSpec.at(pointer);
+         System.err.println("responseNode: " + responseNode);
+
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
    }
 
 

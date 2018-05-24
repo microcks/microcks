@@ -185,6 +185,25 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                               request = new Request();
                               request.setName(exampleName);
                            }
+
+                           // Complete request accept-type with response content-type.
+                           Header header = new Header();
+                           header.setName("Accept");
+                           HashSet<String> values = new HashSet<>();
+                           values.add(contentValue);
+                           header.setValues(values);
+                           request.addHeader(header);
+
+                           // Do we have to complete request with path parameters?
+                           Map<String, String> pathParameters = pathParametersByExample.get(exampleName);
+                           if (pathParameters != null) {
+                              for (Entry<String, String> paramEntry : pathParameters.entrySet()) {
+                                 Parameter param = new Parameter();
+                                 param.setName(paramEntry.getKey());
+                                 param.setValue(paramEntry.getValue());
+                                 request.addQueryParameter(param);
+                              }
+                           }
                            // Do we have to complete request with query parameters?
                            Map<String, String> queryParameters = queryParametersByExample.get(exampleName);
                            if (queryParameters != null) {
@@ -315,7 +334,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
    /**
     * Extract request bodies within verb specification and organize them by example.
-    * Key of returned map is example name. Value is basic Microks Request object (no query params, no headers)
+    * Key of returned map is example name. Value is basic Microcks Request object (no query params, no headers)
     */
    private Map<String, Request> extractRequestBodies(JsonNode verbNode) {
       Map<String, Request> results = new HashMap<>();
@@ -337,6 +356,15 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                Request request = new Request();
                request.setName(exampleName);
                request.setContent(exampleValue);
+
+               // We should add a Content-type header here for request body.
+               Header header = new Header();
+               header.setName("Content-Type");
+               HashSet<String> values = new HashSet<>();
+               values.add(contentTypeName);
+               header.setValues(values);
+               request.addHeader(header);
+
                results.put(exampleName, request);
             }
          }
