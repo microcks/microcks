@@ -40,7 +40,7 @@ import java.io.*;
 import java.util.stream.Stream;
 
 /**
- * A controller for mocking Soap responses.
+ * A controller for distributing or genetation resources associated to services mocked within Microcks.
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
@@ -51,6 +51,7 @@ public class ResourceController {
    private static Logger log = LoggerFactory.getLogger(ResourceController.class);
 
    private static final String SWAGGER_20 = "swagger_20";
+   private static final String OPENAPI_30 = "openapi_30";
 
    private static final String SERVICE_PATTERN = "\\{service\\}";
    private static final String VERSION_PATTERN = "\\{version\\}";
@@ -104,6 +105,14 @@ public class ResourceController {
                log.error("IOException while reading swagger-2.0.json template", e);
             }
             headers.setContentType(MediaType.APPLICATION_JSON);
+         } else if (OPENAPI_30.equals(resourceType)) {
+            org.springframework.core.io.Resource template = new ClassPathResource("templates/openapi-3.0.yaml");
+            try {
+               stream = template.getInputStream();
+            } catch (IOException e) {
+               log.error("IOException while reading openapi-3.0.yaml template", e);
+            }
+            headers.set("Content-Type", "text/yaml");
          }
 
          // Now process the stream, replacing patterns by value.

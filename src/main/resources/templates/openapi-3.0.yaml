@@ -1,0 +1,73 @@
+---
+openapi: 3.0.0
+info:
+  title: {service}
+  description: This is a generic API definition for manipulation of {resource} resources. It contains basic CRUD operations for {resource} resources.
+  version: {version}
+paths:
+  /{resource}:
+    get:
+      summary: Retrieve {resource} resources.
+      description: Retrieve a bunch of {resource} resources. Specifiy example resource as body payload.
+      operationId:
+      responses:
+        200:
+          description: Get an array of {resource} resources.
+    post:
+      summary: Create new {resource} resource.
+      description: Create a new {resource} resource. Specify payload within request body.
+      operationId:
+      requestBody:
+        description: The payload of resource {resource} to create.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schema/AnyType'
+      responses:
+        201:
+          description: Get the newly created {resource} resource.
+  /{resource}/{id}:
+    get:
+      summary: Retrieve a {resource} resource.
+      description: Retrieve an already existing {resource} resource having the specified id.
+      operationId:
+      responses:
+        200:
+          description: {resource} resource having specified id.
+          content:
+            application/json:
+              schema:
+                 $ref: '#/components/schema/AnyType'
+    put:
+      summary: Update a {resource} resource.
+      description: Update an already existing {resource} resource having the specified id.
+      operationId:
+      requestBody:
+        description: The payload of resource {resource} to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schema/AnyType'
+      responses:
+        200:
+          description:
+          content:
+            application/json:
+              schema:
+    delete:
+      summary: Delete a {resource} resource.
+      description: Remove an existing {resource} resource having the specified id.
+      operationId:
+      responses:
+        204:
+          description: Resource {resource} with specified id has been removed.
+    parameters:
+      - name: id
+        in: path
+        description: Id of resource
+        required: true
+        schema:
+          type: string
+components:
+  schemas:
+    AnyType:
