@@ -30,10 +30,12 @@ import org.junit.Test;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -69,6 +71,91 @@ public class OpenAPIImporterTest {
    }
 
    @Test
+   public void testOpenAPIImportYAMLWithHeaders() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-headers.yaml");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("OpenAPI Car API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+      assertEquals(ResourceType.OPEN_API_SPEC, resources.get(0).getType());
+      assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
+      assertNotNull(resources.get(0).getContent());
+
+      // Check that operation and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+
+      Operation operation = service.getOperations().get(0);
+      assertEquals("GET /owner/{owner}/car", operation.getName());
+      assertEquals("GET", operation.getMethod());
+      assertEquals(DispatchStyles.URI_ELEMENTS, operation.getDispatcher());
+      assertEquals("owner ?? page && limit && x-user-id", operation.getDispatcherRules());
+
+      // Check that messages have been correctly found.
+      Map<Request, Response> messages = null;
+      try {
+         messages = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(1, messages.size());
+      assertEquals(1, operation.getResourcePaths().size());
+      assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+
+      for (Map.Entry<Request, Response> entry : messages.entrySet()) {
+         Request request = entry.getKey();
+         Response response = entry.getValue();
+         assertNotNull(request);
+         assertNotNull(response);
+         assertEquals("laurent_cars", request.getName());
+         assertEquals("laurent_cars", response.getName());
+         assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+         assertEquals("200", response.getStatus());
+         assertEquals("application/json", response.getMediaType());
+         assertNotNull(response.getContent());
+
+         // Check headers now.
+         assertEquals(2, request.getHeaders().size());
+         Iterator<Header> headers = request.getHeaders().iterator();
+         while (headers.hasNext()) {
+            Header header = headers.next();
+            if ("x-user-id".equals(header.getName())) {
+               assertEquals(1, header.getValues().size());
+               assertEquals("poiuytrezamlkjhgfdsq", header.getValues().iterator().next());
+            } else if ("Accept".equals(header.getName())) {
+               assertEquals(1, header.getValues().size());
+               assertEquals("application/json", header.getValues().iterator().next());
+            } else {
+               fail("Unexpected header name in request");
+            }
+         }
+
+         assertEquals(1, response.getHeaders().size());
+         Header header = response.getHeaders().iterator().next();
+         assertEquals("x-result-count", header.getName());
+         assertEquals(1, header.getValues().size());
+         assertEquals("2", header.getValues().iterator().next());
+      }
+   }
+
+   @Test
    public void testOpenAPIJsonPointer() {
       try {
          ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
@@ -80,12 +167,10 @@ public class OpenAPIImporterTest {
 
          String pointer = "/paths/" + path.replace("/", "~1") + "/" + verb
                + "/responses/200/content/" + "application/json".replace("/", "~1");
-         //pointer = "/paths/~1owner~1{owner}~1car";
-         System.err.println("pointer: " + pointer);
 
          JsonNode responseNode = openapiSpec.at(pointer);
-         System.err.println("responseNode: " + responseNode);
-
+         assertNotNull(responseNode);
+         assertFalse(responseNode.isMissingNode());
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -113,7 +198,7 @@ public class OpenAPIImporterTest {
       assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
       assertNotNull(resources.get(0).getContent());
 
-      // Check that operations and and input/output have been found.
+      // Check that operations and input/output have been found.
       assertEquals(3, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
 

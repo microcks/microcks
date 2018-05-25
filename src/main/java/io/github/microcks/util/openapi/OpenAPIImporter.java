@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * @author laurent
@@ -147,9 +148,10 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
             // Find the correct operation.
             if (operation.getName().equals(verbName.toUpperCase() + " " + pathName)) {
-               // Find everything related to inputs for this operations examples.
-               Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(path.getValue());
-               Map<String, Map<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue());
+               // Find everything related to inputs for this operation examples.
+               Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(path.getValue(), "path");
+               Map<String, Map<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue(), "query");
+               Map<String, Map<String, String>> headerParametersByExample = extractParametersByExample(verb.getValue(), "header");
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
 
                // No need to go further if no examples.
@@ -158,6 +160,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                   Iterator<Entry<String, JsonNode>> responseCodes = verb.getValue().path("responses").fields();
                   while (responseCodes.hasNext()) {
                      Entry<String, JsonNode> responseCode = responseCodes.next();
+
+                     // Find here potential headers for output of this operation examples.
+                     Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue().path("headers"));
 
                      Iterator<Entry<String, JsonNode>> contents = responseCode.getValue().path("content").fields();
                      while (contents.hasNext()) {
@@ -177,6 +182,10 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                            response.setContent(getExampleValue(example));
                            if (!responseCode.getKey().startsWith("2")) {
                               response.setFault(true);
+                           }
+                           List<Header> responseHeaders = headersByExample.get(exampleName);
+                           if (responseHeaders != null) {
+                              responseHeaders.stream().forEach(header -> response.addHeader(header));
                            }
 
                            // Do we have a request for this example?
@@ -212,6 +221,20 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                                  param.setName(paramEntry.getKey());
                                  param.setValue(paramEntry.getValue());
                                  request.addQueryParameter(param);
+                              }
+                           }
+                           // Do we have to complete request with header parameters?
+                           Map<String, String> headerParameters = headerParametersByExample.get(exampleName);
+                           if (headerParameters != null) {
+                              for (Entry<String, String> headerEntry : headerParameters.entrySet()) {
+                                 header = new Header();
+                                 header.setName(headerEntry.getKey());
+                                 // Values may be multiple and CSV.
+                                 Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(","))
+                                       .map(value -> value.trim())
+                                       .collect(Collectors.toSet());
+                                 header.setValues(headerValues);
+                                 request.addHeader(header);
                               }
                            }
 
@@ -302,10 +325,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    }
 
    /**
-    * Extract parameters within a specification node and organize them by example.
-    * Key of returned map is example name. Key of value map is param name. Value of value map is param value ;-)
+    * Extract parameters within a specification node and organize them by example. Parameter can be of type 'path',
+    * 'query', 'header' or 'cookie'. Allow to filter them using parameterType. Key of returned map is example name.
+    * Key of value map is param name. Value of value map is param value ;-)
     */
-   private Map<String, Map<String, String>> extractParametersByExample(JsonNode node) {
+   private Map<String, Map<String, String>> extractParametersByExample(JsonNode node, String parameterType) {
       Map<String, Map<String, String>> results = new HashMap<>();
 
       Iterator<JsonNode> parameters = node.path("parameters").elements();
@@ -313,7 +337,8 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          JsonNode parameter = parameters.next();
          String parameterName = parameter.path("name").asText();
 
-         if (parameter.has("examples")) {
+         if (parameter.has("in") && parameter.path("in").asText().equals(parameterType)
+               && parameter.has("examples")) {
             Iterator<String> exampleNames = parameter.path("examples").fieldNames();
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
@@ -366,6 +391,48 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                request.addHeader(header);
 
                results.put(exampleName, request);
+            }
+         }
+      }
+      return results;
+   }
+
+   /**
+    * Extract headers within a header specification node and organize them by example.
+    * Key of returned map is example name. Value is a list of Microcks Header objects.
+    */
+   private Map<String, List<Header>> extractHeadersByExample(JsonNode headersNode) {
+      Map<String, List<Header>> results = new HashMap<>();
+      if (!headersNode.isMissingNode()) {
+         Iterator<String> headerNames = headersNode.fieldNames();
+
+         while (headerNames.hasNext()) {
+            String headerName = headerNames.next();
+            JsonNode headerNode = headersNode.path(headerName);
+
+            if (headerNode.has("examples")) {
+               Iterator<String> exampleNames = headerNode.path("examples").fieldNames();
+               while (exampleNames.hasNext()) {
+                  String exampleName = exampleNames.next();
+                  JsonNode example = headerNode.path("examples").path(exampleName);
+                  String exampleValue = getExampleValue(example);
+
+                  // Example may be multiple CSV.
+                  Set<String> values = Arrays.stream(
+                        exampleValue.split(",")).map(value -> value.trim())
+                        .collect(Collectors.toSet());
+
+                  Header header = new Header();
+                  header.setName(headerName);
+                  header.setValues(values);
+
+                  List<Header> headersForExample = results.get(exampleName);
+                  if (headersForExample == null) {
+                     headersForExample = new ArrayList<>();
+                  }
+                  headersForExample.add(header);
+                  results.put(exampleName, headersForExample);
+               }
             }
          }
       }

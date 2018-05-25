@@ -1,0 +1,107 @@
+---
+openapi: 3.0.0
+info:
+  title: OpenAPI Car API
+  description: Sample OpenAPI API using cars
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+paths:
+  /owner/{owner}/car:
+    get:
+      summary: List all cars of owner
+      description: List all cars of owner description
+      operationId: getCarsOp
+      parameters:
+      - name: page
+        in: query
+        description: Result page wanted
+        required: false
+        schema:
+          type: integer
+        examples:
+          laurent_cars:
+            value: 0
+      - name: limit
+        in: query
+        description: Number of result in page
+        required: false
+        schema:
+          type: integer
+        examples:
+          laurent_cars:
+            value: 20
+      - name: x-user-id
+        in: header
+        description: Token to be passed as a header
+        required: true
+        schema:
+          type: string
+        style: simple
+        examples:
+          laurent_cars:
+            value: poiuytrezamlkjhgfdsq
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
+              examples:
+                laurent_cars:
+                  value: |-
+                    [
+                        {"name": "307", "model": "Peugeot 307", "year": 2003},
+                        {"name": "jean-pierre", "model": "Peugeot Traveler", "year": 2017}
+                    ]
+          headers:
+            x-result-count:
+              description: Total number of results
+              schema:
+                type: string
+              examples:
+                laurent_cars:
+                  value: 2
+    parameters:
+    - name: owner
+      in: path
+      description: Owner of the cars
+      required: true
+      schema:
+        format: string
+        type: string
+      examples:
+        laurent_cars:
+          summary: Value for laurent related examples
+          value: laurent
+        laurent_307:
+          $ref: '#/components/examples/param_laurent'
+components:
+  schemas:
+    Car:
+      required:
+      - name
+      properties:
+        name:
+          description: Name of the car
+          type: string
+        year:
+          description: Build year
+          type: integer
+        model:
+          description: Model of the car
+          type: string
+  examples:
+    param_laurent:
+      value: laurent
+tags:
+- name: car
+  description:
