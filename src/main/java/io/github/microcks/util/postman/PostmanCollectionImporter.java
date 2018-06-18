@@ -52,7 +52,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
    /**
     * Build a new importer.
-    * @param collectionFilePath The path to local SoapUI project file
+    * @param collectionFilePath The path to local Postman collection file
     * @throws IOException if project file cannot be found or read.
     */
    public PostmanCollectionImporter(String collectionFilePath) throws IOException {
@@ -89,7 +89,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return result;
    }
 
-   private void fillServiceDefinition(Service service) {
+   private void fillServiceDefinition(Service service) throws MockRepositoryImportException {
       service.setName(collection.path("info").path("name").asText());
       service.setType(ServiceType.REST);
 
@@ -103,7 +103,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          }
       }
       if (version == null){
-         // TODO Throw a typed exception here...
+         log.error("Version property is missing in Collection description");
+         throw new MockRepositoryImportException("Version property is missing in Collection description");
       }
       service.setVersion(version);
    }
