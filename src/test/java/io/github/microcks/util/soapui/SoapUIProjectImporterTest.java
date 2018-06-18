@@ -32,7 +32,12 @@ public class SoapUIProjectImporterTest {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
-      List<Service> services = importer.getServiceDefinitions();
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("HelloServiceSoapBinding", service.getName());
@@ -93,7 +98,12 @@ public class SoapUIProjectImporterTest {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
-      List<Service> services = importer.getServiceDefinitions();
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("HelloServiceScriptBinding", service.getName());
@@ -151,9 +161,16 @@ public class SoapUIProjectImporterTest {
       } catch (Exception e){
          fail("Exception should not be thrown");
       }
-      List<Service> services = importer.getServiceDefinitions();
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
       assertEquals(1, services.size());
       Service service = services.get(0);
+      assertEquals("execute_pttBinding_GetProductElements MockService", service.getName());
+      assertEquals("1.0.0", service.getVersion());
       
       List<Resource> resources = importer.getResourceDefinitions(service);
       assertEquals(2, resources.size());
@@ -165,7 +182,7 @@ public class SoapUIProjectImporterTest {
       resource = resources.get(1);
       assertEquals(ResourceType.WSDL, resource.getType());
       assertNotNull(resource.getContent());
-      assertEquals("execute_pttBinding_GetProductElements MockService-null.wsdl", resource.getName());
+      assertEquals("execute_pttBinding_GetProductElements MockService-1.0.0.wsdl", resource.getName());
       // Check that XSD path has been changed into WSDL.
       assertTrue(resource.getContent().contains("<xsd:import namespace=\"http://lbroudoux.github.com/Product/Commun\" schemaLocation=\"./Product_Anomalie_v1.0.xsd\"/>"));
    }
@@ -179,7 +196,12 @@ public class SoapUIProjectImporterTest {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
-      List<Service> services = importer.getServiceDefinitions();
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Whabed MockService", service.getName());
@@ -287,13 +309,32 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
+   public void testSimpleProjectNoVersionImport() {
+      SoapUIProjectImporter importer = null;
+      try {
+         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/RefTest-no-version-soapui-project.xml");
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties are there.
+      boolean failure = false;
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         failure = true;
+         assertNotEquals(-1, e.getMessage().indexOf("Version property"));
+      }
+      assertTrue(failure);
+   }
+
+   @Test
    public void testHelloAPIProjectImport() {
       MockRepositoryImporter importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(
                new java.io.File("target/test-classes/io/github/microcks/util/soapui/HelloAPI-soapui-project.xml"));
       } catch (Exception e) {
-         e.printStackTrace();
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
@@ -301,7 +342,6 @@ public class SoapUIProjectImporterTest {
       try {
          services = importer.getServiceDefinitions();
       } catch (MockRepositoryImportException e) {
-         e.printStackTrace();
          fail("Exception should not be thrown");
       }
       assertEquals(1, services.size());

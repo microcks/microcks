@@ -135,4 +135,4 @@
          </sam:anomaliesBloquantes>
       </sam:output>
    </soapenv:Body>
-</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="GetProductElements"/></con:response><con:dispatchConfig/></con:mockOperation><con:properties/></con:mockService><con:properties/><con:wssContainer/></con:soapui-project>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="GetProductElements"/></con:response><con:dispatchConfig/></con:mockOperation><con:properties><con:property><con:name>version</con:name><con:value>1.0.0</con:value></con:property></con:properties></con:mockService><con:properties/><con:wssContainer/></con:soapui-project>

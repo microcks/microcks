@@ -88,7 +88,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public List<Service> getServiceDefinitions() {
+   public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
       List<Service> result = new ArrayList<>();
       // Add Soap and then Rest services definitions.
       result.addAll(getSoapServiceDefinitions(project.getMockServiceList()));
@@ -166,7 +166,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    /**
     * Get the definitions of Soap Services from mock services.
     */
-   private List<Service> getSoapServiceDefinitions(List<WsdlMockService> mockServices){
+   private List<Service> getSoapServiceDefinitions(List<WsdlMockService> mockServices) throws MockRepositoryImportException {
       List<Service> result = new ArrayList<>();
 
       for (WsdlMockService wms : mockServices){
@@ -185,7 +185,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          // Extract version from custom properties.
          String version = wms.getPropertyValue(SERVICE_VERSION_PROPERTY);
          if (version == null){
-            // TODO Throw a typed exception here...
+            log.error("Version property is missing in Project properties");
+            throw new MockRepositoryImportException("Version property is missing in Project properties");
          }
          service.setVersion(version);
 
