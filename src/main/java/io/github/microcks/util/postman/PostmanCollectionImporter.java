@@ -103,7 +103,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          }
       }
       if (version == null){
-         log.error("Version property is missing in Collection description");
+         log.error("Version property is missing in Collection description. Use 'version=x.y - something' syntax.");
          throw new MockRepositoryImportException("Version property is missing in Collection description");
       }
       service.setVersion(version);
