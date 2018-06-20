@@ -462,8 +462,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       if (url.startsWith("http://")) {
          url = url.substring("http://".length());
       }
-      // Remove host and port specification.
-      url = url.substring(url.indexOf('/'));
+      // Remove host and port specification if any.
+      if (url.indexOf('/') != -1) {
+         url = url.substring(url.indexOf('/'));
+      }
       return url;
    }
 }
