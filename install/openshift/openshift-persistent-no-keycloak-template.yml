@@ -1,0 +1,521 @@
+---
+apiVersion: v1
+kind: Template
+labels:
+  template: microcks-persistent-no-keycloak-template
+metadata:
+  annotations:
+    description: Template for Microcks application (see http://microcks.github.io). Requires an external Keycloak instance.
+    iconClass: icon-java
+    tags: instant-app
+  labels: {}
+  name: microcks-persistent-no-keycloak
+parameters:
+- name: APP_NAME
+  value: microcks
+  displayName: Application Name
+  description: Name of your Microcks application.
+  required: true
+- name: APP_ROUTE_HOSTNAME
+  displayName: Microcks component hostname
+  description: The external hostname to access your Microcks app.
+  required: true
+- name: KEYCLOAK_ROUTE_HOSTNAME
+  displayName: Keycloak component hostname
+  description: The external hostname to access Keycloak from Microcks app.
+  required: true
+- name: MEMORY_LIMIT
+  displayName: Memory Limit
+  description: Maximum amount of memory the container can use.
+  value: 512Mi
+- name: MONGODB_MEMORY_LIMIT
+  displayName: MongoDB Memory Limit
+  description: Maximum amount of memory the container can use.
+  value: 512Mi
+- name: MONGODB_VOL_SIZE
+  displayName: MongoDB Volume Size
+  description: Volume size for MongoDB data.
+  value: 2Gi
+  required: true
+- name: MONGODB_USER
+  displayName: MongoDB Connection Username
+  description: Username for MongoDB user that will be used for accessing the database.
+  generate: expression
+  from: user[A-Z0-9]{3}
+  required: true
+- name: MONGODB_PASSWORD
+  displayName: MongoDB Connection Password
+  description: Password for the MongoDB connection user.
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+  required: true
+- name: MONGODB_ADMIN_PASSWORD
+  displayName: MongoDB Admin Password
+  description: Password for the database admin user.
+  generate: expression
+  from: "[a-zA-Z0-9]{16}"
+  required: true
+- name: NAMESPACE
+  displayName: Namespace for MongoDB
+  description: The OpenShift Namespace where the MongoDB ImageStream reside.
+  value: openshift
+objects:
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}"
+    labels:
+      app: "${APP_NAME}"
+      group: microcks
+  spec:
+    tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: microcks/microcks:latest
+- kind: ImageStream
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-postman-runtime"
+    labels:
+      app: "${APP_NAME}"
+      group: microcks
+  spec:
+    tags:
+    - name: latest
+      from:
+        kind: DockerImage
+        name: microcks/microcks-postman-runtime:latest
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}"
+    labels:
+      app: "${APP_NAME}"
+      container: spring
+      group: microcks
+  spec:
+    ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: spring
+    type: ClusterIP
+    sessionAffinity: None
+    selector:
+      app: "${APP_NAME}"
+      container: spring
+      group: microcks
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-postman-runtime"
+    labels:
+      app: "${APP_NAME}"
+      container: postman-runtime
+      group: microcks
+  spec:
+    ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 3000
+      name: postman-runtime
+    type: ClusterIP
+    sessionAffinity: None
+    selector:
+      app: "${APP_NAME}"
+      container: postman-runtime
+      group: microcks
+- kind: Service
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-mongodb"
+    labels:
+      app: "${APP_NAME}"
+      container: mongodb
+      group: microcks
+    creationTimestamp:
+  spec:
+    ports:
+    - name: mongodb
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+      nodePort: 0
+    selector:
+      app: "${APP_NAME}"
+      container: mongodb
+      group: microcks
+    type: ClusterIP
+    sessionAffinity: None
+  status:
+    loadBalancer: {}
+- kind: Route
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}"
+    labels:
+      app: "${APP_NAME}"
+      group: microcks
+  spec:
+    host: "${APP_ROUTE_HOSTNAME}"
+    to:
+      kind: Service
+      name: "${APP_NAME}"
+    port:
+      targetPort: spring
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}"
+    labels:
+      app: "${APP_NAME}"
+      container: spring
+      group: microcks
+  spec:
+    strategy:
+      type: Recreate
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - spring
+        from:
+          kind: ImageStreamTag
+          name: "${APP_NAME}:latest"
+    replicas: 1
+    selector:
+      app: "${APP_NAME}"
+      deploymentconfig: "${APP_NAME}"
+      container: spring
+      group: microcks
+    template:
+      metadata:
+        labels:
+          app: "${APP_NAME}"
+          deploymentconfig: "${APP_NAME}"
+          container: spring
+          group: microcks
+      spec:
+        containers:
+        - name: spring
+          image: "${APP_NAME}"
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          env:
+          - name: JAVA_OPTS
+            value: "-Xmx300m"
+          - name: SPRING_PROFILES_ACTIVE
+            value: prod
+          - name: SPRING_DATA_MONGODB_URI
+            value: mongodb://${MONGODB_USER}:${MONGODB_PASSWORD}@${APP_NAME}-mongodb:27017/${SPRING_DATA_MONGODB_DATABASE}
+          - name: SPRING_DATA_MONGODB_DATABASE
+            value: "${APP_NAME}"
+          - name: POSTMAN_RUNNER_URL
+            value: http://${APP_NAME}-postman-runtime:8080
+          - name: TEST_CALLBACK_URL
+            value: http://${APP_NAME}:8080
+          - name: KEYCLOAK_URL
+            value: http://${KEYCLOAK_ROUTE_HOSTNAME}/auth
+          resources:
+            limits:
+              memory: "${MEMORY_LIMIT}"
+          livenessProbe:
+            httpGet:
+              path: "/api/health"
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            timeoutSeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: "/api/health"
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 20
+            timeoutSeconds: 3
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          volumeMounts:
+            - name: "${APP_NAME}-config"
+              mountPath: "/config"
+          terminationMessagePath: "/dev/termination-log"
+          imagePullPolicy: IfNotPresent
+        volumes:
+          - name: "${APP_NAME}-config"
+            configMap:
+              name: "${APP_NAME}-config"
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-postman-runtime"
+    labels:
+      app: "${APP_NAME}"
+      container: postman-runtime
+      group: microcks
+  spec:
+    strategy:
+      type: Recreate
+    triggers:
+    - type: ConfigChange
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - postman-runtime
+        from:
+          kind: ImageStreamTag
+          name: "${APP_NAME}-postman-runtime:latest"
+    replicas: 1
+    selector:
+      app: "${APP_NAME}"
+      deploymentconfig: "${APP_NAME}-postman-runtime"
+      container: postman-runtime
+      group: microcks
+    template:
+      metadata:
+        labels:
+          app: "${APP_NAME}"
+          deploymentconfig: "${APP_NAME}-postman-runtime"
+          container: postman-runtime
+          group: microcks
+      spec:
+        containers:
+        - name: postman-runtime
+          image: "${APP_NAME}-postman-runtime"
+          ports:
+          - containerPort: 3000
+            protocol: TCP
+          env:
+          - name: LOG_LEVEL
+            value: info
+          resources:
+            limits:
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: "/health"
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 4
+            timeoutSeconds: 3
+            periodSeconds: 20
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: "/health"
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 20
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: "/dev/termination-log"
+          imagePullPolicy: IfNotPresent
+        restartPolicy: Always
+        terminationGracePeriodSeconds: 30
+        dnsPolicy: ClusterFirst
+- kind: DeploymentConfig
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-mongodb"
+    labels:
+      app: "${APP_NAME}"
+      container: mongodb
+      group: microcks
+    creationTimestamp:
+  spec:
+    strategy:
+      type: Recreate
+    triggers:
+    - type: ImageChange
+      imageChangeParams:
+        automatic: true
+        containerNames:
+        - mongodb
+        from:
+          kind: ImageStreamTag
+          name: mongodb:3.2
+          namespace: "${NAMESPACE}"
+        lastTriggeredImage: ''
+    - type: ConfigChange
+    replicas: 1
+    selector:
+      app: "${APP_NAME}"
+      deploymentconfig: mongodb
+      container: mongodb
+      group: microcks
+    template:
+      metadata:
+        creationTimestamp:
+        labels:
+          app: "${APP_NAME}"
+          deploymentconfig: mongodb
+          container: mongodb
+          group: microcks
+      spec:
+        containers:
+        - name: mongodb
+          image: " "
+          ports:
+          - containerPort: 27017
+            protocol: TCP
+          readinessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 3
+            exec:
+              command:
+              - "/bin/sh"
+              - "-i"
+              - "-c"
+              - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
+                --eval="quit()"
+          livenessProbe:
+            timeoutSeconds: 1
+            initialDelaySeconds: 30
+            tcpSocket:
+              port: 27017
+          env:
+          - name: MONGODB_USER
+            value: "${MONGODB_USER}"
+          - name: MONGODB_PASSWORD
+            value: "${MONGODB_PASSWORD}"
+          - name: MONGODB_ADMIN_PASSWORD
+            value: "${MONGODB_ADMIN_PASSWORD}"
+          - name: MONGODB_DATABASE
+            value: "${APP_NAME}"
+          resources:
+            limits:
+              memory: "${MONGODB_MEMORY_LIMIT}"
+          volumeMounts:
+          - name: "${APP_NAME}-mongodb-data"
+            mountPath: "/var/lib/mongodb/data"
+          terminationMessagePath: "/dev/termination-log"
+          imagePullPolicy: IfNotPresent
+          capabilities: {}
+          securityContext:
+            capabilities: {}
+            privileged: false
+        volumes:
+        - name: "${APP_NAME}-mongodb-data"
+          persistentVolumeClaim:
+            claimName: "${APP_NAME}-mongodb"
+        restartPolicy: Always
+        dnsPolicy: ClusterFirst
+  status: {}
+- kind: PersistentVolumeClaim
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-mongodb"
+    labels:
+      app: "${APP_NAME}"
+      container: mongodb
+      group: microcks
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${MONGODB_VOL_SIZE}"
+- kind: ConfigMap
+  apiVersion: v1
+  metadata:
+    name: "${APP_NAME}-config"
+    labels:
+      app: "${APP_NAME}"
+      container: spring
+      group: microcks
+  data:
+    application.properties: |-
+      # Application configuration properties
+      tests-callback.url=${TEST_CALLBACK_URL}
+      postman-runner.url=${POSTMAN_RUNNER_URL}
+
+      network.username=
+      network.password=
+
+      validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
+
+      # Logging configuration properties
+      logging.config=/config/logback.xml
+
+      # Keycloak configuration properties
+      keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180/auth}
+      keycloak.realm=microcks
+      keycloak.resource=microcks-app
+      keycloak.bearer-only=true
+      keycloak.ssl-required=external
+
+      keycloak.security-constraints[0].authRoles[0]=admin
+      keycloak.security-constraints[0].authRoles[1]=manager
+      keycloak.security-constraints[0].authRoles[2]=user
+      keycloak.security-constraints[0].securityCollections[0].name=Insecure stuffs
+      keycloak.security-constraints[0].securityCollections[0].patterns[0]=/api/services
+      keycloak.security-constraints[0].securityCollections[0].patterns[1]=/api/services/count
+      keycloak.security-constraints[0].securityCollections[0].patterns[2]=/api/jobs
+      keycloak.security-constraints[0].securityCollections[0].patterns[3]=/api/jobs/count
+    logback.xml: |-
+      <?xml version="1.0" encoding="UTF-8"?>
+
+      <configuration scan="true">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+          <encoder>
+            <charset>utf-8</charset>
+            <Pattern>[%p] %c - %m%n</Pattern>
+          </encoder>
+        </appender>
+
+        <logger name="io.github.microcks" level="INFO"/>
+        <!-- Change com.mongodb to org.mongodb so that com.mongodb.FongoDBCollection is ignored, set to debug and tests do not fail... -->
+        <logger name="org.mongodb" level="INFO"/>
+        <logger name="org.springframework.data.mongodb" level="INFO"/>
+        <logger name="org.keycloak" level="INFO"/>
+
+        <logger name="javax.activation" level="WARN"/>
+        <logger name="javax.mail" level="WARN"/>
+        <logger name="javax.xml.bind" level="WARN"/>
+        <logger name="ch.qos.logback" level="WARN"/>
+        <logger name="com.codahale.metrics" level="WARN"/>
+        <logger name="com.ryantenney" level="WARN"/>
+        <logger name="com.sun.xml.internal.bind" level="WARN"/>
+        <logger name="com.zaxxer" level="WARN"/>
+        <logger name="io.undertow" level="WARN"/>
+        <logger name="org.apache" level="WARN"/>
+        <logger name="org.apache.catalina.startup.DigesterFactory" level="OFF"/>
+        <logger name="org.bson" level="WARN"/>
+        <logger name="org.hibernate.validator" level="WARN"/>
+        <logger name="org.hibernate" level="WARN"/>
+        <logger name="org.hibernate.ejb.HibernatePersistence" level="OFF"/>
+        <logger name="org.springframework" level="WARN"/>
+        <logger name="org.springframework.aop" level="WARN"/>
+        <logger name="org.springframework.web" level="WARN"/>
+        <logger name="org.springframework.security" level="WARN"/>
+        <logger name="org.springframework.cache" level="WARN"/>
+        <logger name="org.springframework.scheduling" level="WARN"/>
+        <logger name="org.thymeleaf" level="WARN"/>
+        <logger name="org.xnio" level="WARN"/>
+        <logger name="com.mangofactory.swagger" level="WARN"/>
+        <logger name="com.wordnik.swagger" level="warn"/>
+        <logger name="sun.rmi.transport" level="warn"/>
+
+        <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+          <resetJUL>true</resetJUL>
+        </contextListener>
+
+        <root level="${logback.loglevel}">
+          <appender-ref ref="CONSOLE"/>
+        </root>
+      </configuration>
+
