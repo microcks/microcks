@@ -260,6 +260,10 @@ public class TestRunnerService {
             soapRunner.setClientHttpRequestFactory(factory);
             soapRunner.setResourceUrl(validationResourceUrl);
             return soapRunner;
+         case OPEN_API_SCHEMA:
+            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, false);
+            openApiRunner.setClientHttpRequestFactory(factory);
+            return openApiRunner;
          case SOAP_UI:
             // Handle local download of correct project file.
             List<ImportJob> jobs = jobRepository.findByServiceRefId(serviceId);
@@ -287,10 +291,6 @@ public class TestRunnerService {
                   log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
                }
             }
-         case OPEN_API_SCHEMA:
-            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, false);
-            openApiRunner.setClientHttpRequestFactory(factory);
-            return openApiRunner;
          default:
             HttpTestRunner httpRunner = new HttpTestRunner();
             httpRunner.setClientHttpRequestFactory(factory);
