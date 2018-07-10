@@ -141,9 +141,9 @@ public class TestRunnerService {
             updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
             testResultRepository.save(testResult);
          } else {
-            testCaseResult.setSuccess(false);
-            testCaseResult.setElapsedTime(0);
-            testResultRepository.save(testResult);
+            //testCaseResult.setSuccess(false);
+            //testCaseResult.setElapsedTime(0);
+            //testResultRepository.save(testResult);
          }
       }
 
