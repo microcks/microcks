@@ -108,7 +108,7 @@ public class RestController {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          if (operation.getMethod().equals(request.getMethod().toUpperCase())){
             // ... then check is we have a matching resource path.
-            if (operation.getResourcePaths().contains(resourcePath)){
+            if (operation.getResourcePaths() != null && operation.getResourcePaths().contains(resourcePath)){
                rOperation = operation;
                break;
             }
