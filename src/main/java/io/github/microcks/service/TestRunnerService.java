@@ -136,14 +136,14 @@ public class TestRunnerService {
          }
 
          // Update result if we got returns. If no returns, it means that there's no
-         // sample request for that operation.
-         if (results != null && !results.isEmpty()) {
+         // sample request for that operation -> mark it as failed.
+         if (results == null) {
+            testCaseResult.setSuccess(false);
+            testCaseResult.setElapsedTime(0);
+            testResultRepository.save(testResult);
+         } else if (!results.isEmpty()) {
             updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
             testResultRepository.save(testResult);
-         } else {
-            //testCaseResult.setSuccess(false);
-            //testCaseResult.setElapsedTime(0);
-            //testResultRepository.save(testResult);
          }
       }
 

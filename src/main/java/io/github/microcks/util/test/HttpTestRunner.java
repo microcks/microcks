@@ -74,7 +74,11 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
       if (log. isDebugEnabled()){
          log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
       }
-      
+
+      if (requests.isEmpty()) {
+         return null;
+      }
+
       // Initialize result container.
       List<TestReturn> result = new ArrayList<TestReturn>();
 
