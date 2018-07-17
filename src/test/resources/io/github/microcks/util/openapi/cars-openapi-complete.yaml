@@ -109,7 +109,7 @@ paths:
                   $ref: '#/components/schemas/Person'
               examples:
                 laurent_307_passengers:
-                value: "[\n    {\"firstname\": \"Nicolas\", \"lastname\": \"Masse\"},\n    {\"firstname\": \"Eric\", \"lastname\": \"Wittmann\"}\n]"
+                  value: "[\n    {\"firstname\": \"Nicolas\", \"lastname\": \"Masse\"},\n    {\"firstname\": \"Eric\", \"lastname\": \"Wittmann\"}\n]"
     post:
       summary: Add some passengers to the car
       description: Add some passengers to the car description
