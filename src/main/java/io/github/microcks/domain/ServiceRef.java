@@ -28,6 +28,9 @@ public class ServiceRef {
    private String name;
    private String version;
 
+   public ServiceRef() {
+   }
+
    public ServiceRef(String serviceId, String name, String version) {
       this.serviceId = serviceId;
       this.name = name;
