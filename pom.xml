@@ -4,7 +4,7 @@
 
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
-  <version>0.6.1-SNAPSHOT</version>
+  <version>0.5.1-SNAPSHOT</version>
 
   <name>Microcks</name>
   <description>Mirocks: easy mocks for your microservices</description>
