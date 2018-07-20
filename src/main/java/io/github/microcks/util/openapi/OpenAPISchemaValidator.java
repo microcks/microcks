@@ -108,10 +108,10 @@ public class OpenAPISchemaValidator {
    }
 
    /**
-    *
-    * @param jsonText
-    * @return
-    * @throws IOException
+    * Get a Jackson JsonNode representation for Json object.
+    * @param jsonText The Json object as a string
+    * @return The Jackson JsonNode corresponding to json object string
+    * @throws IOException if json string representation cannot be parsed
     */
    public static JsonNode getJsonNode(String jsonText) throws IOException {
       return JsonSchemaValidator.getJsonNode(jsonText);

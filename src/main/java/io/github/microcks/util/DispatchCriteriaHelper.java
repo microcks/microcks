@@ -248,7 +248,7 @@ public class DispatchCriteriaHelper{
 
    /**
     * Build a dispatch criteria string from URI parameters contained into a map
-    * @param paramsRule Map<String, String> criteriaMap = new TreeMap<String, String>();
+    * @param paramsRule The dispatch rules referencing parameters to consider
     * @param paramsMap The Map containing URI params (not necessarily sorted)
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
