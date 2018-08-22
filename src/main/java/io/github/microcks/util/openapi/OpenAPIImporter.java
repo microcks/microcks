@@ -246,7 +246,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                               Map<String, String> queryParams = queryParametersByExample.get(exampleName);
                               dispatchCriteria = DispatchCriteriaHelper
                                     .buildFromParamsMap(operation.getDispatcherRules(), queryParams);
-
+                              // We should complete resourcePath here.
+                              String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, queryParams);
+                              operation.addResourcePath(resourcePath);
                            } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
                               Map<String, String> parts = pathParametersByExample.get(exampleName);
                               dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
@@ -309,6 +311,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                         + " ?? " + extractOperationParams(verb.getValue()));
                   operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
                } else if (operationHasParameters(verb.getValue())) {
+                  operation.setDispatcherRules(extractOperationParams(verb.getValue()));
                   operation.setDispatcher(DispatchStyles.URI_PARAMS);
                } else if (urlHasParts(pathName)) {
                   operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName));
