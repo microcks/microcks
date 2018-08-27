@@ -159,6 +159,10 @@ public class DispatchCriteriaHelper{
     * @return A string representing dispatch rules for the corresponding incoming request.
     */
    public static String extractPartsFromURIPattern(String pattern){
+      // Sanitize pattern as it may containers query params expressed using '{{}}'.
+      if (pattern.contains("?")) {
+         pattern = pattern.substring(0, pattern.indexOf('?'));
+      }
       // Build a pattern for extracting parts from pattern.
       String partsPattern = null;
       if (pattern.contains("/{")) {

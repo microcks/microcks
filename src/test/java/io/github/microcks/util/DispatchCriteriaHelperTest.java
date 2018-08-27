@@ -69,7 +69,7 @@ public class DispatchCriteriaHelperTest {
    @Test
    public void testExtractPartsFromURIPattern(){
       // Check with single URI pattern.
-      String operationName = "/deployment/byComponent/{component}/{version}";
+      String operationName = "/deployment/byComponent/{component}/{version}?{{param}}";
 
       String dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIPattern(operationName);
       assertEquals("component && version", dispatchCriteria);

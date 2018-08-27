@@ -83,7 +83,12 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       }
 
       // Then build its operations.
-      service.setOperations(extractOperations());
+      try {
+         service.setOperations(extractOperations());
+      } catch (Throwable t) {
+         log.error("Runtime exception while extracting Operations for " + service.getName());
+         throw new MockRepositoryImportException("Runtime exception for " + service.getName() + ": " + t.getMessage());
+      }
 
       result.add(service);
       return result;
