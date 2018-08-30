@@ -120,6 +120,7 @@ public class TestService {
                updatedTestCaseResult = testCaseResult;
                // If results we now update the success flag and elapsed time of testCase?
                if (testReturns == null || testReturns.isEmpty()) {
+                  log.info("testReturns are null or empty, setting elapsedTime to -I and success to false for {}", operationName);
                   testCaseResult.setElapsedTime(-1);
                   testCaseResult.setSuccess(false);
                } else {
@@ -133,6 +134,7 @@ public class TestService {
          try {
             updateTestResult(testResult);
             saved = true;
+            log.debug("testResult {} has been updated !", testResult.getId());
          } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
             // Update counter and refresh domain object.
             log.warn("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
@@ -199,6 +201,8 @@ public class TestService {
          testCaseResult.setSuccess(successFlag);
       }
       testCaseResult.setElapsedTime(caseElapsedTime);
+      log.debug("testCaseResult for {} have been updated with {} elapsedTime and success flag to {}",
+            testCaseResult.getOperationName(), testCaseResult.getElapsedTime(), testCaseResult.isSuccess());
    }
 
    /**
@@ -211,10 +215,13 @@ public class TestService {
       long totalElapsedTime = 0;
       for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
          totalElapsedTime += testCaseResult.getElapsedTime();
-         if (!testCaseResult.isSuccess()) {
+         if (!testCaseResult.isSuccess()){
             globalSuccessFlag = false;
          }
-         if (testCaseResult.getElapsedTime() == 0) {
+         // -1 is default elapsed time for testcase so its mean that still in
+         // progress because not updated yet.
+         if (testCaseResult.getElapsedTime() == -1) {
+            log.debug("testCaseResult.elapsedTime is -1, set globalProgressFlag to true");
             globalProgressFlag = true;
          }
       }
@@ -224,7 +231,8 @@ public class TestService {
       testResult.setInProgress(globalProgressFlag);
       testResult.setElapsedTime(totalElapsedTime);
 
-      log.debug("Trying to update testResult {}", testResult.getId());
+      log.debug("Trying to update testResult {} with {} elapsedTime and success flag to {}",
+            testResult.getId(), testResult.getElapsedTime(), testResult.isSuccess());
       testResultRepository.save(testResult);
 
    }
