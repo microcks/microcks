@@ -1,0 +1,87 @@
+export class Api {
+  name: string;
+  version: string;
+  resource: string;
+}
+
+export class Service {
+  id: string;
+  name: string;
+  version: string;
+  xmlNS: string;
+  type: ServiceType;
+  operations: Operation[];
+}
+export enum ServiceType {
+  SOAP_HTTP,
+  REST,
+  GENERIC_REST
+}
+
+export class Operation {
+  name: string;
+  method: string;
+  inputName: string;
+  outputName: string;
+  dispatcher: string;
+  dispatcherRules: string;
+  defaultDelay: number;
+  resourcePaths: string[];
+}
+
+export class Contract {
+  id: string;
+  name: string;
+  content: string;
+  type: ContractType;
+  serviceId: string;
+}
+export enum ContractType {
+  WSDL,
+  XSD,
+  JSON_SCHEMA,
+  SWAGGER,
+  RAML,
+  OPEN_API_SPEC
+}
+
+export class Header {
+  name: string;
+  values: string[];
+}
+
+export class Parameter {
+  name: string;
+  value: string;
+}
+
+abstract class Message {
+  name: string;
+  content: string;
+  operationId: string;
+  testCaseId: string;
+  headers: Header[];
+}
+export class Request extends Message {
+  id: string;
+  responseId: string;
+  queryParameters: Parameter[];
+}
+export class Response extends Message {
+  id: string;
+  status: string;
+  mediaType: string;
+  dispatchCriteria: string;
+  isFault: boolean = false;
+}
+
+export class RequestResponsePair {
+  request: Request;
+  response: Response;
+}
+
+export class ServiceView {
+  service: Service;
+  messagesMap: {string : RequestResponsePair[]};
+}
+

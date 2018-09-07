@@ -64,6 +64,13 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>${spring-boot.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
         <groupId>org.keycloak.bom</groupId>
         <artifactId>keycloak-adapter-bom</artifactId>
         <version>${keycloak.version}</version>
@@ -74,13 +81,6 @@
   </dependencyManagement>
 
   <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-parent</artifactId>
-      <version>${spring-boot.version}</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -168,6 +168,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
         <configuration>
           <source>${java.version}</source>
           <target>${java.version}</target>
@@ -240,25 +241,43 @@
       <build>
         <plugins>
           <plugin>
-            <groupId>com.github.trecloux</groupId>
-            <artifactId>yeoman-maven-plugin</artifactId>
-            <version>0.4</version>
+            <groupId>com.github.eirslett</groupId>
+            <artifactId>frontend-maven-plugin</artifactId>
+            <version>1.6</version>
             <executions>
               <execution>
-                <id>run-frontend-build</id>
-                <phase>generate-resources</phase>
+                <id>install node and npm</id>
                 <goals>
-                  <goal>build</goal>
+                  <goal>install-node-and-npm</goal>
+                </goals>
+                <phase>generate-resources</phase>
+              </execution>
+              <execution>
+                <id>npm install</id>
+                <goals>
+                  <goal>npm</goal>
                 </goals>
                 <configuration>
-                  <buildTool>grunt</buildTool>
-                  <buildArgs>build --force --no-color</buildArgs>
-                  <skipTests>true</skipTests>
+                  <arguments>install</arguments>
+                </configuration>
+              </execution>
+              <!-- Build the app -->
+              <execution>
+                <id>ng build</id>
+                <goals>
+                  <goal>npm</goal>
+                </goals>
+                <phase>generate-resources</phase>
+                <configuration>
+                  <arguments>run-script build-prod</arguments>
                 </configuration>
               </execution>
             </executions>
             <configuration>
-              <yeomanProjectDirectory>${project.basedir}</yeomanProjectDirectory>
+              <nodeVersion>v8.11.3</nodeVersion>
+              <npmVersion>5.6.0</npmVersion>
+              <workingDirectory>${basedir}/src/main/webapp</workingDirectory>
+              <installDirectory>target</installDirectory>
             </configuration>
           </plugin>
           <plugin>

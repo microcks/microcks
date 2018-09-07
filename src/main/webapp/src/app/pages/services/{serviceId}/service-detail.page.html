@@ -1,0 +1,208 @@
+<div *ngIf="serviceView | async as view">
+  <div class="container-fluid breadcrumb-bar">
+    <div class="row">
+      <ol class="breadcrumb">
+        <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
+        <li>{{ view.service.name }} - {{ view.service.version }}</li>
+      </ol>
+    </div>
+  </div>
+
+  <h1>{{ view.service.name }} - {{ view.service.version }}</h1>
+  <small>Created 10 days ago, last update on 08/14/2018 14:55</small>
+
+  <div class="row">
+    <div class="col-md-8">
+      <h3 class="section-label">Properties</h3>
+      <dl class="dl-horizontal left">
+        <dt>Service Type:</dt>
+        <dd>
+          <span class="label label-primary" *ngIf="view.service.type === 'SOAP_HTTP'">SOAP</span>
+          <span class="label label-success" *ngIf="view.service.type === 'REST'">REST</span>
+          <span class="label label-info" *ngIf="view.service.type === 'GENERIC_REST'">DYNAMIC</span>
+        </dd>
+        <span *ngIf="view.service.type === 'SOAP_HTTP'">
+          <dt>Namespace:</dt>
+          <dd><code>{{ view.service.xmlNS }}</code></dd>
+        </span>
+        <dt>Contracts:</dt>
+        <dd>
+          <a *ngFor="let contract of contracts | async" href="/api/resources/{{ contract.id }}" target="new" title="{{ contract.type }}">
+            {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i>
+          </a>
+          <div *ngIf="!contracts | async">
+            No contracts attached
+          </div>
+          <span *ngIf="view.service.type === 'GENERIC_REST'">
+            <a href="/api/resources/{{ view.service.id }}/swagger_20" target="new" alt="Swagger 2.0 spec">
+              Swagger 2.0 spec <i class="glyphicon glyphicon-globe"></i>
+            </a> <br/>
+            <a href="/api/resources/{{ view.service.id }}/openapi_30" target="new" alt="OpenAPI 3.0 spec">
+              OpenAPI 3.0 spec <i class="glyphicon glyphicon-globe"></i>
+            </a>
+          </span>
+        </dd>
+        <dt>Statistics:</dt>
+        <dd>
+          <a href="#/admin/invocations/{{ view.service.name }}/{{ view.service.version }}">Mocks invocations <i class="glyphicon glyphicon-signal"></i></a>
+        </dd>
+      </dl>
+    </div>
+    <div class="col-md-4">
+      <h3 class="section-label">Tests</h3>
+      <test-bar-chart [data]="serviceTests"></test-bar-chart>
+      <div class="row">
+        <div class="col-sm-6">
+          <a [routerLink]="['/tests/service', view.service.id]"><i class="glyphicon glyphicon-time"></i> View Tests Runs</a>
+        </div>
+        <div class="col-sm-6">
+          <button class="btn btn-primary" (click)="gotoCreateTest()">
+            <span class="fa fa-plus"></span> New Test
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h3 class="section-label">Operations</h3>
+  </div>
+
+  <div class="container-fluid">
+    <pfng-list id="operationsList"
+        [actionTemplate]="actionTemplate"
+        [config]="operationsListConfig"
+        [expandTemplate]="operationDetailTemplate"
+        [items]="operations"
+        [itemTemplate]="operationTemplate"
+        (onActionSelect)="handleAction($event, null)"
+        (onClick)="handleClick($event)"
+        (onDblClick)="handleDblClick($event)"
+        (onSelectionChange)="handleSelectionChange($event)">
+      
+        <ng-template #operationTemplate let-item="item" let-index="index">
+          <div class="list-pf-left">
+          </div>
+          <div class="list-pf-content-wrapper">
+            <div class="list-pf-main-content">
+              <div class="list-pf-title">{{ item.name }}</div>
+              <div class="list-pf-description text-overflow-pf">
+                <span [ngSwitch]="item.method">
+                  <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                  <span class="label label-info" *ngSwitchCase="'PUT'">PUT</span>
+                  <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                  <span class="label label-warning" *ngSwitchDefault>POST</span>
+                </span>
+                with <code>{{ item.dispatcher }}</code> dispatcher
+              </div>
+            </div>
+            <div class="list-pf-additional-content">
+              <div>
+                <span class="pficon pficon-image"> </span>
+                <strong>  {{ view.messagesMap[item.name].length }}</strong> sample(s)
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template #operationDetailTemplate let-item="item" let-index="index">
+          <h4 class="section-label no-margin-top">Properties</h4>
+          <dl class="dl-horizontal left">
+            <dt>HTTP Verb:</dt>
+            <dd>
+              <div [ngSwitch]="item.method">
+                <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                <span class="label label-info" *ngSwitchCase="'PUT'">PUT</span>
+                <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                <span class="label label-warning" *ngSwitchDefault>POST</span>
+              </div>
+            </dd>
+            <span *ngIf="view.service.type === 'SOAP_HTTP'">
+              <dt>Message Input Name:</dt>
+              <dd><code>{{ item.inputName }}</code></dd>
+              <dt>Message Output Name:</dt>
+              <dd><code>{{ item.outputName }}</code></dd>
+            </span>
+            <dt>Dispatcher:</dt>
+            <dd><code>{{ item.dispatcher }}</code> &nbsp; 
+              <span class="learn-more-inline">
+                <a href="https://microcks.github.io">Learn More 
+                  <i class="fa fa-external-link" aria-hidden="true"></i>
+                </a>
+              </span>
+            </dd>
+            <dt>Dispatching rules:</dt>
+            <dd><code class="code-block">{{ item.dispatcherRules }}</code></dd>
+            <dt>Default delay:</dt>
+            <dd>{{ item.defaultDelay || 0 }} ms</dd>
+          </dl>
+          <h4 class="section-label">Mocks</h4>
+          <tabset>
+            <tab *ngFor="let pair of view.messagesMap[item.name]" heading="{{ pair.request.name }}">
+              <div class="row">
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Request</h5>
+
+                  <dl>
+                    <dt>Mock URL</dt>
+                    <dd>
+                      <div class="input-group">
+                        <input type="text" class="form-control" value="{{ formatRestMockUrl(item, pair.response.dispatchCriteria) }}" disabled/>
+                        <span class="input-group-addon">
+                          <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                            (click)="copyToClipboard(formatRestMockUrl(item, pair.response.dispatchCriteria))"></i>
+                        </span>
+                      </div>
+                    </dd>
+                  </dl>
+                
+                  <pre *ngIf="pair.request.content"><code highlight>{{ pair.request.content }}</code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="pair.request.headers">
+                    <thead>
+                      <tr>
+                        <th>Header name</th>
+                        <th>Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let header of pair.request.headers">
+                        <td>{{ header.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Response</h5>
+
+                  <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST'">
+                    <dt>Response Code and Type</dt>
+                    <dd>
+                      <code><small>{{ pair.response.status }}: {{pair.response.mediaType}}</small></code>
+                    </dd>
+                  </dl>
+                  
+                  <pre *ngIf="pair.response.content"><code highlight>{{ pair.response.content }}</code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="pair.response.headers">
+                    <thead>
+                      <tr>
+                        <th>Header name</th>
+                        <th>Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let header of pair.request.headers">
+                        <td>{{ header.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </tab>
+          </tabset>
+        </ng-template>
+
+    </pfng-list>
+  </div>
+</div>

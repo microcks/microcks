@@ -1,0 +1,19 @@
+span.label {
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+  padding-top: 0.6em;
+  padding-bottom: 0.6em;
+}
+
+.fa-times-circle {
+  content: "\f057";
+  color: #c00;
+}
+.fa-check-circle {
+  content: "\f058";
+  color: #3f9c35;
+}
+.fa-refresh {
+  content: "\f021";
+  color: #0088ce;
+}

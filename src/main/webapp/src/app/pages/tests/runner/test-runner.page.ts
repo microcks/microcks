@@ -1,0 +1,73 @@
+import { Component, OnInit} from "@angular/core";
+import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+
+import { Observable, interval, Subscription } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+
+import { ListConfig, ListEvent } from 'patternfly-ng/list';
+
+import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+
+import { ServicesService } from '../../../services/services.service';
+import { TestsService } from '../../../services/tests.service';
+import { Service } from '../../../models/service.model';
+import { TestRunnerType, TestResult } from "../../../models/test.model";
+
+@Component({
+  selector: "test-runner-page",
+  templateUrl: "test-runner.page.html",
+  styleUrls: ["test-runner.page.css"]
+})
+export class TestRunnerPageComponent implements OnInit {
+
+  testId: string;
+  test: Observable<TestResult>;
+  service: Observable<Service>;
+  notifications: Notification[];
+  poller: Subscription;
+  resultsListConfig: ListConfig;
+
+  constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private notificationService: NotificationService,
+    private route: ActivatedRoute, private router: Router) {
+  }
+
+  ngOnInit() {
+    this.notifications = this.notificationService.getNotifications();
+    this.test = this.route.paramMap.pipe(
+      switchMap((params: ParamMap) => {
+        // (+) before `params.get()` turns the string into a number
+        this.testId = params.get('testId');
+        return this.testsSvc.getTestResult(this.testId);
+      })
+    );
+    this.test.subscribe(res => {
+      this.service = this.servicesSvc.getService(res.serviceId);
+    });
+
+    this.poller = interval(2000).pipe(
+      switchMap(() => this.test = this.testsSvc.getTestResult(this.testId))
+    ).subscribe(res => {
+      if (!res.inProgress){
+        this.poller.unsubscribe();
+      }
+    });
+
+    this.resultsListConfig = {
+      dblClick: false,
+      emptyStateConfig: null,
+      multiSelect: false,
+      selectItems: false,
+      selectionMatchProp: 'name',
+      showCheckbox: false,
+      showRadioButton: false,
+      useExpandItems: true,
+      hideClose: true
+    } as ListConfig;
+  }
+
+  ngOnDestroy(): void {
+    if (this.poller){
+      this.poller.unsubscribe();
+    }
+  }
+}

@@ -1,0 +1,16 @@
+.serviceName {
+  flex-basis: 50%;
+  max-width: 300px;
+}
+.list-view-pf-description {
+  flex-basis: 70%;
+}
+
+:host >>> .tooltip-inner {
+  max-width: 800px;
+  word-wrap: break-word;
+}
+
+.modal-dialog {
+  width: 900px;
+}

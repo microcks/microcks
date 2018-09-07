@@ -1,0 +1,39 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">
+    Add Dynamic Resource API
+  </h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <form class="form-horizontal">
+    <fieldset>
+      <legend><span class="fa fa-bolt"></span> API properties</legend>
+      <div class="control-group">
+        <label class="control-label required-pf" for="name">API Name &amp; Version</label>
+        <div class="controls row">
+          <div class="col-xs-6">
+            <input type="text" placeholder="eg. Order API" id="name" name="name" class="form-control" size="20" [(ngModel)]="api.name" required/>
+          </div>
+          <div class="input-group col-xs-2">
+            <span class="input-group-addon">v.</span>
+            <input type="text" placeholder="1.0" id="version" name="version" class="form-control" [(ngModel)]="api.version" required/>
+          </div>
+        </div>
+        <p class="help-block">The name and version of the API to create (should be unique).</p>
+      </div>
+      <div class="control-group">
+        <label class="control-label required-pf" for="resource">Resource</label>
+        <div class="controls">
+          <input type="text" placeholder="eg. order" id="resource" name="resource" class="form-control" [(ngModel)]="api.resource" required/>
+          <p class="help-block">The resource this API will expose (will be used for default CRUD API operations).</p>
+        </div>
+      </div>
+    </fieldset>
+  </form>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+  <input type="submit" class="btn btn-primary" (click)="createDynamicApi(api)" ng-disabled="form.$invalid" value="Create"/>
+</div>
