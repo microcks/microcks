@@ -133,4 +133,11 @@ public class ServiceController {
       }
       return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
    }
+
+   @RequestMapping(value = "/services/{id}", method = RequestMethod.DELETE)
+   public ResponseEntity<String> deleteService(@PathVariable("id") String serviceId) {
+      log.debug("Removing service with id {}", serviceId);
+      serviceService.deleteService(serviceId);
+      return new ResponseEntity<>(HttpStatus.OK);
+   }
 }
