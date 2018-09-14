@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Service, ServiceView, Api } from '../models/service.model';
+import { Service, ServiceView, Api , GenericResource } from '../models/service.model';
 
 @Injectable({ providedIn: 'root' })
 export class ServicesService {
@@ -37,5 +37,18 @@ export class ServicesService {
 
   public createDynamicAPI(api: Api): Observable<Service> {
     return this.http.post<Service>(this.rootUrl + '/services/generic', api);
+  }
+
+  public deleteService(service: Service): Observable<Service> {
+    return this.http.delete<Service>(this.rootUrl + '/services/' + service.id);
+  }
+
+  public getGenericResources(service: Service, page: number = 1, pageSize: number = 20): Observable<GenericResource[]> {
+    const options = { params: new HttpParams().set('page', String(page - 1)).set('size', String(pageSize)) };
+    return this.http.get<GenericResource[]>(this.rootUrl + '/genericresources/service/' + service.id, options);
+  }
+
+  public countGenericResources(service: Service): Observable<any> {
+    return this.http.get<any>(this.rootUrl + '/genericresources/service/' + service.id + '/count');
   }
 }

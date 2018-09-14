@@ -4,8 +4,11 @@ import { ActivatedRoute, Router, ParamMap } from "@angular/router";
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { ListConfig, ListEvent } from 'patternfly-ng/list';
 
+import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { Operation, Service, ServiceType, ServiceView, Contract } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
 import { ContractsService } from '../../../services/contracts.service';
@@ -19,6 +22,7 @@ import { TestsService } from '../../../services/tests.service';
 })
 export class ServiceDetailPageComponent implements OnInit {
 
+  modalRef: BsModalRef;
   serviceId: string;
   serviceView: Observable<ServiceView>;
   resolvedServiceView: ServiceView;
@@ -28,7 +32,7 @@ export class ServiceDetailPageComponent implements OnInit {
   operationsListConfig: ListConfig;
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
-      private testsSvc: TestsService, private route: ActivatedRoute, private router: Router) {
+      private testsSvc: TestsService, private modalService: BsModalService, private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit() {
@@ -65,6 +69,14 @@ export class ServiceDetailPageComponent implements OnInit {
   public gotoCreateTest(): void {
     console.log("[gotoCreateTest] " + this.serviceId);
     this.router.navigate(['/tests/create', { serviceId: this.serviceId }]);
+  }
+
+  public openResources(): void {
+    const initialState = {
+      closeBtnName: 'Close';
+      service: this.resolvedServiceView.service
+    };
+    this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
   }
 
   public formatRestMockUrl(operation: Operation, dispatchCriteria: string): string {

@@ -49,9 +49,12 @@
       </dl>
     </div>
     <div class="col-md-4">
-      <h3 class="section-label">Tests</h3>
-      <test-bar-chart [data]="serviceTests"></test-bar-chart>
-      <div class="row">
+      <h3 class="section-label" [ngSwitch]="view.service.type">
+        <span *ngSwitchCase="'GENERIC_REST'">Resources</span>
+        <span *ngSwitchDefault>Tests</span>
+      </h3>
+      <test-bar-chart *ngIf="view.service.type != 'GENERIC_REST'" [data]="serviceTests"></test-bar-chart>
+      <div class="row" *ngIf="view.service.type != 'GENERIC_REST'">
         <div class="col-sm-6">
           <a [routerLink]="['/tests/service', view.service.id]"><i class="glyphicon glyphicon-time"></i> View Tests Runs</a>
         </div>
@@ -61,6 +64,13 @@
           </button>
         </div>
       </div>
+
+      <span *ngIf="view.service.type == 'GENERIC_REST'">
+        <p>
+          You may have already used this Dynamic API to record resources.<br/>
+          Check <a (click)="openResources()">what's in the repository <i class="glyphicon glyphicon-transfer"></i></a>.
+        </p>
+      </span>
     </div>
   </div>
 
@@ -106,36 +116,46 @@
         </ng-template>
 
         <ng-template #operationDetailTemplate let-item="item" let-index="index">
-          <h4 class="section-label no-margin-top">Properties</h4>
-          <dl class="dl-horizontal left">
-            <dt>HTTP Verb:</dt>
-            <dd>
-              <div [ngSwitch]="item.method">
-                <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
-                <span class="label label-info" *ngSwitchCase="'PUT'">PUT</span>
-                <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
-                <span class="label label-warning" *ngSwitchDefault>POST</span>
-              </div>
-            </dd>
-            <span *ngIf="view.service.type === 'SOAP_HTTP'">
-              <dt>Message Input Name:</dt>
-              <dd><code>{{ item.inputName }}</code></dd>
-              <dt>Message Output Name:</dt>
-              <dd><code>{{ item.outputName }}</code></dd>
-            </span>
-            <dt>Dispatcher:</dt>
-            <dd><code>{{ item.dispatcher }}</code> &nbsp; 
-              <span class="learn-more-inline">
-                <a href="https://microcks.github.io">Learn More 
-                  <i class="fa fa-external-link" aria-hidden="true"></i>
-                </a>
+          <h4 class="section-label no-margin-top">Dispatching Properties</h4>
+          <div class="row">
+            <div class="col-md-6">
+              <dl class="dl-horizontal left">
+              <span *ngIf="view.service.type === 'SOAP_HTTP'">
+                <dt>Message Input Name:</dt>
+                <dd><code>{{ item.inputName }}</code></dd>
               </span>
-            </dd>
-            <dt>Dispatching rules:</dt>
-            <dd><code class="code-block">{{ item.dispatcherRules }}</code></dd>
-            <dt>Default delay:</dt>
-            <dd>{{ item.defaultDelay || 0 }} ms</dd>
-          </dl>
+              <dt>Dispatcher:</dt>
+              <dd><code>{{ item.dispatcher }}</code> &nbsp; 
+                <span class="learn-more-inline">
+                  <a href="https://microcks.github.io">Learn More 
+                    <i class="fa fa-external-link" aria-hidden="true"></i>
+                  </a>
+                </span>
+              </dd>
+              <dt>Dispatching rules:</dt>
+              <dd><code class="code-block">{{ item.dispatcherRules }}</code></dd>
+              </dl>
+            </div>
+            <div class="col-md-6">
+              <dl class="dl-horizontal left">
+              <span *ngIf="view.service.type === 'SOAP_HTTP'">
+                <dt>Message Output Name:</dt>
+                <dd><code>{{ item.outputName }}</code></dd>
+              </span>
+              <dt>HTTP Verb:</dt>
+              <dd>
+                <div [ngSwitch]="item.method">
+                  <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                  <span class="label label-info" *ngSwitchCase="'PUT'">PUT</span>
+                  <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                  <span class="label label-warning" *ngSwitchDefault>POST</span>
+                </div>
+              </dd>
+              <dt>Default delay:</dt>
+              <dd>{{ item.defaultDelay || 0 }} ms</dd>
+              </dl>
+            </div>
+          </div>
           <h4 class="section-label">Mocks</h4>
           <tabset>
             <tab *ngFor="let pair of view.messagesMap[item.name]" heading="{{ pair.request.name }}">

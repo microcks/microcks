@@ -1,0 +1,35 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">'{{ service.name }} - {{service.version }}' Resources
+  </h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <table class="table table-hover table-striped">
+    <thead>
+      <tr>
+        <th>Id</th>
+        <th>Payload</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let resource of resources">
+        <td>{{ resource.id }}</td>
+        <td><pre><code highlight>{{ printPaylaod(resource.payload) }}</code></pre></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="text-center">
+    <pfng-pagination [config]="paginationConfig"
+      (onPageNumberChange)="handlePageNumber($event)"
+      (onPageSizeChange)="handlePageSize($event)">
+    </pfng-pagination>
+  </div>
+  <br/>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+  </div>
+</div>

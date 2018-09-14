@@ -25,6 +25,7 @@ import { AuthenticationServiceProvider } from './services/auth.service.provider'
 import { AuthenticationHttpInterceptor } from './services/auth.http-interceptor';
 import { ConfigService } from './services/config.service';
 
+import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
 import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
 import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
 
@@ -38,6 +39,7 @@ import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
 import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
+import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
 
 
 @NgModule({
@@ -47,9 +49,9 @@ import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-
     AppRoutingModule, HttpClientModule
   ],
   declarations: [
-    AppComponent, TimeAgoPipe, VerticalNavComponent, TestBarChartComponent, DashboardPageComponent, ServicesPageComponent, ServiceDetailPageComponent, 
-    ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent, ServiceRefsDialogComponent, 
-    ImporterWizardComponent, DynamicAPIDialogComponent
+    AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, DashboardPageComponent, ServicesPageComponent,
+    ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
+    ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent
   ],
   providers: [
     ConfigService, AuthenticationServiceProvider, BsDropdownConfig, NotificationService,
@@ -60,7 +62,7 @@ import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-
     }
   ],
   entryComponents: [
-    ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent
+    ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent
   ], 
   bootstrap: [AppComponent]
 })

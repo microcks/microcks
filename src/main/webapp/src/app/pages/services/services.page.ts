@@ -9,6 +9,7 @@ import { FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-n
 
 import { DynamicAPIDialogComponent } from './_components/dynamic-api.dialog';
 import { Service, Api } from '../../models/service.model';
+import { IAuthenticationService } from "../../services/auth.service";
 import { ServicesService } from '../../services/services.service';
 
 @Component({
@@ -31,7 +32,7 @@ export class ServicesPageComponent implements OnInit {
   html:string = '';
 
   constructor(private servicesSvc: ServicesService, private modalService: BsModalService, 
-    private notificationService: NotificationService) { }
+    private notificationService: NotificationService, protected authService: IAuthenticationService) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
@@ -81,8 +82,27 @@ export class ServicesPageComponent implements OnInit {
     });
   }
 
+  deleteService(service: Service) {
+    console.log("[deleteService]: " + JSON.stringify(service));
+
+    this.servicesSvc.deleteService(service).subscribe(
+      {
+        next: res => {
+          this.notificationService.message(NotificationType.SUCCESS,
+              service.name, "Service has been fully deleted", false, null, null);
+          this.getServices();
+          this.servicesCount--;
+        },
+        error: err => {
+          this.notificationService.message(NotificationType.DANGER,
+              service.name, "Service cannot be deleted (" + err.message + ")", false, null, null);
+        },
+        complete: () => console.log('Observer got a complete notification'),
+      }
+    );
+  }
+
   selectService(service: Service) {
-    console.log("[selectService]");
     this.html = '<ul>';
     service.operations.forEach(operation => {
       this.html += '<li>' + operation.name + '</li>';
@@ -120,19 +140,17 @@ export class ServicesPageComponent implements OnInit {
       this.createDynamicAPI(api);
     });
   }
-
+  
   createDynamicAPI(api: Api): void {
     this.servicesSvc.createDynamicAPI(api).subscribe(
       {
         next: res => {
-          console.log("next");
           this.notificationService.message(NotificationType.SUCCESS,
               api.name, 'Dynamic API "' + api.name + '" has been created', false, null, null);
           this.getServices();
           this.countServices();
         },
         error: err => {
-          console.log("error - " + JSON.stringify(err));
           this.notificationService.message(NotificationType.DANGER,
               api.name, 'Service or API "' + api.name + '"already exists with version ' + api.version, false, null, null);
         },
@@ -141,7 +159,12 @@ export class ServicesPageComponent implements OnInit {
     );
   }
 
+
   handleCloseNotification($event: NotificationEvent): void {
     this.notificationService.remove($event.notification);
+  }
+
+  public hasRole(role: string): boolean {
+    return this.authService.hasRole(role);
   }
 }

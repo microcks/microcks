@@ -85,3 +85,8 @@ export class ServiceView {
   messagesMap: {string : RequestResponsePair[]};
 }
 
+export class GenericResource {
+  id: string;
+  serviceId: string;
+  payload: any;
+}
