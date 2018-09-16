@@ -13,9 +13,9 @@ export class Service {
   operations: Operation[];
 }
 export enum ServiceType {
-  SOAP_HTTP,
-  REST,
-  GENERIC_REST
+  SOAP_HTTP = "SOAP_HTTP",
+  REST = "REST",
+  GENERIC_REST = "GENERIC_REST"
 }
 
 export class Operation {

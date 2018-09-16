@@ -67,48 +67,55 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public gotoCreateTest(): void {
-    console.log("[gotoCreateTest] " + this.serviceId);
     this.router.navigate(['/tests/create', { serviceId: this.serviceId }]);
   }
 
   public openResources(): void {
     const initialState = {
-      closeBtnName: 'Close';
+      closeBtnName: 'Close',
       service: this.resolvedServiceView.service
     };
     this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
   }
 
-  public formatRestMockUrl(operation: Operation, dispatchCriteria: string): string {
-    var result = 'http://localhost:8080/rest/';
-    result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
+  public formatMockUrl(operation: Operation, dispatchCriteria: string): string {
+    var result = document.location.origin;
 
-    var parts = {};
-    var params = {};
-    var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
-    var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
+    if (this.resolvedServiceView.service.type === ServiceType.REST) {
+      result += '/rest/';
+      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
 
-    partsCriteria.split('/').forEach(function(element, index, array) {
-      if (element){
-        parts[element.split('=')[0]] = element.split('=')[1];
+      var parts = {};
+      var params = {};
+      var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
+      var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
+
+      partsCriteria.split('/').forEach(function(element, index, array) {
+        if (element){
+          parts[element.split('=')[0]] = element.split('=')[1];
+        }
+      });
+
+      var operationName = operation.name;
+      operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
+        return parts[p1];
+      });
+      // Support also Postman syntax with /:part
+      operationName = operationName.replace(/:(\w+)/g, function(match, p1, string) {
+        return parts[p1];
+      });
+      if (paramsCriteria != null) {
+        operationName += '?' + paramsCriteria.replace('?', '&');
       }
-    });
 
-    var operationName = operation.name;
-    operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
-      return parts[p1];
-    });
-    // Support also Postman syntax with /:part
-    operationName = operationName.replace(/:(\w+)/g, function(match, p1, string) {
-      return parts[p1];
-    });
-    if (paramsCriteria != null) {
-      operationName += '?' + paramsCriteria.replace('?', '&');
+      // Remove leading VERB in Postman import case.
+      operationName = this.removeVerbInUrl(operationName);
+      result += operationName;
+    } else if (this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP) {
+      result += '/soap/';
+      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
     }
-
-    // Remove leading VERB in Postman import case.
-    operationName = this.removeVerbInUrl(operationName);
-    result += operationName;
+    
     return result;
   }
 
