@@ -8,7 +8,7 @@ if (environment.production) {
   enableProdMode();
 }
 
-var keycloak = window["Keycloak"]('http://localhost:8080/api/keycloak/config');
+var keycloak = window["Keycloak"](location.origin + '/api/keycloak/config');
 keycloak.init({onLoad: 'login-required'}).success(function (authenticated) {
   if (authenticated) {
       window['keycloak'] = keycloak;
