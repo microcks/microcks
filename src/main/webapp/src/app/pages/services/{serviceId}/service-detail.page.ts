@@ -114,6 +114,9 @@ export class ServiceDetailPageComponent implements OnInit {
     } else if (this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP) {
       result += '/soap/';
       result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
+    } else if (this.resolvedServiceView.service.type === ServiceType.GENERIC_REST) {
+      result += '/dynarest/';
+      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
     }
     
     return result;
