@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import { AdminPageComponent } from './pages/admin/admin.page';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { ServicesPageComponent } from './pages/services/services.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
@@ -42,6 +43,10 @@ const routes: Routes = [
   {
     path: "importers",
     component: ImportersPageComponent
+  },
+  {
+    path: "admin",
+    component: AdminPageComponent
   }
 ];
 

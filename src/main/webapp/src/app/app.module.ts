@@ -29,6 +29,7 @@ import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confir
 import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
 import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
 
+import { AdminPageComponent } from './pages/admin/admin.page';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { ServicesPageComponent } from './pages/services/services.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
@@ -49,9 +50,9 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
     AppRoutingModule, HttpClientModule
   ],
   declarations: [
-    AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, DashboardPageComponent, ServicesPageComponent,
-    ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
-    ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent
+    AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
+    ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
+    TestRunnerPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent
   ],
   providers: [
     ConfigService, AuthenticationServiceProvider, BsDropdownConfig, NotificationService,

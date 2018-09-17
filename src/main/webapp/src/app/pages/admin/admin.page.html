@@ -1,0 +1,15 @@
+<div class="form-group pull-right">
+  <pfng-toast-notification-list [notifications]="notifications" 
+      (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
+  </pfng-toast-notification-list>
+</div>
+
+<h1>Administration</h1>
+<small>Use this section to manage your <b>Users</b>, export and import repository <b>Snapshots</b> and manage <b>Access Tokens</b>.</small>
+
+<br/><br/>
+<tabset>
+  <tab heading="Users" customClass="second-tab"></tab>
+  <tab heading="Snapshots" customClass="second-tab"></tab>
+  <tab heading="Tokens" customClass="second-tab"></tab>
+</tabset>
