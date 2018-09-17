@@ -196,7 +196,7 @@ export class ImportersPageComponent implements OnInit {
   }
 
   startImportJob(job: ImportJob):void {
-    this.importersSvc.stopImportJob(job).subscribe(
+    this.importersSvc.startImportJob(job).subscribe(
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,

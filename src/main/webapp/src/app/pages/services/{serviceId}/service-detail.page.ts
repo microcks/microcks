@@ -116,7 +116,8 @@ export class ServiceDetailPageComponent implements OnInit {
       result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
     } else if (this.resolvedServiceView.service.type === ServiceType.GENERIC_REST) {
       result += '/dynarest/';
-      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
+      var resourceName = this.removeVerbInUrl(operationName);
+      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version + resourceName;
     }
     
     return result;
