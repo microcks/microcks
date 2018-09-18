@@ -87,25 +87,28 @@ export class ServiceDetailPageComponent implements OnInit {
 
       var parts = {};
       var params = {};
-      var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
-      var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
-
-      partsCriteria.split('/').forEach(function(element, index, array) {
-        if (element){
-          parts[element.split('=')[0]] = element.split('=')[1];
-        }
-      });
-
       var operationName = operation.name;
-      operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
-        return parts[p1];
-      });
-      // Support also Postman syntax with /:part
-      operationName = operationName.replace(/:(\w+)/g, function(match, p1, string) {
-        return parts[p1];
-      });
-      if (paramsCriteria != null) {
-        operationName += '?' + paramsCriteria.replace('?', '&');
+
+      if (dispatchCriteria != null) {
+        var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
+        var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
+
+        partsCriteria.split('/').forEach(function(element, index, array) {
+          if (element){
+            parts[element.split('=')[0]] = element.split('=')[1];
+          }
+        });
+      
+        operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
+          return parts[p1];
+        });
+        // Support also Postman syntax with /:part
+        operationName = operationName.replace(/:(\w+)/g, function(match, p1, string) {
+          return parts[p1];
+        });
+        if (paramsCriteria != null) {
+          operationName += '?' + paramsCriteria.replace('?', '&');
+        }
       }
 
       // Remove leading VERB in Postman import case.

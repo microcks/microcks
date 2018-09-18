@@ -17,4 +17,8 @@ export class AdminPageComponent implements OnInit {
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
   }
+
+  handleCloseNotification($event: NotificationEvent): void {
+    this.notificationService.remove($event.notification);
+  }
 }
