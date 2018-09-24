@@ -1,4 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { Router } from "@angular/router";
 import { Observable } from 'rxjs';
 
 import { TestResult } from '../../models/test.model';
@@ -19,7 +20,7 @@ export class TestBarChartComponent implements OnInit {
   baseWidth: number = 180;
   baseHeight: number = 80;
 
-  constructor() {
+  constructor(private router: Router) {
   }
 
   ngOnInit() {
@@ -67,12 +68,16 @@ export class TestBarChartComponent implements OnInit {
       }).attr('data-placement', 'left').attr('title', function(d) {
         return "[" + d.testDate.toISOString() + "] : " + d.elapsedTime + " ms";
       }).on('click', function(d) {
-        document.location.href = '#/test/' + d.id.toString();
+        document.location.href = '/tests/' + d.id.toString();
+        //this.navigateToTest(d.id.toString());
       });
 
       vis.exit().remove();
 
-
     });
+  }
+
+  public navigateToTest(testId: string): void {
+    this.router.navigate(['/tests', testId]);
   }
 }

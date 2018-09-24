@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -79,6 +80,12 @@ public class ResourceController {
          return new ResponseEntity<Object>(resource.getContent(), HttpStatus.OK);
       }
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+   }
+
+   @RequestMapping(value = "/resources/service/{serviceId}", method = RequestMethod.GET)
+   public List<Resource> getServiceResources(@PathVariable("serviceId") String serviceId) {
+      log.debug("Request resources for service {}", serviceId);
+      return resourceRepository.findByServiceId(serviceId);
    }
 
    @RequestMapping(value = "/resources/{serviceId}/{resourceType}", method = RequestMethod.GET)

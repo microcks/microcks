@@ -12,7 +12,7 @@
     </div>
 
     <h1>Test {{ test.id }}</h1>
-    <small>Created 2 days ago, run on 08/24/2018 12:51</small>
+    <small>Created {{ test.testDate | timeAgo }}, run on {{ test.testDate | date:'medium' }}</small>
 
     <h3 class="section-label">Properties</h3>
 
