@@ -84,7 +84,7 @@ export class ServicesPageComponent implements OnInit {
   }
 
   getServices(page: number = 1):void {
-    this.servicesSvc.getServices().subscribe(results => this.services = results);
+    this.servicesSvc.getServices(page).subscribe(results => this.services = results);
   }
   filterServices(filter: string): void {
     this.servicesSvc.filterServices(filter).subscribe(results => {
