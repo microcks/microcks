@@ -28,13 +28,16 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { HighlightModule } from 'ngx-highlightjs';
 
+import { CardModule } from 'patternfly-ng/card';
+import { DonutChartModule } from 'patternfly-ng';
 import { ListModule } from 'patternfly-ng/list';
 import { NotificationService, ToastNotificationListModule } from 'patternfly-ng/notification';
+import { SparklineChartModule } from 'patternfly-ng/chart'
 import { PaginationModule } from 'patternfly-ng/pagination';
 import { ToolbarModule } from 'patternfly-ng/toolbar';
 import { WizardModule } from 'patternfly-ng/wizard';
 
-import { FileSelectDirective } from 'ng2-file-upload';
+import { FileUploadModule } from 'ng2-file-upload';
 import { TimeAgoPipe } from 'time-ago-pipe';
 
 import { AppComponent } from './app.component';
@@ -68,11 +71,11 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
 @NgModule({
   imports: [
     BrowserModule, FormsModule, BsDropdownModule.forRoot(), ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(), 
-    HighlightModule.forRoot({ theme: 'github' }), ListModule, ToastNotificationListModule, PaginationModule, ToolbarModule, WizardModule,
-    AppRoutingModule, HttpClientModule
+    HighlightModule.forRoot({ theme: 'github' }), FileUploadModule, CardModule, DonutChartModule, ListModule, ToastNotificationListModule, SparklineChartModule,
+    PaginationModule, ToolbarModule, WizardModule, AppRoutingModule, HttpClientModule
   ],
   declarations: [
-    AppComponent, FileSelectDirective, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
+    AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
     ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
     TestRunnerPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent,
     SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent

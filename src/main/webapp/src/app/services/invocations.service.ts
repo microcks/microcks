@@ -56,7 +56,15 @@ export class InvocationsService {
     return this.http.get<DailyInvocations>(this.rootUrl + '/invocations/' + serviceName + '/' + serviceVersion);
   }
 
-  private formatDayDate(day: Date) : string {
+  public getInvocationsStatsTrend(limit: number) : Observable<any> {
+    if (limit != null) {
+      const options = { params: new HttpParams().set('limit', limit.toString()) };
+      return this.http.get<any>(this.rootUrl + '/invocations/global/last', options);
+    }
+    return this.http.get<any>(this.rootUrl + '/invocations/global/last');
+  }
+
+  public formatDayDate(day: Date) : string {
     var result = day.getFullYear().toString();
     result += day.getMonth() < 9 ? '0' + (day.getMonth()+1).toString() : (day.getMonth()+1).toString();
     result += day.getDate() < 10 ? '0' + day.getDate().toString() : day.getDate().toString();

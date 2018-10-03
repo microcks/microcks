@@ -15,7 +15,7 @@
 
 small {
   font-weight: 400;
-  font-size: 95%;
+  font-size: 0.9em;
   line-height: 1;
   color: #9c9c9c;
 }
@@ -38,6 +38,11 @@ dd, dt {
 }
 .form-actions>button {
   margin-left: 5px;
+}
+
+span.card-pf-footer-text {
+  font-size: 0.7em !important;
+  vertical-align: text-top;
 }
 
 .pf-icon-sm {

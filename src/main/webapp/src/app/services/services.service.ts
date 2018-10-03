@@ -43,6 +43,10 @@ export class ServicesService {
     return this.http.get<any>(this.rootUrl + '/services/count');
   }
 
+  public getServicesMap(): Observable<any> {
+    return this.http.get<any>(this.rootUrl + '/services/map');
+  }
+
   public getServiceView(serviceId: string): Observable<ServiceView> {
     const options = { params: new HttpParams().set('messages', 'true') };
     return this.http.get<ServiceView>(this.rootUrl + '/services/' + serviceId, options);

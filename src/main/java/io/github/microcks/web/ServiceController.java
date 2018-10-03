@@ -20,6 +20,7 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
+import io.github.microcks.repository.CustomServiceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.service.MessageService;
 import io.github.microcks.service.RequestResponsePair;
@@ -85,6 +86,17 @@ public class ServiceController {
       Map<String, Long> counter = new HashMap<>();
       counter.put("counter", serviceRepository.count());
       return counter;
+   }
+
+   @RequestMapping(value = "/services/map", method = RequestMethod.GET)
+   public Map<String, Integer> getServicesMap() {
+      log.debug("Counting services by type...");
+      Map<String, Integer> map = new HashMap<>();
+      List<CustomServiceRepository.ServiceCount> results = serviceRepository.countServicesByType();
+      for (CustomServiceRepository.ServiceCount count : results) {
+         map.put(count.getType(), count.getNumber());
+      }
+      return map;
    }
 
    @RequestMapping(value = "/services/{id}", method = RequestMethod.GET)

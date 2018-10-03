@@ -24,6 +24,7 @@
     "@angular/platform-browser-dynamic": "^6.0.3",
     "@angular/router": "^6.0.3",
     "bootstrap": "^3.3.7",
+    "c3": "^0.6.7",
     "core-js": "^2.5.4",
     "d3": "^5.7.0",
     "jquery": "^3.3.1",
