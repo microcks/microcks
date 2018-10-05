@@ -56,9 +56,9 @@ export class DashboardPageComponent implements OnInit {
 	};
 
 	donutChartData: any[] = [
-    ['REST', 2],
-    ['DYNAMIC', 1],
-    ['SOAP', 3]
+    ['REST', 0],
+    ['DYNAMIC', 0],
+    ['SOAP', 0]
   ];
 	largeConfig: DonutChartConfig = {
 		chartId: 'repositoryDonut',
