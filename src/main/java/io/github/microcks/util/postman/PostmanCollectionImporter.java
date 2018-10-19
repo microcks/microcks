@@ -99,16 +99,24 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       service.setType(ServiceType.REST);
 
       String version = null;
-      String description = collection.path("info").path("description").asText();
-      if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
-         description = description.substring(description.indexOf(SERVICE_VERSION_PROPERTY + "="));
-         description = description.substring(0, description.indexOf(' '));
-         if (description.split("=").length > 1) {
-            version = description.split("=")[1];
+
+      // On v2.1 collection format, we may have a version attribute under info.
+      // See https://schema.getpostman.com/json/collection/v2.1.0/docs/index.html
+      if (collection.path("info").has("version")) {
+         version = collection.path("info").path("version").asText();
+      } else {
+         String description = collection.path("info").path("description").asText();
+         if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
+            description = description.substring(description.indexOf(SERVICE_VERSION_PROPERTY + "="));
+            description = description.substring(0, description.indexOf(' '));
+            if (description.split("=").length > 1) {
+               version = description.split("=")[1];
+            }
          }
       }
+
       if (version == null){
-         log.error("Version property is missing in Collection description. Use 'version=x.y - something' syntax.");
+         log.error("Version property is missing in Collection. Use either 'version' for v2.1 Collection or 'version=x.y - something' description syntax.");
          throw new MockRepositoryImportException("Version property is missing in Collection description");
       }
       service.setVersion(version);
