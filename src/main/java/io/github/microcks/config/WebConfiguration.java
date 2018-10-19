@@ -19,11 +19,10 @@
 package io.github.microcks.config;
 
 import io.github.microcks.web.filter.CorsFilter;
-import io.github.microcks.web.filter.StaticResourcesFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.embedded.ServletContextInitializer;
+import org.springframework.boot.web.servlet.ServletContextInitializer;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
@@ -52,9 +51,6 @@ public class WebConfiguration implements ServletContextInitializer {
       log.info("Starting web application configuration, using profiles: {}", Arrays.toString(env.getActiveProfiles()));
       EnumSet<DispatcherType> disps = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD, DispatcherType.ASYNC);
       initCORSFilter(servletContext, disps);
-      if (env.acceptsProfiles(ConfigurationConstants.PROFILE_PRODUCTION)) {
-         //initStaticResourcesFilter(servletContext, disps);
-      }
       log.info("Web application fully configured");
    }
 
@@ -63,19 +59,5 @@ public class WebConfiguration implements ServletContextInitializer {
       FilterRegistration.Dynamic corsFilter = servletContext.addFilter("corsFilter", new CorsFilter());
       corsFilter.addMappingForUrlPatterns(disps, true, "/api/*");
       corsFilter.setAsyncSupported(true);
-   }
-
-   /** */
-   private void initStaticResourcesFilter(ServletContext servletContext, EnumSet<DispatcherType> disps) {
-      log.debug("Registering static resources production Filter");
-      FilterRegistration.Dynamic resFilter = servletContext.addFilter("staticResourcesFilter", new StaticResourcesFilter());
-      resFilter.addMappingForUrlPatterns(disps, true, "/");
-      resFilter.addMappingForUrlPatterns(disps, true, "/index.html");
-      resFilter.addMappingForUrlPatterns(disps, true, "/scripts/*");
-      resFilter.addMappingForUrlPatterns(disps, true, "/images/*");
-      resFilter.addMappingForUrlPatterns(disps, true, "/styles/*");
-      resFilter.addMappingForUrlPatterns(disps, true, "/views/*");
-      resFilter.addMappingForUrlPatterns(disps, true, "/bower_components/*");
-      resFilter.setAsyncSupported(true);
    }
 }
