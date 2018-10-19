@@ -9,24 +9,35 @@ Current development version is `0.7.0-SNAPSHOT`. [![Build Status](https://travis
 ## Development
 
 For development purposes, frontend GUI and backend APIs have been separated and runs onto 2 different runtime servers.
-* Frontend is an AngularJS application served by Grunt server with livereload enabled,
+* Frontend is an Angular 6 application served by `ng serve` with livereload enabled,
 * Backend is a Spring Boot application served by Boot internal server
+
+We also need a Keycloak server running on port `8180`. 
 
 ### Pre-requisites
 
-* NodeJS (version >= 6.0) and associated tools : NPM, Bower and Grunt-cli
-* Java Development Kit (version 8) and Apache Maven (version >= 3.0)
+* NodeJS (version >= 8.0) and associated tools : NPM and ng-cli (`npm install -g ng-cli`)
+* Java Development Kit (version >= 8) and Apache Maven (version >= 3.0)
+* Keycloak 3.4.0
 * MongoDB 3.2
 
 ### Start servers
 
-In a terminal, start frontend GUI server using Grunt :
+Let's begin with starting the Keycloak server. Within the installation directory of Keycloak 3.4.0, just run this command:
 
 ```
+$ cd bin
+$ ./standalone.sh -Djboss.socket.binding.port-offset=100
+```
+
+In a terminal, start frontend GUI server using NG :
+
+```
+$ cd src/main/webapp
 $ grunt serve
 ```
 
-Server is started on port `9000`. Grunt should open a new browser tab pointing to `http://localhost:9000` where application s hosted.
+Server is started on port `4200`. Open a new browser tab pointing to `http://localhost:4200` where application is hosted.
 
 ```
 $ mvn spring-boot:run
@@ -41,17 +52,17 @@ Server is started on port `8080` and will be used as API endpoints root by front
 For now, there's still a problem with Frontend integration tests configuration so you should disable them using the following flag:
  
 ```
-$ mvn -Pprod package -Dyo.test.skip=true
+$ mvn -Pprod package
 ```
 
 ```
-$ java -jar target/microcks-0.6.1-SNAPSHOT.jar
+$ java -jar target/microcks-0.7.0-SNAPSHOT.jar
 ```
 
 ### Build and run Docker image
 
 ```
-$ mvn -Pprod clean package -Dyo.test.skip=true docker:build
+$ mvn -Pprod clean package docker:build
 ```
 
 ```
