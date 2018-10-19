@@ -1,0 +1,22 @@
+.repositoryUrl {
+  max-width: 700px;
+  word-wrap: break-word;
+}
+:host >>> .tooltip-inner {
+  max-width: 400px;
+  word-wrap: break-word;
+}
+
+span.label {
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+  padding-top: 0.6em;
+  padding-bottom: 0.6em;
+}
+span.label a {
+  color: #ffffff;
+}
+
+.list-view-pf-description {
+  flex-basis: 60%;
+}

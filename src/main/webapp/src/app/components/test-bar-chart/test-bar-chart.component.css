@@ -1,0 +1,17 @@
+.bar {
+  display: inline-block;
+  border: 1px;
+  border-bottom: 1px solid #CCC;
+}
+.bar-success {
+  background: #7BB33D;
+}
+.bar-success:hover {
+  background: #73A839;
+}
+.bar-failure {
+  background: #dd1f26;
+}
+.bar-failure:hover {
+  background: #d41e24;
+}

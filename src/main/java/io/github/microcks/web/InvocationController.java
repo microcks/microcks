@@ -19,6 +19,7 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.DailyStatistic;
+import io.github.microcks.repository.CustomDailyStatisticRepository;
 import io.github.microcks.repository.DailyStatisticRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A Rest controller for API defined on invocation stats.
@@ -79,6 +82,20 @@ public class InvocationController {
       return repository.findByDayAndServiceNameAndServiceVersion(day, serviceName, serviceVersion);
    }
 
+   @RequestMapping(value = "/invocations/global/last", method = RequestMethod.GET)
+   public Map<String, Long> getLastInvocationStatGlobal(@RequestParam(value="limit", required=false, defaultValue="20") Integer limit){
+      log.debug("Getting invocations stats for last {} days", limit);
+
+      String day = getTodaysDate();
+      String dayBefore = getPastDate(limit);
+      Map<String, Long> invocations = new TreeMap<>();
+      List<CustomDailyStatisticRepository.InvocationCount> results = repository.aggregateDailyStatistics(dayBefore, day);
+      for (CustomDailyStatisticRepository.InvocationCount count : results) {
+         invocations.put(count.getDay(), count.getNumber());
+      }
+      return invocations;
+   }
+
    private String getTodaysDate(){
       Calendar calendar = Calendar.getInstance();
       int month = calendar.get(Calendar.MONTH) + 1;
@@ -87,4 +104,14 @@ public class InvocationController {
       String dayOfMonthStr = (dayOfMonth<10 ? "0" : "") + String.valueOf(dayOfMonth);
       return String.valueOf(calendar.get(Calendar.YEAR)) + monthStr + dayOfMonthStr;
    }
+
+   private String getPastDate(Integer daysback) {
+    Calendar calendar = Calendar.getInstance();
+    calendar.add(Calendar.DAY_OF_YEAR, -daysback);
+    int month = calendar.get(Calendar.MONTH) + 1;
+    String monthStr = (month<10 ? "0" : "") + String.valueOf(month);
+    int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
+    String dayOfMonthStr = (dayOfMonth<10 ? "0" : "") + String.valueOf(dayOfMonth);
+    return String.valueOf(calendar.get(Calendar.YEAR)) + monthStr + dayOfMonthStr;
+ }
 }

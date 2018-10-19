@@ -1,0 +1,20 @@
+<div bsModal #confirmDeleteModal="bs-modal" class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel"
+    aria-hidden="true" *ngIf="isOpen()" (onHidden)="close()">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" aria-hidden="true" (click)="cancel()">
+          <span class="pficon pficon-close"></span>
+        </button>
+        <h4 class="modal-title" id="confirmDeleteModalLabel">Confirm Delete</h4>
+      </div>
+      <div class="modal-body">
+        <ng-content></ng-content>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" (click)="cancel()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="delete()">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>

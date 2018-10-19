@@ -1,0 +1,52 @@
+<h3 class="section-label">
+  IMPORT SNAPSHOT
+  <div class="pull-right">
+    <button type="button" class="btn btn-success" 
+        (click)="uploader.uploadAll()" 
+        [disabled]="!uploader.getNotUploadedItems().length" >
+      <span class="fa fa-plus"></span> Import
+    </button>
+  </div>
+</h3>
+<small>Upload and import a previously exported JSON repository snapshot.</small>
+
+<div class="container-fluid">
+  <br/>
+  <input type="file" name="snapshot" ng2FileSelect [uploader]="uploader" />
+</div>
+
+
+<h3 class="section-label">
+  EXPORT SNAPSHOT
+  <div class="pull-right">
+    <button class="btn btn-primary" (click)="createExport()">
+      <span class="fa fa-plus"></span> Export
+    </button>
+  </div>
+</h3>
+<small>Choose APIs &amp; Services you want to export as JSON file among this <b>{{ servicesCount}}</b> ones.</small>
+
+<div class="container-fluid">
+  <div class="row pre-scrollable">
+    <div class="controls col-sm-6">
+      <ul class="unstyled">
+        <li *ngFor="let service of halfServices">
+          <label class="checkbox">
+            <input type="checkbox" name="serviceIds" [(ngModel)]="selectedServices.ids[service.id]">
+            {{ service.name }} - {{ service.version }}
+          </label>
+        </li>
+      </ul>
+    </div>
+    <div class="controls col-sm-6">
+      <ul class="unstyled">
+        <li *ngFor="let service of secondHalfServices">
+          <label class="checkbox">
+            <input type="checkbox" name="serviceIds" [(ngModel)]="selectedServices.ids[service.id]">
+            {{ service.name }} - {{ service.version }}
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

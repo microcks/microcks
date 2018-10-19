@@ -26,12 +26,17 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.mapreduce.MapReduceResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
 import java.util.List;
+
+import static org.springframework.data.domain.Sort.Direction.ASC;
+import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
 
 /**
  * Implementation of CustomDailyStatisticRepository.
@@ -94,6 +99,19 @@ public class DailyStatisticRepositoryImpl implements CustomDailyStatisticReposit
       statistic.setDay(day);
       statistic.setDailyCount(0);
       return statistic;
+   }
+
+   @Override
+   public List<InvocationCount> aggregateDailyStatistics(String afterday, String beforeday) {
+      // Build a query to pre-select the statistics that will be aggregated.
+      Aggregation aggregation = newAggregation(
+            match(Criteria.where("day").gte(afterday).lte(beforeday)),
+            group("day").sum("dailyCount").as("number"),
+            project("number").and("day").previousOperation(),
+            sort(ASC, "day")
+      );
+      AggregationResults<InvocationCount> results = template.aggregate(aggregation, DailyStatistic.class, InvocationCount.class);
+      return results.getMappedResults();
    }
    
    @Override

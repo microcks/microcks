@@ -1,0 +1,21 @@
+<div class="form-group pull-right">
+  <pfng-toast-notification-list [notifications]="notifications" 
+      (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
+  </pfng-toast-notification-list>
+</div>
+
+<h1>Administration</h1>
+<small>Use this section to manage your <b>Users</b>, export and import repository <b>Snapshots</b> and manage <b>Secrets</b>.</small>
+
+<br/><br/>
+<tabset>
+  <tab heading="Users" customClass="second-tab">
+    <users-tab></users-tab>
+  </tab>
+  <tab heading="Snapshots" customClass="second-tab">
+    <snapshots-tab></snapshots-tab>
+  </tab>
+  <tab heading="Secrets" customClass="second-tab">
+    <secrets-tab></secrets-tab>
+  </tab>
+</tabset>

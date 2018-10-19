@@ -1,0 +1,68 @@
+<div class="form-group pull-right">
+  <pfng-toast-notification-list [notifications]="notifications" [showClose]="true">
+  </pfng-toast-notification-list>
+</div>
+
+<div *ngIf="service | async as service">
+  <div class="container-fluid breadcrumb-bar">
+    <div class="row">
+      <ol class="breadcrumb">
+        <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
+        <li><a [routerLink]="['/services', service.id]">{{ service.name }} - {{ service.version }}</a></li>
+        <li>New Test</li>
+      </ol>
+    </div>
+  </div>
+
+  <h1>New Test</h1>
+
+  <form class="form-horizontal">
+    <fieldset>
+      <div class="control-group form-inline">
+        <label class="control-label" for="service">Service under test</label>
+        <div class="controls">
+          <input id="service" class="form-control" readonly value="{{ service.name }}"/>
+          &nbsp;
+          <div class="input-group">
+            <span class="input-group-addon">v.</span>
+            <span id="version" name="version" class="form-control" readonly>{{ service.version }}</span>
+          </div>
+          <p class="help-block">The service and its version we're going to test.</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label required-pf" for="testEndpoint">Test Endpoint</label>
+        <div class="controls">
+          <input type="url" placeholder="e. http://" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
+          <p class="help-block">A valid endpoint to use for testing (Http URL for API or WebServices).</p>
+        </div>
+      </div>
+      <div class="control-group">
+        <label class="control-label required-pf" for="runnerType">Runner</label>
+        <div class="controls">
+          <select id="runnerType" name="runnerType" class="form-control" [(ngModel)]="runnerType" (ngModelChange)="checkForm()">
+            <option value="HTTP">HTTP</option>
+            <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP'">SOAP</option>
+            <option value="SOAP_UI" *ngIf="service.type === 'SOAP_HTTP'">SOAP UI</option>
+            <option value="POSTMAN" *ngIf="service.type === 'REST'">POSTMAN</option>
+            <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST'">OPEN API SCHEMA</option>
+          </select>
+          <p class="help-block">
+            The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).
+            <span class="learn-more-inline">
+              <a href="https://microcks.github.io">Learn More 
+                <i class="fa fa-external-link" aria-hidden="true"></i>
+              </a>
+            </span>
+          </p>
+        </div>
+      </div>
+      <div class="form-actions right pull-right">
+        <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>
+        <button class="btn btn-primary" (click)="createTest()" [disabled]="!submitEnabled">
+          <span class="fa fa-plus"></span> Launch test !
+        </button>
+      </div>
+    </fieldset>
+  </form>
+</div>

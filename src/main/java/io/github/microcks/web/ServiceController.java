@@ -20,6 +20,7 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
+import io.github.microcks.repository.CustomServiceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.service.MessageService;
 import io.github.microcks.service.RequestResponsePair;
@@ -87,6 +88,17 @@ public class ServiceController {
       return counter;
    }
 
+   @RequestMapping(value = "/services/map", method = RequestMethod.GET)
+   public Map<String, Integer> getServicesMap() {
+      log.debug("Counting services by type...");
+      Map<String, Integer> map = new HashMap<>();
+      List<CustomServiceRepository.ServiceCount> results = serviceRepository.countServicesByType();
+      for (CustomServiceRepository.ServiceCount count : results) {
+         map.put(count.getType(), count.getNumber());
+      }
+      return map;
+   }
+
    @RequestMapping(value = "/services/{id}", method = RequestMethod.GET)
    public ResponseEntity<?> getService(
          @PathVariable("id") String serviceId,
@@ -132,5 +144,12 @@ public class ServiceController {
          return new ResponseEntity<>(HttpStatus.OK);
       }
       return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+   }
+
+   @RequestMapping(value = "/services/{id}", method = RequestMethod.DELETE)
+   public ResponseEntity<String> deleteService(@PathVariable("id") String serviceId) {
+      log.debug("Removing service with id {}", serviceId);
+      serviceService.deleteService(serviceId);
+      return new ResponseEntity<>(HttpStatus.OK);
    }
 }

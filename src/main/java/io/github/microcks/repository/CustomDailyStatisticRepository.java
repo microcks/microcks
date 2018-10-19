@@ -32,5 +32,26 @@ public interface CustomDailyStatisticRepository {
 
    DailyStatistic aggregateDailyStatistics(String day);
 
+   List<InvocationCount> aggregateDailyStatistics(String afterday, String beforeday);
+
    List<DailyStatistic> findTopStatistics(String day, int limit);
+
+   class InvocationCount {
+    String day;
+    Long number;
+
+    public String getDay() {
+       return day;
+    }
+    public void setDay(String day) {
+       this.day = day;
+    }
+
+    public Long getNumber() {
+       return number;
+    }
+    public void setNumber(Long number) {
+       this.number = number;
+    }
+ }
 }

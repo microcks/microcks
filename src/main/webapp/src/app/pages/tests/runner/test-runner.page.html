@@ -1,0 +1,113 @@
+<div class="form-group pull-right">
+  <pfng-toast-notification-list [notifications]="notifications" [showClose]="true">
+  </pfng-toast-notification-list>
+</div>
+
+<div *ngIf="test | async as test">
+  <div *ngIf="service | async as service">
+    <div class="container-fluid breadcrumb-bar">
+      <div class="row">
+        <ol class="breadcrumb">
+          <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
+          <li><a [routerLink]="['/services', service.id]">{{ service.name }} - {{ service.version }}</a></li>
+          <li><a [routerLink]="['/tests/service', service.id]">Tests History</a></li>
+          <li>Running Test</li>
+        </ol>
+      </div>
+    </div>
+
+    <h1>Test {{ test.id }}</h1>
+    <small>Created {{ test.testDate | date | timeAgo }}</small>
+
+    <h3 class="section-label">Properties</h3>
+
+    <div class="row">
+      <div class="col-md-8">
+        <dl class="dl-horizontal left">
+          <dt>Test Number:</dt>
+          <dd>#{{ test.testNumber }}</dd>
+          <dt>Tested API or Service:</dt>
+          <dd><a [routerLink]="['/services', service.id]">{{ service.name }} - {{ service.version }}</a></dd>
+          <dt>Tested Endpoint:</dt>
+          <dd><code>{{ test.testedEndpoint }}</code></dd>
+          <dt>Test Results:</dt>
+          <dd><a [routerLink]="['/tests/', test.id]">Full results</a></dd>
+        </dl>
+      </div>
+      <div class="col-md-4">
+        <i *ngIf="test.inProgress" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
+        <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i> 
+        <i *ngIf="!test.inProgress && !test.success" class="fa fa-2x fa-fw fa-times-circle"></i>
+        <span class="label label-info">{{ test.runnerType }}</span>
+      </div>
+    </div>
+
+    <div>
+      <h3 class="section-label">Results</h3>
+    </div>
+
+    <div class="container-fluid">
+      <pfng-list id="resultsList"
+          [actionTemplate]="actionTemplate"
+          [config]="resultsListConfig"
+          [expandTemplate]="resultDetailTemplate"
+          [items]="test.testCaseResults"
+          [itemTemplate]="resultTemplate"
+          (onActionSelect)="handleAction($event, null)"
+          (onClick)="handleClick($event)"
+          (onDblClick)="handleDblClick($event)"
+          (onSelectionChange)="handleSelectionChange($event)">
+
+        <ng-template #resultTemplate let-item="item" let-index="index">
+          <div class="list-pf-left">
+          </div>
+          <div class="list-pf-content-wrapper">
+            <div class="list-pf-main-content">
+              <div class="list-pf-title">{{ item.operationName }}</div>
+              <div class="list-pf-description text-overflow-pf">
+                <div>
+                  <span class="pficon pficon-image"> </span>
+                  <strong>  {{ item.testStepResults.length }}</strong> test(s)
+                </div>
+              </div>
+            </div>
+            <div class="list-pf-additional-content">
+            <div>
+                <i *ngIf="item.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
+                <i *ngIf="!item.inProgress && item.success" class="fa fa-fw fa-check-circle"></i> 
+                <i *ngIf="!item.inProgress && !item.success" class="fa fa-fw fa-times-circle"></i>
+                <span class="time-elapsed">in {{ item.elapsedTime }} ms</span>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template #resultDetailTemplate let-item="item" let-index="index">
+          <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">  
+            <div *ngFor="let testStep of item.testStepResults" class="list-group-item">
+              <div class="list-view-pf-main-info">
+                <div class="list-view-pf-body">
+                  <div class="list-view-pf-description">
+                    <div class="list-group-item-heading">
+                      {{ testStep.requestName }}
+                    </div>
+                    <div class="list-group-item-text repositoryUrl">
+                    </div>
+                  </div>
+                  <div class="list-view-pf-additional-info">
+                    <div class="list-view-pf-additional-info-item" >
+                      <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
+                      <i *ngIf="!test.inProgress && test.success" class="fa fa-fw fa-check-circle"></i> 
+                      <i *ngIf="!test.inProgress && !test.success" class="fa fa-fw fa-times-circle"></i>
+                      <span class="time-elapsed">in {{ item.elapsedTime }} ms</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </pfng-list>
+    </div>
+  </div>
+</div>

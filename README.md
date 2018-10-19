@@ -2,7 +2,7 @@
 
 ## Build Status
 
-Current development version is `0.6.1-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
+Current development version is `0.7.0-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
 
 ## Installation
 
