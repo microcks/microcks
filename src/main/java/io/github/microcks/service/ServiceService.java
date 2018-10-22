@@ -77,7 +77,7 @@ public class ServiceService {
     */
    public List<Service> importServiceDefinition(String repositoryUrl) throws MockRepositoryImportException {
       log.info("Importing service definitions from file " + repositoryUrl);
-      if (repositoryUrl.startsWith("http")){
+      if (repositoryUrl.startsWith("http")) {
          try {
             repositoryUrl = handleRemoteFileDownload(repositoryUrl);
          } catch (IOException ioe) {
@@ -86,13 +86,25 @@ public class ServiceService {
          }
       }
 
+      return importServiceDefinition(new File(repositoryUrl));
+   }
+
+
+   /**
+    * Import definitions of services and bounded resources and messages into Microcks
+    * repository. This uses a MockRepositoryImporter underhood.
+    * @param repositoryFile The File for mock repository.
+    * @return The list of imported Services
+    * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
+    */
+   public List<Service> importServiceDefinition(File repositoryFile) throws MockRepositoryImportException {
       // Retrieve the correct importer based on file path.
       MockRepositoryImporter importer = null;
       try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(new File(repositoryUrl));
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile);
       } catch (IOException ioe) {
-         log.error("Exception while accessing file " + repositoryUrl, ioe);
-         throw new MockRepositoryImportException(repositoryUrl + " cannot be found", ioe);
+         log.error("Exception while accessing file " + repositoryFile.getPath(), ioe);
+         throw new MockRepositoryImportException(repositoryFile.getPath() + " cannot be found", ioe);
       }
 
       List<Service> services = importer.getServiceDefinitions();

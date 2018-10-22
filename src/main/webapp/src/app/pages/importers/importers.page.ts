@@ -27,6 +27,7 @@ import { FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-n
 
 import { ImportJob, ServiceRef } from '../../models/importer.model';
 import { ImportersService } from '../../services/importers.service';
+import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
 
 
 @Component({
@@ -124,7 +125,14 @@ export class ImportersPageComponent implements OnInit {
     }
   }
 
-  openServiceRefs(serviceRefs: ServiceRef[]):void {
+  openArtifactUploader(): void {
+    const initialState = {
+    };
+    this.modalRef = this.modalService.show(ArtifactUploaderDialogComponent, {initialState});
+    this.modalRef.content.closeBtnName = 'Close';
+  }
+
+  openServiceRefs(serviceRefs: ServiceRef[]): void {
     const initialState = {
       serviceRefs: serviceRefs
     };

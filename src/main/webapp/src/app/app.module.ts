@@ -64,6 +64,7 @@ import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
+import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
 import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
 import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
 
@@ -77,7 +78,7 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
   declarations: [
     AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
     ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
-    TestRunnerPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent,
+    TestRunnerPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent,
     SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent
   ],
   providers: [
@@ -89,7 +90,7 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
     }
   ],
   entryComponents: [
-    ServiceRefsDialogComponent, ImporterWizardComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent
+    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent
   ], 
   bootstrap: [AppComponent]
 })
