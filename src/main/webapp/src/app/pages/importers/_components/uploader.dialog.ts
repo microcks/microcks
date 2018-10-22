@@ -38,12 +38,10 @@ export class ArtifactUploaderDialogComponent implements OnInit {
  
   ngOnInit() {
     this.uploader.onErrorItem = (item: FileItem, response: string, status: number, headers: ParsedResponseHeaders) => {
-      console.log("onErrorItem " + status, item);
       this.notificationService.message(NotificationType.DANGER,
         item.file.name, "Importation error on server side (" + response + ")", false, null, null);
     }
     this.uploader.onSuccessItem = (item: FileItem, response: string, status: number, headers: ParsedResponseHeaders) => {
-      console.log("onSuccessItem " + status, item);
       this.notificationService.message(NotificationType.SUCCESS,
         item.file.name, "Import of " + response + " done!", false, null, null);
     }
