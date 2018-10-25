@@ -27,7 +27,7 @@
         </span>
         <dt>Contracts:</dt>
         <dd>
-          <a *ngFor="let contract of contracts | async" href="/api/resources/{{ contract.id }}" target="new" title="{{ contract.type }}">
+          <a *ngFor="let contract of contracts | async" href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
             {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i>
           </a>
           <div *ngIf="!contracts | async">
