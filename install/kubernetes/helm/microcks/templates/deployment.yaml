@@ -24,8 +24,8 @@ spec:
         - containerPort: 8080
           protocol: TCP
         env:
-          - name: JAVA_OPTS
-            value: "-Xmx300m"
+          - name: JAVA_OPTIONS
+            value: ""
           - name: SPRING_PROFILES_ACTIVE
             value: prod
           - name: SPRING_DATA_MONGODB_URI
