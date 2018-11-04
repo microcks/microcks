@@ -92,12 +92,7 @@ public class SoapController {
       Operation rOperation = null;
       for (Operation operation : service.getOperations()) {
          // Enhancement : try getting operation from soap:body directly!
-         String openingPattern = "(.*):Body>(\\s*)<(\\w+):" + operation.getInputName() + ">(.*)";
-         String closingPattern = "(.*)</(\\w+):" + operation.getInputName() + ">(\\s*)</(\\w+):Body>(.*)";
-         Pattern op = Pattern.compile(openingPattern, Pattern.DOTALL);
-         Pattern cp = Pattern.compile(closingPattern, Pattern.DOTALL);
-
-         if (op.matcher(body).matches() && cp.matcher(body).matches()) {
+         if (hasPayloadCorrectStructureForOperation(body, operation.getInputName())) {
             rOperation = operation;
             break;
          }
@@ -177,6 +172,21 @@ public class SoapController {
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
    }
 
+   /**
+    * Check if given SOAP payload has a correct structure for given operation name.
+    * @param payload SOAP payload to check structure
+    * @param operationName Name of operation to check structure against
+    * @return True if payload is correct for operation, false otherwise.
+    */
+   protected boolean hasPayloadCorrectStructureForOperation(String payload, String operationName) {
+      String openingPattern = "(.*):Body>(\\s*)<(\\w+):" + operationName + "(.*)>(.*)";
+      String closingPattern = "(.*)</(\\w+):" + operationName + ">(\\s*)</(.*):Body>(.*)";
+
+      Pattern op = Pattern.compile(openingPattern, Pattern.DOTALL);
+      Pattern cp = Pattern.compile(closingPattern, Pattern.DOTALL);
+
+      return (op.matcher(payload).matches() && cp.matcher(payload).matches());
+   }
 
    private String getDispatchCriteriaFromXPathEval(Operation operation, String body) {
       try {
