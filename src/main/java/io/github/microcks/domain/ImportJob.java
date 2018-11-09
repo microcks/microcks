@@ -26,11 +26,10 @@ import java.util.Set;
 
 /**
  * Domain object representing an import job within Microcks.
- * Import jobs are responsible of periodically checking tests
- * &amp; mocks repository in order to update their definitions with
- * Microks own repository. They typically used the repositoryUrl
- * attribute, associated with the etag marker in order to easily
- * see if something has been updated.
+ * Import jobs are responsible of periodically checking tests &amp; mocks
+ * repository in order to update their definitions with Microcks own repository.
+ * They typically used the repositoryUrl attribute, associated with the etag
+ * marker in order to easily see if something has been updated.
  * @author laurent
  */
 public class ImportJob {
@@ -39,6 +38,7 @@ public class ImportJob {
    private String id;
    private String name;
    private String repositoryUrl;
+   private boolean repositoryDisableSSLValidation = false;
    private String frequency;
    private Date createdDate;
    private Date lastImportDate;
@@ -46,6 +46,7 @@ public class ImportJob {
    private boolean active = false;
    private String etag;
 
+   private SecretRef secretRef;
    private Set<ServiceRef> serviceRefs;
 
    public String getId() {
@@ -70,6 +71,14 @@ public class ImportJob {
 
    public void setRepositoryUrl(String repositoryUrl) {
       this.repositoryUrl = repositoryUrl;
+   }
+
+   public boolean isRepositoryDisableSSLValidation() {
+      return repositoryDisableSSLValidation;
+   }
+
+   public void setRepositoryDisableSSLValidation(boolean repositoryDisableSSLValidation) {
+      this.repositoryDisableSSLValidation = repositoryDisableSSLValidation;
    }
 
    public String getFrequency() {
@@ -118,6 +127,14 @@ public class ImportJob {
 
    public void setEtag(String etag) {
       this.etag = etag;
+   }
+
+   public SecretRef getSecretRef() {
+      return secretRef;
+   }
+
+   public void setSecretRef(SecretRef secretRef) {
+      this.secretRef = secretRef;
    }
 
    public Set<ServiceRef> getServiceRefs() {

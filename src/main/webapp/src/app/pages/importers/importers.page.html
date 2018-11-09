@@ -40,6 +40,10 @@
           </div>
           <div class="list-view-pf-additional-info">
             <div class="list-view-pf-additional-info-item" >
+              <span *ngIf="job.secretRef != null" class="fa fa-lock" tooltip="Using {{ job.secretRef.name }} secret"></span>
+              <span *ngIf="job.secretRef == null" class="fa"></span>
+            </div>
+            <div class="list-view-pf-additional-info-item" >
               <span class="label label-info" *ngIf="job.lastImportDate">Imported</span>
               <span class="label label-default" *ngIf="!job.lastImportDate">Not Imported</span>
               <span class="label label-success" *ngIf="job.active">Scanned</span>
@@ -63,7 +67,7 @@
           </button>
           <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
             <li><a (click)="editImportJob(wizardTemplate, job)">Edit</a></li>
-            <li><a (click)="deleteImportJob(job)">Delete</a></li>
+            <li><a (click)="confirmDeleteDialog.open(job)">Delete</a></li>
             <li role="separator" class="divider"></li>
             <li><a (click)="activateImportJob(job)" *ngIf="!job.active">Activate</a></li>
             <li><a (click)="startImportJob(job)" *ngIf="job.active">Force import</a></li>
@@ -79,3 +83,13 @@
       (onPageSizeChange)="handlePageSize($event)">
   </pfng-pagination>
 </div>
+
+<confirm-delete-dialog #confirmDeleteDialog (onDelete)="deleteImportJob($event)">
+    <p>Do you really want to delete the selected Import Job ?</p>
+  
+    <div class="alert alert-danger">
+      <span class="pficon pficon-error-circle-o"></span>
+      <strong>NOTE : </strong>
+      <span>This will <strong>permanently</strong> delete the Import Job from Microcks. Already discovered Services &amp; APIs remain but will not be updated. This operation cannot be undone.</span>
+    </div>
+  </confirm-delete-dialog>

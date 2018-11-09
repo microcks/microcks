@@ -21,7 +21,9 @@ import { Component, OnInit, ViewChild, ViewEncapsulation, Host } from '@angular/
 import { WizardComponent, WizardConfig, WizardEvent, WizardStep, WizardStepComponent, WizardStepConfig } from 'patternfly-ng/wizard';
 
 import { ImportersPageComponent } from '../importers.page';
-import { ImportJob } from '../../../models/importer.model';
+import { ImportJob, Secret, SecretRef } from '../../../models/importer.model';
+import { SecretsService } from '../../../services/secrets.service';
+
 
 @Component({
   encapsulation: ViewEncapsulation.None,
@@ -34,6 +36,8 @@ export class ImporterWizardComponent implements OnInit {
 
   data: any = {};
   job: ImportJob = null;
+  useSecret: boolean = false;
+  secrets: Secret[];
 
   // Wizard Step 1
   step1Config: WizardStepConfig;
@@ -44,7 +48,7 @@ export class ImporterWizardComponent implements OnInit {
   wizardConfig: WizardConfig;
   wizardHost: ImportersPageComponent;
 
-  constructor(@Host() wizardHost: ImportersPageComponent) {
+  constructor(@Host() wizardHost: ImportersPageComponent, private secretsSvc: SecretsService) {
     this.wizardHost = wizardHost;
   }
   
@@ -52,6 +56,7 @@ export class ImporterWizardComponent implements OnInit {
     var wizardTitle: string = 'Create a new Job';
     if (this.wizardHost.selectedJob) {
       this.job = this.wizardHost.selectedJob;
+      this.useSecret = (this.job.secretRef != null);
       wizardTitle = 'Edit existing Job "' + this.job.name + '"';
     } else {
       this.job = new ImportJob();
@@ -92,6 +97,14 @@ export class ImporterWizardComponent implements OnInit {
     this.setNavAway(false);
   }
 
+  ngAfterViewInit() {
+    this.getSecrets();
+  }
+
+  getSecrets(page: number = 1): void {
+    this.secretsSvc.getSecrets(page).subscribe(results => this.secrets = results);
+  }
+
   nextClicked($event: WizardEvent): void {
     if ($event.step.config.id === 'step3') {
       //
@@ -123,6 +136,22 @@ export class ImporterWizardComponent implements OnInit {
     this.step1Config.nextEnabled = 
       (this.job.name !== undefined && this.job.name.length > 0 && this.job.repositoryUrl !== undefined && this.job.repositoryUrl.length > 0);
     this.setNavAway(this.step1Config.nextEnabled);
+  }
+  updateSecretProperties(event: any): void {
+    var secretId = event.target.value;
+    if ('none' != event.target.value) {
+      for (var i=0; i<this.secrets.length; i++) {
+        var secret = this.secrets[i];
+        if (secretId === secret.id) {
+          console.log('Got a match');
+          this.job.secretRef = new SecretRef(secret.id, secret.name);
+          console.log(JSON.stringify(this.job.secretRef));
+          break;
+        }
+      };
+    } else {
+      this.job.secretRef = null;
+    }
   }
 
   private setNavAway(allow: boolean) {
