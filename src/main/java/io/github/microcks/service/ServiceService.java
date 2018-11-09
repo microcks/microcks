@@ -27,12 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.Authenticator;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 import java.util.Map;
 
@@ -72,21 +67,28 @@ public class ServiceService {
     * Import definitions of services and bounded resources and messages into Microcks
     * repository. This uses a MockRepositoryImporter underhood.
     * @param repositoryUrl The String representing mock repository url.
+    * @param repositorySecret The authentication secret associated with the repository url. Can be set to null if none.
+    * @param disableSSLValidation Whether SSL certificates validation should be turned off.
     * @return The list of imported Services
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
-   public List<Service> importServiceDefinition(String repositoryUrl) throws MockRepositoryImportException {
-      log.info("Importing service definitions from file " + repositoryUrl);
+   public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret, boolean disableSSLValidation) throws MockRepositoryImportException {
+      log.info("Importing service definitions from " + repositoryUrl);
+      File localFile = null;
+
       if (repositoryUrl.startsWith("http")) {
          try {
-            repositoryUrl = handleRemoteFileDownload(repositoryUrl);
+            localFile = HTTPDownloader.handleHTTPDownloadToFile(repositoryUrl, repositorySecret, disableSSLValidation);
          } catch (IOException ioe) {
             log.error("Exception while downloading " + repositoryUrl, ioe);
             throw new MockRepositoryImportException(repositoryUrl + " cannot be downloaded", ioe);
          }
+      } else {
+         // Simply build locaFile from repository url.
+         localFile = new File(repositoryUrl);
       }
 
-      return importServiceDefinition(new File(repositoryUrl));
+      return importServiceDefinition(localFile);
    }
 
 
@@ -264,29 +266,5 @@ public class ServiceService {
          }
       }
       return false;
-   }
-
-   /** Download a remote HTTP URL into a temporary local file. */
-   private String handleRemoteFileDownload(String remoteUrl) throws IOException {
-      // Build remote Url and local file.
-      URL website = new URL(remoteUrl);
-      String localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis() + ".project";
-      // Set authenticator instance.
-      Authenticator.setDefault(new UsernamePasswordAuthenticator(username, password));
-      ReadableByteChannel rbc = null;
-      FileOutputStream fos = null;
-      try {
-         rbc = Channels.newChannel(website.openStream());
-         // Transfer file to local.
-         fos = new FileOutputStream(localFile);
-         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-      }
-      finally {
-         if (fos != null)
-            fos.close();
-         if (rbc != null)
-            rbc.close();
-      }
-      return localFile;
    }
 }

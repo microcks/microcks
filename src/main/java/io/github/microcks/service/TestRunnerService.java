@@ -20,8 +20,8 @@ package io.github.microcks.service;
 
 import io.github.microcks.domain.*;
 import io.github.microcks.repository.*;
+import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.UsernamePasswordAuthenticator;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.postman.PostmanTestStepsRunner;
 import io.github.microcks.util.soapui.SoapUITestStepsRunner;
@@ -39,13 +39,9 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
-import java.net.Authenticator;
 import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -74,11 +70,8 @@ public class TestRunnerService {
    @Autowired
    private ImportJobRepository jobRepository;
 
-   @Value("${network.username}")
-   private final String username = null;
-
-   @Value("${network.password}")
-   private final String password = null;
+   @Autowired
+   private SecretRepository secretRepository;
 
    @Value("${tests-callback.url}")
    private final String testsCallbackUrl = null;
@@ -269,7 +262,7 @@ public class TestRunnerService {
             List<ImportJob> jobs = jobRepository.findByServiceRefId(serviceId);
             if (jobs != null && !jobs.isEmpty()) {
                try {
-                  String projectFile = handleRemoteFileDownload(jobs.get(0).getRepositoryUrl());
+                  String projectFile = handleJobRepositoryDownloadToFile(jobs.get(0));
                   SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(projectFile);
                   return soapUIRunner;
                } catch (IOException ioe) {
@@ -281,7 +274,7 @@ public class TestRunnerService {
             jobs = jobRepository.findByServiceRefId(serviceId);
             if (jobs != null && !jobs.isEmpty()) {
                try {
-                  String collectionFile = handleRemoteFileDownload(jobs.get(0).getRepositoryUrl());
+                  String collectionFile = handleJobRepositoryDownloadToFile(jobs.get(0));
                   PostmanTestStepsRunner postmanRunner = new PostmanTestStepsRunner(collectionFile);
                   postmanRunner.setClientHttpRequestFactory(factory);
                   postmanRunner.setTestsCallbackUrl(testsCallbackUrl);
@@ -298,27 +291,17 @@ public class TestRunnerService {
       }
    }
 
-   /** Download a remote HTTP URL into a temporary local file. */
-   private String handleRemoteFileDownload(String remoteUrl) throws IOException {
-      // Build remote Url and local file.
-      URL website = new URL(remoteUrl);
-      String localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis() + ".project";
-      // Set authenticator instance.
-      Authenticator.setDefault(new UsernamePasswordAuthenticator(username, password));
-      ReadableByteChannel rbc = null;
-      FileOutputStream fos = null;
-      try {
-         rbc = Channels.newChannel(website.openStream());
-         // Transfer file to local.
-         fos = new FileOutputStream(localFile);
-         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+   /** Download a remote HTTP URL repository into a temporary local file. */
+   private String handleJobRepositoryDownloadToFile(ImportJob job) throws IOException {
+      // Check if job has an associated secret to retrieve.
+      Secret jobSecret = null;
+      if (job.getSecretRef() != null) {
+         log.debug("Retrieving secret {} for job {}", job.getSecretRef().getName(), job.getName());
+         jobSecret = secretRepository.findOne(job.getSecretRef().getSecretId());
       }
-      finally {
-         if (fos != null)
-            fos.close();
-         if (rbc != null)
-            rbc.close();
-      }
-      return localFile;
+
+      File localFile = HTTPDownloader.handleHTTPDownloadToFile(job.getRepositoryUrl(),
+            jobSecret, job.isRepositoryDisableSSLValidation());
+      return localFile.getAbsolutePath();
    }
 }

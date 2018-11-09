@@ -19,9 +19,11 @@
 package io.github.microcks.service;
 
 import io.github.microcks.domain.ImportJob;
+import io.github.microcks.domain.Secret;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceRef;
 import io.github.microcks.repository.ImportJobRepository;
+import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.util.MockRepositoryImportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +46,9 @@ public class JobService {
    private ImportJobRepository jobRepository;
 
    @Autowired
+   private SecretRepository secretRepository;
+
+   @Autowired
    private ServiceService serviceService;
 
    /**
@@ -53,11 +58,20 @@ public class JobService {
    public void doImportJob(ImportJob job) {
       log.info("Starting import for job '{}'", job.getName());
 
-      // Reinitialize service references before new import.
+      // Retrieve associated secret if any.
+      Secret jobSecret = null;
+      if (job.getSecretRef() != null) {
+         log.debug("Retrieving secret {} for job {}", job.getSecretRef().getName(), job.getName());
+         jobSecret = secretRepository.findOne(job.getSecretRef().getSecretId());
+      }
+
+      // Reinitialize service references and import errors before new import.
       job.setServiceRefs(null);
+      job.setLastImportError(null);
       List<Service> services = null;
       try {
-         services = serviceService.importServiceDefinition(job.getRepositoryUrl());
+         services = serviceService.importServiceDefinition(job.getRepositoryUrl(),
+               jobSecret, job.isRepositoryDisableSSLValidation());
       } catch (MockRepositoryImportException mrie) {
          log.warn("MockRepositoryImportException while importing job '{}' : {}", job.getName(), mrie.getMessage());
          job.setLastImportError(mrie.getMessage());

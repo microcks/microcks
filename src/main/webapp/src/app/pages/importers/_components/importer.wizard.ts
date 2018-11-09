@@ -136,6 +136,9 @@ export class ImporterWizardComponent implements OnInit {
     this.step1Config.nextEnabled = 
       (this.job.name !== undefined && this.job.name.length > 0 && this.job.repositoryUrl !== undefined && this.job.repositoryUrl.length > 0);
     this.setNavAway(this.step1Config.nextEnabled);
+    if (this.useSecret && this.job.secretRef == null) {
+      this.job.secretRef = new SecretRef('none', '');
+    }
   }
   updateSecretProperties(event: any): void {
     var secretId = event.target.value;
@@ -143,9 +146,7 @@ export class ImporterWizardComponent implements OnInit {
       for (var i=0; i<this.secrets.length; i++) {
         var secret = this.secrets[i];
         if (secretId === secret.id) {
-          console.log('Got a match');
           this.job.secretRef = new SecretRef(secret.id, secret.name);
-          console.log(JSON.stringify(this.job.secretRef));
           break;
         }
       };
