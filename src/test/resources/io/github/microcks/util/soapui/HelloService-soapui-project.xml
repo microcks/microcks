@@ -116,20 +116,13 @@ if (name == "Andrew"){
    <soapenv:Header/>
    <soapenv:Body>
       <soapenv:Fault>
-         <soapenv:Code>
-            <soapenv:Value>soapenv:Sender</soapenv:Value>
-            <soapenv:Subcode>
-               <soapenv:Value>rpc:BadArguments</soapenv:Value>
-            </soapenv:Subcode>
-         </soapenv:Code>
-         <soapenv:Reason>
-            <soapenv:Text xml:lang="en-US">Processing error</soapenv:Text>
-         </soapenv:Reason>
-         <soapenv:Detail>
+         <faultcode>soapenv:Sender</faultcode>
+         <faultstring>Unknown name</faultstring>
+         <detail>
             <hel:HelloException>
                <code>999</code>
             </hel:HelloException>
-         </soapenv:Detail>
+         </detail>
       </soapenv:Fault>
    </soapenv:Body>
 </soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.example.com/hello/HelloService/sayHelloResponse"/></con:response><con:dispatchConfig xsi:type="con:MockOperationQueryMatchDispatch" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:query><con:name>Andrew</con:name><con:query>declare namespace ser='http://www.example.com/hello';

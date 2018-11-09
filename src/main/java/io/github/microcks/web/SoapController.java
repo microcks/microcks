@@ -166,6 +166,9 @@ public class SoapController {
          // Set Content-Type to "text/xml".
          HttpHeaders responseHeaders = new HttpHeaders();
          responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
+         if (response.isFault()) {
+            return new ResponseEntity<Object>(response.getContent(), responseHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
+         }
          return new ResponseEntity<Object>(response.getContent(), responseHeaders, HttpStatus.OK);
       }
 
