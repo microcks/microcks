@@ -523,6 +523,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       response.setContent(((WsdlMockResponse)mockResponse).getResponseContent());
       response.setHeaders(buildHeaders(((WsdlMockResponse)mockResponse).getResponseHeaders()));
       response.setDispatchCriteria(dispatchCriteria);
+      if ("500".equals(((WsdlMockResponse)mockResponse).getConfig().getHttpResponseStatus())) {
+         response.setFault(true);
+      }
       return response;
    }
 

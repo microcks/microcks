@@ -42,7 +42,7 @@ public class SoapUIXPathBuilder {
       WritableNamespaceContext nsContext = new WritableNamespaceContext();
 
       // Parse SoapUI rules for getting namespaces and expression to evaluate.
-      // declare namespace ser='http://www.mma.fr/test/service';
+      // declare namespace ser='http://www.example.com/test/service';
       // //ser:sayHello/name
       String xpathExpression = null;
       String lines[] = rules.split("\\r?\\n");

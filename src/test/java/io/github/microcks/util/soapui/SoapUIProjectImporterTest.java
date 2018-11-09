@@ -90,6 +90,75 @@ public class SoapUIProjectImporterTest {
    }
    
    @Test
+   public void testSimpleScriptWithSOAPFaultProjectImport(){
+      SoapUIProjectImporter importer = null;
+      try{
+         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml");
+      } catch (Exception e){
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("HelloService Mock", service.getName());
+      assertEquals("http://www.example.com/hello", service.getXmlNS());
+      assertEquals("0.9", service.getVersion());
+      
+      // Check that operations and and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().iterator().next();
+      assertEquals("sayHello", operation.getName());
+      assertEquals("sayHello", operation.getInputName());
+      assertEquals("sayHelloResponse", operation.getOutputName());
+      
+      // Check mock dispatching rules.
+      assertEquals("SCRIPT", operation.getDispatcher());
+      assertTrue(operation.getDispatcherRules().contains("import com.eviware.soapui.support.XmlHolder"));
+      
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+      Resource resource = resources.get(0);
+      assertEquals(ResourceType.WSDL, resource.getType());
+      assertEquals("HelloService Mock-0.9.wsdl", resource.getName());
+      assertNotNull(resource.getContent());
+      
+      // Check that messages have been correctly found.
+      Map<Request, Response> messages = null;
+      try{
+         messages = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e){
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(3, messages.size());
+      for (Entry<Request, Response> entry : messages.entrySet()){
+         Request request = entry.getKey();
+         Response response = entry.getValue();
+         assertNotNull(request);
+         assertNotNull(response);
+         if ("Andrew Request".equals(request.getName())){
+            assertEquals("Andrew Response", response.getName());
+            assertEquals("Andrew Response", response.getDispatchCriteria());
+         }
+         else if ("Karla Request".equals(request.getName())){
+            assertEquals("Karla Response", response.getName());
+            assertEquals("Karla Response", response.getDispatchCriteria());
+         }
+         else if ("World Request".equals(request.getName())){
+            assertEquals("World Response", response.getName());
+            assertEquals("World Response", response.getDispatchCriteria());
+            assertTrue(response.isFault());
+         }
+      }
+   }
+
+   @Test
    public void testSimpleScriptProjectImport(){
       SoapUIProjectImporter importer = null;
       try{
@@ -109,18 +178,18 @@ public class SoapUIProjectImporterTest {
       assertEquals("HelloServiceScriptBinding", service.getName());
       assertEquals("http://lbroudoux.github.com/test/service", service.getXmlNS());
       assertEquals("1.0", service.getVersion());
-      
+
       // Check that operations and and input/output have been found.
       assertEquals(1, service.getOperations().size());
       Operation operation = service.getOperations().iterator().next();
       assertEquals("sayHello", operation.getName());
       assertEquals("sayHello", operation.getInputName());
       assertEquals("sayHelloResponse", operation.getOutputName());
-      
+
       // Check mock dispatching rules.
       assertEquals("SCRIPT", operation.getDispatcher());
       assertTrue(operation.getDispatcherRules().contains("import com.eviware.soapui.support.XmlHolder"));
-      
+
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);
       assertEquals(1, resources.size());
@@ -128,7 +197,7 @@ public class SoapUIProjectImporterTest {
       assertEquals(ResourceType.WSDL, resource.getType());
       assertEquals("HelloServiceScriptBinding-1.0.wsdl", resource.getName());
       assertNotNull(resource.getContent());
-      
+
       // Check that messages have been correctly found.
       Map<Request, Response> messages = null;
       try{
