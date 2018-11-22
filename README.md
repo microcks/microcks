@@ -4,6 +4,10 @@
 
 Current development version is `0.7.0-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
 
+## Developer Workspace
+
+[![Contribute](https://che.openshift.io/factory/resources/factory-contribute.svg)](https://che.openshift.io/f?id=factorymtyoro1y0qt8tq2j)
+
 ## Installation
 
 ## Development
