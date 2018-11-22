@@ -6,7 +6,7 @@ Current development version is `0.7.0-SNAPSHOT`. [![Build Status](https://travis
 
 ## Developer Workspace
 
-[![Contribute](https://che.openshift.io/factory/resources/factory-contribute.svg)](https://che.openshift.io/f?id=factorymtyoro1y0qt8tq2j)
+[![Contribute](https://che.openshift.io/factory/resources/factory-contribute.svg)](http://che-eclipse-che.apps.laurent.openhybridcloud.io/f?id=factoryfp1e8mfo0olbe90v)
 
 ## Installation
 
