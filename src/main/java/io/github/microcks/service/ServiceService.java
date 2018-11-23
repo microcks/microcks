@@ -114,8 +114,14 @@ public class ServiceService {
          Service existingService = serviceRepository.findByNameAndVersion(service.getName(), service.getVersion());
          log.debug("Service [{}, {}] exists ? {}", service.getName(), service.getVersion(), existingService != null);
          if (existingService != null){
+            // Retrieve its previous identifier and metadatas.
             service.setId(existingService.getId());
+            service.setMetadata(existingService.getMetadata());
          }
+         if (existingService.getMetadata() == null) {
+            service.setMetadata(new Metadata());
+         }
+         service.getMetadata().objectUpdated();
          service = serviceRepository.save(service);
 
          // Remove resources previously attached to service.
@@ -184,6 +190,7 @@ public class ServiceService {
       service.setName(name);
       service.setVersion(version);
       service.setType(ServiceType.GENERIC_REST);
+      service.setMetadata(new Metadata());
 
       // Now create basic crud operations for the resource.
       Operation createOp = new Operation();

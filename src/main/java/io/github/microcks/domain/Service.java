@@ -35,6 +35,7 @@ public class Service {
    private String version;
    private String xmlNS;
    private ServiceType type;
+   private Metadata metadata;
 
    private List<Operation> operations = new ArrayList<>();
 
@@ -91,5 +92,13 @@ public class Service {
          this.operations = new ArrayList<>();
       }
       operations.add(operation);
+   }
+
+   public Metadata getMetadata() {
+      return metadata;
+   }
+
+   public void setMetadata(Metadata metadata) {
+      this.metadata = metadata;
    }
 }

@@ -40,7 +40,7 @@
               <span class="label label-success" *ngIf="service.type === 'REST'">REST</span>
               <span class="label label-info" *ngIf="service.type === 'GENERIC_REST'">DYNAMIC</span>
               | Version <b>{{ service.version }}</b> <br/><br/>
-              <small>Updated on 08/14/2018 14:55</small>
+              <small *ngIf="service.metadata">Updated on {{ service.metadata.lastUpdate | date : 'medium' }}</small>
             </div>
           </div>
           <div class="list-view-pf-additional-info">

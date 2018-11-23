@@ -9,7 +9,7 @@
   </div>
 
   <h1>{{ view.service.name }} - {{ view.service.version }}</h1>
-  <small>Created 10 days ago, last update on 08/14/2018 14:55</small>
+  <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn | timeAgo }}, last update on {{ view.service.metadata.lastUpdate | date : 'medium'  }}</small>
 
   <div class="row">
     <div class="col-md-8">
