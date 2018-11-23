@@ -23,6 +23,7 @@ export class ServiceRef {
 export class Secret {
   id: string;
   name: string;
+  description: string;
   username: string;
   password: string;
   token: string;
