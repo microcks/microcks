@@ -74,6 +74,8 @@ public class DynamicMockRestController {
       log.debug("Creating a new resource '{}' for service '{}-{}'", resource, serviceName, version);
       long startTime = System.currentTimeMillis();
 
+      serviceName = sanitizeServiceName(serviceName);
+
       MockContext mockContext = getMockContext(serviceName, version, "POST /" + resource);
       if (mockContext != null) {
          Document document = null;
@@ -115,6 +117,8 @@ public class DynamicMockRestController {
       log.debug("Find resources '{}' for service '{}-{}'", resource, serviceName, version);
       long startTime = System.currentTimeMillis();
 
+      serviceName = sanitizeServiceName(serviceName);
+
       MockContext mockContext = getMockContext(serviceName, version, "GET /" + resource);
       if (mockContext != null) {
 
@@ -149,6 +153,8 @@ public class DynamicMockRestController {
       log.debug("Get resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
 
+      serviceName = sanitizeServiceName(serviceName);
+
       MockContext mockContext = getMockContext(serviceName, version, "GET /" + resource + "/:id");
       if (mockContext != null) {
          // Get the requested generic resource.
@@ -182,6 +188,8 @@ public class DynamicMockRestController {
    ) {
       log.debug("Update resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
+
+      serviceName = sanitizeServiceName(serviceName);
 
       MockContext mockContext = getMockContext(serviceName, version, "PUT /" + resource + "/:id");
       if (mockContext != null) {
@@ -233,6 +241,8 @@ public class DynamicMockRestController {
       log.debug("Update resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
 
+      serviceName = sanitizeServiceName(serviceName);
+
       MockContext mockContext = getMockContext(serviceName, version, "DELETE /" + resource + "/:id");
       if (mockContext != null) {
          genericResourceRepository.delete(resourceId);
@@ -246,6 +256,15 @@ public class DynamicMockRestController {
 
       // Return a 400 code : bad request.
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+   }
+
+   /** Sanitize the service name (check encoding and so on...) */
+   private String sanitizeServiceName(String serviceName) {
+      // If serviceName was encoded with '+' instead of '%20', replace them.
+      if (serviceName.contains("+")) {
+         return serviceName.replace('+', ' ');
+      }
+      return serviceName;
    }
 
    /** Retrieve a MockContext corresponding to operation on service. Null if not found or not valid. */

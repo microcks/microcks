@@ -106,7 +106,7 @@ export class ServiceDetailPageComponent implements OnInit {
       var parts = {};
       var params = {};
       var operationName = operation.name;
-
+      
       if (dispatchCriteria != null) {
         var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
         var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
@@ -137,7 +137,7 @@ export class ServiceDetailPageComponent implements OnInit {
       result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
     } else if (this.resolvedServiceView.service.type === ServiceType.GENERIC_REST) {
       result += '/dynarest/';
-      var resourceName = this.removeVerbInUrl(operationName);
+      var resourceName = this.removeVerbInUrl(operation.name);
       result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version + resourceName;
     }
     
@@ -145,7 +145,6 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public copyToClipboard(url: string): void {
-    console.log("Copying " + url);
     let selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
     selBox.style.left = '0';
@@ -170,6 +169,6 @@ export class ServiceDetailPageComponent implements OnInit {
     return operationName;
   }
   private encodeUrl(url: string): string {
-    return url.replace(/\s/g, '%20');
+    return url.replace(/\s/g, '+');
   }
 }

@@ -87,6 +87,11 @@ public class SoapController {
 
       long startTime = System.currentTimeMillis();
 
+      // If serviceName was encoded with '+' instead of '%20', replace them.
+      if (serviceName.contains("+")) {
+         serviceName = serviceName.replace('+', ' ');
+      }
+
       // Retrieve service and correct operation.
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;

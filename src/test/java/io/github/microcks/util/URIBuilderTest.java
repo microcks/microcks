@@ -30,7 +30,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
- * This is a Test for URIBuilder class
+ * This is a Test for URIBuilder class.
  * @laurent
  */
 public class URIBuilderTest {

@@ -102,6 +102,10 @@ public class RestController {
       }
       log.info("Found resourcePath: " + resourcePath);
 
+      // If serviceName was encoded with '+' instead of '%20', replace them.
+      if (serviceName.contains("+")) {
+         serviceName = serviceName.replace('+', ' ');
+      }
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
       for (Operation operation : service.getOperations()){
