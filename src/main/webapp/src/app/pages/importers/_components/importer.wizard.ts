@@ -138,6 +138,8 @@ export class ImporterWizardComponent implements OnInit {
     this.setNavAway(this.step1Config.nextEnabled);
     if (this.useSecret && this.job.secretRef == null) {
       this.job.secretRef = new SecretRef('none', '');
+    } else {
+      this.job.secretRef = null;
     }
   }
   updateSecretProperties(event: any): void {
