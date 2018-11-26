@@ -48,7 +48,7 @@ spec:
         - containerPort: 8080
           protocol: TCP
         env:
-          - name: JAVA_OPTIOS
+          - name: JAVA_OPTIONS
             value: ""
           - name: SPRING_PROFILES_ACTIVE
             value: prod
@@ -82,6 +82,13 @@ spec:
           periodSeconds: 10
           successThreshold: 1
           failureThreshold: 3
+        volumeMounts:
+          - name: "microcks-config"
+            mountPath: "/deployments/config"
+      volumes:
+        - name: "microcks-config"
+          configMap:
+            name: "microcks-config"
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -103,7 +110,7 @@ data:
     validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
 
     # Logging configuration properties
-    logging.config=/config/logback.xml
+    logging.config=/deployments/config/logback.xml
 
     # Keycloak configuration properties
     keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180/auth}

@@ -240,7 +240,7 @@ objects:
             failureThreshold: 3
           volumeMounts:
             - name: "${APP_NAME}-config"
-              mountPath: "/config"
+              mountPath: "/deployments/config"
           terminationMessagePath: "/dev/termination-log"
           imagePullPolicy: IfNotPresent
         volumes:
@@ -430,7 +430,7 @@ objects:
       validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
 
       # Logging configuration properties
-      logging.config=/config/logback.xml
+      logging.config=/deployments/config/logback.xml
 
       # Keycloak configuration properties
       keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180/auth}
