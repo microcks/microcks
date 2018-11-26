@@ -118,9 +118,10 @@ public class ServiceService {
             service.setId(existingService.getId());
             service.setMetadata(existingService.getMetadata());
          }
-         if (existingService.getMetadata() == null) {
+         if (service.getMetadata() == null) {
             service.setMetadata(new Metadata());
          }
+
          service.getMetadata().objectUpdated();
          service = serviceRepository.save(service);
 
