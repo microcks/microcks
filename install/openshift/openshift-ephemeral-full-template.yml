@@ -693,28 +693,38 @@ objects:
         "defaultRoles": [ "user" ],
         "requiredCredentials": [ "password" ],
         "scopeMappings": [
-            {
-                "client": "microcks-app-js",
-                "roles": ["admin", "manager", "user"]
-            }
+          {
+            "client": "microcks-app-js",
+            "roles": ["admin", "manager", "user"]
+          }
         ],
         "applications": [
-            {
-                "name": "microcks-app",
-                "enabled": true,
-                "bearerOnly": true
-            },
-            {
-                "name": "microcks-app-js",
-                "enabled": true,
-                "publicClient": true,
-                "webOrigins": [
-                    "+"
-                ],
-                "redirectUris": [
-                    "http://${APP_ROUTE_HOSTNAME}/*"
-                ]
-            }
+          {
+            "name": "microcks-app",
+            "enabled": true,
+            "bearerOnly": true
+          },
+          {
+            "name": "microcks-app-js",
+            "enabled": true,
+            "publicClient": true,
+            "webOrigins": [
+              "+"
+            ],
+            "redirectUris": [
+              "http://${APP_ROUTE_HOSTNAME}/*"
+            ]
+          },
+          {
+            "name": "microcks-serviceaccount",
+            "enabled": true,
+            "bearerOnly": false,
+            "publicClient": false,
+            "standardFlowEnabled": false,
+            "directAccessGrantsEnabled": true,
+            "serviceAccountsEnabled": true,
+            "clientAuthenticatorType": "client-secret"
+          }
         ],
         "identityProviders": [
           {
