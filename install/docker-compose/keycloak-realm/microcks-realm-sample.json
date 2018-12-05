@@ -100,6 +100,16 @@
       "redirectUris": [
         "http://localhost:8080/*"
       ]
+    },
+    {
+      "name": "microcks-serviceaccount",
+      "enabled": true,
+      "bearerOnly": false,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret"
     }
   ],
   "keycloakVersion": "3.4.0.Final"
