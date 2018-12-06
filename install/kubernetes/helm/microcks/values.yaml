@@ -1,6 +1,6 @@
 appName: microcks
-microcksHost: microcks-microcks2.192.168.99.100.nip.io
-keycloakHost: keycloak-microcks2.192.168.99.100.nip.io
+microcksHost: microcks-microcks.192.168.99.100.nip.io
+keycloakHost: keycloak-microcks.192.168.99.100.nip.io
 
 persistence:
   enable: false

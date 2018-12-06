@@ -15,7 +15,7 @@ data:
     network.username=
     network.password=
 
-    validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
+    validation.resourceUrl=http://{{ .Values.microcksHost }}/api/resources/
 
     # Logging configuration properties
     logging.config=/deployments/config/logback.xml

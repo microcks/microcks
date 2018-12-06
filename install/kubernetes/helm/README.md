@@ -30,5 +30,6 @@ You may want to launch custom installation with such a command:
 ## Deleting the Chart
 
 ```console
-$ helm delete ./microcks --name microcks --namespace=microcks
+$ helm delete microcks
+$ helm del --purge microcks
 ```
