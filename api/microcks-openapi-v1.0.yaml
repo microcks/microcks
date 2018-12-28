@@ -20,8 +20,7 @@ paths:
     summary: This path operations deal with Services
     get:
       tags:
-      - api
-      - service
+      - mock
       summary: Get Services and APIs
       operationId: GetServices
       parameters:
@@ -71,8 +70,7 @@ paths:
   /services/count:
     get:
       tags:
-      - api
-      - service
+      - mock
       summary: Get the Services counter
       operationId: GetServicesCounter
       responses:
@@ -88,8 +86,7 @@ paths:
   /services/search:
     get:
       tags:
-      - api
-      - service
+      - mock
       summary: Search for Services and APIs
       operationId: SearchServices
       parameters:
@@ -114,6 +111,8 @@ paths:
   /jobs:
     summary: This path operations deal with ImportJobs
     get:
+      tags:
+      - job
       summary: Get ImportJobs
       description: Retrieve a list of ImportJobs
       operationId: GetImportJobs
@@ -170,6 +169,8 @@ paths:
     summary: This path or subpaths operations deal with specific ImportJob having
       given id
     get:
+      tags:
+      - job
       summary: Get ImportJob
       description: Retrieve an ImportJob using its identifier
       responses:
@@ -183,6 +184,8 @@ paths:
       - jwt-bearer:
         - user
     post:
+      tags:
+      - job
       summary: Update ImportJob
       description: Update an ImportJob
       requestBody:
@@ -199,6 +202,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImportJob'
     delete:
+      tags:
+      - job
       summary: Delete ImportJob
       description: Delete an ImportJob
       operationId: DeleteImportJob
@@ -220,6 +225,8 @@ paths:
         type: string
   /jobs/{id}/activate:
     put:
+      tags:
+      - job
       summary: Activate an ImportJob
       description: Make an ImportJob active, so that it is executed
       operationId: ActivateImportJob
@@ -235,6 +242,8 @@ paths:
         - user
   /jobs/{id}/start:
     put:
+      tags:
+      - job
       summary: Start an ImportJob
       description: Starting an ImportJob forces it to immediatly import mock definitions
       operationId: StartImportJob
@@ -250,6 +259,8 @@ paths:
         - user
   /jobs/{id}/stop:
     put:
+      tags:
+      - job
       summary: Stop an ImportJob
       description: Stopping an ImportJob desactivate it, so that it won't execute
         at next schedule
@@ -266,6 +277,8 @@ paths:
         - user
   /services/{id}:
     get:
+      tags:
+      - mock
       summary: Get Service
       operationId: GetService
       responses:
@@ -279,6 +292,8 @@ paths:
       - jwt-bearer:
         - user
     delete:
+      tags:
+      - mock
       summary: Delete Service
       description: Delete a Service
       operationId: DeleteService
@@ -299,6 +314,8 @@ paths:
     summary: Deals with artifacts (SOAP UI project, Postman collection or OpenAPI
       Specification) to be imported by Microcks.
     post:
+      tags:
+      - job
       summary: Upload an artifact
       description: Uploads an artifact (SOAP UI project, Postman collection or OpenAPI
         Specification) to be imported by Microcks.
@@ -346,6 +363,8 @@ paths:
   /jobs/count:
     summary: Count ImportJobs
     get:
+      tags:
+      - job
       summary: Get the ImportJobs counter
       operationId: GetImportJobCounter
       responses:
@@ -361,6 +380,8 @@ paths:
   /secrets:
     summary: This path operations deal with Secrets
     get:
+      tags:
+      - config
       parameters:
       - name: page
         in: query
@@ -388,6 +409,10 @@ paths:
       - jwt-bearer:
         - user
     post:
+      tags:
+      - config
+      summary: Create a new Secret
+      operationId: CreateSecret
       requestBody:
         content:
           application/json:
@@ -405,6 +430,11 @@ paths:
         - admin
   /secrets/{id}:
     get:
+      tags:
+      - config
+      summary: Get Secret
+      description: Retrieve a Secret
+      operationId: GetSecret
       responses:
         200:
           description: Found Secret
@@ -416,6 +446,11 @@ paths:
       - jwt-bearer:
         - admin
     put:
+      tags:
+      - config
+      summary: Update Secret
+      description: Update a Secret
+      operationId: UpdateSecret
       responses:
         200:
           description: Updated Secret
@@ -423,6 +458,8 @@ paths:
       - jwt-bearer:
         - admin
     delete:
+      tags:
+      - config
       summary: Delete Secret
       description: Delete a Secret
       operationId: DeleteSecret
@@ -441,6 +478,8 @@ paths:
         type: string
   /secrets/count:
     get:
+      tags:
+      - config
       summary: Get the Secrets counter
       operationId: GetSecretsCounter
       responses:
@@ -455,6 +494,8 @@ paths:
         - user
   /tests/service/{serviceId}:
     get:
+      tags:
+      - test
       summary: Get TestResults by Service
       operationId: GetTestResultsByService
       responses:
@@ -478,6 +519,8 @@ paths:
         type: string
   /tests/service/{serviceId}/count:
     get:
+      tags:
+      - test
       summary: Get the TestResults for Service counter
       operationId: GetTestResultsByServiceCounter
       responses:
@@ -499,6 +542,8 @@ paths:
         type: string
   /tests/{id}:
     get:
+      tags:
+      - test
       summary: Get TestResult
       description: ""
       operationId: GetTestResult
@@ -521,6 +566,8 @@ paths:
         type: string
   /tests/{id}/messages/{testCaseId}:
     get:
+      tags:
+      - test
       summary: Get messages for TestCase
       operationId: GetMessagesByTestCase
       responses:
@@ -579,6 +626,8 @@ paths:
   /keycloak/config:
     summary: Keycloak Authentification configuration
     get:
+      tags:
+      - config
       summary: Get authentification configuration
       operationId: GetKeycloakConfig
       responses:
@@ -1072,10 +1121,10 @@ security:
 - jwt-bearer: []
 tags:
 - name: mock
-  description: ""
-- name: service
-  description: ""
-- name: api
-  description: Microcks is for dealing with API mocks and tests
+  description: Operations related to API and Services mocks
 - name: test
-  description: ""
+  description: Operations related to API and Services tests
+- name: job
+  description: Operations related to Jobs for discovering mocks and tests
+- name: config
+  description: Operations related to configuration
