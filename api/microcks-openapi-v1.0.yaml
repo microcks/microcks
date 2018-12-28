@@ -146,6 +146,8 @@ paths:
       - jwt-bearer:
         - user
     post:
+      tags:
+      - job
       summary: Create ImportJob
       description: Create a new ImportJob
       operationId: CreateImportJob
@@ -999,54 +1001,6 @@ components:
           type: array
           items:
             type: string
-    TestResult:
-      description: Represents the result of a Service or API test run by Microcks.
-        Tests are related to a service and made of multiple test cases corresponding
-        to each operations / actions composing service. Tests are run against a specific
-        endpoint named testedEndpoint. It holds global markers telling if test still
-        ran, is a success, how many times is has taken and so on ...
-      required:
-      - id
-      - version
-      - testNumber
-      - testedEndpoitn
-      - serviceId
-      - success
-      - inProgress
-      - runnerType
-      properties:
-        id:
-          description: Unique identifier of TestResult
-          type: string
-        version:
-          description: Revision number of this test
-          type: number
-        testNumber:
-          description: Incremental number for tracking number of tests of a service
-          type: number
-        testedEndpoitn:
-          description: Endpoint used during test
-          type: string
-        serviceId:
-          description: Unique identifier of service tested
-          type: string
-        elapsedTime:
-          description: Elapsed time in milliseconds since test beginning
-          type: number
-        success:
-          description: flag telling if test is a success
-          type: boolean
-        inProgress:
-          description: Flag telling is test is still in progress
-          type: boolean
-        runnerType:
-          $ref: '#/components/schemas/TestRunnerType'
-          description: Runner used for this test
-        testCaseResults:
-          description: TestCase results associated to this test
-          type: array
-          items:
-            $ref: '#/components/schemas/TestCaseResult'
     TestStepResult:
       description: TestStepResult is an entity embedded within TestCaseResult. They
         are created for each request associated with an operation / action of a microservice.
@@ -1105,6 +1059,54 @@ components:
         response:
           $ref: '#/components/schemas/Response'
           description: The Response part of the pair
+    TestResult:
+      description: Represents the result of a Service or API test run by Microcks.
+        Tests are related to a service and made of multiple test cases corresponding
+        to each operations / actions composing service. Tests are run against a specific
+        endpoint named testedEndpoint. It holds global markers telling if test still
+        ran, is a success, how many times is has taken and so on ...
+      required:
+      - id
+      - version
+      - testNumber
+      - testedEndpoint
+      - serviceId
+      - success
+      - inProgress
+      - runnerType
+      properties:
+        id:
+          description: Unique identifier of TestResult
+          type: string
+        version:
+          description: Revision number of this test
+          type: number
+        testNumber:
+          description: Incremental number for tracking number of tests of a service
+          type: number
+        testedEndpoint:
+          description: Endpoint used during test
+          type: string
+        serviceId:
+          description: Unique identifier of service tested
+          type: string
+        elapsedTime:
+          description: Elapsed time in milliseconds since test beginning
+          type: number
+        success:
+          description: Flag telling if test is a success
+          type: boolean
+        inProgress:
+          description: Flag telling is test is still in progress
+          type: boolean
+        runnerType:
+          $ref: '#/components/schemas/TestRunnerType'
+          description: Runner used for this test
+        testCaseResults:
+          description: TestCase results associated to this test
+          type: array
+          items:
+            $ref: '#/components/schemas/TestCaseResult'
   securitySchemes:
     jwt-bearer:
       type: oauth2
