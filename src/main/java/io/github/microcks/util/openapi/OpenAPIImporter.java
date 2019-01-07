@@ -50,6 +50,8 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    private JsonNode spec;
    private String specContent;
 
+   private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head", "patch", "trace");
+
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local OpenAPI spec file
@@ -297,7 +299,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
             String verbName = verb.getKey();
 
             // Only deal with real verbs for now.
-            if (!"parameters".equals(verbName)) {
+            if (VALID_VERBS.contains(verbName)) {
                String operationName = verbName.toUpperCase() + " " + pathName;
 
                Operation operation = new Operation();
