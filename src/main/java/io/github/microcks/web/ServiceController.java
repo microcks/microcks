@@ -99,13 +99,27 @@ public class ServiceController {
       return map;
    }
 
-   @RequestMapping(value = "/services/{id}", method = RequestMethod.GET)
+   @RequestMapping(value = "/services/{id:.+}", method = RequestMethod.GET)
    public ResponseEntity<?> getService(
          @PathVariable("id") String serviceId,
          @RequestParam(value = "messages", required = false, defaultValue = "true") boolean messages
       ) {
       log.debug("Retrieving service with id {}", serviceId);
-      Service service = serviceRepository.findOne(serviceId);
+
+      Service service = null;
+      // serviceId may have the form of <service_name>:<service_version>
+      if (serviceId.contains(":")) {
+         String name = serviceId.substring(0, serviceId.indexOf(':'));
+         String version = serviceId.substring(serviceId.indexOf(':') + 1);
+
+         // If service name was encoded with '+' instead of '%20', replace them.
+         if (name.contains("+")) {
+            name = name.replace('+', ' ');
+         }
+         service = serviceRepository.findByNameAndVersion(name, version);
+      } else {
+         service = serviceRepository.findOne(serviceId);
+      }
 
       if (messages) {
          Map<String, List<RequestResponsePair>> messagesMap = new HashMap<String, List<RequestResponsePair>>();

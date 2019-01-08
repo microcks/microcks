@@ -88,7 +88,7 @@ public class UploadArtifactController {
             return new ResponseEntity<Object>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          }
          if (services != null && services.size() > 0) {
-            return new ResponseEntity<Object>(services.get(0).getName() + "-" + services.get(0).getVersion(), HttpStatus.CREATED);
+            return new ResponseEntity<Object>(services.get(0).getName() + ":" + services.get(0).getVersion(), HttpStatus.CREATED);
          }
       }
       return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
