@@ -201,7 +201,7 @@
                     <tbody>
                       <tr *ngFor="let header of pair.request.headers">
                         <td>{{ header.name }}</td>
-                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
                       </tr>
                     </tbody>
                   </table>
@@ -225,9 +225,9 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let header of pair.request.headers">
+                      <tr *ngFor="let header of pair.response.headers">
                         <td>{{ header.name }}</td>
-                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values">{{ v }}{{ $last ? '':', '}}</span></td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
                       </tr>
                     </tbody>
                   </table>
