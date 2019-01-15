@@ -1,3 +1,9 @@
+<div class="form-group pull-right">
+  <pfng-toast-notification-list [notifications]="notifications" 
+      (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
+  </pfng-toast-notification-list>
+</div>
+
 <div *ngIf="serviceView | async as view">
   <div class="container-fluid breadcrumb-bar">
     <div class="row">

@@ -24,6 +24,7 @@ import { switchMap } from 'rxjs/operators';
 
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { ListConfig, ListEvent } from 'patternfly-ng/list';
 
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
@@ -48,12 +49,15 @@ export class ServiceDetailPageComponent implements OnInit {
   serviceTests: Observable<TestResult[]>;
   operations: Operation[];
   operationsListConfig: ListConfig;
+  notifications: Notification[];
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
-      private testsSvc: TestsService, private modalService: BsModalService, private route: ActivatedRoute, private router: Router) {
+      private testsSvc: TestsService, private modalService: BsModalService, private notificationService: NotificationService,
+      private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit() {
+    this.notifications = this.notificationService.getNotifications();
     this.serviceView = this.route.paramMap.pipe(
       switchMap((params: ParamMap) => 
         this.servicesSvc.getServiceView(params.get('serviceId')))
@@ -69,7 +73,10 @@ export class ServiceDetailPageComponent implements OnInit {
     this.serviceView.subscribe( view => {
       this.serviceId = view.service.id;
       this.resolvedServiceView = view;
-      this.operations = view.service.operations; 
+      this.operations = view.service.operations;
+      this.operations.sort((o1, o2) => {
+        return this.sortOperations(o1, o2);
+      });
     });
 
     this.operationsListConfig = {
@@ -82,6 +89,21 @@ export class ServiceDetailPageComponent implements OnInit {
       showRadioButton: false,
       useExpandItems: true
     } as ListConfig;
+  }
+
+  private sortOperations(o1: Operation, o2: Operation): number {
+    var name1 = this.removeVerbInUrl(o1.name);
+    var name2 = this.removeVerbInUrl(o2.name);
+    if (name1 > name2) {
+      return 1;
+    }
+    if (name2 > name1) {
+      return -1;
+    }
+    if (o1.name > o2.name) {
+      return 1;
+    }
+    return -1;
   }
 
   public gotoCreateTest(): void {
@@ -151,11 +173,13 @@ export class ServiceDetailPageComponent implements OnInit {
     selBox.style.top = '0';
     selBox.style.opacity = '0';
     selBox.value = url;
-    document.body.appendChild(selBox);
     selBox.focus();
     selBox.select();
+    document.body.appendChild(selBox);
     document.execCommand('copy');
     document.body.removeChild(selBox);
+    this.notificationService.message(NotificationType.INFO,
+      this.resolvedServiceView.service.name, "Mock URL has been copied to clipboard", false, null, null);
   }
 
   private removeVerbInUrl(operationName: string): string {
@@ -170,5 +194,9 @@ export class ServiceDetailPageComponent implements OnInit {
   }
   private encodeUrl(url: string): string {
     return url.replace(/\s/g, '+');
+  }
+
+  handleCloseNotification($event: NotificationEvent): void {
+    this.notificationService.remove($event.notification);
   }
 }
