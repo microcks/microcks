@@ -173,9 +173,9 @@ export class ServiceDetailPageComponent implements OnInit {
     selBox.style.top = '0';
     selBox.style.opacity = '0';
     selBox.value = url;
+    document.body.appendChild(selBox);
     selBox.focus();
     selBox.select();
-    document.body.appendChild(selBox);
     document.execCommand('copy');
     document.body.removeChild(selBox);
     this.notificationService.message(NotificationType.INFO,
