@@ -37,6 +37,8 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
+ * An implementation of MockReopsitoryImporter that deals with OpenAPI v3.0.x specification
+ * file ; whether encoding into JSON or YAML documents.
  * @author laurent
  */
 public class OpenAPIImporter implements MockRepositoryImporter {
@@ -214,6 +216,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                                  param.setValue(paramEntry.getValue());
                                  request.addQueryParameter(param);
                               }
+                           } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
+                                 || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+                              // We've must have at least one path parameters but none...
+                              // Do not register this request / response pair.
+                              break;
                            }
                            // Do we have to complete request with query parameters?
                            Map<String, String> queryParameters = queryParametersByExample.get(exampleName);

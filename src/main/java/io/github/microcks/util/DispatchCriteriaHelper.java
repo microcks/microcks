@@ -239,15 +239,18 @@ public class DispatchCriteriaHelper{
     * @return A string representing dispatch criteria for the corresponding incoming request.
     */
    public static String buildFromPartsMap(Map<String, String> partsMap) {
-      Map<String, String> criteriaMap = new TreeMap<String, String>();
-      criteriaMap.putAll(partsMap);
+      if (partsMap != null && !partsMap.isEmpty()) {
+         Map<String, String> criteriaMap = new TreeMap<String, String>();
+         criteriaMap.putAll(partsMap);
 
-      // Just appends sorted entries, separating them with /.
-      StringBuilder result = new StringBuilder();
-      for (String criteria : criteriaMap.keySet()){
-         result.append("/").append(criteria).append("=").append(criteriaMap.get(criteria));
+         // Just appends sorted entries, separating them with /.
+         StringBuilder result = new StringBuilder();
+         for (String criteria : criteriaMap.keySet()) {
+            result.append("/").append(criteria).append("=").append(criteriaMap.get(criteria));
+         }
+         return result.toString();
       }
-      return result.toString();
+      return "";
    }
 
    /**
