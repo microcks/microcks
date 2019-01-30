@@ -43,7 +43,7 @@
           <select id="runnerType" name="runnerType" class="form-control" [(ngModel)]="runnerType" (ngModelChange)="checkForm()">
             <option value="HTTP">HTTP</option>
             <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP'">SOAP</option>
-            <option value="SOAP_UI" *ngIf="service.type === 'SOAP_HTTP'">SOAP UI</option>
+            <option value="SOAP_UI">SOAP UI</option>
             <option value="POSTMAN" *ngIf="service.type === 'REST'">POSTMAN</option>
             <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST'">OPEN API SCHEMA</option>
           </select>
