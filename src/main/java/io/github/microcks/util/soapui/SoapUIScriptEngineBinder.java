@@ -18,6 +18,7 @@
  */
 package io.github.microcks.util.soapui;
 
+import com.eviware.soapui.support.types.StringToStringsMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,8 @@ import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
+
 /**
  * Utility class that holds methods for creating binding environments for
  * a JSR 233 ScriptEngine.
@@ -34,24 +37,8 @@ public class SoapUIScriptEngineBinder{
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(SoapUIScriptEngineBinder.class);
-   
-   /**
-    * Create and bind a SoapUI environment for a ScriptEngine.
-    * @param engine The engine to enrich with binding environment.
-    * @param requestContent The content of request to use as data
-    */
-   public static void bindSoapUIEnvironment(ScriptEngine engine, String requestContent){
-      
-      // Build a fake request container.
-      FakeSoapUIMockRequest mockRequest = new FakeSoapUIMockRequest(requestContent, null);
-      
-      // Create bindings and put content according to SoapUI binding environment.
-      Bindings bindings = engine.createBindings();
-      bindings.put("mockRequest", mockRequest);
-      bindings.put("log", log);
-      engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
-   }
-   
+
+
    /**
     * Create and bind a SoapUI environment for a ScriptEngine.
     * @param engine The engine to enrich with binding environment.
@@ -59,10 +46,16 @@ public class SoapUIScriptEngineBinder{
     * @param request The wrapped incoming servlet request.
     */
    public static void bindSoapUIEnvironment(ScriptEngine engine, String requestContent, HttpServletRequest request){
+      // Build a map of header values.
+      StringToStringsMap headers = new StringToStringsMap();
+      for (String headerName : Collections.list(request.getHeaderNames())) {
+         headers.put(headerName, Collections.list(request.getHeaders(headerName)));
+      }
+
       // Build a fake request container.
-      FakeSoapUIMockRequest mockRequest = new FakeSoapUIMockRequest(requestContent, null);
+      FakeSoapUIMockRequest mockRequest = new FakeSoapUIMockRequest(requestContent, headers);
       mockRequest.setRequest(request);
-      
+
       // Create bindings and put content according to SoapUI binding environment.
       Bindings bindings = engine.createBindings();
       bindings.put("mockRequest", mockRequest);

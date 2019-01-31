@@ -44,6 +44,7 @@ import org.xml.sax.InputSource;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import javax.servlet.http.HttpServletRequest;
 import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
 import java.util.Date;
@@ -74,13 +75,14 @@ public class SoapController {
    private final String resourceUrl = null;
 
 
-   @RequestMapping(value = "/{service}/{version}", method = RequestMethod.POST)
+   @RequestMapping(value = "/{service}/{version}/**", method = RequestMethod.POST)
    public ResponseEntity<?> execute(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
          @RequestParam(value="validate", required=false) Boolean validate,
          @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody String body
+         @RequestBody String body,
+         HttpServletRequest request
       ) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: " + body);
@@ -131,7 +133,7 @@ public class SoapController {
             dispatchCriteria = getDispatchCriteriaFromXPathEval(rOperation, body);
 
          } else if (DispatchStyles.SCRIPT.equals(rOperation.getDispatcher())) {
-            dispatchCriteria = getDispatchCriteriaFromScriptEval(rOperation, body);
+            dispatchCriteria = getDispatchCriteriaFromScriptEval(rOperation, body, request);
          }
 
          log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
@@ -207,12 +209,12 @@ public class SoapController {
       return null;
    }
 
-   private String getDispatchCriteriaFromScriptEval(Operation operation, String body) {
+   private String getDispatchCriteriaFromScriptEval(Operation operation, String body, HttpServletRequest request) {
       ScriptEngineManager sem = new ScriptEngineManager();
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body);
+         SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
          return (String) se.eval(operation.getDispatcherRules());
       } catch (Exception e) {
          log.error("Error during Script evaluation", e);
