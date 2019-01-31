@@ -76,16 +76,24 @@ public class OpenAPITestRunner extends HttpTestRunner {
       int responseCode = 0;
       try {
          responseCode = httpResponse.getRawStatusCode();
+         log.debug("Response status code : " + responseCode);
       } catch (IOException ioe) {
          log.debug("IOException while getting raw status code in response", ioe);
          return TestReturn.FAILURE_CODE;
       }
 
-      // If required, compare response code to expected one.
+      // If required, compare response code and content-type to expected ones.
       if (validateResponseCode) {
          Response expectedResponse = responseRepository.findOne(request.getResponseId());
-         if (String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
+         log.debug("Response expected status code : " + expectedResponse.getStatus());
+         if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
             log.debug("Response HttpStatus does not match expected one, returning failure");
+            return TestReturn.FAILURE_CODE;
+         }
+
+         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType().toString());
+         if (!expectedResponse.getMediaType().equalsIgnoreCase(httpResponse.getHeaders().getContentType().toString())) {
+            log.debug("Response Content-Type does not match expected one, returning failure");
             return TestReturn.FAILURE_CODE;
          }
       }

@@ -233,6 +233,7 @@ public class TestRunnerService {
          clone.setContent(request.getContent());
          clone.setHeaders(request.getHeaders());
          clone.setQueryParameters(request.getQueryParameters());
+         clone.setResponseId(request.getResponseId());
          // Assign testCaseId.
          clone.setTestCaseId(testCaseId);
          result.add(clone);
@@ -254,7 +255,7 @@ public class TestRunnerService {
             soapRunner.setResourceUrl(validationResourceUrl);
             return soapRunner;
          case OPEN_API_SCHEMA:
-            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, false);
+            OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, true);
             openApiRunner.setClientHttpRequestFactory(factory);
             return openApiRunner;
          case SOAP_UI:
