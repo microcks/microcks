@@ -67,8 +67,8 @@
             <div class="list-pf-additional-content">
               <div>
                 <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
-                <i *ngIf="!test.inProgress && test.success" class="fa fa-fw fa-check-circle"></i> 
-                <i *ngIf="!test.inProgress && !test.success" class="fa fa-fw fa-times-circle"></i>
+                <i *ngIf="!test.inProgress && item.success" class="fa fa-fw fa-check-circle"></i> 
+                <i *ngIf="!test.inProgress && !item.success" class="fa fa-fw fa-times-circle"></i>
                 <span class="time-elapsed">in {{ item.elapsedTime }} ms</span>
               </div>
             </div>
@@ -80,8 +80,8 @@
             <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName }}" (select)="onTestStepSelect(testStep, $event)">
               <ng-template tabHeading>
                 <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
-                <i *ngIf="!test.inProgress && test.success" class="fa fa-fw fa-check-circle"></i> 
-                <i *ngIf="!test.inProgress && !test.success" class="fa fa-fw fa-times-circle"></i>
+                <i *ngIf="!test.inProgress && testStep.success" class="fa fa-fw fa-check-circle"></i> 
+                <i *ngIf="!test.inProgress && !testStep.success" class="fa fa-fw fa-times-circle"></i>
               </ng-template>
               <div class="row" *ngIf="testMessages[encode(item.operationName)]">  
                 <div class="col-md-6">
