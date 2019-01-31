@@ -10,7 +10,7 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: 1.2.0
+  version: 1.0.0
 paths:
   ' /owner/{owner}/car':
     get:
