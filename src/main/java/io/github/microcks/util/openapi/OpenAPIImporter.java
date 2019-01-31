@@ -151,7 +151,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
             String verbName = verb.getKey();
 
             // Find the correct operation.
-            if (operation.getName().equals(verbName.toUpperCase() + " " + pathName)) {
+            if (operation.getName().equals(verbName.toUpperCase() + " " + pathName.trim())) {
                // Find everything related to inputs for this operation examples.
                Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(path.getValue(), "path");
                Map<String, Map<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue(), "query");
@@ -307,7 +307,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
             // Only deal with real verbs for now.
             if (VALID_VERBS.contains(verbName)) {
-               String operationName = verbName.toUpperCase() + " " + pathName;
+               String operationName = verbName.toUpperCase() + " " + pathName.trim();
 
                Operation operation = new Operation();
                operation.setName(operationName);

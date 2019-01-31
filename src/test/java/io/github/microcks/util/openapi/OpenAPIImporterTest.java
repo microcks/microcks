@@ -52,6 +52,7 @@ public class OpenAPIImporterTest {
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml");
       } catch (IOException ioe) {
+         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -64,6 +65,19 @@ public class OpenAPIImporterTest {
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi.json");
       } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnSimpleOpenAPI(importer);
+   }
+
+   @Test
+   public void testOpenAPIImportYAMLWithSpacesOps() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-spacesops.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
