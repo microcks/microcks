@@ -68,7 +68,7 @@ export class TestBarChartComponent implements OnInit {
       }).attr('data-placement', 'left').attr('title', function(d) {
         return "[" + d.testDate.toISOString() + "] : " + d.elapsedTime + " ms";
       }).on('click', function(d) {
-        document.location.href = '/tests/' + d.id.toString();
+        document.location.href = '/#/tests/' + d.id.toString();
         //this.navigateToTest(d.id.toString());
       });
 
