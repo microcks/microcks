@@ -74,7 +74,7 @@ export class TestCreatePageComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              String(res.testNumber), "Test #" + res.testNumber + " has been launched", false, null, null);
+              String(res.id), "Test #" + res.id + " has been launched", false, null, null);
           this.router.navigate(['/tests/runner', res.id]);
         },
         error: err => {
