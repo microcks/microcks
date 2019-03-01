@@ -41,4 +41,7 @@ public class DispatchStyles{
 
    /** Constant for URI_ELEMENTS dispatch style (PARTS and PARAMS). */
    public static final String URI_ELEMENTS = "URI_ELEMENTS";
+
+   /** Constant for JSON_BODY dispatch style. */
+   public static final String JSON_BODY = "JSON_BODY";
 }

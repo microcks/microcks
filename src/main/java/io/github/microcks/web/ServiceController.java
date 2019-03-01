@@ -28,6 +28,7 @@ import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.web.dto.GenericResourceServiceDTO;
+import io.github.microcks.web.dto.OperationOverrideDTO;
 import io.github.microcks.web.dto.ServiceViewDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -146,14 +147,15 @@ public class ServiceController {
       }
    }
 
-   @RequestMapping(value = "/services/{id}/operationDelay", method = RequestMethod.PUT)
-   public ResponseEntity<?> updateServiceOperationDelay(
+   @RequestMapping(value = "/services/{id}/operation", method = RequestMethod.PUT)
+   public ResponseEntity<?> overrideServiceOperation(
          @PathVariable("id") String serviceId,
          @RequestParam(value = "operationName") String operationName,
-         @RequestParam(value = "delay") Long delay
+         @RequestBody OperationOverrideDTO operationOverride
       ) {
-      log.debug("Updating delay for operation {} of service {}", operationName, serviceId);
-      boolean result = serviceService.updateOperationDelay(serviceId, operationName, delay);
+      log.debug("Updating operation {} of service {}", operationName, serviceId);
+      boolean result = serviceService.updateOperation(serviceId, operationName, operationOverride.getDispatcher(),
+            operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay());
       if (result){
          return new ResponseEntity<>(HttpStatus.OK);
       }

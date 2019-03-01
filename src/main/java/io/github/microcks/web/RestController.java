@@ -28,6 +28,9 @@ import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
+import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
+import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.soapui.SoapUIScriptEngineBinder;
 
 import org.slf4j.Logger;
@@ -154,12 +157,28 @@ public class RestController {
             String fullURI = request.getRequestURL() + "?" + request.getQueryString();
             dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
          }
+         else if (DispatchStyles.JSON_BODY.equals(rOperation.getDispatcher())) {
+            JsonEvaluationSpecification specification = null;
+            try {
+               specification = JsonEvaluationSpecification.buildFromJsonString(rOperation.getDispatcherRules());
+               dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
+            } catch (JsonMappingException jme) {
+               log.error("Dispatching rules of request cannot be interpreted as valid JSON", jme);
+            }
+         }
 
          log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
                IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
          if (!responses.isEmpty()) {
             response = responses.get(0);
+         } else {
+            // When using the JSON_BODY dispatcher, return of evaluation may be the name of response.
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
+                  dispatchCriteria);
+            if (!responses.isEmpty()) {
+               response = responses.get(0);
+            }
          }
 
          if (response != null) {

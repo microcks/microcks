@@ -117,6 +117,9 @@ public class ServiceService {
             // Retrieve its previous identifier and metadatas.
             service.setId(existingService.getId());
             service.setMetadata(existingService.getMetadata());
+
+            // Keep its overriden operation properties
+            copyOverridenOperations(existingService, service);
          }
          if (service.getMetadata() == null) {
             service.setMetadata(new Metadata());
@@ -261,18 +264,39 @@ public class ServiceService {
     * Update the default delay of a Service operation
     * @param id The identifier of service to update operation for
     * @param operationName The name of operation to update delay for
+    * @param dispatcher The dispatcher to use for this operation
+    * @param dispatcherRules The dispatcher rules to use for this operation
     * @param delay The new delay value for operation
     * @return True if operation has been found and updated, false otherwise.
     */
-   public Boolean updateOperationDelay(String id, String operationName, Long delay) {
+   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay) {
       Service service = serviceRepository.findOne(id);
       for (Operation operation : service.getOperations()){
          if (operation.getName().equals(operationName)){
+            operation.setDispatcher(dispatcher);
+            operation.setDispatcherRules(dispatcherRules);
             operation.setDefaultDelay(delay);
+            operation.setOverride(true);
             serviceRepository.save(service);
             return true;
          }
       }
       return false;
+   }
+
+
+   /** Recopy overriden operation mutable properties into newService. */
+   private void copyOverridenOperations(Service existingService, Service newService) {
+      for (Operation existingOperation : existingService.getOperations()) {
+         if (existingOperation.hasOverride()) {
+            for (Operation op : newService.getOperations()) {
+               if (existingOperation.getName().equals(op.getName())) {
+                  op.setDefaultDelay(existingOperation.getDefaultDelay());
+                  op.setDispatcher(existingOperation.getDispatcher());
+                  op.setDispatcherRules(existingOperation.getDispatcherRules());
+               }
+            }
+         }
+      }
    }
 }
