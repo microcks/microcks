@@ -34,6 +34,8 @@ public interface ResponseRepository extends MongoRepository<Response, String> {
 
    List<Response> findByTestCaseId(String testCaseId);
 
+   List<Response> findByOperationIdAndName(String operationId, String name);
+
    List<Response> findByOperationIdAndDispatchCriteria(String operationId, String dispatchCriteria);
 
    @Query("{ 'operationId' : {'$in' : ?0}}")
