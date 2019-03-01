@@ -1,0 +1,168 @@
+<div class="form-group pull-right">
+  <pfng-toast-notification-list [notifications]="notifications" 
+      (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
+  </pfng-toast-notification-list>
+</div>
+  
+<div *ngIf="serviceView | async as view">
+  <div class="container-fluid breadcrumb-bar">
+    <div class="row">
+      <ol class="breadcrumb">
+        <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
+        <li><a [routerLink]="['/services', view.service.id]">{{ view.service.name }} - {{ view.service.version }}</a></li>
+        <li>Operation {{ operationName }}</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <h1>{{ view.service.name }} - {{ view.service.version }} - {{ operationName }}</h1>
+      <small>Review and adapt dispatcher properties for mocks on operation {{ operationName }}. Be sure to knwo what you're doing: it may break your mocks!</small>
+
+      <h3 class="section-label">Current dispatching properties</h3>
+      
+      <div class="row">
+        <div class="col-md-6">
+          <dl class="dl-horizontal left">
+          <span *ngIf="view.service.type === 'SOAP_HTTP'">
+            <dt>Message Input Name:</dt>
+            <dd><code>{{ operation.inputName }}</code></dd>
+          </span>
+          <dt>Dispatcher:</dt>
+          <dd><code>{{ operation.dispatcher }}</code> &nbsp; 
+            <span class="learn-more-inline">
+              <a href="https://microcks.github.io">Learn More 
+                <i class="fa fa-external-link" aria-hidden="true"></i>
+              </a>
+            </span>
+          </dd>
+          <dt>Dispatching rules:</dt>
+          <dd><code class="code-block">{{ operation.dispatcherRules }}</code></dd>
+          </dl>
+        </div>
+        <div class="col-md-6">
+          <dl class="dl-horizontal left">
+          <span *ngIf="view.service.type === 'SOAP_HTTP'">
+            <dt>Message Output Name:</dt>
+            <dd><code>{{ operation.outputName }}</code></dd>
+          </span>
+          <dt>HTTP Verb:</dt>
+          <dd>
+            <div [ngSwitch]="operation.method">
+              <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+              <span class="label label-info" *ngSwitchCase="'PUT'">PUT</span>
+              <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+              <span class="label label-warning" *ngSwitchDefault>POST</span>
+            </div>
+          </dd>
+          <dt>Default delay:</dt>
+          <dd>{{ operation.defaultDelay || 0 }} ms</dd>
+          </dl>
+        </div>
+      </div>
+      <h3 class="section-label">New dispatching properties</h3>
+
+      <div class="row">
+        <div class="col-md-7">
+          <div class="control-group">
+            <label class="control-label" for="dispatcher">Dispatcher</label>
+            <div class="controls">
+              <select class="form-control" name="dispatcher" [(ngModel)]="newOperation.dispatcher">
+                <option value="URI_PARAMS">URI PARAMS</option>
+                <option value="URI_PARTS">URI PARTS</option>
+                <option value="URI_ELEMENTS">URI ELEMENTS</option>
+                <option value="JSON_BODY">JSON BODY</option>
+              </select>
+              <p class="help-block">The dispatcher used by Operation.</p>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label" for="dispatcherRules">Dispatcher rules</label>
+            <div class="controls">
+              <textarea class="form-control" rows="10" id="dispatcherRules" name="dispatcherRules" [(ngModel)]="newOperation.dispatcherRules" (ngModelChange)="updateSecretProperties()">
+              </textarea>
+              <p class="help-block">The dispatcher rules for above dispatcher</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <h4 class="section-label text-right">Available responses</h4>
+
+          <div class="text-right" *ngFor="let pair of view.messagesMap[operationName]">
+            <h2><span class="label label-primary">{{ pair.response.name }} - {{ pair.response.dispatchCriteria }}</span></h2>
+          </div>
+        </div>
+      </div>
+      <br/><br/>
+      <div class="pull-right">
+        <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
+        <button type="submit" class="btn btn-primary" (click)="saveOperationProperties(secret)" ng-disabled="form.$invalid">Save</button>
+      </div>
+    </div>
+    <div class="col-md-4 help-bar">
+      <h3 class="section-label">Help needed?</h3>
+      <small>This sidebar provides some explainations and examples on how to use the <code>JSON_BODY</code> dispatcher.</small>
+      <br/><br/>
+      <p>
+        Consider the following JSON payload representing a request body for creating new Beer entity:
+      </p>
+      <pre><code highlight>{{ examplePayload }}</code></pre>
+  
+      <p>
+        Using the <code>JSON_BODY</code> dispatcher, you can select target response depending of the value of a payload element.
+        Below we are checking for <code>country</code> with the <code>equals</code> operator. Note that you should always have a <code>default</code> case.
+      </p>
+      <div style="position: absolute; right: 20px">
+        <button class="btn btn-default" (click)="copyDispatcherRules(equalsOperator)">
+          <span class="fa fa-paste"></span> Copy
+        </button>
+      </div>
+      <pre><code highlight>{{ equalsOperator }}</code></pre>
+  
+      <p>
+        You can also dispatch depending on a payload number value using the <code>range</code> operator. Note the orientation
+        of brackets to include or exclude edge values. <code>default</code> is still mandatory.
+      </p>
+      <div style="position: absolute; right: 20px">
+        <button class="btn btn-default" (click)="copyDispatcherRules(rangeOperator)">
+          <span class="fa fa-paste"></span> Copy
+        </button>
+      </div>
+      <pre><code highlight>{{ rangeOperator }}</code></pre>
+  
+      <p>
+        The <code>size</code> operator allows you to define dispatching rules depending on the size of an array. Here we only accept
+        beers that have at least 2 references and at most 100.
+      </p>
+      <div style="position: absolute; right: 20px">
+        <button class="btn btn-default" (click)="copyDispatcherRules(sizeOperator)">
+          <span class="fa fa-paste"></span> Copy
+        </button>
+      </div>
+      <pre><code highlight>{{ sizeOperator }}</code></pre>
+  
+      <p>
+        For much more complex rules, you may use the <code>regexp</code> operator. There's no guarantee that cases will in the given
+        order so regular expressions should be exclusives. Otherwise, it falls within the <code>default</code> case.
+      </p>
+      <div style="position: absolute; right: 20px">
+        <button class="btn btn-default" (click)="copyDispatcherRules(regexpOperator)">
+          <span class="fa fa-paste"></span> Copy
+        </button>
+      </div>
+      <pre><code highlight>{{ regexpOperator }}</code></pre>
+  
+      <p>
+        Finally, you may want to dispatch according the presence of an element within JSON payload. For that, you'll use the <code>presence</code>
+        operator that implies defining one <code>found</code> OR one <code>missing</code> case. Alternative falls into <code>default</code> case.
+      </p>
+      <div style="position: absolute; right: 20px">
+        <button class="btn btn-default" (click)="copyDispatcherRules(presenceOperator)">
+          <span class="fa fa-paste"></span> Copy
+        </button>
+      </div>
+      <pre><code highlight>{{ presenceOperator }}</code></pre>
+    </div>
+  </div>
+</div>

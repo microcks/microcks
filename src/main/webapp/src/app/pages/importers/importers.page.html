@@ -85,11 +85,11 @@
 </div>
 
 <confirm-delete-dialog #confirmDeleteDialog (onDelete)="deleteImportJob($event)">
-    <p>Do you really want to delete the selected Import Job ?</p>
-  
-    <div class="alert alert-danger">
-      <span class="pficon pficon-error-circle-o"></span>
-      <strong>NOTE : </strong>
-      <span>This will <strong>permanently</strong> delete the Import Job from Microcks. Already discovered Services &amp; APIs remain but will not be updated. This operation cannot be undone.</span>
-    </div>
-  </confirm-delete-dialog>
+  <p>Do you really want to delete the selected Import Job ?</p>
+
+  <div class="alert alert-danger">
+    <span class="pficon pficon-error-circle-o"></span>
+    <strong>NOTE : </strong>
+    <span>This will <strong>permanently</strong> delete the Import Job from Microcks. Already discovered Services &amp; APIs remain but will not be updated. This operation cannot be undone.</span>
+  </div>
+</confirm-delete-dialog>

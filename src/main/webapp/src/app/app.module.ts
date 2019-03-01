@@ -62,6 +62,7 @@ import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
 import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
+import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
 import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
@@ -78,8 +79,8 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
   declarations: [
     AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
     ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
-    TestRunnerPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent,
-    SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent
+    TestRunnerPageComponent, OperationOverridePageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
+    DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent
   ],
   providers: [
     ConfigService, AuthenticationServiceProvider, BsDropdownConfig, NotificationService,
@@ -90,7 +91,8 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
     }
   ],
   entryComponents: [
-    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, GenericResourcesDialogComponent
+    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, 
+    GenericResourcesDialogComponent
   ], 
   bootstrap: [AppComponent]
 })

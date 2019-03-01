@@ -33,6 +33,7 @@ public class Operation {
    private String inputName;
    private String outputName;
 
+   private boolean override = false;
    private String dispatcher;
    private String dispatcherRules;
    private Long defaultDelay;
@@ -69,6 +70,14 @@ public class Operation {
 
    public void setOutputName(String outputName) {
       this.outputName = outputName;
+   }
+
+   public boolean hasOverride() {
+      return this.override;
+   }
+
+   public void setOverride(boolean override) {
+      this.override = override;
    }
 
    public String getDispatcher() {

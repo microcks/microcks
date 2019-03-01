@@ -31,7 +31,7 @@
     "keycloak-js": "^3.4.0",
     "ng2-file-upload": "^1.3.0",
     "ngx-bootstrap": "^3.0.1",
-    "ngx-highlightjs": "^2.1.1",
+    "ngx-highlightjs": "^2.1.4",
     "patternfly": "^3.52.0",
     "patternfly-ng": "^4.0.1",
     "rxjs": "^6.0.0",

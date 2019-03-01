@@ -30,6 +30,7 @@ import { ListConfig, ListEvent } from 'patternfly-ng/list';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { Operation, Service, ServiceType, ServiceView, Contract } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
+import { IAuthenticationService } from "../../../services/auth.service";
 import { ContractsService } from '../../../services/contracts.service';
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
@@ -48,12 +49,13 @@ export class ServiceDetailPageComponent implements OnInit {
   contracts: Observable<Contract[]>;
   serviceTests: Observable<TestResult[]>;
   operations: Operation[];
+  selectedOperation: Operation;
   operationsListConfig: ListConfig;
   notifications: Notification[];
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
-      private testsSvc: TestsService, private modalService: BsModalService, private notificationService: NotificationService,
-      private route: ActivatedRoute, private router: Router) {
+      private testsSvc: TestsService, protected authService: IAuthenticationService, private modalService: BsModalService,
+      private notificationService: NotificationService, private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit() {
@@ -198,5 +200,9 @@ export class ServiceDetailPageComponent implements OnInit {
 
   handleCloseNotification($event: NotificationEvent): void {
     this.notificationService.remove($event.notification);
+  }
+
+  public hasRole(role: string): boolean {
+    return this.authService.hasRole(role);
   }
 }

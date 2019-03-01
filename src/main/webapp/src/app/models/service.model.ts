@@ -29,6 +29,12 @@ export class Operation {
   resourcePaths: string[];
 }
 
+export class OperationMutableProperties {
+  dispatcher: string;
+  dispatcherRules: string;
+  defaultDelay: number;
+}
+
 export class Contract {
   id: string;
   name: string;
