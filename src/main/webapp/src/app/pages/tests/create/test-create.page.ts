@@ -40,8 +40,12 @@ export class TestCreatePageComponent implements OnInit {
   serviceId: string;
   testEndpoint: string;
   runnerType: TestRunnerType;
+  showAdvanced: boolean = false;
   submitEnabled: boolean = false;
   notifications: Notification[];
+  operationsHeaders: any = {
+    'globals': []
+  };
 
   constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private notificationService: NotificationService,
     private route: ActivatedRoute, private router: Router) {
@@ -58,6 +62,24 @@ export class TestCreatePageComponent implements OnInit {
     );
   }
 
+  public addHeaderValue(operationName: string) {
+    var operationHeaders = this.operationsHeaders[operationName];
+    if (operationHeaders == null) {
+      this.operationsHeaders[operationName] = [
+        { 'name': "", 'values': "" }
+      ];
+    } else {
+      this.operationsHeaders[operationName].push({ 'name': "", 'values': "" });
+    }
+  }
+
+  public removeHeaderValue(operationName: string, headerIndex: number) {
+    var operationHeaders = this.operationsHeaders[operationName];
+    if (operationHeaders != null) {
+      operationHeaders.splice(headerIndex, 1);
+    }
+  }
+
   public checkForm(): void {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined);
     console.log("submitEnabled: " + this.submitEnabled);
@@ -68,7 +90,7 @@ export class TestCreatePageComponent implements OnInit {
   }
 
   public createTest(): void {
-    var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType};
+    var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, operationsHeaders: this.operationsHeaders};
     console.log("[createTest] test: " + JSON.stringify(test));
     this.testsSvc.create(test).subscribe(
       {

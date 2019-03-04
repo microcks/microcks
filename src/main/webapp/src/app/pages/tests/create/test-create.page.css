@@ -1,0 +1,53 @@
+.key-value-editor-col {
+  padding-left: 0px;
+  padding-right: 5px;
+}
+.operation-headers {
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+.key-value-editor-entry-header {
+  padding-right: 50px;
+}
+.key-value-editor-header {
+  float: left;
+  margin-bottom: 5px;
+  padding-right: 5px;
+  width: 50%;
+}
+
+.key-value-editor .key-value-editor-entry {
+  display: table;
+  margin-bottom: 10px;
+  padding-right: 50px;
+  position: relative;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.key-value-editor .key-value-editor-input{
+  float: left;
+  margin-bottom: 0;
+  padding-right: 5px;
+  width: 50%;
+}
+
+.key-value-editor .key-value-editor-buttons {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50px;
+  vertical-align: middle;
+}
+
+.key-value-editor .as-item-delete{
+  display: inline-block;
+  font-size: 14px;
+  opacity: .65;
+  padding: 5px;
+  vertical-align: middle;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  color: #333;
+}

@@ -20,6 +20,7 @@ export class TestRequest {
   serviceId: string;
   testEndpoint: string;
   runnerType: TestRunnerType;
+  operationsHeaders: any;
 }
 
 export class TestResult {

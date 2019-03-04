@@ -29,6 +29,10 @@ dd, dt {
   text-align: left;
 }
 
+[role=button] {
+  cursor: pointer;
+}
+
 .control-group {
   padding-top: 0.8em;
   padding-bottom: 0.8em;
