@@ -16,34 +16,22 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.web.dto;
+package io.github.microcks.domain;
 
-import java.util.List;
-import java.util.Map;
+
+import java.util.HashMap;
+import java.util.Set;
+
 /**
- * Data Transfer object for grouping base information to launch a test (and thus create a TestResult).
+ * Specification of additional headers for a Service/API operations.
+ * Keys are operation name or "globals" (if header applies to all), values are Header objects.
  * @author laurent
  */
-public class TestRequestDTO {
+public class OperationsHeaders extends HashMap<String, Set<Header>> {
 
-   private String serviceId;
-   private String testEndpoint;
-   private String runnerType;
-   private Map<String, List<HeaderDTO>> operationsHeaders;
+   public static final String GLOBALS = "globals";
 
-   public String getServiceId() {
-      return serviceId;
-   }
-
-   public String getTestEndpoint() {
-      return testEndpoint;
-   }
-
-   public String getRunnerType() {
-      return runnerType;
-   }
-
-   public Map<String, List<HeaderDTO>> getOperationsHeaders() {
-      return operationsHeaders;
+   public Set<Header> getGlobals() {
+      return this.get(GLOBALS);
    }
 }

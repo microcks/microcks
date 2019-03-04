@@ -18,32 +18,28 @@
  */
 package io.github.microcks.web.dto;
 
-import java.util.List;
-import java.util.Map;
 /**
- * Data Transfer object for grouping base information to launch a test (and thus create a TestResult).
+ * Data Transfer object for basic header with its values (comma separated string).
  * @author laurent
  */
-public class TestRequestDTO {
+public class HeaderDTO {
 
-   private String serviceId;
-   private String testEndpoint;
-   private String runnerType;
-   private Map<String, List<HeaderDTO>> operationsHeaders;
+   private String name;
+   private String values;
 
-   public String getServiceId() {
-      return serviceId;
+   public String getName() {
+      return name;
    }
 
-   public String getTestEndpoint() {
-      return testEndpoint;
+   public void setName(String name) {
+      this.name = name;
    }
 
-   public String getRunnerType() {
-      return runnerType;
+   public String getValues() {
+      return values;
    }
 
-   public Map<String, List<HeaderDTO>> getOperationsHeaders() {
-      return operationsHeaders;
+   public void setValues(String values) {
+      this.values = values;
    }
 }

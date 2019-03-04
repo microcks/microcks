@@ -18,15 +18,13 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestRunnerType;
+import io.github.microcks.domain.*;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.service.MessageService;
 import io.github.microcks.service.RequestResponsePair;
 import io.github.microcks.service.TestService;
+import io.github.microcks.web.dto.HeaderDTO;
 import io.github.microcks.web.dto.TestCaseReturnDTO;
 import io.github.microcks.web.dto.TestRequestDTO;
 import org.slf4j.Logger;
@@ -41,9 +39,7 @@ import org.springframework.web.bind.annotation.*;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * A Rest controller for API defined on test results.
@@ -103,7 +99,9 @@ public class TestController {
          service = serviceRepository.findOne(test.getServiceId());
       }
       TestRunnerType testRunner = TestRunnerType.valueOf(test.getRunnerType());
-      TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner);
+      // Build additional header entries for operations.
+      OperationsHeaders operationsHeaders = buildOperationsHeaders(test.getOperationsHeaders());
+      TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, operationsHeaders);
       return new ResponseEntity<TestResult>(testResult, HttpStatus.CREATED);
    }
 
@@ -141,5 +139,32 @@ public class TestController {
          return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
       }
       return new ResponseEntity<TestCaseResult>(HttpStatus.BAD_REQUEST);
+   }
+
+   /**
+    * Build OperationsHeaders domain object from basic Map. Key is operation name, Value is
+    * a header data transfer object.
+    */
+   private OperationsHeaders buildOperationsHeaders(Map<String, List<HeaderDTO>> operationsHeaders) {
+      OperationsHeaders result = new OperationsHeaders();
+      if (operationsHeaders != null) {
+         // Now browse different operations (globals included).
+         for (Map.Entry<String, List<HeaderDTO>> operationsHeadersEntry : operationsHeaders.entrySet()) {
+            String operationName = operationsHeadersEntry.getKey();
+            List<HeaderDTO> operationHeaders = operationsHeadersEntry.getValue();
+            Set<Header> headers = new HashSet<>();
+            // Browse each header entry. Values are comma separated.
+            for (HeaderDTO operationHeadersEntry : operationHeaders) {
+               String[] headerValues = operationHeadersEntry.getValues().split(",");
+               Header header = new Header();
+               header.setName(operationHeadersEntry.getName());
+               header.setValues(new HashSet<>(Arrays.asList(headerValues)));
+               headers.add(header);
+            }
+            result.put(operationName, headers);
+         }
+         return result;
+      }
+      return null;
    }
 }

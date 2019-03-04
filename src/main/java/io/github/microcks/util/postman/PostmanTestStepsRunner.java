@@ -38,10 +38,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author laurent
@@ -137,8 +134,23 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
             ArrayNode jsonParams = buildQueryParams(request.getQueryParameters());
             ((ObjectNode) jsonRequest).set("queryParams", jsonParams);
          }
-         if (request.getHeaders() != null && request.getHeaders().size() > 0) {
-            ArrayNode jsonHeaders = buildHeaders(request.getHeaders());
+         // Set headers to request if any. Start with those coming from request itself.
+         // Add or override existing headers with test specific ones for operation and globals.
+         Set<Header> headers = new HashSet<>();
+
+         if (request.getHeaders() != null) {
+            headers.addAll(request.getHeaders());
+         }
+         if (testResult.getOperationsHeaders() != null) {
+            if (testResult.getOperationsHeaders().getGlobals() != null) {
+               headers.addAll(testResult.getOperationsHeaders().getGlobals());
+            }
+            if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
+               headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
+            }
+         }
+         if (headers != null && headers.size() > 0) {
+            ArrayNode jsonHeaders = buildHeaders(headers);
             ((ObjectNode) jsonRequest).set("headers", jsonHeaders);
          }
 

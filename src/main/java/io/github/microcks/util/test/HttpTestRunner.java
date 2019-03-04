@@ -99,9 +99,21 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          }
          ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(new URI(customizedEndpointUrl), method);
          
-         // Set headers to request if any.
-         Set<Header> headers = request.getHeaders();
-         if (headers != null && headers.size() > 0){
+         // Set headers to request if any. Start with those coming from request itself.
+         // Add or override existing headers with test specific ones for operation and globals.
+         Set<Header> headers = new HashSet<>();
+         if (request.getHeaders() != null) {
+            headers.addAll(request.getHeaders());
+         }
+         if (testResult.getOperationsHeaders() != null) {
+            if (testResult.getOperationsHeaders().getGlobals() != null) {
+               headers.addAll(testResult.getOperationsHeaders().getGlobals());
+            }
+            if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
+               headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
+            }
+         }
+         if (headers.size() > 0){
             for (Header header : headers){
                httpRequest.getHeaders().add(header.getName(), buildValue(header.getValues()));
             }

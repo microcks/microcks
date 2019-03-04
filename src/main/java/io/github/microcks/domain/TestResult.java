@@ -47,6 +47,7 @@ public class TestResult {
    private boolean success = false;
    private boolean inProgress = true;
    private TestRunnerType runnerType;
+   private OperationsHeaders operationsHeaders;
 
    private List<TestCaseResult> testCaseResults = new ArrayList<>();
 
@@ -128,6 +129,14 @@ public class TestResult {
 
    public void setRunnerType(TestRunnerType runnerType) {
       this.runnerType = runnerType;
+   }
+
+   public OperationsHeaders getOperationsHeaders() {
+      return operationsHeaders;
+   }
+
+   public void setOperationsHeaders(OperationsHeaders operationsHeaders) {
+      this.operationsHeaders = operationsHeaders;
    }
 
    public List<TestCaseResult> getTestCaseResults() {

@@ -60,14 +60,16 @@ public class TestService {
     * @param service Service to launch tests for
     * @param testEndpoint Endpoint URI for running the tests
     * @param runnerType The type of runner fo tests
+    * @param operationsHeaders Additional / overriden headers for operations to test
     * @return An initialized TestResults (mostly empty for now since tests run asynchronously)
     */
-   public TestResult launchTests(Service service, String testEndpoint, TestRunnerType runnerType){
+   public TestResult launchTests(Service service, String testEndpoint, TestRunnerType runnerType, OperationsHeaders operationsHeaders){
       TestResult testResult = new TestResult();
       testResult.setTestDate(new Date());
       testResult.setTestedEndpoint(testEndpoint);
       testResult.setServiceId(service.getId());
       testResult.setRunnerType(runnerType);
+      testResult.setOperationsHeaders(operationsHeaders);
       testResultRepository.save(testResult);
 
       // Launch test asynchronously before returning result.
