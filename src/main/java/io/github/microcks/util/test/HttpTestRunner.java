@@ -115,8 +115,11 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          }
          if (headers.size() > 0){
             for (Header header : headers){
+               log.debug("Adding header " + header.getName() + " to request");
                httpRequest.getHeaders().add(header.getName(), buildValue(header.getValues()));
             }
+            // Update request headers for traceability of possibly added ones.
+            request.setHeaders(headers);
          }
          // If there's input content, add it to request.
          if (request.getContent() != null) {
