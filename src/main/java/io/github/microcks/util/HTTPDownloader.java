@@ -143,21 +143,21 @@ public class HTTPDownloader {
       // Set authenticator instance for proxies and stuffs.
       Authenticator.setDefault(new UsernamePasswordAuthenticator(username, password));
 
+      HttpURLConnection connection = (HttpURLConnection) website.openConnection();
+
       // If SSL validation is disabled, trust everything.
       try {
          if (disableSSLValidation) {
             log.debug("SSL Validation is disabled for {}, installing accept everything TrustManager", remoteUrl);
-            installAcceptEverythingTrustManager();
+            installAcceptEverythingTrustManager(connection);
          } else if (secret != null && secret.getCaCertPem() != null) {
             log.debug("Secret for {} contains a CA Cert, installing certificate into TrustManager", remoteUrl);
-            installCustomCaCertTrustManager(secret.getCaCertPem());
+            installCustomCaCertTrustManager(secret.getCaCertPem(), connection);
          }
       } catch (Exception e) {
          log.error("Caught exception while preparing TrustManager for connecting {}: {}", remoteUrl, e.getMessage());
          throw new IOException("SSL Connection with " + remoteUrl + " failed during preparation", e);
       }
-
-      HttpURLConnection connection = (HttpURLConnection) website.openConnection();
 
       if (secret != null) {
          // If Basic authentication required, set request property.
@@ -215,6 +215,35 @@ public class HTTPDownloader {
    }
 
    /**
+    * Install a TrustManager that accept every verification of host name.
+    */
+   private static void installAcceptEverythingTrustManager(HttpURLConnection connection) throws Exception {
+      // Create a trust manager that does not validate certificate chains
+      TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+         public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+            return null;
+         }
+         public void checkClientTrusted(X509Certificate[] certs, String authType) {
+         }
+         public void checkServerTrusted(X509Certificate[] certs, String authType) {
+         }
+      } };
+
+      // Install the all-trusting trust manager.
+      final SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+      ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
+
+      // Create and install all-trusting host name verifier.
+      HostnameVerifier allHostsValid = new HostnameVerifier() {
+         public boolean verify(String hostname, SSLSession session) {
+            return true;
+         }
+      };
+      ((HttpsURLConnection) connection).setHostnameVerifier(allHostsValid);
+   }
+
+   /**
     * Install a TrustManager that validates the CA certificate.
     */
    private static void installCustomCaCertTrustManager(String caCertPem) throws Exception {
@@ -240,5 +269,33 @@ public class HTTPDownloader {
       SSLContext sslContext = SSLContext.getInstance("TLS");
       sslContext.init(null, tmf.getTrustManagers(), null);
       HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
+   }
+
+   /**
+    * Install a TrustManager that validates the CA certificate.
+    */
+   private static void installCustomCaCertTrustManager(String caCertPem, HttpURLConnection connection) throws Exception {
+      // First compute a stripped PEM certificate and decode it from base64.
+      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
+            .replaceAll(END_CERTIFICATE, "");
+      InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
+
+      // Generate a new x509 certificate from the stripped decoded pem.
+      CertificateFactory cf = CertificateFactory.getInstance("X.509");
+      X509Certificate caCert = (X509Certificate)cf.generateCertificate(is);
+
+      // Set a new certificate into keystore.
+      TrustManagerFactory tmf = TrustManagerFactory
+            .getInstance(TrustManagerFactory.getDefaultAlgorithm());
+      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+      ks.load(null); // You don't need the KeyStore instance to come from a file.
+      ks.setCertificateEntry("caCert", caCert);
+
+      tmf.init(ks);
+
+      // Install the new TrustManager.
+      SSLContext sslContext = SSLContext.getInstance("TLS");
+      sslContext.init(null, tmf.getTrustManagers(), null);
+      ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
    }
 }
