@@ -158,4 +158,8 @@ export class OperationOverridePageComponent implements OnInit {
   public copyDispatcherRules(operator: string) {
     this.newOperation.dispatcherRules = operator;
   }
+
+  handleCloseNotification($event: NotificationEvent): void {
+    this.notificationService.remove($event.notification);
+  }
 }
