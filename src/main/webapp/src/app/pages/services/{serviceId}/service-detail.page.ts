@@ -135,6 +135,7 @@ export class ServiceDetailPageComponent implements OnInit {
         var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
         var paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
 
+        partsCriteria = this.encodeUrl(partsCriteria);
         partsCriteria.split('/').forEach(function(element, index, array) {
           if (element){
             parts[element.split('=')[0]] = element.split('=')[1];

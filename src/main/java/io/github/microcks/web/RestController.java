@@ -100,6 +100,7 @@ public class RestController {
          // Build the encoded URI fragment to retrieve simple resourcePath.
          serviceAndVersion = "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
          resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
+         resourcePath = UriUtils.decode(resourcePath, "UTF-8");
       } catch (UnsupportedEncodingException e1) {
          return new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR);
       }
@@ -108,6 +109,10 @@ public class RestController {
       // If serviceName was encoded with '+' instead of '%20', replace them.
       if (serviceName.contains("+")) {
          serviceName = serviceName.replace('+', ' ');
+      }
+      // If resourcePath was encoded with '+' instead of '%20', replace them.
+      if (resourcePath.contains("+")) {
+         resourcePath = resourcePath.replace('+', ' ');
       }
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
