@@ -779,7 +779,7 @@ objects:
       spec:
         initContainers:
         - name: openshift-ca-pemtokeystore
-          image: syndesis/pemtokeystore:v0.2.1
+          image: jimmidyson/pemtokeystore:v0.2.0
           imagePullPolicy: IfNotPresent
           args:
           - "-keystore"
