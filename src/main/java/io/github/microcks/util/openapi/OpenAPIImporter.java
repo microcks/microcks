@@ -71,7 +71,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                isYaml = false;
                break;
             }
-            else if (line.startsWith("---") || line.startsWith("openapi: 3")) {
+            else if (line.startsWith("---") || line.matches("(openapi: ["']?3.*))") {
                isYaml = true;
                break;
             }
