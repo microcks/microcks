@@ -72,6 +72,19 @@ public class OpenAPIImporterTest {
    }
 
    @Test
+   public void testSimpleOpenAPIImportYAMLWithQuotes() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-quoted.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnSimpleOpenAPI(importer);
+   }
+
+   @Test
    public void testSimpleOpenAPIImportYAMLNoDashesWithJSON() {
       OpenAPIImporter importer = null;
       try {

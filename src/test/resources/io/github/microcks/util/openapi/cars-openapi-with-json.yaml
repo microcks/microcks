@@ -85,4 +85,4 @@ components:
       value: laurent
 tags:
 - name: car
-  description:
+  description: Car
