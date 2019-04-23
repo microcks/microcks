@@ -1,0 +1,67 @@
+---
+openapi: 3.0.2
+info:
+  title: Test OPENAPI
+  version: 1.0.0
+paths:
+  /tests:
+    get:
+      operationId: ListTests
+      responses:
+        200:
+          description: Get Tests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Test'
+              examples:
+                simple:
+                  value:
+                  - foo: some text
+                    bar: 11
+                  - foo: some text
+                    bar: 35
+  /tests/{id}:
+    get:
+      operationId: GetTest
+      responses:
+        200:
+          description: Get Test
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Test'
+              examples:
+                single:
+                  value:
+                    foo: some text
+                    bar: 55
+    parameters:
+    - name: id
+      in: path
+      description: Test id
+      required: true
+      schema:
+        type: string
+      examples:
+        single:
+          value: 55
+components:
+  schemas:
+    Test:
+      title: Root Type for Test
+      description: The root of the Test type's schema.
+      type: object
+      properties:
+        foo:
+          type: string
+        bar:
+          format: int32
+          type: integer
+      example: |-
+        {
+            "foo": "Test string",
+            "bar": 123
+        }

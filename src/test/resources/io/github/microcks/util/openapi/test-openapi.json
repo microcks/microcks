@@ -1,0 +1,92 @@
+{
+  "openapi": "3.0.2",
+  "info": {
+    "title": "Test API",
+    "description": "Description for Test API",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/tests": {
+      "get": {
+        "operationId": "ListTests",
+        "responses": {
+          "200": {
+            "description": "Get Tests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Test"
+                  }
+                },
+                "examples": {
+                  "simple": {
+                    "value": "[\n    {\n        \"foo\": \"some text\",\n        \"bar\": 11\n    },\n    {\n        \"foo\": \"some text\",\n        \"bar\": 35\n    }\n]"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tests/{id}": {
+      "get": {
+        "operationId": "GetTest",
+        "responses": {
+          "200": {
+            "description": "Get Test",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Test"
+                },
+                "examples": {
+                  "single": {
+                    "value": "{\n  \"foo\": \"some text\",\n  \"bar\": 55\n }"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "description": "Test id",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "examples": {
+            "single": {
+              "value": 55
+            }
+          }
+        }
+      ]
+    }
+  },
+  "components": {
+    "schemas": {
+      "Test": {
+        "title": "Root Type for Test",
+        "description": "The root of the Test type's schema.",
+        "type": "object",
+        "properties": {
+          "foo": {
+            "type": "string"
+          },
+          "bar": {
+            "format": "int32",
+            "type": "integer"
+          }
+        },
+        "example": "{\n    \"foo\": \"Test string\",\n    \"bar\": 123\n}"
+      }
+    }
+  }
+}

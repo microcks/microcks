@@ -20,6 +20,7 @@ package io.github.microcks.util.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.microcks.domain.*;
 import io.github.microcks.util.*;
@@ -453,6 +454,10 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    /** Get the value of an example. This can be direct value field of those of followed $ref */
    private String getExampleValue(JsonNode example) {
       if (example.has("value")) {
+         if (example.path("value").getNodeType() == JsonNodeType.ARRAY ||
+               example.path("value").getNodeType() == JsonNodeType.OBJECT ) {
+            return example.path("value").toString();
+         }
          return example.path("value").asText();
       }
       if (example.has("$ref")) {

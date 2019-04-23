@@ -485,6 +485,58 @@ public class OpenAPIImporterTest {
       }
    }
 
+   @Test
+   public void testExampleValueDeserializationYAML() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnTestOpenAPI(importer);
+   }
+
+   @Test
+   public void testExampleValueDeserializationYAMLYAML() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-yaml.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnTestOpenAPI(importer);
+   }
+
+   @Test
+   public void testExampleValueDeserializationJSON() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi.json");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnTestOpenAPI(importer);
+   }
+
+   @Test
+   public void testExampleValueDeserializationJSONJSON() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-json.json");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnTestOpenAPI(importer);
+   }
+
 
    private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {
       // Check that basic service properties are there.
@@ -584,6 +636,69 @@ public class OpenAPIImporterTest {
             assertEquals(0, messages.size());
          } else {
             fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   private void importAndAssertOnTestOpenAPI(OpenAPIImporter importer) {
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+
+      // Check that operations and input/output have been found.
+      assertEquals(2, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("GET /tests".equals(operation.getName())) {
+            // Check that messages have been correctly found.
+            Map<Request, Response> messages = null;
+            try {
+               messages = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, messages.size());
+
+            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
+               Request request = entry.getKey();
+               Response response = entry.getValue();
+               assertNotNull(request);
+               assertNotNull(response);
+               assertNotNull(response.getContent());
+               assertFalse(response.getContent().length() == 0);
+               assertTrue(response.getContent().startsWith("["));
+               assertTrue(response.getContent().contains("\"some text\""));
+               assertTrue(response.getContent().contains("11"));
+               assertTrue(response.getContent().contains("35"));
+               assertTrue(response.getContent().endsWith("]"));
+            }
+         } else if ("GET /tests/{id}".equals(operation.getName())) {
+            // Check that messages have been correctly found.
+            Map<Request, Response> messages = null;
+            try {
+               messages = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, messages.size());
+
+            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
+               Request request = entry.getKey();
+               Response response = entry.getValue();
+               assertNotNull(request);
+               assertNotNull(response);
+               assertNotNull(response.getContent());
+               assertFalse(response.getContent().length() == 0);
+               assertTrue(response.getContent().startsWith("{"));
+               assertTrue(response.getContent().contains("\"foo\":"));
+               assertTrue(response.getContent().contains("\"bar\":"));
+               assertTrue(response.getContent().endsWith("}"));
+            }
          }
       }
    }
