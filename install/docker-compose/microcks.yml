@@ -51,6 +51,7 @@ services:
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
       - KEYCLOAK_URL=http://localhost:8180/auth
+      - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       #- KEYCLOAK_URL=http://docker.for.mac.localhost:8180/auth
       #- KEYCLOAK_URL=http://docker.for.win.localhost:8180/auth
     networks:
