@@ -28,6 +28,7 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { HighlightModule } from 'ngx-highlightjs';
 
+import { AboutModalModule } from 'patternfly-ng/modal';
 import { CardModule } from 'patternfly-ng/card';
 import { DonutChartModule } from 'patternfly-ng';
 import { ListModule } from 'patternfly-ng/list';
@@ -72,7 +73,7 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
 
 @NgModule({
   imports: [
-    BrowserModule, FormsModule, BsDropdownModule.forRoot(), ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(), 
+    BrowserModule, FormsModule, BsDropdownModule.forRoot(), AboutModalModule, ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(), 
     HighlightModule.forRoot({ theme: 'github' }), FileUploadModule, CardModule, DonutChartModule, ListModule, ToastNotificationListModule, SparklineChartModule,
     PaginationModule, ToolbarModule, WizardModule, AppRoutingModule, HttpClientModule
   ],

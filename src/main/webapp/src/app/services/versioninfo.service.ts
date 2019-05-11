@@ -16,19 +16,18 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Component, OnInit } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent implements OnInit {
-  title = 'Microcks UI';
+@Injectable({ providedIn: 'root' })
+export class VersionInfoService {
 
-  constructor() {
-  }
+  private rootUrl: string = '/api';
 
-  ngOnInit() {
+  constructor(private http: HttpClient) { }
+
+  public getVersionInfo(): Observable<any> {
+    return this.http.get<any>(this.rootUrl + '/version/info/');
   }
 }

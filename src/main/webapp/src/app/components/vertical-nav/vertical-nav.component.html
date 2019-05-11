@@ -19,7 +19,13 @@
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
           <li><a href="#0">Help</a></li>
-          <li><a href="#0">About</a></li>
+          <li><a (click)="openAboutModal(aboutTemplate)">About</a>
+            <ng-template #aboutTemplate>
+              <pfng-about-modal [config]="aboutConfig"
+                                (onCancel)="closeAboutModal($event)">
+              </pfng-about-modal>
+            </ng-template>
+          </li>
         </ul>
       </li>
       <li class="dropdown">
