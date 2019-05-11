@@ -92,9 +92,13 @@ public class OpenAPITestRunner extends HttpTestRunner {
          }
 
          log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType().toString());
-         if (!expectedResponse.getMediaType().equalsIgnoreCase(httpResponse.getHeaders().getContentType().toString())) {
+         // Sanitize charset information from media-type.
+         String contentType = httpResponse.getHeaders().getContentType().toString();
+         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+            contentType = contentType.substring(0, contentType.indexOf(";"));
+         }
+         if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
             log.debug("Response Content-Type does not match expected one, returning failure");
-            return TestReturn.FAILURE_CODE;
          }
       }
 
