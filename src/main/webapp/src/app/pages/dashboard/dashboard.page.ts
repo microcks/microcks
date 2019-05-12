@@ -46,7 +46,7 @@ export class DashboardPageComponent implements OnInit {
 	chartConfig: SparklineChartConfig = {
 		chartId: 'invocationsSparkline',
 		chartHeight: 150,
-    tooltipType: 'default'
+		tooltipType: 'default'
   };
   chartData: SparklineChartData = {
     dataAvailable: false,
@@ -67,12 +67,14 @@ export class DashboardPageComponent implements OnInit {
       REST: '#89bf04',     
       DYNAMIC: '#9c27b0', 
       SOAP: '#39a5dc',
-    },
+		},
+		/*
     data: {
       onclick: (data: any, element: any) => {
         alert('You clicked on donut arc: ' + data.id);
       }
-    },
+		},
+		*/
     donut: { title: 'APIs & Services' },
     legend: { show: true }
 	};
