@@ -85,6 +85,7 @@ public class SoapController {
          HttpServletRequest request
       ) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
+      log.debug("Toto");
       log.debug("Request body: " + body);
 
       long startTime = System.currentTimeMillis();
@@ -93,7 +94,7 @@ public class SoapController {
       if (serviceName.contains("+")) {
          serviceName = serviceName.replace('+', ' ');
       }
-
+      log.info("Service name: " + serviceName);
       // Retrieve service and correct operation.
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
@@ -101,6 +102,7 @@ public class SoapController {
          // Enhancement : try getting operation from soap:body directly!
          if (hasPayloadCorrectStructureForOperation(body, operation.getInputName())) {
             rOperation = operation;
+            log.info("Found valid operation {}", rOperation.getName());
             break;
          }
       }
@@ -189,12 +191,11 @@ public class SoapController {
     * @return True if payload is correct for operation, false otherwise.
     */
    protected boolean hasPayloadCorrectStructureForOperation(String payload, String operationName) {
-      String openingPattern = "(.*):Body>(\\s*)<(\\w+):" + operationName + "(.*)>(.*)";
-      String closingPattern = "(.*)</(\\w+):" + operationName + ">(\\s*)</(.*):Body>(.*)";
+      String openingPattern = "(.*):Body>(\\s*)<((\\w+):|)" + operationName + "(.*)>(.*)";
+      String closingPattern = "(.*)</((\\w+):|)" + operationName + ">(\\s*)</(.*):Body>(.*)";
 
       Pattern op = Pattern.compile(openingPattern, Pattern.DOTALL);
       Pattern cp = Pattern.compile(closingPattern, Pattern.DOTALL);
-
       return (op.matcher(payload).matches() && cp.matcher(payload).matches());
    }
 
