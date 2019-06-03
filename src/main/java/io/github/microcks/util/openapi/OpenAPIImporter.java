@@ -81,7 +81,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
-         specContent = new String(bytes);
+         specContent = new String(bytes, Charset.forName("UTF-8"));
          // Convert them to Node using Jackson object mapper.
          ObjectMapper mapper = null;
          if (isYaml) {
