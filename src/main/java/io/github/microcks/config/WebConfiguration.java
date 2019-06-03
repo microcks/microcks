@@ -58,6 +58,7 @@ public class WebConfiguration implements ServletContextInitializer {
    private void initCORSFilter(ServletContext servletContext, EnumSet<DispatcherType> disps) {
       FilterRegistration.Dynamic corsFilter = servletContext.addFilter("corsFilter", new CorsFilter());
       corsFilter.addMappingForUrlPatterns(disps, true, "/api/*");
+      corsFilter.addMappingForUrlPatterns(disps, true, "/dynarest/*");
       corsFilter.setAsyncSupported(true);
    }
 }
