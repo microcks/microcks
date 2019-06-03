@@ -67,9 +67,8 @@ public class ImportServiceDefinitionTask {
 
    @Value("${network.password}")
    private final String password = null;
-
-
-   @Scheduled(cron="0 0 0/2 * * *")
+   
+   @Scheduled(cron = "${services.update.interval}")
    public void importServiceDefinition(){
       // Prepare some flags.
       int updated = 0;
