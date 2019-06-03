@@ -305,6 +305,7 @@ public class OpenAPIImporterTest {
             try {
                messages = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
+               e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(1, messages.size());
@@ -535,6 +536,86 @@ public class OpenAPIImporterTest {
       }
 
       importAndAssertOnTestOpenAPI(importer);
+   }
+
+   @Test
+   public void testResponseRefsOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-complex-refs.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("OpenAPI Car API with Refs", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+      assertEquals(ResourceType.OPEN_API_SPEC, resources.get(0).getType());
+      assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
+      assertNotNull(resources.get(0).getContent());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+
+         if ("GET /owner/{owner}/car".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+            assertEquals(DispatchStyles.URI_ELEMENTS, operation.getDispatcher());
+            assertEquals("owner ?? page && limit && x-user-id", operation.getDispatcherRules());
+
+            // Check that messages have been correctly found.
+            Map<Request, Response> messages = null;
+            try {
+               messages = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(2, messages.size());
+            assertEquals(2, operation.getResourcePaths().size());
+            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+
+            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
+               Request request = entry.getKey();
+               Response response = entry.getValue();
+               assertNotNull(request);
+               assertNotNull(response);
+
+               if ("laurent_cars".equals(request.getName())) {
+                  assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else if ("unknown".equals(request.getName())) {
+                  assertEquals("/owner=unknown?limit=20?page=0", response.getDispatchCriteria());
+                  assertEquals("404", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertEquals("{\"reason\": \"owner not found\"}", response.getContent());
+                  assertEquals(1, response.getHeaders().size());
+
+                  Header header = response.getHeaders().iterator().next();
+                  assertEquals("my-custom-header", header.getName());
+                  assertEquals("unknown", header.getValues().iterator().next());
+               }
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
    }
 
 

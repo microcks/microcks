@@ -167,9 +167,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                      Entry<String, JsonNode> responseCode = responseCodes.next();
 
                      // Find here potential headers for output of this operation examples.
-                     Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue().path("headers"));
+                     Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue());
 
-                     Iterator<Entry<String, JsonNode>> contents = responseCode.getValue().path("content").fields();
+                     Iterator<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).fields();
                      while (contents.hasNext()) {
                         Entry<String, JsonNode> content = contents.next();
                         String contentValue = content.getKey();
@@ -413,9 +413,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
     * Extract headers within a header specification node and organize them by example.
     * Key of returned map is example name. Value is a list of Microcks Header objects.
     */
-   private Map<String, List<Header>> extractHeadersByExample(JsonNode headersNode) {
+   private Map<String, List<Header>> extractHeadersByExample(JsonNode responseNode) {
       Map<String, List<Header>> results = new HashMap<>();
-      if (!headersNode.isMissingNode()) {
+
+      if (responseNode.has("headers")) {
+         JsonNode headersNode = responseNode.path("headers");
          Iterator<String> headerNames = headersNode.fieldNames();
 
          while (headerNames.hasNext()) {
@@ -448,10 +450,16 @@ public class OpenAPIImporter implements MockRepositoryImporter {
             }
          }
       }
+      if (responseNode.has("$ref")) {
+         // $ref: '#/components/responses/unknown'
+         String ref = responseNode.path("$ref").asText();
+         JsonNode component = spec.at(ref.substring(1));
+         return extractHeadersByExample(component);
+      }
       return results;
    }
 
-   /** Get the value of an example. This can be direct value field of those of followed $ref */
+   /** Get the value of an example. This can be direct value field or those of followed $ref */
    private String getExampleValue(JsonNode example) {
       if (example.has("value")) {
          if (example.path("value").getNodeType() == JsonNodeType.ARRAY ||
@@ -467,6 +475,17 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          return getExampleValue(component);
       }
       return null;
+   }
+
+   /** Get the content of a response. This can be direct content field or those of followed $ref */
+   private JsonNode getResponseContent(JsonNode response) {
+      if (response.has("$ref")) {
+         // $ref: '#/components/responses/unknown'
+         String ref = response.path("$ref").asText();
+         JsonNode component = spec.at(ref.substring(1));
+         return getResponseContent(component);
+      }
+      return response.path("content");
    }
 
    /** Check parameters presence into given operation node. */
