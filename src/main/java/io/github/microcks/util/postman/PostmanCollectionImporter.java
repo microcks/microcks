@@ -253,9 +253,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       response.setName(responseNode.path("name").asText());
 
       if (isV2Collection) {
-         response.setStatus(responseNode.path("code").asText());
+         response.setStatus(responseNode.path("code").asText("200"));
          response.setHeaders(buildHeaders(responseNode.path("header")));
-         response.setContent(responseNode.path("body").asText());
+         response.setContent(responseNode.path("body").asText(""));
       } else {
          response.setStatus(responseNode.path("responseCode").path("code").asText());
          response.setHeaders(buildHeaders(responseNode.path("headers")));
