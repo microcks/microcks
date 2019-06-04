@@ -36,15 +36,10 @@ import io.github.microcks.util.soapui.SoapUIScriptEngineBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
 import javax.script.ScriptEngine;
@@ -52,6 +47,7 @@ import javax.script.ScriptEngineManager;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -75,8 +71,12 @@ public class RestController {
    @Autowired
    private ApplicationContext applicationContext;
 
+   @Value("${mocks.rest.enable-cors-policy}")
+   private final Boolean enableCorsPolicy = null;
 
-   @RequestMapping(value = "/{service}/{version}/**")
+
+   @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
+         RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
    public ResponseEntity<?> execute(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
@@ -244,6 +244,14 @@ public class RestController {
          }
          return new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
       }
+
+      // Handle OPTIONS request if CORS policy is enabled.
+      else if (enableCorsPolicy && "OPTIONS".equals(request.getMethod().toUpperCase())) {
+         log.debug("No valid operation found but Microcks configured to apply CORS policy");
+         return handleCorsRequest(request);
+      }
+
+      log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
    }
 
@@ -254,5 +262,29 @@ public class RestController {
          return operationName.substring(operationName.indexOf(' ') + 1);
       }
       return operationName;
+   }
+
+   private ResponseEntity<Object> handleCorsRequest(HttpServletRequest request) {
+      // Retrieve and set access control headers from those coming in request.
+      List<String> accessControlHeaders = new ArrayList<>();
+      Collections.list(request.getHeaders("Access-Control-Request-Headers")).forEach(
+            header -> accessControlHeaders.add(header)
+      );
+      HttpHeaders requestHeaders = new HttpHeaders();
+      requestHeaders.setAccessControlAllowHeaders(accessControlHeaders);
+      requestHeaders.setAccessControlExposeHeaders(accessControlHeaders);
+
+      // Apply CORS headers to response with 204 response code.
+      ResponseEntity<Object> response = ResponseEntity.noContent()
+               .header("Access-Control-Allow-Origin", "*")
+               .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE")
+               .headers(requestHeaders)
+               .header("Access-Allow-Credentials", "true")
+               .header("Access-Control-Max-Age", "3600")
+               .header("Vary", "Accept-Encoding, Origin")
+               .build();
+
+      return response;
+
    }
 }

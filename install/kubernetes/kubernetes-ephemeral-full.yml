@@ -109,6 +109,7 @@ data:
 
     validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
     services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
+    mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
 
     # Logging configuration properties
     logging.config=/deployments/config/logback.xml
