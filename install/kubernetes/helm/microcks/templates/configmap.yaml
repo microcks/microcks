@@ -16,6 +16,7 @@ data:
     network.password=
 
     validation.resourceUrl=http://{{ .Values.microcksHost }}/api/resources/
+    services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
 
     # Logging configuration properties
     logging.config=/deployments/config/logback.xml
