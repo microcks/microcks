@@ -183,6 +183,14 @@ public class RestController {
                   dispatchCriteria);
             if (!responses.isEmpty()) {
                response = responses.get(0);
+            } else {
+               // In case no response found (because dispatcher is null for example), just get one for the operation.
+               // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
+               log.debug("No responses found so far, tempting with just bare operationId...");
+               responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(service, rOperation));
+               if (!responses.isEmpty()) {
+                  response = responses.get(0);
+               }
             }
          }
 
