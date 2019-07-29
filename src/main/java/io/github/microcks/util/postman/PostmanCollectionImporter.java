@@ -275,11 +275,13 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             response.setMediaType("application/json");
          }
       }
-      // For V1 Collection, if no Content-Type header but response expressed as a language,
+      // For V2 Collection, if no Content-Type header but response expressed as a language,
       // assume it is its content-type.
       if (isV2Collection && response.getMediaType() == null) {
          if ("json".equals(responseNode.path("_postman_previewlanguage").asText())) {
             response.setMediaType("application/json");
+         } else if ("xml".equals(responseNode.path("_postman_previewlanguage").asText())) {
+            response.setMediaType("text/xml");
          }
       }
       response.setDispatchCriteria(dispatchCriteria);
