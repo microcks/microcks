@@ -186,13 +186,12 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   private removeVerbInUrl(operationName: string): string {
-    if (operationName.startsWith("GET ") || operationName.startsWith("PUT ")) {
-      operationName = operationName.slice(4);
-    } else if (operationName.startsWith("POST ")) {
-      operationName = operationName.slice(5);
-    } else if (operationName.startsWith("DELETE ")) {
-      operationName = operationName.slice(7);
-    }
+    if (operationName.startsWith("GET ") || operationName.startsWith("PUT ")
+        || operationName.startsWith("POST ") || operationName.startsWith("DELETE ")
+        || operationName.startsWith("OPTIONS ") || operationName.startsWith("PATCH ")
+        || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")) {
+      operationName = operationName.slice(operationName.indexOf(' ') + 1);
+    } 
     return operationName;
   }
   private encodeUrl(url: string): string {

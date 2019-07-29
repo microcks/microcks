@@ -273,7 +273,8 @@ public class RestController {
 
    private String getURIPattern(String operationName) {
       if (operationName.startsWith("GET ") || operationName.startsWith("POST ")
-            || operationName.startsWith("PUT ") || operationName.startsWith("DELETE ")) {
+            || operationName.startsWith("PUT ") || operationName.startsWith("DELETE ")
+            || operationName.startsWith("PATCH ") || operationName.startsWith("OPTIONS ")) {
          return operationName.substring(operationName.indexOf(' ') + 1);
       }
       return operationName;
@@ -292,7 +293,7 @@ public class RestController {
       // Apply CORS headers to response with 204 response code.
       ResponseEntity<Object> response = ResponseEntity.noContent()
                .header("Access-Control-Allow-Origin", "*")
-               .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE")
+               .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH")
                .headers(requestHeaders)
                .header("Access-Allow-Credentials", "true")
                .header("Access-Control-Max-Age", "3600")
