@@ -177,20 +177,20 @@ public class RestController {
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
                IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
          if (!responses.isEmpty()) {
-            response = GetResponseByType(responses, request);
+            response = getResponseByMediaType(responses, request);
          } else {
             // When using the JSON_BODY dispatcher, return of evaluation may be the name of response.
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
                   dispatchCriteria);
             if (!responses.isEmpty()) {
-               response = GetResponseByType(responses, request);
+               response = getResponseByMediaType(responses, request);
             } else {
                // In case no response found (because dispatcher is null for example), just get one for the operation.
                // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
                log.debug("No responses found so far, tempting with just bare operationId...");
                responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(service, rOperation));
                if (!responses.isEmpty()) {
-                  response = GetResponseByType(responses, request);
+                  response = getResponseByMediaType(responses, request);
                }
             }
          }
@@ -264,7 +264,7 @@ public class RestController {
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
    }
 
-   private Response GetResponseByType(List<Response> responses, HttpServletRequest request) {
+   private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {
       String accept = request.getHeader("Accept");
       return responses.stream().filter(r-> StringUtils.isNotEmpty(accept) ?  
          accept.equals(r.getMediaType()) : true).findFirst().orElse(responses.get(0));         
