@@ -514,10 +514,13 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       Iterator<JsonNode> parameters = operation.path("parameters").elements();
       while (parameters.hasNext()) {
          JsonNode parameter = parameters.next();
-         if (params.length() > 0) {
-            params.append(" && ");
+         String parameterIn = parameter.path("in").asText();
+         if (!"path".equals(parameterIn)) {
+            if (params.length() > 0) {
+               params.append(" && ");
+            }
+            params.append(parameter.path("name").asText());
          }
-         params.append(parameter.path("name").asText());
       }
       return params.toString();
    }
