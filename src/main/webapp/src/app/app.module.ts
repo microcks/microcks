@@ -49,6 +49,7 @@ import { AuthenticationHttpInterceptor } from './services/auth.http-interceptor'
 import { ConfigService } from './services/config.service';
 
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
+import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
 import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
 
@@ -81,7 +82,7 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
     AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
     ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
     TestRunnerPageComponent, OperationOverridePageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
-    DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent
+    DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, HelpDialogComponent
   ],
   providers: [
     ConfigService, AuthenticationServiceProvider, BsDropdownConfig, NotificationService,
@@ -93,7 +94,7 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
   ],
   entryComponents: [
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, 
-    GenericResourcesDialogComponent
+    GenericResourcesDialogComponent, HelpDialogComponent
   ], 
   bootstrap: [AppComponent]
 })

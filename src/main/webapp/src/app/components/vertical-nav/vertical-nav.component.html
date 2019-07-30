@@ -15,10 +15,10 @@
     <ul class="nav navbar-nav navbar-right navbar-iconic navbar-utility">
       <li class="dropdown">
         <button class="btn btn-link dropdown-toggle nav-item-iconic" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-          <span title="Help" class="fa pficon-help"></span>
+          <span title="Help" class="fa pficon-help"></span> &nbsp; <span class="caret"></span>
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-          <li><a href="#0">Help</a></li>
+          <li><a (click)="openHelpDialog()">Help</a></li>
           <li><a (click)="openAboutModal(aboutTemplate)">About</a>
             <ng-template #aboutTemplate>
               <pfng-about-modal [config]="aboutConfig"

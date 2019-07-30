@@ -6,6 +6,7 @@ import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { AboutModalConfig } from 'patternfly-ng/modal/about-modal/about-modal-config';
 import { AboutModalEvent } from 'patternfly-ng/modal/about-modal/about-modal-event';
 
+import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
 import { IAuthenticationService } from "../../services/auth.service";
 import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from "../../models/user.model";
@@ -50,6 +51,11 @@ export class VerticalNavComponent implements OnInit {
 
   ngAfterViewInit() {
     $().setupVerticalNavigation(true);
+  }
+
+  public openHelpDialog() {
+    const initialState = {};
+    this.modalRef = this.modalService.show(HelpDialogComponent, {initialState});
   }
 
   public openAboutModal(template: TemplateRef<any>): void {
