@@ -1,0 +1,103 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "LocationById",
+    "description": "A brand new API with no content.  Go nuts!",
+    "contact": {},
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "https://{defaultHost}",
+      "variables": {
+        "defaultHost": {
+          "default": "www.example.com"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/location/{id}": {
+      "get": {
+        "summary": "getLocationById",
+        "description": "Get location",
+        "operationId": "GetLocationById",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Location identifier",
+            "required": true,
+            "style": "simple",
+            "explode": false,
+            "schema": {
+              "type": "string"
+            },
+            "examples": {
+              "location": {
+                "value": "83"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RootTypeforlocation"
+                },
+                "examples": {
+                  "location": {
+                    "value": "{\n    \"id\": 83,\n    \"name\": \"some text\",\n    \"location\": {\n        \"lat\": 55.93,\n        \"lng\": 97.05\n    },\n    \"type\": \"some text\",\n    \"status\": \"some text\"\n}"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "deprecated": false
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RootTypeforlocation": {
+        "title": "RootTypeforlocation",
+        "description": "The root of the location type's schema.",
+        "type": "object",
+        "properties": {
+          "id": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/Location"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "Location": {
+        "title": "Location",
+        "type": "object",
+        "properties": {
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

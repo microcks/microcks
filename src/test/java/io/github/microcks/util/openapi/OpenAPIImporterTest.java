@@ -115,6 +115,67 @@ public class OpenAPIImporterTest {
    }
 
    @Test
+   public void testOpenAPIWithOpsPathParameter() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/locations-openapi.json");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("LocationById", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0", service.getVersion());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+
+         if ("GET /location/{id}".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+            assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+            assertEquals("id", operation.getDispatcherRules());
+
+            // Check that messages have been correctly found.
+            Map<Request, Response> messages = null;
+            try {
+               messages = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, messages.size());
+            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals("/location/83", operation.getResourcePaths().get(0));
+
+            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
+               Request request = entry.getKey();
+               Response response = entry.getValue();
+               assertNotNull(request);
+               assertNotNull(response);
+               assertEquals("location", request.getName());
+               assertEquals("location", response.getName());
+               assertEquals("/id=83", response.getDispatchCriteria());
+               assertEquals("200", response.getStatus());
+               assertEquals("application/json", response.getMediaType());
+               assertNotNull(response.getContent());
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+
+   @Test
    public void testOpenAPIImportYAMLWithSpacesOps() {
       OpenAPIImporter importer = null;
       try {

@@ -145,6 +145,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          Entry<String, JsonNode> path = paths.next();
          String pathName = path.getKey();
 
+         // Find examples fragments defined at the path level.
+         Map<String, Map<String, String>> pathPathParametersByExample = extractParametersByExample(path.getValue(), "path");
+
          // Iterate on specification path, "verbs" nodes.
          Iterator<Entry<String, JsonNode>> verbs = path.getValue().fields();
          while (verbs.hasNext()) {
@@ -153,8 +156,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
             // Find the correct operation.
             if (operation.getName().equals(verbName.toUpperCase() + " " + pathName.trim())) {
-               // Find everything related to inputs for this operation examples.
-               Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(path.getValue(), "path");
+               // Find examples fragments defined at the verb level.
+               Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(verb.getValue(), "path");
+               pathParametersByExample.putAll(pathPathParametersByExample);
                Map<String, Map<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue(), "query");
                Map<String, Map<String, String>> headerParametersByExample = extractParametersByExample(verb.getValue(), "header");
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
@@ -315,11 +319,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                operation.setMethod(verbName.toUpperCase());
 
                // Deal with dispatcher stuffs.
-               if (operationHasParameters(verb.getValue()) && urlHasParts(pathName)) {
+               if (operationHasParameters(verb.getValue(), "query") && urlHasParts(pathName)) {
                   operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName)
                         + " ?? " + extractOperationParams(verb.getValue()));
                   operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
-               } else if (operationHasParameters(verb.getValue())) {
+               } else if (operationHasParameters(verb.getValue(), "query")) {
                   operation.setDispatcherRules(extractOperationParams(verb.getValue()));
                   operation.setDispatcher(DispatchStyles.URI_PARAMS);
                } else if (urlHasParts(pathName)) {
@@ -489,8 +493,19 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    }
 
    /** Check parameters presence into given operation node. */
-   private static boolean operationHasParameters(JsonNode operation) {
-      return operation.has("parameters");
+   private static boolean operationHasParameters(JsonNode operation, String parameterType) {
+      if (!operation.has("parameters")) {
+         return false;
+      }
+      Iterator<JsonNode> parameters = operation.path("parameters").elements();
+      while (parameters.hasNext()) {
+         JsonNode parameter = parameters.next();
+         String parameterIn = parameter.path("in").asText();
+         if (parameterIn.equals(parameterType)) {
+            return true;
+         }
+      }
+      return false;
    }
 
    /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2)*/
