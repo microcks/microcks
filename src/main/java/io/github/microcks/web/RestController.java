@@ -18,16 +18,11 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
+import io.github.microcks.domain.*;
 import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.*;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
@@ -51,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * A controller for mocking Rest responses.
@@ -88,7 +84,7 @@ public class RestController {
 
       log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}",
             serviceName, version, request.getRequestURI(), request.getMethod());
-      log.debug("Request body: " + body);
+      log.debug("Request body: {}", body);
 
       long startTime = System.currentTimeMillis();
 
@@ -105,7 +101,7 @@ public class RestController {
       } catch (UnsupportedEncodingException e1) {
          return new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR);
       }
-      log.info("Found resourcePath: " + resourcePath);
+      log.debug("Found resourcePath: {}", resourcePath);
 
       // If serviceName was encoded with '+' instead of '%20', replace them.
       if (serviceName.contains("+")) {
@@ -130,48 +126,14 @@ public class RestController {
 
       if (rOperation != null){
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
+         String violationMsg = validateParameterConstraintsIfAny(rOperation, request);
+         if (violationMsg != null) {
+            return new ResponseEntity<Object>(violationMsg + ". Check parameter constraints.", HttpStatus.BAD_REQUEST);
+         }
 
          Response response = null;
          String uriPattern = getURIPattern(rOperation.getName());
-         String dispatchCriteria = null;
-
-         // Depending on dispatcher, evaluate request with rules.
-         if (DispatchStyles.SEQUENCE.equals(rOperation.getDispatcher())){
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
-         }
-         else if (DispatchStyles.SCRIPT.equals(rOperation.getDispatcher())){
-            ScriptEngineManager sem = new ScriptEngineManager();
-            try{
-               // Evaluating request with script coming from operation dispatcher rules.
-               ScriptEngine se = sem.getEngineByExtension("groovy");
-               SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
-               dispatchCriteria = (String) se.eval(rOperation.getDispatcherRules());
-            } catch (Exception e){
-               log.error("Error during Script evaluation", e);
-            }
-         }
-         // New cases related to services/operations/messages coming from a postman collection file.
-         else if (DispatchStyles.URI_PARAMS.equals(rOperation.getDispatcher())){
-            String fullURI = request.getRequestURL() + "?" + request.getQueryString();
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
-         }
-         else if (DispatchStyles.URI_PARTS.equals(rOperation.getDispatcher())){
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
-         }
-         else if (DispatchStyles.URI_ELEMENTS.equals(rOperation.getDispatcher())){
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
-            String fullURI = request.getRequestURL() + "?" + request.getQueryString();
-            dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
-         }
-         else if (DispatchStyles.JSON_BODY.equals(rOperation.getDispatcher())) {
-            JsonEvaluationSpecification specification = null;
-            try {
-               specification = JsonEvaluationSpecification.buildFromJsonString(rOperation.getDispatcherRules());
-               dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
-            } catch (JsonMappingException jme) {
-               log.error("Dispatching rules of request cannot be interpreted as valid JSON", jme);
-            }
-         }
+         String dispatchCriteria = computeDispatchCriteria(rOperation, uriPattern, resourcePath, request, body);
 
          log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
@@ -262,6 +224,63 @@ public class RestController {
 
       log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+   }
+
+
+   private String validateParameterConstraintsIfAny(Operation rOperation, HttpServletRequest request) {
+      if (rOperation.getParameterConstraints() != null) {
+         for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
+            String violationMsg = ParameterConstraintUtil.validateConstraint(request, constraint);
+            if (violationMsg != null) {
+               return violationMsg;
+            }
+         }
+      }
+      return null;
+   }
+
+   private String computeDispatchCriteria(Operation rOperation, String uriPattern, String resourcePath, HttpServletRequest request, String body) {
+      String dispatchCriteria = null;
+
+      // Depending on dispatcher, evaluate request with rules.
+      if (DispatchStyles.SEQUENCE.equals(rOperation.getDispatcher())){
+         dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+      }
+      else if (DispatchStyles.SCRIPT.equals(rOperation.getDispatcher())){
+         ScriptEngineManager sem = new ScriptEngineManager();
+         try{
+            // Evaluating request with script coming from operation dispatcher rules.
+            ScriptEngine se = sem.getEngineByExtension("groovy");
+            SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
+            dispatchCriteria = (String) se.eval(rOperation.getDispatcherRules());
+         } catch (Exception e){
+            log.error("Error during Script evaluation", e);
+         }
+      }
+      // New cases related to services/operations/messages coming from a postman collection file.
+      else if (DispatchStyles.URI_PARAMS.equals(rOperation.getDispatcher())){
+         String fullURI = request.getRequestURL() + "?" + request.getQueryString();
+         dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
+      }
+      else if (DispatchStyles.URI_PARTS.equals(rOperation.getDispatcher())){
+         dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+      }
+      else if (DispatchStyles.URI_ELEMENTS.equals(rOperation.getDispatcher())){
+         dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+         String fullURI = request.getRequestURL() + "?" + request.getQueryString();
+         dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rOperation.getDispatcherRules(), fullURI);
+      }
+      else if (DispatchStyles.JSON_BODY.equals(rOperation.getDispatcher())) {
+         JsonEvaluationSpecification specification = null;
+         try {
+            specification = JsonEvaluationSpecification.buildFromJsonString(rOperation.getDispatcherRules());
+            dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
+         } catch (JsonMappingException jme) {
+            log.error("Dispatching rules of request cannot be interpreted as valid JSON", jme);
+         }
+      }
+
+      return dispatchCriteria;
    }
 
    private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {

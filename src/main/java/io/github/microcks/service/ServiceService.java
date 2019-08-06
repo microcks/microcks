@@ -267,14 +267,16 @@ public class ServiceService {
     * @param dispatcher The dispatcher to use for this operation
     * @param dispatcherRules The dispatcher rules to use for this operation
     * @param delay The new delay value for operation
+    * @param constraints Constraints for this operation parameters
     * @return True if operation has been found and updated, false otherwise.
     */
-   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay) {
+   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay, List<ParameterConstraint> constraints) {
       Service service = serviceRepository.findOne(id);
       for (Operation operation : service.getOperations()){
          if (operation.getName().equals(operationName)){
             operation.setDispatcher(dispatcher);
             operation.setDispatcherRules(dispatcherRules);
+            operation.setParameterConstraints(constraints);
             operation.setDefaultDelay(delay);
             operation.setOverride(true);
             serviceRepository.save(service);
@@ -294,6 +296,7 @@ public class ServiceService {
                   op.setDefaultDelay(existingOperation.getDefaultDelay());
                   op.setDispatcher(existingOperation.getDispatcher());
                   op.setDispatcherRules(existingOperation.getDispatcherRules());
+                  op.setParameterConstraints(existingOperation.getParameterConstraints());
                }
             }
          }

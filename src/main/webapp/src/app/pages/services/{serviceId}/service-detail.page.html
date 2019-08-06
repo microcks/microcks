@@ -187,6 +187,30 @@
             </dd>
           </dl>
 
+          <h4 class="section-label" *ngIf="item.parameterConstraints">Parameter Constraints</h4>
+          <div class="row" *ngIf="item.parameterConstraints">
+            <div class="col-md-6">
+              <dl class="dl-horizontal left">
+                <span *ngFor="let constraint of item.parameterConstraints">
+                  <span *ngIf="constraint.in === 'query'">
+                    <dt>Query param {{ constraint.name }}:</dt>
+                    <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
+                  </span>
+                </span>
+              </dl>
+            </div>
+            <div class="col-md-6">
+              <dl class="dl-horizontal left">
+                <span *ngFor="let constraint of item.parameterConstraints">
+                  <span *ngIf="constraint.in === 'header'">
+                    <dt>Header {{ constraint.name }}:</dt>
+                    <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
+                  </span>
+                </span>
+              </dl>
+            </div>
+          </div>
+
           <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
 
           <tabset>

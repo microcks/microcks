@@ -7,3 +7,52 @@
   display: inline-block;
   white-space: pre-wrap;
 }
+
+.parameters-constraints {
+  padding-bottom: 20px;
+}
+
+.constraint-editor-entry-header {
+  padding-right: 50px;
+}
+.constraint-editor-header {
+  float: left;
+  margin-bottom: 5px;
+  padding-right: 5px;
+  width: 25%;
+}
+
+.constraint-editor .constraint-editor-entry {
+  display: table;
+  margin-bottom: 10px;
+  padding-right: 50px;
+  position: relative;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.constraint-editor .constraint-editor-input{
+  float: left;
+  margin-bottom: 0;
+  padding-right: 5px;
+  width: 25%;
+}
+
+.constraint-editor .constraint-editor-buttons {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 50px;
+  vertical-align: middle;
+}
+
+.constraint-editor .as-item-delete{
+  display: inline-block;
+  font-size: 14px;
+  opacity: .65;
+  padding: 5px;
+  vertical-align: middle;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  color: #333;
+}

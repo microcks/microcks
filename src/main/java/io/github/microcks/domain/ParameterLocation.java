@@ -19,6 +19,7 @@
 package io.github.microcks.domain;
 
 /**
+ * Enumeration of locations for operation parameters.
  * @author laurent
  */
 public enum ParameterLocation {

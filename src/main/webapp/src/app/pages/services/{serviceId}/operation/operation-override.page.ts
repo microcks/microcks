@@ -24,9 +24,10 @@ import { switchMap } from 'rxjs/operators';
 
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 
-import { Operation, Service, ServiceType, ServiceView, OperationMutableProperties } from '../../../../models/service.model';
+import { Operation, Service, ServiceType, ServiceView, OperationMutableProperties, ParameterConstraint, ParameterLocation } from '../../../../models/service.model';
 import { ServicesService } from '../../../../services/services.service';
 import { dispatch } from 'rxjs/internal/observable/range';
+import { ValueTransformer } from '@angular/compiler/src/util';
 
 @Component({
   selector: 'operation-override-page',
@@ -42,6 +43,10 @@ export class OperationOverridePageComponent implements OnInit {
   operation: Operation;
   newOperation: Operation;
   notifications: Notification[];
+  paramConstraints: any = {
+    'header': [],
+    'query': []
+  }
 
   examplePayload =  `{
   "name": "Abbey Brune",
@@ -116,11 +121,17 @@ export class OperationOverridePageComponent implements OnInit {
       for (var i=0; i<this.resolvedServiceView.service.operations.length; i++) {
         if (this.operationName === this.resolvedServiceView.service.operations[i].name) {
           this.operation = this.resolvedServiceView.service.operations[i];
-          // Clone mutable properties from oepration.
+          // Clone mutable properties from operation.
           this.newOperation = new Operation();
           this.newOperation.defaultDelay = this.operation.defaultDelay;
           this.newOperation.dispatcher = this.operation.dispatcher;
           this.newOperation.dispatcherRules = this.operation.dispatcherRules;
+          this.newOperation.parameterConstraints = this.operation.parameterConstraints;
+          if (this.newOperation.parameterConstraints) {
+            for (var j=0; j<this.newOperation.parameterConstraints.length; j++) {
+              this.paramConstraints[this.newOperation.parameterConstraints[j].in].push(this.newOperation.parameterConstraints[j]);
+            }
+          }
           break;
         }
       }
@@ -134,10 +145,19 @@ export class OperationOverridePageComponent implements OnInit {
     this.newOperation.dispatcherRules = this.operation.dispatcherRules;
   }
   public saveOperationProperties() {
-    var operationProperties = {defaultDelay: this.newOperation.defaultDelay,
-      dispatcher: this.newOperation.dispatcher,
-      dispatcherRules: this.newOperation.dispatcherRules
-    };
+    var operationProperties = new OperationMutableProperties();
+    operationProperties.defaultDelay = this.newOperation.defaultDelay
+    operationProperties.dispatcher = this.newOperation.dispatcher;
+    operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
+    operationProperties.parameterConstraints = [];
+    // Now recopy parameter constraints.
+    for (var i=0; i<this.paramConstraints.header.length; i++) {
+      operationProperties.parameterConstraints.push(this.paramConstraints.header[i]);
+    }
+    for (var i=0; i<this.paramConstraints.query.length; i++) {
+      operationProperties.parameterConstraints.push(this.paramConstraints.query[i]);
+    }
+    
     console.log("[saveOperationProperties] operationProperties: " + JSON.stringify(operationProperties));
     this.servicesSvc.updateServiceOperationProperties(this.resolvedServiceView.service,
       this.operationName, operationProperties).subscribe(
@@ -157,6 +177,24 @@ export class OperationOverridePageComponent implements OnInit {
 
   public copyDispatcherRules(operator: string) {
     this.newOperation.dispatcherRules = operator;
+  }
+
+  public addParameterConstraint(location: string) {
+    var parameterConstraints = this.paramConstraints[location];
+    if (parameterConstraints == null) {
+      this.paramConstraints[location] = [
+        { 'name': "my-header", 'in': location, 'required': false, 'recopy': false, 'mustMatchRegexp': null}
+      ];
+    } else {
+      this.paramConstraints[location].push({ 'name': "my-header", 'in': location, 'required': false, 'recopy': false, 'mustMatchRegexp': null});
+    }
+  }
+
+  public removeParameterConstraint(location: string, index: number) {
+    var parameterConstraints = this.paramConstraints[location];
+    if (parameterConstraints != null) {
+      parameterConstraints.splice(index, 1);
+    }
   }
 
   handleCloseNotification($event: NotificationEvent): void {

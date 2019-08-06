@@ -18,6 +18,10 @@
  */
 package io.github.microcks.web.dto;
 
+import io.github.microcks.domain.ParameterConstraint;
+
+import java.util.List;
+
 /**
  * Data Transfer object for grouping the mutable properties of an Operation.
  * @author laurent
@@ -27,6 +31,7 @@ public class OperationOverrideDTO {
    private String dispatcher;
    private String dispatcherRules;
    private Long defaultDelay;
+   private List<ParameterConstraint> parameterConstraints;
 
    public String getDispatcher() {
       return dispatcher;
@@ -50,5 +55,13 @@ public class OperationOverrideDTO {
 
    public void setDefaultDelay(Long defaultDelay) {
       this.defaultDelay = defaultDelay;
+   }
+
+   public List<ParameterConstraint> getParameterConstraints() {
+      return parameterConstraints;
+   }
+
+   public void setParameterConstraints(List<ParameterConstraint> parameterConstraints) {
+      this.parameterConstraints = parameterConstraints;
    }
 }

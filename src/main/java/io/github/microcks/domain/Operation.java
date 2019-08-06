@@ -20,6 +20,7 @@ package io.github.microcks.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
  * An Operation / action of a micro service. Holds information on
  * messages constitution (inputName, outputName) and how dispatch
@@ -39,6 +40,7 @@ public class Operation {
    private Long defaultDelay;
 
    private List<String> resourcePaths;
+   private List<ParameterConstraint> parameterConstraints;
 
    public String getName() {
       return name;
@@ -117,5 +119,20 @@ public class Operation {
          this.resourcePaths = new ArrayList<>();
       }
       resourcePaths.add(resourcePath);
+   }
+
+   public List<ParameterConstraint> getParameterConstraints() {
+      return parameterConstraints;
+   }
+
+   public void setParameterConstraints(List<ParameterConstraint> parameterConstraints) {
+      this.parameterConstraints = parameterConstraints;
+   }
+
+   public void addParameterConstraint(ParameterConstraint constraint) {
+      if (this.parameterConstraints == null) {
+         this.parameterConstraints = new ArrayList<>();
+      }
+      parameterConstraints.add(constraint);
    }
 }
