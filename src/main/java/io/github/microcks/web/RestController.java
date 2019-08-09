@@ -194,6 +194,9 @@ public class RestController {
                responseHeaders.setContentType(MediaType.valueOf(response.getMediaType() + ";charset=UTF-8"));
             }
 
+            // Deal with headers from parameter constraints if any?
+            recopyHeadersFromParameterConstraints(rOperation, request, responseHeaders);
+
             // Adding other generic headers (caching directives and so on...)
             if (response.getHeaders() != null) {
                for (Header header : response.getHeaders()) {
@@ -281,6 +284,19 @@ public class RestController {
       }
 
       return dispatchCriteria;
+   }
+
+   private void recopyHeadersFromParameterConstraints(Operation rOperation, HttpServletRequest request, HttpHeaders responseHeaders) {
+      if (rOperation.getParameterConstraints() != null) {
+         for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
+            if (ParameterLocation.header == constraint.getIn() && constraint.isRecopy()) {
+               String value = request.getHeader(constraint.getName());
+               if (value != null) {
+                  responseHeaders.set(constraint.getName(), value);
+               }
+            }
+         }
+      }
    }
 
    private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {
