@@ -127,11 +127,17 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Extract JsonNode corresponding to response.
       String verb = operation.getName().split(" ")[0].toLowerCase();
       String path = operation.getName().split(" ")[1].trim();
-      MediaType mediaType = httpResponse.getHeaders().getContentType();
-      log.debug("Response media-type is {}", mediaType.toString());
+
+      // Sanitize charset information from media-type.
+      String contentType = httpResponse.getHeaders().getContentType().toString();
+      if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+         contentType = contentType.substring(0, contentType.indexOf(";"));
+      }
+      log.debug("Response media-type is {}", contentType);
 
       String pointer = "/paths/" + path.replace("/", "~1") + "/" + verb
-            + "/responses/" + responseCode + "/content/" + mediaType.toString().replace("/", "~1");
+            + "/responses/" + responseCode + "/content/" + contentType.replace("/", "~1");
+      log.debug("Looking for responseNode at " + pointer);
       JsonNode responseNode = openapiSpec.at(pointer);
       log.debug("responseNode: " + responseNode);
 
