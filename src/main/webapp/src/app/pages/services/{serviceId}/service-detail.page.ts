@@ -28,7 +28,7 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 import { ListConfig, ListEvent } from 'patternfly-ng/list';
 
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
-import { Operation, Service, ServiceType, ServiceView, Contract } from '../../../models/service.model';
+import { Operation, Service, ServiceType, ServiceView, Contract, ParameterConstraint } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
 import { IAuthenticationService } from "../../../services/auth.service";
 import { ContractsService } from '../../../services/contracts.service';
@@ -118,6 +118,22 @@ export class ServiceDetailPageComponent implements OnInit {
       service: this.resolvedServiceView.service
     };
     this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
+  }
+
+  public displayParameterConstraint(constraint: ParameterConstraint): string {
+    var result = "Parameter ";
+    if (constraint.required) {
+      result += " is <code>required</code>";
+    }
+    if (constraint.recopy) {
+      if (result != "Parameter ") { result += ", "}
+      result += " will be <code>recopied</code> as response header"
+    }
+    if (constraint.mustMatchRegexp) {
+      if (result != "Parameter ") { result += ", "}
+      result += " must match the <code>" + constraint.mustMatchRegexp + "</code> regular expression"
+    }
+    return result;
   }
 
   public formatMockUrl(operation: Operation, dispatchCriteria: string): string {

@@ -27,12 +27,26 @@ export class Operation {
   dispatcherRules: string;
   defaultDelay: number;
   resourcePaths: string[];
+  parameterConstraints: ParameterConstraint[];
 }
 
 export class OperationMutableProperties {
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
+  parameterConstraints: ParameterConstraint[];
+}
+export class ParameterConstraint {
+  name: string;
+  in: ParameterLocation;
+  required: boolean;
+  recopy: boolean;
+  mustMatchRegexp: string;
+}
+export enum ParameterLocation {
+  path,
+  query,
+  header
 }
 
 export class Contract {

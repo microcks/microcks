@@ -154,8 +154,9 @@ public class ServiceController {
          @RequestBody OperationOverrideDTO operationOverride
       ) {
       log.debug("Updating operation {} of service {}", operationName, serviceId);
+      log.debug("ParameterConstraints?: " + operationOverride.getParameterConstraints());
       boolean result = serviceService.updateOperation(serviceId, operationName, operationOverride.getDispatcher(),
-            operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay());
+            operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(), operationOverride.getParameterConstraints());
       if (result){
          return new ResponseEntity<>(HttpStatus.OK);
       }

@@ -18,7 +18,78 @@
   <div class="row">
     <div class="col-md-8">
       <h1>{{ view.service.name }} - {{ view.service.version }} - {{ operationName }}</h1>
-      <small>Review and adapt dispatcher properties for mocks on operation {{ operationName }}. Be sure to know what you're doing: it may break your mocks!</small>
+      <small>Review and adapt parameters constraints and dispatcher properties for mocks on operation {{ operationName }}. Be sure to know what you're doing: it may break your mocks!</small>
+
+      <h3 class="section-label">Parameters Constraints</h3>
+
+      <div class="parameters-constraints">
+        <h5 class="subsection">Query parameters</h5>
+        <div class="constraint-editor-entry constraint-editor-entry-header" 
+                *ngIf="paramConstraints['query'] != null && paramConstraints['query'].length > 0">
+          <div class="constraint-editor-header name-header">Name</div>
+          <div class="constraint-editor-header required-header text-center">Required?</div>
+          <div class="constraint-editor-header recopy-header text-center">Recopy?</div>
+          <div class="constraint-editor-header regexp-header text-center">Match Regexep?</div>
+        </div>
+        <div class="constraint-editor" *ngFor="let constraint of paramConstraints['query']">
+          <div class="constraint-editor-entry">
+            <div class="constraint-editor-input">
+              <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="constraint.name"/>
+            </div>
+            <div class="constraint-editor-input text-center">
+              <input type="checkbox" name="required" [(ngModel)]="constraint.required" style="vertical-align: middle;"/>
+            </div>
+            <div class="constraint-editor-input text-center">
+              <input type="checkbox" name="recopy" [(ngModel)]="constraint.recopy"/>
+            </div>
+            <div class="constraint-editor-input">
+                <input class="form-control" type="text" placeHolder="" name="mustMatchRegexp" [(ngModel)]="constraint.mustMatchRegexp">
+            </div>
+            <div class="constraint-editor-buttons">
+              <a (click)="removeParameterConstraint('query', i)" class="as-item-delete" role="button">
+                <i class="pficon pficon-close"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <a (click)="addParameterConstraint('query')" role="button">Add Parameter Constraint</a>
+        
+        <h5 class="subsection">Header parameters</h5>
+        <div class="constraint-editor-entry constraint-editor-entry-header" 
+                *ngIf="paramConstraints['header'] != null && paramConstraints['header'].length > 0">
+          <div class="constraint-editor-header name-header">Name</div>
+          <div class="constraint-editor-header required-header text-center">Required?</div>
+          <div class="constraint-editor-header recopy-header text-center">Recopy?</div>
+          <div class="constraint-editor-header regexp-header text-center">Match Regexep?</div>
+        </div>
+        <div class="constraint-editor" *ngFor="let constraint of paramConstraints['header']">
+          <div class="constraint-editor-entry">
+            <div class="constraint-editor-input">
+              <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="constraint.name"/>
+            </div>
+            <div class="constraint-editor-input text-center">
+              <input type="checkbox" name="required" [(ngModel)]="constraint.required" style="vertical-align: middle;"/>
+            </div>
+            <div class="constraint-editor-input text-center">
+              <input type="checkbox" name="recopy" [(ngModel)]="constraint.recopy"/>
+            </div>
+            <div class="constraint-editor-input">
+                <input class="form-control" type="text" placeHolder="" name="mustMatchRegexp" [(ngModel)]="constraint.mustMatchRegexp">
+            </div>
+            <div class="constraint-editor-buttons">
+              <a (click)="removeParameterConstraint('header', i)" class="as-item-delete" role="button">
+                <i class="pficon pficon-close"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <a (click)="addParameterConstraint('header')" role="button">Add Header Constraint</a>
+      </div>
+      <div class="pull-right">
+        <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
+        <button type="submit" class="btn btn-primary" (click)="saveOperationProperties(secret)" ng-disabled="form.$invalid">Save</button>
+      </div>
+      <br/><br/><br/>
 
       <h3 class="section-label">Current dispatching properties</h3>
       
@@ -62,6 +133,7 @@
           </dl>
         </div>
       </div>
+
       <h3 class="section-label">New dispatching properties</h3>
 
       <div class="row">
@@ -103,7 +175,19 @@
     </div>
     <div class="col-md-4 help-bar">
       <h3 class="section-label">Help needed?</h3>
-      <small>This sidebar provides some explainations and examples on how to use the <code>JSON_BODY</code> dispatcher.</small>
+      <small>This sidebar provides some explanations and examples on how to setup parameter constraints and use the <code>JSON_BODY</code> dispatcher.</small>
+      <br/><br/>
+      <p>
+        Parameters constraints allows you to define expectations regarding incoming header or query parameters values.
+        Adding constraints add new behaviour on your operation mocks so that they can:
+      </p>
+      <ul>
+        <li>check presence of parameter using the <code>required</code> flag,</li>
+        <li><code>recopy</code> incoming parameter value into an outgoing header (think of transaction propagation for example),</li>
+        <li><code>match</code> parameter value using a `regular expression` (think of Authorization token validation for example)</li>
+      </ul>
+      
+
       <br/><br/>
       <p>
         Consider the following JSON payload representing a request body for creating new Beer entity:
@@ -123,7 +207,7 @@
   
       <p>
         You can also dispatch depending on a payload number value using the <code>range</code> operator. Note the orientation
-        of brackets to include or exclude edge values. <code>default</code> is still mandatory.
+        of brackets to include or exclude edge values. <code>default</code> is still required.
       </p>
       <div style="position: absolute; right: 20px">
         <button class="btn btn-default" (click)="copyDispatcherRules(rangeOperator)">
