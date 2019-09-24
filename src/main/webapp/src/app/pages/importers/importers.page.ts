@@ -175,6 +175,9 @@ export class ImportersPageComponent implements OnInit {
             this.notificationService.message(NotificationType.SUCCESS,
                 job.name, "Import job has been created", false, null, null);
             this.getImportJobs();
+            // Retrieve job id before activating.
+            job.id = res.id;
+            this.activateImportJob(job);
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
@@ -211,6 +214,7 @@ export class ImportersPageComponent implements OnInit {
           job.active = true;
           this.notificationService.message(NotificationType.SUCCESS,
               job.name, "Import job has been started/activated", false, null, null);
+          this.startImportJob(job);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
@@ -227,6 +231,11 @@ export class ImportersPageComponent implements OnInit {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
               job.name, "Import job has been forced", false, null, null);
+          console.log("ImportJobs in 2 secs");
+          // TODO run this outsize NgZone using zone.runOutsideAngular() : https://angular.io/api/core/NgZone
+          setTimeout(() => {
+            this.getImportJobs();
+          }, 2000);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
