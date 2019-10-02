@@ -58,7 +58,8 @@ public class MockRepositoryImporterFactory {
             importer = new SoapUIProjectImporter(mockRepository.getPath());
             break;
          } else if (line.startsWith("openapi: 3")
-               || line.startsWith("\"openapi\": \"3") || line.startsWith("'openapi': '3")) {
+               || line.startsWith("openapi: \"3") || line.startsWith("\"openapi\": \"3")
+               || line.startsWith("'openapi': '3")) {
             importer = new OpenAPIImporter(mockRepository.getPath());
             break;
          }
