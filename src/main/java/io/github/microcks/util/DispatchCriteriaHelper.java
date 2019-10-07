@@ -159,10 +159,16 @@ public class DispatchCriteriaHelper{
     * @return A string representing dispatch rules for the corresponding incoming request.
     */
    public static String extractPartsFromURIPattern(String pattern){
-      // Sanitize pattern as it may containers query params expressed using '{{}}'.
+      // Sanitize pattern as it may contains query params expressed using '{{}}'.
       if (pattern.contains("?")) {
          pattern = pattern.substring(0, pattern.indexOf('?'));
       }
+      // and as it may contains variables using '{{}}'.
+      if (pattern.contains("{{") && pattern.contains("}}")) {
+         pattern = pattern.replaceAll("\\{\\{", "");
+         pattern = pattern.replaceAll("\\}\\}", "");
+      }
+
       // Build a pattern for extracting parts from pattern.
       String partsPattern = null;
       if (pattern.contains("/{")) {
@@ -188,7 +194,7 @@ public class DispatchCriteriaHelper{
       }
       return "";
    }
-   
+
    /**
     * Extract and build a dispatch criteria string from URI pattern (containing variable parts within
     * {} or prefixed with :), projected onto a real instanciated URI.
@@ -216,15 +222,15 @@ public class DispatchCriteriaHelper{
 
       Pattern valuesP = Pattern.compile(valuesPattern);
       Matcher valuesM = valuesP.matcher(realURI);
-      
+
       // Both should match and have the same group count.
-      if (valuesM.matches() && partsM.matches() 
+      if (valuesM.matches() && partsM.matches()
             && valuesM.groupCount() == partsM.groupCount()){
          for (int i=1; i<partsM.groupCount()+1; i++){
             criteriaMap.put(partsM.group(i), valuesM.group(i));
          }
       }
-      
+
       // Just appends sorted entries, separating them with /.
       StringBuilder result = new StringBuilder();
       for (String criteria : criteriaMap.keySet()){
