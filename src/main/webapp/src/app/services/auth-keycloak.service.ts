@@ -67,7 +67,6 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
 
   /**
    * Returns the observable for is/isnot authenticated.
-   * 
    */
   public isAuthenticated(): Observable<boolean> {
     return this.authenticated;
@@ -137,4 +136,18 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
     return this.keycloak.token;
   }
 
+  /**
+   * Return the Keycloak realm url.
+   */
+  public getRealmUrl(): string {
+    var realmUrl = this.keycloak.createLogoutUrl();
+    return realmUrl.slice(0, realmUrl.indexOf("/protocol/"));
+  }
+
+  /**
+   * Return the Keycloak administration realm url.
+   */
+  public getAdminRealmUrl(): string {
+    return this.getRealmUrl().replace('/auth/', '/auth/admin/');
+  }
 }

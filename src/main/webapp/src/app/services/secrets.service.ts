@@ -21,6 +21,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { Secret } from '../models/importer.model';
+import { IAuthenticationService } from './auth.service';
 
 
 @Injectable({ providedIn: 'root' })

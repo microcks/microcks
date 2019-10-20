@@ -1,0 +1,22 @@
+span.label {
+  margin-left: 4px !important;
+  margin-right: 4px !important;
+  padding-top: 0.6em;
+  padding-bottom: 0.6em;
+  border-radius: .25rem;
+}
+span.label a {
+  color: #ffffff;
+}
+
+.userName {
+  flex-basis: 40%;
+  max-width: 150px;
+}
+.userFullName {
+  flex-basis: 40%;
+  max-width: 200px;
+}
+.list-view-pf-description {
+  flex-basis: 40%;
+}
