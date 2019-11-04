@@ -29,6 +29,17 @@ import io.github.microcks.util.test.AbstractTestRunner;
 import io.github.microcks.util.test.HttpTestRunner;
 import io.github.microcks.util.test.SoapHttpTestRunner;
 import io.github.microcks.util.test.TestReturn;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
+import org.apache.http.ssl.SSLContexts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,9 +47,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 
+import javax.net.ssl.SSLContext;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -99,6 +112,17 @@ public class TestRunnerService {
          testResult.setTestNumber(1L);
       }
 
+      // Initialize runner once as it is shared for each test.
+      AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, service.getId());
+      if (testRunner == null) {
+         // Set failure and stopped flags and save before exiting.
+         testResult.setSuccess(false);
+         testResult.setInProgress(false);
+         testResult.setElapsedTime(0);
+         testResultRepository.save(testResult);
+         return CompletableFuture.completedFuture(testResult);
+      }
+
       for (Operation operation : service.getOperations()) {
          // Prepare result container for operation tests.
          TestCaseResult testCaseResult = new TestCaseResult();
@@ -112,7 +136,6 @@ public class TestRunnerService {
          requests = cloneRequestsForTestCase(requests, testCaseId);
 
          List<TestReturn> results = new ArrayList<TestReturn>();
-         AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, service.getId());
          try {
             HttpMethod method = testRunner.buildMethod(operation.getMethod());
             results = testRunner.runTest(service, operation, testResult, requests, testResult.getTestedEndpoint(), method);
@@ -244,7 +267,27 @@ public class TestRunnerService {
    /** Retrieve correct test runner according given type. */
    private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, String serviceId){
       // TODO: remove this ugly initialization later.
-      SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+      // Initialize new HttpComponentsClientHttpRequestFactory that supports https connections.
+      TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
+      SSLContext sslContext = null;
+      try {
+         sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
+      } catch (Exception e) {
+         log.error("Exception while building SSLContext with acceptionTrustStrategy", e);
+         return null;
+      }
+
+      SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+      Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory> create()
+                  .register("https", sslsf)
+                  .register("http", new PlainConnectionSocketFactory())
+                  .build();
+
+      BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(socketFactoryRegistry);
+      CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(sslsf)
+            .setConnectionManager(connectionManager).build();
+
+      HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
       factory.setConnectTimeout(200);
       factory.setReadTimeout(10000);
 
@@ -268,6 +311,7 @@ public class TestRunnerService {
                   return soapUIRunner;
                } catch (IOException ioe) {
                   log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
+                  return null;
                }
             }
          case POSTMAN:
@@ -283,6 +327,7 @@ public class TestRunnerService {
                   return postmanRunner;
                } catch (IOException ioe) {
                   log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
+                  return null;
                }
             }
          default:

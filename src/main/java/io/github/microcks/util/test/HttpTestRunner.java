@@ -49,25 +49,25 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(HttpTestRunner.class);
-         
+
    private ClientHttpRequestFactory clientHttpRequestFactory;
 
    /**
-    * Get the ClientHttpRequestFactory used for reaching endpoint. 
+    * Get the ClientHttpRequestFactory used for reaching endpoint.
     * @return The ClientHttpRequestFactory used for reaching endpoint
     */
    public ClientHttpRequestFactory getClientHttpRequestFactory() {
       return clientHttpRequestFactory;
    }
-   
-   /** 
+
+   /**
     * Set the ClientHttpRequestFactory used for reaching endpoint.
     * @param clientHttpRequestFactory The ClientHttpRequestFactory used for reaching endpoint
     */
    public void setClientHttpRequestFactory( ClientHttpRequestFactory clientHttpRequestFactory) {
       this.clientHttpRequestFactory = clientHttpRequestFactory;
    }
-   
+
    @Override
    public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
                                    List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException{
@@ -98,7 +98,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             log.debug("Using customized endpoint url: " + customizedEndpointUrl);
          }
          ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(new URI(customizedEndpointUrl), method);
-         
+
          // Set headers to request if any. Start with those coming from request itself.
          // Add or override existing headers with test specific ones for operation and globals.
          Set<Header> headers = new HashSet<>();
@@ -125,7 +125,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          if (request.getContent() != null) {
             httpRequest.getBody().write(request.getContent().getBytes());
          }
-         
+
          // Actually execute request.
          long startTime = System.currentTimeMillis();
          ClientHttpResponse httpResponse = null;
@@ -151,7 +151,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             code = extractTestReturnCode(service, operation, request, httpResponse, responseContent);
             message = extractTestReturnMessage(service, operation, request, httpResponse);
          }
-         
+
          // Create a Response object for returning.
          Response response = new Response();
          if (httpResponse != null){
@@ -163,12 +163,12 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
                response.setHeaders(headers);
             }
          }
-         
+
          result.add(new TestReturn(code, duration, message, request, response));
       }
       return result;
    }
-   
+
    /**
     * Build the HttpMethod corresponding to string. Default to POST
     * if unknown or unrecognized.
@@ -196,7 +196,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
     * @param request The tested reference request
     * @param httpResponse The received response from endpoint
     * @param responseContent The response body content if any (may be null)
-    * @return The test result code, wether TestReturn.SUCCESS_CODE or TestReturn.FAILURE_CODE 
+    * @return The test result code, wether TestReturn.SUCCESS_CODE or TestReturn.FAILURE_CODE
     */
    protected int extractTestReturnCode(Service service, Operation operation, Request request,
                                        ClientHttpResponse httpResponse, String responseContent){
@@ -213,7 +213,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
       }
       return code;
    }
-   
+
    /**
     * This is a hook for allowing sub-classes to redefine the extraction of success or failure message.
     * This implementation just extract raw http code.
@@ -221,7 +221,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
     * @param operation The tested operation
     * @param request The tested reference request
     * @param httpResponse The received response from endpoint
-    * @return The test result message. 
+    * @return The test result message.
     */
    protected String extractTestReturnMessage(Service service, Operation operation, Request request, ClientHttpResponse httpResponse){
       String message = null;
@@ -234,7 +234,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
       }
       return message;
    }
-   
+
    /** Build domain headers from ClientHttpResponse ones. */
    private Set<Header> buildHeaders(ClientHttpResponse httpResponse){
       if (httpResponse.getHeaders() != null && !httpResponse.getHeaders().isEmpty()){
