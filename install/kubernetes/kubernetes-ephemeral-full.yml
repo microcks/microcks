@@ -438,7 +438,7 @@ spec:
     spec:
       containers:
       - name: keycloak-server
-        image: jboss/keycloak-openshift:3.4.0.Final
+        image: jboss/keycloak:4.8.3.Final
         ports:
         - name: http
           containerPort: 8080
@@ -447,7 +447,6 @@ spec:
           containerPort: 8778
           protocol: TCP
         args:
-        - start-keycloak.sh
         - "-b $(INTERNAL_POD_IP)"
         - "-Djgroups.bind_addr=global"
         - "-Djboss.node.name=$(INTERNAL_POD_IP)"
@@ -471,13 +470,13 @@ spec:
           value: clustered
         - name: DB_VENDOR
           value: POSTGRES
-        - name: POSTGRES_USER
+        - name: DB_USER
           value: "user"
-        - name: POSTGRES_PASSWORD
+        - name: DB_PASSWORD
           value: "password"
-        - name: POSTGRES_DATABASE
+        - name: DB_DATABASE
           value: root
-        - name: POSTGRES_PORT_5432_TCP_ADDR
+        - name: DB_ADDR
           value: "microcks-keycloak-postgresql"
         - name: OPENSHIFT_KUBE_PING_LABELS
           value: deploymentconfig=keycloak
