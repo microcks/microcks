@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * A controller for mocking Rest responses.
@@ -336,6 +335,5 @@ public class RestController {
                .build();
 
       return response;
-
    }
 }

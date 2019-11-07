@@ -22,9 +22,14 @@ import io.github.microcks.web.filter.CorsFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.ServletContextInitializer;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -45,6 +50,9 @@ public class WebConfiguration implements ServletContextInitializer {
    @Autowired
    private Environment env;
 
+   @Value("${mocks.rest.enable-cors-policy}")
+   private final Boolean enableCorsPolicy = null;
+
 
    @Override
    public void onStartup(ServletContext servletContext) throws ServletException {
@@ -52,6 +60,20 @@ public class WebConfiguration implements ServletContextInitializer {
       EnumSet<DispatcherType> disps = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD, DispatcherType.ASYNC);
       initCORSFilter(servletContext, disps);
       log.info("Web application fully configured");
+   }
+
+   @Bean
+   public WebMvcConfigurer corsConfigurer() {
+      return new WebMvcConfigurerAdapter() {
+         @Override
+         public void addCorsMappings(CorsRegistry registry) {
+            if (enableCorsPolicy) {
+               registry.addMapping("/rest/**")
+                     .allowedMethods("POST", "PUT", "GET", "OPTIONS", "DELETE", "PATCH")
+                     .allowedOrigins("*");
+            }
+         }
+      };
    }
 
    /** */
