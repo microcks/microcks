@@ -50,7 +50,7 @@ public class HTTPDownloader {
    /** Constant representing the header line in a custom CA Cert in PEM format. */
    private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
    /** Constant representing the footer line in a custom CA Cert in PEM format. */
-   private static final String END_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
+   private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
 
 
    @Value("${network.username}")
