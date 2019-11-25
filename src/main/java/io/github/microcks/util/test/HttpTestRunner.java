@@ -64,7 +64,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
     * Set the ClientHttpRequestFactory used for reaching endpoint.
     * @param clientHttpRequestFactory The ClientHttpRequestFactory used for reaching endpoint
     */
-   public void setClientHttpRequestFactory( ClientHttpRequestFactory clientHttpRequestFactory) {
+   public void setClientHttpRequestFactory(ClientHttpRequestFactory clientHttpRequestFactory) {
       this.clientHttpRequestFactory = clientHttpRequestFactory;
    }
 
@@ -162,6 +162,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             if (headers != null){
                response.setHeaders(headers);
             }
+            httpResponse.close();
          }
 
          result.add(new TestReturn(code, duration, message, request, response));

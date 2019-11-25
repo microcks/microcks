@@ -79,7 +79,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
     * Set the ClientHttpRequestFactory used for reaching endpoint.
     * @param clientHttpRequestFactory The ClientHttpRequestFactory used for reaching endpoint
     */
-   public void setClientHttpRequestFactory( ClientHttpRequestFactory clientHttpRequestFactory) {
+   public void setClientHttpRequestFactory(ClientHttpRequestFactory clientHttpRequestFactory) {
       this.clientHttpRequestFactory = clientHttpRequestFactory;
    }
 
@@ -169,6 +169,10 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          httpResponse = httpRequest.execute();
       } catch (IOException ioe){
          log.error("IOException while executing request ", ioe);
+      } finally {
+         if (httpResponse != null) {
+            httpResponse.close();
+         }
       }
 
       return new ArrayList<TestReturn>();
