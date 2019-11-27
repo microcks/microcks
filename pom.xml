@@ -4,7 +4,7 @@
 
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
-  <version>0.8.0</version>
+  <version>0.8.1-SNAPSHOT</version>
 
   <name>Microcks</name>
   <description>Mirocks: easy mocks for your microservices</description>
@@ -34,7 +34,7 @@
     <connection>scm:git:https://github.com/microcks/microcks.git</connection>
     <developerConnection>scm:git:https://github.com/microcks/microcks.git</developerConnection>
     <url>http://github.com/microcks/microcks/</url>
-    <tag>0.8.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <distributionManagement>
