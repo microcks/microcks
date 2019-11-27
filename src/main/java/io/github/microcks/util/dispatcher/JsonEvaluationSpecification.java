@@ -24,7 +24,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * Represent the specification of a Json payload evaluation. <code>exp</code> should represent a valid JSONPointer
  * expression, <code>operator</code> is an evaluation operator found into <code>EvaluationOperator</code> and
- * <code>cases</code> representes the different possible results of evaluation (along with a default choice).
+ * <code>cases</code> represents the different possible results of evaluation (along with a default choice).
  * @author laurent
  */
 @JsonPropertyOrder({ "exp", "operator", "cases" })
@@ -62,7 +62,7 @@ public class JsonEvaluationSpecification {
     * Build a specification from a JSON string.
     * @param jsonPayload The JSON payload representing valid specification
     * @return A newly build JsonEvaluationSpecification
-    * @throw JsonMappingException if given JSON string cannot be parsed as a JsonEvaluationSpecification
+    * @throws JsonMappingException if given JSON string cannot be parsed as a JsonEvaluationSpecification
     */
    public static JsonEvaluationSpecification buildFromJsonString(String jsonPayload) throws JsonMappingException {
       JsonEvaluationSpecification specification = null;

@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 /**
  * This utility class evaluates JSON against one or more evaluation specifications.
  * Specification may be represented that way and use to find a suitable response for an incoming
- * JSON request: <br/>
+ * JSON request: <br>
  * <pre><code> {
  *   "exp": "/country",							# JSONPointer expression
  *   "operator": "equals",

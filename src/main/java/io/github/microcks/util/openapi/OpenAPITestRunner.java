@@ -51,8 +51,10 @@ public class OpenAPITestRunner extends HttpTestRunner {
    private List<String> lastValidationErrors = null;
 
    /**
-    *
-    * @param validateResponseCode
+    * Build a new OpenAPITestRunner.
+    * @param resourceRepository Access to resources repository
+    * @param responseRepository Access to response repository
+    * @param validateResponseCode whether to validate response code
     */
    public OpenAPITestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository, boolean validateResponseCode) {
       this.resourceRepository = resourceRepository;
