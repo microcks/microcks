@@ -122,6 +122,14 @@
           <artifactId>servlet-api</artifactId>
           <groupId>jetty</groupId>
         </exclusion>
+        <exclusion>
+          <artifactId>jetty</artifactId>
+          <groupId>jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jetty-util</artifactId>
+          <groupId>jetty</groupId>
+        </exclusion>
       </exclusions>
     </dependency>
 
