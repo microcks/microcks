@@ -1,0 +1,35 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: microcks
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+spec:
+  rules:
+  - host: "{{ .Values.microcksHost }}"
+    http:
+      paths:
+      - backend:
+          serviceName: "{{ .Values.appName }}"
+          servicePort: 8080
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: keycloak
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+spec:
+  rules:
+  - host: "{{ .Values.keycloakHost }}"
+    http:
+      paths:
+      - backend:
+          serviceName: "{{ .Values.appName }}-keycloak"
+          servicePort: 8080
