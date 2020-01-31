@@ -32,6 +32,12 @@ metadata:
     group: microcks
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: "microcks"
+      deploymentconfig: "microcks"
+      container: spring
+      group: microcks
   template:
     metadata:
       labels:
@@ -67,7 +73,7 @@ spec:
             path: "/api/health"
             port: 8080
             scheme: HTTP
-          initialDelaySeconds: 15
+          initialDelaySeconds: 20
           timeoutSeconds: 3
           periodSeconds: 10
           successThreshold: 1
@@ -77,7 +83,7 @@ spec:
             path: "/api/health"
             port: 8080
             scheme: HTTP
-          initialDelaySeconds: 20
+          initialDelaySeconds: 25
           timeoutSeconds: 3
           periodSeconds: 10
           successThreshold: 1
@@ -237,6 +243,12 @@ metadata:
     group: microcks
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: "microcks"
+      deploymentconfig: "microcks-postman-runtime"
+      container: postman-runtime
+      group: microcks
   template:
     metadata:
       labels:
@@ -322,6 +334,12 @@ spec:
   strategy:
     type: Recreate
   replicas: 1
+  selector:
+    matchLabels:
+      app: "microcks"
+      deploymentconfig: mongodb
+      container: mongodb
+      group: microcks
   template:
     metadata:
       labels:
@@ -428,6 +446,12 @@ spec:
   strategy:
     type: Recreate
   replicas: 1
+  selector:
+    matchLabels:
+      app: "microcks"
+      deploymentconfig: keycloak
+      container: keycloak
+      group: microcks
   template:
     metadata:
       labels:
@@ -668,6 +692,12 @@ spec:
   strategy:
     type: Recreate
   replicas: 1
+  selector:
+    matchLabels:
+      app: "microcks"
+      deploymentconfig: keycloak-postgresql
+      container: keycloak-postgresql
+      group: microcks
   template:
     metadata:
       labels:

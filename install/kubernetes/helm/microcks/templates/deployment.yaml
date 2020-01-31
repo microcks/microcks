@@ -8,6 +8,12 @@ metadata:
     group: microcks
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: "{{ .Values.appName }}"
+      container: spring
+      group: microcks
   template:
     metadata:
       labels:
@@ -87,6 +93,12 @@ metadata:
     group: microcks
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: "{{ .Values.appName }}-postman-runtime"
+      container: postman-runtime
+      group: microcks
   template:
     metadata:
       labels:
@@ -146,6 +158,12 @@ spec:
   strategy:
     type: Recreate
   replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: mongodb
+      container: mongodb
+      group: microcks
   template:
     metadata:
       labels:
@@ -228,6 +246,12 @@ spec:
   strategy:
     type: Recreate
   replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: keycloak
+      container: keycloak
+      group: microcks
   template:
     metadata:
       labels:
@@ -314,6 +338,12 @@ spec:
   strategy:
     type: Recreate
   replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: keycloak-postgresql
+      container: keycloak-postgresql
+      group: microcks
   template:
     metadata:
       labels:
