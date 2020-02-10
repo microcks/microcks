@@ -50,8 +50,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- <docker.image.prefix>microcks</docker.image.prefix> -->
-    <docker.image.prefix>lbroudoux</docker.image.prefix>
+    <docker.image.prefix>microcks</docker.image.prefix>
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
     <spring-boot.version>1.5.17.RELEASE</spring-boot.version>
