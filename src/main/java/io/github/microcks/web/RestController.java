@@ -19,7 +19,6 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.*;
-import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.*;
@@ -42,10 +41,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * A controller for mocking Rest responses.
@@ -157,33 +153,6 @@ public class RestController {
          }
 
          if (response != null) {
-            // Setting delay to default one if not set.
-            if (delay == null && rOperation.getDefaultDelay() != null) {
-               delay = rOperation.getDefaultDelay();
-            }
-
-            if (delay != null && delay > -1) {
-               log.debug("Mock delay is turned on, waiting if necessary...");
-               long duration = System.currentTimeMillis() - startTime;
-               if (duration < delay) {
-                  Object semaphore = new Object();
-                  synchronized (semaphore) {
-                     try {
-                        semaphore.wait(delay - duration);
-                     } catch (Exception e) {
-                        log.debug("Delay semaphore was interrupted");
-                     }
-                  }
-                }
-                log.debug("Delay now expired, releasing response !");
-            }
-
-            // Publish an invocation event before returning.
-            MockInvocationEvent event = new MockInvocationEvent(this, service.getName(), version,
-               response.getName(), new Date(startTime), startTime - System.currentTimeMillis());
-            applicationContext.publishEvent(event);
-            log.debug("Mock invocation event has been published");
-
             HttpStatus status = (response.getStatus() != null ?
                 HttpStatus.valueOf(Integer.parseInt(response.getStatus())) : HttpStatus.OK);
 
@@ -213,7 +182,20 @@ public class RestController {
                   }
                }
             }
-            return new ResponseEntity<Object>(response.getContent(), responseHeaders, status);
+
+            // Render response content before waiting and returning.
+            String responseContent = MockControllerCommons.renderResponseContent(body, resourcePath, request, response);
+
+            // Setting delay to default one if not set.
+            if (delay == null && rOperation.getDefaultDelay() != null) {
+               delay = rOperation.getDefaultDelay();
+            }
+            MockControllerCommons.waitForDelay(startTime, delay);
+
+            // Publish an invocation event before returning.
+            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+
+            return new ResponseEntity<Object>(responseContent, responseHeaders, status);
          }
          return new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
       }
