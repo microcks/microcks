@@ -18,6 +18,7 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.CustomServiceRepository;
@@ -145,6 +146,17 @@ public class ServiceController {
          log.error("Service '{}-{} already exists'", serviceDTO.getName(), serviceDTO.getVersion());
          return new ResponseEntity<>(HttpStatus.CONFLICT);
       }
+   }
+
+   @RequestMapping(value = "/services/{id}/metadata", method = RequestMethod.PUT)
+   public ResponseEntity<?> updateMetadata(@PathVariable("id") String serviceId,
+         @RequestBody Metadata metadata) {
+      log.debug("Updating the metadata of service {}", serviceId);
+      boolean result = serviceService.updateMetadata(serviceId, metadata);
+      if (result){
+         return new ResponseEntity<>(HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
    }
 
    @RequestMapping(value = "/services/{id}/operation", method = RequestMethod.PUT)

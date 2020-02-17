@@ -17,7 +17,7 @@
  * under the License.
  */
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
@@ -48,6 +48,7 @@ import { AuthenticationServiceProvider } from './services/auth.service.provider'
 import { AuthenticationHttpInterceptor } from './services/auth.http-interceptor';
 import { ConfigService } from './services/config.service';
 
+import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
@@ -66,11 +67,17 @@ import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
+//import { HubPageComponent } from './pages/hub/hub.page';
+//import { HubPackagePageComponent } from './pages/hub/package/package.page';
+//import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
 import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
 import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
 import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
 
+export function configLoader(configService: ConfigService) {
+  return () => configService.loadConfiguredFeatures();
+}
 
 @NgModule({
   imports: [
@@ -82,10 +89,17 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
     AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
     ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
     TestRunnerPageComponent, OperationOverridePageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
-    DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, HelpDialogComponent
+    DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, HelpDialogComponent,
+    EditLabelsDialogComponent //, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
   ],
   providers: [
-    ConfigService, AuthenticationServiceProvider, BsDropdownConfig, NotificationService,
+    ConfigService, {
+      provide: APP_INITIALIZER,
+      useFactory: configLoader,
+      multi: true,
+      deps: [ConfigService]
+    },
+    AuthenticationServiceProvider, BsDropdownConfig, NotificationService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthenticationHttpInterceptor,
@@ -94,7 +108,7 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
   ],
   entryComponents: [
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, 
-    GenericResourcesDialogComponent, HelpDialogComponent
+    GenericResourcesDialogComponent, HelpDialogComponent, EditLabelsDialogComponent
   ], 
   bootstrap: [AppComponent]
 })

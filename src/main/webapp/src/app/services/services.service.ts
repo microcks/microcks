@@ -20,7 +20,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Service, ServiceView, Api, GenericResource, OperationMutableProperties } from '../models/service.model';
+import { Service, ServiceView, Api, GenericResource, OperationMutableProperties, Metadata } from '../models/service.model';
 
 @Injectable({ providedIn: 'root' })
 export class ServicesService {
@@ -68,6 +68,10 @@ export class ServicesService {
   public getGenericResources(service: Service, page: number = 1, pageSize: number = 20): Observable<GenericResource[]> {
     const options = { params: new HttpParams().set('page', String(page - 1)).set('size', String(pageSize)) };
     return this.http.get<GenericResource[]>(this.rootUrl + '/genericresources/service/' + service.id, options);
+  }
+
+  public updateServiceMetadata(service: Service, metadata: Metadata): Observable<any> {
+    return this.http.put<any>(this.rootUrl + '/services/' + service.id + '/metadata', metadata);
   }
 
   public updateServiceOperationProperties(service: Service, operationName: string, properties: OperationMutableProperties): Observable<any> {

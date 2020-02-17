@@ -261,6 +261,25 @@ public class ServiceService {
    }
 
    /**
+    * Update the metadata for a Service. Only deals with annotations and labels and
+    * takes care of updated the <b>lastUpdate</b> marker.
+    * @param id The identifier of service to update metadata for
+    * @param metadata The new metadata for this Service
+    * @return True if service has been found and updated, false otherwise.
+    */
+   public Boolean updateMetadata(String id, Metadata metadata) {
+      Service service = serviceRepository.findOne(id);
+      if (service != null) {
+         service.getMetadata().setLabels(metadata.getLabels());
+         service.getMetadata().setAnnotations(metadata.getAnnotations());
+         service.getMetadata().objectUpdated();
+         serviceRepository.save(service);
+         return true;
+      }
+      return false;
+   }
+
+   /**
     * Update the default delay of a Service operation
     * @param id The identifier of service to update operation for
     * @param operationName The name of operation to update delay for

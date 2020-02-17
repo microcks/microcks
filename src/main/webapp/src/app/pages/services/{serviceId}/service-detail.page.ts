@@ -27,8 +27,9 @@ import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { ListConfig, ListEvent } from 'patternfly-ng/list';
 
+import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
-import { Operation, Service, ServiceType, ServiceView, Contract, ParameterConstraint } from '../../../models/service.model';
+import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
 import { IAuthenticationService } from "../../../services/auth.service";
 import { ContractsService } from '../../../services/contracts.service';
@@ -93,6 +94,16 @@ export class ServiceDetailPageComponent implements OnInit {
     } as ListConfig;
   }
 
+  private getLabelsKeys(): string[] {
+    if (this.resolvedServiceView.service.metadata.labels == null) {
+      return null;
+    }
+    return Object.keys(this.resolvedServiceView.service.metadata.labels);
+  }
+  private getLabelValue(label: string): string {
+    return this.resolvedServiceView.service.metadata.labels[label];
+  }
+
   private sortOperations(o1: Operation, o2: Operation): number {
     var name1 = this.removeVerbInUrl(o1.name);
     var name2 = this.removeVerbInUrl(o2.name);
@@ -110,6 +121,32 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public gotoCreateTest(): void {
     this.router.navigate(['/tests/create', { serviceId: this.serviceId }]);
+  }
+
+  public openEditLabels(): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      resourceName: this.resolvedServiceView.service.name + " - " + this.resolvedServiceView.service.version,
+      resourceType: 'Service',
+      labels: JSON.parse(JSON.stringify(this.resolvedServiceView.service.metadata.labels))
+    };
+    this.modalRef = this.modalService.show(EditLabelsDialogComponent, {initialState});
+    this.modalRef.content.saveLabelsAction.subscribe((labels) => {
+      this.resolvedServiceView.service.metadata.labels = labels;
+      this.servicesSvc.updateServiceMetadata(this.resolvedServiceView.service, this.resolvedServiceView.service.metadata).subscribe(
+        {
+          next: res => {
+            this.notificationService.message(NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name, "Labels have been updated", false, null, null);
+          },
+          error: err => {
+            this.notificationService.message(NotificationType.DANGER,
+              this.resolvedServiceView.service.name, "Labels cannot be updated (" + err.message + ")", false, null, null);
+          },
+          complete: () => console.log('Observer got a complete notification'),
+        }
+      );
+    });
   }
 
   public openResources(): void {
