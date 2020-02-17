@@ -106,7 +106,7 @@ public class ServiceService {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile);
       } catch (IOException ioe) {
          log.error("Exception while accessing file " + repositoryFile.getPath(), ioe);
-         throw new MockRepositoryImportException(repositoryFile.getPath() + " cannot be found", ioe);
+         throw new MockRepositoryImportException(ioe.getMessage(), ioe);
       }
 
       List<Service> services = importer.getServiceDefinitions();

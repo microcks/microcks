@@ -36,6 +36,7 @@ import java.util.*;
 /**
  * Implement of MockRepositoryImporter that uses a Postman collection for building
  * domain objects. Only v2 collection format is supported.
+ * @author laurent
  */
 public class PostmanCollectionImporter implements MockRepositoryImporter {
 
@@ -63,7 +64,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          ObjectMapper mapper = new ObjectMapper();
          collection = mapper.readTree(jsonBytes);
       } catch (Exception e) {
-         throw new IOException("Postman collection file");
+         log.error("Exception while parsing Postman collection file " + collectionFilePath, e);
+         throw new IOException("Postman collection file parsing error");
       }
    }
 
