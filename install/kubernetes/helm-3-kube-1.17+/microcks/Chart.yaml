@@ -1,15 +1,20 @@
-apiVersion: v1
+apiVersion: v2
 name: microcks
-version: 0.8.0-helm-3-kube-1.17+
-description:
+version: 0.8.0-helm-3.kube-1.17
+kubeVersion: '>=1.17.0'
+description: Microcks - API Mocking and Testing
+type: application
 keywords:
   - mocks
   - microservice
   - api
   - test
-home: https://microcks.github.io
+home: https://microcks.io
 sources:
-  - http://github.com/microcks/microcks
+  - http://github.com/microcks/microcks/
+  - https://microcks.io
 maintainers:
   - name: Laurent Broudoux
+    email: laurent.broudoux@gmail.com
+icon: https://microcks.io/images/microcks-big.png
 appVersion: 0.8.0
