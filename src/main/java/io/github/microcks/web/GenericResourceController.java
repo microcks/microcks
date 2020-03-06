@@ -58,7 +58,7 @@ public class GenericResourceController {
    ) {
       log.debug("List resources for service '{}'", serviceId);
 
-      List<GenericResource> genericResources = genericResourceRepository.findByServiceId(serviceId, new PageRequest(page, size));
+      List<GenericResource> genericResources = genericResourceRepository.findByServiceId(serviceId, PageRequest.of(page, size));
       // Transform and collect resources.
       List<GenericResource> resources = genericResources.stream()
             .map(genericResource -> addIdToPayload(genericResource))

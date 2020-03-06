@@ -88,14 +88,10 @@ public class RestController {
       String serviceAndVersion = null;
       String resourcePath = null;
 
-      try {
-         // Build the encoded URI fragment to retrieve simple resourcePath.
-         serviceAndVersion = "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
-         resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
-         resourcePath = UriUtils.decode(resourcePath, "UTF-8");
-      } catch (UnsupportedEncodingException e1) {
-         return new ResponseEntity<Object>(HttpStatus.INTERNAL_SERVER_ERROR);
-      }
+      // Build the encoded URI fragment to retrieve simple resourcePath.
+      serviceAndVersion = "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
+      resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
+      resourcePath = UriUtils.decode(resourcePath, "UTF-8");
       log.debug("Found resourcePath: {}", resourcePath);
 
       // If serviceName was encoded with '+' instead of '%20', replace them.

@@ -168,7 +168,6 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                   Iterator<Entry<String, JsonNode>> responseCodes = verb.getValue().path("responses").fields();
                   while (responseCodes.hasNext()) {
                      Entry<String, JsonNode> responseCode = responseCodes.next();
-
                      // Find here potential headers for output of this operation examples.
                      Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue());
 

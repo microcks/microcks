@@ -53,10 +53,10 @@
     <docker.image.prefix>microcks</docker.image.prefix>
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
-    <spring-boot.version>1.5.17.RELEASE</spring-boot.version>
-    <jackson.version>2.8.3</jackson.version>
-    <keycloak.version>3.4.0.Final</keycloak.version>
-    <fongo.version>2.0.6</fongo.version>
+    <spring-boot.version>2.2.5.RELEASE</spring-boot.version>
+    <jackson.version>2.10.2</jackson.version>
+    <keycloak.version>4.8.3.Final</keycloak.version>
+    <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.1.1</soapui.version>
   </properties>
 
@@ -109,6 +109,12 @@
       <artifactId>httpclient</artifactId>
       <version>4.5.2</version>
     </dependency>
+    <!-- Required since Spring 1.5 to 2.3 migration -->
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+      <version>1.4.01</version>
+    </dependency>
     <dependency>
       <groupId>com.smartbear.soapui</groupId>
       <artifactId>soapui</artifactId>
@@ -129,6 +135,22 @@
         <exclusion>
           <artifactId>jetty-util</artifactId>
           <groupId>jetty</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>swingx</artifactId>
+          <groupId>swingx</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>htmlunit</artifactId>
+          <groupId>net.sourceforge.htmlunit</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>htmlunit-core-js</artifactId>
+          <groupId>net.sourceforge.htmlunit</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>hermes</artifactId>
+          <groupId>hermesjms</groupId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -163,9 +185,9 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.github.fakemongo</groupId>
-      <artifactId>fongo</artifactId>
-      <version>${fongo.version}</version>
+      <groupId>de.bwaldvogel</groupId>
+      <artifactId>mongo-java-server</artifactId>
+      <version>${mongo-java-server.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -190,6 +212,8 @@
           <source>${java.version}</source>
           <target>${java.version}</target>
           <encoding>${project.build.sourceEncoding}</encoding>
+          <compilerArgument>-Xlint:deprecation</compilerArgument>
+          <compilerArgument>-Xlint:unchecked</compilerArgument>
         </configuration>
       </plugin>
       <plugin>
@@ -234,6 +258,28 @@
   </pluginRepositories>
 
   <profiles>
+    <profile>
+      <id>uber</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring-boot.version}</version>
+            <configuration>
+              <addResources>true</addResources>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>repackage</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>release</id>
       <build>
@@ -377,7 +423,8 @@
             <version>0.4.11</version>
             <configuration>
               <imageName>${docker.image.prefix}/${project.artifactId}</imageName>
-              <dockerDirectory>src/main/docker</dockerDirectory>
+              <!-- <dockerDirectory>src/main/docker/ubi</dockerDirectory> -->
+              <dockerDirectory>src/main/docker/fabric8-ubi</dockerDirectory>
               <resources>
                 <resource>
                   <targetPath>/</targetPath>

@@ -74,6 +74,7 @@ public class EvaluationContext {
     * @param <T> Any implementation of {@code ELFunction} interface
     * @return The Function class object
     */
+   @SuppressWarnings("unchecked")
    public <T extends ELFunction> Class<T> lookupFunction(String name) {
       Object function = variables.get(name);
       if (function instanceof Class) {

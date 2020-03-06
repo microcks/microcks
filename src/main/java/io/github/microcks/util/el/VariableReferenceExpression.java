@@ -158,7 +158,7 @@ public class VariableReferenceExpression implements Expression {
 
       try {
          String methodName = "get" + property.substring(0, 1).toUpperCase() + property.substring(1, property.length());
-         Class clazz = obj.getClass();
+         Class<?> clazz = obj.getClass();
          Method method = clazz.getMethod(methodName);
          result = method.invoke(obj);
       }

@@ -72,8 +72,8 @@ public class ServiceController {
          @RequestParam(value = "size", required = false, defaultValue = "20") int size
       ) {
       log.debug("Getting service list for page {} and size {}", page, size);
-      return serviceRepository.findAll(new PageRequest(page, size,
-            new Sort(Sort.Direction.ASC, "name", "version"))).getContent();
+      return serviceRepository.findAll(PageRequest.of(page, size,
+            Sort.by(Sort.Direction.ASC, "name", "version"))).getContent();
    }
 
    @RequestMapping(value = "/services/search", method = RequestMethod.GET)
@@ -120,7 +120,7 @@ public class ServiceController {
          }
          service = serviceRepository.findByNameAndVersion(name, version);
       } else {
-         service = serviceRepository.findOne(serviceId);
+         service = serviceRepository.findById(serviceId).orElse(null);
       }
 
       if (messages) {

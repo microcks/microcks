@@ -118,7 +118,7 @@ public class DailyStatisticRepositoryImpl implements CustomDailyStatisticReposit
    public List<DailyStatistic> findTopStatistics(String day, int limit) {
       // Build a query selecting and sorting / limiting.
       Query query = new Query(Criteria.where("day").is(day))
-            .with(new Sort(new Order(Direction.DESC, "dailyCount")))
+            .with(Sort.by(new Order(Direction.DESC, "dailyCount")))
             .limit(limit);
       
       return template.find(query, DailyStatistic.class);
