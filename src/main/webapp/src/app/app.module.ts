@@ -67,9 +67,11 @@ import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
-//import { HubPageComponent } from './pages/hub/hub.page';
-//import { HubPackagePageComponent } from './pages/hub/package/package.page';
-//import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
+/*
+import { HubPageComponent } from './pages/hub/hub.page';
+import { HubPackagePageComponent } from './pages/hub/package/package.page';
+import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
+*/
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
 import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
 import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
@@ -90,7 +92,7 @@ export function configLoader(configService: ConfigService) {
     ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
     TestRunnerPageComponent, OperationOverridePageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
     DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, HelpDialogComponent,
-    EditLabelsDialogComponent //, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
+    EditLabelsDialogComponent//, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
   ],
   providers: [
     ConfigService, {
