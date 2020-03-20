@@ -1,0 +1,50 @@
+<div *ngIf="resolvedPackage">
+  <div class="container-fluid breadcrumb-bar">
+    <div class="row">
+      <ol class="breadcrumb">
+        <li><a [routerLink]="['/hub']">Microcks Hub</a></li>
+        <li>{{ resolvedPackage.displayName }}</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="mh-page-header_inner container-sm">
+    <div class="mh-package-header-content" *ngIf="resolvedPackage">
+      <div class="mh-package-header_image-container">
+        <img class="mh-package-header_image" src="{{ resolvedPackage.thumbUrl }}" alt>
+      </div>
+      <div class="mh-package-header_info">
+        <h1 class="mh-package-header_title">{{ resolvedPackage.displayName }}</h1>
+        <div class="mh-package-header_description">{{ resolvedPackage.description }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mh-page-contents">
+    <div class="mh-page-contents_inner">
+      <div class="mh-package-page row">
+        <div class="col-md-5 col-md-push-7 col-sm-5 col-sm-push-7 col-xs-12">
+          <h1>Available APIs</h1>
+          <div class="mh-package-api-list-view" *ngIf="resolvedAPIVersions">
+            <a *ngFor="let api of resolvedAPIVersions" class="mh-package-api-list-view_item" [routerLink]="['api', api.name]">
+              <div class="catalog-tile-pf-header">
+                <img class="catalog-tile-pf-icon" src="{{ api.thumbUrl }}" alt="">
+                <span>
+                  <div class="catalog-tile-pf-title">{{ api.displayName }}</div>
+                  <div class="catalog-tile-pf-subtitle">provided by {{ api.provider }}</div>
+                </span>
+              </div>
+              <div class="catalog-tile-pf-description">
+                <span>{{ api.description }}</span>
+              </div>
+            </a>
+          </div>
+        </div>
+        <div class="col-md-7 col-md-pull-5 col-sm-7 col-sm-pull-5 col-xs-12">
+          <h1>{{ resolvedPackage.displayName }}</h1>
+          <div class="mh-package-markdown-view" [innerHTML]="renderLongDescription()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
