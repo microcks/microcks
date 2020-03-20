@@ -29,6 +29,9 @@ import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { ImportersPageComponent } from './pages/importers/importers.page';
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
+import { HubPageComponent } from './pages/hub/hub.page';
+import { HubPackagePageComponent } from './pages/hub/package/package.page';
+import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
 
 const routes: Routes = [
   {
@@ -66,6 +69,18 @@ const routes: Routes = [
   {
     path: "importers",
     component: ImportersPageComponent
+  },
+  {
+    path: "hub",
+    component: HubPageComponent
+  },
+  {
+    path: "hub/package/:packageId",
+    component: HubPackagePageComponent
+  },
+  {
+    path: "hub/package/:packageId/api/:apiVersionId",
+    component: HubAPIVersionPageComponent
   },
   {
     path: "admin",

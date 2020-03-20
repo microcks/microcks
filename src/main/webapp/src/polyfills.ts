@@ -73,6 +73,10 @@ import 'core-js/es7/reflect';
  */
 import 'zone.js/dist/zone';  // Included with Angular CLI.
 
+// Add global to window, assigning the value of window itself. 
+// This is required as we integrate sanitize-html, showdown that requires path that throws
+// Uncaught ReferenceError: global is not defined at Object../node_modules/array-uniq/index.js
+(window as any).global = window;
 
 
 /***************************************************************************************************

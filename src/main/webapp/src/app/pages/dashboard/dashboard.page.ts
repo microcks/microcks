@@ -52,7 +52,7 @@ export class DashboardPageComponent implements OnInit {
     dataAvailable: false,
     total: 100,
     xData: this.chartDates,
-    yData: ['used']
+		yData: ['used']
 	};
 
 	donutChartData: any[] = [

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="104.99304mm"
+   height="50.889248mm"
+   viewBox="0 0 104.99304 50.889248"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"
+   sodipodi:docname="mocks-levels.svg">
+  <defs
+     id="defs2" />
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.979899"
+     inkscape:cx="148.58839"
+     inkscape:cy="80.804061"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     inkscape:window-width="1235"
+     inkscape:window-height="998"
+     inkscape:window-x="509"
+     inkscape:window-y="22"
+     inkscape:window-maximized="0"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid830"
+       originx="-17.077714"
+       originy="-221.94078" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Calque 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-17.077714,-24.169975)">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="32.392559"
+       y="32.41666"
+       id="text817"><tspan
+         sodipodi:role="line"
+         id="tspan815"
+         x="32.392559"
+         y="32.41666"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Lato;-inkscape-font-specification:Lato;fill:#363636;fill-opacity:1;stroke-width:0.26458332">Incomplete Mocks</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       x="32.203568"
+       y="53.772305"
+       id="text824"><tspan
+         sodipodi:role="line"
+         id="tspan822"
+         x="32.203568"
+         y="53.772305"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Lato;-inkscape-font-specification:Lato;fill:#363636;fill-opacity:1;stroke-width:0.26458332">Full Mocks</tspan></text>
+    <text
+       id="text828"
+       y="74.901016"
+       x="32.392555"
+       style="font-style:normal;font-weight:normal;font-size:10.58333302px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Lato;-inkscape-font-specification:Lato;fill:#b6b6b6;fill-opacity:1;stroke-width:0.26458332"
+         y="74.901016"
+         x="32.392555"
+         id="tspan826"
+         sodipodi:role="line">Mocks + Assertions</tspan></text>
+    <circle
+       style="fill:#df691a;fill-opacity:1;stroke-width:0.20652132"
+       id="path832"
+       cx="21.355656"
+       cy="28.447916"
+       r="4.2779412" />
+    <path
+       style="fill:#ff0000;fill-opacity:0;stroke:#ffffff;stroke-width:1.11261034;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 18.985432,28.530956 1.707242,1.713799 3.151833,-3.163935"
+       id="path856"
+       inkscape:connector-curvature="0" />
+    <rect
+       style="fill:#363636;fill-opacity:1;stroke:#ffffff;stroke-width:0.41101032;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect858"
+       width="0.95631075"
+       height="9.6449156"
+       x="20.637499"
+       y="34.268749" />
+    <circle
+       r="4.2779412"
+       cy="49.614597"
+       cx="21.355656"
+       id="circle860"
+       style="fill:#df691a;fill-opacity:1;stroke-width:0.20652132" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path862"
+       d="m 18.985432,49.697633 1.707242,1.713799 3.151833,-3.163935"
+       style="fill:#ff0000;fill-opacity:0;stroke:#ffffff;stroke-width:1.11261034;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <rect
+       y="55.36845"
+       x="20.724293"
+       height="9.6449156"
+       width="0.95631075"
+       id="rect864"
+       style="fill:#b6b6b6;fill-opacity:1;stroke:#ffffff;stroke-width:0.41101032;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+    <circle
+       style="fill:none;fill-opacity:1;stroke-width:0.507;stroke:#b6b6b6;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       id="circle866"
+       cx="21.355656"
+       cy="70.781281"
+       r="4.2779412" />
+  </g>
+</svg>
