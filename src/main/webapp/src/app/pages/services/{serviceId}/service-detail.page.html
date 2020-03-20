@@ -192,8 +192,8 @@
             </dd>
           </dl>
 
-          <h4 class="section-label" *ngIf="item.parameterConstraints">Parameter Constraints</h4>
-          <div class="row" *ngIf="item.parameterConstraints">
+          <h4 class="section-label" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">Parameter Constraints</h4>
+          <div class="row" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">
             <div class="col-md-6">
               <dl class="dl-horizontal left">
                 <span *ngFor="let constraint of item.parameterConstraints">

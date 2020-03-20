@@ -77,9 +77,33 @@ public class ServiceController {
    }
 
    @RequestMapping(value = "/services/search", method = RequestMethod.GET)
-   public List<Service> searchServices(@RequestParam(value = "name") String name) {
-      log.debug("Searching services corresponding to {}", name);
-      return serviceRepository.findByNameLike(name);
+   public List<Service> searchServices(
+         //@RequestParam(value = "name", required = false) String name,
+         //@RequestParam(value = "labels", required = false) Map<String, String> labels
+         @RequestParam Map<String, String> queryMap
+      ) {
+      // Parse params from queryMap.
+      String name = null;
+      Map<String, String> labels = new HashMap<>();
+      for (String paramKey: queryMap.keySet()) {
+         if ("name".equals(paramKey)) {
+            name = queryMap.get("name");
+         }
+         if (paramKey.startsWith("labels.")) {
+            labels.put(paramKey.substring(paramKey.indexOf('.') + 1), queryMap.get(paramKey));
+         }
+      }
+
+      if (labels == null || labels.isEmpty()) {
+         log.debug("Searching services corresponding to name {}", name);
+         return serviceRepository.findByNameLike(name);
+      }
+      if (name == null || name.trim().length() == 0) {
+         log.debug("Searching services corresponding to labels {}", labels);
+         return serviceRepository.findByLabels(labels);
+      }
+      log.debug("Searching services corresponding to name {} and labels {}", name, labels);
+      return serviceRepository.findByLabelsAndNameLike(labels, name);
    }
 
    @RequestMapping(value = "/services/count", method = RequestMethod.GET)
@@ -99,6 +123,17 @@ public class ServiceController {
          map.put(count.getType(), count.getNumber());
       }
       return map;
+   }
+
+   @RequestMapping(value = "/services/labels", method = RequestMethod.GET)
+   public Map<String, String[]> getServicesLabels() {
+      log.debug("Retrieving available services labels...");
+      Map<String, String[]> labelValues = new HashMap<>();
+      List<CustomServiceRepository.LabelValues> results = serviceRepository.listLabels();
+      for (CustomServiceRepository.LabelValues values : results) {
+         labelValues.put(values.getKey(), values.getValues());
+      }
+      return labelValues;
    }
 
    @RequestMapping(value = "/services/{id:.+}", method = RequestMethod.GET)

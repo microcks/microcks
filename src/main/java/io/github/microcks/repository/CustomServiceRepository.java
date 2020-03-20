@@ -21,6 +21,7 @@ package io.github.microcks.repository;
 import io.github.microcks.domain.Service;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Custom repository interface for Service domain objects.
@@ -30,7 +31,13 @@ public interface CustomServiceRepository {
 
    List<Service> findByIdIn(List<String> ids);
 
+   List<Service> findByLabels(Map<String, String> labels);
+
+   List<Service> findByLabelsAndNameLike(Map<String, String> labels, String name);
+
    List<ServiceCount> countServicesByType();
+
+   List<LabelValues> listLabels();
 
    class ServiceCount {
       String type;
@@ -49,5 +56,16 @@ public interface CustomServiceRepository {
       public void setNumber(int number) {
          this.number = number;
       }
+   }
+
+   class LabelValues {
+      String key;
+      String[] values;
+
+      public String getKey() { return key; }
+      public void setKey(String key) { this.key = key; }
+
+      public String[] getValues() { return values; }
+      public void setValues(String[] values) { this.values = values; }
    }
 }

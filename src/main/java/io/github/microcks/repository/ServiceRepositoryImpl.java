@@ -26,11 +26,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.ObjectOperators;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
@@ -61,6 +63,26 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
       return results;
    }
 
+   @Override
+   public List<Service> findByLabels(Map<String, String> labels) {
+      Query query = new Query();
+      for (String labelKey : labels.keySet()) {
+         query.addCriteria(Criteria.where("metadata.labels." + labelKey).is(labels.get(labelKey)));
+      }
+      List<Service> results = template.find(query, Service.class);
+      return results;
+   }
+
+   @Override
+   public List<Service> findByLabelsAndNameLike(Map<String, String> labels, String name) {
+      Query query = new Query(Criteria.where("name").regex(name, "i"));
+      for (String labelKey : labels.keySet()) {
+         query.addCriteria(Criteria.where("metadata.labels." + labelKey).is(labels.get(labelKey)));
+      }
+      List<Service> results = template.find(query, Service.class);
+      return results;
+   }
+
    public List<ServiceCount> countServicesByType() {
       Aggregation aggregation = newAggregation(
             project("type"),
@@ -69,6 +91,20 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
             sort(DESC, "number")
       );
       AggregationResults<ServiceCount> results = template.aggregate(aggregation, Service.class, ServiceCount.class);
+      return results.getMappedResults();
+   }
+
+   public List<LabelValues> listLabels() {
+      ObjectOperators.ObjectToArray labels = ObjectOperators.ObjectToArray.valueOfToArray("metadata.labels");
+      Aggregation aggregation = newAggregation(
+            project().and(labels).as("labels"),
+            unwind("labels"),
+            sort(DESC, "labels.v"),
+            group("labels.k")
+                  .addToSet("labels.v").as("values")
+                  .first("labels.k").as("key")
+      );
+      AggregationResults<LabelValues> results = template.aggregate(aggregation, Service.class, LabelValues.class);
       return results.getMappedResults();
    }
 }

@@ -34,8 +34,18 @@ export class ServicesService {
     return this.http.get<Service[]>(this.rootUrl + '/services', options);
   }
 
-  public filterServices(filter: string): Observable<Service[]> {
-    const options = { params: new HttpParams().set('name', filter) };
+  public filterServices(labelsFilter: Map<string, string>, nameFilter: string): Observable<Service[]> {
+    let httpParams: HttpParams = new HttpParams();
+    if (nameFilter != null) {
+      httpParams = httpParams.set('name', nameFilter);
+    }
+    if (labelsFilter != null) {
+      for (let key of Array.from( labelsFilter.keys() )) {
+        httpParams = httpParams.set('labels.' + key, labelsFilter.get(key));
+      }
+    }
+    
+    const options = { params: httpParams };
     return this.http.get<Service[]>(this.rootUrl + '/services/search', options);
   }
 
@@ -45,6 +55,10 @@ export class ServicesService {
 
   public getServicesMap(): Observable<any> {
     return this.http.get<any>(this.rootUrl + '/services/map');
+  }
+
+  public getServicesLabels(): Observable<any> {
+    return this.http.get<any>(this.rootUrl + '/services/labels');
   }
 
   public getServiceView(serviceId: string): Observable<ServiceView> {
