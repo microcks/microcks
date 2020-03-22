@@ -1,9 +1,24 @@
 .serviceName {
-  flex-basis: 50%;
+  flex-basis: 40%;
   max-width: 300px;
+  display: inline-block;
+  word-wrap: break-word;
+  word-break: break-all;
+}
+.serviceMetadata {
+  flex-basis: 60%;
+  display: inline-block;
+  word-wrap: break-word;
+  word-break: break-all;
 }
 .list-view-pf-description {
   flex-basis: 70%;
+}
+
+@media (min-width: 992px) {
+  .list-view-pf-additional-info {
+    width: 25%;
+  }
 }
 
 :host >>> .tooltip-inner {

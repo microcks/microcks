@@ -53,6 +53,7 @@ import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confir
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
 import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
+import { LabelListComponent } from './components/label-list/label-list.component';
 
 import { AdminPageComponent } from './pages/admin/admin.page';
 import { SecretsTabComponent } from './pages/admin/_components/secrets.tab';
@@ -86,7 +87,8 @@ export function configLoader(configService: ConfigService) {
     PaginationModule, ToolbarModule, WizardModule, AppRoutingModule, HttpClientModule
   ],
   declarations: [
-    AppComponent, TimeAgoPipe, ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, AdminPageComponent, DashboardPageComponent,
+    AppComponent, TimeAgoPipe,
+    ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, LabelListComponent, AdminPageComponent, DashboardPageComponent,
     ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
     TestRunnerPageComponent, OperationOverridePageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
     DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, HelpDialogComponent,

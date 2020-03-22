@@ -18,7 +18,7 @@
   <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn | timeAgo }}, last update on {{ view.service.metadata.lastUpdate | date : 'medium'  }}</small>
 
   <div *ngIf="view.service.metadata" class="metadata-labels">
-    <div class="metadata-label" *ngFor="let label of getLabelsKeys()"><span>{{ label }}</span><span>=</span><span>{{ getLabelValue(label) }}</span></div>
+    <label-list [metadata]="view.service.metadata"></label-list>
     <button type="button" class="btn btn-link" *ngIf="hasRole('admin') || hasRole('manager')" (click)="openEditLabels()">Edit Labels</button>
   </div>
 
