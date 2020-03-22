@@ -94,16 +94,6 @@ export class ServiceDetailPageComponent implements OnInit {
     } as ListConfig;
   }
 
-  private getLabelsKeys(): string[] {
-    if (this.resolvedServiceView.service.metadata.labels == null) {
-      return null;
-    }
-    return Object.keys(this.resolvedServiceView.service.metadata.labels);
-  }
-  private getLabelValue(label: string): string {
-    return this.resolvedServiceView.service.metadata.labels[label];
-  }
-
   private sortOperations(o1: Operation, o2: Operation): number {
     var name1 = this.removeVerbInUrl(o1.name);
     var name2 = this.removeVerbInUrl(o2.name);

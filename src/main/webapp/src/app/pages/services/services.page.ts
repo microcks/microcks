@@ -263,4 +263,8 @@ export class ServicesPageComponent implements OnInit {
   public repositoryFilterFeatureLabelLabel(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-label');
   }
+
+  public repositoryFilterFeatureLabelList(): string {
+    return this.config.getFeatureProperty('repository-filter', 'label-list');
+  }
 }
