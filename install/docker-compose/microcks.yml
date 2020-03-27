@@ -3,7 +3,7 @@ networks:
   main:
 services:
   mongo:
-    image: mongo:3.3.12
+    image: mongo:3.4.23
     container_name: microcks-mongo
     volumes:
       - "~/tmp/microcks-data:/data/db"
@@ -19,13 +19,15 @@ services:
         aliases:
           - postman
   keycloak:
-    image: jboss/keycloak:3.4.0.Final
+    image: jboss/keycloak:9.0.2
     command: "-b 0.0.0.0 -Dkeycloak.import=/microcks-keycloak-config/microcks-realm-sample.json"
     container_name: microcks-keycloak
     ports:
       - "8180:8080"
+      - "8543:8443"
     volumes:
       - ./keycloak-realm:/microcks-keycloak-config
+      - ./keystore:/etc/x509/https
     environment:
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "123"
@@ -42,6 +44,7 @@ services:
     container_name: microcks
     volumes:
       - ./config:/deployments/config
+      - ./keystore:/deployments/keystore
     ports:
       - "8080:8080"
     environment:
@@ -50,10 +53,10 @@ services:
       - SPRING_DATA_MONGODB_DATABASE=microcks
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
-      - KEYCLOAK_URL=http://localhost:8180/auth
+      #- KEYCLOAK_URL=https://localhost:8543/auth
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      #- KEYCLOAK_URL=http://docker.for.mac.localhost:8180/auth
-      #- KEYCLOAK_URL=http://docker.for.win.localhost:8180/auth
+      - KEYCLOAK_URL=https://docker.for.mac.localhost:8543/auth
+      #- KEYCLOAK_URL=https://docker.for.win.localhost:8543/auth
     networks:
       main:
         aliases:
