@@ -20,7 +20,7 @@ data:
     network.username=
     network.password=
 
-    validation.resourceUrl=http://{{ .Values.microcksHost }}/api/resources/
+    validation.resourceUrl=http://{{ .Values.microcks.url }}/api/resources/
     services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
     mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
 
@@ -94,6 +94,7 @@ data:
         <appender-ref ref="CONSOLE"/>
       </root>
     </configuration>
+{{- if .Values.keycloak.install }}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -187,7 +188,7 @@ data:
             "+"
           ],
           "redirectUris": [
-            "http://{{ .Values.microcksHost }}/*"
+            "https://{{ .Values.microcks.url }}/*"
           ]
         },
         {
@@ -205,3 +206,4 @@ data:
       ],
       "keycloakVersion": "3.4.0.Final"
     }
+{{- end }}

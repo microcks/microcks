@@ -1,4 +1,4 @@
-{{- if .Values.persistence.enable }}
+{{- if and .Values.mongodb.install .Values.mongodb.persistent }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -13,7 +13,9 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.persistence.mongodbVolumeSize }}
+      storage: {{ .Values.mongodb.volumeSize }}
+{{- end }}
+{{- if and .Values.keycloak.install Values.keycloak.persistent }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
@@ -28,5 +30,5 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.persistence.postgresVolumeSize }}
+      storage: {{ .Values.keycloak.volumeSize }}
 {{- end }}
