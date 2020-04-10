@@ -35,19 +35,29 @@ spec:
           - name: SPRING_PROFILES_ACTIVE
             value: prod
           - name: SPRING_DATA_MONGODB_URI
-            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.appName }}-mongodb:27017/${SPRING_DATA_MONGODB_DATABASE}
+            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.mongodb.uri | default (print .Values.appName "-mongodb:27017") }}/${SPRING_DATA_MONGODB_DATABASE}
           - name: SPRING_DATA_MONGODB_USER
             valueFrom:
               secretKeyRef:
+                {{- if hasKey .Values.mongodb "secretRef" }}
+                key: {{ .Values.mongodb.secretRef.usernameKey | default "username" }}
+                name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
+                {{- else }}
                 key: username
                 name: "{{ .Values.appName }}-mongodb-connection"
+                {{- end }}
           - name: SPRING_DATA_MONGODB_PASSWORD
             valueFrom:
               secretKeyRef:
+                {{- if hasKey .Values.mongodb "secretRef" }}
+                key: {{ .Values.mongodb.secretRef.passwordKey | default "password" }}
+                name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
+                {{- else }}
                 key: password
                 name: "{{ .Values.appName }}-mongodb-connection"
+                {{- end }}
           - name: SPRING_DATA_MONGODB_DATABASE
-            value: "{{ .Values.appName }}"
+            value: {{ .Values.mongodb.database | default .Values.appName }}
           - name: POSTMAN_RUNNER_URL
             value: http://{{ .Values.appName }}-postman-runtime:8080
           - name: TEST_CALLBACK_URL
@@ -175,7 +185,7 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: {{ .Values.mongodbImage }}
+        image: {{ .Values.mongodb.image }}
         ports:
         - containerPort: 27017
           protocol: TCP
@@ -265,7 +275,7 @@ spec:
     spec:
       containers:
       - name: keycloak-server
-        image: {{ .Values.keycloakImage }}
+        image: {{ .Values.keycloak.image }}
         resources:
           requests:
             cpu: 400m
@@ -362,7 +372,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: keycloak-postgresql
-        image: {{ .Values.postgresImage }}
+        image: {{ .Values.keycloak.postgresImage }}
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5432

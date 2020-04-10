@@ -15,7 +15,7 @@ spec:
     requests:
       storage: {{ .Values.mongodb.volumeSize }}
 {{- end }}
-{{- if and .Values.keycloak.install Values.keycloak.persistent }}
+{{- if and .Values.keycloak.install .Values.keycloak.persistent }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1

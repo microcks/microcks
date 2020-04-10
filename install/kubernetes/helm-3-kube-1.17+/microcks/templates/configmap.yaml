@@ -20,7 +20,7 @@ data:
     network.username=
     network.password=
 
-    validation.resourceUrl=http://{{ .Values.microcks.url }}/api/resources/
+    validation.resourceUrl=https://{{ .Values.microcks.url }}/api/resources/
     services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
     mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
 
