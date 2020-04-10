@@ -14,7 +14,7 @@ after_success:
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:latest;
     fi
-  - if [ "$TRAVIS_BRANCH" == "0.9.0" ]; then
+  - if [ "$TRAVIS_BRANCH" == "0.9.x" ]; then
     mvn -B -q -Pprod -DskipTests package docker:build;
     docker tag microcks/microcks microcks/microcks:nightly;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
