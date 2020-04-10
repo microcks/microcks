@@ -2,15 +2,15 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: microcks-persistent-no-keycloak-template
+  template: microcks-persistent-no-keycloak-template-https
 metadata:
   annotations:
-    description: Template for Microcks application (see https://microcks.io) on OpenShift 3.x. Requires an external Keycloak instance.
+    description: Template for Microcks application (see https://microcks.io) with HTTPS support. Requires an external Keycloak instance.
     openshift.io/display-name: Microcks with existing Keycloak
     openshift.io/provider-display-name: Microcks.io
     tags: instant-app
   labels: {}
-  name: microcks-persistent-no-keycloak
+  name: microcks-persistent-no-keycloak-https
 parameters:
 - name: APP_NAME
   value: microcks
@@ -70,10 +70,10 @@ objects:
       group: microcks
   spec:
     tags:
-    - name: latest
+    - name: nightly
       from:
         kind: DockerImage
-        name: microcks/microcks:latest
+        name: microcks/microcks:nightly
 - kind: ImageStream
   apiVersion: v1
   metadata:
@@ -165,6 +165,8 @@ objects:
       name: "${APP_NAME}"
     port:
       targetPort: spring
+    tls:
+      termination: edge
 - kind: DeploymentConfig
   apiVersion: v1
   metadata:
@@ -185,7 +187,7 @@ objects:
         - spring
         from:
           kind: ImageStreamTag
-          name: "${APP_NAME}:latest"
+          name: "${APP_NAME}:nightly"
     replicas: 1
     selector:
       app: "${APP_NAME}"
@@ -220,7 +222,7 @@ objects:
           - name: TEST_CALLBACK_URL
             value: http://${APP_NAME}:8080
           - name: KEYCLOAK_URL
-            value: http://${KEYCLOAK_ROUTE_HOSTNAME}/auth
+            value: https://${KEYCLOAK_ROUTE_HOSTNAME}/auth
           resources:
             limits:
               memory: "${MEMORY_LIMIT}"
@@ -454,7 +456,7 @@ objects:
       network.username=
       network.password=
 
-      validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
+      validation.resourceUrl=https://${APP_ROUTE_HOSTNAME}/api/resources/
       services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
       mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
 
@@ -467,6 +469,9 @@ objects:
       keycloak.resource=microcks-app
       keycloak.bearer-only=true
       keycloak.ssl-required=external
+      keycloak.disable-trust-manager=true
+      # keycloak.truststore=/deployments/tls/ca-keycloak-truststore.jks
+      # keycloak.truststore-password=mypass
 
       keycloak.security-constraints[0].authRoles[0]=admin
       keycloak.security-constraints[0].authRoles[1]=manager

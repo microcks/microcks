@@ -2,15 +2,15 @@
 apiVersion: v1
 kind: Template
 labels:
-  template: microcks-persistent-no-keycloak-template
+  template: microcks-ephemeral-no-keycloak-template
 metadata:
   annotations:
-    description: Template for Microcks application (see https://microcks.io) on OpenShift 3.x. Requires an external Keycloak instance.
-    openshift.io/display-name: Microcks with existing Keycloak
+    description: Template for Microcks application (see https://microcks.io). Requires an external Keycloak instance.
+    openshift.io/display-name: Microcks with existing Keycloak (Ephemeral)
     openshift.io/provider-display-name: Microcks.io
     tags: instant-app
   labels: {}
-  name: microcks-persistent-no-keycloak
+  name: microcks-ephemeral-no-keycloak
 parameters:
 - name: APP_NAME
   value: microcks
@@ -23,7 +23,7 @@ parameters:
   required: true
 - name: KEYCLOAK_ROUTE_HOSTNAME
   displayName: Keycloak component hostname
-  description: The external hostname to access Keycloak from Microcks app.
+  description: The external hostname to access Keycloak within Microcks app.
   required: true
 - name: MEMORY_LIMIT
   displayName: Memory Limit
@@ -33,11 +33,6 @@ parameters:
   displayName: MongoDB Memory Limit
   description: Maximum amount of memory the container can use.
   value: 512Mi
-- name: MONGODB_VOL_SIZE
-  displayName: MongoDB Volume Size
-  description: Volume size for MongoDB data.
-  value: 2Gi
-  required: true
 - name: MONGODB_USER
   displayName: MongoDB Connection Username
   description: Username for MongoDB user that will be used for accessing the database.
@@ -411,25 +406,11 @@ objects:
             privileged: false
         volumes:
         - name: "${APP_NAME}-mongodb-data"
-          persistentVolumeClaim:
-            claimName: "${APP_NAME}-mongodb"
+          emptyDir:
+            medium: ''
         restartPolicy: Always
         dnsPolicy: ClusterFirst
   status: {}
-- kind: PersistentVolumeClaim
-  apiVersion: v1
-  metadata:
-    name: "${APP_NAME}-mongodb"
-    labels:
-      app: "${APP_NAME}"
-      container: mongodb
-      group: microcks
-  spec:
-    accessModes:
-      - ReadWriteOnce
-    resources:
-      requests:
-        storage: "${MONGODB_VOL_SIZE}"
 - kind: ConfigMap
   apiVersion: v1
   metadata:
@@ -454,7 +435,7 @@ objects:
       network.username=
       network.password=
 
-      validation.resourceUrl=http://${APP_ROUTE_HOSTNAME}/api/resources/
+      validation.resourceUrl=https://${APP_ROUTE_HOSTNAME}/api/resources/
       services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
       mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
 
@@ -528,4 +509,3 @@ objects:
           <appender-ref ref="CONSOLE"/>
         </root>
       </configuration>
-
