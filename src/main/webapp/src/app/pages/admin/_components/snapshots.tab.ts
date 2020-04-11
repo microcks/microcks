@@ -54,7 +54,7 @@ export class SnapshotsTabComponent implements OnInit {
     this.servicesSvc.getServices(1, 1000).subscribe(
       results => {
         this.halfServices = results.slice(0, (results.length / 2) + 1);
-        this.secondHalfServices = results.slice((results.length / 2) + 2, results.length);
+        this.secondHalfServices = results.slice((results.length / 2) + 1, results.length);
         this.servicesCount = results.length;
       }
     );

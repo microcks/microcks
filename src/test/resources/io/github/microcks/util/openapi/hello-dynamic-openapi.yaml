@@ -1,0 +1,65 @@
+---
+openapi: 3.0.2
+info:
+  title: Hello Dynamic API
+  description: Description for Hello Dynamic API
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+paths:
+  /hello:
+    get:
+      summary: Say hello in a dynamic way
+      description: Use Microcks dynamic template in response
+      operationId: hello
+      requestBody:
+        description: Name
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Name'
+            examples:
+              dynamic:
+                value: |-
+                  { "name": "Laurent" }
+        required: true
+      responses:
+        200:
+          description: Greeting
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Greeting'
+              examples:
+                dynamic:
+                  value: |-
+                    {
+                      "id": "{{ randomString(64) }}",
+                      "date": "{{ now(dd/MM/yyyy) }}",
+                      "message": "Hello {{ request.body/name }}!"
+                    }
+components:
+  schemas:
+    Name:
+      title: Root type for Name
+      description: The root of the Name type's schema
+      type: object
+      properties:
+        name:
+          type: string
+    Greeting:
+      title: Root type for Greeting
+      description: The root of the Greeting type's schema
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+        message:
+          type: string

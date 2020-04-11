@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Generator: Adobe Illustrator 23.0.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.1"
+   id="Calque_1"
+   x="0px"
+   y="0px"
+   viewBox="0 0 684.25559 62.784"
+   xml:space="preserve"
+   sodipodi:docname="hub-microcks.svg"
+   width="684.25562"
+   height="62.784"
+   inkscape:version="0.92.2 5c3e80d, 2017-08-06"><metadata
+     id="metadata443"><rdf:RDF><cc:Work
+         rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" /><dc:title /></cc:Work></rdf:RDF></metadata><defs
+     id="defs441" /><sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1816"
+     inkscape:window-height="965"
+     id="namedview439"
+     showgrid="false"
+     inkscape:zoom="0.520258"
+     inkscape:cx="-194.40677"
+     inkscape:cy="-198.12938"
+     inkscape:window-x="53"
+     inkscape:window-y="42"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Calque_1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"><inkscape:grid
+       type="xygrid"
+       id="grid7170"
+       originx="-1832.7208"
+       originy="-582.39584" /></sodipodi:namedview><style
+     type="text/css"
+     id="style10">
+	.st0{fill:#4C8DCB;}
+	.st1{enable-background:new    ;}
+	.st2{fill:#CACFD2;}
+	.st3{fill:#D5DFF3;}
+	.st4{fill:#FFFFFF;}
+	.st5{clip-path:url(#SVGID_2_);fill:#006893;}
+	.st6{clip-path:url(#SVGID_2_);fill:#CACFD2;}
+	.st7{clip-path:url(#SVGID_4_);fill:#CACFD2;}
+	.st8{clip-path:url(#SVGID_6_);fill:#CACFD2;}
+	.st9{clip-path:url(#SVGID_8_);fill:#006893;}
+	.st10{clip-path:url(#SVGID_8_);fill:#CACFD2;}
+	.st11{clip-path:url(#SVGID_10_);fill:#CACFD2;}
+	.st12{clip-path:url(#SVGID_12_);fill:#CACFD2;}
+	.st13{clip-path:url(#SVGID_14_);}
+	.st14{fill:#00658F;}
+	.st15{clip-path:url(#SVGID_14_);fill:#CACFD2;}
+	.st16{fill:#0074A4;}
+	.st17{fill:#82D0F5;}
+	.st18{clip-path:url(#SVGID_16_);fill:#006893;}
+	.st19{clip-path:url(#SVGID_16_);fill:#CACFD2;}
+	.st20{clip-path:url(#SVGID_18_);fill:#CACFD2;}
+	.st21{clip-path:url(#SVGID_20_);fill:#CACFD2;}
+	.st22{clip-path:url(#SVGID_22_);fill:#006893;}
+	.st23{clip-path:url(#SVGID_22_);fill:#CACFD2;}
+	.st24{clip-path:url(#SVGID_24_);fill:#CACFD2;}
+	.st25{clip-path:url(#SVGID_26_);fill:#CACFD2;}
+	.st26{clip-path:url(#SVGID_28_);}
+	.st27{clip-path:url(#SVGID_28_);fill:#CACFD2;}
+</style><text
+     id="text8264"
+     y="61.919998"
+     x="213.11909"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+     xml:space="preserve"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-size:96px;font-family:'Alegreya Sans SC';-inkscape-font-specification:'Alegreya Sans SC Medium';fill:#ffffff;fill-opacity:1"
+       y="61.919998"
+       x="213.11909"
+       id="tspan8262"
+       sodipodi:role="line">Microcks.io</tspan></text>
+<text
+     xml:space="preserve"
+     style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
+     x="-7.8720002"
+     y="61.919998"
+     id="text8268"><tspan
+       sodipodi:role="line"
+       id="tspan8266"
+       x="-7.8720002"
+       y="61.919998"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:96px;font-family:'Alegreya Sans SC';-inkscape-font-specification:'Alegreya Sans SC Bold';fill:#d5dff3;fill-opacity:1">HUB</tspan></text>
+</svg>

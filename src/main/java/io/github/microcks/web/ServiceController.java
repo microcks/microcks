@@ -18,6 +18,7 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.CustomServiceRepository;
@@ -71,14 +72,38 @@ public class ServiceController {
          @RequestParam(value = "size", required = false, defaultValue = "20") int size
       ) {
       log.debug("Getting service list for page {} and size {}", page, size);
-      return serviceRepository.findAll(new PageRequest(page, size,
-            new Sort(Sort.Direction.ASC, "name", "version"))).getContent();
+      return serviceRepository.findAll(PageRequest.of(page, size,
+            Sort.by(Sort.Direction.ASC, "name", "version"))).getContent();
    }
 
    @RequestMapping(value = "/services/search", method = RequestMethod.GET)
-   public List<Service> searchServices(@RequestParam(value = "name") String name) {
-      log.debug("Searching services corresponding to {}", name);
-      return serviceRepository.findByNameLike(name);
+   public List<Service> searchServices(
+         //@RequestParam(value = "name", required = false) String name,
+         //@RequestParam(value = "labels", required = false) Map<String, String> labels
+         @RequestParam Map<String, String> queryMap
+      ) {
+      // Parse params from queryMap.
+      String name = null;
+      Map<String, String> labels = new HashMap<>();
+      for (String paramKey: queryMap.keySet()) {
+         if ("name".equals(paramKey)) {
+            name = queryMap.get("name");
+         }
+         if (paramKey.startsWith("labels.")) {
+            labels.put(paramKey.substring(paramKey.indexOf('.') + 1), queryMap.get(paramKey));
+         }
+      }
+
+      if (labels == null || labels.isEmpty()) {
+         log.debug("Searching services corresponding to name {}", name);
+         return serviceRepository.findByNameLike(name);
+      }
+      if (name == null || name.trim().length() == 0) {
+         log.debug("Searching services corresponding to labels {}", labels);
+         return serviceRepository.findByLabels(labels);
+      }
+      log.debug("Searching services corresponding to name {} and labels {}", name, labels);
+      return serviceRepository.findByLabelsAndNameLike(labels, name);
    }
 
    @RequestMapping(value = "/services/count", method = RequestMethod.GET)
@@ -100,6 +125,17 @@ public class ServiceController {
       return map;
    }
 
+   @RequestMapping(value = "/services/labels", method = RequestMethod.GET)
+   public Map<String, String[]> getServicesLabels() {
+      log.debug("Retrieving available services labels...");
+      Map<String, String[]> labelValues = new HashMap<>();
+      List<CustomServiceRepository.LabelValues> results = serviceRepository.listLabels();
+      for (CustomServiceRepository.LabelValues values : results) {
+         labelValues.put(values.getKey(), values.getValues());
+      }
+      return labelValues;
+   }
+
    @RequestMapping(value = "/services/{id:.+}", method = RequestMethod.GET)
    public ResponseEntity<?> getService(
          @PathVariable("id") String serviceId,
@@ -119,7 +155,7 @@ public class ServiceController {
          }
          service = serviceRepository.findByNameAndVersion(name, version);
       } else {
-         service = serviceRepository.findOne(serviceId);
+         service = serviceRepository.findById(serviceId).orElse(null);
       }
 
       if (messages) {
@@ -145,6 +181,17 @@ public class ServiceController {
          log.error("Service '{}-{} already exists'", serviceDTO.getName(), serviceDTO.getVersion());
          return new ResponseEntity<>(HttpStatus.CONFLICT);
       }
+   }
+
+   @RequestMapping(value = "/services/{id}/metadata", method = RequestMethod.PUT)
+   public ResponseEntity<?> updateMetadata(@PathVariable("id") String serviceId,
+         @RequestBody Metadata metadata) {
+      log.debug("Updating the metadata of service {}", serviceId);
+      boolean result = serviceService.updateMetadata(serviceId, metadata);
+      if (result){
+         return new ResponseEntity<>(HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
    }
 
    @RequestMapping(value = "/services/{id}/operation", method = RequestMethod.PUT)

@@ -20,6 +20,7 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Service;
 import io.github.microcks.service.ServiceService;
+import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.MockRepositoryImportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.util.List;
 
 /**
+ * This is a controller for managing import of uploaded or downloaded artifact contract files.
  * @author laurent
  */
 @RestController
@@ -52,6 +54,29 @@ public class UploadArtifactController {
    @Autowired
    private ServiceService serviceService;
 
+   @RequestMapping(value = "/artifact/download", method = RequestMethod.POST)
+   public ResponseEntity<?> importArtifact(@RequestParam(value = "url", required = true) String url) {
+      if (!url.isEmpty()) {
+         List<Service> services = null;
+
+         try {
+            // Download remote to local file before import.
+            File localFile = HTTPDownloader.handleHTTPDownloadToFile(url, null, true);
+
+            // Now try importing services.
+            services = serviceService.importServiceDefinition(localFile);
+         } catch (IOException ioe) {
+            log.error("Exception while retrieving remote item " + url, ioe);
+            return new ResponseEntity<Object>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
+         } catch (MockRepositoryImportException mrie) {
+         return new ResponseEntity<Object>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+         }
+         if (services != null && services.size() > 0) {
+            return new ResponseEntity<Object>(services.get(0).getName() + ":" + services.get(0).getVersion(), HttpStatus.CREATED);
+         }
+      }
+      return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
+   }
 
    @RequestMapping(value = "/artifact/upload", method = RequestMethod.POST)
    public ResponseEntity<?> importArtifact(@RequestParam(value = "file") MultipartFile file) {

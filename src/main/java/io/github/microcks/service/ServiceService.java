@@ -106,7 +106,7 @@ public class ServiceService {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile);
       } catch (IOException ioe) {
          log.error("Exception while accessing file " + repositoryFile.getPath(), ioe);
-         throw new MockRepositoryImportException(repositoryFile.getPath() + " cannot be found", ioe);
+         throw new MockRepositoryImportException(ioe.getMessage(), ioe);
       }
 
       List<Service> services = importer.getServiceDefinitions();
@@ -131,7 +131,7 @@ public class ServiceService {
          // Remove resources previously attached to service.
          List<Resource> existingResources = resourceRepository.findByServiceId(service.getId());
          if (existingResources != null && existingResources.size() > 0){
-            resourceRepository.delete(existingResources);
+            resourceRepository.deleteAll(existingResources);
          }
 
          // Save new resources.
@@ -139,14 +139,14 @@ public class ServiceService {
          for (Resource resource : resources){
             resource.setServiceId(service.getId());
          }
-         resourceRepository.save(resources);
+         resourceRepository.saveAll(resources);
 
          for (Operation operation : service.getOperations()){
             String operationId = IdBuilder.buildOperationId(service, operation);
 
             // Remove messages previously attached to service.
-            requestRepository.delete(requestRepository.findByOperationId(operationId));
-            responseRepository.delete(responseRepository.findByOperationId(operationId));
+            requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
+            responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
 
             Map<Request, Response> messages = importer.getMessageDefinitions(service, operation);
 
@@ -154,13 +154,13 @@ public class ServiceService {
             for (Response response : messages.values()){
                response.setOperationId(operationId);
             }
-            responseRepository.save(messages.values());
+            responseRepository.saveAll(messages.values());
             // Associate request with response and operation before saving.
             for (Request request : messages.keySet()){
                request.setOperationId(operationId);
                request.setResponseId(messages.get(request).getId());
             }
-            requestRepository.save(messages.keySet());
+            requestRepository.saveAll(messages.keySet());
          }
 
          // When extracting message informations, we may have modified Operation because discovered new resource paths
@@ -240,24 +240,45 @@ public class ServiceService {
     */
    public void deleteService(String id){
       // Get service to remove.
-      Service service = serviceRepository.findOne(id);
+      Service service = serviceRepository.findById(id).orElse(null);
 
       // Delete all resources first.
-      resourceRepository.delete(resourceRepository.findByServiceId(id));
+      resourceRepository.deleteAll(resourceRepository.findByServiceId(id));
 
       // Delete all requests and responses bound to service operation.
-      for (Operation operation : service.getOperations()){
-         String operationId = IdBuilder.buildOperationId(service, operation);
-         requestRepository.delete(requestRepository.findByOperationId(operationId));
-         responseRepository.delete(responseRepository.findByOperationId(operationId));
+      if (service != null) {
+         for (Operation operation : service.getOperations()) {
+            String operationId = IdBuilder.buildOperationId(service, operation);
+            requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
+            responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
+         }
       }
 
       // Delete all tests related to service.
-      testResultRepository.delete(testResultRepository.findByServiceId(id));
+      testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
 
       // Finally delete service.
       serviceRepository.delete(service);
       log.info("Service [{}] has been fully deleted", id);
+   }
+
+   /**
+    * Update the metadata for a Service. Only deals with annotations and labels and
+    * takes care of updated the <b>lastUpdate</b> marker.
+    * @param id The identifier of service to update metadata for
+    * @param metadata The new metadata for this Service
+    * @return True if service has been found and updated, false otherwise.
+    */
+   public Boolean updateMetadata(String id, Metadata metadata) {
+      Service service = serviceRepository.findById(id).orElse(null);
+      if (service != null) {
+         service.getMetadata().setLabels(metadata.getLabels());
+         service.getMetadata().setAnnotations(metadata.getAnnotations());
+         service.getMetadata().objectUpdated();
+         serviceRepository.save(service);
+         return true;
+      }
+      return false;
    }
 
    /**
@@ -271,16 +292,18 @@ public class ServiceService {
     * @return True if operation has been found and updated, false otherwise.
     */
    public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay, List<ParameterConstraint> constraints) {
-      Service service = serviceRepository.findOne(id);
-      for (Operation operation : service.getOperations()){
-         if (operation.getName().equals(operationName)){
-            operation.setDispatcher(dispatcher);
-            operation.setDispatcherRules(dispatcherRules);
-            operation.setParameterConstraints(constraints);
-            operation.setDefaultDelay(delay);
-            operation.setOverride(true);
-            serviceRepository.save(service);
-            return true;
+      Service service = serviceRepository.findById(id).orElse(null);
+      if (service != null) {
+         for (Operation operation : service.getOperations()) {
+            if (operation.getName().equals(operationName)) {
+               operation.setDispatcher(dispatcher);
+               operation.setDispatcherRules(dispatcherRules);
+               operation.setParameterConstraints(constraints);
+               operation.setDefaultDelay(delay);
+               operation.setOverride(true);
+               serviceRepository.save(service);
+               return true;
+            }
          }
       }
       return false;

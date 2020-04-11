@@ -20,7 +20,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Service, ServiceView, Api, GenericResource, OperationMutableProperties } from '../models/service.model';
+import { Service, ServiceView, Api, GenericResource, OperationMutableProperties, Metadata } from '../models/service.model';
 
 @Injectable({ providedIn: 'root' })
 export class ServicesService {
@@ -34,8 +34,18 @@ export class ServicesService {
     return this.http.get<Service[]>(this.rootUrl + '/services', options);
   }
 
-  public filterServices(filter: string): Observable<Service[]> {
-    const options = { params: new HttpParams().set('name', filter) };
+  public filterServices(labelsFilter: Map<string, string>, nameFilter: string): Observable<Service[]> {
+    let httpParams: HttpParams = new HttpParams();
+    if (nameFilter != null) {
+      httpParams = httpParams.set('name', nameFilter);
+    }
+    if (labelsFilter != null) {
+      for (let key of Array.from( labelsFilter.keys() )) {
+        httpParams = httpParams.set('labels.' + key, labelsFilter.get(key));
+      }
+    }
+    
+    const options = { params: httpParams };
     return this.http.get<Service[]>(this.rootUrl + '/services/search', options);
   }
 
@@ -45,6 +55,10 @@ export class ServicesService {
 
   public getServicesMap(): Observable<any> {
     return this.http.get<any>(this.rootUrl + '/services/map');
+  }
+
+  public getServicesLabels(): Observable<any> {
+    return this.http.get<any>(this.rootUrl + '/services/labels');
   }
 
   public getServiceView(serviceId: string): Observable<ServiceView> {
@@ -68,6 +82,10 @@ export class ServicesService {
   public getGenericResources(service: Service, page: number = 1, pageSize: number = 20): Observable<GenericResource[]> {
     const options = { params: new HttpParams().set('page', String(page - 1)).set('size', String(pageSize)) };
     return this.http.get<GenericResource[]>(this.rootUrl + '/genericresources/service/' + service.id, options);
+  }
+
+  public updateServiceMetadata(service: Service, metadata: Metadata): Observable<any> {
+    return this.http.put<any>(this.rootUrl + '/services/' + service.id + '/metadata', metadata);
   }
 
   public updateServiceOperationProperties(service: Service, operationName: string, properties: OperationMutableProperties): Observable<any> {

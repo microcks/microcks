@@ -55,8 +55,8 @@ public class SecretController {
          @RequestParam(value = "size", required = false, defaultValue = "20") int size
    ) {
       log.debug("Getting secrets list for page {} and size {}", page, size);
-      return secretRepository.findAll(new PageRequest(page, size,
-            new Sort(Sort.Direction.ASC, "name"))).getContent();
+      return secretRepository.findAll(PageRequest.of(page, size,
+            Sort.by(Sort.Direction.ASC, "name"))).getContent();
    }
 
    @RequestMapping(value = "/secrets/search", method = RequestMethod.GET)
@@ -88,7 +88,7 @@ public class SecretController {
    @RequestMapping(value = "/secrets/{id}", method = RequestMethod.DELETE)
    public ResponseEntity<String> deleteService(@PathVariable("id") String secretId) {
       log.debug("Removing secret with id {}", secretId);
-      secretRepository.delete(secretId);
+      secretRepository.deleteById(secretId);
       return new ResponseEntity<>(HttpStatus.OK);
    }
 }

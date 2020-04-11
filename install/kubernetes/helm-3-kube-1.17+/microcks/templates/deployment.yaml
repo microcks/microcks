@@ -24,7 +24,7 @@ spec:
     spec:
       containers:
       - name: details
-        image: {{ .Values.microcksImage }}
+        image: {{ .Values.microcks.image }}
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
@@ -35,25 +35,35 @@ spec:
           - name: SPRING_PROFILES_ACTIVE
             value: prod
           - name: SPRING_DATA_MONGODB_URI
-            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.appName }}-mongodb:27017/${SPRING_DATA_MONGODB_DATABASE}
+            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.mongodb.uri | default (print .Values.appName "-mongodb:27017") }}/${SPRING_DATA_MONGODB_DATABASE}
           - name: SPRING_DATA_MONGODB_USER
             valueFrom:
               secretKeyRef:
+                {{- if hasKey .Values.mongodb "secretRef" }}
+                key: {{ .Values.mongodb.secretRef.usernameKey | default "username" }}
+                name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
+                {{- else }}
                 key: username
                 name: "{{ .Values.appName }}-mongodb-connection"
+                {{- end }}
           - name: SPRING_DATA_MONGODB_PASSWORD
             valueFrom:
               secretKeyRef:
+                {{- if hasKey .Values.mongodb "secretRef" }}
+                key: {{ .Values.mongodb.secretRef.passwordKey | default "password" }}
+                name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
+                {{- else }}
                 key: password
                 name: "{{ .Values.appName }}-mongodb-connection"
+                {{- end }}
           - name: SPRING_DATA_MONGODB_DATABASE
-            value: "{{ .Values.appName }}"
+            value: {{ .Values.mongodb.database | default .Values.appName }}
           - name: POSTMAN_RUNNER_URL
             value: http://{{ .Values.appName }}-postman-runtime:8080
           - name: TEST_CALLBACK_URL
             value: http://{{ .Values.appName }}:8080
           - name: KEYCLOAK_URL
-            value: http://{{ .Values.keycloakHost }}/auth
+            value: https://{{ .Values.keycloak.url }}/auth
         livenessProbe:
           httpGet:
             path: "/api/health"
@@ -109,7 +119,7 @@ spec:
     spec:
       containers:
       - name: postman-runtime
-        image: {{ .Values.microcksPostmanImage }}
+        image: {{ .Values.postman.image }}
         ports:
         - containerPort: 3000
           protocol: TCP
@@ -144,6 +154,7 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
+{{- if and .Values.mongodb.install }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -174,7 +185,7 @@ spec:
     spec:
       containers:
       - name: mongodb
-        image: {{ .Values.mongodbImage }}
+        image: {{ .Values.mongodb.image }}
         ports:
         - containerPort: 27017
           protocol: TCP
@@ -224,7 +235,7 @@ spec:
           privileged: false
       volumes:
       - name: "{{ .Values.appName }}-mongodb-data"
-        {{- if .Values.persistence.enable }}
+        {{- if .Values.mongodb.persistent }}
         persistentVolumeClaim:
           claimName: "{{ .Values.appName }}-mongodb"
         {{- else }}
@@ -233,6 +244,8 @@ spec:
         {{- end }}
       restartPolicy: Always
       dnsPolicy: ClusterFirst
+{{- end }}
+{{- if and .Values.keycloak.install }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -262,7 +275,7 @@ spec:
     spec:
       containers:
       - name: keycloak-server
-        image: {{ .Values.keycloakImage }}
+        image: {{ .Values.keycloak.image }}
         resources:
           requests:
             cpu: 400m
@@ -359,7 +372,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: keycloak-postgresql
-        image: {{ .Values.postgresImage }}
+        image: {{ .Values.keycloak.postgresImage }}
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5432
@@ -401,10 +414,11 @@ spec:
             mountPath: "/var/lib/pgsql/data"
       volumes:
       - name: "{{ .Values.appName }}-keycloak-postgresql-data"
-        {{- if .Values.persistence.enable }}
+        {{- if .Values.keycloak.persistent }}
         persistentVolumeClaim:
           claimName: "{{ .Values.appName }}-keycloak-postgresql"
         {{- else }}
         emptyDir:
           medium: ''
         {{- end }}
+{{- end }}

@@ -5,8 +5,9 @@ labels:
   template: microcks-ephemeral-template
 metadata:
   annotations:
-    description: Template for Microcks application (see http://microcks.github.io)
-    iconClass: icon-java
+    description: Template for Microcks application (see https://microcks.io) on OpenShift 3.x
+    openshift.io/display-name: Microcks (Ephemeral)
+    openshift.io/provider-display-name: Microcks.io
     tags: instant-app
   labels: {}
   name: microcks-ephemeral
@@ -439,7 +440,7 @@ objects:
         - mongodb
         from:
           kind: ImageStreamTag
-          name: mongodb:3.2
+          name: mongodb:3.6
           namespace: "${NAMESPACE}"
         lastTriggeredImage: ''
     - type: ConfigChange

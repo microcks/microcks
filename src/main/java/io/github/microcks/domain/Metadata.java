@@ -21,6 +21,8 @@ package io.github.microcks.domain;
 import java.util.*;
 
 /**
+ * This is a commodity object for holding metadata on any entity. This object is
+ * inspired by Kubernetes metadata.
  * @author laurent
  */
 public class Metadata {
@@ -68,6 +70,14 @@ public class Metadata {
       }
    }
 
+   /**
+    * Override all the metadata annotations with new ones.
+    * @param annotations New annotations to set
+    */
+   public void setAnnotations(Map<String, String> annotations) {
+      this.annotations = annotations;
+   }
+
    /** @return An immutable version of labels map. */
    public Map<String, String> getLabels() {
       if (labels == null) {
@@ -88,5 +98,13 @@ public class Metadata {
          }
          labels.put(key, value);
       }
+   }
+
+   /**
+    * Override all the metadata labels with new ones.
+    * @param labels New labels to set
+    */
+   public void setLabels(Map<String, String> labels) {
+      this.labels = labels;
    }
 }

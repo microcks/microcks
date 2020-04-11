@@ -104,7 +104,7 @@ public class ResourceController {
    ) {
       log.info("Requesting {} resource for service {}", resourceType, serviceId);
 
-      Service service = serviceRepository.findOne(serviceId);
+      Service service = serviceRepository.findById(serviceId).orElse(null);
       if (service != null && ServiceType.GENERIC_REST.equals(service.getType())) {
          // Prepare HttpHeaders.
          InputStream stream = null;

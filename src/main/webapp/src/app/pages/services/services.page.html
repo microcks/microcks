@@ -3,7 +3,7 @@
       (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
   </pfng-toast-notification-list>
 </div>
-  
+
 <h1>
   APIs &amp; Services
   <div class="pull-right">
@@ -35,12 +35,16 @@
             <div class="list-group-item-heading serviceName">
               <h4><a [routerLink]="[service.id]">{{ service.name }}</a></h4>
             </div>
-            <div class="list-group-item-text">
+            <div class="list-group-item-text serviceMetadata">
               <span class="label label-primary" *ngIf="service.type === 'SOAP_HTTP'">SOAP</span>
               <span class="label label-success" *ngIf="service.type === 'REST'">REST</span>
               <span class="label label-info" *ngIf="service.type === 'GENERIC_REST'">DYNAMIC</span>
-              | Version <b>{{ service.version }}</b> <br/><br/>
-              <small *ngIf="service.metadata">Updated on {{ service.metadata.lastUpdate | date : 'medium' }}</small>
+                  | Version <b>{{ service.version }}</b>
+                  | <label-list [metadata]="service.metadata" [filter]="repositoryFilterFeatureLabelList()"></label-list>
+              <br/>
+              <div style="margin-top: 10px">
+                <small *ngIf="service.metadata" >Updated on {{ service.metadata.lastUpdate | date : 'medium' }}</small>
+              </div>
             </div>
           </div>
           <div class="list-view-pf-additional-info">

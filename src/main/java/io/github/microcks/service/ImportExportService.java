@@ -75,10 +75,10 @@ public class ImportExportService {
          log.info("Retrieve " + model.getRequests().size() + " requests to import into repository");
       }
       if (model != null){
-         serviceRepository.save(model.getServices());
-         resourceRepository.save(model.getResources());
-         responseRepository.save(model.getResponses());
-         requestRepository.save(model.getRequests());
+         serviceRepository.saveAll(model.getServices());
+         resourceRepository.saveAll(model.getResources());
+         responseRepository.saveAll(model.getResponses());
+         requestRepository.saveAll(model.getRequests());
          return true;
       }
 

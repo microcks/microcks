@@ -2,3 +2,7 @@
   display: inline-block;
   white-space: pre-wrap;
 }
+
+.metadata-labels {
+  margin-top: 10px;
+}

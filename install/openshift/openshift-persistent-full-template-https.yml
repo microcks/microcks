@@ -5,8 +5,9 @@ labels:
   template: microcks-persistent-template-https
 metadata:
   annotations:
-    description: Template for Microcks application (see http://microcks.github.io) with HTTPS support
-    iconClass: icon-java
+    description: Template for Microcks application (see https://microcks.io) on OpenShift 3.x with HTTPS support
+    openshift.io/display-name: Microcks with SSL
+    openshift.io/provider-display-name: Microcks.io
     tags: instant-app
   labels: {}
   name: microcks-persistent-https
@@ -447,7 +448,7 @@ objects:
         - mongodb
         from:
           kind: ImageStreamTag
-          name: mongodb:3.2
+          name: mongodb:3.6
           namespace: "${NAMESPACE}"
         lastTriggeredImage: ''
     - type: ConfigChange
@@ -546,7 +547,7 @@ objects:
   metadata:
     name: "${APP_NAME}-keycloak-admin"
     labels:
-      group: microcks
+      app: "${APP_NAME}"
       container: keycloak
       group: microcks
   type: kubernetes.io/basic-auth
@@ -562,6 +563,13 @@ objects:
       container: spring
       group: microcks
   data:
+    features.properties: |-
+      # Optional and additional features configuration
+      # Syntax: features.features.<feature-name>.<feature-property>=<feature-property-value>
+      features.feature.repository-filter.enabled=false
+      features.feature.repository-filter.label-key=domain
+      features.feature.repository-filter.label-label=Domain
+      features.feature.repository-filter.label-list=domain,status
     application.properties: |-
       # Application configuration properties
       tests-callback.url=${TEST_CALLBACK_URL}

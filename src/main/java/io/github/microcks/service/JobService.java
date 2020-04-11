@@ -62,7 +62,7 @@ public class JobService {
       Secret jobSecret = null;
       if (job.getSecretRef() != null) {
          log.debug("Retrieving secret {} for job {}", job.getSecretRef().getName(), job.getName());
-         jobSecret = secretRepository.findOne(job.getSecretRef().getSecretId());
+         jobSecret = secretRepository.findById(job.getSecretRef().getSecretId()).orElse(null);
       }
 
       // Reinitialize service references and import errors before new import.

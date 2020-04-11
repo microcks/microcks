@@ -67,7 +67,7 @@ public class JobController {
       if (name != null) {
          return jobRepository.findByNameLike(name);
       }
-      return jobRepository.findAll(new PageRequest(page, size, new Sort(Sort.Direction.ASC, "name")))
+      return jobRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name")))
             .getContent();
    }
 
@@ -89,7 +89,7 @@ public class JobController {
    @RequestMapping(value = "/jobs/{id}", method = RequestMethod.GET)
    public ResponseEntity<ImportJob> getJob(@PathVariable("id") String jobId) {
       log.debug("Retrieving job with id {}", jobId);
-      return new ResponseEntity<>(jobRepository.findOne(jobId), HttpStatus.OK);
+      return new ResponseEntity<>(jobRepository.findById(jobId).orElse(null), HttpStatus.OK);
    }
 
    @RequestMapping(value = "/jobs/{id}", method = RequestMethod.POST)
@@ -101,7 +101,7 @@ public class JobController {
    @RequestMapping(value = "/jobs/{id}/activate", method = RequestMethod.PUT)
    public ResponseEntity<ImportJob> activateJob(@PathVariable("id") String jobId) {
       log.debug("Activating job with id {}", jobId);
-      ImportJob job = jobRepository.findOne(jobId);
+      ImportJob job = jobRepository.findById(jobId).orElse(null);
       job.setActive(true);
       return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
    }
@@ -109,7 +109,7 @@ public class JobController {
    @RequestMapping(value = "/jobs/{id}/start", method = RequestMethod.PUT)
    public ResponseEntity<ImportJob> startJob(@PathVariable("id") String jobId) {
       log.debug("Starting job with id {}", jobId);
-      ImportJob job = jobRepository.findOne(jobId);
+      ImportJob job = jobRepository.findById(jobId).orElse(null);
       job.setActive(true);
       jobService.doImportJob(job);
       return new ResponseEntity<>(job, HttpStatus.OK);
@@ -118,7 +118,7 @@ public class JobController {
    @RequestMapping(value = "/jobs/{id}/stop", method = RequestMethod.PUT)
    public ResponseEntity<ImportJob> stopJob(@PathVariable("id") String jobId) {
       log.debug("Stopping job with id {}", jobId);
-      ImportJob job = jobRepository.findOne(jobId);
+      ImportJob job = jobRepository.findById(jobId).orElse(null);
       job.setActive(false);
       return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
    }
@@ -126,7 +126,7 @@ public class JobController {
    @RequestMapping(value = "/jobs/{id}", method = RequestMethod.DELETE)
    public ResponseEntity<String> deleteJob(@PathVariable("id") String jobId) {
       log.debug("Removing job with id {}", jobId);
-      jobRepository.delete(jobId);
+      jobRepository.deleteById(jobId);
       return new ResponseEntity<>(HttpStatus.OK);
    }
 }

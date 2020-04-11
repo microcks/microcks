@@ -1,0 +1,335 @@
+/* Specific styles */
+
+.modal-header {
+  background-color: #ffffff !important;
+  border-bottom: 1px solid rgba(0,0,0,0.2);
+}
+
+.mh-api-install-modal_row {
+  padding-top: 20px; 
+  padding-bottom: 15px;
+}
+
+.mh-button.mh-button-navig {
+  background-color: #92d400;
+  color: #fff;
+}
+
+/* Overriden styles */
+
+.mh-api-header-content {
+  padding: 20px 0 10px 0 !important;
+}
+.mh-api-header_info h1 {
+  margin-top: 10px;
+}
+.mh-api-header_version {
+  font-weight: 400;
+  font-size: 0.9em;
+  line-height: 1;
+  color: #9c9c9c !important;
+}
+
+.mh-api-page_side-panel .properties-side-panel-pf {
+  background-color: #f1f1f1 !important;
+}
+
+.mh-api-install-modal_list {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.mh-api-install-modal_list > li:last-child {
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+
+.mh-button {
+  width: 100%;
+}
+
+/* Global styles coming from styles.css */
+
+.mh-page-contents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+  min-height: calc(100vh - 700px);
+}
+.mh-page-contents_inner {
+  background: transparent;
+  display: flex;
+  padding: 20px 15px 0 15px;
+}
+
+.mh-external-link.indicator {
+  padding-right: 15px;
+}
+.mh-external-link.block {
+  display: block;
+}
+
+@media (min-width: 1400px) {
+  .container-sm {
+    max-width: 1220px;
+  }
+}
+
+/* Specific styles comming from apiVersion.page.css,, ignoring .mh-api-header_title */
+
+.mh-api-header-content {
+  align-items: flex-start;
+  display: flex;
+  flex-direction: row;
+  padding: 30px 0;
+  overflow: hidden;
+}
+.mh-api-header_image-container {
+  background: #fff;
+  /*border-radius: 50px;*/
+  /*box-shadow: 0 2px 4px rgba(0,0,0,.2);*/
+  /*height: 100px;*/
+  /*width: 100px;*/
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.mh-api-header_image {
+  max-height: 60px;
+  max-width: 60px;
+}
+
+.mh-api-header_info {
+  flex: 1;
+  margin-left: 20px;
+  overflow: hidden;
+}
+.mh-api-header_version {
+  color: #fff;
+}
+
+
+@media (min-width: 768px) {
+  .col-md-push-9 {
+    left: 75%;
+  }
+}
+@media (min-width: 768px) {
+  .col-md-pull-3 {
+    right: 25%; 
+  }
+}
+
+@media (min-width: 768px) {
+  .mh-api-page_side-panel {
+    margin-top: 20px;
+  }
+}
+.mh-api-page_side-panel .mh-button {
+  width: 100%;
+}
+.mh-button.mh-button-primary {
+  background-color: #1991eb;
+  color: #fff;
+}
+.mh-button {
+  border: none;
+  border-radius: 4px;
+  padding: 6px 15px 7px;
+}
+
+.mh-api-page_side-panel_separator {
+  margin: 30px 0;
+  border-top: 1px solid #eaeaea;
+}
+
+.mh-api-page_side-panel .properties-side-panel-pf {
+  background-color: #ffffff;
+  display: block;
+  padding: 30px 30px 30px 10px;
+  width: 100%;
+}
+.properties-side-panel-pf-property:first-of-type {
+  margin-top: 0;
+}
+.properties-side-panel-pf-property {
+  margin-top: 20px;
+}
+.mh-api-page_side-panel .properties-side-panel-pf .properties-side-panel-pf-property-label {
+  color: #b6b6b6;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.properties-side-panel-pf-property .navbar {
+  padding: 0;
+}
+
+.btn-group {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+}
+.btn-group>.btn:first-child {
+  margin-left: 0;
+}
+.btn {
+  padding: 2px 6px;
+}
+.btn-default.active, .btn-default .open .dropdown-toggle.btn-default, .btn-default:active, .btn-default:focus, .btn-default:hover {
+  background-color: #f1f1f1;
+}
+
+.mh-api-page_side-panel_version-dropdown {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: #363636;
+  font-size: inherit;
+  font-weight: inherit;
+}
+.mh-api-page_side-panel .dropdown-menu, .mh-api-page_side-panel_version-dropdown {
+  font-size: inherit;
+  font-weight: inherit;
+  
+}
+.mh-api-page_side-panel .dropdown-menu {
+  background-color: #fafbfd;
+  border-radius: 4px;
+  border: 1px solid #eaeaea;
+  -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
+  box-shadow: 0 6px 12px rgba(0,0,0,.175);
+}
+.mh-api-page_side-panel .dropdown-menu>li>a {
+  border-color: transparent;
+  border-style: solid;
+  border-width: 1px 0;
+  padding: 1px 10px;
+  display: block;
+  clear: both;
+  font-weight: 400;
+  line-height: 1.66667;
+  color: #363636;
+  white-space: nowrap;
+}
+.dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
+  color: #4d5258;
+  text-decoration: none;
+  background-color: #f5f5f5;
+}
+
+.properties-side-panel-pf-property-value {
+  font-size: 14px;
+  margin-top: 5px;
+  word-break: break-word;
+}
+
+.mh-capability-level-popover_icon {
+  display: none;
+  font-size: 10px;
+  cursor: pointer;
+}
+@media (min-width: 768px) {
+  .mh-capability-level-popover_icon {
+    display: inline-block;
+    margin-left: 3px;
+  }
+}
+
+.mh-capability-level-popover_link {
+  display: none;
+}
+
+.mh-api-page_side-panel_image {
+  padding-top: 5px;
+  width: 139px;
+}
+
+.mh-api-markdown-view {
+  padding-bottom: 15px;
+}
+
+.modal-content {
+  background-color: #fff;
+}
+.modal-header .close {
+  color: #000;
+}
+.modal-body {
+  padding: 20px;
+  padding-top: 0px;
+}
+.modal-body h2 {
+  font-size: 22px;
+  letter-spacing: 1.22px;
+  padding-top: 0;
+  margin: 20px 0;
+  border: 0;
+}
+.catalog-item-header-pf {
+  display: flex;
+  align-items: center;
+}
+.catalog-item-header-pf-icon {
+  font-size: 60px;
+  max-height: 60px;
+  width: 60px;
+}
+.catalog-item-header-pf-text {
+  margin-left: 20px;
+}
+.catalog-item-header-pf-title {
+  font-weight: 400;
+  margin-bottom: 0;
+  margin-top: 0;
+}
+.catalog-item-header-pf-subtitle {
+  color: #8b8d8f;
+  margin-top: 10px;
+  margin-bottom: 0;
+  font-size: 15px;
+  letter-spacing: .83px;
+}
+
+.mh-api-install-modal_list {
+  padding-left: 20px;
+}
+.mh-api-install-modal_list>li:not(:last-child) {
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+.mh-api-install-modal_list>li {
+  display: list-item;
+  text-align: -webkit-match-parent;
+}
+.mh-api-install-modal_list-item .mh-code {
+  margin-bottom: 0;
+}
+.mh-api-install-modal_install-command-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+.mh-api-install-modal .mh-code {
+  margin: 10px 20px 15px 0;
+  padding: 10px;
+  background-color: #fafbfd;
+  border-radius: 3px;
+  flex: 1;
+  word-break: break-all;
+}
+.mh-code {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.mh-capability-level-popover {
+  max-width: 730px;
+  height: 330px;
+  width: 730px;
+}

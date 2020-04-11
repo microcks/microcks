@@ -64,6 +64,12 @@
         <span class="list-group-item-value">Importers</span>
       </a>
     </li>
+    <li class="list-group-item" *ngIf="hasFeatureEnabled('microcks-hub')">
+      <a routerLink="/hub">
+        <span class="pficon pficon-topology" data-toggle="tooltip" title="Mocks Hub"></span>
+        <span class="list-group-item-value">Microcks Hub</span>
+      </a>
+    </li>
     <li class="list-group-item" *ngIf="hasRole('admin')">
       <a routerLink="/admin">
         <span class="fa fa-shield" data-toggle="tooltip" title="Administration"></span>

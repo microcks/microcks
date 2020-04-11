@@ -18,12 +18,17 @@
  */
 package io.github.microcks.repository;
 
-import com.github.fakemongo.Fongo;
-import com.mongodb.Mongo;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import de.bwaldvogel.mongo.MongoServer;
+import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+
+import javax.annotation.PreDestroy;
+import java.net.InetSocketAddress;
 
 /**
  * Spring configuration for repositories tests.
@@ -32,19 +37,33 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @Configuration
 @ComponentScan(basePackages = {"io.github.microcks.service"})
 @EnableMongoRepositories(basePackages = {"io.github.microcks.repository"})
-public class RepositoryTestsConfiguration extends AbstractMongoConfiguration {
+public class RepositoryTestsConfiguration extends AbstractMongoClientConfiguration {
+
+   private MongoClient client;
+   private MongoServer server;
 
    @Override
    protected String getDatabaseName() {
       return "demo-test";
    }
+
    @Override
-   public Mongo mongo() {
-      // Uses Fongo for in-memory tests.
-      return new Fongo("mongo-test").getMongo();
+   public MongoClient mongoClient() {
+      // Replacing fongo by mongo-java-server, according to
+      // https://github.com/fakemongo/fongo/issues/337
+      //return new Fongo("mongo-test").getMongo();
+
+      // Create a server and bind on a random local port
+      server = new MongoServer(new MemoryBackend());
+      InetSocketAddress serverAddress = server.bind();
+      //client = new MongoClient(new ServerAddress(serverAddress));
+      client = MongoClients.create("mongodb://localhost:" + serverAddress.getPort());
+      return client;
    }
-   @Override
-   protected String getMappingBasePackage() {
-      return "com.github.lbroudoux.microcks.domain";
+
+   @PreDestroy
+   public void shutdown(){
+      client.close();
+      server.shutdown();
    }
 }

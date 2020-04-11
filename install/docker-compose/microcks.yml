@@ -3,7 +3,7 @@ networks:
   main:
 services:
   mongo:
-    image: mongo:3.3.12
+    image: mongo:3.4.23
     container_name: microcks-mongo
     volumes:
       - "~/tmp/microcks-data:/data/db"
@@ -52,11 +52,10 @@ services:
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
       - POSTMAN_RUNNER_URL=http://postman:3000
-      - TEST_CALLBACK_URL=https://microcks:8080
+      - TEST_CALLBACK_URL=http://microcks:8080
       #- KEYCLOAK_URL=https://localhost:8543/auth
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      - KEYCLOAK_URL=http://docker.for.mac.localhost:8180/auth
-      #- KEYCLOAK_URL=https://docker.for.mac.localhost:8543/auth
+      - KEYCLOAK_URL=https://docker.for.mac.localhost:8543/auth
       #- KEYCLOAK_URL=https://docker.for.win.localhost:8543/auth
     networks:
       main:

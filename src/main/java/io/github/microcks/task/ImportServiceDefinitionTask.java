@@ -80,7 +80,7 @@ public class ImportServiceDefinitionTask {
       log.debug("Found {} jobs to check. Splitting in {} chunks.", numJobs, (numJobs/CHUNK_SIZE + 1));
 
       for (int i=0; i<numJobs/CHUNK_SIZE + 1; i++) {
-         List<ImportJob> jobs = jobRepository.findAll(new PageRequest(i, CHUNK_SIZE)).getContent();
+         List<ImportJob> jobs = jobRepository.findAll(PageRequest.of(i, CHUNK_SIZE)).getContent();
          log.debug("Found {} jobs into chunk {}", jobs.size(), i);
 
          for (ImportJob job : jobs){
@@ -91,7 +91,7 @@ public class ImportServiceDefinitionTask {
                Secret jobSecret = null;
                if (job.getSecretRef() != null) {
                   log.debug("Retrieving secret {} for job {}", job.getSecretRef().getName(), job.getName());
-                  jobSecret = secretRepository.findOne(job.getSecretRef().getSecretId());
+                  jobSecret = secretRepository.findById(job.getSecretRef().getSecretId()).orElse(null);
                }
 
                // Get older and fresh Etag if any.

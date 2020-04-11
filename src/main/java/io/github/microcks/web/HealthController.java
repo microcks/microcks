@@ -50,7 +50,7 @@ public class HealthController {
 
       try {
          // Using a single selection query to ensure connection to MongoDB is ok.
-         List<ImportJob> jobs = jobRepository.findAll(new PageRequest(0, 10, new Sort(Sort.Direction.ASC, "name")))
+         List<ImportJob> jobs = jobRepository.findAll(PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name")))
                .getContent();
       } catch (Exception e) {
          log.error("Health check caught an exception: " + e.getMessage(), e);

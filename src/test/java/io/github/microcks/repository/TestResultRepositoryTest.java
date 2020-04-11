@@ -87,7 +87,7 @@ public class TestResultRepositoryTest {
 
   @Test
   public void testFindLastOnesForService() {
-    List<TestResult> older = repository.findByServiceId(serviceId, new PageRequest(0, 2, Sort.Direction.DESC, "testNumber"));
+    List<TestResult> older = repository.findByServiceId(serviceId, PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
     assertEquals(2, older.size());
     Long newTestNumber = older.get(0).getTestNumber() + 1L;
     assertEquals(3L, newTestNumber.longValue());

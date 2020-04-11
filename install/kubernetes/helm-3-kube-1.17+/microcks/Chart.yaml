@@ -17,4 +17,4 @@ maintainers:
   - name: Laurent Broudoux
     email: laurent.broudoux@gmail.com
 icon: https://microcks.io/images/microcks-big.png
-appVersion: 0.8.0
+appVersion: 0.9.0

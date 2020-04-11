@@ -83,7 +83,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       try{
          project = new WsdlProject(projectFilePath);
       } catch (Exception e) {
-         throw new IOException("SoapUI project file");
+         log.error("Exception while parsing SoapUI file " + projectFilePath, e);
+         throw new IOException("SoapUI project file parsing error");
       }
    }
 

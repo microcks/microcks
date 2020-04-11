@@ -95,9 +95,6 @@ public class SoapHttpTestRunner extends HttpTestRunner{
 				log.debug("Soap validation errors found " + errors.size() + ", marking test as failed.");
 				return TestReturn.FAILURE_CODE;
 			}
-		} catch (UnsupportedEncodingException uee) {
-			log.debug("UnsupportedEncodingException while encoding Wsdl URL", uee);
-			return TestReturn.FAILURE_CODE;
 		} catch (XmlException e) {
 			log.debug("XmlException while validating Soap response message", e);
 			return TestReturn.FAILURE_CODE;

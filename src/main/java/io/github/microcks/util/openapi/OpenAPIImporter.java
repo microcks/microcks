@@ -44,9 +44,7 @@ import java.util.stream.Collectors;
  */
 public class OpenAPIImporter implements MockRepositoryImporter {
 
-   /**
-    * A simple logger for diagnostic messages.
-    */
+   /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(OpenAPIImporter.class);
 
    private boolean isYaml = true;
@@ -91,7 +89,8 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          }
          spec = mapper.readTree(bytes);
       } catch (Exception e) {
-         throw new IOException("OpenAPI spec file");
+         log.error("Exception while parsing OpenAPI specification file " + specificationFilePath, e);
+         throw new IOException("OpenAPI spec file parsing error");
       }
    }
 
@@ -169,7 +168,6 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                   Iterator<Entry<String, JsonNode>> responseCodes = verb.getValue().path("responses").fields();
                   while (responseCodes.hasNext()) {
                      Entry<String, JsonNode> responseCode = responseCodes.next();
-
                      // Find here potential headers for output of this operation examples.
                      Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue());
 

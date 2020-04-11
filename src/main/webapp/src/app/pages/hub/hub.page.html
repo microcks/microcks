@@ -1,0 +1,65 @@
+<div class="container-fluid mh-header-bar">
+  <div class="row">
+    <img class="mh-header-bar-inner_logo" src="/assets/images/hub-microcks.svg"/>
+  </div>
+</div>
+
+<h1>
+  Welcome to Hub Microcks.io
+</h1>
+<small>Hub Microcks.io is a community place for sharing API mocks and contract tests for using with Microcks. Look for your favorite API mocks.</small>
+
+<div class="mh-page-contents">
+  <div class="mh-page-contents_inner container-sm">
+    <div class="mh-page_filters">
+      <div class="filter-panel-pf">
+        <form class="filter-panel-pf-category">
+          <fieldset class="checkbox filter-panel-pf-category-items">
+            <legend class="filter-panel-pf-category-title">categories</legend>
+            <div *ngFor="let category of categories" class="mh-category-item" [ngClass]="{selected: category === selectedCategory}">
+              <button class="mh-category-item_select" (click)="selectCategory(category)" type="button">{{ category }}</button>
+              <button class="mh-category-item_deselect" *ngIf="category === selectedCategory">
+                <span aria-hidden="true" class="fa fa-close" (click)="unselectCategory(category)"></span>
+                <span class="sr-only">clear</span>
+              </button>
+            </div>
+          </fieldset>
+        </form>
+
+        <form class="filter-panel-pf-category">
+          <fieldset class="checkbox filter-panel-pf-category-items">
+            <legend class="filter-panel-pf-category-title">provider</legend>
+            <div *ngFor="let provider of providers | slice:0:maxProviders" class="filter-panel-pf-category-item">
+              <div class="checkbox">
+                <label title="{{ provider }}">
+                  <input type="checkbox" (click)="toggleProvider(provider)">{{ provider }}<span class="item-count">({{ countFilteredPackagesForProvider(provider) }})</span>
+                </label>
+              </div>
+            </div>
+            <button *ngIf="providers.length - maxProviders > 0" (click)="showAllProviders()" type="button" class="btn btn-link">Show {{ providers.length - maxProviders }} more</button>
+          </fieldset>
+        </form>
+      </div>
+    </div>
+    <div class="mh-page_contents container-sm">
+      <div class="mh-page_toolbar">
+        <div class="mh-page_toolbar-item mh-page_toolbar-item_left" *ngIf="filteredPackages">
+          {{ filteredPackages.length }} <span class="mh-page_toolbar-item-label">Packages</span>, {{ countFilteredAPIs() }} <span class="mh-page_toolbar-item-label">APIs</span>
+        </div>
+      </div>
+      <div class="catalog-tile-view-pf catalog-tile-view-pf-no-categories">
+        <a *ngFor="let package of filteredPackages" id="{{ package.name }}" [routerLink]="['package', package.name]" class="catalog-tile-pf" >
+          <div class="catalog-tile-pf-header">
+            <img class="catalog-tile-pf-icon" src="{{ package.thumbUrl }}" alt="">
+          </div>
+          <div class="catalog-tile-pf-body"><div class="catalog-tile-pf-title">{{ package.displayName }}</div>
+          <div class="catalog-tile-pf-subtitle">provided by {{ package.provider }}</div>
+            <div class="catalog-tile-pf-description" style="max-height: 69px;">
+              <span>{{ package.description }}</span>
+            </div>
+          </div>
+        </a>
+      </div>      
+    </div>
+  </div>
+</div>

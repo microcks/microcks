@@ -7,8 +7,8 @@ To learn more about the release, try:
   $ helm status {{ .Release.Name }}
   $ helm get {{ .Release.Name }}
 
-Microcks is available at http://{{ .Values.microcksHost }}.
+Microcks is available at https://{{ .Values.microcks.url }}.
 
-Keycloak has been deployed on http://{{ .Values.keycloakHost }}/auth to protect user access.
+Keycloak has been deployed on https://{{ .Values.keycloak.url }}/auth to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into '{{ .Values.appName }}-keycloak-admin' secret.

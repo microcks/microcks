@@ -37,6 +37,7 @@ import java.io.StringWriter;
 import java.util.List;
 
 /**
+ * This is an implementation of HttpTestRunner that deals with OpenAPI schema validation.
  * @author laurent
  */
 public class OpenAPITestRunner extends HttpTestRunner {
@@ -86,7 +87,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
 
       // If required, compare response code and content-type to expected ones.
       if (validateResponseCode) {
-         Response expectedResponse = responseRepository.findOne(request.getResponseId());
+         Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
          log.debug("Response expected status code : " + expectedResponse.getStatus());
          if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
             log.debug("Response HttpStatus does not match expected one, returning failure");

@@ -1,0 +1,28 @@
+---
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+whitelistObjectNames:
+  - 'org.apache.camel:*'
+rules:
+  - pattern: '^org.apache.camel<context=(\w+), type=routes, name=\"(\S+)\"><>((?:Min|Mean|Max|Last|Delta)(?:ProcessingTime)):'
+    name: camel_routes_$3
+    labels:
+      name: $2
+      context: $1
+  - pattern: '^org.apache.camel<context=(\w+), type=routes, name=\"(\S+)\"><>(TotalProcessingTime):'
+    type: COUNTER
+    name: camel_routes_$3
+    labels:
+      name: $2
+      context: $1
+  - pattern: '^org.apache.camel<context=(\w+), type=routes, name=\"(\S+)\"><>(ExchangesInflight|LastProcessingTime):'
+    name: camel_routes_$3
+    labels:
+      name: $2
+      context: $1
+  - pattern: '^org.apache.camel<context=(\w+), type=routes, name=\"(\S+)\"><>((?:Exchanges(?:Completed|Failed|Total))|FailuresHandled):'
+    type: COUNTER
+    name: camel_routes_$3
+    labels:
+      name: $2
+      context: $1

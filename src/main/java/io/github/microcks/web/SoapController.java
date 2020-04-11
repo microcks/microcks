@@ -21,7 +21,6 @@ package io.github.microcks.web;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
-import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.DispatchStyles;
@@ -47,7 +46,6 @@ import javax.script.ScriptEngineManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
-import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -145,42 +143,29 @@ public class SoapController {
             response = responses.get(0);
          }
 
+         // Set Content-Type to "text/xml".
+         HttpHeaders responseHeaders = new HttpHeaders();
+         responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
+
+         // Render response content before waiting and returning.
+         String responseContent = MockControllerCommons.renderResponseContent(body, null, request, response);
+
          // Setting delay to default one if not set.
          if (delay == null && rOperation.getDefaultDelay() != null) {
             delay = rOperation.getDefaultDelay();
          }
-
-         if (delay != null && delay > -1) {
-            log.debug("Mock delay is turned on, waiting if necessary...");
-            long duration = System.currentTimeMillis() - startTime;
-            if (duration < delay) {
-               Object semaphore = new Object();
-               synchronized (semaphore) {
-                  try {
-                     semaphore.wait(delay - duration);
-                  } catch (Exception e) {
-                     log.debug("Delay semaphore was interrupted");
-                  }
-               }
-            }
-            log.debug("Delay now expired, releasing response !");
-         }
+         MockControllerCommons.waitForDelay(startTime, delay);
 
          // Publish an invocation event before returning.
-         MockInvocationEvent event = new MockInvocationEvent(this, service.getName(), version,
-               response.getName(), new Date(startTime), startTime - System.currentTimeMillis());
-         applicationContext.publishEvent(event);
-         log.debug("Mock invocation event has been published");
+         MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
 
-         // Set Content-Type to "text/xml".
-         HttpHeaders responseHeaders = new HttpHeaders();
-         responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
          if (response.isFault()) {
-            return new ResponseEntity<Object>(response.getContent(), responseHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<Object>(responseContent, responseHeaders, HttpStatus.INTERNAL_SERVER_ERROR);
          }
-         return new ResponseEntity<Object>(response.getContent(), responseHeaders, HttpStatus.OK);
+         return new ResponseEntity<Object>(responseContent, responseHeaders, HttpStatus.OK);
       }
 
+      log.debug("No valid operation found and Microcks...");
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
    }
 

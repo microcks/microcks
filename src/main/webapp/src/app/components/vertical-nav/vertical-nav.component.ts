@@ -1,5 +1,5 @@
-import { Component, OnInit, TemplateRef, ViewEncapsulation } from '@angular/core';
-import { Observable, from, forkJoin } from 'rxjs';
+import { Component, OnInit, TemplateRef, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
+import { Observable } from 'rxjs';
 
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
@@ -10,6 +10,7 @@ import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
 import { IAuthenticationService } from "../../services/auth.service";
 import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from "../../models/user.model";
+import { ConfigService } from 'src/app/services/config.service';
 
 
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
@@ -20,14 +21,15 @@ declare let $: any;
   selector: 'vertical-nav',
   encapsulation: ViewEncapsulation.None,
   templateUrl: './vertical-nav.component.html',
-  styleUrls: ['./vertical-nav.component.css']
+  styleUrls: ['./vertical-nav.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class VerticalNavComponent implements OnInit {
   aboutConfig: AboutModalConfig;
   modalRef: BsModalRef;
 
   constructor(protected authService: IAuthenticationService, private modalService: BsModalService,
-    private versionInfoSvc: VersionInfoService) {
+    private versionInfoSvc: VersionInfoService, private config: ConfigService) {
   }
 
   ngOnInit() {
@@ -74,6 +76,12 @@ export class VerticalNavComponent implements OnInit {
   }
 
   public hasRole(role: string): boolean {
+    console.info("hasRole called");
     return this.authService.hasRole(role);
+  }
+
+  public hasFeatureEnabled(feature: string): boolean {
+    console.info("hasFeatureEnabled called");
+    return this.config.hasFeatureEnabled(feature);
   }
 }

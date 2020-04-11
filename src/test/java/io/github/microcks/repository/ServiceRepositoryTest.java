@@ -67,7 +67,7 @@ public class ServiceRepositoryTest {
 
    @Test
    public void testFindOne(){
-      Service service = repository.findOne(serviceId);
+      Service service = repository.findById(serviceId).orElse(null);
       assertNotNull(service);
       assertEquals("MyService-hello", service.getName());
       assertEquals("1.1", service.getVersion());

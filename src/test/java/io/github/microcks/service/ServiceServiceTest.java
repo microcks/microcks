@@ -62,7 +62,7 @@ public class ServiceServiceTest {
       assertNotNull(created.getId());
 
       // Retrieve object by id and assert on what has been persisted.
-      Service retrieved = repository.findOne(created.getId());
+      Service retrieved = repository.findById(created.getId()).orElse(null);
       assertEquals("Order Service", retrieved.getName());
       assertEquals("1.0", retrieved.getVersion());
       assertEquals(ServiceType.GENERIC_REST, retrieved.getType());

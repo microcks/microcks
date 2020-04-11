@@ -1,32 +1,57 @@
 appName: microcks
-microcksHost: microcks-microcks.192.168.99.100.nip.io
-keycloakHost: keycloak-microcks.192.168.99.100.nip.io
 
-#microcksHost: microcks-microcks.192.168.64.6.nip.io
-#keycloakHost: keycloak-microcks.192.168.64.6.nip.io
+microcks:
+  url: microcks-microcks.192.168.99.100.nip.io
+  #url: microcks-microcks.192.168.64.6.nip.io
+  #ingressSecretRef: my-secret-for-microcks-ingress
+  image: microcks/microcks:nightly
+  replicas: 1
+  
+postman:
+  image: microcks/microcks-postman-runtime:latest
+  replicas: 1
 
-persistence:
-  enable: false
-  mongodbVolumeSize: 2Gi
-  postgresVolumeSize: 1Gi
+keycloak:
+  install: true
+  url: keycloak-microcks.192.168.99.100.nip.io
+  #url: keycloak-microcks.192.168.64.6.nip.io
+  #ingressSecretRef: my-secret-for-keycloak-ingress
+  
+  image: jboss/keycloak:4.8.3.Final
+  adminUsername: admin
+  # Unless you uncomment following line, admin password will be randowly generated.
+  # Beware that in case of update, new value will be generated and
+  #adminPassword: 123
 
-mongodbUsername: userM
-# Unless you uncomment following line, admin password will be randowly generated.
-# Beware that in case of update, new value will be generated and
-#mongodbPassword: 123
+  persistent: true
+  volumeSize: 1Gi
+  postgresImage: centos/postgresql-95-centos7:latest
+  username: userP
+  # Unless you uncomment following line, admin password will be randowly generated.
+  # Beware that in case of update, new value will be generated and
+  #password: 123
 
-keycloakAdminUsername: admin
-# Unless you uncomment following line, admin password will be randowly generated.
-# Beware that in case of update, new value will be generated and
-#keycloakAdminPassword: 123
+mongodb:
+  install: true
+  #uri: mongodb:27017
+  image: centos/mongodb-34-centos7:latest
+  persistent: true
+  volumeSize: 2Gi
+  
+  username: userM
+  # Unless you uncomment following line, admin password will be randowly generated.
+  # Beware that in case of update, new value will be generated and overwrite existing one.
+  #password: 123
 
-postgresUsername: userP
-# Unless you uncomment following line, admin password will be randowly generated.
-# Beware that in case of update, new value will be generated and
-#postgresPassword: 123
+  # Or you can uncomment secretRef block if username and password are provided through a Secret.
+  #secretRef:
+    #secret: mongodb
+    #usernameKey: database-user
+    #passwordKey: database-password
 
-microcksImage: microcks/microcks:latest
-microcksPostmanImage: microcks/microcks-postman-runtime:latest
-mongodbImage: centos/mongodb-32-centos7:latest
-keycloakImage: jboss/keycloak:4.8.3.Final
-postgresImage: centos/postgresql-95-centos7:latest
+features:
+  repositoryFilter:
+    enabled: false
+    labelKey: app
+    labelLabel: Application
+    labelList: app,status

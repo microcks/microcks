@@ -4,7 +4,7 @@
   </pfng-toast-notification-list>
 </div>
 
-<div *ngIf="serviceView | async as view">
+<div *ngIf="resolvedServiceView as view">
   <div class="container-fluid breadcrumb-bar">
     <div class="row">
       <ol class="breadcrumb">
@@ -16,6 +16,11 @@
 
   <h1>{{ view.service.name }} - {{ view.service.version }}</h1>
   <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn | timeAgo }}, last update on {{ view.service.metadata.lastUpdate | date : 'medium'  }}</small>
+
+  <div *ngIf="view.service.metadata" class="metadata-labels">
+    <label-list [metadata]="view.service.metadata"></label-list>
+    <button type="button" class="btn btn-link" *ngIf="hasRole('admin') || hasRole('manager')" (click)="openEditLabels()">Edit Labels</button>
+  </div>
 
   <div class="row">
     <div class="col-md-8">
@@ -187,8 +192,8 @@
             </dd>
           </dl>
 
-          <h4 class="section-label" *ngIf="item.parameterConstraints">Parameter Constraints</h4>
-          <div class="row" *ngIf="item.parameterConstraints">
+          <h4 class="section-label" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">Parameter Constraints</h4>
+          <div class="row" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">
             <div class="col-md-6">
               <dl class="dl-horizontal left">
                 <span *ngFor="let constraint of item.parameterConstraints">

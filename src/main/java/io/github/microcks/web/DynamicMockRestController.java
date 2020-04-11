@@ -124,7 +124,7 @@ public class DynamicMockRestController {
 
          List<GenericResource> genericResources = null;
          if (body == null) {
-            genericResources = genericResourceRepository.findByServiceId(mockContext.service.getId(), new PageRequest(page, size));
+            genericResources = genericResourceRepository.findByServiceId(mockContext.service.getId(), PageRequest.of(page, size));
          } else {
             genericResources = genericResourceRepository.findByServiceIdAndJSONQuery(mockContext.service.getId(), body);
          }
@@ -158,7 +158,7 @@ public class DynamicMockRestController {
       MockContext mockContext = getMockContext(serviceName, version, "GET /" + resource + "/:id");
       if (mockContext != null) {
          // Get the requested generic resource.
-         GenericResource genericResource = genericResourceRepository.findOne(resourceId);
+         GenericResource genericResource = genericResourceRepository.findById(resourceId).orElse(null);
 
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
@@ -194,7 +194,7 @@ public class DynamicMockRestController {
       MockContext mockContext = getMockContext(serviceName, version, "PUT /" + resource + "/:id");
       if (mockContext != null) {
          // Get the requested generic resource.
-         GenericResource genericResource = genericResourceRepository.findOne(resourceId);
+         GenericResource genericResource = genericResourceRepository.findById(resourceId).orElse(null);
          if (genericResource != null) {
             Document document = null;
 
@@ -245,7 +245,7 @@ public class DynamicMockRestController {
 
       MockContext mockContext = getMockContext(serviceName, version, "DELETE /" + resource + "/:id");
       if (mockContext != null) {
-         genericResourceRepository.delete(resourceId);
+         genericResourceRepository.deleteById(resourceId);
 
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
