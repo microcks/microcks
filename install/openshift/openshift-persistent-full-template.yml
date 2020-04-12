@@ -108,10 +108,10 @@ objects:
       group: microcks
   spec:
     tags:
-    - name: 0.9.0
+    - name: latest
       from:
         kind: DockerImage
-        name: lbroudoux/microcks:0.9.0
+        name: microcks/microcks:latest
 - kind: ImageStream
   apiVersion: v1
   metadata:
@@ -281,7 +281,7 @@ objects:
         - spring
         from:
           kind: ImageStreamTag
-          name: "${APP_NAME}:0.9.0"
+          name: "${APP_NAME}:latest"
     replicas: 1
     selector:
       app: "${APP_NAME}"

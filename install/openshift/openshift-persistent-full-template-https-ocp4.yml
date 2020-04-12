@@ -93,10 +93,10 @@ objects:
       group: microcks
   spec:
     tags:
-    - name: nightly
+    - name: latest
       from:
         kind: DockerImage
-        name: microcks/microcks:nightly
+        name: microcks/microcks:latest
 - kind: ImageStream
   apiVersion: v1
   metadata:
@@ -270,7 +270,7 @@ objects:
         - spring
         from:
           kind: ImageStreamTag
-          name: "${APP_NAME}:nightly"
+          name: "${APP_NAME}:latest"
     replicas: 1
     selector:
       app: "${APP_NAME}"

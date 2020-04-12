@@ -2,7 +2,7 @@
 
 ## Build Status
 
-Current development version is `0.7.1-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
+Current development version is `0.9.0-SNAPSHOT`. [![Build Status](https://travis-ci.org/microcks/microcks.png?branch=master)](https://travis-ci.org/microcks/microcks)
 
 ## Developer Workspace
 
@@ -22,8 +22,8 @@ We also need a Keycloak server running on port `8180`.
 
 * NodeJS (version >= 8.0) and associated tools : NPM and ng-cli (`npm install -g ng-cli`)
 * Java Development Kit (version >= 8) and Apache Maven (version >= 3.0)
-* Keycloak 3.4.0
-* MongoDB 3.2
+* Keycloak 4.8.0
+* MongoDB 3.4
 
 ### Start servers
 
@@ -38,7 +38,7 @@ In a terminal, start frontend GUI server using NG :
 
 ```
 $ cd src/main/webapp
-$ grunt serve
+$ ng serve
 ```
 
 Server is started on port `4200`. Open a new browser tab pointing to `http://localhost:4200` where application is hosted.
@@ -60,7 +60,7 @@ $ mvn -Pprod package
 ```
 
 ```
-$ java -jar target/microcks-0.7.0-SNAPSHOT.jar
+$ java -jar target/microcks-0.9.0-SNAPSHOT.jar
 ```
 
 ### Build and run Docker image

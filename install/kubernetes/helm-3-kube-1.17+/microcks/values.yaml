@@ -4,7 +4,7 @@ microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-microcks-ingress
-  image: microcks/microcks:nightly
+  image: microcks/microcks:latest
   replicas: 1
   
 postman:
