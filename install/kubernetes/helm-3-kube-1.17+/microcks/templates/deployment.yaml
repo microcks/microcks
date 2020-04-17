@@ -325,12 +325,8 @@ spec:
           value: root
         - name: DB_ADDR
           value: "{{ .Values.appName }}-keycloak-postgresql"
-        - name: OPENSHIFT_KUBE_PING_LABELS
-          value: deploymentconfig=keycloak
-        - name: OPENSHIFT_KUBE_PING_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
+        - name: PROXY_ADDRESS_FORWARDING
+          value: 'true'
         volumeMounts:
         - name: {{ .Values.appName }}-keycloak-config
           mountPath: "/opt/jboss/keycloak/standalone/configuration/realm"

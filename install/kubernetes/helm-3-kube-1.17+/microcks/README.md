@@ -13,11 +13,8 @@ $ helm repo add microcks https://microcks.io/helm
 
 $ kubectl create namespace microcks
 
-$ helm install —-version 0.9.0-helm-3.kube-1.17 --namespace microcks \
-   --set microcks.url=microcks.$(minikube ip).nip.io \
-   --set keycloak.url=keycloak.$(minikube ip).nip.io \
-   microcks microcks/microcks
-
+$ helm install microcks microcks/microcks —-version 0.9.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
+  
 NAME: microcks
 LAST DEPLOYED: Wed Apr 15 19:35:33 2020
 NAMESPACE: microcks
@@ -106,7 +103,7 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `keycloak`    | `postgresImage`    | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `mongodb`     | `install`          | **Optional**. Flag for MongoDB installation. Default is `true`. Set to `false` if you want to reuse an existing MongoDB instance. |
 | `mongodb`     | `uri`              | **Optional**. MongoDB URI in case you're reusing existing MongoDB instance. Mandatory if `install` is `false` |
-| `mongodb`     | `database`         | **Optional**. MongoDB database name in case you're reusing existing MongoDB instance. Useful if `install` is `false`. Default to `sampledb` |
+| `mongodb`     | `database`         | **Optional**. MongoDB database name in case you're reusing existing MongoDB instance. Used if `install` is `false`. Default to `appName` |
 | `mongodb`     | `secretRef`        | **Optional**. Reference of a Secret containing credentials for connecting a provided MongoDB instance. Mandatory if `install` is `false` |
 | `mongodb`     | `persistent`       | **Optional**. Flag for MongoDB persistence. Default is `true`. Set to `false` if you want an ephemeral MongoDB installation. |
 | `mongodb`     | `volumeSize`       | **Optional**. Size of persistent volume claim for MongoDB. Default is `2Gi`. Not used if not persistent install asked. |

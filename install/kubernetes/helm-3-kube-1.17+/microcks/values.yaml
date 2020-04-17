@@ -4,7 +4,7 @@ microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-microcks-ingress
-  image: microcks/microcks:latest
+  image: microcks/microcks:0.9.0
   replicas: 1
   
 postman:
@@ -34,7 +34,7 @@ keycloak:
 mongodb:
   install: true
   #uri: mongodb:27017
-  database: sampledb
+  #database: sampledb
   image: centos/mongodb-34-centos7:latest
   persistent: true
   volumeSize: 2Gi
