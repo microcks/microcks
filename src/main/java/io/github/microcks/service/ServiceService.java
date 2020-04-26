@@ -320,6 +320,7 @@ public class ServiceService {
                   op.setDispatcher(existingOperation.getDispatcher());
                   op.setDispatcherRules(existingOperation.getDispatcherRules());
                   op.setParameterConstraints(existingOperation.getParameterConstraints());
+                  op.setOverride(true);
                }
             }
          }
