@@ -66,6 +66,7 @@ public class MockControllerCommons {
          for (String parameter : parameterNames) {
             evaluableParams.put(parameter, request.getParameter(parameter));
          }
+         evaluableRequest.setParams(evaluableParams);
          // Adding headers...
          Map<String, String> evaluableHeaders = new HashMap<>();
          List<String> headerNames = Collections.list(request.getHeaderNames());
