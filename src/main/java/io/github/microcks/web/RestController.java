@@ -167,7 +167,7 @@ public class RestController {
                   if ("Location".equals(header.getName())) {
                      // We should process location in order to make relative URI specified an absolute one from
                      // the client perspective.
-                     String location = "http://" + request.getServerName() + ":" + request.getServerPort()
+                     String location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
                         + request.getContextPath() + "/rest"
                         + serviceAndVersion + header.getValues().iterator().next();
                      responseHeaders.add(header.getName(), location);
