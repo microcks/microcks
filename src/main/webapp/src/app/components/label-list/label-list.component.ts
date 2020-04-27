@@ -29,24 +29,24 @@ import { Metadata } from '../../../app/models/service.model';
 })
 export class LabelListComponent implements OnInit {
 
-  @Input('metadata') metadadata: Metadata
+  @Input('metadata') metadata: Metadata
 
   @Input('filter') filter: string
 
   private labels: any = null;
 
   ngOnInit() {
-    if (this.metadadata) {
+    if (this.metadata) {
       if (this.filter) {
         this.labels = {};
         var filteredLabels = this.filter.split(',');
         filteredLabels.forEach(label => {
-          if (this.metadadata.labels[label]) {
-            this.labels[label] = this.metadadata.labels[label];
+          if (this.metadata.labels && this.metadata.labels[label]) {
+            this.labels[label] = this.metadata.labels[label];
           }
         });
       } else {
-        this.labels = this.metadadata.labels;
+        this.labels = this.metadata.labels;
       }
     }
   }
