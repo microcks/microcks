@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implement of MockRepositoryImporter that uses a Postman collection for building
@@ -132,7 +133,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public Map<Request, Response> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
 
       if (isV2Collection) {
          return getMessageDefinitionsV2(service, operation);
@@ -141,7 +142,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       }
    }
 
-   private Map<Request, Response> getMessageDefinitionsV2(Service service, Operation operation) {
+   private List<Exchange> getMessageDefinitionsV2(Service service, Operation operation) {
       Map<Request, Response> result = new HashMap<Request, Response>();
 
       Iterator<JsonNode> items = collection.path("item").elements();
@@ -149,7 +150,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          JsonNode item = items.next();
          result.putAll(getMessageDefinitionsV2("", item, operation));
       }
-      return result;
+
+      // Adapt map to list of Exchanges.
+      return result.entrySet().stream()
+            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
    }
 
    private Map<Request, Response> getMessageDefinitionsV2(String folderName, JsonNode itemNode, Operation operation) {

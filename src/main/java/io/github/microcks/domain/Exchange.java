@@ -19,12 +19,8 @@
 package io.github.microcks.domain;
 
 /**
- * Types for managed Microservices.
+ * Abstract bean representing a Service or API Exchange..
  * @author laurent
  */
-public enum ServiceType {
-   SOAP_HTTP,
-   REST,
-   GENERIC_REST,
-   EVENT
+public abstract class Exchange {
 }

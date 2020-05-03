@@ -18,6 +18,7 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
@@ -57,8 +58,8 @@ public class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof PostmanCollectionImporter);
 
       // Load an OpenAPI YAML file.
-      File openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml");
       importer = null;
+      File openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml");
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec);
       } catch (Throwable t) {
@@ -75,5 +76,15 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer should not fail !");
       }
       assertTrue(importer instanceof OpenAPIImporter);
+
+      // Load an AsyncAPI YAML file.
+      File asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec);
+      } catch (Throwable t) {
+         fail("Getting importer should not fail !");
+      }
+      assertTrue(importer instanceof AsyncAPIImporter);
    }
 }

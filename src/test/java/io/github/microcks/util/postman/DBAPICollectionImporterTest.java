@@ -42,25 +42,23 @@ public class DBAPICollectionImporterTest {
 
          if ("GET ".equals(operation.getName())) {
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(5, messages.size());
+            assertEquals(5, exchanges.size());
          }
          else if ("POST ".equals(operation.getName()) ){
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(0, messages.size());
+            assertEquals(0, exchanges.size());
          }
       }
    }
@@ -89,27 +87,30 @@ public class DBAPICollectionImporterTest {
       for (Operation operation : service.getOperations()) {
 
          // Check that messages have been correctly found.
-         Map<Request, Response> messages = null;
+         List<Exchange> exchanges = null;
          try {
-            messages = importer.getMessageDefinitions(service, operation);
+            exchanges = importer.getMessageDefinitions(service, operation);
          } catch (Exception e) {
-            e.printStackTrace();
             fail("No exception should be thrown when importing message definitions.");
          }
-         System.err.println("  messages: " + messages.size());
 
          if ("GET /v1/addresses".equals(operation.getName())) {
-            assertEquals(1, messages.size());
-            Map.Entry<Request, Response> entry = messages.entrySet().iterator().next();
-            Request request = entry.getKey();
-            Response response = entry.getValue();
-            assertNotNull(request);
-            assertNotNull(response);
+            assertEquals(1, exchanges.size());
+            Exchange exchange = exchanges.get(0);
+            if (exchange instanceof RequestResponsePair) {
+               RequestResponsePair entry = (RequestResponsePair) exchange;
+               Request request = entry.getRequest();
+               Response response = entry.getResponse();
+               assertNotNull(request);
+               assertNotNull(response);
 
-            assertEquals(2, request.getHeaders().size());
-            assertEquals(15, response.getHeaders().size());
-            assertEquals("200", response.getStatus());
-            assertEquals("application/json", response.getMediaType());
+               assertEquals(2, request.getHeaders().size());
+               assertEquals(15, response.getHeaders().size());
+               assertEquals("200", response.getStatus());
+               assertEquals("application/json", response.getMediaType());
+            } else {
+               fail("Exchange has the wrong type. Expecting RequestResponsePair");
+            }
          }
       }
    }

@@ -19,12 +19,32 @@
 package io.github.microcks.domain;
 
 /**
- * Types for managed Microservices.
+ * Simple bean representing a request/response pair.
  * @author laurent
  */
-public enum ServiceType {
-   SOAP_HTTP,
-   REST,
-   GENERIC_REST,
-   EVENT
+public class RequestResponsePair extends Exchange {
+
+   private Request request;
+   private Response response;
+
+   public RequestResponsePair(Request request, Response response){
+      this.request = request;
+      this.response = response;
+   }
+
+   public Request getRequest() {
+      return request;
+   }
+
+   public void setRequest(Request request) {
+      this.request = request;
+   }
+
+   public Response getResponse() {
+      return response;
+   }
+
+   public void setResponse(Response response) {
+      this.response = response;
+   }
 }

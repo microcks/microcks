@@ -18,8 +18,8 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Response;
+import io.github.microcks.domain.*;
+import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
 import org.slf4j.Logger;
@@ -45,6 +45,29 @@ public class MessageService {
    @Autowired
    private ResponseRepository responseRepository;
 
+   @Autowired
+   private EventMessageRepository eventMessageRepository;
+
+
+   /**
+    * Retrieve unidirectional events corresponding to an Operation.
+    * @param operationId The identifier of operation to get messages for.
+    * @return A list of unidirectional event messages
+    */
+   public List<UnidirectionalEvent> getEventByOperation(String operationId) {
+      // Retrieve event messages using operation identifier.
+      List<EventMessage> eventMessages = eventMessageRepository.findByOperationId(operationId);
+      if (log.isDebugEnabled()) {
+         log.debug("Found " + eventMessages.size() + " event(s) for operation " + operationId);
+      }
+
+      // Just wrap then into an UnidirectionalEvent exchange.
+      List<UnidirectionalEvent> results = new ArrayList<>(eventMessages.size());
+      for (EventMessage eventMessage : eventMessages) {
+         results.add(new UnidirectionalEvent(eventMessage));
+      }
+      return results;
+   }
 
    /**
     * Retrieve pairs of requests and responses corresponding to an Operation.
@@ -69,7 +92,7 @@ public class MessageService {
    }
 
    /**
-    * Retrieved pairs of requests and responses corresponding to a TestCase?
+    * Retrieved pairs of requests and responses corresponding to a TestCase.
     * @param testCaseId The identifier of test case to get messages for.
     * @return A list of paired requests and responses
     */

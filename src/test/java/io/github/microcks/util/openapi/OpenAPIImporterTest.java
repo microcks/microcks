@@ -32,7 +32,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -146,27 +145,32 @@ public class OpenAPIImporterTest {
             assertEquals("id", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals("/location/83", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("location", request.getName());
-               assertEquals("location", response.getName());
-               assertEquals("/id=83", response.getDispatchCriteria());
-               assertEquals("200", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("location", request.getName());
+                  assertEquals("location", response.getName());
+                  assertEquals("/id=83", response.getDispatchCriteria());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          } else {
             fail("Unknown operation name: " + operation.getName());
@@ -227,49 +231,54 @@ public class OpenAPIImporterTest {
       assertEquals("owner ?? page && limit && x-user-id", operation.getDispatcherRules());
 
       // Check that messages have been correctly found.
-      Map<Request, Response> messages = null;
+      List<Exchange> exchanges = null;
       try {
-         messages = importer.getMessageDefinitions(service, operation);
+         exchanges = importer.getMessageDefinitions(service, operation);
       } catch (Exception e) {
          fail("No exception should be thrown when importing message definitions.");
       }
-      assertEquals(1, messages.size());
+      assertEquals(1, exchanges.size());
       assertEquals(1, operation.getResourcePaths().size());
       assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
-      for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-         Request request = entry.getKey();
-         Response response = entry.getValue();
-         assertNotNull(request);
-         assertNotNull(response);
-         assertEquals("laurent_cars", request.getName());
-         assertEquals("laurent_cars", response.getName());
-         assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-         assertEquals("200", response.getStatus());
-         assertEquals("application/json", response.getMediaType());
-         assertNotNull(response.getContent());
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof RequestResponsePair) {
+            RequestResponsePair entry = (RequestResponsePair) exchange;
+            Request request = entry.getRequest();
+            Response response = entry.getResponse();
+            assertNotNull(request);
+            assertNotNull(response);
+            assertEquals("laurent_cars", request.getName());
+            assertEquals("laurent_cars", response.getName());
+            assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+            assertEquals("200", response.getStatus());
+            assertEquals("application/json", response.getMediaType());
+            assertNotNull(response.getContent());
 
-         // Check headers now.
-         assertEquals(2, request.getHeaders().size());
-         Iterator<Header> headers = request.getHeaders().iterator();
-         while (headers.hasNext()) {
-            Header header = headers.next();
-            if ("x-user-id".equals(header.getName())) {
-               assertEquals(1, header.getValues().size());
-               assertEquals("poiuytrezamlkjhgfdsq", header.getValues().iterator().next());
-            } else if ("Accept".equals(header.getName())) {
-               assertEquals(1, header.getValues().size());
-               assertEquals("application/json", header.getValues().iterator().next());
-            } else {
-               fail("Unexpected header name in request");
+            // Check headers now.
+            assertEquals(2, request.getHeaders().size());
+            Iterator<Header> headers = request.getHeaders().iterator();
+            while (headers.hasNext()) {
+               Header header = headers.next();
+               if ("x-user-id".equals(header.getName())) {
+                  assertEquals(1, header.getValues().size());
+                  assertEquals("poiuytrezamlkjhgfdsq", header.getValues().iterator().next());
+               } else if ("Accept".equals(header.getName())) {
+                  assertEquals(1, header.getValues().size());
+                  assertEquals("application/json", header.getValues().iterator().next());
+               } else {
+                  fail("Unexpected header name in request");
+               }
             }
-         }
 
-         assertEquals(1, response.getHeaders().size());
-         Header header = response.getHeaders().iterator().next();
-         assertEquals("x-result-count", header.getName());
-         assertEquals(1, header.getValues().size());
-         assertEquals("2", header.getValues().iterator().next());
+            assertEquals(1, response.getHeaders().size());
+            Header header = response.getHeaders().iterator().next();
+            assertEquals("x-result-count", header.getName());
+            assertEquals(1, header.getValues().size());
+            assertEquals("2", header.getValues().iterator().next());
+         } else {
+            fail("Exchange has the wrong type. Expecting RequestResponsePair");
+         }
       }
    }
 
@@ -333,27 +342,32 @@ public class OpenAPIImporterTest {
             assertEquals("owner ?? page && limit", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("laurent_cars", request.getName());
-               assertEquals("laurent_cars", response.getName());
-               assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-               assertEquals("200", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("laurent_cars", request.getName());
+                  assertEquals("laurent_cars", response.getName());
+                  assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          }
          else if ("POST /owner/{owner}/car".equals(operation.getName())) {
@@ -362,28 +376,33 @@ public class OpenAPIImporterTest {
             assertEquals("owner", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("laurent_307", request.getName());
-               assertEquals("laurent_307", response.getName());
-               assertEquals("/owner=laurent", response.getDispatchCriteria());
-               assertEquals("201", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("laurent_307", request.getName());
+                  assertEquals("laurent_307", response.getName());
+                  assertEquals("/owner=laurent", response.getDispatchCriteria());
+                  assertEquals("201", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          }
          else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
@@ -392,27 +411,32 @@ public class OpenAPIImporterTest {
             assertEquals("owner && car", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car/307/passenger", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("laurent_307_passengers", request.getName());
-               assertEquals("laurent_307_passengers", response.getName());
-               assertEquals("/car=307/owner=laurent", response.getDispatchCriteria());
-               assertEquals("200", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("laurent_307_passengers", request.getName());
+                  assertEquals("laurent_307_passengers", response.getName());
+                  assertEquals("/car=307/owner=laurent", response.getDispatchCriteria());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          }
          else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
@@ -421,13 +445,13 @@ public class OpenAPIImporterTest {
             assertEquals("owner && car", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(0, messages.size());
+            assertEquals(0, exchanges.size());
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
@@ -474,13 +498,13 @@ public class OpenAPIImporterTest {
             assertEquals("owner ?? page && limit", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(0, messages.size());
+            assertEquals(0, exchanges.size());
          }
          else if ("POST /owner/{owner}/car".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
@@ -488,27 +512,32 @@ public class OpenAPIImporterTest {
             assertEquals("owner", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("laurent_307", request.getName());
-               assertEquals("laurent_307", response.getName());
-               assertEquals("/owner=laurent", response.getDispatchCriteria());
-               assertEquals("201", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("laurent_307", request.getName());
+                  assertEquals("laurent_307", response.getName());
+                  assertEquals("/owner=laurent", response.getDispatchCriteria());
+                  assertEquals("201", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          }
          else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
@@ -517,9 +546,9 @@ public class OpenAPIImporterTest {
             assertEquals("owner && car", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
@@ -529,17 +558,22 @@ public class OpenAPIImporterTest {
             // to check that we have at least the number of params what we have into uri pattern.
             //assertEquals(0, messages.size());
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("laurent_307_passengers", request.getName());
-               assertEquals("laurent_307_passengers", response.getName());
-               assertEquals("/owner=laurent", response.getDispatchCriteria());
-               assertEquals("200", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("laurent_307_passengers", request.getName());
+                  assertEquals("laurent_307_passengers", response.getName());
+                  assertEquals("/owner=laurent", response.getDispatchCriteria());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          } else {
             fail("Unknown operation name: " + operation.getName());
@@ -640,37 +674,42 @@ public class OpenAPIImporterTest {
             assertEquals("owner ?? page && limit && x-user-id", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
+            assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
 
-               if ("laurent_cars".equals(request.getName())) {
-                  assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
-               } else if ("unknown".equals(request.getName())) {
-                  assertEquals("/owner=unknown?limit=20?page=0", response.getDispatchCriteria());
-                  assertEquals("404", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertEquals("{\"reason\": \"owner not found\"}", response.getContent());
-                  assertEquals(1, response.getHeaders().size());
+                  if ("laurent_cars".equals(request.getName())) {
+                     assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else if ("unknown".equals(request.getName())) {
+                     assertEquals("/owner=unknown?limit=20?page=0", response.getDispatchCriteria());
+                     assertEquals("404", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertEquals("{\"reason\": \"owner not found\"}", response.getContent());
+                     assertEquals(1, response.getHeaders().size());
 
-                  Header header = response.getHeaders().iterator().next();
-                  assertEquals("my-custom-header", header.getName());
-                  assertEquals("unknown", header.getValues().iterator().next());
+                     Header header = response.getHeaders().iterator().next();
+                     assertEquals("my-custom-header", header.getName());
+                     assertEquals("unknown", header.getValues().iterator().next());
+                  }
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
          } else {
@@ -711,27 +750,32 @@ public class OpenAPIImporterTest {
             assertEquals("owner ?? page && limit", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("laurent_cars", request.getName());
-               assertEquals("laurent_cars", response.getName());
-               assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-               assertEquals("200", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("laurent_cars", request.getName());
+                  assertEquals("laurent_cars", response.getName());
+                  assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          }
          else if ("POST /owner/{owner}/car".equals(operation.getName())) {
@@ -740,27 +784,32 @@ public class OpenAPIImporterTest {
             assertEquals("owner", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertEquals("laurent_307", request.getName());
-               assertEquals("laurent_307", response.getName());
-               assertEquals("/owner=laurent", response.getDispatchCriteria());
-               assertEquals("201", response.getStatus());
-               assertEquals("application/json", response.getMediaType());
-               assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("laurent_307", request.getName());
+                  assertEquals("laurent_307", response.getName());
+                  assertEquals("/owner=laurent", response.getDispatchCriteria());
+                  assertEquals("201", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          }
          else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
@@ -769,13 +818,13 @@ public class OpenAPIImporterTest {
             assertEquals("owner && car", operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(0, messages.size());
+            assertEquals(0, exchanges.size());
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
@@ -798,48 +847,58 @@ public class OpenAPIImporterTest {
       for (Operation operation : service.getOperations()) {
          if ("GET /tests".equals(operation.getName())) {
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertNotNull(response.getContent());
-               assertFalse(response.getContent().length() == 0);
-               assertTrue(response.getContent().startsWith("["));
-               assertTrue(response.getContent().contains("\"some text\""));
-               assertTrue(response.getContent().contains("11"));
-               assertTrue(response.getContent().contains("35"));
-               assertTrue(response.getContent().endsWith("]"));
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertNotNull(response.getContent());
+                  assertFalse(response.getContent().length() == 0);
+                  assertTrue(response.getContent().startsWith("["));
+                  assertTrue(response.getContent().contains("\"some text\""));
+                  assertTrue(response.getContent().contains("11"));
+                  assertTrue(response.getContent().contains("35"));
+                  assertTrue(response.getContent().endsWith("]"));
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          } else if ("GET /tests/{id}".equals(operation.getName())) {
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
+            assertEquals(1, exchanges.size());
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               assertNotNull(response.getContent());
-               assertFalse(response.getContent().length() == 0);
-               assertTrue(response.getContent().startsWith("{"));
-               assertTrue(response.getContent().contains("\"foo\":"));
-               assertTrue(response.getContent().contains("\"bar\":"));
-               assertTrue(response.getContent().endsWith("}"));
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertNotNull(response.getContent());
+                  assertFalse(response.getContent().length() == 0);
+                  assertTrue(response.getContent().startsWith("{"));
+                  assertTrue(response.getContent().contains("\"foo\":"));
+                  assertTrue(response.getContent().contains("\"bar\":"));
+                  assertTrue(response.getContent().endsWith("}"));
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
             }
          }
       }

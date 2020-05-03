@@ -58,7 +58,7 @@ export class DashboardPageComponent implements OnInit {
 	donutChartData: any[] = [
     ['REST', 0],
     ['DYNAMIC', 0],
-    ['SOAP', 0]
+		['SOAP', 0]
   ];
 	largeConfig: DonutChartConfig = {
 		chartId: 'repositoryDonut',
@@ -66,7 +66,8 @@ export class DashboardPageComponent implements OnInit {
     colors: {
       REST: '#89bf04',     
       DYNAMIC: '#9c27b0', 
-      SOAP: '#39a5dc',
+			SOAP: '#39a5dc',
+			EVENT: '#ec7a08'
 		},
 		/*
     data: {

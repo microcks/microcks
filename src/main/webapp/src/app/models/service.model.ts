@@ -41,6 +41,7 @@ export class Service {
 export enum ServiceType {
   SOAP_HTTP = "SOAP_HTTP",
   REST = "REST",
+  EVENT= "EVENT",
   GENERIC_REST = "GENERIC_REST"
 }
 
@@ -49,6 +50,7 @@ export class Operation {
   method: string;
   inputName: string;
   outputName: string;
+  bindings: {string: Binding[]}
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
@@ -61,6 +63,16 @@ export class OperationMutableProperties {
   dispatcherRules: string;
   defaultDelay: number;
   parameterConstraints: ParameterConstraint[];
+}
+export class Binding {
+  type: BindingType;
+  keyType: string;
+  destinationType: string;
+  destinationName: string;
+}
+export enum BindingType {
+  KAFKA,
+  AMQP1
 }
 export class ParameterConstraint {
   name: string;
@@ -88,7 +100,8 @@ export enum ContractType {
   JSON_SCHEMA,
   SWAGGER,
   RAML,
-  OPEN_API_SPEC
+  OPEN_API_SPEC,
+  ASYNC_API_SPEC
 }
 
 export class Header {
@@ -120,15 +133,24 @@ export class Response extends Message {
   dispatchCriteria: string;
   isFault: boolean = false;
 }
+export class EventMessage extends Message {
+  id: string;
+  mediaType: string;
+}
 
-export class RequestResponsePair {
+export abstract class Exchange {
+}
+export class UnidirectionalEvent extends Exchange {
+  eventMessage: EventMessage;
+}
+export class RequestResponsePair extends Exchange {
   request: Request;
   response: Response;
 }
 
 export class ServiceView {
   service: Service;
-  messagesMap: {string : RequestResponsePair[]};
+  messagesMap: {string : Exchange[]};
 }
 
 export class GenericResource {

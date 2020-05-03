@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, ParamMap } from "@angular/router";
 
 import { Observable } from 'rxjs';
@@ -29,9 +29,10 @@ import { ListConfig, ListEvent } from 'patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
-import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint } from '../../../models/service.model';
+import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint, Exchange, UnidirectionalEvent, RequestResponsePair, EventMessage } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
 import { IAuthenticationService } from "../../../services/auth.service";
+import { ConfigService } from '../../../services/config.service';
 import { ContractsService } from '../../../services/contracts.service';
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
@@ -39,7 +40,8 @@ import { TestsService } from '../../../services/tests.service';
 @Component({
   selector: 'service-detail-page',
   templateUrl: './service-detail.page.html',
-  styleUrls: ['./service-detail.page.css']
+  styleUrls: ['./service-detail.page.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ServiceDetailPageComponent implements OnInit {
 
@@ -55,8 +57,9 @@ export class ServiceDetailPageComponent implements OnInit {
   notifications: Notification[];
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
-      private testsSvc: TestsService, protected authService: IAuthenticationService, private modalService: BsModalService,
-      private notificationService: NotificationService, private route: ActivatedRoute, private router: Router) {
+      private testsSvc: TestsService, protected authService: IAuthenticationService, private config: ConfigService,
+      private modalService: BsModalService, private notificationService: NotificationService,
+      private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit() {
@@ -147,6 +150,14 @@ export class ServiceDetailPageComponent implements OnInit {
     this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
   }
 
+  public getHeaderName(exchange: Exchange): string {
+    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
+      return (exchange as UnidirectionalEvent).eventMessage.name;
+    } else {
+      return (exchange as RequestResponsePair).request.name;
+    }
+  }
+
   public displayParameterConstraint(constraint: ParameterConstraint): string {
     var result = "Parameter ";
     if (constraint.required) {
@@ -163,7 +174,48 @@ export class ServiceDetailPageComponent implements OnInit {
     return result;
   }
 
+  public getBindingsList(operation: Operation): string {
+    console.log("[ServiceDetailPageComponent.getBindingsList()]");
+    if (operation.bindings != null) {
+      var result = "";
+      var bindings = Object.keys(operation.bindings);
+      for (let i=0; i<bindings.length; i++) {
+        var b = bindings[i];
+        switch (b) {
+          case 'KAFKA':
+            result += 'Kafka';
+            break;
+          case 'AMQP1':
+            result += 'AMQP 1.0';
+            break;
+        }
+        if (i+1 < bindings.length) {
+          result += ", ";
+        }
+      }
+      return result;
+    }
+    return null;
+  }
+  public hasBinding(operation: Operation, binding: string): boolean {
+    if (operation.bindings != null) {
+      return operation.bindings.hasOwnProperty(binding);
+    }
+    return false;
+  }
+  public getBindingProperty(operation: Operation, binding: string, property: string): string {
+    console.log("[ServiceDetailPageComponent.getBindingProperty()]");
+    if (operation.bindings != null) {
+      var b = operation.bindings[binding];
+      if (b.hasOwnProperty(property)) {
+        return b[property];
+      }
+    }
+    return null;
+  }
+
   public formatMockUrl(operation: Operation, dispatchCriteria: string): string {
+    console.log("[ServiceDetailPageComponent.formatMockUrl()]");
     var result = document.location.origin;
 
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
@@ -211,6 +263,21 @@ export class ServiceDetailPageComponent implements OnInit {
     
     return result;
   }
+  public formatAsyncDestination(operation: Operation, eventMessage: EventMessage): string {
+    var serviceName = this.resolvedServiceView.service.name;
+    var operationName = operation.name;
+
+    // Remove ' ', '-' in service name.
+    serviceName = serviceName.replace(/\s/g, '');
+    serviceName = serviceName.replace(/-/g, '');
+
+    // Remove verb and replace '/' by '-' in operation name.
+    operationName = this.removeVerbInUrl(operationName);
+    operationName = operationName.replace(/\//g, '-');
+
+    return serviceName + "_" + this.resolvedServiceView.service.version + "_" + operationName;
+  }
+
 
   public copyToClipboard(url: string): void {
     let selBox = document.createElement('textarea');
@@ -232,7 +299,8 @@ export class ServiceDetailPageComponent implements OnInit {
     if (operationName.startsWith("GET ") || operationName.startsWith("PUT ")
         || operationName.startsWith("POST ") || operationName.startsWith("DELETE ")
         || operationName.startsWith("OPTIONS ") || operationName.startsWith("PATCH ")
-        || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")) {
+        || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")
+        || operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
       operationName = operationName.slice(operationName.indexOf(' ') + 1);
     } 
     return operationName;
@@ -247,5 +315,9 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public hasRole(role: string): boolean {
     return this.authService.hasRole(role);
+  }
+
+  public asyncAPIFeatureEndpoint(binding: string): string {
+    return this.config.getFeatureProperty('async-api', 'endpoint-' + binding);
   }
 }

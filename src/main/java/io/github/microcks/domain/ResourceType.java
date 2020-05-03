@@ -28,5 +28,6 @@ public enum ResourceType {
    JSON_SCHEMA,
    SWAGGER,
    RAML,
-   OPEN_API_SPEC
+   OPEN_API_SPEC,
+   ASYNC_API_SPEC
 }

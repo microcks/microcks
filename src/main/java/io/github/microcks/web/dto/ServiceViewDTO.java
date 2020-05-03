@@ -18,8 +18,9 @@
  */
 package io.github.microcks.web.dto;
 
+import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Service;
-import io.github.microcks.service.RequestResponsePair;
+import io.github.microcks.domain.RequestResponsePair;
 
 import java.util.List;
 import java.util.Map;
@@ -31,9 +32,9 @@ import java.util.Map;
 public class ServiceViewDTO {
 
    private Service service;
-   private Map<String, List<RequestResponsePair>> messagesMap;
+   private Map<String, List<? extends Exchange>> messagesMap;
 
-   public ServiceViewDTO(Service service, Map<String, List<RequestResponsePair>> messagesMap) {
+   public ServiceViewDTO(Service service, Map<String, List<? extends Exchange>> messagesMap) {
       this.service = service;
       this.messagesMap = messagesMap;
    }
@@ -42,7 +43,7 @@ public class ServiceViewDTO {
       return service;
    }
 
-   public Map<String, List<RequestResponsePair>> getMessagesMap() {
+   public Map<String, List<? extends Exchange>> getMessagesMap() {
       return messagesMap;
    }
 }

@@ -19,12 +19,13 @@
 package io.github.microcks.domain;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * An Operation / action of a micro service. Holds information on
- * messages constitution (inputName, outputName) and how dispatch
- * request to them.
+ * An Operation / action of a micro service. Holds information on messages constitution
+ * (inputName, outputName, bindings) and how dispatch request to them.
  * @author laurent
  */
 public class Operation {
@@ -33,6 +34,7 @@ public class Operation {
    private String method;
    private String inputName;
    private String outputName;
+   private Map<String, Binding> bindings;
 
    private boolean override = false;
    private String dispatcher;
@@ -72,6 +74,21 @@ public class Operation {
 
    public void setOutputName(String outputName) {
       this.outputName = outputName;
+   }
+
+   public Map<String, Binding> getBindings() {
+      return bindings;
+   }
+
+   public void setBindings(Map<String, Binding> bindings) {
+      this.bindings = bindings;
+   }
+
+   public void addBinding(String name, Binding binding) {
+      if (this.bindings == null) {
+         this.bindings = new HashMap<>();
+      }
+      bindings.put(name, binding);
    }
 
    public boolean hasOverride() {

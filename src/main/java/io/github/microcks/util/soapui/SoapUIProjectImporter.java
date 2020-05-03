@@ -58,6 +58,7 @@ import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Implement of MockRepositoryImporter that uses a SoapUI project for building
@@ -144,7 +145,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public Map<Request, Response> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
       // First try with a Soap Service mock...
       MockService mockService = project.getMockServiceByName(service.getName());
       if (mockService != null){
@@ -160,7 +161,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       if (restMockService != null){
          return getRestMessageDefinitions(restMockService, operation);
       }
-      return new HashMap<>();
+      return new ArrayList<Exchange>();
    }
 
 
@@ -304,7 +305,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    /**
     * Get message definition for an operation of a Soap mock service.
     */
-   private Map<Request, Response> getSoapMessageDefinitions(MockService mockService, Operation operation) throws XPathExpressionException{
+   private List<Exchange> getSoapMessageDefinitions(MockService mockService, Operation operation) throws XPathExpressionException{
       Map<Request, Response> result = new HashMap<Request, Response>();
 
       // Get MockOperation corresponding to operation.
@@ -371,13 +372,17 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
             result.put(request, response);
          }
       }
-      return result;
+
+      // Adapt map to list of Exchanges.
+      return result.entrySet().stream()
+            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
    }
 
    /**
     * Get message definition for an operation of a Rest mock service.
     */
-   private Map<Request, Response> getRestMessageDefinitions(RestMockService mockService, Operation operation){
+   private List<Exchange> getRestMessageDefinitions(RestMockService mockService, Operation operation){
       Map<Request, Response> result = new HashMap<Request, Response>();
 
       // Collect mock responses for MockOperation corresponding to operation (it may be many).
@@ -443,7 +448,11 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          Request request = buildRequest(rtr);
          result.put(request, response);
       }
-      return result;
+
+      // Adapt map to list of Exchanges.
+      return result.entrySet().stream()
+            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
    }
 
    /**

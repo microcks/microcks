@@ -19,12 +19,10 @@
 package io.github.microcks.domain;
 
 /**
- * Types for managed Microservices.
+ * Enumeration of types for asynchronous protocols bindings.
  * @author laurent
  */
-public enum ServiceType {
-   SOAP_HTTP,
-   REST,
-   GENERIC_REST,
-   EVENT
+public enum BindingType {
+   KAFKA,
+   AMQP1
 }

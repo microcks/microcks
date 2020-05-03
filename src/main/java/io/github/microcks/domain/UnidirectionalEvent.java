@@ -16,38 +16,25 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.service;
-
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Response;
+package io.github.microcks.domain;
 
 /**
- * Simple bean representing a request/response pair.
+ * Simple bean representing an unidirectional exchange as an event message.
  * @author laurent
  */
-public class RequestResponsePair {
+public class UnidirectionalEvent extends Exchange {
 
-   private Request request;
-   private Response response;
+   private EventMessage eventMessage;
 
-   public RequestResponsePair(Request request, Response response){
-      this.request = request;
-      this.response = response;
+   public UnidirectionalEvent(EventMessage eventMessage) {
+      this.eventMessage = eventMessage;
    }
 
-   public Request getRequest() {
-      return request;
+   public EventMessage getEventMessage() {
+      return eventMessage;
    }
 
-   public void setRequest(Request request) {
-      this.request = request;
-   }
-
-   public Response getResponse() {
-      return response;
-   }
-
-   public void setResponse(Response response) {
-      this.response = response;
+   public void setEventMessage(EventMessage eventMessage) {
+      this.eventMessage = eventMessage;
    }
 }

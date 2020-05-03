@@ -22,7 +22,7 @@ import io.github.microcks.domain.*;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.service.MessageService;
-import io.github.microcks.service.RequestResponsePair;
+import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.service.TestService;
 import io.github.microcks.web.dto.HeaderDTO;
 import io.github.microcks.web.dto.TestCaseReturnDTO;

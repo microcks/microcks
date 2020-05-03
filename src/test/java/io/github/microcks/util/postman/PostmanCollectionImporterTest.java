@@ -26,7 +26,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.*;
@@ -73,25 +72,30 @@ public class PostmanCollectionImporterTest {
             assertEquals("/v2/pet/findByStatus", operation.getResourcePaths().get(0));
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try{
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
-            Map.Entry<Request, Response> entry = messages.entrySet().iterator().next();
-            Request request = entry.getKey();
-            Response response = entry.getValue();
-            assertNotNull(request);
-            assertNotNull(response);
-            assertEquals("findbystatus-available", response.getName());
-            assertEquals(1, response.getHeaders().size());
-            assertEquals("200", response.getStatus());
-            assertEquals("application/json", response.getMediaType());
-            assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
-            assertNotNull(response.getContent());
+            assertEquals(1, exchanges.size());
+            Exchange exchange = exchanges.get(0);
+            if (exchange instanceof RequestResponsePair) {
+               RequestResponsePair entry = (RequestResponsePair) exchange;
+               Request request = entry.getRequest();
+               Response response = entry.getResponse();
+               assertNotNull(request);
+               assertNotNull(response);
+               assertEquals("findbystatus-available", response.getName());
+               assertEquals(1, response.getHeaders().size());
+               assertEquals("200", response.getStatus());
+               assertEquals("application/json", response.getMediaType());
+               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+               assertNotNull(response.getContent());
+            } else {
+               fail("Exchange has the wrong type. Expecting RequestResponsePair");
+            }
          }
          else if ("GET /v2/pet/:petId".equals(operation.getName())) {
             // assertions for findById.
@@ -100,36 +104,41 @@ public class PostmanCollectionImporterTest {
             assertEquals(DispatchStyles.URI_ELEMENTS, operation.getDispatcher());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
+            assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
             assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
                   || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
             assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
                   || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               if ("findbyid-2".equals(request.getName())) {
-                  assertEquals("findbyid-2", response.getName());
-                  assertEquals(1, response.getHeaders().size());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertEquals("/petId=2?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
-                  assertNotNull(response.getContent());
-               } else if ("findbyid-1".equals(request.getName())) {
-                  assertEquals("404", response.getStatus());
-                  assertEquals("/petId=1?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  if ("findbyid-2".equals(request.getName())) {
+                     assertEquals("findbyid-2", response.getName());
+                     assertEquals(1, response.getHeaders().size());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertEquals("/petId=2?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+                     assertNotNull(response.getContent());
+                  } else if ("findbyid-1".equals(request.getName())) {
+                     assertEquals("404", response.getStatus());
+                     assertEquals("/petId=1?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+                  } else {
+                     fail("Unknown request name: " + request.getName());
+                  }
                } else {
-                  fail("Unknown request name: " + request.getName());
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
          } else {
@@ -174,25 +183,30 @@ public class PostmanCollectionImporterTest {
             assertEquals("/v2/pet/findByStatus", operation.getResourcePaths().get(0));
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try{
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, messages.size());
-            Map.Entry<Request, Response> entry = messages.entrySet().iterator().next();
-            Request request = entry.getKey();
-            Response response = entry.getValue();
-            assertNotNull(request);
-            assertNotNull(response);
-            assertEquals("findbystatus-available", response.getName());
-            assertEquals(1, response.getHeaders().size());
-            assertEquals("200", response.getStatus());
-            assertEquals("application/json", response.getMediaType());
-            assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
-            assertNotNull(response.getContent());
+            assertEquals(1, exchanges.size());
+            Exchange exchange = exchanges.get(0);
+            if (exchange instanceof RequestResponsePair) {
+               RequestResponsePair entry = (RequestResponsePair) exchange;
+               Request request = entry.getRequest();
+               Response response = entry.getResponse();
+               assertNotNull(request);
+               assertNotNull(response);
+               assertEquals("findbystatus-available", response.getName());
+               assertEquals(1, response.getHeaders().size());
+               assertEquals("200", response.getStatus());
+               assertEquals("application/json", response.getMediaType());
+               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+               assertNotNull(response.getContent());
+            } else {
+               fail("Exchange has the wrong type. Expecting RequestResponsePair");
+            }
          }
          else if ("GET /v2/pet/:petId".equals(operation.getName())) {
             // assertions for findById.
@@ -201,36 +215,41 @@ public class PostmanCollectionImporterTest {
             assertEquals(DispatchStyles.URI_ELEMENTS, operation.getDispatcher());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try {
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
+            assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
             assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
                   || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
             assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
                   || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               if ("findbyid-2".equals(request.getName())) {
-                  assertEquals("findbyid-2", response.getName());
-                  assertEquals(1, response.getHeaders().size());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertEquals("/petId=2?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
-                  assertNotNull(response.getContent());
-               } else if ("findbyid-1".equals(request.getName())) {
-                  assertEquals("404", response.getStatus());
-                  assertEquals("/petId=1?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  if ("findbyid-2".equals(request.getName())) {
+                     assertEquals("findbyid-2", response.getName());
+                     assertEquals(1, response.getHeaders().size());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertEquals("/petId=2?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+                     assertNotNull(response.getContent());
+                  } else if ("findbyid-1".equals(request.getName())) {
+                     assertEquals("404", response.getStatus());
+                     assertEquals("/petId=1?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+                  } else {
+                     fail("Unknown request name: " + request.getName());
+                  }
                } else {
-                  fail("Unknown request name: " + request.getName());
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
          } else {
@@ -273,35 +292,40 @@ public class PostmanCollectionImporterTest {
             //assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try{
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
+            assertEquals(2, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               if ("create-123456".equals(request.getName())) {
-                  assertNotNull(request.getContent());
-                  assertNull(response.getHeaders());
-                  assertEquals("201", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
-               } else if ("create-7891011".equals(request.getName())) {
-                  assertNotNull(request.getContent());
-                  assertNull(response.getHeaders());
-                  assertEquals("201", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  if ("create-123456".equals(request.getName())) {
+                     assertNotNull(request.getContent());
+                     assertNull(response.getHeaders());
+                     assertEquals("201", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else if ("create-7891011".equals(request.getName())) {
+                     assertNotNull(request.getContent());
+                     assertNull(response.getHeaders());
+                     assertEquals("201", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else {
+                     fail("Unknown request name: " + request.getName());
+                  }
                } else {
-                  fail("Unknown request name: " + request.getName());
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
          }
@@ -311,37 +335,42 @@ public class PostmanCollectionImporterTest {
             assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try{
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
+            assertEquals(2, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               if ("list-pending_approval".equals(request.getName())) {
-                  assertNull(request.getContent());
-                  assertNull(response.getHeaders());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
-                  assertEquals("?page=0?status=pending_approval", response.getDispatchCriteria());
-               } else if ("list-approved".equals(request.getName())) {
-                  assertNull(request.getContent());
-                  assertNull(response.getHeaders());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
-                  assertEquals("?page=0?status=approved", response.getDispatchCriteria());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  if ("list-pending_approval".equals(request.getName())) {
+                     assertNull(request.getContent());
+                     assertNull(response.getHeaders());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                     assertEquals("?page=0?status=pending_approval", response.getDispatchCriteria());
+                  } else if ("list-approved".equals(request.getName())) {
+                     assertNull(request.getContent());
+                     assertNull(response.getHeaders());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                     assertEquals("?page=0?status=approved", response.getDispatchCriteria());
+                  } else {
+                     fail("Unknown request name: " + request.getName());
+                  }
                } else {
-                  fail("Unknown request name: " + request.getName());
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
          }
@@ -351,14 +380,14 @@ public class PostmanCollectionImporterTest {
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
 
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
+            List<Exchange> exchanges = null;
             try{
-               messages = importer.getMessageDefinitions(service, operation);
+               exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
+            assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
 
             assertTrue("/order/123456".equals(operation.getResourcePaths().get(0))
@@ -366,27 +395,32 @@ public class PostmanCollectionImporterTest {
             assertTrue("/order/123456".equals(operation.getResourcePaths().get(1))
                   || "/order/7891011".equals(operation.getResourcePaths().get(1)));
 
-            for (Map.Entry<Request, Response> entry : messages.entrySet()) {
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               if ("get-123456".equals(request.getName())) {
-                  assertNull(request.getContent());
-                  assertNull(response.getHeaders());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
-                  assertEquals("/id=123456", response.getDispatchCriteria());
-               } else if ("get-7891011".equals(request.getName())) {
-                  assertNull(request.getContent());
-                  assertNull(response.getHeaders());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
-                  assertEquals("/id=7891011", response.getDispatchCriteria());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  if ("get-123456".equals(request.getName())) {
+                     assertNull(request.getContent());
+                     assertNull(response.getHeaders());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                     assertEquals("/id=123456", response.getDispatchCriteria());
+                  } else if ("get-7891011".equals(request.getName())) {
+                     assertNull(request.getContent());
+                     assertNull(response.getHeaders());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                     assertEquals("/id=7891011", response.getDispatchCriteria());
+                  } else {
+                     fail("Unknown request name: " + request.getName());
+                  }
                } else {
-                  fail("Unknown request name: " + request.getName());
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
          }

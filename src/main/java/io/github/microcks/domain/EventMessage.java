@@ -18,13 +18,30 @@
  */
 package io.github.microcks.domain;
 
+import org.springframework.data.annotation.Id;
+
 /**
- * Types for managed Microservices.
  * @author laurent
  */
-public enum ServiceType {
-   SOAP_HTTP,
-   REST,
-   GENERIC_REST,
-   EVENT
+public class EventMessage extends Message {
+
+   @Id
+   private String id;
+   private String mediaType;
+
+   public String getId() {
+      return id;
+   }
+
+   public void setId(String id) {
+      this.id = id;
+   }
+
+   public String getMediaType() {
+      return mediaType;
+   }
+
+   public void setMediaType(String mediaType) {
+      this.mediaType = mediaType;
+   }
 }

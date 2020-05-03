@@ -4,7 +4,7 @@
   </pfng-toast-notification-list>
 </div>
 
-<div *ngIf="resolvedServiceView as view">
+<div *ngIf="serviceView | async as view">
   <div class="container-fluid breadcrumb-bar">
     <div class="row">
       <ol class="breadcrumb">
@@ -30,6 +30,7 @@
         <dd>
           <span class="label label-primary" *ngIf="view.service.type === 'SOAP_HTTP'">SOAP</span>
           <span class="label label-success" *ngIf="view.service.type === 'REST'">REST</span>
+          <span class="label label-warning" *ngIf="view.service.type === 'EVENT'">EVENT</span>
           <span class="label label-info" *ngIf="view.service.type === 'GENERIC_REST'">DYNAMIC</span>
         </dd>
         <span *ngIf="view.service.type === 'SOAP_HTTP'">
@@ -146,20 +147,41 @@
                 <dt>Message Input Name:</dt>
                 <dd><code>{{ item.inputName }}</code></dd>
               </span>
-              <dt>Dispatcher:</dt>
-              <dd><code>{{ item.dispatcher }}</code> &nbsp; 
-                <span class="learn-more-inline">
-                  <a href="https://microcks.github.io">Learn More 
-                    <i class="fa fa-external-link" aria-hidden="true"></i>
-                  </a>
-                </span>
-              </dd>
-              <dt>Dispatching rules:</dt>
-              <dd><code class="code-block">{{ item.dispatcherRules }}</code></dd>
+              <span *ngIf="view.service.type != 'EVENT'">
+                <dt>Dispatcher:</dt>
+                <dd><code>{{ item.dispatcher }}</code> &nbsp; 
+                  <span class="learn-more-inline">
+                    <a href="https://microcks.github.io">Learn More 
+                      <i class="fa fa-external-link" aria-hidden="true"></i>
+                    </a>
+                  </span>
+                </dd>
+                <dt>Dispatching rules:</dt>
+                <dd><code class="code-block">{{ item.dispatcherRules }}</code></dd>
+              </span>
+              <span *ngIf="view.service.type === 'EVENT'">
+                <dt>Frequency:</dt>
+                <dd>{{ item.defaultDelay || 30 }} s</dd>
+                <dt>Available bindings:</dt>
+                <dd>
+                  {{ getBindingsList(item) }} &nbsp; 
+                  <span class="learn-more-inline">
+                    <a href="https://microcks.github.io">Learn More 
+                      <i class="fa fa-external-link" aria-hidden="true"></i>
+                    </a>
+                  </span>
+                </dd>
+              </span>
               </dl>
             </div>
             <div class="col-md-6">
-              <dl class="dl-horizontal left">
+              <dl class="dl-horizontal left" *ngIf="view.service.type == 'EVENT'">
+                <span *ngIf="hasBinding(item, 'KAFKA')">
+                  <dt>Kafka endpoint:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('KAFKA') }}</a></dd>
+                </span>
+              </dl>
+              <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
               <span *ngIf="view.service.type === 'SOAP_HTTP'">
                 <dt>Message Output Name:</dt>
                 <dd><code>{{ item.outputName }}</code></dd>
@@ -217,28 +239,17 @@
           </div>
 
           <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
-
           <tabset>
-            <tab *ngFor="let pair of view.messagesMap[item.name]" heading="{{ pair.request.name }}">
-              <div class="row">
+            <tab *ngFor="let exchange of view.messagesMap[item.name]" heading="{{ getHeaderName(exchange) }}">
+              <div class="row" *ngIf="view.service.type === 'EVENT'">
                 <div class="col-md-6">
-                  <h5 class="subsection-label">Request</h5>
-
-                  <dl>
-                    <dt>Mock URL</dt>
-                    <dd>
-                      <div class="input-group">
-                        <input type="text" class="form-control" value="{{ formatMockUrl(item, pair.response.dispatchCriteria) }}" disabled/>
-                        <span class="input-group-addon">
-                          <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
-                            (click)="copyToClipboard(formatMockUrl(item, pair.response.dispatchCriteria))"></i>
-                        </span>
-                      </div>
-                    </dd>
+                  <h5 class="subsection-label">Message</h5>
+                  <dl class="dl-horizontal left">
+                    <dt>Content Type:</dt>
+                    <dd><code><small>{{ exchange.eventMessage.mediaType }}</small></code></dd>
                   </dl>
-                
-                  <pre *ngIf="pair.request.content"><code highlight>{{ pair.request.content }}</code></pre>
-                  <table class="table table-condensed" width="100%" *ngIf="pair.request.headers">
+                  <pre *ngIf="exchange.eventMessage.content"><code highlight>{{ exchange.eventMessage.content }}</code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="exchange.eventMessage.headers">
                     <thead>
                       <tr>
                         <th>Header name</th>
@@ -246,7 +257,72 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let header of pair.request.headers">
+                      <tr *ngFor="let header of exchange.eventMessage.headers">
+                        <td>{{ header.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Bindings details</h5>
+                  <span *ngIf="hasBinding(item, 'KAFKA')">
+                    <dl class="dl-horizontal left">
+                      <dt>Kafka topic:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage) }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                              (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage))"></i>
+                          </span>
+                        </div>
+                      </dd>
+                      <dt>Kafka Key type:</dt>
+                      <dd>{{ getBindingProperty(item, 'KAFKA', 'keyType') }}</dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'AMQP1')">
+                    <dl>
+                      <dt>AMQP destination</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="topic/UsersignedupAPI_0.1.0_user-signedup" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                              (click)="copyToClipboard('topic/UsersignedupAPI_0.1.0_user-signedup')"></i>
+                          </span>
+                        </div>
+                      </dd>
+                    </dl>
+                  </span>
+                </div>
+              </div>
+              <div class="row" *ngIf="view.service.type != 'EVENT'">
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Request</h5>
+                  <dl>
+                    <dt>Mock URL</dt>
+                    <dd>
+                      <div class="input-group">
+                        <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria) }}" disabled/>
+                        <span class="input-group-addon">
+                          <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                            (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria))"></i>
+                        </span>
+                      </div>
+                    </dd>
+                  </dl>
+                  <pre *ngIf="exchange.request.content"><code highlight>{{ exchange.request.content }}</code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
+                    <thead>
+                      <tr>
+                        <th>Header name</th>
+                        <th>Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let header of exchange.request.headers">
                         <td>{{ header.name }}</td>
                         <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
                       </tr>
@@ -255,16 +331,14 @@
                 </div>
                 <div class="col-md-6">
                   <h5 class="subsection-label">Response</h5>
-
                   <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST'">
-                    <dt>Response Code and Type</dt>
+                    <dt>Response Code and Type:</dt>
                     <dd>
-                      <code><small>{{ pair.response.status }}: {{pair.response.mediaType}}</small></code>
+                      <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
                     </dd>
                   </dl>
-                  
-                  <pre *ngIf="pair.response.content"><code highlight>{{ pair.response.content }}</code></pre>
-                  <table class="table table-condensed" width="100%" *ngIf="pair.response.headers">
+                  <pre *ngIf="exchange.response.content"><code highlight>{{ exchange.response.content }}</code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="exchange.response.headers">
                     <thead>
                       <tr>
                         <th>Header name</th>
@@ -272,7 +346,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      <tr *ngFor="let header of pair.response.headers">
+                      <tr *ngFor="let header of exchange.response.headers">
                         <td>{{ header.name }}</td>
                         <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
                       </tr>

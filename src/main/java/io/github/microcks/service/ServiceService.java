@@ -54,6 +54,9 @@ public class ServiceService {
    private ResponseRepository responseRepository;
 
    @Autowired
+   private EventMessageRepository eventMessageRepository;
+
+   @Autowired
    private TestResultRepository testResultRepository;
 
    @Value("${network.username}")
@@ -147,23 +150,51 @@ public class ServiceService {
             // Remove messages previously attached to service.
             requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
             responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
+            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
 
+            /*
             Map<Request, Response> messages = importer.getMessageDefinitions(service, operation);
 
-            // Associate response with operation before saving.
-            for (Response response : messages.values()){
+            // Associate response with operation before saving if not an event/async API
+            // In that later case, responses are all null
+            for (Response response : messages.values()) {
                response.setOperationId(operationId);
             }
             responseRepository.saveAll(messages.values());
-            // Associate request with response and operation before saving.
+            // Associate request with operation and response before saving.
             for (Request request : messages.keySet()){
                request.setOperationId(operationId);
                request.setResponseId(messages.get(request).getId());
             }
             requestRepository.saveAll(messages.keySet());
+            */
+
+            List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair pair = (RequestResponsePair)exchange;
+
+                  // Associate request and response with operation.
+                  pair.getRequest().setOperationId(operationId);
+                  pair.getResponse().setOperationId(operationId);
+
+                  // Save response and associate request with response before saving it.
+                  responseRepository.save(pair.getResponse());
+                  pair.getRequest().setResponseId(pair.getResponse().getId());
+                  requestRepository.save(pair.getRequest());
+
+               } else if (exchange instanceof UnidirectionalEvent) {
+                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
+
+                  // Associate event message with operation before saving it..
+                  event.getEventMessage().setOperationId(operationId);
+                  eventMessageRepository.save(event.getEventMessage());
+               }
+            }
+
          }
 
-         // When extracting message informations, we may have modified Operation because discovered new resource paths
+         // When extracting message information, we may have modified Operation because discovered new resource paths
          // depending on variable URI parts. As a consequence, we got to update Service in repository.
          serviceRepository.save(service);
       }

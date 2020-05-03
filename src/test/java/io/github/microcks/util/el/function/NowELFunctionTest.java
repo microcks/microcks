@@ -20,6 +20,7 @@ package io.github.microcks.util.el.function;
 
 import org.junit.Test;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import static org.junit.Assert.*;
@@ -72,18 +73,17 @@ public class NowELFunctionTest {
       String result = function.evalute("dd/MM/yyyy HH:mm:ss", "1d");
 
       // Assert formatting.
-      int day = currentDate.get(Calendar.DAY_OF_MONTH);
-      int month = currentDate.get(Calendar.MONTH);
-      int year = currentDate.get(Calendar.YEAR);
-      String dateString = (day < 9 ? "0" + (day + 1) : (day + 1)) + "/"
-            + (month < 9 ? "0" + (month + 1) : (month + 1)) + "/" + year;
+      currentDate.add(Calendar.DAY_OF_YEAR, 1);
+      SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+      String dateString = dateFormat.format(currentDate.getTime());
 
       assertTrue(result.startsWith(dateString));
 
       // Now add 1 month.
       result = function.evalute("dd/MM/yyyy HH:mm:ss", "1M");
-      dateString = (day < 10 ? "0" + day : day) + "/"
-            + (month < 8 ? "0" + (month + 2) : (month + 2)) + "/" + year;
+      currentDate.add(Calendar.DAY_OF_YEAR, -1);
+      currentDate.add(Calendar.MONTH, 1);
+      dateString = dateFormat.format(currentDate.getTime());
       assertTrue(result.startsWith(dateString));
    }
 }

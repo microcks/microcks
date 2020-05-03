@@ -135,7 +135,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public Map<Request, Response> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
       Map<Request, Response> result = new HashMap<>();
 
       // Iterate on specification "paths" nodes.
@@ -287,7 +287,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
             }
          }
       }
-      return result;
+
+      // Adapt map to list of Exchanges.
+      return result.entrySet().stream()
+            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
    }
 
    /**

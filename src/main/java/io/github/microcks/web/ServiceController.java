@@ -18,13 +18,10 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Service;
+import io.github.microcks.domain.*;
 import io.github.microcks.repository.CustomServiceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.service.MessageService;
-import io.github.microcks.service.RequestResponsePair;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
@@ -41,6 +38,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.swing.event.DocumentEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -159,11 +157,20 @@ public class ServiceController {
       }
 
       if (messages) {
-         Map<String, List<RequestResponsePair>> messagesMap = new HashMap<String, List<RequestResponsePair>>();
+         // Put messages into a map where key is operation name.
+         Map<String, List<? extends Exchange>> messagesMap = new HashMap<>();
          for (Operation operation : service.getOperations()) {
-            List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
-                  IdBuilder.buildOperationId(service, operation));
-            messagesMap.put(operation.getName(), pairs);
+            if (service.getType() == ServiceType.EVENT) {
+               // If an event, we should explicitly retrieve event messages.
+               List<UnidirectionalEvent> events = messageService.getEventByOperation(
+                     IdBuilder.buildOperationId(service, operation));
+               messagesMap.put(operation.getName(), events);
+            } else {
+               // Otherwise we have traditional request / response pairs.
+               List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
+                     IdBuilder.buildOperationId(service, operation));
+               messagesMap.put(operation.getName(), pairs);
+            }
          }
          return new ResponseEntity<>(new ServiceViewDTO(service, messagesMap), HttpStatus.OK);
       }

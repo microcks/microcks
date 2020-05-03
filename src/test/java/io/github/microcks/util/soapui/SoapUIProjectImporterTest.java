@@ -2,12 +2,7 @@ package io.github.microcks.util.soapui;
 
 import static org.junit.Assert.*;
 
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.*;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.MockRepositoryImporterFactory;
@@ -65,26 +60,30 @@ public class SoapUIProjectImporterTest {
       assertNotNull(resource.getContent());
       
       // Check that messages have been correctly found.
-      Map<Request, Response> messages = null;
-      try{
-         messages = importer.getMessageDefinitions(service, operation);
-      } catch (Exception e){
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
          fail("No exception should be thrown when importing message definitions.");
       }
-      assertEquals(2, messages.size());
-      for (Entry<Request, Response> entry : messages.entrySet()){
-         Request request = entry.getKey();
-         Response response = entry.getValue();
-         assertNotNull(request);
-         assertNotNull(response);
-         if ("Anne Request".equals(request.getName())){
-            assertEquals(3, request.getHeaders().size());
-            assertEquals("Anne Response", response.getName());
-            assertEquals("Anne", response.getDispatchCriteria());
-         }
-         else if ("Laurent Request".equals(request.getName())){
-            assertEquals("Laurent Response", response.getName());
-            assertEquals("Laurent", response.getDispatchCriteria());
+      assertEquals(2, exchanges.size());
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof RequestResponsePair) {
+            RequestResponsePair entry = (RequestResponsePair) exchange;
+            Request request = entry.getRequest();
+            Response response = entry.getResponse();
+            assertNotNull(request);
+            assertNotNull(response);
+            if ("Anne Request".equals(request.getName())) {
+               assertEquals(3, request.getHeaders().size());
+               assertEquals("Anne Response", response.getName());
+               assertEquals("Anne", response.getDispatchCriteria());
+            } else if ("Laurent Request".equals(request.getName())) {
+               assertEquals("Laurent Response", response.getName());
+               assertEquals("Laurent", response.getDispatchCriteria());
+            }
+         } else {
+            fail("Exchange has the wrong type. Expecting RequestResponsePair");
          }
       }
    }
@@ -130,30 +129,33 @@ public class SoapUIProjectImporterTest {
       assertNotNull(resource.getContent());
       
       // Check that messages have been correctly found.
-      Map<Request, Response> messages = null;
+      List<Exchange> exchanges = null;
       try{
-         messages = importer.getMessageDefinitions(service, operation);
+         exchanges = importer.getMessageDefinitions(service, operation);
       } catch (Exception e){
          fail("No exception should be thrown when importing message definitions.");
       }
-      assertEquals(3, messages.size());
-      for (Entry<Request, Response> entry : messages.entrySet()){
-         Request request = entry.getKey();
-         Response response = entry.getValue();
-         assertNotNull(request);
-         assertNotNull(response);
-         if ("Andrew Request".equals(request.getName())){
-            assertEquals("Andrew Response", response.getName());
-            assertEquals("Andrew Response", response.getDispatchCriteria());
-         }
-         else if ("Karla Request".equals(request.getName())){
-            assertEquals("Karla Response", response.getName());
-            assertEquals("Karla Response", response.getDispatchCriteria());
-         }
-         else if ("World Request".equals(request.getName())){
-            assertEquals("World Response", response.getName());
-            assertEquals("World Response", response.getDispatchCriteria());
-            assertTrue(response.isFault());
+      assertEquals(3, exchanges.size());
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof RequestResponsePair) {
+            RequestResponsePair entry = (RequestResponsePair) exchange;
+            Request request = entry.getRequest();
+            Response response = entry.getResponse();
+            assertNotNull(request);
+            assertNotNull(response);
+            if ("Andrew Request".equals(request.getName())) {
+               assertEquals("Andrew Response", response.getName());
+               assertEquals("Andrew Response", response.getDispatchCriteria());
+            } else if ("Karla Request".equals(request.getName())) {
+               assertEquals("Karla Response", response.getName());
+               assertEquals("Karla Response", response.getDispatchCriteria());
+            } else if ("World Request".equals(request.getName())) {
+               assertEquals("World Response", response.getName());
+               assertEquals("World Response", response.getDispatchCriteria());
+               assertTrue(response.isFault());
+            }
+         } else {
+            fail("Exchange has the wrong type. Expecting RequestResponsePair");
          }
       }
    }
@@ -199,25 +201,29 @@ public class SoapUIProjectImporterTest {
       assertNotNull(resource.getContent());
 
       // Check that messages have been correctly found.
-      Map<Request, Response> messages = null;
-      try{
-         messages = importer.getMessageDefinitions(service, operation);
-      } catch (Exception e){
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
          fail("No exception should be thrown when importing message definitions.");
       }
-      assertEquals(2, messages.size());
-      for (Entry<Request, Response> entry : messages.entrySet()){
-         Request request = entry.getKey();
-         Response response = entry.getValue();
-         assertNotNull(request);
-         assertNotNull(response);
-         if ("Anne Request".equals(request.getName())){
-            assertEquals("Anne Response", response.getName());
-            assertEquals("Anne Response", response.getDispatchCriteria());
-         }
-         else if ("Laurent Request".equals(request.getName())){
-            assertEquals("Laurent Response", response.getName());
-            assertEquals("Laurent Response", response.getDispatchCriteria());
+      assertEquals(2, exchanges.size());
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof RequestResponsePair) {
+            RequestResponsePair entry = (RequestResponsePair) exchange;
+            Request request = entry.getRequest();
+            Response response = entry.getResponse();
+            assertNotNull(request);
+            assertNotNull(response);
+            if ("Anne Request".equals(request.getName())) {
+               assertEquals("Anne Response", response.getName());
+               assertEquals("Anne Response", response.getDispatchCriteria());
+            } else if ("Laurent Request".equals(request.getName())) {
+               assertEquals("Laurent Response", response.getName());
+               assertEquals("Laurent Response", response.getDispatchCriteria());
+            }
+         } else {
+            fail("Exchange has the wrong type. Expecting RequestResponsePair");
          }
       }
    }
@@ -298,35 +304,37 @@ public class SoapUIProjectImporterTest {
             assertEquals("SEQUENCE", operation.getDispatcher());
             
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
-            try{
-               messages = importer.getMessageDefinitions(service, operation);
-            } catch (Exception e){
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
-            for (Entry<Request, Response> entry : messages.entrySet()){
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               
-               if ("deploymentsForTestREST1.2 Request".equals(request.getName())){
-                  assertEquals("deploymentsForTestREST1.2 Response", response.getName());
-                  assertEquals("/component=testREST/version=1.2", response.getDispatchCriteria());
+            assertEquals(2, exchanges.size());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+
+                  if ("deploymentsForTestREST1.2 Request".equals(request.getName())) {
+                     assertEquals("deploymentsForTestREST1.2 Response", response.getName());
+                     assertEquals("/component=testREST/version=1.2", response.getDispatchCriteria());
+                  } else if ("deploymentsForTestREST1.3 Request".equals(request.getName())) {
+                     assertEquals("deploymentsForTestREST1.3 Response", response.getName());
+                     assertEquals("/component=testREST/version=1.3", response.getDispatchCriteria());
+                  } else {
+                     fail("Message has not an expected name");
+                  }
+
+                  assertEquals("application/json", response.getMediaType());
+                  assertEquals("200", response.getStatus());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
-               else if ("deploymentsForTestREST1.3 Request".equals(request.getName())){
-                  assertEquals("deploymentsForTestREST1.3 Response", response.getName());
-                  assertEquals("/component=testREST/version=1.3", response.getDispatchCriteria());
-               }
-               else {
-                  fail("Message has not an expected name");
-               }
-               
-               assertEquals("application/json", response.getMediaType());
-               assertEquals("200", response.getStatus());
             }
-            
          } 
          else if ("/deployment/byEnvironment/{environment}/{qualifier}.json".equals(operation.getName())){
             assertEquals("GET", operation.getMethod());
@@ -337,37 +345,40 @@ public class SoapUIProjectImporterTest {
             assertFalse(operation.getDispatcherRules().isEmpty());
             
             // Check that messages have been correctly found.
-            Map<Request, Response> messages = null;
-            try{
-               messages = importer.getMessageDefinitions(service, operation);
-            } catch (Exception e){
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, messages.size());
-            for (Entry<Request, Response> entry : messages.entrySet()){
-               Request request = entry.getKey();
-               Response response = entry.getValue();
-               assertNotNull(request);
-               assertNotNull(response);
-               
-               if ("deploymentsForQUALIF2cdsm Request".equals(request.getName())){
-                  assertNotNull(request.getQueryParameters());
-                  assertEquals(4, request.getQueryParameters().size());
-                  assertEquals("deploymentsForQUALIF2cdsm Response", response.getName());
-                  assertEquals("deploymentsForQUALIF2cdsm Response", response.getDispatchCriteria());
+            assertEquals(2, exchanges.size());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+
+                  if ("deploymentsForQUALIF2cdsm Request".equals(request.getName())) {
+                     assertNotNull(request.getQueryParameters());
+                     assertEquals(4, request.getQueryParameters().size());
+                     assertEquals("deploymentsForQUALIF2cdsm Response", response.getName());
+                     assertEquals("deploymentsForQUALIF2cdsm Response", response.getDispatchCriteria());
+                  } else if ("deploymentsForQUALIF2cdsm2 Request".equals(request.getName())) {
+                     assertNotNull(request.getQueryParameters());
+                     assertEquals(4, request.getQueryParameters().size());
+                     assertEquals("deploymentsForQUALIF2cdsm2 Response", response.getName());
+                     assertEquals("deploymentsForQUALIF2cdsm2 Response", response.getDispatchCriteria());
+                  } else {
+                     fail("Message has not an expected name");
+                  }
+
+                  assertEquals("application/json", response.getMediaType());
+                  assertEquals("200", response.getStatus());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
-               else if ("deploymentsForQUALIF2cdsm2 Request".equals(request.getName())){
-                  assertNotNull(request.getQueryParameters());
-                  assertEquals(4, request.getQueryParameters().size());
-                  assertEquals("deploymentsForQUALIF2cdsm2 Response", response.getName());
-                  assertEquals("deploymentsForQUALIF2cdsm2 Response", response.getDispatchCriteria());
-               }
-               else {
-                  fail("Message has not an expected name");
-               }
-               
-               assertEquals("application/json", response.getMediaType());
-               assertEquals("200", response.getStatus());
             }
          } 
          else {
