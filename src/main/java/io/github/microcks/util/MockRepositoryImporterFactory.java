@@ -18,6 +18,7 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
@@ -64,11 +65,17 @@ public class MockRepositoryImporterFactory {
             log.info("Found an XML pragma in file so assuming it's a SoapUI Project to import");
             importer = new SoapUIProjectImporter(mockRepository.getPath());
             break;
-         } else if (line.startsWith("openapi: 3")
+         } else if (line.startsWith("openapi: 3") || line.startsWith("openapi: '3")
                || line.startsWith("openapi: \"3") || line.startsWith("\"openapi\": \"3")
                || line.startsWith("'openapi': '3")) {
             log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
             importer = new OpenAPIImporter(mockRepository.getPath());
+            break;
+         } else if (line.startsWith("asyncapi: 2") || line.startsWith("asyncapi: '2")
+               || line.startsWith("asyncapi: \"2") || line.startsWith("\"asyncapi\": \"2")
+               || line.startsWith("'asyncapi': '2")) {
+            log.info("Found an asyncapi: 2 pragma in file so assuming it's an OpenAPI spec to import");
+            importer = new AsyncAPIImporter(mockRepository.getPath());
             break;
          } else if (line.startsWith("\"swagger\":") || line.startsWith("swagger:")) {
             log.warn("Swagger v2 format is not supported as it does not allow full examples specification, raising an exception");

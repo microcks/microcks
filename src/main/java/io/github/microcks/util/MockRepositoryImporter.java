@@ -18,14 +18,12 @@
  */
 package io.github.microcks.util;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.Operation;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Interface definition for loading Microcks domain objects definitions from a
@@ -66,8 +64,8 @@ public interface MockRepositoryImporter {
     * should be retrieve for full definition of a Service.
     * @param service The service to get messages for
     * @param operation The service operation/actions to get messages for
-    * @return A map of correlated Request/Response. May be empty.
+    * @return A list of Exchange messages
     * @throws MockRepositoryImportException if something goes wrong during import
     */
-   Map<Request, Response> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException;
+   List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException;
 }
