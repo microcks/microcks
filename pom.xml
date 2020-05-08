@@ -10,6 +10,7 @@
     <module>commons/model</module>
     <module>commons/util-el</module>
     <module>webapp</module>
+    <module>minions/async</module>
   </modules>
 
   <name>Microcks</name>
