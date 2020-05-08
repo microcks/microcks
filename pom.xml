@@ -4,10 +4,16 @@
 
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
-  <version>0.9.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <version>1.0.0-SNAPSHOT</version>
+  <modules>
+    <module>commons/model</module>
+    <module>commons/util-el</module>
+    <module>webapp</module>
+  </modules>
 
   <name>Microcks</name>
-  <description>Mirocks: easy mocks for your microservices</description>
+  <description>Microcks: easy mocks for your microservices</description>
   <url>http://microcks.github.io</url>
   <organization>
     <name>Microcks</name>
@@ -51,13 +57,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <java.version>1.8</java.version>
-    <junit.version>4.12</junit.version>
     <spring-boot.version>2.2.5.RELEASE</spring-boot.version>
-    <jackson.version>2.10.2</jackson.version>
-    <keycloak.version>4.8.3.Final</keycloak.version>
-    <mongo-java-server.version>1.24.0</mongo-java-server.version>
-    <soapui.version>5.1.1</soapui.version>
   </properties>
 
   <dependencyManagement>
@@ -69,162 +69,15 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      <dependency>
-        <groupId>org.keycloak.bom</groupId>
-        <artifactId>keycloak-adapter-bom</artifactId>
-        <version>${keycloak.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
     </dependencies>
   </dependencyManagement>
 
-  <dependencies>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-web</artifactId>
-      <version>${spring-boot.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-data-mongodb</artifactId>
-      <version>${spring-boot.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-actuator</artifactId>
-      <version>${spring-boot.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>${jackson.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-spring-boot-starter</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>4.5.2</version>
-    </dependency>
-    <!-- Required since Spring 1.5 to 2.3 migration -->
-    <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-      <version>1.4.01</version>
-    </dependency>
-    <dependency>
-      <groupId>com.smartbear.soapui</groupId>
-      <artifactId>soapui</artifactId>
-      <version>${soapui.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>javafx</groupId>
-          <artifactId>jfxrt</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api</artifactId>
-          <groupId>jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jetty</artifactId>
-          <groupId>jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jetty-util</artifactId>
-          <groupId>jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>swingx</artifactId>
-          <groupId>swingx</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>htmlunit</artifactId>
-          <groupId>net.sourceforge.htmlunit</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>htmlunit-core-js</artifactId>
-          <groupId>net.sourceforge.htmlunit</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>hermes</artifactId>
-          <groupId>hermesjms</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>json-schema-validator</artifactId>
-      <version>2.2.10</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>jackson-coreutils</artifactId>
-      <version>1.9</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>json-schema-core</artifactId>
-      <version>1.2.10</version>
-    </dependency>
-
-    <!-- Test related dependencies -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <version>${spring-boot.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.bwaldvogel</groupId>
-      <artifactId>mongo-java-server</artifactId>
-      <version>${mongo-java-server.version}</version>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
-
   <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>false</filtering>
-      </resource>
-      <resource>
-        <directory>src/main/resources/config</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
     <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.1</version>
-        <configuration>
-          <source>${java.version}</source>
-          <target>${java.version}</target>
-          <encoding>${project.build.sourceEncoding}</encoding>
-          <compilerArgument>-Xlint:deprecation</compilerArgument>
-          <compilerArgument>-Xlint:unchecked</compilerArgument>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-resources-plugin</artifactId>
         <version>3.1.0</version>
-      </plugin>
-      <plugin>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <version>${spring-boot.version}</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -240,46 +93,7 @@
     </plugins>
   </build>
 
-  <repositories>
-    <repository>
-      <id>spring-releases</id>
-      <url>https://repo.spring.io/libs-release</url>
-    </repository>
-    <repository>
-      <id>soapui</id>
-      <url>http://smartbearsoftware.com/repository/maven2</url>
-    </repository>
-  </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>spring-releases</id>
-      <url>https://repo.spring.io/libs-release</url>
-    </pluginRepository>
-  </pluginRepositories>
-
   <profiles>
-    <profile>
-      <id>uber</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>${spring-boot.version}</version>
-            <configuration>
-              <addResources>true</addResources>
-            </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>repackage</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
     <profile>
       <id>release</id>
       <build>
@@ -303,146 +117,6 @@
           </plugin>
         </plugins>
       </build>
-    </profile>
-    <profile>
-      <id>prod</id>
-      <build>
-        <plugins>
-          <plugin>
-            <groupId>com.github.eirslett</groupId>
-            <artifactId>frontend-maven-plugin</artifactId>
-            <version>1.6</version>
-            <executions>
-              <execution>
-                <id>install node and npm</id>
-                <goals>
-                  <goal>install-node-and-npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-              </execution>
-              <execution>
-                <id>npm install</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-                <configuration>
-                  <arguments>install</arguments>
-                </configuration>
-              </execution>
-              <!-- Build the app -->
-              <execution>
-                <id>ng build</id>
-                <goals>
-                  <goal>npm</goal>
-                </goals>
-                <phase>generate-resources</phase>
-                <configuration>
-                  <arguments>run-script build-prod</arguments>
-                </configuration>
-              </execution>
-            </executions>
-            <configuration>
-              <nodeVersion>v8.11.3</nodeVersion>
-              <npmVersion>5.6.0</npmVersion>
-              <workingDirectory>${basedir}/src/main/webapp</workingDirectory>
-              <installDirectory>target</installDirectory>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-clean-plugin</artifactId>
-            <version>2.5</version>
-            <configuration>
-              <filesets>
-                <fileset>
-                  <directory>src/main/webapp/dist</directory>
-                </fileset>
-                <fileset>
-                  <directory>.tmp</directory>
-                </fileset>
-                <!--
-                <fileset>
-                  <directory>node_modules</directory>
-                </fileset>
-                -->
-              </filesets>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>maven-resources-plugin</artifactId>
-            <version>3.0.1</version>
-            <executions>
-              <execution>
-                <id>copy-resources</id>
-                <phase>generate-resources</phase>
-                <goals>
-                  <goal>copy-resources</goal>
-                </goals>
-                <configuration>
-                  <outputDirectory>target/classes/public</outputDirectory>
-                  <resources>
-                    <resource>
-                      <directory>src/main/webapp/dist</directory>
-                      <filtering>false</filtering>
-                    </resource>
-                    <resource>
-                      <directory>${basedir}</directory>
-                      <filtering>false</filtering>
-                      <includes>
-                        <include>bower_components/bootstrap/**</include>
-                      </includes>
-                    </resource>
-                  </resources>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-maven-plugin</artifactId>
-            <version>${spring-boot.version}</version>
-            <configuration>
-              <addResources>true</addResources>
-              <profiles>
-                <profile>prod</profile>
-              </profiles>
-              <arguments>
-                <argument>--spring.profiles.active=prod</argument>
-              </arguments>
-            </configuration>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>repackage</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>com.spotify</groupId>
-            <artifactId>docker-maven-plugin</artifactId>
-            <version>0.4.11</version>
-            <configuration>
-              <imageName>${docker.image.prefix}/${project.artifactId}</imageName>
-              <!-- <dockerDirectory>src/main/docker</dockerDirectory> -->
-              <dockerDirectory>src/main/docker/ubi</dockerDirectory>
-              <!-- <dockerDirectory>src/main/docker/fabric8-ubi</dockerDirectory> -->
-              <resources>
-                <resource>
-                  <targetPath>/</targetPath>
-                  <directory>${project.build.directory}</directory>
-                  <include>${project.build.finalName}.jar</include>
-                </resource>
-              </resources>
-            </configuration>
-          </plugin>
-        </plugins>
-      </build>
-      <properties>
-        <!-- log configuration -->
-        <logback.loglevel>INFO</logback.loglevel>
-        <!-- default Spring profiles -->
-        <spring.profiles.active>prod</spring.profiles.active>
-      </properties>
     </profile>
   </profiles>
 </project>
