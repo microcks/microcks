@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 /**
+ * Repository for AsyncMockDefinitions. Used as a backend storage for jobs that have to publish event messages
+ * at specified frequencies. Has to be initialized at application startup and regularly keep-in-sync with
+ * Microcks server.
  * @author laurent
  */
 public class AsyncMockRepository {
@@ -33,16 +36,16 @@ public class AsyncMockRepository {
    private Set<AsyncMockDefinition> mockDefinitions = new HashSet<>();
 
    /**
-    *
-    * @return
+    * Retrieve the AsyncMockDefinitions present in store.
+    * @return A set of AsyncMockDefinitions
     */
    public Set<AsyncMockDefinition> getMocksDefinitions() {
       return mockDefinitions;
    }
 
    /**
-    *
-    * @param mockDefinition
+    * Store a new or update an existing AsyncMockDefinition in store.
+    * @param mockDefinition Defintion to store or update in store
     */
    public void storeMockDefinition(AsyncMockDefinition mockDefinition) {
       if (mockDefinitions.contains(mockDefinition)) {
@@ -51,7 +54,10 @@ public class AsyncMockRepository {
       mockDefinitions.add(mockDefinition);
    }
 
-
+   /**
+    * Retrieve the set of frequencies of Operation found within definitions in store.
+    * @return A set of frequencies for definitions operations
+    */
    public Set<Long> getMockDefinitionsFrequencies() {
       return mockDefinitions.stream()
             .map(d -> d.getOperation().getDefaultDelay())
@@ -59,9 +65,9 @@ public class AsyncMockRepository {
    }
 
    /**
-    *
-    * @param frequency
-    * @return
+    * Retrieve all the AsyncMockDefinition correspding to a specified operation frequencey
+    * @param frequency The operattion frewuency to get definitions for
+    * @return A set of AsyncMockDefinition having specified operation frequency
     */
    public Set<AsyncMockDefinition> getMockDefinitionsByFrequency(Long frequency) {
       return mockDefinitions.stream()

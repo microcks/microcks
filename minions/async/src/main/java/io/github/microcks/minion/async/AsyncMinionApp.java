@@ -18,24 +18,26 @@
  */
 package io.github.microcks.minion.async;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.UnidirectionalEvent;
+
+import io.github.microcks.minion.async.client.ConnectorException;
+import io.github.microcks.minion.async.client.KeycloakConfig;
+import io.github.microcks.minion.async.client.KeycloakConnector;
+import io.github.microcks.minion.async.client.MicrocksAPIConnector;
 import io.github.microcks.minion.async.client.ServiceViewDTO;
+
+import io.quarkus.runtime.StartupEvent;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import io.github.microcks.domain.Service;
-import io.github.microcks.minion.async.client.KeycloakConnector;
-import io.github.microcks.minion.async.client.KeycloakConfig;
-import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-
-import io.quarkus.runtime.StartupEvent;
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -44,12 +46,15 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 /**
+ * A Minion App for dealing with Async message mocks.
  * @author laurent
  */
 public class AsyncMinionApp {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
+
+   private final int SERVICES_FETCH_SIZE = 30;
 
    @Inject
    @RestClient
@@ -70,7 +75,7 @@ public class AsyncMinionApp {
    @ConfigProperty(name= "minion.restricted-frequencies")
    Long[] restrictedFrequencies;
 
-
+   /** Application startup method. */
    void onStart(@Observes StartupEvent ev) {
       // We need to retrieve Keycloak server from Microckd config.
       KeycloakConfig config = microcksAPIConnector.getKeycloakConfig();
@@ -82,10 +87,10 @@ public class AsyncMinionApp {
                + config.getRealm() + "/protocol/openid-connect/token");
          logger.info("Authentication to Keycloak server succeed!");
 
-
+         int page = 0;
          boolean fetchServices = true;
          while (fetchServices) {
-            List<Service> services = microcksAPIConnector.listServices("Bearer " + oauthToken, 0, 30);
+            List<Service> services = microcksAPIConnector.listServices("Bearer " + oauthToken, page, SERVICES_FETCH_SIZE);
             for (Service service : services) {
                logger.debug("Found service " + service.getName() + " - " + service.getVersion());
 
@@ -119,16 +124,22 @@ public class AsyncMinionApp {
                   }
                }
             }
-            if (services.size() < 30) {
+            if (services.size() < SERVICES_FETCH_SIZE) {
                fetchServices = false;
             }
+            page++;
          }
 
          logger.info("Starting scheduling of all producer jobs...");
          producerScheduler.scheduleAllProducerJobs();
 
+      } catch (ConnectorException ce) {
+         logger.error("Cannot authenticate to Keycloak server and thus enable to call Microcks API" +
+               "to get Async APIs to mocks...", ce);
+         throw new RuntimeException("Unable to start the Minion due to connection exception");
       } catch (IOException ioe) {
-         logger.error("Cannot authenticate to Keycloak server", ioe);
+         logger.error("IOExceptino while communicating with Keycloak or Microcks API", ioe);
+         throw new RuntimeException("Unable to start the Minion due to IO exception");
       }
    }
 }

@@ -51,11 +51,14 @@ public class KeycloakConnector {
    String saCredentials;
 
    /**
-    *
-    * @param tokenEndpoint
-    * @return
+    * Connect to the given OIDC endpoint on a Keycloak server, realize a client_credentials grant type
+    * with configured account and credentials to finally return the OAuth accesc token.
+    * @param tokenEndpoint The OIDC endpoint on which to authenticate
+    * @return The OAuth access token after successful authentication
+    * @throws ConnectorException If connection faild (bad endpoint) or authentication failed (bad account or credentials)
+    * @throws IOException In case of communication exception
     */
-   public String connectAndGetOAuthToken(String tokenEndpoint) throws IOException {
+   public String connectAndGetOAuthToken(String tokenEndpoint) throws ConnectorException, IOException {
       // Start creating a httpClient that disables host name validation for certificates.
       CloseableHttpClient httpClient = HttpClients.custom()
             .setSSLHostnameVerifier((String s, SSLSession sslSession) -> true)
@@ -74,6 +77,12 @@ public class KeycloakConnector {
 
          // Execute request and retrieve content as string.
          CloseableHttpResponse tokenResponse = httpClient.execute(tokenRequest);
+
+         if (tokenResponse.getStatusLine().getStatusCode() != 200) {
+            logger.error("OAuth token cannot be retrieved for Keycloak server, check microcks.serviceaccount configuration");
+            throw new ConnectorException("OAuth token cannot be retrieved for Microcks. Check microcks.serviceaccount.");
+         }
+
          String result = EntityUtils.toString(tokenResponse.getEntity());
          logger.debug("Result: " + result);
 

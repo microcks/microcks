@@ -18,11 +18,6 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import java.util.Properties;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -32,7 +27,13 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+
+import java.util.Properties;
+
 /**
+ * Kafka implementation of producer for async event messages.
  * @author laurent
  */
 @ApplicationScoped
@@ -57,18 +58,18 @@ public class KafkaProducerManager {
       props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion");
       props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
       props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-      return new KafkaProducer<String, String>(props);
+      return new KafkaProducer<>(props);
    }
 
    /**
-    *
-    * @param topic
-    * @param key
-    * @param value
+    * Publish a message on specified topic.
+    * @param topic The destination topic for message
+    * @param key The message key
+    * @param value The message payload
     */
-   public void publishMockMessage(String topic, String key, String value) {
-      logger.info("Publishing message " + value);
-      producer.send(new ProducerRecord<String,String>(topic, key, value));
+   public void publishMessage(String topic, String key, String value) {
+      logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
+      producer.send(new ProducerRecord<String, String>(topic, key, value));
       producer.flush();
    }
 }

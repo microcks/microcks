@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * This is a wrapper bean that holds needed elements for async API operation mocking.
  * @author laurent
  */
 public class AsyncMockDefinition {

@@ -18,10 +18,6 @@
  */
 package io.github.microcks.minion.async;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.transaction.Transactional;
-
 import io.github.microcks.minion.async.producer.ProducerManager;
 
 import io.quarkus.arc.Arc;
@@ -40,11 +36,15 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
 /**
+ * Bean responsible for Async mock messages producers scheduling.
  * @author laurent
  */
 public class ProducerScheduler {
@@ -71,23 +71,24 @@ public class ProducerScheduler {
    }
 
 
-   /** Scheduling all the producer jobs for configured frequencies. */
+   /** Schedule all the producer jobs for configured frequencies. */
    public void scheduleAllProducerJobs() {
       for (Long frequency : restrictedFrequencies) {
          scheduleProducerForFrequency(frequency);
       }
    }
 
-   /** Unscheduling all producer jobs for configured frequencies. */
+   /** Unschedule all producer jobs for configured frequencies. */
    public void unscheduleAllProducerJobs() {
       try {
          quartz.unscheduleJobs(triggerKeys);
          triggerKeys.clear();
       } catch (SchedulerException e) {
-         e.printStackTrace();
+         logger.error("Failure while unscheduling all producer jobs", e);
       }
    }
 
+   /** Inner class implementing Quartz Job and deleting job execution to ProducerManager bean. */
    public static class AsyncMockProducerJob implements Job {
       public void execute(JobExecutionContext context) throws JobExecutionException {
          Long frequency = context.getJobDetail().getJobDataMap().getLong("frequency");
@@ -95,16 +96,15 @@ public class ProducerScheduler {
       }
    }
 
-   /**
-    *
-    * @param frequency
-    */
+   /** Schedule a Quartz Job and associate trigger for specified frewqency. */
    private void scheduleProducerForFrequency(Long frequency) {
+      logger.info("Scheduling a new Producer Job at frequency " + frequency);
 
       // Create a job detail which is holding its frequency as a param.
       JobDetail jobDetail = JobBuilder.newJob(AsyncMockProducerJob.class)
             .usingJobData("frequency", frequency).build();
 
+      // Create a trigger for this job, executing each 'frequency' seconds.
       Trigger trigger = TriggerBuilder.newTrigger()
             .forJob(jobDetail)
             .withIdentity(String.valueOf(frequency))
@@ -120,7 +120,7 @@ public class ProducerScheduler {
          quartz.scheduleJob(jobDetail, trigger);
          triggerKeys.add(trigger.getKey());
       } catch (SchedulerException e) {
-         e.printStackTrace();
+         logger.error("Failure while scheduling producer job for frequency " + frequency, e);
       }
    }
 }

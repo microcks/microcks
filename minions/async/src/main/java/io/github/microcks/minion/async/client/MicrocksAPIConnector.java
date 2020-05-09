@@ -20,10 +20,15 @@ package io.github.microcks.minion.async.client;
 
 import io.github.microcks.domain.Service;
 
-import javax.ws.rs.*;
-
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 import java.util.List;
 
@@ -31,21 +36,40 @@ import java.util.List;
 @RegisterRestClient
 @RegisterClientHeaders
 /**
+ * REST Client interface for calling various Microcks APIs.
  * @author laurent
  */
 public interface MicrocksAPIConnector {
 
+   /**
+    * Retrieve the Keycloak server configuration for the Microcks instance.
+    * @return The Keycloak config object
+    */
    @GET
    @Path("/keycloak/config")
    @Produces("application/json")
    KeycloakConfig getKeycloakConfig();
 
+   /**
+    * Retrieve a list of services from Microcks APIs.
+    * @param authorization The Authorization header containing the OAuth access token for this API call
+    * @param page The page of service list to request
+    * @param size The size of the page to fetch
+    * @return A list of Service
+    */
    @GET
    @Path("/services")
    @Produces("application/json")
    List<Service> listServices(@HeaderParam("Authorization") String authorization, @QueryParam("page") int page,
                               @QueryParam("size") int size);
 
+   /**
+    * Retrieve the complete ServiceView for a Service that may contain messages definitions.
+    * @param authorization The Authorization header containing the OAuth access token for this API call
+    * @param serviceId The unique identifier of Service to get the view for
+    * @param messages Whether to include full descriptions of operations messages
+    * @return A list of ServiceViewDTO
+    */
    @GET
    @Path("/services/{id}")
    @Produces("application/json")
