@@ -71,7 +71,6 @@ public class ResourceController {
          HttpServletRequest request
    ) {
       String extension = request.getRequestURI().substring(request.getRequestURI().lastIndexOf('.'));
-      name = name + extension;
 
       log.info("Requesting resource named " + name);
 
