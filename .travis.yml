@@ -20,6 +20,9 @@ after_success:
     docker tag microcks/microcks microcks/microcks:nightly;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:nightly;
+    docker tag microcks/microcks quay.io/microcks/microcks:nightly;
+    docker login -u "QUAY_USERNAME" -p "$QUAY_PASSWORD";
+    docker push quay.io/microcks/microcks:nightly;
     fi
   - if [ "$TRAVIS_BRANCH" == "$TRAVIS_TAG" ]; then
     mvn -B -q -Pprod package docker:build;
