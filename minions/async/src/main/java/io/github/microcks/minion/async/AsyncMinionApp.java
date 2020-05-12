@@ -21,13 +21,13 @@ package io.github.microcks.minion.async;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
 
 import io.github.microcks.minion.async.client.ConnectorException;
 import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.KeycloakConnector;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.github.microcks.minion.async.client.ServiceViewDTO;
 
 import io.quarkus.runtime.StartupEvent;
 
@@ -56,6 +56,12 @@ public class AsyncMinionApp {
 
    private final int SERVICES_FETCH_SIZE = 30;
 
+   @ConfigProperty(name = "minion.supported-bindings")
+   String[] supportedBindings;
+
+   @ConfigProperty(name= "minion.restricted-frequencies")
+   Long[] restrictedFrequencies;
+
    @Inject
    @RestClient
    MicrocksAPIConnector microcksAPIConnector;
@@ -69,11 +75,6 @@ public class AsyncMinionApp {
    @Inject
    ProducerScheduler producerScheduler;
 
-   @ConfigProperty(name = "minion.supported-bindings")
-   String[] supportedBindings;
-
-   @ConfigProperty(name= "minion.restricted-frequencies")
-   Long[] restrictedFrequencies;
 
    /** Application startup method. */
    void onStart(@Observes StartupEvent ev) {
@@ -109,7 +110,7 @@ public class AsyncMinionApp {
 
                   if (operations.size() > 0) {
                      logger.info("Found " + operations.size() + " candidate operations in " + service.getName() + " - " + service.getVersion());
-                     ServiceViewDTO serviceView = microcksAPIConnector.getService("Bearer " + oauthToken, service.getId(), true);
+                     ServiceView serviceView = microcksAPIConnector.getService("Bearer " + oauthToken, service.getId(), true);
 
                      for (Operation operation : operations) {
                         operation.setDefaultDelay(30L);

@@ -19,6 +19,7 @@
 package io.github.microcks.minion.async.client;
 
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceView;
 
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -73,6 +74,6 @@ public interface MicrocksAPIConnector {
    @GET
    @Path("/services/{id}")
    @Produces("application/json")
-   ServiceViewDTO getService(@HeaderParam("Authorization") String authorization, @PathParam("id") String serviceId,
+   ServiceView getService(@HeaderParam("Authorization") String authorization, @PathParam("id") String serviceId,
                                    @QueryParam("messages") boolean messages);
 }
