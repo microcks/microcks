@@ -16,32 +16,28 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.minion.async.client;
+package io.github.microcks.event;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceView;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.common.errors.SerializationException;
+import org.apache.kafka.common.serialization.Serializer;
 
-import java.util.List;
-import java.util.Map;
 /**
- * Data Transfer object for grouping a Service and its messages pairs.
+ * A Kafka serializer for ServiceView using Jackson ObjectMapper serialization.
  * @author laurent
  */
-public class ServiceViewDTO {
+public class ServiceViewSerializer implements Serializer<ServiceView> {
 
-   private Service service;
-   private Map<String, List<? extends Exchange>> messagesMap;
+   private ObjectMapper mapper = new ObjectMapper();
 
-   public ServiceViewDTO(Service service, Map<String, List<? extends Exchange>> messagesMap) {
-      this.service = service;
-      this.messagesMap = messagesMap;
-   }
-
-   public Service getService() {
-      return service;
-   }
-
-   public Map<String, List<? extends Exchange>> getMessagesMap() {
-      return messagesMap;
+   @Override
+   public byte[] serialize(String topic, ServiceView serviceView) {
+      try {
+         return mapper.writeValueAsBytes(serviceView);
+      } catch (JsonProcessingException e) {
+         throw new SerializationException("Error serializing serviceView", e);
+      }
    }
 }

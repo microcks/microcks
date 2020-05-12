@@ -18,18 +18,39 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.*;
-import io.github.microcks.repository.*;
-import io.github.microcks.util.*;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Metadata;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Secret;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.event.ServiceUpdateEvent;
+import io.github.microcks.repository.EventMessageRepository;
+import io.github.microcks.repository.RequestRepository;
+import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.repository.ResponseRepository;
+import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.repository.TestResultRepository;
+import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.EntityAlreadyExistsException;
+import io.github.microcks.util.HTTPDownloader;
+import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.MockRepositoryImportException;
+import io.github.microcks.util.MockRepositoryImporter;
+import io.github.microcks.util.MockRepositoryImporterFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Bean defining service operations around Service domain objects.
@@ -59,6 +80,9 @@ public class ServiceService {
    @Autowired
    private TestResultRepository testResultRepository;
 
+   @Autowired
+   private ApplicationContext applicationContext;
+
    @Value("${network.username}")
    private final String username = null;
 
@@ -87,7 +111,7 @@ public class ServiceService {
             throw new MockRepositoryImportException(repositoryUrl + " cannot be downloaded", ioe);
          }
       } else {
-         // Simply build locaFile from repository url.
+         // Simply build localFile from repository url.
          localFile = new File(repositoryUrl);
       }
 
@@ -152,23 +176,6 @@ public class ServiceService {
             responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
             eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
 
-            /*
-            Map<Request, Response> messages = importer.getMessageDefinitions(service, operation);
-
-            // Associate response with operation before saving if not an event/async API
-            // In that later case, responses are all null
-            for (Response response : messages.values()) {
-               response.setOperationId(operationId);
-            }
-            responseRepository.saveAll(messages.values());
-            // Associate request with operation and response before saving.
-            for (Request request : messages.keySet()){
-               request.setOperationId(operationId);
-               request.setResponseId(messages.get(request).getId());
-            }
-            requestRepository.saveAll(messages.keySet());
-            */
-
             List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -197,6 +204,9 @@ public class ServiceService {
          // When extracting message information, we may have modified Operation because discovered new resource paths
          // depending on variable URI parts. As a consequence, we got to update Service in repository.
          serviceRepository.save(service);
+
+         // Publish a Service update event before returning.
+         publishServiceUpdateEvent(service);
       }
       log.info("Having imported {} services definitions into repository", services.size());
       return services;
@@ -336,6 +346,9 @@ public class ServiceService {
                return true;
             }
          }
+
+         // Publish a Service update event before returning.
+         publishServiceUpdateEvent(service);
       }
       return false;
    }
@@ -356,5 +369,12 @@ public class ServiceService {
             }
          }
       }
+   }
+
+   /** Publish a ServiceUpdateEvent towards minions or some other consumers. */
+   private void publishServiceUpdateEvent(Service service) {
+      ServiceUpdateEvent event = new ServiceUpdateEvent(this, service.getId());
+      applicationContext.publishEvent(event);
+      log.debug("Service update event has been published");
    }
 }

@@ -16,34 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.web.dto;
+package io.github.microcks.event;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.RequestResponsePair;
-
-import java.util.List;
-import java.util.Map;
+import org.springframework.context.ApplicationEvent;
 
 /**
- * Data Transfer object for grouping a Service and its messages pairs.
+ * Event raised when a Service has been updated.
  * @author laurent
  */
-public class ServiceViewDTO {
+public class ServiceUpdateEvent extends ApplicationEvent {
 
-   private Service service;
-   private Map<String, List<? extends Exchange>> messagesMap;
+   /** */
+   private final String serviceId;
 
-   public ServiceViewDTO(Service service, Map<String, List<? extends Exchange>> messagesMap) {
-      this.service = service;
-      this.messagesMap = messagesMap;
+   /**
+    * Create a new {@code ServiceUpdateEvent}.
+    * @param source Source object for event
+    * @param serviceId Identifier of the updated Service
+    */
+   public ServiceUpdateEvent(Object source, String serviceId) {
+      super(source);
+      this.serviceId = serviceId;
    }
 
-   public Service getService() {
-      return service;
-   }
-
-   public Map<String, List<? extends Exchange>> getMessagesMap() {
-      return messagesMap;
+   public String getServiceId() {
+      return serviceId;
    }
 }

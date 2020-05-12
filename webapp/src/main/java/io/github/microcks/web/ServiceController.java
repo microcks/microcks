@@ -27,7 +27,7 @@ import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.web.dto.GenericResourceServiceDTO;
 import io.github.microcks.web.dto.OperationOverrideDTO;
-import io.github.microcks.web.dto.ServiceViewDTO;
+import io.github.microcks.domain.ServiceView;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -171,7 +171,7 @@ public class ServiceController {
                messagesMap.put(operation.getName(), pairs);
             }
          }
-         return new ResponseEntity<>(new ServiceViewDTO(service, messagesMap), HttpStatus.OK);
+         return new ResponseEntity<>(new ServiceView(service, messagesMap), HttpStatus.OK);
       }
       return new ResponseEntity<>(service, HttpStatus.OK);
    }

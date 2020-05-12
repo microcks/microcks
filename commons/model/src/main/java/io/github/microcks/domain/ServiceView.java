@@ -16,15 +16,29 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.listener;
+package io.github.microcks.domain;
 
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-
+import java.util.List;
+import java.util.Map;
 /**
+ * Aggregate bean for grouping a Service and its messages pairs.
  * @author laurent
  */
-@Configuration
-@ComponentScan(basePackages = {"io.github.microcks.listener"}, lazyInit = true)
-public class ListenerTestsConfiguration {
+public class ServiceView {
+
+   private Service service;
+   private Map<String, List<? extends Exchange>> messagesMap;
+
+   public ServiceView(Service service, Map<String, List<? extends Exchange>> messagesMap) {
+      this.service = service;
+      this.messagesMap = messagesMap;
+   }
+
+   public Service getService() {
+      return service;
+   }
+
+   public Map<String, List<? extends Exchange>> getMessagesMap() {
+      return messagesMap;
+   }
 }

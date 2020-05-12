@@ -25,6 +25,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Calendar;
@@ -44,6 +45,7 @@ public class DailyStatisticsFeeder implements ApplicationListener<MockInvocation
    private DailyStatisticRepository statisticsRepository;
    
    @Override
+   @Async
    public void onApplicationEvent(MockInvocationEvent event){
       log.debug("Received a MockInvocationEvent on " + event.getServiceName() + " - v" + event.getServiceVersion());
       
