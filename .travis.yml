@@ -15,7 +15,7 @@ after_success:
     docker push microcks/microcks:latest;
     fi
   - if [ "$TRAVIS_BRANCH" == "1.0.x" ]; then
-    cd core/
+    cd webapp/
     mvn -B -q -Pprod -DskipTests package docker:build;
     docker tag microcks/microcks microcks/microcks:nightly;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
@@ -23,6 +23,11 @@ after_success:
     docker tag microcks/microcks:nightly quay.io/microcks/microcks:nightly;
     docker login -u "QUAY_USERNAME" -p "$QUAY_PASSWORD";
     docker push quay.io/microcks/microcks:nightly;
+    cd ../minions/async
+    mvn -B -q -DskipTests package;
+    docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:nightly .
+    docker login -u "QUAY_USERNAME" -p "$QUAY_PASSWORD";
+    docker push quay.io/microcks/microcks-async-minion:nightly
     fi
   - if [ "$TRAVIS_BRANCH" == "$TRAVIS_TAG" ]; then
     mvn -B -q -Pprod package docker:build;
