@@ -21,12 +21,12 @@ after_success:
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:nightly;
     docker tag microcks/microcks:nightly quay.io/microcks/microcks:nightly;
-    docker login -u "QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
     docker push quay.io/microcks/microcks:nightly;
     cd ../minions/async/;
     mvn -B -q -DskipTests package;
     docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:nightly .;
-    docker login -u "QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
     docker push quay.io/microcks/microcks-async-minion:nightly;
     fi
   - if [ "$TRAVIS_BRANCH" == "$TRAVIS_TAG" ]; then
