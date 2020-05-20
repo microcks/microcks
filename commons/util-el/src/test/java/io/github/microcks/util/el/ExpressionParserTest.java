@@ -37,7 +37,7 @@ public class ExpressionParserTest {
       // Build a suitable context.
       EvaluationContext context = new EvaluationContext();
       context.registerFunction("now", NowELFunction.class);
-      context.setVariable("request", new EvaluableRequest("{'name'= 'Laurent'}", null));
+      context.setVariable("request", new EvaluableRequest("{'name': 'Laurent'}", null));
 
       Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
 

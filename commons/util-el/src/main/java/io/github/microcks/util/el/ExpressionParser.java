@@ -122,15 +122,19 @@ public class ExpressionParser {
          log.debug("Found a function expression " + expressionString);
          String functionName = expressionString.substring(0, argsStart);
          String argsString = expressionString.substring(argsStart + 1, argsEnd);
-         String[] args = Arrays.stream(argsString.split(","))
-               .map(arg -> arg.trim()).toArray(String[]::new);
+         String[] args = new String[0];
+         // Parse arguments if non empty string.
+         if (argsString.length() > 0) {
+            args = Arrays.stream(argsString.split(","))
+                  .map(arg -> arg.trim()).toArray(String[]::new);
+         }
 
          Class<ELFunction> functionClazz = context.lookupFunction(functionName);
          ELFunction function = null;
          try {
             function = functionClazz.newInstance();
          } catch (Exception e) {
-            log.error("Exception while instanciating the functionClazz " + functionClazz, e);
+            log.error("Exception while instantiating the functionClazz " + functionClazz, e);
             return new LiteralExpression("");
          }
          return new FunctionExpression(function, args);

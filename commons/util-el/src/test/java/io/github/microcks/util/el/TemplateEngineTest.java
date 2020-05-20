@@ -23,6 +23,8 @@ import org.junit.Test;
 import java.util.Calendar;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * This is a test case for TemplateEngine class.
@@ -49,5 +51,19 @@ public class TemplateEngineTest {
       String result = engine.getValue("Today is {{ now(dd/MM/yyyy) }} and {{ request.body }}");
 
       assertEquals("Today is " + dateString + " and hello world!", result);
+   }
+
+   @Test
+   public void testContextlessTemplate() {
+      String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41} \n";
+
+      TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+
+      try {
+         String content = engine.getValue(template);
+         assertTrue(content.startsWith("{\"signedAt\": \"1"));
+      } catch (Throwable t) {
+         fail("Contextless template should not fail.");
+      }
    }
 }
