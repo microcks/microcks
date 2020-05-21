@@ -18,16 +18,7 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Metadata;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Secret;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.domain.*;
 import io.github.microcks.event.ServiceUpdateEvent;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
@@ -88,6 +79,12 @@ public class ServiceService {
 
    @Value("${network.password}")
    private final String password = null;
+
+   @Value("${async-api.default-binding}")
+   private final String defaultAsyncBinding = null;
+
+   @Value("${async-api.default-frequency}")
+   private final Long defaultAsyncFrequency = 30l;
 
 
    /**
@@ -150,6 +147,18 @@ public class ServiceService {
          }
          if (service.getMetadata() == null) {
             service.setMetadata(new Metadata());
+         }
+
+         // For services of type EVENT, we should put default values on frequency and bindings.
+         if (service.getType().equals(ServiceType.EVENT)) {
+            for (Operation operation : service.getOperations()) {
+               if (operation.getDefaultDelay() == null) {
+                  operation.setDefaultDelay(defaultAsyncFrequency);
+               }
+               if (operation.getBindings() == null || operation.getBindings().isEmpty()) {
+                  operation.addBinding(defaultAsyncBinding, new Binding(BindingType.valueOf(defaultAsyncBinding)));
+               }
+            }
          }
 
          service.getMetadata().objectUpdated();

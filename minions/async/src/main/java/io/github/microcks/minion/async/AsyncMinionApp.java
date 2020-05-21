@@ -99,8 +99,7 @@ public class AsyncMinionApp {
 
                   // Find the operations matching this minion constraints..
                   List<Operation> operations = service.getOperations().stream()
-                        //.filter(o -> Arrays.asList(restrictedFrequencies).contains(o.getDefaultDelay()))
-                        .filter(o -> Arrays.asList(restrictedFrequencies).contains(30L))
+                        .filter(o -> Arrays.asList(restrictedFrequencies).contains(o.getDefaultDelay()))
                         .filter(o -> o.getBindings()
                                     .keySet()
                                     .stream()
@@ -113,7 +112,6 @@ public class AsyncMinionApp {
                      ServiceView serviceView = microcksAPIConnector.getService("Bearer " + oauthToken, service.getId(), true);
 
                      for (Operation operation : operations) {
-                        operation.setDefaultDelay(30L);
                         AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(), operation,
                               serviceView.getMessagesMap().get(operation.getName()).stream()
                                     .filter(e -> e instanceof UnidirectionalEvent)
@@ -139,7 +137,7 @@ public class AsyncMinionApp {
                "to get Async APIs to mocks...", ce);
          throw new RuntimeException("Unable to start the Minion due to connection exception");
       } catch (IOException ioe) {
-         logger.error("IOExceptino while communicating with Keycloak or Microcks API", ioe);
+         logger.error("IOException while communicating with Keycloak or Microcks API", ioe);
          throw new RuntimeException("Unable to start the Minion due to IO exception");
       }
    }
