@@ -18,6 +18,9 @@
  */
 package io.github.microcks.domain;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 import java.util.Map;
 /**
@@ -29,7 +32,8 @@ public class ServiceView {
    private Service service;
    private Map<String, List<? extends Exchange>> messagesMap;
 
-   public ServiceView(Service service, Map<String, List<? extends Exchange>> messagesMap) {
+   @JsonCreator
+   public ServiceView(@JsonProperty("service") Service service, @JsonProperty("messagesMap") Map<String, List<? extends Exchange>> messagesMap) {
       this.service = service;
       this.messagesMap = messagesMap;
    }
