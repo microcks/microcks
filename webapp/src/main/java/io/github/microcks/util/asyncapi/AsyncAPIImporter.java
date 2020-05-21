@@ -167,28 +167,32 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
 
                // No need to go further if no examples.
                if (messageBody.has("examples")) {
-                  Iterator<String> exampleNames = messageBody.path("examples").fieldNames();
-                  while (exampleNames.hasNext()) {
-                     String exampleName = exampleNames.next();
-                     JsonNode example = messageBody.path("examples").path(exampleName);
+                  Iterator<JsonNode> examples = messageBody.path("examples").elements();
+                  while (examples.hasNext()) {
+                     JsonNode exampleNode = examples.next();
+                     Iterator<String> exampleNames = exampleNode.fieldNames();
+                     while (exampleNames.hasNext()) {
+                        String exampleName = exampleNames.next();
+                        JsonNode example = exampleNode.path(exampleName);
 
-                     // No need to go further if no payload.
-                     if (example.has("payload")) {
-                        String exampleValue = getExamplePayload(example);
+                        // No need to go further if no payload.
+                        if (example.has("payload")) {
+                           String exampleValue = getExamplePayload(example);
 
-                        // Build and store a request object.
-                        EventMessage eventMessage = new EventMessage();
-                        eventMessage.setName(exampleName);
-                        eventMessage.setContent(exampleValue);
-                        eventMessage.setMediaType(contentType);
+                           // Build and store a request object.
+                           EventMessage eventMessage = new EventMessage();
+                           eventMessage.setName(exampleName);
+                           eventMessage.setContent(exampleValue);
+                           eventMessage.setMediaType(contentType);
 
-                        // Now complete with specified headers.
-                        List<Header> headers = getExampleHeaders(example);
-                        for (Header header : headers) {
-                           eventMessage.addHeader(header);
+                           // Now complete with specified headers.
+                           List<Header> headers = getExampleHeaders(example);
+                           for (Header header : headers) {
+                              eventMessage.addHeader(header);
+                           }
+
+                           result.add(new UnidirectionalEvent(eventMessage));
                         }
-
-                        result.add(new UnidirectionalEvent(eventMessage));
                      }
                   }
 
