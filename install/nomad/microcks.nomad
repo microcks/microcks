@@ -7,7 +7,7 @@ job "microcks" {
     task "microcks" {
       driver = "docker"
       config {
-        image = "microcks/microcks:latest"
+        image = "quay.io/microcks/microcks:nightly"
         volumes = [
           #"./config:/deployments/config"
           "/Users/lbroudou/Development/github/microcks/install/nomad/config:/deployments/config"
@@ -51,7 +51,7 @@ job "microcks" {
     task "postman" {
       driver = "docker"
       config {
-        image = "microcks/microcks-postman-runtime:latest"
+        image = "quay.io/microcks/microcks-postman-runtime:latest"
         network_mode = "nomad_main"
         network_aliases = [
           "postman"

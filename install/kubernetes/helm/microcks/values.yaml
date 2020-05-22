@@ -22,8 +22,8 @@ postgresUsername: userP
 # Beware that in case of update, new value will be generated and
 #postgresPassword: 123
 
-microcksImage: microcks/microcks:latest
-microcksPostmanImage: microcks/microcks-postman-runtime:latest
+microcksImage: quay.io/microcks/microcks:nightly
+microcksPostmanImage: quay.io/microcks/microcks-postman-runtime:latest
 mongodbImage: centos/mongodb-32-centos7:latest
 keycloakImage: jboss/keycloak:4.8.3.Final
 postgresImage: centos/postgresql-95-centos7:latest

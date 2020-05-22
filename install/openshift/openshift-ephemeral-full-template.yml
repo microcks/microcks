@@ -106,7 +106,7 @@ objects:
     - name: latest
       from:
         kind: DockerImage
-        name: microcks/microcks:latest
+        name: quay.io/microcks/microcks:nightly
 - kind: ImageStream
   apiVersion: v1
   metadata:
@@ -119,7 +119,7 @@ objects:
     - name: latest
       from:
         kind: DockerImage
-        name: microcks/microcks-postman-runtime:latest
+        name: quay.io/microcks/microcks-postman-runtime:latest
 - kind: Service
   apiVersion: v1
   metadata:

@@ -12,7 +12,7 @@ services:
         aliases:
           - mongo
   postman:
-    image: microcks/microcks-postman-runtime:latest
+    image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
     networks:
       main:
@@ -40,7 +40,7 @@ services:
       - mongo
       - postman
       - keycloak
-    image: microcks/microcks:latest
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - ./config:/deployments/config

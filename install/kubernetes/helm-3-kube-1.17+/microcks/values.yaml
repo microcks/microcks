@@ -4,11 +4,11 @@ microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-microcks-ingress
-  image: microcks/microcks:0.9.0
+  image: quay.io/microcks/microcks:nightly
   replicas: 1
   
 postman:
-  image: microcks/microcks-postman-runtime:latest
+  image: quay.io/microcks/microcks-postman-runtime:latest
   replicas: 1
 
 keycloak:
