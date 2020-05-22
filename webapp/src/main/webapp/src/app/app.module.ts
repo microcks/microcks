@@ -22,18 +22,19 @@ import { FormsModule } from '@angular/forms';
 
 import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 
-import { BsDropdownConfig, BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { AppRoutingModule } from './app-routing.module';
+import { AppComponent } from './app.component';
+
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { TabsModule } from 'ngx-bootstrap/tabs';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
-import { HighlightModule } from 'ngx-highlightjs';
+import { HighlightModule, HIGHLIGHT_OPTIONS } from 'ngx-highlightjs';
 
 import { AboutModalModule } from 'patternfly-ng/modal';
 import { CardModule } from 'patternfly-ng/card';
-import { DonutChartModule } from 'patternfly-ng';
+import { DonutChartModule, SparklineChartModule } from 'patternfly-ng/chart';
 import { ListModule } from 'patternfly-ng/list';
 import { NotificationService, ToastNotificationListModule } from 'patternfly-ng/notification';
-import { SparklineChartModule } from 'patternfly-ng/chart'
 import { PaginationModule } from 'patternfly-ng/pagination';
 import { ToolbarModule } from 'patternfly-ng/toolbar';
 import { WizardModule } from 'patternfly-ng/wizard';
@@ -41,19 +42,16 @@ import { WizardModule } from 'patternfly-ng/wizard';
 import { FileUploadModule } from 'ng2-file-upload';
 import { TimeAgoPipe } from 'time-ago-pipe';
 
-import { AppComponent } from './app.component';
-import { AppRoutingModule } from './app-routing.module';
-
 import { AuthenticationServiceProvider } from './services/auth.service.provider';
 import { AuthenticationHttpInterceptor } from './services/auth.http-interceptor';
 import { ConfigService } from './services/config.service';
 
-import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
+import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
-import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
-import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
 import { LabelListComponent } from './components/label-list/label-list.component';
+import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
+import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
 
 import { AdminPageComponent } from './pages/admin/admin.page';
 import { SecretsTabComponent } from './pages/admin/_components/secrets.tab';
@@ -61,38 +59,59 @@ import { SnapshotsTabComponent } from './pages/admin/_components/snapshots.tab';
 import { UsersTabComponent } from './pages/admin/_components/users.tab';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { ServicesPageComponent } from './pages/services/services.page';
+import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
+import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
+import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
 import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
 import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
-import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
+import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
+import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
 import { HubPageComponent } from './pages/hub/hub.page';
 import { HubPackagePageComponent } from './pages/hub/package/package.page';
 import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
-import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
-import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
-import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
-import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
+
+import json from 'highlight.js/lib/languages/json';
+import xml from 'highlight.js/lib/languages/xml';
+
+/**
+ * Import specific languages to avoid importing everything
+ * The following will lazy load highlight.js core script (~9.6KB) + the selected languages bundle (each lang. ~1kb)
+ */
+export function getHighlightLanguages() {
+  return [
+    {name: 'json', func: json},
+    {name: 'xml', func: xml}
+  ];
+}
 
 export function configLoader(configService: ConfigService) {
   return () => configService.loadConfiguredFeatures();
 }
 
 @NgModule({
-  imports: [
-    BrowserModule, FormsModule, BsDropdownModule.forRoot(), AboutModalModule, ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(), 
-    HighlightModule.forRoot({ theme: 'github' }), FileUploadModule, CardModule, DonutChartModule, ListModule, ToastNotificationListModule, SparklineChartModule,
-    PaginationModule, ToolbarModule, WizardModule, AppRoutingModule, HttpClientModule
-  ],
   declarations: [
     AppComponent, TimeAgoPipe,
-    ConfirmDeleteDialogComponent, VerticalNavComponent, TestBarChartComponent, LabelListComponent, AdminPageComponent, DashboardPageComponent,
-    ServicesPageComponent, ServiceDetailPageComponent, ImportersPageComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent,
-    TestRunnerPageComponent, OperationOverridePageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
-    DynamicAPIDialogComponent, GenericResourcesDialogComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, HelpDialogComponent,
-    EditLabelsDialogComponent, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
+    ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent,
+    TestBarChartComponent, LabelListComponent, EditLabelsDialogComponent,
+    DashboardPageComponent, ServicesPageComponent, DynamicAPIDialogComponent,
+    ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
+    TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
+    ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
+    AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
+    HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
+  ],
+  imports: [
+    BrowserModule, FormsModule, AppRoutingModule, HttpClientModule,
+    ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(),
+    HighlightModule, FileUploadModule,
+    AboutModalModule, 
+    CardModule, DonutChartModule, SparklineChartModule,
+    ListModule, PaginationModule, ToolbarModule,
+    WizardModule, ToastNotificationListModule, 
   ],
   providers: [
     ConfigService, {
@@ -101,17 +120,24 @@ export function configLoader(configService: ConfigService) {
       multi: true,
       deps: [ConfigService]
     },
-    AuthenticationServiceProvider, BsDropdownConfig, NotificationService,
+    AuthenticationServiceProvider, NotificationService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthenticationHttpInterceptor,
       multi: true
+    },
+    {
+      provide: HIGHLIGHT_OPTIONS,
+      useValue: {
+        languages: getHighlightLanguages
+      }
     }
   ],
   entryComponents: [
-    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent, DynamicAPIDialogComponent, 
-    GenericResourcesDialogComponent, HelpDialogComponent, EditLabelsDialogComponent
-  ], 
+    HelpDialogComponent, DynamicAPIDialogComponent, 
+    EditLabelsDialogComponent, GenericResourcesDialogComponent,
+    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

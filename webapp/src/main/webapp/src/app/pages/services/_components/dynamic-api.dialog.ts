@@ -18,7 +18,7 @@
  */
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 
 import { Api } from '../../../models/service.model';
 

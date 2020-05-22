@@ -5,16 +5,26 @@
     "outDir": "./dist/out-tsc",
     "sourceMap": true,
     "declaration": false,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
+    "downlevelIteration": true,
     "experimentalDecorators": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "importHelpers": true,
+    //"target": "es2015",
+    // Comment this and fallback to es5 otherwise d3.js will not load as it is using this.document (see https://stackoverflow.com/questions/35560305/d3-js-uncaught-typeerror-cannot-read-property-document-of-undefined)
     "target": "es5",
     "typeRoots": [
       "node_modules/@types"
     ],
     "lib": [
-      "es2017",
+      "es2018",
       "dom"
     ]
+  },
+  "angularCompilerOptions": {
+    // "fullTemplateTypeCheck": true,
+    // Comment this and fallback to no type checking in templates because patternfly raise errors
+    "fullTemplateTypeCheck": false,
+    "strictInjectionParameters": true
   }
 }

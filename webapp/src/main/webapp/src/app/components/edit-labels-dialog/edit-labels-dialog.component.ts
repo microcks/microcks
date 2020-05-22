@@ -18,7 +18,7 @@
  */
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'edit-labels-dialog',

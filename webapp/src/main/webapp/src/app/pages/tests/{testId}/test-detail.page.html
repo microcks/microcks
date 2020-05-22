@@ -87,7 +87,7 @@
                 <div class="col-md-6">
                   <h5 class="subsection-label">Request</h5>
 
-                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).request.content"><code highlight>{{ messagePairFor(item.operationName, testStep.requestName).request.content }}</code></pre>
+                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).request.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).request.content"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="messagePairFor(item.operationName, testStep.requestName).request.headers">
                     <thead>
                       <tr>
@@ -120,7 +120,7 @@
                       </dd>
                     </span>
                   </dl>
-                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).response.content"><code highlight>{{ messagePairFor(item.operationName, testStep.requestName).response.content }}</code></pre>
+                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).response.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).response.content"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="messagePairFor(item.operationName, testStep.requestName).response.headers">
                     <thead>
                       <tr>

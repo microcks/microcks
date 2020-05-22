@@ -18,7 +18,7 @@
  */
 import { Component, OnInit } from '@angular/core';
 
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 
 import { ServicesService } from '../../../../services/services.service';

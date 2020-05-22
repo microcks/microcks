@@ -19,7 +19,7 @@
 import { Component, OnInit } from '@angular/core';
 
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
-import { FileUploader } from 'ng2-file-upload/ng2-file-upload';
+import { FileUploader } from 'ng2-file-upload';
 
 import { Service } from '../../../models/service.model';
 import { ServicesService } from '../../../services/services.service';

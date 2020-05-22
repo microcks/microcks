@@ -18,8 +18,7 @@
  */
 import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
 
-import { BsModalService } from 'ngx-bootstrap/modal';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 import { ToolbarConfig } from 'patternfly-ng/toolbar';
@@ -37,7 +36,7 @@ import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
   styleUrls: ['./importers.page.css']
 })
 export class ImportersPageComponent implements OnInit {
-  @ViewChild('wizardTemplate') wizardTemplate: TemplateRef<any>;
+  @ViewChild('wizardTemplate', {static: true}) wizardTemplate: TemplateRef<any>;
 
   modalRef: BsModalRef;
   importJobs: ImportJob[];

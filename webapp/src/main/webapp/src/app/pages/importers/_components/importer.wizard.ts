@@ -32,7 +32,7 @@ import { SecretsService } from '../../../services/secrets.service';
   styleUrls: ['./importer.wizard.css']
 })
 export class ImporterWizardComponent implements OnInit {
-  @ViewChild('wizard') wizard: WizardComponent;
+  @ViewChild('wizard', {static: true}) wizard: WizardComponent;
 
   data: any = {};
   job: ImportJob = null;
