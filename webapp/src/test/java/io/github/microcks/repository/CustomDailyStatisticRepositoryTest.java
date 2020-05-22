@@ -28,6 +28,7 @@ import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.util.HashMap;
@@ -40,6 +41,7 @@ import java.util.Map;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
+@TestPropertySource(locations = {"classpath:/config/test.properties"})
 public class CustomDailyStatisticRepositoryTest {
 
    @Autowired
