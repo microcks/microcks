@@ -50,10 +50,18 @@
               "sourceMap": false,
               "extractCss": true,
               "namedChunks": false,
-              "aot": true,
+              // This is marked as required for oatternfly-ng Angular 8 as
+              // https://patternfly.github.io/patternfly-ng/ but does not seem to have any effect...
+              "preserveSymlinks": true, 
+              "aot": false,
+              // This is our target. Compilation is OK but it fails at runtime withe this exception:
+              // ERROR NullInjectorError: StaticInjectorError(Fv)[t -> t]: StaticInjectorError(Platform: core)[t -> t]: NullInjectorError: No provider for t!
+              //"aot": true,
               "extractLicenses": true,
               "vendorChunk": false,
-              "buildOptimizer": true,
+              "buildOptimizer": false,
+              // This goes with AOT activation:
+              //"buildOptimizer": true,
               "budgets": [
                 {
                   "type": "initial",
