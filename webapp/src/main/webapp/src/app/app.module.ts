@@ -25,6 +25,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+import { BsDropdownConfig, BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { TabsModule } from 'ngx-bootstrap/tabs';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
@@ -106,7 +107,7 @@ export function configLoader(configService: ConfigService) {
   ],
   imports: [
     BrowserModule, FormsModule, AppRoutingModule, HttpClientModule,
-    ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(),
+    BsDropdownModule.forRoot(), ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(),
     HighlightModule, FileUploadModule,
     AboutModalModule, 
     CardModule, DonutChartModule, SparklineChartModule,
@@ -120,7 +121,7 @@ export function configLoader(configService: ConfigService) {
       multi: true,
       deps: [ConfigService]
     },
-    AuthenticationServiceProvider, NotificationService,
+    AuthenticationServiceProvider, BsDropdownConfig, NotificationService,
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthenticationHttpInterceptor,

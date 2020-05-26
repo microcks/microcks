@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build-prod": "ng build --prod",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
@@ -20,7 +21,7 @@
     "@angular/platform-browser-dynamic": "~8.2.0",
     "@angular/router": "~8.2.0",
     "jquery": "^3.5.0",
-    "keycloak-js": "^3.4.0",
+    "keycloak-js": "^10.0.1",
     "ng2-file-upload": "^1.4.0",
     "ngx-bootstrap": "^5.6.1",
     "ngx-highlightjs": "^4.0.2",

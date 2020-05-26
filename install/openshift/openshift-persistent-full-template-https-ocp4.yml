@@ -768,7 +768,7 @@ objects:
       spec:
         containers:
         - name: keycloak-server
-          image: jboss/keycloak:4.8.3.Final
+          image: jboss/keycloak:10.0.1
           ports:
           - name: http
             containerPort: 8080

@@ -9,12 +9,12 @@ if (environment.production) {
 }
 
 var keycloak = window["Keycloak"](location.origin + '/api/keycloak/config');
-keycloak.init({onLoad: 'login-required'}).success(function (authenticated) {
+keycloak.init({onLoad: 'login-required'}).then(function (authenticated) {
   if (authenticated) {
       window['keycloak'] = keycloak;
       platformBrowserDynamic().bootstrapModule(AppModule)
       .catch(err => console.log(err));
   }
-}).error(function () {
+}).catch(function () {
   alert('Failed to initialize authentication subsystem.');
 });

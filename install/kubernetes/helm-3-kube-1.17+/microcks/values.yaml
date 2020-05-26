@@ -17,7 +17,7 @@ keycloak:
   #url: keycloak-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-keycloak-ingress
   
-  image: jboss/keycloak:4.8.3.Final
+  image: jboss/keycloak:10.0.1
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randowly generated.
   # Beware that in case of update, new value will be generated and

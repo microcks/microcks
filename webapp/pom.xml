@@ -15,12 +15,12 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <docker.image.prefix>microcks</docker.image.prefix>
+    <docker.image.prefix>lbroudoux</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
     <jackson.version>2.10.2</jackson.version>
-    <keycloak.version>4.8.3.Final</keycloak.version>
+    <keycloak.version>10.0.1</keycloak.version>
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.1.1</soapui.version>
   </properties>
