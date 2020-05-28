@@ -59,11 +59,13 @@ public class TemplateEngineTest {
 
       TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
+      String content = null;
       try {
-         String content = engine.getValue(template);
-         assertTrue(content.startsWith("{\"signedAt\": \"1"));
+         content = engine.getValue(template);
+         System.err.println("Content: " + content);
       } catch (Throwable t) {
          fail("Contextless template should not fail.");
       }
+      assertTrue(content.startsWith("{\"signedAt\": \"1"));
    }
 }

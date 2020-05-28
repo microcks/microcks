@@ -21,6 +21,7 @@ package io.github.microcks.util.el;
 import io.github.microcks.util.el.function.NowELFunction;
 import io.github.microcks.util.el.function.RandomIntELFunction;
 import io.github.microcks.util.el.function.RandomStringELFunction;
+import io.github.microcks.util.el.function.UUIDELFunction;
 
 /**
  * Helper class holding commodity methods for getting {@code TemplateEngine} instances..
@@ -37,6 +38,7 @@ public class TemplateEngineFactory {
 
       // Register some built-in functions into evaluation context.
       engine.getContext().registerFunction("now", NowELFunction.class);
+      engine.getContext().registerFunction("uuid", UUIDELFunction.class);
       engine.getContext().registerFunction("randomInt", RandomIntELFunction.class);
       engine.getContext().registerFunction("randomString", RandomStringELFunction.class);
 
