@@ -10,6 +10,7 @@
 
 Microcks is a platform for turning your API and microservices assets - *OpenAPI specs*, *AsyncAPI specs*, *Postman collections*, *SoapUI projects* - into live mocks in seconds.
 
+It also reuse these assets for running compliance and non-regression tests againts your API implementation. We provide integrations with *Jenkins*, *Tekton* and many others through a simple CLI.
 
 ## Getting Started
 
