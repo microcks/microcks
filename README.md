@@ -1,7 +1,5 @@
 <img src="./microcks-banner.png" width="600"> 
 
-![Microcks](microcks-banner.png)
-
 [![Version](https://img.shields.io/maven-central/v/io.github.microcks/microcks?color=blue&style=for-the-badge)]((https://search.maven.org/artifact/io.github.microcks/microcks))
 [![Travis (.org)](https://img.shields.io/travis/microcks/microcks?logo=travis&style=for-the-badge)](https://travis-ci.org/microcks/microcks)
 [![Container](https://img.shields.io/badge/dynamic/json?color=blueViolet&logo=docker&style=for-the-badge&label=Quay.io&query=tags[0].name&url=https://quay.io/api/v1/repository/microcks/microcks/tag/?limit=100&page=1&onlyActiveTags=true)](https://quay.io/repository/microcks/microcks?tab=tags)
