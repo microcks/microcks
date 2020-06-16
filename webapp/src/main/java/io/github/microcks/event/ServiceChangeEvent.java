@@ -21,25 +21,33 @@ package io.github.microcks.event;
 import org.springframework.context.ApplicationEvent;
 
 /**
- * Event raised when a Service has been updated.
+ * Event raised when a Service has been changed (CREATED, UPDATED or DELETED).
  * @author laurent
  */
-public class ServiceUpdateEvent extends ApplicationEvent {
+public class ServiceChangeEvent extends ApplicationEvent {
 
    /** */
    private final String serviceId;
+   /** */
+   private final ChangeType changeType;
 
    /**
-    * Create a new {@code ServiceUpdateEvent}.
+    * Create a new {@code ServiceUpdateEvent} with deletion flag.
     * @param source Source object for event
     * @param serviceId Identifier of the updated Service
+    * @param changeType Type of changes this event if representing
     */
-   public ServiceUpdateEvent(Object source, String serviceId) {
+   public ServiceChangeEvent(Object source, String serviceId, ChangeType changeType) {
       super(source);
       this.serviceId = serviceId;
+      this.changeType = changeType;
    }
 
    public String getServiceId() {
       return serviceId;
+   }
+
+   public ChangeType getChangeType() {
+      return changeType;
    }
 }

@@ -19,7 +19,8 @@
 package io.github.microcks.service;
 
 import io.github.microcks.domain.*;
-import io.github.microcks.event.ServiceUpdateEvent;
+import io.github.microcks.event.ChangeType;
+import io.github.microcks.event.ServiceChangeEvent;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResourceRepository;
@@ -133,6 +134,7 @@ public class ServiceService {
          throw new MockRepositoryImportException(ioe.getMessage(), ioe);
       }
 
+      boolean serviceUpdate = false;
       List<Service> services = importer.getServiceDefinitions();
       for (Service service : services){
          Service existingService = serviceRepository.findByNameAndVersion(service.getName(), service.getVersion());
@@ -144,6 +146,7 @@ public class ServiceService {
 
             // Keep its overriden operation properties
             copyOverridenOperations(existingService, service);
+            serviceUpdate = true;
          }
          if (service.getMetadata() == null) {
             service.setMetadata(new Metadata());
@@ -207,7 +210,6 @@ public class ServiceService {
                   eventMessageRepository.save(event.getEventMessage());
                }
             }
-
          }
 
          // When extracting message information, we may have modified Operation because discovered new resource paths
@@ -215,7 +217,7 @@ public class ServiceService {
          serviceRepository.save(service);
 
          // Publish a Service update event before returning.
-         publishServiceUpdateEvent(service);
+         publishServiceChangeEvent(service, serviceUpdate ? ChangeType.UPDATED : ChangeType.CREATED);
       }
       log.info("Having imported {} services definitions into repository", services.size());
       return services;
@@ -307,8 +309,10 @@ public class ServiceService {
       // Delete all tests related to service.
       testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
 
-      // Finally delete service.
+      // Finally delete service and publish event.
       serviceRepository.delete(service);
+      publishServiceChangeEvent(service, ChangeType.DELETED);
+
       log.info("Service [{}] has been fully deleted", id);
    }
 
@@ -357,7 +361,7 @@ public class ServiceService {
          }
 
          // Publish a Service update event before returning.
-         publishServiceUpdateEvent(service);
+         publishServiceChangeEvent(service, ChangeType.UPDATED);
       }
       return false;
    }
@@ -380,10 +384,10 @@ public class ServiceService {
       }
    }
 
-   /** Publish a ServiceUpdateEvent towards minions or some other consumers. */
-   private void publishServiceUpdateEvent(Service service) {
-      ServiceUpdateEvent event = new ServiceUpdateEvent(this, service.getId());
+   /** Publish a ServiceChangeEvent towards minions or some other consumers. */
+   private void publishServiceChangeEvent(Service service, ChangeType changeType) {
+      ServiceChangeEvent event = new ServiceChangeEvent(this, service.getId(), changeType);
       applicationContext.publishEvent(event);
-      log.debug("Service update event has been published");
+      log.debug("Service change event has been published");
    }
 }

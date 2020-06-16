@@ -18,18 +18,18 @@
  */
 package io.github.microcks.minion.async.client;
 
-import io.github.microcks.domain.ServiceView;
+import io.github.microcks.event.ServiceViewChangeEvent;
 
 import io.quarkus.kafka.client.serialization.ObjectMapperDeserializer;
 
 /**
- * A Kafka deserializer for ServiceView using Jackson ObjectMapper.
+ * A Kafka deserializer for ServiceViewChangeEvent using Jackson ObjectMapper.
  * @author laurent
  */
-public class ServiceViewDeserializer extends ObjectMapperDeserializer<ServiceView> {
+public class ServiceViewChangeEventDeserializer extends ObjectMapperDeserializer<ServiceViewChangeEvent> {
 
-   public ServiceViewDeserializer() {
+   public ServiceViewChangeEventDeserializer() {
       // Pass the class to the parent.
-      super(ServiceView.class);
+      super(ServiceViewChangeEvent.class);
    }
 }

@@ -59,7 +59,7 @@ public class ProducerManager {
 
    /**
     * Produce all the async mock messages corresponding to specified frequency.
-    * @param frequency The frewuency to emit messages for
+    * @param frequency The frequency to emit messages for
     */
    public void produceAsyncMockMessagesAt(Long frequency) {
       logger.info("Producing async mock messages for frequency: " + frequency);

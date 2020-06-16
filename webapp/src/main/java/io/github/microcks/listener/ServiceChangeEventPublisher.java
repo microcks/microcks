@@ -24,7 +24,9 @@ import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.UnidirectionalEvent;
-import io.github.microcks.event.ServiceUpdateEvent;
+import io.github.microcks.event.ChangeType;
+import io.github.microcks.event.ServiceChangeEvent;
+import io.github.microcks.event.ServiceViewChangeEvent;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.service.MessageService;
 import io.github.microcks.util.IdBuilder;
@@ -47,10 +49,10 @@ import java.util.Map;
  */
 @Component
 @ConditionalOnProperty(value="async-api.enabled", havingValue="true", matchIfMissing=true)
-public class EventServiceUpdatePublisher implements ApplicationListener<ServiceUpdateEvent> {
+public class ServiceChangeEventPublisher implements ApplicationListener<ServiceChangeEvent> {
 
    /** A commons logger for diagnostic messages. */
-   private static Log log = LogFactory.getLog(EventServiceUpdatePublisher.class);
+   private static Log log = LogFactory.getLog(ServiceChangeEventPublisher.class);
 
    @Autowired
    private ServiceRepository serviceRepository;
@@ -59,34 +61,41 @@ public class EventServiceUpdatePublisher implements ApplicationListener<ServiceU
    private MessageService messageService;
 
    @Autowired
-   private KafkaTemplate<String, ServiceView> kafkaTemplate;
+   private KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate;
 
    @Override
    @Async
-   public void onApplicationEvent(ServiceUpdateEvent event) {
-      log.debug("Received a ServiceUpdateEvent on " + event.getServiceId());
-      Service service = serviceRepository.findById(event.getServiceId()).orElse(null);
+   public void onApplicationEvent(ServiceChangeEvent event) {
+      log.debug("Received a ServiceChangeEvent on " + event.getServiceId());
 
-      if (service != null) {
-         // Put messages into a map where key is operation name.
-         Map<String, List<? extends Exchange>> messagesMap = new HashMap<>();
-         for (Operation operation : service.getOperations()) {
-            if (service.getType() == ServiceType.EVENT) {
-               // If an event, we should explicitly retrieve event messages.
-               List<UnidirectionalEvent> events = messageService.getEventByOperation(
-                     IdBuilder.buildOperationId(service, operation));
-               messagesMap.put(operation.getName(), events);
-            } else {
-               // Otherwise we have traditional request / response pairs.
-               List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
-                     IdBuilder.buildOperationId(service, operation));
-               messagesMap.put(operation.getName(), pairs);
+      ServiceView serviceView = null;
+      if (event.getChangeType() != ChangeType.DELETED) {
+         Service service = serviceRepository.findById(event.getServiceId()).orElse(null);
+
+         if (service != null) {
+            // Put messages into a map where key is operation name.
+            Map<String, List<? extends Exchange>> messagesMap = new HashMap<>();
+            for (Operation operation : service.getOperations()) {
+               if (service.getType() == ServiceType.EVENT) {
+                  // If an event, we should explicitly retrieve event messages.
+                  List<UnidirectionalEvent> events = messageService.getEventByOperation(
+                        IdBuilder.buildOperationId(service, operation));
+                  messagesMap.put(operation.getName(), events);
+               } else {
+                  // Otherwise we have traditional request / response pairs.
+                  List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
+                        IdBuilder.buildOperationId(service, operation));
+                  messagesMap.put(operation.getName(), pairs);
+               }
             }
-         }
 
-         ServiceView serviceView = new ServiceView(service, messagesMap);
-         kafkaTemplate.send("microcks-services-updates", service.getId(), serviceView);
-         log.debug("Processing of ServiceUpdateEvent done !");
+            serviceView = new ServiceView(service, messagesMap);
+         }
       }
+
+      // Build and send a ServiceViewChangeEvent that wraps ServiceView.
+      ServiceViewChangeEvent serviceViewChangeEvent = new ServiceViewChangeEvent(event.getServiceId(), serviceView, event.getChangeType(), System.currentTimeMillis());
+      kafkaTemplate.send("microcks-services-updates", event.getServiceId(), serviceViewChangeEvent);
+      log.debug("Processing of ServiceChangeEvent done !");
    }
 }

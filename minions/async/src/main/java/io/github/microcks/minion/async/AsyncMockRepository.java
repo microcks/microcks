@@ -45,13 +45,24 @@ public class AsyncMockRepository {
 
    /**
     * Store a new or update an existing AsyncMockDefinition in store.
-    * @param mockDefinition Defintion to store or update in store
+    * @param mockDefinition Definition to store or update in store
     */
    public void storeMockDefinition(AsyncMockDefinition mockDefinition) {
       if (mockDefinitions.contains(mockDefinition)) {
          mockDefinitions.remove(mockDefinition);
       }
       mockDefinitions.add(mockDefinition);
+   }
+
+   /**
+    * Remove the AsyncMockDefinitions corresponding to owner Service id.
+    * @param serviceId The identifier of owner Service.
+    */
+   public void removeMockDefinitions(String serviceId) {
+      Set<AsyncMockDefinition> serviceDefs = mockDefinitions.stream()
+            .filter(d -> d.getOwnerService().getId().equals(serviceId))
+            .collect(Collectors.toSet());
+      mockDefinitions.removeAll(serviceDefs);
    }
 
    /**

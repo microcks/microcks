@@ -18,26 +18,12 @@
  */
 package io.github.microcks.event;
 
-import io.github.microcks.domain.ServiceView;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.common.errors.SerializationException;
-import org.apache.kafka.common.serialization.Serializer;
-
 /**
- * A Kafka serializer for ServiceView using Jackson ObjectMapper serialization.
+ * Enumeration of types for domain objects changes.
  * @author laurent
  */
-public class ServiceViewSerializer implements Serializer<ServiceView> {
-
-   private ObjectMapper mapper = new ObjectMapper();
-
-   @Override
-   public byte[] serialize(String topic, ServiceView serviceView) {
-      try {
-         return mapper.writeValueAsBytes(serviceView);
-      } catch (JsonProcessingException e) {
-         throw new SerializationException("Error serializing serviceView", e);
-      }
-   }
+public enum ChangeType {
+   CREATED,
+   UPDATED,
+   DELETED
 }

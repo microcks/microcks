@@ -20,8 +20,9 @@ package io.github.microcks.minion.async;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.event.ChangeType;
+import io.github.microcks.event.ServiceViewChangeEvent;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -34,6 +35,8 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 /**
+ * This bean is responsible for listening the incoming <code>ServiceViewChangeEvent</code> on
+ * <code>microcks-services-updates</code> Kafka topic and updating the AsyncMockRepository accordingly.
  * @author laurent
  */
 public class AsyncMockDefinitionUpdater {
@@ -51,26 +54,32 @@ public class AsyncMockDefinitionUpdater {
    AsyncMockRepository mockRepository;
 
    @Incoming("microcks-services-updates")
-   public void onServiceUpdate(ServiceView serviceView) {
-      logger.info("Received a new Service update for '" + serviceView.getService().getName() + " - " + serviceView.getService().getVersion() + "'");
+   public void onServiceUpdate(ServiceViewChangeEvent serviceViewChangeEvent) {
+      logger.info("Received a new change event [" + serviceViewChangeEvent.getChangeType() + "] for '"
+            + serviceViewChangeEvent.getServiceId() + "', at " + serviceViewChangeEvent.getTimestamp());
 
-      // Only deal with service of type EVENT...
-      if (serviceView.getService().getType().equals(ServiceType.EVENT)) {
+      // Remove existing definitions or add/update existing for EVENT services.
+      if (serviceViewChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
+         logger.info("Removing mock definitions for " + serviceViewChangeEvent.getServiceId());
+         mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
+      } else {
+         // Only deal with service of type EVENT...
+         if (serviceViewChangeEvent.getServiceView() != null && serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)) {
+            // Browse and check operation regarding restricted frequencies and supported bindings.
+            for (Operation operation : serviceViewChangeEvent.getServiceView().getService().getOperations()) {
+               if (Arrays.asList(restrictedFrequencies).contains(operation.getDefaultDelay())
+                     && operation.getBindings().keySet().stream().anyMatch(Arrays.asList(supportedBindings)::contains)) {
 
-         // Browse and check operation regarding restricted frequencies and supported bindings.
-         for (Operation operation : serviceView.getService().getOperations()) {
-            if (Arrays.asList(restrictedFrequencies).contains(operation.getDefaultDelay())
-                  && operation.getBindings().keySet().stream().anyMatch(Arrays.asList(supportedBindings)::contains)) {
-
-               logger.info("Found '" + operation.getName() + "' as a candidate for async message mocking");
-               // Build an Async mock definition and store it into repository.
-               AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(), operation,
-                     serviceView.getMessagesMap().get(operation.getName()).stream()
-                           .filter(e -> e instanceof UnidirectionalEvent)
-                           .map(e -> ((UnidirectionalEvent)e).getEventMessage())
-                           .collect(Collectors.toList())
-               );
-               mockRepository.storeMockDefinition(mockDefinition);
+                  logger.info("Found '" + operation.getName() + "' as a candidate for async message mocking");
+                  // Build an Async mock definition and store it into repository.
+                  AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceViewChangeEvent.getServiceView().getService(), operation,
+                        serviceViewChangeEvent.getServiceView().getMessagesMap().get(operation.getName()).stream()
+                              .filter(e -> e instanceof UnidirectionalEvent)
+                              .map(e -> ((UnidirectionalEvent)e).getEventMessage())
+                              .collect(Collectors.toList())
+                  );
+                  mockRepository.storeMockDefinition(mockDefinition);
+               }
             }
          }
       }
