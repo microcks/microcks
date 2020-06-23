@@ -26,8 +26,8 @@ perl -i.bak -pe 's|#- KEYCLOAK_URL=https://localhost:8543/auth|- KEYCLOAK_URL=ht
 echo "Generating certificates for '$HOSTNAME' ..."
 mkdir keystore
 docker run -v $PWD/keystore:/certs -e SERVER_HOSTNAMES="$HOSTNAME" -it nmasse/mkcert:0.1
-mv ./keystore/server.crt ./keystore/tls.crt
-mv ./keystore/server.key ./keystore/tls.key
+#mv ./keystore/server.crt ./keystore/tls.crt
+#mv ./keystore/server.key ./keystore/tls.key
 mv ./keystore/server.p12 ./keystore/microcks.p12
 
 if [ "${VERSION}" != "latest" ]; then
