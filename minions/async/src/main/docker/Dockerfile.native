@@ -7,16 +7,16 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/microcks-kafka-peon .
+# docker build -f src/main/docker/Dockerfile.native -t microcks/microcks-async-minion .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/microcks-kafka-peon
+# docker run -i --rm -p 8080:8080 microcks/microcks-async-minion
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.1
 WORKDIR /work/
-COPY target/*-runner /work/application
+COPY --chown=1001:root target/*-runner /work/application
 
 # set up permissions for user `1001`
 RUN chmod 775 /work /work/application \

@@ -7,17 +7,17 @@
 #
 # Then, build the image with:
 #
-# docker build -f src/main/docker/Dockerfile.jvm -t quarkus/microcks-kafka-peon-jvm .
+# docker build -f src/main/docker/Dockerfile.jvm -t microcks/microcks-async-minion-jvm .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/microcks-kafka-peon-jvm
+# docker run -i --rm -p 8080:8080 microcks/microcks-async-minion-jvm
 #
 ###
 FROM registry.access.redhat.com/ubi8/ubi-minimal:8.1
 
 ARG JAVA_PACKAGE=java-11-openjdk-headless
-ARG RUN_JAVA_VERSION=1.3.5
+ARG RUN_JAVA_VERSION=1.3.8
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 

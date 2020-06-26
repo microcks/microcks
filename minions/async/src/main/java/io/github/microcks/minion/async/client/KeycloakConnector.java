@@ -22,16 +22,21 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.ssl.SSLContexts;
+import org.apache.http.ssl.TrustStrategy;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.util.Base64;
 
 @ApplicationScoped
@@ -59,10 +64,25 @@ public class KeycloakConnector {
     * @throws IOException In case of communication exception
     */
    public String connectAndGetOAuthToken(String tokenEndpoint) throws ConnectorException, IOException {
-      // Start creating a httpClient that disables host name validation for certificates.
-      CloseableHttpClient httpClient = HttpClients.custom()
-            .setSSLHostnameVerifier((String s, SSLSession sslSession) -> true)
-            .build();
+      CloseableHttpClient httpClient = null;
+
+      try {
+         // Start creating a SSL Context that accepts all because we may have self-signed certs.
+         TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
+         SSLContext sslContext = SSLContexts.custom()
+               .loadTrustMaterial(null, acceptingTrustStrategy)
+               .build();
+         SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
+
+         // Configuring a httpClient that disables host name validation for certificates.
+         httpClient = HttpClients.custom()
+               .setSSLHostnameVerifier((String s, SSLSession sslSession) -> true)
+               .setSSLSocketFactory(sslsf)
+               .build();
+      } catch (GeneralSecurityException gse) {
+         logger.error("Caught a SecurityException when building the SSL Context", gse);
+         throw new ConnectorException("SSLContext cannot be created to reach Keycloak endpoint: " + gse.getMessage());
+      }
 
       try {
          // Prepare a post request with grant_type client credentials flow.
