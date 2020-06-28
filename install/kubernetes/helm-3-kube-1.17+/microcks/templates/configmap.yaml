@@ -12,6 +12,14 @@ data:
     features.feature.repository-filter.label-key={{ .Values.features.repositoryFilter.labelKey }}
     features.feature.repository-filter.label-label={{ .Values.features.repositoryFilter.labelLabel }}
     features.feature.repository-filter.label-list={{ .Values.features.repositoryFilter.labelList }}
+
+    features.feature.async-api.enabled={{ .Values.features.async.enabled }}
+    features.feature.async-api.default-binding={{ .Values.features.async.defaultBinding }}
+    {{- if eq .Values.features.async.kafka.install true }}
+    features.feature.async-api.endpoint-KAFKA={{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}
+    {{- else }}
+    features.feature.async-api.endpoint-KAFKA={{ .Values.features.async.kafka.url }}"
+    {{- end }}
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
@@ -43,6 +51,14 @@ data:
     keycloak.security-constraints[0].securityCollections[0].patterns[1]=/api/services/count
     keycloak.security-constraints[0].securityCollections[0].patterns[2]=/api/jobs
     keycloak.security-constraints[0].securityCollections[0].patterns[3]=/api/jobs/count
+
+    # Async mocking support.
+    async-api.enabled={{ .Values.features.async.enabled }}
+    async-api.default-binding={{ .Values.features.async.defaultBinding }}
+    async-api.default-frequency={{ .Values.features.async.defaultFrequency }}
+
+    # Kafka configuration properties
+    spring.kafka.producer.bootstrap-servers=${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
   logback.xml: |-
     <?xml version="1.0" encoding="UTF-8"?>
 
@@ -193,7 +209,8 @@ data:
           ]
         },
         {
-          "name": "microcks-serviceaccount",
+          "name": "{{ .Values.keycloak.serviceAccount }}",
+          "secret": "{{ .Values.keycloak.serviceAccountCredentials }}",
           "enabled": true,
           "bearerOnly": false,
           "publicClient": false,
@@ -208,3 +225,40 @@ data:
       "keycloakVersion": "3.4.0.Final"
     }
 {{- end }}
+{{- if .Values.features.async.enabled }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-async-minion-config"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: asybnc-minion
+    group: microcks
+data:
+  application.properties: |-
+    # Configuration file.
+    %kube.quarkus.http.port=8080
+
+    # Configure the log level.
+    %kube.quarkus.log.level=INFO
+    %kube.quarkus.log.console.level=INFO
+
+    # Access to Microcks API server.
+    %kube.io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url=http://{{ .Values.appName }}:8080
+    %kube.microcks.serviceaccount={{ .Values.keycloak.serviceAccount }}
+    %kube.microcks.serviceaccount.credentials={{ .Values.keycloak.serviceAccountCredentials }}
+
+    # Access to Kafka broker.
+    {{- if .Values.features.async.kafka.install }}
+    %kube.kafka.bootstrap.servers={{ .Values.appName }}-kafka-kafka-bootstrap:9092
+    %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.appName }}-kafka-kafka-bootstrap:9092
+    {{- else }}
+    %kube.kafka.bootstrap.servers={{ .Values.features.async.kafka.url }}
+    %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.features.async.kafka.url }}
+    {{- end }}
+
+    # Configure the minion own behavioral properties.
+    %kube.minion.supported-bindings=KAFKA
+    %kube.minion.restricted-frequencies=30,10
+{{- end -}}

@@ -31,6 +31,9 @@ keycloak:
   # Beware that in case of update, new value will be generated and
   #password: 123
 
+  serviceAccount: microcks-serviceaccount
+  serviceAccountCredentials: ab54d329-e435-41ae-a900-ec6b3fe15c54
+
 mongodb:
   install: true
   #uri: mongodb:27017
@@ -51,6 +54,20 @@ mongodb:
     #passwordKey: database-password
 
 features:
+  async:
+    enabled: false
+    defaultBinding: KAFKA
+    defaultFrequency: 10
+    
+    image: quay.io/microcks/microcks-async-minion:nightly
+
+    kafka:
+      install: true
+      url: 192.168.99.100.nip.io
+      #url: kafka-bootstrap:9092
+      persistent: false
+      volumeSize: 2Gi
+
   repositoryFilter:
     enabled: false
     labelKey: app
