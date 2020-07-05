@@ -16,7 +16,7 @@ data:
     features.feature.async-api.enabled={{ .Values.features.async.enabled }}
     features.feature.async-api.default-binding={{ .Values.features.async.defaultBinding }}
     {{- if eq .Values.features.async.kafka.install true }}
-    features.feature.async-api.endpoint-KAFKA={{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}
+    features.feature.async-api.endpoint-KAFKA={{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}:443
     {{- else }}
     features.feature.async-api.endpoint-KAFKA={{ .Values.features.async.kafka.url }}"
     {{- end }}

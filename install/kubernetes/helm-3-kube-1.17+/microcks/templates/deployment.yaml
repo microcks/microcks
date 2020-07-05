@@ -462,26 +462,26 @@ spec:
         ports:
         - containerPort: 8080
           protocol: TCP
-        # livenessProbe:
-        #   httpGet:
-        #     path: "/api/health"
-        #     port: 8080
-        #     scheme: HTTP
-        #   initialDelaySeconds: 5
-        #   timeoutSeconds: 2
-        #   periodSeconds: 5
-        #   successThreshold: 1
-        #   failureThreshold: 3
-        # readinessProbe:
-        #   httpGet:
-        #     path: "/api/health"
-        #     port: 8080
-        #     scheme: HTTP
-        #   initialDelaySeconds: 10
-        #   timeoutSeconds: 2
-        #   periodSeconds: 10
-        #   successThreshold: 1
-        #   failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: "/health/live"
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: "/health/ready"
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
         volumeMounts:
           - name: "{{ .Values.appName }}-async-minion-config"
             mountPath: "/deployments/config"
