@@ -115,7 +115,9 @@
                   <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
                   <span class="label label-info" *ngSwitchDefault>{{ item.method }}</span>
                 </span>
-                with <code>{{ item.dispatcher }}</code> dispatcher
+                <span *ngIf="item.dispatcher">
+                  with <code>{{ item.dispatcher }}</code> dispatcher
+                </span>
               </div>
             </div>
             <div class="list-pf-additional-content">

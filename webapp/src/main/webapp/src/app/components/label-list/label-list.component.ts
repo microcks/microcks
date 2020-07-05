@@ -35,6 +35,10 @@ export class LabelListComponent implements OnInit {
 
   private labels: any = null;
 
+  check() {
+    console.log('LabelListComponent view checked');
+  }
+
   ngOnInit() {
     if (this.metadata) {
       if (this.filter) {
@@ -52,6 +56,19 @@ export class LabelListComponent implements OnInit {
   }
 
   getLabelsKeys(): string[] {
+    if (this.metadata) {
+      if (this.filter) {
+        this.labels = {};
+        var filteredLabels = this.filter.split(',');
+        filteredLabels.forEach(label => {
+          if (this.metadata.labels && this.metadata.labels[label]) {
+            this.labels[label] = this.metadata.labels[label];
+          }
+        });
+      } else {
+        this.labels = this.metadata.labels;
+      }
+    }
     if (this.labels == null) {
       return null;
     }

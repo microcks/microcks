@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router, ParamMap } from "@angular/router";
 
 import { Observable } from 'rxjs';
@@ -59,7 +59,7 @@ export class ServiceDetailPageComponent implements OnInit {
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
       private testsSvc: TestsService, protected authService: IAuthenticationService, private config: ConfigService,
       private modalService: BsModalService, private notificationService: NotificationService,
-      private route: ActivatedRoute, private router: Router) {
+      private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
   }
 
   ngOnInit() {
@@ -129,8 +129,13 @@ export class ServiceDetailPageComponent implements OnInit {
       this.servicesSvc.updateServiceMetadata(this.resolvedServiceView.service, this.resolvedServiceView.service.metadata).subscribe(
         {
           next: res => {
+            // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
+            // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
+            this.serviceView = new Observable<ServiceView>(observer => { observer.next(this.resolvedServiceView) });
             this.notificationService.message(NotificationType.SUCCESS,
               this.resolvedServiceView.service.name, "Labels have been updated", false, null, null);
+            // Then trigger view reevaluation to update the label list component and the notifications toaster.
+            this.ref.detectChanges();
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
