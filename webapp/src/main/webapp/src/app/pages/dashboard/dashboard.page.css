@@ -1,5 +1,10 @@
 h1.arvo {
-  font-size: 2em;
+  font-size: 2.4em;
+  line-height: 1.2em;
+}
+.hl {
+  color: #ff1745;
+  font-weight: 600;
 }
 
 blockquote.top-invocation {

@@ -36,7 +36,7 @@ export class VerticalNavComponent implements OnInit {
     this.user().subscribe( currentUser => {
       this.versionInfoSvc.getVersionInfo().subscribe( versionInfo => {
         this.aboutConfig = {
-          additionalInfo: 'Microcks is Open Source mocking and testing platform for API and microservices. Visit http://microcks.github.io for more information.',
+          additionalInfo: 'Microcks is Open Source mocking and testing platform for API and microservices. Visit https://microcks.io for more information.',
           copyright: 'Distributed under Apache Licence v2.0',
           logoImageAlt: 'Microcks',
           logoImageSrc: 'assets/microcks.png',
