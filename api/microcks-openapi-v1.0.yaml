@@ -2,6 +2,7 @@
 openapi: 3.0.2
 info:
   title: Microcks API v1.0
+  version: 1.0.0
   description: API offered by Microcks, the mock and testing platform for API and
     microservices (microcks.github.io)
   contact:
@@ -11,7 +12,6 @@ info:
   license:
     name: Apache 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0
-  version: 1.0.0
 servers:
 - url: http://microcks.example.com/api
   description: ""
@@ -21,307 +21,301 @@ paths:
     get:
       tags:
       - mock
-      summary: Get Services and APIs
-      operationId: GetServices
       parameters:
       - name: page
-        in: query
         description: Page of Services to retrieve (starts at and defaults to 0)
         schema:
           type: integer
-      - name: size
         in: query
+      - name: size
         description: Size of a page. Maximum number of Services to include in a response
           (defaults to 20)
         schema:
           type: integer
+        in: query
       responses:
-        200:
-          description: List of found Services
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Service'
+          description: List of found Services
       security:
       - jwt-bearer:
         - user
+      operationId: GetServices
+      summary: Get Services and APIs
   /tests:
     post:
-      tags:
-      - test
-      summary: Create a new Test
-      operationId: CreateTest
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/TestRequest'
         required: true
+      tags:
+      - test
       responses:
-        201:
-          description: Created TestResult (empty shell cause tests are executed asynchronously)
+        "201":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestResult'
+          description: Created TestResult (empty shell cause tests are executed asynchronously)
       security:
       - jwt-bearer:
         - user
+      operationId: CreateTest
+      summary: Create a new Test
   /services/count:
     get:
       tags:
       - mock
-      summary: Get the Services counter
-      operationId: GetServicesCounter
       responses:
-        200:
-          description: Number of Services in datastore
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Counter'
+          description: Number of Services in datastore
       security:
       - jwt-bearer:
         - user
+      operationId: GetServicesCounter
+      summary: Get the Services counter
   /services/search:
     get:
       tags:
       - mock
-      summary: Search for Services and APIs
-      operationId: SearchServices
       parameters:
       - name: name
-        in: query
         description: Name like criterion for query
-        required: true
         schema:
           type: string
+        in: query
+        required: true
       responses:
-        200:
-          description: List of found Services (filtered according search criteria)
+        "200":
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Service'
+          description: List of found Services (filtered according search criteria)
       security:
       - jwt-bearer:
         - user
+      operationId: SearchServices
+      summary: Search for Services and APIs
   /jobs:
     summary: This path operations deal with ImportJobs
     get:
       tags:
       - job
-      summary: Get ImportJobs
-      description: Retrieve a list of ImportJobs
-      operationId: GetImportJobs
       parameters:
       - name: page
-        in: query
         description: Page of ImportJobs to retrieve (starts at and defaults to 0)
         schema:
           type: integer
-      - name: size
         in: query
+      - name: size
         description: Size of a page. Maximum number of ImportJobs to include in a
           response (defaults to 20)
         schema:
           type: integer
-      - name: name
         in: query
+      - name: name
         description: Name like criterion for query
         schema:
           type: string
+        in: query
       responses:
-        200:
-          description: List of found ImportJobs
+        "200":
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/ImportJob'
+          description: List of found ImportJobs
       security:
       - jwt-bearer:
         - user
+      operationId: GetImportJobs
+      summary: Get ImportJobs
+      description: Retrieve a list of ImportJobs
     post:
-      tags:
-      - job
-      summary: Create ImportJob
-      description: Create a new ImportJob
-      operationId: CreateImportJob
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ImportJob'
         required: true
+      tags:
+      - job
       responses:
-        201:
-          description: Created ImportJob
+        "201":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJob'
+          description: Created ImportJob
       security:
       - jwt-bearer:
         - user
+      operationId: CreateImportJob
+      summary: Create ImportJob
+      description: Create a new ImportJob
   /jobs/{id}:
     summary: This path or subpaths operations deal with specific ImportJob having
       given id
     get:
       tags:
       - job
-      summary: Get ImportJob
-      description: Retrieve an ImportJob using its identifier
       responses:
-        200:
-          description: Found ImportJob
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJob'
+          description: Found ImportJob
       security:
       - jwt-bearer:
         - user
+      summary: Get ImportJob
+      description: Retrieve an ImportJob using its identifier
     post:
-      tags:
-      - job
-      summary: Update ImportJob
-      description: Update an ImportJob
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ImportJob'
         required: true
+      tags:
+      - job
       responses:
-        200:
-          description: Updated ImportJob
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJob'
+          description: Updated ImportJob
+      summary: Update ImportJob
+      description: Update an ImportJob
     delete:
       tags:
       - job
-      summary: Delete ImportJob
-      description: Delete an ImportJob
-      operationId: DeleteImportJob
       responses:
-        200:
-          description: ImportJob deleted
+        "200":
           content:
             application/json: {}
+          description: ImportJob deleted
       security:
       - jwt-bearer:
         - user:identity
         - admin
+      operationId: DeleteImportJob
+      summary: Delete ImportJob
+      description: Delete an ImportJob
     parameters:
     - name: id
-      in: path
       description: Unique identifier of ImportJob to manage
-      required: true
       schema:
         type: string
+      in: path
+      required: true
   /jobs/{id}/activate:
     put:
       tags:
       - job
-      summary: Activate an ImportJob
-      description: Make an ImportJob active, so that it is executed
-      operationId: ActivateImportJob
       responses:
-        200:
-          description: ImportJob is activated
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJob'
+          description: ImportJob is activated
       security:
       - jwt-bearer:
         - user
+      operationId: ActivateImportJob
+      summary: Activate an ImportJob
+      description: Make an ImportJob active, so that it is executed
   /jobs/{id}/start:
     put:
       tags:
       - job
-      summary: Start an ImportJob
-      description: Starting an ImportJob forces it to immediatly import mock definitions
-      operationId: StartImportJob
       responses:
-        200:
-          description: Started ImportJob
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJob'
+          description: Started ImportJob
       security:
       - jwt-bearer:
         - user
+      operationId: StartImportJob
+      summary: Start an ImportJob
+      description: Starting an ImportJob forces it to immediatly import mock definitions
   /jobs/{id}/stop:
     put:
       tags:
       - job
-      summary: Stop an ImportJob
-      description: Stopping an ImportJob desactivate it, so that it won't execute
-        at next schedule
-      operationId: StopImportJob
       responses:
-        200:
-          description: Stopped ImportJob
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImportJob'
+          description: Stopped ImportJob
       security:
       - jwt-bearer:
         - user
+      operationId: StopImportJob
+      summary: Stop an ImportJob
+      description: Stopping an ImportJob desactivate it, so that it won't execute
+        at next schedule
   /services/{id}:
     get:
       tags:
       - mock
-      summary: Get Service
-      operationId: GetService
       responses:
-        200:
-          description: Requested Service
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Service'
+          description: Requested Service
       security:
       - jwt-bearer:
         - user
+      operationId: GetService
+      summary: Get Service
     delete:
       tags:
       - mock
-      summary: Delete Service
-      description: Delete a Service
-      operationId: DeleteService
       responses:
-        200:
+        "200":
           description: Service has been deleted
       security:
       - jwt-bearer:
         - admin
+      operationId: DeleteService
+      summary: Delete Service
+      description: Delete a Service
     parameters:
     - name: id
-      in: path
       description: Unique identifier of Service to managed
-      required: true
       schema:
         type: string
+      in: path
+      required: true
   /artifact/upload:
     summary: Deals with artifacts (SOAP UI project, Postman collection or OpenAPI
       Specification) to be imported by Microcks.
     post:
-      tags:
-      - job
-      summary: Upload an artifact
-      description: Uploads an artifact (SOAP UI project, Postman collection or OpenAPI
-        Specification) to be imported by Microcks.
-      operationId: uploadArtifact
       requestBody:
         content:
           multipart/form-data:
@@ -347,38 +341,44 @@ paths:
 
                   --------------------------8af8cbb56dd4bde0--
         required: true
+      tags:
+      - job
       responses:
-        201:
+        "201":
+          content:
+            text/plain:
+              schema:
+                type: string
           description: Artifact was imported and Service found
-          content:
-            text/plain:
-              schema:
-                type: string
-        204:
+        "204":
           description: No file attribute found in uploaded data
-        400:
-          description: Artifact content is invalid and not understood
+        "400":
           content:
             text/plain:
               schema:
                 type: string
+          description: Artifact content is invalid and not understood
+      operationId: uploadArtifact
+      summary: Upload an artifact
+      description: Uploads an artifact (SOAP UI project, Postman collection or OpenAPI
+        Specification) to be imported by Microcks.
   /jobs/count:
     summary: Count ImportJobs
     get:
       tags:
       - job
-      summary: Get the ImportJobs counter
-      operationId: GetImportJobCounter
       responses:
-        200:
-          description: Number of ImportJobs in datastore
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Counter'
+          description: Number of ImportJobs in datastore
       security:
       - jwt-bearer:
         - user
+      operationId: GetImportJobCounter
+      summary: Get the ImportJobs counter
   /secrets:
     summary: This path operations deal with Secrets
     get:
@@ -386,224 +386,219 @@ paths:
       - config
       parameters:
       - name: page
-        in: query
         description: Page of Secrets to retrieve (starts at and defaults to 0)
-        required: false
         schema:
           type: integer
-      - name: size
         in: query
+        required: false
+      - name: size
         description: Size of a page. Maximum number of Secrets to include in a response
           (defaults to 20)
-        required: false
         schema:
           type: integer
+        in: query
+        required: false
       responses:
-        200:
-          description: List of found Secrets
+        "200":
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Secret'
+          description: List of found Secrets
       security:
       - jwt-bearer:
         - user
     post:
-      tags:
-      - config
-      summary: Create a new Secret
-      operationId: CreateSecret
       requestBody:
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Secret'
+      tags:
+      - config
       responses:
-        201:
-          description: Created Secret
+        "201":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Secret'
+          description: Created Secret
       security:
       - jwt-bearer:
         - admin
+      operationId: CreateSecret
+      summary: Create a new Secret
   /secrets/{id}:
     get:
       tags:
       - config
-      summary: Get Secret
-      description: Retrieve a Secret
-      operationId: GetSecret
       responses:
-        200:
-          description: Found Secret
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Secret'
+          description: Found Secret
       security:
       - jwt-bearer:
         - admin
+      operationId: GetSecret
+      summary: Get Secret
+      description: Retrieve a Secret
     put:
       tags:
       - config
-      summary: Update Secret
-      description: Update a Secret
-      operationId: UpdateSecret
       responses:
-        200:
+        "200":
           description: Updated Secret
       security:
       - jwt-bearer:
         - admin
+      operationId: UpdateSecret
+      summary: Update Secret
+      description: Update a Secret
     delete:
       tags:
       - config
-      summary: Delete Secret
-      description: Delete a Secret
-      operationId: DeleteSecret
       responses:
-        200:
+        "200":
           description: Secret has been deleted
       security:
       - jwt-bearer:
         - admin
+      operationId: DeleteSecret
+      summary: Delete Secret
+      description: Delete a Secret
     parameters:
     - name: id
-      in: path
       description: Unique identifier of Secret to manage
-      required: true
       schema:
         type: string
+      in: path
+      required: true
   /secrets/count:
     get:
       tags:
       - config
-      summary: Get the Secrets counter
-      operationId: GetSecretsCounter
       responses:
-        200:
-          description: Number of Secrets in datastore
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Counter'
+          description: Number of Secrets in datastore
       security:
       - jwt-bearer:
         - user
+      operationId: GetSecretsCounter
+      summary: Get the Secrets counter
   /tests/service/{serviceId}:
     get:
       tags:
       - test
-      summary: Get TestResults by Service
-      operationId: GetTestResultsByService
       responses:
-        200:
-          description: List of TestResults for the Service having the requested id
+        "200":
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/TestResult'
+          description: List of TestResults for the Service having the requested id
       security:
       - jwt-bearer:
         - user
+      operationId: GetTestResultsByService
+      summary: Get TestResults by Service
     parameters:
     - name: serviceId
-      in: path
       description: Unique identifier of Service to manage TestResults for
-      required: true
       schema:
         type: string
+      in: path
+      required: true
   /tests/service/{serviceId}/count:
     get:
       tags:
       - test
-      summary: Get the TestResults for Service counter
-      operationId: GetTestResultsByServiceCounter
       responses:
-        200:
-          description: Number of TestResults for this Service in datastore
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Counter'
+          description: Number of TestResults for this Service in datastore
       security:
       - jwt-bearer:
         - user
+      operationId: GetTestResultsByServiceCounter
+      summary: Get the TestResults for Service counter
     parameters:
     - name: serviceId
-      in: path
       description: Unique identifier of Service to manage TestResults for
-      required: true
       schema:
         type: string
+      in: path
+      required: true
   /tests/{id}:
     get:
       tags:
       - test
-      summary: Get TestResult
-      description: ""
-      operationId: GetTestResult
       responses:
-        200:
-          description: Requested TestResult
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestResult'
+          description: Requested TestResult
       security:
       - jwt-bearer:
         - user
+      operationId: GetTestResult
+      summary: Get TestResult
+      description: ""
     parameters:
     - name: id
-      in: path
       description: Unique identifier of TestResult to manage
-      required: true
       schema:
         type: string
+      in: path
+      required: true
   /tests/{id}/messages/{testCaseId}:
     get:
       tags:
       - test
-      summary: Get messages for TestCase
-      operationId: GetMessagesByTestCase
       responses:
-        200:
-          description: List of request and response messages for this TestCase
+        "200":
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/RequestResponsePair'
+          description: List of request and response messages for this TestCase
       security:
       - jwt-bearer:
         - user
+      operationId: GetMessagesByTestCase
+      summary: Get messages for TestCase
     parameters:
     - name: id
-      in: path
       description: Unique identifier of TestResult to manage
-      required: true
       schema:
         type: string
-    - name: testCaseId
       in: path
-      description: Unique identifier of TetsCaseResult to manage
       required: true
+    - name: testCaseId
+      description: Unique identifier of TetsCaseResult to manage
       schema:
         type: string
+      in: path
+      required: true
   /tests/{id}/testCaseResult:
     post:
-      tags:
-      - test
-      summary: Report and create a new TestCaseResult
-      description: Report a TestCaseResult (typically used by a Test runner)
-      operationId: ReportTestCaseResult
       requestBody:
         description: TestCase return wrapper object
         content:
@@ -611,32 +606,98 @@ paths:
             schema:
               $ref: '#/components/schemas/TestCaseReturnDTO'
         required: true
+      tags:
+      - test
       responses:
-        200:
-          description: TestCaseResult is reported
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TestCaseResult'
+          description: TestCaseResult is reported
+      operationId: ReportTestCaseResult
+      summary: Report and create a new TestCaseResult
+      description: Report a TestCaseResult (typically used by a Test runner)
     parameters:
     - name: id
-      in: path
       description: Unique identifier of TestResult to manage
-      required: true
       schema:
         type: string
+      in: path
+      required: true
   /keycloak/config:
     summary: Keycloak Authentification configuration
     get:
       tags:
       - config
-      summary: Get authentification configuration
-      operationId: GetKeycloakConfig
       responses:
-        200:
-          description: Get current configuration
+        "200":
           content:
             application/json: {}
+          description: Get current configuration
+      operationId: GetKeycloakConfig
+      summary: Get authentification configuration
+  /services/{id}/operation:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperationOverrideDTO'
+        required: true
+      tags:
+      - mock
+      parameters:
+      - name: operationName
+        description: Name of operation to update
+        schema:
+          type: string
+        in: query
+        required: true
+      responses:
+        "200":
+          description: Operation has been updated
+        "500":
+          description: Operation cannot be updated
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: OverrideServiceOperation
+      summary: Override Service Operation
+    parameters:
+    - name: id
+      description: Unique identifier of Service to managed
+      schema:
+        type: string
+      in: path
+      required: true
+  /services/{id}/metadata:
+    put:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Metadata'
+        required: true
+      tags:
+      - mock
+      responses:
+        "200":
+          description: Service metadata has been updated
+        "500":
+          description: Update of metadata failed
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: UpdateServiceMetadata
+      summary: Update Service Metadata
+    parameters:
+    - name: id
+      description: Unique identifier of Service to managed
+      schema:
+        type: string
+      in: path
+      required: true
 components:
   schemas:
     TestCaseResult:
@@ -693,20 +754,25 @@ components:
         version:
           description: Distinct version for a named Service or API
           type: string
-        XmlNS:
-          description: Associated Xml Namespace in case of Xml based Service
-          type: string
         type:
           description: Service or API Type
           enum:
           - REST
           - SOAP_HTTP
           - GENERIC_REST
+          - EVENT
+          type: string
         operations:
           description: Set of Operations for Service or API
           type: array
           items:
             $ref: '#/components/schemas/Operation'
+        xmlNS:
+          description: Associated Xml Namespace in case of Xml based Service
+          type: string
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+          description: Metadata of Service
     TestRequest:
       description: Test request is a minimalist wrapper for requesting the launch
         of a new test
@@ -1107,11 +1173,70 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TestCaseResult'
+    Metadata:
+      description: ""
+      required:
+      - createdOn
+      - lastUpdate
+      type: object
+      properties:
+        createdOn:
+          description: Creation date of attached object
+          type: integer
+        lastUpdate:
+          description: Last update of attached object
+          type: integer
+        annotations:
+          description: Annotations of attached object
+          type: array
+          items: {}
+    OperationOverrideDTO:
+      description: Data Transfer object for grouping the mutable properties of an
+        Operation
+      type: object
+      properties:
+        dispatcher:
+          description: ""
+          type: string
+        dispatcherRules:
+          description: ""
+          type: string
+        defaultDelay:
+          description: ""
+          type: integer
+        parameterConstraints:
+          description: ""
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterConstraint'
+    ParameterConstraint:
+      description: Companion object for Operation that may be used to express constraints
+        on request parameters
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          description: Parameter name
+          type: string
+        required:
+          description: Whether it's a required constraint
+          type: boolean
+        recopy:
+          description: Whether it's a recopy constraint
+          type: boolean
+        mustMatchRegexp:
+          description: Whether it's a regular expression matching constraint
+          type: string
+        in:
+          description: Parameter location
+          enum:
+          - path
+          - query
+          - header
+          type: string
   securitySchemes:
     jwt-bearer:
-      type: oauth2
-      description: JWT Bearer acquired using OAuth 2 Authentication flow or Direct
-        Access Grant
       flows:
         clientCredentials:
           tokenUrl: https://keycloak.example.com/auth/realms/microcks/protocol/openid-connect/token
@@ -1119,6 +1244,9 @@ components:
           scopes:
             user: manager
             admin: ""
+      type: oauth2
+      description: JWT Bearer acquired using OAuth 2 Authentication flow or Direct
+        Access Grant
 security:
 - jwt-bearer: []
 tags:
