@@ -83,31 +83,6 @@ paths:
         - user
       operationId: GetServicesCounter
       summary: Get the Services counter
-  /services/search:
-    get:
-      tags:
-      - mock
-      parameters:
-      - name: name
-        description: Name like criterion for query
-        schema:
-          type: string
-        in: query
-        required: true
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Service'
-          description: List of found Services (filtered according search criteria)
-      security:
-      - jwt-bearer:
-        - user
-      operationId: SearchServices
-      summary: Search for Services and APIs
   /jobs:
     summary: This path operations deal with ImportJobs
     get:
@@ -242,6 +217,13 @@ paths:
       operationId: ActivateImportJob
       summary: Activate an ImportJob
       description: Make an ImportJob active, so that it is executed
+    parameters:
+    - name: id
+      description: Unique identifier of ImportJob to manage
+      schema:
+        type: string
+      in: path
+      required: true
   /jobs/{id}/start:
     put:
       tags:
@@ -259,6 +241,13 @@ paths:
       operationId: StartImportJob
       summary: Start an ImportJob
       description: Starting an ImportJob forces it to immediatly import mock definitions
+    parameters:
+    - name: id
+      description: Unique identifier of ImportJob to manage
+      schema:
+        type: string
+      in: path
+      required: true
   /jobs/{id}/stop:
     put:
       tags:
@@ -277,17 +266,27 @@ paths:
       summary: Stop an ImportJob
       description: Stopping an ImportJob desactivate it, so that it won't execute
         at next schedule
+    parameters:
+    - name: id
+      description: Unique identifier of ImportJob to manage
+      schema:
+        type: string
+      in: path
+      required: true
   /services/{id}:
     get:
       tags:
       - mock
+      parameters:
+      - name: messages
+        description: Whether to include details on services messages into result.
+          Default is false
+        schema:
+          type: boolean
+        in: query
       responses:
         "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Service'
-          description: Requested Service
+          $ref: '#/components/responses/ServiceResponse'
       security:
       - jwt-bearer:
         - user
@@ -302,6 +301,7 @@ paths:
       security:
       - jwt-bearer:
         - admin
+        - manager
       operationId: DeleteService
       summary: Delete Service
       description: Delete a Service
@@ -633,7 +633,9 @@ paths:
       responses:
         "200":
           content:
-            application/json: {}
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeycloakConfig'
           description: Get current configuration
       operationId: GetKeycloakConfig
       summary: Get authentification configuration
@@ -662,6 +664,7 @@ paths:
       security:
       - jwt-bearer:
         - admin
+        - manager
       operationId: OverrideServiceOperation
       summary: Override Service Operation
     parameters:
@@ -689,6 +692,7 @@ paths:
       security:
       - jwt-bearer:
         - admin
+        - manager
       operationId: UpdateServiceMetadata
       summary: Update Service Metadata
     parameters:
@@ -698,6 +702,52 @@ paths:
         type: string
       in: path
       required: true
+  /services/labels:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelsMap'
+          description: 'Already used labels: keys are label Keys, values are array
+            of label Values'
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: GetServicesLabels
+      summary: Get the already used labels for Services
+  /services/search:
+    get:
+      tags:
+      - mock
+      parameters:
+      - name: queryMap
+        description: Map of criterion. Key can be simply 'name' with value as the
+          searched string. You can also search by label using keys like 'labels.x'
+          where 'x' is the label and value the label value
+        schema:
+          type: object
+          additionalProperties:
+            type: string
+        in: query
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
+          description: List of found Services (filtered according search criteria)
+      security:
+      - jwt-bearer:
+        - user
+      operationId: SearchServices
+      summary: Search for Services and APIs
 components:
   schemas:
     TestCaseResult:
@@ -1034,39 +1084,6 @@ components:
           type: array
           items:
             type: string
-    Operation:
-      description: An Operation of a Service or API
-      required:
-      - name
-      - method
-      type: object
-      properties:
-        name:
-          description: Unique name of this Operation within Service scope
-          type: string
-        method:
-          description: Represents transport method
-          type: string
-        inputName:
-          description: Name of input parameters in case of Xml based Service
-          type: string
-        outputName:
-          description: Name of output parameters in case of Xml based Service
-          type: string
-        dispatcher:
-          description: Dispatcher strategy used for mocks
-          type: string
-        dispatcherRules:
-          description: DispactherRules used for mocks
-          type: string
-        defaultDelay:
-          description: Default response time delay for mocks
-          type: number
-        resourcePaths:
-          description: Paths the mocks endpoints are mapped on
-          type: array
-          items:
-            type: string
     TestStepResult:
       description: TestStepResult is an entity embedded within TestCaseResult. They
         are created for each request associated with an operation / action of a microservice.
@@ -1095,6 +1112,7 @@ components:
       - auth-server-url
       - public-client
       - ssl-required
+      - resource
       type: object
       properties:
         realm:
@@ -1112,19 +1130,25 @@ components:
           enum:
           - none
           - external
+        resource:
+          description: Name of Keycloak resource/application used on client side
+          type: string
     RequestResponsePair:
       description: Request associated with corresponding Response
-      required:
-      - request
-      - response
       type: object
-      properties:
-        request:
-          $ref: '#/components/schemas/Request'
-          description: The request part of the pair
-        response:
-          $ref: '#/components/schemas/Response'
-          description: The Response part of the pair
+      allOf:
+      - required:
+        - request
+        - response
+        type: object
+        properties:
+          request:
+            $ref: '#/components/schemas/Request'
+            description: The request part of the pair
+          response:
+            $ref: '#/components/schemas/Response'
+            description: The Response part of the pair
+      - $ref: '#/components/schemas/AbstractExchange'
     TestResult:
       description: Represents the result of a Service or API test run by Microcks.
         Tests are related to a service and made of multiple test cases corresponding
@@ -1173,39 +1197,23 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TestCaseResult'
-    Metadata:
-      description: ""
-      required:
-      - createdOn
-      - lastUpdate
-      type: object
-      properties:
-        createdOn:
-          description: Creation date of attached object
-          type: integer
-        lastUpdate:
-          description: Last update of attached object
-          type: integer
-        annotations:
-          description: Annotations of attached object
-          type: array
-          items: {}
     OperationOverrideDTO:
       description: Data Transfer object for grouping the mutable properties of an
         Operation
       type: object
       properties:
         dispatcher:
-          description: ""
+          description: Type of dispatcher to apply for this operation
           type: string
         dispatcherRules:
-          description: ""
+          description: Rules of dispatcher for this operation
           type: string
         defaultDelay:
-          description: ""
+          description: Default delay in milliseconds to apply to mock responses on
+            this operation
           type: integer
         parameterConstraints:
-          description: ""
+          description: Constraints that may apply to incoming parameters on this operation
           type: array
           items:
             $ref: '#/components/schemas/ParameterConstraint'
@@ -1235,6 +1243,200 @@ components:
           - query
           - header
           type: string
+    Metadata:
+      description: Commodity object for holding metadata on any entity. This object
+        is inspired by Kubernetes metadata.
+      required:
+      - createdOn
+      - lastUpdate
+      type: object
+      properties:
+        createdOn:
+          description: Creation date of attached object
+          type: integer
+        lastUpdate:
+          description: Last update of attached object
+          type: integer
+        annotations:
+          description: Annotations of attached object
+          type: object
+          additionalProperties:
+            type: string
+        labels:
+          description: Labels put on attached object
+          type: object
+          additionalProperties:
+            type: string
+    Binding:
+      description: Protocol binding details for asynchronous operations
+      required:
+      - type
+      - destinationName
+      type: object
+      properties:
+        type:
+          description: Protocol binding identifier
+          enum:
+          - KAFKA
+          type: string
+        keyType:
+          description: Type of key for Kafka messages
+          type: string
+        destinationType:
+          description: Type of destination for asynchronous messages of this operation
+          type: string
+        destinationName:
+          description: Name of destination for asynchronous messages of this operation
+          type: string
+    Operation:
+      description: An Operation of a Service or API
+      required:
+      - name
+      - method
+      type: object
+      properties:
+        name:
+          description: Unique name of this Operation within Service scope
+          type: string
+        method:
+          description: Represents transport method
+          type: string
+        inputName:
+          description: Name of input parameters in case of Xml based Service
+          type: string
+        outputName:
+          description: Name of output parameters in case of Xml based Service
+          type: string
+        dispatcher:
+          description: Dispatcher strategy used for mocks
+          type: string
+        dispatcherRules:
+          description: DispactherRules used for mocks
+          type: string
+        defaultDelay:
+          description: Default response time delay for mocks
+          type: number
+        resourcePaths:
+          description: Paths the mocks endpoints are mapped on
+          type: array
+          items:
+            type: string
+        parameterContraints:
+          description: Contraints that may apply to mock invocatino on this operation
+          type: array
+          items:
+            $ref: '#/components/schemas/ParameterConstraint'
+        bindings:
+          description: Map of protocol binding details for this operation
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/Binding'
+    LabelsMap:
+      description: A map which keys are already used labels keys and values are already
+        used values for this key
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/StringArray'
+        type: object
+    UnidirectionalEvent:
+      description: Representation of an unidirectional exchange as an event message
+      type: object
+      allOf:
+      - required:
+        - eventMessage
+        type: object
+        properties:
+          eventMessage:
+            $ref: '#/components/schemas/EventMessage'
+            description: Asynchronous message for this unidirectional event
+      - $ref: '#/components/schemas/AbstractExchange'
+    EventMessage:
+      description: ""
+      required:
+      - id
+      - mediaType
+      type: object
+      properties:
+        id:
+          description: Unique identifier of this message
+          type: string
+        mediaType:
+          description: Content type of message
+          type: string
+        name:
+          description: Unique distinct name of this message
+          type: string
+        content:
+          description: Body content for this message
+          type: string
+        operationId:
+          description: Identifier of Operation this message is associated to
+          type: string
+        testCaseId:
+          description: Unique identifier of TestCase this message is attached (in
+            case of a test)
+          type: string
+        headers:
+          description: Headers for this message
+          type: array
+          items:
+            $ref: '#/components/schemas/Header'
+    StringArray:
+      description: A simple array of String
+      type: array
+      items:
+        type: string
+    MessageArray:
+      description: Array of Message for Service operations
+      type: array
+      items:
+        $ref: '#/components/schemas/Exchange'
+    Exchange:
+      oneOf:
+      - $ref: '#/components/schemas/RequestResponsePair'
+      - $ref: '#/components/schemas/UnidirectionalEvent'
+      discriminator:
+        propertyName: type
+        mapping:
+          reqRespPair: '#/components/schemas/RequestResponsePair'
+          unidirEvent: '#/components/schemas/UnidirectionalEvent'
+    AbstractExchange:
+      description: Abstract bean representing a Service or API Exchange.
+      required:
+      - type
+      type: object
+      properties:
+        type:
+          description: Discriminant type for identifying kind of exchange
+          enum:
+          - reqRespPair
+          - unidirEvent
+          type: string
+    ServiceView:
+      description: Aggregate bean for grouping a Service an its messages pairs
+      required:
+      - service
+      - messagesMap
+      type: object
+      properties:
+        service:
+          $ref: '#/components/schemas/Service'
+          description: Wrapped service description
+        messagesMap:
+          description: Map of messages for this Service. Keys are operation name,
+            values are array of messages for this operation
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/MessageArray'
+  responses:
+    ServiceResponse:
+      content:
+        application/json:
+          schema:
+            oneOf:
+            - $ref: '#/components/schemas/Service'
+            - $ref: '#/components/schemas/ServiceView'
+      description: ""
   securitySchemes:
     jwt-bearer:
       flows:
@@ -1242,7 +1444,8 @@ components:
           tokenUrl: https://keycloak.example.com/auth/realms/microcks/protocol/openid-connect/token
           refreshUrl: https://keycloak.example.com/auth/realms/microcks/protocol/openid-connect/token
           scopes:
-            user: manager
+            user: ""
+            manager: ""
             admin: ""
       type: oauth2
       description: JWT Bearer acquired using OAuth 2 Authentication flow or Direct
