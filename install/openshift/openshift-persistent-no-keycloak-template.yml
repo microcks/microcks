@@ -465,6 +465,7 @@ objects:
       keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180/auth}
       keycloak.realm=microcks
       keycloak.resource=microcks-app
+      keycloak.use-resource-role-mappings=true
       keycloak.bearer-only=true
       keycloak.ssl-required=external
 

@@ -46,7 +46,7 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
     let w: any = window;
     this.keycloak = w["keycloak"];
 
-    //console.info("Token: %s", JSON.stringify(this.keycloak.tokenParsed, null, 2));
+    console.info("Token: %s", JSON.stringify(this.keycloak.tokenParsed, null, 2));
     //console.info("ID Token: %s", JSON.stringify(this.keycloak.idTokenParsed, null, 2));
     //console.info("Access Token: %s", this.keycloak.token);
 
@@ -100,8 +100,18 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    * @param role 
    */
   public hasRole(role: string): boolean {
-    //console.log("[KeycloakAuthenticationService] hasRealmRole called with " + role);
-    return this.keycloak.hasRealmRole(role);
+    //console.log("[KeycloakAuthenticationService] hasRole called with " + role);
+    // Now default to a resource role for 'microcks-app'
+    //return this.keycloak.hasRealmRole(role);
+
+    if (!this.keycloak.resourceAccess) {
+      return false;
+    }
+    var access = this.keycloak.resourceAccess['microcks-app' || this.keycloak.clientId];
+    return !!access && access.roles.indexOf(role) >= 0;
+
+    // Don't know why but this fail as the code above is just copy-pasted from implementations...
+    // return this.keycloak.hasResourceRole('microcks-app', role);
   }
 
   /**
