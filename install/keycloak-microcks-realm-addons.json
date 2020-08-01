@@ -1,0 +1,64 @@
+{
+  "roles": {
+    "client": {
+      "microcks-app": [
+        {
+          "name": "admin",
+          "composite": false,
+          "clientRole": true
+        },
+        {
+          "name": "manager",
+          "composite": false,
+          "clientRole": true
+        }
+      ]
+    }
+  },
+  "clientScopeMappings": {
+    "microcks-app": [
+      {
+        "client": "microcks-app-js",
+        "roles": [
+          "manager",
+          "admin",
+          "user"
+        ]
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "microcks-app",
+      "enabled": true,
+      "bearerOnly": true,
+      "defaultRoles": [
+        "user"
+      ]
+    },
+    {
+      "clientId": "microcks-app-js",
+      "enabled": true,
+      "publicClient": true,
+      "webOrigins": [
+        "+"
+      ],
+      "redirectUris": [
+        "https://localhost:8080/*"
+      ],
+      "fullScopeAllowed": false
+    },
+    {
+      "clientId": "microcks-serviceaccount",
+      "secret": "ab54d329-e435-41ae-a900-ec6b3fe15c54",
+      "enabled": true,
+      "bearerOnly": false,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret"
+    }
+  ],
+  "keycloakVersion": "10.0.1"
+}

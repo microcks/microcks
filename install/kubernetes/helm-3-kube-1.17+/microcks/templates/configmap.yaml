@@ -37,7 +37,7 @@ data:
 
     # Keycloak configuration properties
     keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180/auth}
-    keycloak.realm=microcks
+    keycloak.realm={{ .Values.keycloak.realm }}
     keycloak.resource=microcks-app
     keycloak.use-resource-role-mappings=true
     keycloak.bearer-only=true
