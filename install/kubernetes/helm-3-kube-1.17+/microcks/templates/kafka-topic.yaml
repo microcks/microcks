@@ -1,0 +1,12 @@
+{{- if .Values.features.async.kafka.install }}
+apiVersion: kafka.strimzi.io/v1beta1
+kind: KafkaTopic
+metadata:
+  labels:
+    strimzi.io/cluster: "{{ .Values.appName }}-kafka"
+  name: "{{ .Values.appName }}-kafka-services-updates"
+spec:
+  partitions: 1
+  replicas: 1
+  topicName: microcks-services-updates
+{{- end }}

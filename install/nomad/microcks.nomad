@@ -7,10 +7,9 @@ job "microcks" {
     task "microcks" {
       driver = "docker"
       config {
-        image = "microcks/microcks:latest"
+        image = "quay.io/microcks/microcks:nightly"
         volumes = [
-          #"./config:/deployments/config"
-          "/Users/lbroudou/Development/github/microcks/install/nomad/config:/deployments/config"
+          "<current_dir>/config:/deployments/config"
         ]
         network_mode = "nomad_main"
         network_aliases = [
@@ -42,16 +41,17 @@ job "microcks" {
         "SPRING_DATA_MONGODB_DATABASE" = "microcks"
         "POSTMAN_RUNNER_URL" = "http://postman:3000"
         "TEST_CALLBACK_URL" = "http://microcks:8080"
-        #"KEYCLOAK_URL" = "http://localhost:8180/auth"
-        "KEYCLOAK_URL" = "http://docker.for.mac.localhost:8180/auth"
-        #"KEYCLOAK_URL" = "http://docker.for.win.localhost:8180/auth"
+        "SERVICES_UPDATE_INTERVAL" = "0 0 0/2 * * *"
+        #"KEYCLOAK_URL" = "https://localhost:8543/auth"
+        "KEYCLOAK_URL" = "https://docker.for.mac.localhost:8543/auth"
+        #"KEYCLOAK_URL" = "https://docker.for.win.localhost:8543/auth"
       }
     }
 
     task "postman" {
       driver = "docker"
       config {
-        image = "microcks/microcks-postman-runtime:latest"
+        image = "quay.io/microcks/microcks-postman-runtime:latest"
         network_mode = "nomad_main"
         network_aliases = [
           "postman"
@@ -72,14 +72,14 @@ job "microcks" {
     task "keycloak" {
       driver = "docker"
       config {
-        image = "jboss/keycloak:3.4.0.Final"
+        image = "jboss/keycloak:10.0.1"
         args = [
           "-b", "0.0.0.0",
           "-Dkeycloak.import=/microcks-keycloak-config/microcks-realm-sample.json"
         ],
         volumes = [
-          #"./keycloak-realm:/microcks-keycloak-config"
-          "/Users/lbroudou/Development/github/microcks/install/nomad/keycloak-realm:/microcks-keycloak-config"
+          "<current_dir>/keycloak-realm:/microcks-keycloak-config",
+          "<current_dir>/keystore:/etc/x509/https
         ]
         network_mode = "nomad_main"
         network_aliases = [
@@ -87,6 +87,7 @@ job "microcks" {
         ]
         port_map = {
           http = 8080
+          https = 8443
         }
       }
       env {
@@ -100,6 +101,9 @@ job "microcks" {
           port "http" {
             static = "8180"
           }
+          port "https" {
+            static = "8543"
+          }
         }
       }
     }
@@ -110,9 +114,9 @@ job "microcks" {
     task "mongo" {
       driver = "docker"
       config {
-        image = "mongo:3.3.12"
+        image = "mongo:3.4.23"
         volumes = [
-          "/Users/lbroudou/tmp/microcks-data:/data/db"
+          "<current_dir>/microcks-data:/data/db"
         ]
         network_mode = "nomad_main"
         network_aliases = [

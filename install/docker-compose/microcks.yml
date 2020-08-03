@@ -12,14 +12,14 @@ services:
         aliases:
           - mongo
   postman:
-    image: microcks/microcks-postman-runtime:latest
+    image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
     networks:
       main:
         aliases:
           - postman
   keycloak:
-    image: jboss/keycloak:9.0.2
+    image: jboss/keycloak:10.0.1
     command: "-b 0.0.0.0 -Dkeycloak.import=/microcks-keycloak-config/microcks-realm-sample.json"
     container_name: microcks-keycloak
     ports:
@@ -40,7 +40,7 @@ services:
       - mongo
       - postman
       - keycloak
-    image: microcks/microcks:latest
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - ./config:/deployments/config

@@ -96,7 +96,7 @@ objects:
     - name: latest
       from:
         kind: DockerImage
-        name: microcks/microcks:latest
+        name: quay.io/microcks/microcks:nightly
 - kind: ImageStream
   apiVersion: v1
   metadata:
@@ -109,7 +109,7 @@ objects:
     - name: latest
       from:
         kind: DockerImage
-        name: microcks/microcks-postman-runtime:latest
+        name: quay.io/microcks/microcks-postman-runtime:latest
 - kind: Service
   apiVersion: v1
   metadata:
@@ -562,6 +562,7 @@ objects:
       keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180/auth}
       keycloak.realm=microcks
       keycloak.resource=microcks-app
+      keycloak.use-resource-role-mappings=true
       keycloak.bearer-only=true
       keycloak.ssl-required=external
       keycloak.disable-trust-manager=true
@@ -674,43 +675,53 @@ objects:
         "maxDeltaTimeSeconds": 43200,
         "failureFactor": 30,
         "roles": {
-          "realm": [
+          "realm": [],
+          "client": {
+            "microcks-app": [
+              {
+                "name": "user",
+                "composite": false,
+                "clientRole": true,
+                "containerId": "microcks"
+              },
+              {
+                "name": "admin",
+                "composite": false,
+                "clientRole": true,
+                "containerId": "microcks"
+              },
+              {
+                "name": "manager",
+                "composite": false,
+                "clientRole": true,
+                "containerId": "microcks"
+              }
+            ]
+          }
+        },
+        "defaultRoles": [ ],
+        "requiredCredentials": [ "password" ],
+        "scopeMappings": [],
+        "clientScopeMappings": {
+          "microcks-app": [
             {
-              "name": "admin",
-              "scopeParamRequired": false,
-              "composite": false,
-              "clientRole": false,
-              "containerId": "microcks"
-            },
-            {
-              "name": "manager",
-              "scopeParamRequired": false,
-              "composite": false,
-              "clientRole": false,
-              "containerId": "microcks"
-            },
-            {
-              "name": "user",
-              "scopeParamRequired": false,
-              "composite": false,
-              "clientRole": false,
-              "containerId": "microcks"
+              "client": "microcks-app-js",
+              "roles": [
+                "manager",
+                "admin",
+                "user"
+              ]
             }
           ]
         },
-        "defaultRoles": [ "user" ],
-        "requiredCredentials": [ "password" ],
-        "scopeMappings": [
-          {
-            "client": "microcks-app-js",
-            "roles": ["admin", "manager", "user"]
-          }
-        ],
         "applications": [
           {
             "name": "microcks-app",
             "enabled": true,
-            "bearerOnly": true
+            "bearerOnly": true,
+            "defaultRoles": [
+              "user"
+            ]
           },
           {
             "name": "microcks-app-js",
@@ -721,7 +732,8 @@ objects:
             ],
             "redirectUris": [
                 "https://${APP_ROUTE_HOSTNAME}/*"
-            ]
+            ],
+            "fullScopeAllowed": false
           },
           {
             "name": "microcks-serviceaccount",
@@ -735,7 +747,7 @@ objects:
           }
         ],
         "identityProviders": [],
-        "keycloakVersion": "3.4.0.Final"
+        "keycloakVersion": "10.0.1"
       }
 - kind: DeploymentConfig
   apiVersion: v1
@@ -768,7 +780,7 @@ objects:
       spec:
         containers:
         - name: keycloak-server
-          image: jboss/keycloak:4.8.3.Final
+          image: jboss/keycloak:10.0.1
           ports:
           - name: http
             containerPort: 8080

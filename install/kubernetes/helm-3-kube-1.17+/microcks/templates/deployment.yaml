@@ -23,7 +23,7 @@ spec:
         group: microcks
     spec:
       containers:
-      - name: details
+      - name: spring
         image: {{ .Values.microcks.image }}
         imagePullPolicy: IfNotPresent
         ports:
@@ -64,6 +64,12 @@ spec:
             value: http://{{ .Values.appName }}:8080
           - name: KEYCLOAK_URL
             value: https://{{ .Values.keycloak.url }}/auth
+          - name: KAFKA_BOOTSTRAP_SERVER
+            {{- if eq .Values.features.async.kafka.install true }}
+            value: "{{ .Values.appName }}-kafka-kafka-bootstrap:9092"
+            {{- else }}
+            value: "{{ .Values.features.async.kafka.url }}"
+            {{- end }}
         livenessProbe:
           httpGet:
             path: "/api/health"
@@ -417,4 +423,71 @@ spec:
         emptyDir:
           medium: ''
         {{- end }}
+{{- end }}
+{{- if and .Values.features.async.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.appName }}-async-minon"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: async-minion
+    group: microcks
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: async-minion
+      container: async-minion
+      group: microcks
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.appName }}"
+        deploymentconfig: async-minion
+        container: async-minion
+        group: microcks
+    spec:
+      containers:
+      - name: async-minion
+        image: {{ .Values.features.async.image }}
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: QUARKUS_PROFILE
+            value: kube
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: "/health/live"
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: "/health/ready"
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+          - name: "{{ .Values.appName }}-async-minion-config"
+            mountPath: "/deployments/config"
+        terminationMessagePath: "/dev/termination-log"
+      volumes:
+        - name: "{{ .Values.appName }}-async-minion-config"
+          configMap:
+            name: "{{ .Values.appName }}-async-minion-config"
 {{- end }}

@@ -1,0 +1,18 @@
+h1.arvo {
+  font-size: 2.4em;
+  line-height: 1.2em;
+}
+.hl {
+  color: #ff1745;
+  font-weight: 600;
+}
+
+blockquote.top-invocation {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-bottom: 4px;  
+}
+p.top-invocation {
+  margin-bottom: 0;
+  font-size: 0.85em;
+}

@@ -95,19 +95,26 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `postman`     | `replicas`         | **Optional**. The number of replicas for the Microcks Postman pod. Default is `1`. |
 | `postman`     | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `install`          | **Optional**. Flag for Keycloak installation. Default is `true`. Set to `false` if you want to reuse an existing Keycloak instance. |
-| `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install if it already exists or the one used for exposing Keycloak `Ingress` | 
+| `keycloak`    | `realm`            | **Optional**. Name of Keycloak realm to use. Should be setup only if `install` is `false` and you want to reuse an existing realm. Default is `microcks`. |
+| `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install if it already exists or the one used for exposing Keycloak `Ingress`. | 
 | `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |  
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
 | `keycloak`    | `volumeSize`       | **Optional**. Size of persistent volume claim for Keycloak. Default is `1Gi`. Not used if not persistent install asked. |
 | `keycloak`    | `postgresImage`    | **Optional**. The reference of container image used. Chart comes with its default version. |
+| `keycloak`    | `serviceAccount`    | **Optional**. A service account to create into Microcks Keycloak realm. Default is `microcks-serviceaccount`. |
+| `keycloak`    | `serviceAccountCredentials`    | **Optional**. The credentials of Keycloak realm service account for Microcks. Default is `ab54d329-e435-41ae-a900-ec6b3fe15c54`. |
 | `mongodb`     | `install`          | **Optional**. Flag for MongoDB installation. Default is `true`. Set to `false` if you want to reuse an existing MongoDB instance. |
-| `mongodb`     | `uri`              | **Optional**. MongoDB URI in case you're reusing existing MongoDB instance. Mandatory if `install` is `false` |
-| `mongodb`     | `database`         | **Optional**. MongoDB database name in case you're reusing existing MongoDB instance. Used if `install` is `false`. Default to `appName` |
-| `mongodb`     | `secretRef`        | **Optional**. Reference of a Secret containing credentials for connecting a provided MongoDB instance. Mandatory if `install` is `false` |
+| `mongodb`     | `uri`              | **Optional**. MongoDB URI in case you're reusing existing MongoDB instance. Mandatory if `install` is `false`. |
+| `mongodb`     | `database`         | **Optional**. MongoDB database name in case you're reusing existing MongoDB instance. Used if `install` is `false`. Default to `appName`. |
+| `mongodb`     | `secretRef`        | **Optional**. Reference of a Secret containing credentials for connecting a provided MongoDB instance. Mandatory if `install` is `false`. |
 | `mongodb`     | `persistent`       | **Optional**. Flag for MongoDB persistence. Default is `true`. Set to `false` if you want an ephemeral MongoDB installation. |
 | `mongodb`     | `volumeSize`       | **Optional**. Size of persistent volume claim for MongoDB. Default is `2Gi`. Not used if not persistent install asked. |
-| `features`    | `repositoryFilter` | **Optional**. Feature allowing to filter API and services on main page. Must be explicitely `enabled`. See [Organizing repository](https://microcks.io/documentation/using/advanced/organizing/#master-level-filter) for more informations |
+| `features`    | `repositoryFilter` | **Optional**. Feature allowing to filter API and services on main page. Must be explicitely `enabled`. See [Organizing repository](https://microcks.io/documentation/using/advanced/organizing/#master-level-filter) for more informations. |
+| `features`    | `async.enabled`    | **Optional**. Feature allowing to mock an tests asynchronous APIs through Events. Enebling it requires an active message broker. Default is `false`. |
+| `features`    | `async.image`      | **Optional**. The reference of container image used for `async-minion` component. Chart comes with its default version. |
+| `features`    | `async.kafka.install` | **Optional**. Flag for Kafka installation. Default is `true` and required Strinzi Operator to be setup. Set to `false` if you want to reuse an existing Kafka instance. |
+| `features`    | `async.kafka.url`  | **Optional**. The URL of Kafka broker if it already exists or the one used for exposing Kafka `Ingress` when we install it. In this later case, it should only be the subdomain part (eg: `apps.example.com`). |
 
 
 You may want to launch custom installation with such a command:
@@ -117,6 +124,16 @@ You may want to launch custom installation with such a command:
     --set appName=mocks --set mongodb.volumeSize=5Gi \
     --set microcks.url=mocks-microcks.apps.example.com \
     --set keycloak.url=keycloak-microcks.apps.example.com
+ ```
+
+ or - with included Kafka for async mocking turned on:
+
+ ```console
+ $ helm install microcks ./microcks --namespace=microcks \
+    --set appName=microcks --set features.async.enabled=true \
+    --set microcks.url=microcks.$(minikube ip).nip.io \
+    --set keycloak.url=keycloak.$(minikube ip).nip.io \
+    --set features.async.kafka.url=$(minikube ip).nip.io
  ```
 
 ## Checking everything is OK

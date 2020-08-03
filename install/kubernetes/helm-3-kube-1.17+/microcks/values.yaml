@@ -4,22 +4,23 @@ microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-microcks-ingress
-  image: microcks/microcks:0.9.2
+  image: quay.io/microcks/microcks:nightly
   replicas: 1
   
 postman:
-  image: microcks/microcks-postman-runtime:latest
+  image: quay.io/microcks/microcks-postman-runtime:latest
   replicas: 1
 
 keycloak:
   install: true
+  realm: microcks
   url: keycloak-microcks.192.168.99.100.nip.io
   #url: keycloak-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-keycloak-ingress
-  
-  image: jboss/keycloak:4.8.3.Final
+
+  image: jboss/keycloak:10.0.1
   adminUsername: admin
-  # Unless you uncomment following line, admin password will be randowly generated.
+  # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
   #adminPassword: 123
 
@@ -27,9 +28,12 @@ keycloak:
   volumeSize: 1Gi
   postgresImage: centos/postgresql-95-centos7:latest
   username: userP
-  # Unless you uncomment following line, admin password will be randowly generated.
+  # Unless you uncomment following line, admin password will be randoMly generated.
   # Beware that in case of update, new value will be generated and
   #password: 123
+
+  serviceAccount: microcks-serviceaccount
+  serviceAccountCredentials: ab54d329-e435-41ae-a900-ec6b3fe15c54
 
 mongodb:
   install: true
@@ -51,6 +55,20 @@ mongodb:
     #passwordKey: database-password
 
 features:
+  async:
+    enabled: false
+    defaultBinding: KAFKA
+    defaultFrequency: 10
+    
+    image: quay.io/microcks/microcks-async-minion:nightly
+
+    kafka:
+      install: true
+      url: 192.168.99.100.nip.io
+      #url: kafka-bootstrap:9092
+      persistent: false
+      volumeSize: 2Gi
+
   repositoryFilter:
     enabled: false
     labelKey: app

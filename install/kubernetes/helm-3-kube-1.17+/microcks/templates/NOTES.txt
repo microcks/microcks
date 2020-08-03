@@ -12,3 +12,12 @@ Microcks is available at https://{{ .Values.microcks.url }}.
 Keycloak has been deployed on https://{{ .Values.keycloak.url }}/auth to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into '{{ .Values.appName }}-keycloak-admin' secret.
+
+{{- if eq .Values.features.async.kafka.install true }}
+
+Kafka broker has been deployed on {{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}.
+It has been exposed using TLS passthrough of the Ingress controller, you shoud extract the certificate for your client using:
+
+  $ kubectl get secret {{ .Values.appName }}-kafka-cluster-ca-cert -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
+
+{{- end }}

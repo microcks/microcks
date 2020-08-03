@@ -10,19 +10,47 @@ services:
 
 after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
-    mvn -B -q -Pprod package docker:build;
+    cd webapp/;
+    mvn -B -q -Pprod -DskipTests package docker:build;
+    docker tag microcks/microcks microcks/microcks:latest;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:latest;
+    docker tag microcks/microcks:latest quay.io/microcks/microcks:latest;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker push quay.io/microcks/microcks:latest;
+    cd ../minions/async/;
+    mvn -B -q -DskipTests package;
+    docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:latest .;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker push quay.io/microcks/microcks-async-minion:latest;
     fi
-  - if [ "$TRAVIS_BRANCH" == "0.9.x" ]; then
+  - if [ "$TRAVIS_BRANCH" == "1.0.x" ]; then
+    cd webapp/;
     mvn -B -q -Pprod -DskipTests package docker:build;
     docker tag microcks/microcks microcks/microcks:nightly;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:nightly;
+    docker tag microcks/microcks:nightly quay.io/microcks/microcks:nightly;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker push quay.io/microcks/microcks:nightly;
+    cd ../minions/async/;
+    mvn -B -q -DskipTests package;
+    docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:nightly .;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker push quay.io/microcks/microcks-async-minion:nightly;
     fi
   - if [ "$TRAVIS_BRANCH" == "$TRAVIS_TAG" ]; then
-    mvn -B -q -Pprod package docker:build;
+    cd webapp/;
+    mvn -B -q -Pprod -DskipTests package docker:build;
     docker tag microcks/microcks microcks/microcks:$TRAVIS_TAG;
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
     docker push microcks/microcks:$TRAVIS_TAG;
+    docker tag microcks/microcks:$TRAVIS_TAG quay.io/microcks/microcks:$TRAVIS_TAG;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker push quay.io/microcks/microcks:$TRAVIS_TAG;
+    cd ../minions/async/;
+    mvn -B -q -DskipTests package;
+    docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:$TRAVIS_TAG .;
+    docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
+    docker push quay.io/microcks/microcks-async-minion:$TRAVIS_TAG;
     fi

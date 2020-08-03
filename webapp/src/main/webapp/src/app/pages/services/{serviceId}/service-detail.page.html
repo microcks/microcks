@@ -1,0 +1,365 @@
+<div class="form-group pull-right">
+  <pfng-toast-notification-list [notifications]="notifications" 
+      (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
+  </pfng-toast-notification-list>
+</div>
+
+<div *ngIf="serviceView | async as view">
+  <div class="container-fluid breadcrumb-bar">
+    <div class="row">
+      <ol class="breadcrumb">
+        <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
+        <li>{{ view.service.name }} - {{ view.service.version }}</li>
+      </ol>
+    </div>
+  </div>
+
+  <h1>{{ view.service.name }} - {{ view.service.version }}</h1>
+  <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn | timeAgo }}, last update on {{ view.service.metadata.lastUpdate | date : 'medium'  }}</small>
+
+  <div *ngIf="view.service.metadata" class="metadata-labels">
+    <label-list [metadata]="view.service.metadata"></label-list>
+    <button type="button" class="btn btn-link" *ngIf="hasRole('admin') || hasRole('manager')" (click)="openEditLabels()">Edit Labels</button>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8">
+      <h3 class="section-label">Properties</h3>
+      <dl class="dl-horizontal left">
+        <dt>Service Type:</dt>
+        <dd>
+          <span class="label label-primary" *ngIf="view.service.type === 'SOAP_HTTP'">SOAP</span>
+          <span class="label label-success" *ngIf="view.service.type === 'REST'">REST</span>
+          <span class="label label-warning" *ngIf="view.service.type === 'EVENT'">EVENT</span>
+          <span class="label label-info" *ngIf="view.service.type === 'GENERIC_REST'">DYNAMIC</span>
+        </dd>
+        <span *ngIf="view.service.type === 'SOAP_HTTP'">
+          <dt>Namespace:</dt>
+          <dd><code>{{ view.service.xmlNS }}</code></dd>
+        </span>
+        <dt>Contracts:</dt>
+        <dd>
+          <a *ngFor="let contract of contracts | async" href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
+            {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i>
+          </a>
+          <div *ngIf="!contracts | async">
+            No contracts attached
+          </div>
+          <span *ngIf="view.service.type === 'GENERIC_REST'">
+            <a href="/api/resources/{{ view.service.id }}/swagger_20" target="new" alt="Swagger 2.0 spec">
+              Swagger 2.0 spec <i class="glyphicon glyphicon-globe"></i>
+            </a> <br/>
+            <a href="/api/resources/{{ view.service.id }}/openapi_30" target="new" alt="OpenAPI 3.0 spec">
+              OpenAPI 3.0 spec <i class="glyphicon glyphicon-globe"></i>
+            </a>
+          </span>
+        </dd>
+        <dt>Statistics:</dt>
+        <dd>
+          <a href="#/admin/invocations/{{ view.service.name }}/{{ view.service.version }}">Mocks invocations <i class="glyphicon glyphicon-signal"></i></a>
+        </dd>
+      </dl>
+    </div>
+    <div class="col-md-4">
+      <h3 class="section-label" [ngSwitch]="view.service.type">
+        <span *ngSwitchCase="'GENERIC_REST'">Resources</span>
+        <span *ngSwitchDefault>Tests</span>
+      </h3>
+      <test-bar-chart *ngIf="view.service.type != 'GENERIC_REST'" [data]="serviceTests"></test-bar-chart>
+      <div class="row" *ngIf="view.service.type != 'GENERIC_REST'">
+        <div class="col-sm-6">
+          <a [routerLink]="['/tests/service', view.service.id]"><i class="glyphicon glyphicon-time"></i> View Tests Runs</a>
+        </div>
+        <div class="col-sm-6">
+          <button class="btn btn-primary" (click)="gotoCreateTest()">
+            <span class="fa fa-plus"></span> New Test
+          </button>
+        </div>
+      </div>
+
+      <span *ngIf="view.service.type == 'GENERIC_REST'">
+        <p>
+          You may have already used this Dynamic API to record resources.<br/>
+          Check <a (click)="openResources()">what's in the repository <i class="glyphicon glyphicon-transfer"></i></a>.
+        </p>
+      </span>
+    </div>
+  </div>
+
+  <div>
+    <h3 class="section-label">Operations</h3>
+  </div>
+
+  <div class="container-fluid">
+    <pfng-list id="operationsList"
+        [actionTemplate]="actionTemplate"
+        [config]="operationsListConfig"
+        [expandTemplate]="operationDetailTemplate"
+        [items]="operations"
+        [itemTemplate]="operationTemplate"
+        (onActionSelect)="handleAction($event, null)"
+        (onDblClick)="handleDblClick($event)"
+        (onSelectionChange)="handleSelectionChange($event)">
+      
+        <ng-template #operationTemplate let-item="item" let-index="index">
+          <div class="list-pf-left">
+          </div>
+          <div class="list-pf-content-wrapper">
+            <div class="list-pf-main-content">
+              <div class="list-pf-title">{{ item.name }}</div>
+              <div class="list-pf-description text-overflow-pf">
+                <span [ngSwitch]="item.method">
+                  <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                  <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
+                  <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                  <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
+                  <span class="label label-info" *ngSwitchDefault>{{ item.method }}</span>
+                </span>
+                <span *ngIf="item.dispatcher">
+                  with <code>{{ item.dispatcher }}</code> dispatcher
+                </span>
+              </div>
+            </div>
+            <div class="list-pf-additional-content">
+              <div>
+                <span class="pficon pficon-image"> </span>
+                <strong>  {{ view.messagesMap[item.name].length }}</strong> sample(s)
+              </div>
+            </div>
+            
+            <div class="list-view-pf-actions">
+              <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="view.service.type === 'REST' && (hasRole('admin') || hasRole('manager'))">
+                <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+                  <span class="fa fa-ellipsis-v"></span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
+                  <li><a [routerLink]="['operation', item.name]">Edit Properties</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <ng-template #operationDetailTemplate let-item="item" let-index="index">
+          <h4 class="section-label no-margin-top">Dispatching Properties</h4>
+          <div class="row">
+            <div class="col-md-6">
+              <dl class="dl-horizontal left">
+              <span *ngIf="view.service.type === 'SOAP_HTTP'">
+                <dt>Message Input Name:</dt>
+                <dd><code>{{ item.inputName }}</code></dd>
+              </span>
+              <span *ngIf="view.service.type != 'EVENT'">
+                <dt>Dispatcher:</dt>
+                <dd><code>{{ item.dispatcher }}</code> &nbsp; 
+                  <span class="learn-more-inline">
+                    <a href="https://microcks.github.io">Learn More 
+                      <i class="fa fa-external-link" aria-hidden="true"></i>
+                    </a>
+                  </span>
+                </dd>
+                <dt>Dispatching rules:</dt>
+                <dd><code class="code-block">{{ item.dispatcherRules }}</code></dd>
+              </span>
+              <span *ngIf="view.service.type === 'EVENT'">
+                <dt>Frequency:</dt>
+                <dd>{{ item.defaultDelay || 30 }} s</dd>
+                <dt>Available bindings:</dt>
+                <dd>
+                  {{ getBindingsList(item) }} &nbsp; 
+                  <span class="learn-more-inline">
+                    <a href="https://microcks.github.io">Learn More 
+                      <i class="fa fa-external-link" aria-hidden="true"></i>
+                    </a>
+                  </span>
+                </dd>
+              </span>
+              </dl>
+            </div>
+            <div class="col-md-6">
+              <dl class="dl-horizontal left" *ngIf="view.service.type == 'EVENT'">
+                <span *ngIf="hasBinding(item, 'KAFKA')">
+                  <dt>Kafka endpoint:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('KAFKA') }}</a></dd>
+                </span>
+              </dl>
+              <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
+              <span *ngIf="view.service.type === 'SOAP_HTTP'">
+                <dt>Message Output Name:</dt>
+                <dd><code>{{ item.outputName }}</code></dd>
+              </span>
+              <dt>HTTP Verb:</dt>
+              <dd>
+                <div [ngSwitch]="item.method">
+                  <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                  <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
+                  <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                  <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
+                  <span class="label label-info" *ngSwitchDefault>{{ item.method }}</span>
+                </div>
+              </dd>
+              <dt>Default delay:</dt>
+              <dd>{{ item.defaultDelay || 0 }} ms</dd>
+              </dl>
+            </div>
+          </div>
+          <dl class="dl-horizontal left" *ngIf="view.service.type == 'GENERIC_REST'">
+            <dt>Mock URL:</dt>
+            <dd>
+              <div class="input-group">
+                <input type="text" class="form-control" value="{{ formatMockUrl(item, null) }}" disabled/>
+                <span class="input-group-addon">
+                  <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                    (click)="copyToClipboard(formatMockUrl(item, null))"></i>
+                </span>
+              </div>
+            </dd>
+          </dl>
+
+          <h4 class="section-label" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">Parameter Constraints</h4>
+          <div class="row" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">
+            <div class="col-md-6">
+              <dl class="dl-horizontal left">
+                <span *ngFor="let constraint of item.parameterConstraints">
+                  <span *ngIf="constraint.in === 'query'">
+                    <dt>Query param {{ constraint.name }}:</dt>
+                    <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
+                  </span>
+                </span>
+              </dl>
+            </div>
+            <div class="col-md-6">
+              <dl class="dl-horizontal left">
+                <span *ngFor="let constraint of item.parameterConstraints">
+                  <span *ngIf="constraint.in === 'header'">
+                    <dt>Header {{ constraint.name }}:</dt>
+                    <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
+                  </span>
+                </span>
+              </dl>
+            </div>
+          </div>
+
+          <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
+          <tabset>
+            <tab *ngFor="let exchange of view.messagesMap[item.name]" heading="{{ getHeaderName(exchange) }}">
+              <div class="row" *ngIf="view.service.type === 'EVENT'">
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Message</h5>
+                  <dl class="dl-horizontal left">
+                    <dt>Content Type:</dt>
+                    <dd><code><small>{{ exchange.eventMessage.mediaType }}</small></code></dd>
+                  </dl>
+                  <pre *ngIf="exchange.eventMessage.content"><code [highlight]="exchange.eventMessage.content"></code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="exchange.eventMessage.headers">
+                    <thead>
+                      <tr>
+                        <th>Header name</th>
+                        <th>Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let header of exchange.eventMessage.headers">
+                        <td>{{ header.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Bindings details</h5>
+                  <span *ngIf="hasBinding(item, 'KAFKA')">
+                    <dl class="dl-horizontal left">
+                      <dt>Kafka topic:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage) }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                              (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage))"></i>
+                          </span>
+                        </div>
+                      </dd>
+                      <dt>Kafka Key type:</dt>
+                      <dd>{{ getBindingProperty(item, 'KAFKA', 'keyType') }}</dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'AMQP1')">
+                    <dl>
+                      <dt>AMQP destination</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="topic/UsersignedupAPI_0.1.0_user-signedup" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                              (click)="copyToClipboard('topic/UsersignedupAPI_0.1.0_user-signedup')"></i>
+                          </span>
+                        </div>
+                      </dd>
+                    </dl>
+                  </span>
+                </div>
+              </div>
+              <div class="row" *ngIf="view.service.type != 'EVENT'">
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Request</h5>
+                  <dl>
+                    <dt>Mock URL</dt>
+                    <dd>
+                      <div class="input-group">
+                        <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria) }}" disabled/>
+                        <span class="input-group-addon">
+                          <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                            (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria))"></i>
+                        </span>
+                      </div>
+                    </dd>
+                  </dl>
+                  <pre *ngIf="exchange.request.content"><code [highlight]="exchange.request.content"></code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
+                    <thead>
+                      <tr>
+                        <th>Header name</th>
+                        <th>Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let header of exchange.request.headers">
+                        <td>{{ header.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-md-6">
+                  <h5 class="subsection-label">Response</h5>
+                  <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST'">
+                    <dt>Response Code and Type:</dt>
+                    <dd>
+                      <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
+                    </dd>
+                  </dl>
+                  <pre *ngIf="exchange.response.content"><code [highlight]="exchange.response.content"></code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="exchange.response.headers">
+                    <thead>
+                      <tr>
+                        <th>Header name</th>
+                        <th>Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let header of exchange.response.headers">
+                        <td>{{ header.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </tab>
+          </tabset>
+        </ng-template>
+
+    </pfng-list>
+  </div>
+</div>
