@@ -40,8 +40,7 @@ services:
       - mongo
       - postman
       - keycloak
-    #image: quay.io/microcks/microcks:nightly
-    image: lbroudoux/microcks:latest
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - ./config:/deployments/config
