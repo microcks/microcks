@@ -5,7 +5,7 @@
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
   <packaging>pom</packaging>
-  <version>1.0.0-RC2-SNAPSHOT</version>
+  <version>1.0.0</version>
   <modules>
     <module>commons/model</module>
     <module>commons/util-el</module>
@@ -41,7 +41,7 @@
     <connection>scm:git:https://github.com/microcks/microcks.git</connection>
     <developerConnection>scm:git:https://github.com/microcks/microcks.git</developerConnection>
     <url>http://github.com/microcks/microcks/</url>
-    <tag>HEAD</tag>
+    <tag>1.0.0</tag>
   </scm>
 
   <distributionManagement>
