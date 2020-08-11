@@ -4,7 +4,7 @@ microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-microcks-ingress
-  image: quay.io/microcks/microcks:nightly
+  image: quay.io/microcks/microcks:latest
   replicas: 1
   
 postman:
@@ -60,7 +60,7 @@ features:
     defaultBinding: KAFKA
     defaultFrequency: 10
     
-    image: quay.io/microcks/microcks-async-minion:nightly
+    image: quay.io/microcks/microcks-async-minion:latest
 
     kafka:
       install: true
