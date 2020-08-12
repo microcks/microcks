@@ -6,6 +6,8 @@ Resources within this directory are intended to work with Helm version 3+ (which
 
 ## Installing the Chart
 
+### Simple install - with no asynchronous mocking
+
 From the [Helm Hub](https://hub.helm.sh) directly - assuming here for the example, you are running `minikube`:
 
 ```console
@@ -71,6 +73,58 @@ Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to prote
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into 'microcks-keycloak-admin' secret.
 ```
+
+### Advanced install - with asynchronous mocking
+
+Since release `1.0.0`, Microcks support mocking of event-driven API thanks to [AsyncAPI Spec](https://asyncapi.com). Microcks will take car of publishing sample messages for you on a message broker. You mey reuse an existing broker of let Microcks deploy its own (this is the default when turning on this feature).
+
+To install a Kafka message broker during its deployment, Microcks relies on [Strimzi Operator](https://strimzi.io) and will try to create such custom resources such as `Kafka` and `KafkaTopic`. When using this configuration, you will thus need to install Strimzi Operator cluster-wide or on targeted namespace.
+
+Here's some commands below on how to do that onto a Minikube instance:
+
+```console
+$ helm repo add strimzi https://strimzi.io/charts/
+$ helm repo add microcks https://microcks.io/helm
+
+$ kubectl create namespace microcks
+
+$ helm install strimzi strimzi/strimzi-kafka-operator --namespace microcks
+
+$ helm install microcks ./microcks --namespace=microcks \
+    --set appName=microcks --set features.async.enabled=true \
+    --set microcks.url=microcks.$(minikube ip).nip.io \
+    --set keycloak.url=keycloak.$(minikube ip).nip.io \
+    --set features.async.kafka.url=$(minikube ip).nip.io 
+
+NAME: microcks
+LAST DEPLOYED: Mon Aug 10 19:22:38 2020
+NAMESPACE: microcks
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Thank you for installing microcks.
+
+Your release is named microcks.
+
+To learn more about the release, try:
+
+  $ helm status microcks
+  $ helm get microcks
+
+Microcks is available at https://microcks.192.168.64.6.nip.io.
+
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to protect user access.
+You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
+username and password found into 'microcks-keycloak-admin' secret.
+
+Kafka broker has been deployed on microcks-kafka.192.168.64.6.nip.io.
+It has been exposed using TLS passthrough of the Ingress controller, you shoud extract the certificate for your client using:
+
+  $ kubectl get secret microcks-kafka-cluster-ca-cert -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
+```
+
+[This video](https://www.youtube.com/watch?v=u7SP1bQ8_FE) details the setup.
 
 ## Configuration
 

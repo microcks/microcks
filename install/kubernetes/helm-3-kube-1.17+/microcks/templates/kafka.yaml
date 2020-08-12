@@ -1,4 +1,4 @@
-{{- if .Values.features.async.kafka.install }}
+{{- if and .Values.features.async.enabled .Values.features.async.kafka.install }}
 kind: Kafka
 apiVersion: kafka.strimzi.io/v1beta1
 metadata:
