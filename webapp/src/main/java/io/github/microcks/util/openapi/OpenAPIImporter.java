@@ -353,6 +353,14 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       Iterator<JsonNode> parameters = node.path("parameters").elements();
       while (parameters.hasNext()) {
          JsonNode parameter = parameters.next();
+
+         // If parameter is a $ref, navigate to it first.
+         if (parameter.has("$ref")) {
+            // $ref: '#/components/parameters/accountId'
+            String ref = parameter.path("$ref").asText();
+            parameter = spec.at(ref.substring(1));
+         }
+
          String parameterName = parameter.path("name").asText();
 
          if (parameter.has("in") && parameter.path("in").asText().equals(parameterType)
@@ -494,6 +502,30 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       return response.path("content");
    }
 
+   /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2)*/
+   private String extractOperationParams(JsonNode operation) {
+      StringBuilder params = new StringBuilder();
+      Iterator<JsonNode> parameters = operation.path("parameters").elements();
+      while (parameters.hasNext()) {
+         JsonNode parameter = parameters.next();
+         // If parameter is a $ref, navigate to it first.
+         if (parameter.has("$ref")) {
+            // $ref: '#/components/parameters/accountId'
+            String ref = parameter.path("$ref").asText();
+            parameter = spec.at(ref.substring(1));
+         }
+
+         String parameterIn = parameter.path("in").asText();
+         if (!"path".equals(parameterIn)) {
+            if (params.length() > 0) {
+               params.append(" && ");
+            }
+            params.append(parameter.path("name").asText());
+         }
+      }
+      return params.toString();
+   }
+
    /** Check parameters presence into given operation node. */
    private static boolean operationHasParameters(JsonNode operation, String parameterType) {
       if (!operation.has("parameters")) {
@@ -508,23 +540,6 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          }
       }
       return false;
-   }
-
-   /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2)*/
-   private static String extractOperationParams(JsonNode operation) {
-      StringBuilder params = new StringBuilder();
-      Iterator<JsonNode> parameters = operation.path("parameters").elements();
-      while (parameters.hasNext()) {
-         JsonNode parameter = parameters.next();
-         String parameterIn = parameter.path("in").asText();
-         if (!"path".equals(parameterIn)) {
-            if (params.length() > 0) {
-               params.append(" && ");
-            }
-            params.append(parameter.path("name").asText());
-         }
-      }
-      return params.toString();
    }
 
    /** Check variables parts presence into given url. */

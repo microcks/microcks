@@ -1,0 +1,60 @@
+openapi: 3.0.1
+info:
+  title: Sample API
+  version: '1.0'
+paths:
+  /accounts/{accountId}:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/accountId"
+      responses:
+        200:
+          $ref: "#/components/responses/OK_200_AccountDetails"
+
+components:
+  parameters:
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        $ref: "#/components/schemas/accountId"
+      examples:
+        "Example 1":
+          value: 396be545-e2d4-4497-a5b5-700e89ab99c0
+
+  responses:
+    OK_200_AccountDetails:
+      description: OK
+      content:
+        application/json:
+          schema:
+            type: object
+            required:
+              - account
+            properties:
+              account:
+                $ref: "#/components/schemas/accountDetails"
+          examples:
+            "Example 1":
+              $ref: "#/components/examples/accountDetailsRegularAccount"
+
+  schemas:
+    accountId:
+      type: string
+      format: uuid
+    accountDetails:
+      type: object
+      properties:
+        resourceId:
+          type: string
+
+  examples:
+    accountDetailsRegularAccount:
+      value:
+        {
+          "account":
+            {
+              "resourceId": "f377afb3-5c62-40cc-8f07-1f4749a780eb",
+            }
+        }

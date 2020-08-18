@@ -718,6 +718,81 @@ public class OpenAPIImporterTest {
       }
    }
 
+   @Test
+   public void testParameterRefsOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/param-refs-openapi.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Sample API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+      assertEquals(ResourceType.OPEN_API_SPEC, resources.get(0).getType());
+      assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
+      assertNotNull(resources.get(0).getContent());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+
+         if ("GET /accounts/{accountId}".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+            assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+            assertEquals("accountId", operation.getDispatcherRules());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals("/accounts/396be545-e2d4-4497-a5b5-700e89ab99c0", operation.getResourcePaths().get(0));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+
+                  if ("Example 1".equals(request.getName())) {
+                     assertEquals("/accountId=396be545-e2d4-4497-a5b5-700e89ab99c0", response.getDispatchCriteria());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                     assertEquals("{\"account\":{\"resourceId\":\"f377afb3-5c62-40cc-8f07-1f4749a780eb\"}}", response.getContent());
+                  }
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
 
    private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {
       // Check that basic service properties are there.
