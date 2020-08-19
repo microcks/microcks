@@ -24,6 +24,7 @@ import com.eviware.soapui.config.RESTMockResponseConfig;
 import com.eviware.soapui.impl.rest.mock.RestMockResponse;
 import com.eviware.soapui.impl.rest.mock.RestMockService;
 import com.eviware.soapui.impl.rest.support.RestParamsPropertyHolder;
+import com.eviware.soapui.impl.support.AbstractInterface;
 import com.eviware.soapui.impl.wsdl.WsdlInterface;
 import com.eviware.soapui.impl.wsdl.WsdlOperation;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
@@ -37,6 +38,7 @@ import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequest;
 import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestStep;
 import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestRequest;
 import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestRequestStep;
+import com.eviware.soapui.model.iface.Interface;
 import com.eviware.soapui.model.mock.MockOperation;
 import com.eviware.soapui.model.mock.MockResponse;
 import com.eviware.soapui.model.mock.MockService;
@@ -106,39 +108,51 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       WsdlMockService wsdlMockService = project.getMockServiceByName(service.getName());
 
       if (wsdlMockService != null){
-         // Use only the fisrt interface of the mock service corresponding to service.
+         // Use only the first interface of the mock service corresponding to service.
          WsdlInterface wi = project.getMockServiceByName(service.getName()).getMockedInterfaces()[0];
 
-         List<DefintionPartConfig> parts = wi.getConfig().getDefinitionCache().getPartList();
+         // Find the name of the definition we must look for within all interfaces.
+         String definitionName = wi.getConfig().getDefinition();
 
-         if (parts != null && parts.size() > 0){
-            // First part is always the wsdl definition, get its content as string.
-            String wsdlContent = parts.get(0).getContent().newCursor().getTextValue();
+         List<Interface> pis = project.getInterfaceList();
 
-            // Then browse the following one (XSD) and change relative path in imports.
-            for (int i=1; i<parts.size(); i++){
-               DefintionPartConfig xsdConfig = parts.get(i);
-               String xsdUrl = xsdConfig.getUrl();
-               String xsdName = xsdUrl.substring(xsdUrl.lastIndexOf('/') + 1);
-               String xsdContent = xsdConfig.getContent().newCursor().getTextValue();
+         for (Interface pi : pis) {
+            if (pi instanceof WsdlInterface) {
+               WsdlInterface candidateWI = (WsdlInterface)pi;
 
-               // Build a new xsd resource for this part.
-               Resource xsdResource = new Resource();
-               xsdResource.setName(xsdName);
-               xsdResource.setType(ResourceType.XSD);
-               xsdResource.setContent(xsdContent);
-               results.add(xsdResource);
+               if (candidateWI.getDefinition().equals(definitionName)) {
+                  List<DefintionPartConfig> parts = candidateWI.getConfig().getDefinitionCache().getPartList();
+                  if (parts != null && parts.size() > 0) {
+                     // First part is always the wsdl definition, get its content as string.
+                     String wsdlContent = parts.get(0).getContent().newCursor().getTextValue();
 
-               // URL references within WSDL must be replaced by their local counterpart.
-               wsdlContent = wsdlContent.replace(xsdUrl, "./" + xsdName);
+                     // Then browse the following one (XSD) and change relative path in imports.
+                     for (int i = 1; i < parts.size(); i++) {
+                        DefintionPartConfig xsdConfig = parts.get(i);
+                        String xsdUrl = xsdConfig.getUrl();
+                        String xsdName = xsdUrl.substring(xsdUrl.lastIndexOf('/') + 1);
+                        String xsdContent = xsdConfig.getContent().newCursor().getTextValue();
+
+                        // Build a new xsd resource for this part.
+                        Resource xsdResource = new Resource();
+                        xsdResource.setName(xsdName);
+                        xsdResource.setType(ResourceType.XSD);
+                        xsdResource.setContent(xsdContent);
+                        results.add(xsdResource);
+
+                        // URL references within WSDL must be replaced by their local counterpart.
+                        wsdlContent = wsdlContent.replace(xsdUrl, "./" + xsdName);
+                     }
+
+                     // Finally, declare englobing wsdl resource.
+                     Resource wsdlResource = new Resource();
+                     wsdlResource.setName(service.getName() + "-" + service.getVersion() + ".wsdl");
+                     wsdlResource.setType(ResourceType.WSDL);
+                     wsdlResource.setContent(wsdlContent);
+                     results.add(wsdlResource);
+                  }
+               }
             }
-
-            // Finally, declare englobing wsdl resource.
-            Resource wsdlResource = new Resource();
-            wsdlResource.setName(service.getName() + "-" + service.getVersion() + ".wsdl");
-            wsdlResource.setType(ResourceType.WSDL);
-            wsdlResource.setContent(wsdlContent);
-            results.add(wsdlResource);
          }
       }
       return results;

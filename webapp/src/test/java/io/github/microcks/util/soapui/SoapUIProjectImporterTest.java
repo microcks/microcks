@@ -426,4 +426,34 @@ public class SoapUIProjectImporterTest {
       }
       assertEquals(1, services.size());
    }
+
+   @Test
+   public void testMultipleInterfacesProjectImport() {
+      SoapUIProjectImporter importer = null;
+      try {
+         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/GetDrivers-soapui-project.xml");
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("DriverSoap", service.getName());
+      assertEquals("http://www.itra.com", service.getXmlNS());
+      assertEquals("1.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(services.get(0));
+      assertEquals(1, resources.size());
+      Resource resource = resources.get(0);
+      Assert.assertEquals(ResourceType.WSDL, resource.getType());
+      assertEquals("DriverSoap-1.0.wsdl", resource.getName());
+      assertNotNull(resource.getContent());
+   }
 }
