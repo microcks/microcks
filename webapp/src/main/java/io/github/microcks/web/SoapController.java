@@ -105,7 +105,7 @@ public class SoapController {
 
       if (operationName != null) {
          for (Operation operation : service.getOperations()) {
-            if (operationName.equals(operation.getInputName())) {
+            if (operationName.equals(operation.getInputName()) || operationName.equals(operation.getName())) {
                rOperation = operation;
                log.info("Found valid operation {}", rOperation.getName());
                break;
