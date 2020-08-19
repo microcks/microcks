@@ -47,6 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -59,6 +60,8 @@ public class SoapController {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(SoapController.class);
+
+   private static Pattern operationCapturePattern = Pattern.compile("(.*):Body>(\\s*)<((\\w+):|)(?<operation>\\w+)(.*)(/)?>(.*)", Pattern.DOTALL);
 
    @Autowired
    private ServiceRepository serviceRepository;
@@ -83,7 +86,6 @@ public class SoapController {
          HttpServletRequest request
       ) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
-      log.debug("Toto");
       log.debug("Request body: " + body);
 
       long startTime = System.currentTimeMillis();
@@ -96,12 +98,18 @@ public class SoapController {
       // Retrieve service and correct operation.
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
-      for (Operation operation : service.getOperations()) {
-         // Enhancement : try getting operation from soap:body directly!
-         if (hasPayloadCorrectStructureForOperation(body, operation.getInputName())) {
-            rOperation = operation;
-            log.info("Found valid operation {}", rOperation.getName());
-            break;
+
+      // Enhancement : try getting operation from soap:body directly!
+      String operationName = extractOperationName(body);
+      log.debug("Extracted operation name from payload: {}", operationName);
+
+      if (operationName != null) {
+         for (Operation operation : service.getOperations()) {
+            if (operationName.equals(operation.getInputName())) {
+               rOperation = operation;
+               log.info("Found valid operation {}", rOperation.getName());
+               break;
+            }
          }
       }
 
@@ -165,7 +173,7 @@ public class SoapController {
          return new ResponseEntity<Object>(responseContent, responseHeaders, HttpStatus.OK);
       }
 
-      log.debug("No valid operation found and Microcks...");
+      log.debug("No valid operation found by Microcks...");
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
    }
 
@@ -178,10 +186,25 @@ public class SoapController {
    protected boolean hasPayloadCorrectStructureForOperation(String payload, String operationName) {
       String openingPattern = "(.*):Body>(\\s*)<((\\w+):|)" + operationName + "(.*)>(.*)";
       String closingPattern = "(.*)</((\\w+):|)" + operationName + ">(\\s*)</(.*):Body>(.*)";
+      String shortPattern = "(.*):Body>(\\s*)<((\\w+):|)" + operationName + "(.*)/>(\\s*)</(.*):Body>(.*)";
 
       Pattern op = Pattern.compile(openingPattern, Pattern.DOTALL);
       Pattern cp = Pattern.compile(closingPattern, Pattern.DOTALL);
-      return (op.matcher(payload).matches() && cp.matcher(payload).matches());
+      Pattern sp = Pattern.compile(shortPattern, Pattern.DOTALL);
+      return (op.matcher(payload).matches() && cp.matcher(payload).matches()) || sp.matcher(payload).matches();
+   }
+
+   /**
+    * Extract operation name from payload. Indeed we extract the wrapping element name inside SOAP body.
+    * @param payload SOAP payload to extract from
+    * @return The wrapping Xml element name with body if matches SOAP. Null otherwise.
+    */
+   protected String extractOperationName(String payload) {
+      Matcher matcher = operationCapturePattern.matcher(payload);
+      if (matcher.find()) {
+         return matcher.group("operation");
+      }
+      return null;
    }
 
    private String getDispatchCriteriaFromXPathEval(Operation operation, String body) {
