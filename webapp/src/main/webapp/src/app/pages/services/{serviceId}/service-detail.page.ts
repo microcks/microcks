@@ -242,11 +242,12 @@ export class ServiceDetailPageComponent implements OnInit {
           }
         });
       
-        operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
+        //operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
+        operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function(match, p1, string) {
           return parts[p1];
         });
         // Support also Postman syntax with /:part
-        operationName = operationName.replace(/:(\w+)/g, function(match, p1, string) {
+        operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, function(match, p1, string) {
           return parts[p1];
         });
         if (paramsCriteria != null) {
