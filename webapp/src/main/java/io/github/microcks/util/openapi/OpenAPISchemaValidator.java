@@ -32,6 +32,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class OpenAPISchemaValidator {
    };
 
    /**
-    * Check if a Json object is valid againts the given OpenAPI schema specification.
+    * Check if a Json object is valid against the given OpenAPI schema specification.
     * @param schemaText The OpenAPI schema specification as a string
     * @param jsonText The Json object as a string
     * @return True if Json object is valid, false otherwise
@@ -108,6 +109,47 @@ public class OpenAPISchemaValidator {
    }
 
    /**
+    * Validate a Json object representing an OpenAPI message (response or request) against a node representing
+    * a full OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
+    * for <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
+    * schema informations. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
+    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
+    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
+    * as validation errors. It returns a list of validation error messages.
+    * @param specificationNode The OpenAPI full sepcification as a Jackson node
+    * @param jsonNode The Json object representing actual message as a Jackson node
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param contentType The Content-Type of the message to valid
+    * @return The list of validation failures. If empty, json object is valid !
+    */
+   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode, String messagePathPointer, String contentType) {
+      // Extract specific content type node for message node.
+      JsonNode messageNode = specificationNode.at(messagePathPointer);
+      if (messageNode == null || messageNode.isMissingNode()) {
+         log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
+         return Arrays.asList("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
+      }
+      // Message node can be just a reference.
+      if (messageNode.has("$ref")) {
+         String ref = messageNode.path("$ref").asText();
+         messageNode = specificationNode.at(ref.substring(1));
+      }
+      // Extract message corresponding to contentType.
+      messageNode = messageNode.at("/content/" + contentType.replace("/", "~1"));
+      if (messageNode == null || messageNode.isMissingNode()) {
+         log.debug("content for {} cannot be found into OpenAPI specification", contentType);
+         return Arrays.asList("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+      }
+
+      // Build a schema object with responseNode schema as root and by importing
+      // all the common parts that may be referenced by references.
+      JsonNode schemaNode = messageNode.path("schema").deepCopy();
+      ((ObjectNode) schemaNode).set("components", specificationNode.path("components").deepCopy());
+
+      return validateJson(schemaNode, jsonNode);
+   }
+
+   /**
     * Get a Jackson JsonNode representation for Json object.
     * @param jsonText The Json object as a string
     * @return The Jackson JsonNode corresponding to json object string
@@ -138,7 +180,7 @@ public class OpenAPISchemaValidator {
             isYaml = false;
             break;
          }
-         if (line.startsWith("---")) {
+         if (line.startsWith("---") || line.startsWith("openapi: ")) {
             isYaml = true;
             break;
          }

@@ -18,6 +18,8 @@
  */
 package io.github.microcks.util.openapi;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
@@ -189,5 +191,91 @@ public class OpenAPISchemaValidatorTest {
             errors.get(0));
       assertEquals("instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])",
             errors.get(1));
+   }
+
+   @Test
+   public void testFullProcedureFromOpenAPIResource() {
+      String openAPIText = null;
+      String jsonText = "[\n" +
+            "  { \"account\": { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } },\n" +
+            "  { \"account\": { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" } }\n" +
+            "]";
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText =  FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts/get/responses/200", "application/json");
+      assertTrue(errors.isEmpty());
+
+
+      // Now try with another message.
+      jsonText = "{ \"account\": {\"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+
+      try {
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts/{accountId} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/json");
+      assertTrue(errors.isEmpty());
+   }
+
+   @Test
+   public void testFullProcedureFromOpenAPIResourceFailure() {
+      String openAPIText = null;
+      String jsonText = "[\n" +
+            "  { \"account\": { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\", \"id\": \"01\" } },\n" +
+            "  { \"account\": { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\", \"id\": \"01\" } }\n" +
+            "]";
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText =  FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts/get/responses/200", "application/json");
+      assertFalse(errors.isEmpty());
+
+
+      // Now try with another message.
+      jsonText = "{ \"account\": {\"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+
+      try {
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts/{accountId} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/json");
+      assertFalse(errors.isEmpty());
    }
 }
