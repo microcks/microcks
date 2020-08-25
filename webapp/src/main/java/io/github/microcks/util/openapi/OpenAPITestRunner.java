@@ -105,47 +105,42 @@ public class OpenAPITestRunner extends HttpTestRunner {
          }
       }
 
-      // Retrieve the resource corresponding to OpenAPI specification if any.
-      Resource openapiSpecResource = null;
-      List<Resource> resources = resourceRepository.findByServiceId(service.getId());
-      for (Resource resource : resources) {
-         if (ResourceType.OPEN_API_SPEC.equals(resource.getType())) {
-            openapiSpecResource = resource;
-            break;
+      // Do not try to validate response content if no content provided ;-)
+      if (responseCode != 204) {
+         // Retrieve the resource corresponding to OpenAPI specification if any.
+         Resource openapiSpecResource = null;
+         List<Resource> resources = resourceRepository.findByServiceId(service.getId());
+         for (Resource resource : resources) {
+            if (ResourceType.OPEN_API_SPEC.equals(resource.getType())) {
+               openapiSpecResource = resource;
+               break;
+            }
          }
-      }
-      if (openapiSpecResource == null) {
-         log.debug("Do not found any OpenAPI specification resource for service {0}, so failing validating", service.getId());
-         return TestReturn.FAILURE_CODE;
-      }
+         if (openapiSpecResource == null) {
+            log.debug("Do not found any OpenAPI specification resource for service {0}, so failing validating", service.getId());
+            return TestReturn.FAILURE_CODE;
+         }
 
-      JsonNode openapiSpec = null;
-      try {
-         openapiSpec = OpenAPISchemaValidator.getJsonNodeForSchema(openapiSpecResource.getContent());
-      } catch (IOException ioe) {
-         log.debug("OpenAPI specification cannot be transformed into valid JsonNode schema, so failing");
-         return TestReturn.FAILURE_CODE;
-      }
+         JsonNode openapiSpec = null;
+         try {
+            openapiSpec = OpenAPISchemaValidator.getJsonNodeForSchema(openapiSpecResource.getContent());
+         } catch (IOException ioe) {
+            log.debug("OpenAPI specification cannot be transformed into valid JsonNode schema, so failing");
+            return TestReturn.FAILURE_CODE;
+         }
 
-      // Extract JsonNode corresponding to response.
-      String verb = operation.getName().split(" ")[0].toLowerCase();
-      String path = operation.getName().split(" ")[1].trim();
+         // Extract JsonNode corresponding to response.
+         String verb = operation.getName().split(" ")[0].toLowerCase();
+         String path = operation.getName().split(" ")[1].trim();
 
-      // Sanitize charset information from media-type.
-      String contentType = httpResponse.getHeaders().getContentType().toString();
-      if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-         contentType = contentType.substring(0, contentType.indexOf(";"));
-      }
-      log.debug("Response media-type is {}", contentType);
+         // Sanitize charset information from media-type.
+         String contentType = httpResponse.getHeaders().getContentType().toString();
+         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+            contentType = contentType.substring(0, contentType.indexOf(";"));
+         }
+         log.debug("Response media-type is {}", contentType);
 
-      String pointer = "/paths/" + path.replace("/", "~1") + "/" + verb
-            + "/responses/" + responseCode + "/content/" + contentType.replace("/", "~1");
-      log.debug("Looking for responseNode at " + pointer);
-      JsonNode responseNode = openapiSpec.at(pointer);
-      log.debug("responseNode: " + responseNode);
 
-      // Is there a specified responseNode for this type ??
-      if (responseNode != null && !responseNode.isMissingNode()) {
          // Get body content as a string.
          JsonNode contentNode = null;
          try {
@@ -154,24 +149,14 @@ public class OpenAPITestRunner extends HttpTestRunner {
             log.debug("Response body cannot be accessed or transformed as Json, returning failure");
             return TestReturn.FAILURE_CODE;
          }
-
-         // Build a schema object with responseNode schema as root and by importing
-         // all the common parts that may be referenced by references.
-         JsonNode schemaNode = responseNode.path("schema").deepCopy();
-         ((ObjectNode) schemaNode).set("components", openapiSpec.path("components").deepCopy());
-
-         lastValidationErrors = OpenAPISchemaValidator.validateJson(schemaNode, contentNode);
+         String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb
+               + "/responses/" + responseCode;
+         lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openapiSpec, contentNode, jsonPointer, contentType;
          if (!lastValidationErrors.isEmpty()) {
             log.debug("OpenAPI schema validation errors found " + lastValidationErrors.size() + ", marking test as failed.");
             return TestReturn.FAILURE_CODE;
          }
          log.debug("OpenAPI schema validation of response is successful !");
-      } else {
-         // Do we still have a response body ??
-         if (httpResponse.getHeaders().getContentLength() > 0) {
-            log.debug("No response expected or defined but response has content, failing");
-            code = TestReturn.FAILURE_CODE;
-         }
       }
       return code;
    }
