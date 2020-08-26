@@ -47,7 +47,7 @@ public abstract class AbstractTestRunner<T>{
     * @param method The method that applies for requesting service (retrieved using buildMethod() method) 
     * @return A list of TestReturn corresponding to the result of test for each reference requests. Returns indices
     * matches reference request indices.
-    * @throws java.net.URISyntaxException if endpointUrl cannot be trasnformed as URI
+    * @throws java.net.URISyntaxException if endpointUrl cannot be transformed as URI
     * @throws java.io.IOException in case of network failure mainly
     */
    public abstract List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,

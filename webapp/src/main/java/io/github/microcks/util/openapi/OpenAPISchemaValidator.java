@@ -112,11 +112,11 @@ public class OpenAPISchemaValidator {
     * Validate a Json object representing an OpenAPI message (response or request) against a node representing
     * a full OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
     * for <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
-    * schema informations. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
+    * schema information. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
     * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
+    * explicitly set <code>additionalProperties</code> to false if you want to consider unknown attributes
     * as validation errors. It returns a list of validation error messages.
-    * @param specificationNode The OpenAPI full sepcification as a Jackson node
+    * @param specificationNode The OpenAPI full specification as a Jackson node
     * @param jsonNode The Json object representing actual message as a Jackson node
     * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
     * @param contentType The Content-Type of the message to valid
