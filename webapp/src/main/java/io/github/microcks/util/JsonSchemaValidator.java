@@ -44,6 +44,7 @@ public class JsonSchemaValidator {
    private static Logger log = LoggerFactory.getLogger(JsonSchemaValidator.class);
 
    public static final String JSON_V4_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-04/schema#";
+   public static final String JSON_V7_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-07/schema#";
    public static final String JSON_SCHEMA_IDENTIFIER_ELEMENT = "$schema";
 
    /**
@@ -136,7 +137,7 @@ public class JsonSchemaValidator {
    private static JsonSchema extractJsonSchemaNode(JsonNode jsonNode) throws ProcessingException {
       final JsonNode schemaIdentifier = jsonNode.get(JSON_SCHEMA_IDENTIFIER_ELEMENT);
       if (schemaIdentifier == null){
-         ((ObjectNode) jsonNode).put(JSON_SCHEMA_IDENTIFIER_ELEMENT, JSON_V4_SCHEMA_IDENTIFIER);
+         ((ObjectNode) jsonNode).put(JSON_SCHEMA_IDENTIFIER_ELEMENT, JSON_V7_SCHEMA_IDENTIFIER);
       }
 
       final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();

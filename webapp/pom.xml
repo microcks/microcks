@@ -125,17 +125,17 @@
     <dependency>
       <groupId>com.github.java-json-tools</groupId>
       <artifactId>json-schema-validator</artifactId>
-      <version>2.2.10</version>
+      <version>2.2.14</version>
     </dependency>
     <dependency>
       <groupId>com.github.java-json-tools</groupId>
       <artifactId>jackson-coreutils</artifactId>
-      <version>1.9</version>
+      <version>2.0</version>
     </dependency>
     <dependency>
       <groupId>com.github.java-json-tools</groupId>
       <artifactId>json-schema-core</artifactId>
-      <version>1.2.10</version>
+      <version>1.2.14</version>
     </dependency>
 
     <!-- Test related dependencies -->

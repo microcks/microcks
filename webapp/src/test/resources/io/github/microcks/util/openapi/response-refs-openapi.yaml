@@ -13,13 +13,13 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref": "#/components/schemas/accountDetails"
+                  $ref: "#/components/schemas/accountDetails"
               examples:
                 "Example 0":
                   value: |-
                     [
-                      { "account": { "resourceId": "396be545-e2d4-4497-a5b5-700e89ab99c0" } },
-                      { "account": { "resourceId": "f377afb3-5c62-40cc-8f07-1f4749a780eb" } }
+                      { "resourceId": "396be545-e2d4-4497-a5b5-700e89ab99c0" },
+                      { "resourceId": "f377afb3-5c62-40cc-8f07-1f4749a780eb" }
                     ]
   /accounts/{accountId}:
     get:
@@ -63,6 +63,9 @@ components:
       format: uuid
     accountDetails:
       type: object
+      additionalProperties: false
+      required:
+        - resourceId
       properties:
         resourceId:
           type: string

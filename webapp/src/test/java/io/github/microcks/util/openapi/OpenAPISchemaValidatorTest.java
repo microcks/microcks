@@ -197,8 +197,8 @@ public class OpenAPISchemaValidatorTest {
    public void testFullProcedureFromOpenAPIResource() {
       String openAPIText = null;
       String jsonText = "[\n" +
-            "  { \"account\": { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } },\n" +
-            "  { \"account\": { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" } }\n" +
+            "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n" +
+            "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" +
             "]";
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
@@ -240,8 +240,8 @@ public class OpenAPISchemaValidatorTest {
    public void testFullProcedureFromOpenAPIResourceFailure() {
       String openAPIText = null;
       String jsonText = "[\n" +
-            "  { \"account\": { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\", \"id\": \"01\" } },\n" +
-            "  { \"account\": { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\", \"id\": \"01\" } }\n" +
+            "  { \"resource\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\", \"id\": \"01\" },\n" +
+            "  { \"resource\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\", \"id\": \"01\" }\n" +
             "]";
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
@@ -261,10 +261,10 @@ public class OpenAPISchemaValidatorTest {
       List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
             "/paths/~1accounts/get/responses/200", "application/json");
       assertFalse(errors.isEmpty());
-
+      assertEquals(5, errors.size());
 
       // Now try with another message.
-      jsonText = "{ \"account\": {\"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+      jsonText = "{ \"account\": {\"resource\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
 
       try {
          // Extract JSON nodes using OpenAPISchemaValidator methods.
