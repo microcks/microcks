@@ -45,6 +45,9 @@ public class OpenAPITestRunner extends HttpTestRunner {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
 
+   /** Content-type for JSON that is the sole valid response type. */
+   private static final String APPLICATION_JSON_TYPE = "application/json";
+
    private ResourceRepository resourceRepository;
    private ResponseRepository responseRepository;
    private boolean validateResponseCode = false;
@@ -85,6 +88,17 @@ public class OpenAPITestRunner extends HttpTestRunner {
          return TestReturn.FAILURE_CODE;
       }
 
+      // Extract response content-type in any case.
+      String contentType = null;
+      if (httpResponse.getHeaders().getContentType() != null) {
+         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType().toString());
+         contentType = httpResponse.getHeaders().getContentType().toString();
+         // Sanitize charset information from media-type.
+         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+            contentType = contentType.substring(0, contentType.indexOf(";"));
+         }
+      }
+
       // If required, compare response code and content-type to expected ones.
       if (validateResponseCode) {
          Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
@@ -94,19 +108,15 @@ public class OpenAPITestRunner extends HttpTestRunner {
             return TestReturn.FAILURE_CODE;
          }
 
-         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType().toString());
-         // Sanitize charset information from media-type.
-         String contentType = httpResponse.getHeaders().getContentType().toString();
-         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-            contentType = contentType.substring(0, contentType.indexOf(";"));
-         }
          if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
             log.debug("Response Content-Type does not match expected one, returning failure");
          }
       }
 
       // Do not try to validate response content if no content provided ;-)
-      if (responseCode != 204) {
+      // Also do not try to schema validate something that is not application/json for now...
+      // Alternatives schemes are on their way for OpenAPI but not yet ready (see https://github.com/OAI/OpenAPI-Specification/pull/1736)
+      if (responseCode != 204 && APPLICATION_JSON_TYPE.equals(contentType)) {
          // Retrieve the resource corresponding to OpenAPI specification if any.
          Resource openapiSpecResource = null;
          List<Resource> resources = resourceRepository.findByServiceId(service.getId());
@@ -117,13 +127,13 @@ public class OpenAPITestRunner extends HttpTestRunner {
             }
          }
          if (openapiSpecResource == null) {
-            log.debug("Do not found any OpenAPI specification resource for service {0}, so failing validating", service.getId());
+            log.debug("Found no OpenAPI specification resource for service {0}, so failing validating", service.getId());
             return TestReturn.FAILURE_CODE;
          }
 
-         JsonNode openapiSpec = null;
+         JsonNode openApiSpec = null;
          try {
-            openapiSpec = OpenAPISchemaValidator.getJsonNodeForSchema(openapiSpecResource.getContent());
+            openApiSpec = OpenAPISchemaValidator.getJsonNodeForSchema(openapiSpecResource.getContent());
          } catch (IOException ioe) {
             log.debug("OpenAPI specification cannot be transformed into valid JsonNode schema, so failing");
             return TestReturn.FAILURE_CODE;
@@ -132,14 +142,6 @@ public class OpenAPITestRunner extends HttpTestRunner {
          // Extract JsonNode corresponding to response.
          String verb = operation.getName().split(" ")[0].toLowerCase();
          String path = operation.getName().split(" ")[1].trim();
-
-         // Sanitize charset information from media-type.
-         String contentType = httpResponse.getHeaders().getContentType().toString();
-         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-            contentType = contentType.substring(0, contentType.indexOf(";"));
-         }
-         log.debug("Response media-type is {}", contentType);
-
 
          // Get body content as a string.
          JsonNode contentNode = null;
@@ -151,7 +153,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
          }
          String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb
                + "/responses/" + responseCode;
-         lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openapiSpec, contentNode, jsonPointer, contentType);
+         lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, contentType);
          if (!lastValidationErrors.isEmpty()) {
             log.debug("OpenAPI schema validation errors found " + lastValidationErrors.size() + ", marking test as failed.");
             return TestReturn.FAILURE_CODE;
