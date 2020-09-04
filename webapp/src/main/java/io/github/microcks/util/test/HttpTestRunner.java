@@ -157,7 +157,10 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          if (httpResponse != null){
             response.setContent(responseContent);
             response.setStatus(String.valueOf(httpResponse.getRawStatusCode()));
-            response.setMediaType(httpResponse.getHeaders().getContentType().toString());
+            System.err.println("Response Content-Type: " + httpResponse.getHeaders().getContentType());
+            if (httpResponse.getHeaders().getContentType() != null) {
+               response.setMediaType(httpResponse.getHeaders().getContentType().toString());
+            }
             headers = buildHeaders(httpResponse);
             if (headers != null){
                response.setHeaders(headers);
@@ -177,12 +180,16 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
    @Override
    public HttpMethod buildMethod(String method){
       if (method != null){
-         if ("GET".equals(method.toUpperCase().trim())){
+         if ("GET".equals(method.toUpperCase().trim())) {
             return HttpMethod.GET;
-         } else if ("PUT".equals(method.toUpperCase().trim())){
+         } else if ("PUT".equals(method.toUpperCase().trim())) {
             return HttpMethod.PUT;
-         } else if ("DELETE".equals(method.toUpperCase().trim())){
+         } else if ("DELETE".equals(method.toUpperCase().trim())) {
             return HttpMethod.DELETE;
+         } else if ("PATCH".equals(method.toUpperCase().trim())) {
+            return HttpMethod.PATCH;
+         } else if ("OPTIONS".equals(method.toUpperCase().trim())) {
+            return HttpMethod.OPTIONS;
          }
       }
       return HttpMethod.POST;
