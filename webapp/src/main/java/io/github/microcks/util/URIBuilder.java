@@ -19,7 +19,11 @@
 package io.github.microcks.util;
 
 import io.github.microcks.domain.Parameter;
+import org.springframework.web.util.UriUtils;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -44,10 +48,10 @@ public class URIBuilder{
             String swaggerTemplate = "/:" + parameter.getName();
             if (pattern.contains(wadltemplate)) {
                // It's a template parameter.
-               pattern = pattern.replace(wadltemplate, parameter.getValue());
+               pattern = pattern.replace(wadltemplate, encodePath(parameter.getValue()));
             } else if (pattern.contains(swaggerTemplate)) {
                // It's a template parameter.
-               pattern = pattern.replace(":" + parameter.getName(), parameter.getValue());
+               pattern = pattern.replace(":" + parameter.getName(), encodePath(parameter.getValue()));
             } else {
                // It's a query parameter, ensure we have started delimiting them.
                if (!pattern.contains("?")) {
@@ -56,7 +60,7 @@ public class URIBuilder{
                if (pattern.contains("=")) {
                   pattern += "&";
                }
-               pattern += parameter.getName() + "=" + parameter.getValue();
+               pattern += parameter.getName() + "=" + encodeValue(parameter.getValue());
             }
          }
       }
@@ -78,10 +82,10 @@ public class URIBuilder{
             String swaggerTemplate = "/:" + parameterName;
             if (pattern.contains(wadltemplate)) {
                // It's a template parameter.
-               pattern = pattern.replace(wadltemplate, parameters.get(parameterName));
+               pattern = pattern.replace(wadltemplate, encodePath(parameters.get(parameterName)));
             } else if (pattern.contains(swaggerTemplate)) {
                // It's a template parameter.
-               pattern = pattern.replace(":" + parameterName, parameters.get(parameterName));
+               pattern = pattern.replace(":" + parameterName, encodePath(parameters.get(parameterName)));
             } else {
                // It's a query parameter, ensure we have started delimiting them.
                if (!pattern.contains("?")) {
@@ -90,10 +94,28 @@ public class URIBuilder{
                if (pattern.contains("=")) {
                   pattern += "&";
                }
-               pattern += parameterName + "=" + parameters.get(parameterName);
+               pattern += parameterName + "=" + encodeValue(parameters.get(parameterName));
             }
          }
       }
       return pattern;
+   }
+
+   /** Utility method for wrapping URL encoding of query parameter. */
+   private static final String encodeValue(String value) {
+      try {
+         return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+      } catch (UnsupportedEncodingException ex) {
+         throw new RuntimeException(ex.getCause());
+      }
+   }
+
+   /**
+    * Utility method for wrapping URL encoding of path parameter. We cannot use
+    * JDK method that only deal with query parameters value. See https://stackoverflow.com/a/2678602
+    * and https://www.baeldung.com/java-url-encoding-decoding.
+    */
+   private static final String encodePath(String path) {
+      return UriUtils.encodePath(path, "UTF-8");
    }
 }

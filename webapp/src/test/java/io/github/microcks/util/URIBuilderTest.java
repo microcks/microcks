@@ -84,6 +84,32 @@ public class URIBuilderTest {
    }
 
    @Test
+   public void testBuildURIFromPatternWithEncoding() {
+      // Prepare a bunch of parameters.
+      Parameter nameParam = new Parameter();
+      nameParam.setName("name");
+      nameParam.setValue("Eclair Cafe");
+
+      Parameter descriptionParam = new Parameter();
+      descriptionParam.setName("description");
+      descriptionParam.setValue("My desc");
+
+      List<Parameter> parameters = new ArrayList<>();
+      parameters.add(nameParam);
+      parameters.add(descriptionParam);
+
+      // Test with old wadl like template format.
+      String pattern = "http://localhost:8080/pastry/{name}";
+      String uri = URIBuilder.buildURIFromPattern(pattern, parameters);
+      assertTrue("http://localhost:8080/pastry/Eclair%20Cafe?description=My+desc".equals(uri));
+
+      // Test with new swagger like template format.
+      pattern = "http://localhost:8080/pastry/:name";
+      uri = URIBuilder.buildURIFromPattern(pattern, parameters);
+      assertTrue("http://localhost:8080/pastry/Eclair%20Cafe?description=My+desc".equals(uri));
+   }
+
+   @Test
    public void testBuildURIFromPatternWithMap() {
       // Prepare a bunch of parameters.
       Map<String, String> parameters = new HashMap<>();
