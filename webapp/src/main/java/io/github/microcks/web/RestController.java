@@ -91,16 +91,16 @@ public class RestController {
       // Build the encoded URI fragment to retrieve simple resourcePath.
       serviceAndVersion = "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
       resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
-      resourcePath = UriUtils.decode(resourcePath, "UTF-8");
+      //resourcePath = UriUtils.decode(resourcePath, "UTF-8");
       log.debug("Found resourcePath: {}", resourcePath);
 
-      // If serviceName was encoded with '+' instead of '%20', replace them.
+      // If serviceName was encoded with '+' instead of '%20', remove them.
       if (serviceName.contains("+")) {
          serviceName = serviceName.replace('+', ' ');
       }
-      // If resourcePath was encoded with '+' instead of '%20', replace them.
+      // If resourcePath was encoded with '+' instead of '%20', replace them .
       if (resourcePath.contains("+")) {
-         resourcePath = resourcePath.replace('+', ' ');
+         resourcePath = resourcePath.replace("+", "%20");
       }
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
@@ -124,6 +124,7 @@ public class RestController {
 
          Response response = null;
          String uriPattern = getURIPattern(rOperation.getName());
+         resourcePath = UriUtils.decode(resourcePath, "UTF-8");
          String dispatchCriteria = computeDispatchCriteria(rOperation, uriPattern, resourcePath, request, body);
 
          log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);

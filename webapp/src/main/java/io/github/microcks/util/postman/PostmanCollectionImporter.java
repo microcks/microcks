@@ -20,11 +20,21 @@ package io.github.microcks.util.postman;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Parameter;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.domain.*;
+import io.github.microcks.util.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -191,14 +201,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
-                  operation.addResourcePath(buildResourcePath(parts, resourcePath));
+                  operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
                } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
                   Map<String, String> parts = buildRequestParts(requestNode);
                   dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                   dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
-                  operation.addResourcePath(buildResourcePath(parts, resourcePath));
+                  operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
                }
 
                Request request = buildRequest(requestNode, responseNode.path("name").asText());
@@ -411,16 +421,6 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          url = operationNode.path("request").path("url").path("raw").asText();
       }
 
-      /*
-      // Old way ot computing operation name.
-      String nameSuffix = url.substring(url.lastIndexOf(operationNameRadix) + operationNameRadix.length());
-      if (nameSuffix.indexOf('?') != -1) {
-         nameSuffix = nameSuffix.substring(0, nameSuffix.indexOf('?'));
-      }
-      operationNameRadix += nameSuffix;
-      return operationNode.path("request").path("method").asText() + " " + operationNameRadix;
-      */
-
       // New way of computing operation name.
       if (url.indexOf('?') != - 1) {
          // Remove query parameters.
@@ -449,22 +449,6 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          result = result.substring(result.indexOf(operationNameRadix));
       }
       return result;
-   }
-
-   /**
-    * Build a resource path a Map for parts and a patter url
-    * <(id:123)> && /order/:id => /order/123
-    */
-   private String buildResourcePath(Map<String, String> parts, String patternUrl) {
-      StringBuilder result = new StringBuilder();
-      for (String token : patternUrl.split("/")) {
-         if (token.startsWith(":") && token.length() > 1) {
-            result.append("/").append(parts.get(token.substring(1)));
-         } else if (token.length() > 0) {
-            result.append("/").append(token);
-         }
-      }
-      return result.toString();
    }
 
    /** Check parameters presence into given url. */

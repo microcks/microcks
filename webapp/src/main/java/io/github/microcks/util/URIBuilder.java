@@ -101,7 +101,7 @@ public class URIBuilder{
       return pattern;
    }
 
-   /** Utility method for wrapping URL encoding of query parameter. */
+   /** Utility method for getting URL encoding of query parameter. */
    private static final String encodeValue(String value) {
       try {
          return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
@@ -111,7 +111,7 @@ public class URIBuilder{
    }
 
    /**
-    * Utility method for wrapping URL encoding of path parameter. We cannot use
+    * Utility method for getting URL encoding of path parameter. We cannot use
     * JDK method that only deal with query parameters value. See https://stackoverflow.com/a/2678602
     * and https://www.baeldung.com/java-url-encoding-decoding.
     */
