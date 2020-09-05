@@ -16,49 +16,61 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.web.dto;
+package io.github.microcks.domain;
 
 import java.util.List;
-import java.util.Map;
+
 /**
- * Data Transfer object for grouping base information to launch a test (and thus create a TestResult).
+ * Simple bean representing the optional elements of a Test requests. Some of them are made
+ * to be persisted into TestResult, some other are just volatile information for execution.
  * @author laurent
  */
-public class TestRequestDTO {
+public class TestOptionals {
 
-   private String serviceId;
-   private String testEndpoint;
-   private String runnerType;
    private String secretId;
    private Long timeout;
    private List<String> filteredOperations;
-   private Map<String, List<HeaderDTO>> operationsHeaders;
+   private OperationsHeaders operationsHeaders;
 
-   public String getServiceId() {
-      return serviceId;
+   public TestOptionals() {
    }
 
-   public String getTestEndpoint() {
-      return testEndpoint;
-   }
-
-   public String getRunnerType() {
-      return runnerType;
+   public TestOptionals(String secretId, Long timeout, List<String> filteredOperations, OperationsHeaders operationsHeaders) {
+      this.secretId = secretId;
+      this.timeout = timeout;
+      this.filteredOperations = filteredOperations;
+      this.operationsHeaders = operationsHeaders;
    }
 
    public String getSecretId() {
       return secretId;
    }
 
+   public void setSecretId(String secretId) {
+      this.secretId = secretId;
+   }
+
    public Long getTimeout() {
       return timeout;
+   }
+
+   public void setTimeout(Long timeout) {
+      this.timeout = timeout;
    }
 
    public List<String> getFilteredOperations() {
       return filteredOperations;
    }
 
-   public Map<String, List<HeaderDTO>> getOperationsHeaders() {
+   public void setFilteredOperations(List<String> filteredOperations) {
+      this.filteredOperations = filteredOperations;
+   }
+
+   public OperationsHeaders getOperationsHeaders() {
       return operationsHeaders;
+   }
+
+   public void setOperationsHeaders(OperationsHeaders operationsHeaders) {
+      this.operationsHeaders = operationsHeaders;
    }
 }

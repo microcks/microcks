@@ -18,12 +18,19 @@
  */
 package io.github.microcks.service;
 
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestCaseResult;
+import io.github.microcks.domain.TestOptionals;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestRunnerType;
+import io.github.microcks.domain.TestStepResult;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.test.TestReturn;
-import io.github.microcks.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,20 +64,20 @@ public class TestService {
 
 
    /**
-    * Launch tests for a Service on dediated endpoint URI.
+    * Launch tests for a Service on dedicated endpoint URI.
     * @param service Service to launch tests for
     * @param testEndpoint Endpoint URI for running the tests
     * @param runnerType The type of runner fo tests
-    * @param operationsHeaders Additional / overriden headers for operations to test
+    * @param testOptionals Additional / optionals elements for test
     * @return An initialized TestResults (mostly empty for now since tests run asynchronously)
     */
-   public TestResult launchTests(Service service, String testEndpoint, TestRunnerType runnerType, OperationsHeaders operationsHeaders){
+   public TestResult launchTests(Service service, String testEndpoint, TestRunnerType runnerType, TestOptionals testOptionals) {
       TestResult testResult = new TestResult();
       testResult.setTestDate(new Date());
       testResult.setTestedEndpoint(testEndpoint);
       testResult.setServiceId(service.getId());
       testResult.setRunnerType(runnerType);
-      testResult.setOperationsHeaders(operationsHeaders);
+      testResult.setOperationsHeaders(testOptionals.getOperationsHeaders());
       testResultRepository.save(testResult);
 
       // Launch test asynchronously before returning result.

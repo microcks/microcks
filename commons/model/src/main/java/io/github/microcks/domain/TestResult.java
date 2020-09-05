@@ -43,6 +43,7 @@ public class TestResult {
    private Date testDate;
    private String testedEndpoint;
    private String serviceId;
+   private SecretRef secretRef;
    private long elapsedTime;
    private boolean success = false;
    private boolean inProgress = true;
@@ -97,6 +98,14 @@ public class TestResult {
 
    public void setServiceId(String serviceId) {
       this.serviceId = serviceId;
+   }
+
+   public SecretRef getSecretRef() {
+      return secretRef;
+   }
+
+   public void setSecretRef(SecretRef secretRef) {
+      this.secretRef = secretRef;
    }
 
    public long getElapsedTime() {

@@ -18,7 +18,6 @@
  */
 package io.github.microcks.domain;
 
-
 import java.util.HashMap;
 import java.util.Set;
 

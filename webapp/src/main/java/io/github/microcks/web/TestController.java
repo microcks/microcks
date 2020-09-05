@@ -101,7 +101,8 @@ public class TestController {
       TestRunnerType testRunner = TestRunnerType.valueOf(test.getRunnerType());
       // Build additional header entries for operations.
       OperationsHeaders operationsHeaders = buildOperationsHeaders(test.getOperationsHeaders());
-      TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, operationsHeaders);
+      TestOptionals testOptionals = new TestOptionals(test.getSecretId(), test.getTimeout(), test.getFilteredOperations(), operationsHeaders);
+      TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, testOptionals);
       return new ResponseEntity<TestResult>(testResult, HttpStatus.CREATED);
    }
 
