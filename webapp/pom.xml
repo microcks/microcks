@@ -17,7 +17,6 @@
     <docker.image.name>microcks</docker.image.name>
     <java.version>1.8</java.version>
     <junit.version>4.12</junit.version>
-    <jackson.version>2.10.2</jackson.version>
     <keycloak.version>10.0.1</keycloak.version>
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.1.1</soapui.version>
@@ -36,6 +35,11 @@
   </dependencyManagement>
 
   <dependencies>
+    <dependency>
+      <groupId>io.github.microcks</groupId>
+      <artifactId>microcks-util</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>io.github.microcks</groupId>
       <artifactId>microcks-model</artifactId>
@@ -61,11 +65,6 @@
     <dependency>
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.fasterxml.jackson.dataformat</groupId>
-      <artifactId>jackson-dataformat-yaml</artifactId>
-      <version>${jackson.version}</version>
     </dependency>
     <dependency>
       <groupId>org.keycloak</groupId>
@@ -120,22 +119,6 @@
           <groupId>hermesjms</groupId>
         </exclusion>
       </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>json-schema-validator</artifactId>
-      <version>2.2.14</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>jackson-coreutils</artifactId>
-      <version>2.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>json-schema-core</artifactId>
-      <version>1.2.14</version>
     </dependency>
 
     <!-- Test related dependencies -->

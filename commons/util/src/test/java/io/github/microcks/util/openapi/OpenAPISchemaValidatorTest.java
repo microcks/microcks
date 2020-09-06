@@ -28,7 +28,7 @@ import java.util.List;
 
 import static org.junit.Assert.*;
 /**
- * This is a test case for OpenAPISchemaValidtor utility.
+ * This is a test case for OpenAPISchemaValidator utility.
  * @author laurent
  */
 public class OpenAPISchemaValidatorTest {
