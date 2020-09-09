@@ -21,6 +21,7 @@ package io.github.microcks.util.test;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestReturn;
 import io.github.microcks.util.SoapMessageValidator;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
@@ -30,7 +31,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.util.UriUtils;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 /**

@@ -34,7 +34,7 @@ import com.eviware.soapui.model.testsuite.TestSuite;
 import com.eviware.soapui.support.types.StringToObjectMap;
 import com.eviware.soapui.support.types.StringToStringsMap;
 import io.github.microcks.util.test.AbstractTestRunner;
-import io.github.microcks.util.test.TestReturn;
+import io.github.microcks.domain.TestReturn;
 import io.github.microcks.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

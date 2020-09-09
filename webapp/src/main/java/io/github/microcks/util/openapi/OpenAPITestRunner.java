@@ -19,21 +19,17 @@
 package io.github.microcks.util.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.microcks.domain.*;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.util.test.HttpTestRunner;
-import io.github.microcks.util.test.TestReturn;
-import org.apache.commons.io.IOUtils;
+import io.github.microcks.domain.TestReturn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpResponse;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.List;
 
 /**

@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.microcks.domain.*;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.test.AbstractTestRunner;
-import io.github.microcks.util.test.TestReturn;
+import io.github.microcks.domain.TestReturn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -175,7 +175,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          }
       }
 
-      return new ArrayList<TestReturn>();
+      return new ArrayList<>();
    }
 
    @Override

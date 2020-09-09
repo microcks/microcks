@@ -18,10 +18,7 @@
  */
 package io.github.microcks.util.test;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.*;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
