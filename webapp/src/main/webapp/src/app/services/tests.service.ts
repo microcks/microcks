@@ -21,7 +21,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { TestRequest, TestResult } from '../models/test.model';
-import { RequestResponsePair } from '../models/service.model';
+import { RequestResponsePair, UnidirectionalEvent } from '../models/service.model';
 
 @Injectable({ providedIn: 'root' })
 export class TestsService {
@@ -54,5 +54,14 @@ export class TestsService {
     var testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
     console.log("[getMessages] called for " + testCaseId);
     return this.http.get<RequestResponsePair>(this.rootUrl + '/tests/' + test.id + '/messages/' + testCaseId);
+  }
+
+  public getEventMessages(test: TestResult, operation: string): Observable<UnidirectionalEvent> {
+    // operation may contain / that are forbidden within encoded URI.
+    // Replace them by "_" and implement same protocole on server-side.
+    operation = operation.replace(/\//g, '_');
+    var testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
+    console.log("[getEventMessages] called for " + testCaseId);
+    return this.http.get<UnidirectionalEvent>(this.rootUrl + '/tests/' + test.id + '/events/' + testCaseId);
   }
 }

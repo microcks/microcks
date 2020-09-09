@@ -33,24 +33,32 @@
       <div class="control-group">
         <label class="control-label required-pf" for="testEndpoint">Test Endpoint</label>
         <div class="controls">
-          <input type="url" placeholder="e. http://" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
-          <p class="help-block">A valid endpoint to use for testing (Http URL for API or WebServices).</p>
+          <span *ngIf="service.type != 'EVENT'">
+            <input type="url" placeholder="eg. http://{service.endpoint.url:port}/{service.path}" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
+            <p class="help-block">A valid endpoint to use for testing (Http URL for API or WebServices).</p>
+          </span>
+          <span *ngIf="service.type === 'EVENT'">
+            <input type="url" placeholder="eg. kafka://{kafka.broker.url:port}/{kafka.topic.name}" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
+            <p class="help-block">A valid endpoint to use for testing (Kafka broker + topic name for Asynchronous API).</p>
+          </span>
         </div>
       </div>
       <div class="control-group">
         <label class="control-label required-pf" for="runnerType">Runner</label>
         <div class="controls">
           <select id="runnerType" name="runnerType" class="form-control" [(ngModel)]="runnerType" (ngModelChange)="checkForm()">
-            <option value="HTTP">HTTP</option>
+            <option value="HTTP" *ngIf="service.type != 'EVENT'">HTTP</option>
             <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP'">SOAP</option>
-            <option value="SOAP_UI">SOAP UI</option>
+            <option value="SOAP_UI" *ngIf="service.type != 'EVENT'">SOAP UI</option>
             <option value="POSTMAN" *ngIf="service.type === 'REST'">POSTMAN</option>
             <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST'">OPEN API SCHEMA</option>
+            <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT'">ASYNC API SCHEMA</option>
           </select>
           <p class="help-block">
-            The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).
+            <span *ngIf="service.type != 'EVENT'">The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).</span>
+            <span *ngIf="service.type === 'EVENT'">The runner to use for this test (for now we only have ASYNC API SCHEMA compliance).</span>
             <span class="learn-more-inline">
-              <a href="https://microcks.github.io">Learn More 
+              <a href="https://microcks.io/documentation/using/tests/" target="blanck">Learn More 
                 <i class="fa fa-external-link" aria-hidden="true"></i>
               </a>
             </span>
@@ -58,19 +66,62 @@
         </div>
       </div>
       <div class="control-group">
-        <span *ngIf="!showAdvanced"><a (click)="showAdvanced = true" role="button">Show advanced options</a></span>
-        <span *ngIf="showAdvanced"><a (click)="showAdvanced = false" role="button">Hide advanced options</a></span>
+        <span *ngIf="!showAdvanced"><a (click)="showAdvancedPanel(true)" role="button">Show advanced options</a></span>
+        <span *ngIf="showAdvanced"><a (click)="showAdvancedPanel(false)" role="button">Hide advanced options</a></span>
       </div>
       <div *ngIf="showAdvanced" >
-        <small>This section allows you to add/override requests headers with global or operation specific ones. Use comma-separated string for multiple values for same header.</small>
-        <div class="control-group operation-headers">
-            <h5 class="subsection">Globals headers</h5>
+        <small>This section allows to add timeout, security credentials for connecting endpoint and filter operations to test.</small>
+        <div class="control-group">
+          <label class="control-label required-pf" for="timeout">Timeout</label>
+          <div class="controls">
+            <input type="number" min="1000" max="30000" step="1000" id="timeout" name="timeout" class="form-control" [(ngModel)]="timeout" (ngModelChange)="checkForm()" required/>
+            <p class="help-block">Time to wait for the end of the test (value in milliseconds).</p>
+          </div>
+        </div>
+        <div class="control-group">
+          <label class="control-label" for="secret">Secret</label>
+          <div class="controls">
+            <select class="form-control" name="secret" [(ngModel)]="secretId" (change)="updateSecretProperties($event)">
+              <option value="none">None</option>
+              <option *ngFor="let secret of secrets" [value]="secret.id">{{ secret.name }} </option>
+            </select>
+            <p class="help-block">Pick the authentication secret that will be associated for connecting the test endpoint.</p>
+          </div>
+        </div>
+        <span *ngIf="service.type != 'EVENT'">
+          <small>This section allows you to add/override requests headers with global or operation specific ones. Use comma-separated string for multiple values for same header.</small>
+          <div class="control-group operation-headers">
+              <h5 class="subsection">Globals headers</h5>
+              <div class="key-value-editor-entry key-value-editor-entry-header" 
+                  *ngIf="operationsHeaders['globals'] != null && operationsHeaders['globals'].length > 0">
+                <div class="key-value-editor-header key-header">Name</div>
+                <div class="key-value-editor-header value-header">Values</div>
+              </div>
+              <div class="key-value-editor" *ngFor="let header of operationsHeaders['globals']">
+                <div class="key-value-editor-entry">
+                  <div class="key-value-editor-input">
+                    <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
+                  </div>
+                  <div class="key-value-editor-input">
+                    <input class="form-control" type="text" placeHolder="Values" name="values" [(ngModel)]="header.values">
+                  </div>
+                  <div class="key-value-editor-buttons">
+                    <a (click)="removeHeaderValue('globals', i)" class="as-item-delete" role="button">
+                      <i class="pficon pficon-close"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <a (click)="addHeaderValue('globals')" role="button">Add Header</a>
+            </div>
+          <div class="control-group operation-headers" *ngFor="let operation of service.operations; index as i;">
+            <h5 class="subsection">Headers for {{ operation.name }}</h5>
             <div class="key-value-editor-entry key-value-editor-entry-header" 
-                *ngIf="operationsHeaders['globals'] != null && operationsHeaders['globals'].length > 0">
+                *ngIf="operationsHeaders[operation.name] != null && operationsHeaders[operation.name].length > 0">
               <div class="key-value-editor-header key-header">Name</div>
               <div class="key-value-editor-header value-header">Values</div>
             </div>
-            <div class="key-value-editor" *ngFor="let header of operationsHeaders['globals']">
+            <div class="key-value-editor" *ngFor="let header of operationsHeaders[operation.name]">
               <div class="key-value-editor-entry">
                 <div class="key-value-editor-input">
                   <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
@@ -79,38 +130,15 @@
                   <input class="form-control" type="text" placeHolder="Values" name="values" [(ngModel)]="header.values">
                 </div>
                 <div class="key-value-editor-buttons">
-                  <a (click)="removeHeaderValue('globals', i)" class="as-item-delete" role="button">
+                  <a (click)="removeHeaderValue(operation.name, i)" class="as-item-delete" role="button">
                     <i class="pficon pficon-close"></i>
                   </a>
                 </div>
               </div>
             </div>
-            <a (click)="addHeaderValue('globals')" role="button">Add Header</a>
+            <a (click)="addHeaderValue(operation.name)" role="button">Add Header</a>
           </div>
-        <div class="control-group operation-headers" *ngFor="let operation of service.operations; index as i;">
-          <h5 class="subsection">Headers for {{ operation.name }}</h5>
-          <div class="key-value-editor-entry key-value-editor-entry-header" 
-              *ngIf="operationsHeaders[operation.name] != null && operationsHeaders[operation.name].length > 0">
-            <div class="key-value-editor-header key-header">Name</div>
-            <div class="key-value-editor-header value-header">Values</div>
-          </div>
-          <div class="key-value-editor" *ngFor="let header of operationsHeaders[operation.name]">
-            <div class="key-value-editor-entry">
-              <div class="key-value-editor-input">
-                <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
-              </div>
-              <div class="key-value-editor-input">
-                <input class="form-control" type="text" placeHolder="Values" name="values" [(ngModel)]="header.values">
-              </div>
-              <div class="key-value-editor-buttons">
-                <a (click)="removeHeaderValue(operation.name, i)" class="as-item-delete" role="button">
-                  <i class="pficon pficon-close"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-          <a (click)="addHeaderValue(operation.name)" role="button">Add Header</a>
-        </div>
+        </span>
       </div>
       <div class="form-actions right pull-right">
         <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>

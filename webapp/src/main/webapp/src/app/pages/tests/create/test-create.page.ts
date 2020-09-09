@@ -26,8 +26,10 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
+import { SecretsService } from '../../../services/secrets.service';
 import { Service } from '../../../models/service.model';
 import { TestRunnerType } from "../../../models/test.model";
+import { Secret } from '../../../models/secret.model';
 
 @Component({
   selector: "test-create-page",
@@ -43,12 +45,15 @@ export class TestCreatePageComponent implements OnInit {
   showAdvanced: boolean = false;
   submitEnabled: boolean = false;
   notifications: Notification[];
+  timeout: number = 10000;
+  secretName: string;
   operationsHeaders: any = {
     'globals': []
   };
+  secrets: Secret[];
 
-  constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private notificationService: NotificationService,
-    private route: ActivatedRoute, private router: Router) {
+  constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private secretsSvc: SecretsService,
+    private notificationService: NotificationService, private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit() {
@@ -60,6 +65,31 @@ export class TestCreatePageComponent implements OnInit {
         return this.servicesSvc.getService(this.serviceId);
       })
     );
+  }
+
+  getSecrets(page: number = 1): void {
+    this.secretsSvc.getSecrets(page).subscribe(results => this.secrets = results);
+  }
+
+  public showAdvancedPanel(show: boolean) {
+    if (show && (this.secrets == undefined || this.secrets.length == 0)) {
+      this.getSecrets();
+    }
+    this.showAdvanced = show;
+  }
+  public updateSecretProperties(event: any): void {
+    var secretId = event.target.value;
+    if ('none' != event.target.value) {
+      for (var i=0; i<this.secrets.length; i++) {
+        var secret = this.secrets[i];
+        if (secretId === secret.id) {
+          this.secretName = secret.name;
+          break;
+        }
+      };
+    } else {
+      this.secretName = null;
+    }
   }
 
   public addHeaderValue(operationName: string) {
@@ -90,7 +120,8 @@ export class TestCreatePageComponent implements OnInit {
   }
 
   public createTest(): void {
-    var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, operationsHeaders: this.operationsHeaders};
+    var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, 
+        timeout: this.timeout, secretName: this.secretName, operationsHeaders: this.operationsHeaders};
     console.log("[createTest] test: " + JSON.stringify(test));
     this.testsSvc.create(test).subscribe(
       {

@@ -22,9 +22,9 @@ import { ActivatedRoute, Router, ParamMap } from "@angular/router";
 import { Observable, interval, Subscription } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { ListConfig, ListEvent } from 'patternfly-ng/list';
+import { ListConfig } from 'patternfly-ng/list';
 
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import { Notification, NotificationService } from 'patternfly-ng/notification';
 
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';

@@ -16,23 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { ActivatedRoute, ParamMap } from "@angular/router";
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { ListConfig, ListEvent } from 'patternfly-ng/list';
+import { ListConfig } from 'patternfly-ng/list';
 
 import { ServicesService } from '../../../services/services.service'
 import { TestsService } from '../../../services/tests.service';
-import { Service } from '../../../models/service.model';
-import { TestResult, TestStepResult } from '../../../models/test.model';
+import { Service, ServiceType } from '../../../models/service.model';
+import { TestResult } from '../../../models/test.model';
 
 @Component({
   selector: 'test-detail-page',
   templateUrl: './test-detail.page.html',
-  styleUrls: ['./test-detail.page.css']
+  styleUrls: ['./test-detail.page.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TestDetailPageComponent implements OnInit {
 
@@ -51,11 +52,22 @@ export class TestDetailPageComponent implements OnInit {
     );
     this.test.subscribe(res => {
       this.service = this.servicesSvc.getService(res.serviceId);
-      res.testCaseResults.forEach(testCase => {
-        var opName = this.encode(testCase.operationName);
-        this.testsSvc.getMessages(res, testCase.operationName).subscribe(pairs => {
-          this.testMessages[opName] = pairs;
-        });
+      this.service.subscribe(svc => {
+        if (svc.type != ServiceType.EVENT) {
+          res.testCaseResults.forEach(testCase => {
+            var opName = this.encode(testCase.operationName);
+            this.testsSvc.getMessages(res, testCase.operationName).subscribe(pairs => {
+              this.testMessages[opName] = pairs;
+            });
+          });
+        } else {
+          res.testCaseResults.forEach(testCase => {
+            var opName = this.encode(testCase.operationName);
+            this.testsSvc.getEventMessages(res, testCase.operationName).subscribe(pairs => {
+              this.testMessages[opName] = pairs;
+            });
+          });
+        }
       });
     });
 
@@ -79,6 +91,17 @@ export class TestDetailPageComponent implements OnInit {
     }
     var result = pairs.filter(function(item, index, array) {
       return item.request.name == requestName; 
+    })[0];
+    return result;
+  }
+  public eventMessageFor(operationName: string, eventMessageName: string): any {
+    var events = this.testMessages[this.encode(operationName)];
+    if (events == undefined) {
+      return undefined;
+    }
+    console.log("events: " + JSON.stringify(events));
+    var result = events.filter(function(item, index, array) {
+      return item.eventMessage.name == eventMessageName; 
     })[0];
     return result;
   }

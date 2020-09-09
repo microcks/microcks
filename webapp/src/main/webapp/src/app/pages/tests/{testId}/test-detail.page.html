@@ -77,14 +77,14 @@
 
         <ng-template #resultDetailTemplate let-item="item" let-index="index">
           <tabset>
-            <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName }}" (select)="onTestStepSelect(testStep, $event)">
+            <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName || testStep.eventMessageName }}" (select)="onTestStepSelect(testStep, $event)">
               <ng-template tabHeading>
                 <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
                 <i *ngIf="!test.inProgress && testStep.success" class="fa fa-fw fa-check-circle"></i> 
                 <i *ngIf="!test.inProgress && !testStep.success" class="fa fa-fw fa-times-circle"></i>
               </ng-template>
               <div class="row" *ngIf="testMessages[encode(item.operationName)]">  
-                <div class="col-md-6">
+                <div class="col-md-6" *ngIf="service.type != 'EVENT'">
                   <h5 class="subsection-label">Request</h5>
 
                   <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).request.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).request.content"></code></pre>
@@ -103,7 +103,7 @@
                     </tbody>
                   </table>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-6" *ngIf="service.type != 'EVENT'">
                   <h5 class="subsection-label">Response</h5>
 
                   <dl class="dl-horizontal left" *ngIf="messagePairFor(item.operationName, testStep.requestName).response.status">
@@ -130,6 +130,39 @@
                     </thead>
                     <tbody>
                       <tr *ngFor="let header of messagePairFor(item.operationName, testStep.requestName).response.headers">
+                        <td>{{ header.name }}</td>
+                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-md-12" *ngIf="service.type === 'EVENT'">
+                  <h5 class="subsection-label">Event Message</h5>
+
+                  <dl class="dl-horizontal left" *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType">
+                    <dt>Consumption Time</dt>
+                    <dd>{{ testStep.elapsedTime }} ms.</dd>
+                    <dt>Event Type</dt>
+                    <dd>
+                      <code><small>{{ eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType }}</small></code>
+                    </dd>
+                    <span *ngIf="testStep.message">
+                      <dt>Error</dt>
+                      <dd>
+                        <code><small>{{ testStep.message }}</small></code>
+                      </dd>
+                    </span>
+                  </dl>
+                  <pre *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content"><code [highlight]="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content"></code></pre>
+                  <table class="table table-condensed" width="100%" *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.headers">
+                    <thead>
+                      <tr>
+                        <th>Header name</th>
+                        <th>Values</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let header of eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.headers">
                         <td>{{ header.name }}</td>
                         <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
                       </tr>
