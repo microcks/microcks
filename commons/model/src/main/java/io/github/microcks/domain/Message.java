@@ -22,7 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Base class holding common attributes for Request and Response
+ * Base class holding common attributes for Request, Response and EventMessage
  * domain objects.
  * @author laurent
  */

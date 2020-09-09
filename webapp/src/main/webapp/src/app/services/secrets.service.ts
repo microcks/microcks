@@ -20,7 +20,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Secret } from '../models/importer.model';
+import { Secret } from '../models/secret.model';
 import { IAuthenticationService } from './auth.service';
 
 

@@ -92,6 +92,26 @@ public class MessageService {
    }
 
    /**
+    * Retrieve unidirectional events corresponding to a TestCase.
+    * @param testCaseId The identifier of test case to get messages for.
+    * @return A list of unidirectional event messages
+    */
+   public List<UnidirectionalEvent> getEventByTestCase(String testCaseId) {
+      // Retrieve events using testCase identifier.
+      List<EventMessage> eventMessages = eventMessageRepository.findByTestCaseId(testCaseId);
+      if (log.isDebugEnabled()) {
+         log.debug("Found " + eventMessages.size() + " event(s) for testCase " + testCaseId);
+      }
+
+      // Just wrap then into an UnidirectionalEvent exchange.
+      List<UnidirectionalEvent> results = new ArrayList<>(eventMessages.size());
+      for (EventMessage eventMessage : eventMessages) {
+         results.add(new UnidirectionalEvent(eventMessage));
+      }
+      return results;
+   }
+
+   /**
     * Retrieved pairs of requests and responses corresponding to a TestCase.
     * @param testCaseId The identifier of test case to get messages for.
     * @return A list of paired requests and responses

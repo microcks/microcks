@@ -29,7 +29,7 @@ public class TestRequestDTO {
    private String serviceId;
    private String testEndpoint;
    private String runnerType;
-   private String secretId;
+   private String secretName;
    private Long timeout;
    private List<String> filteredOperations;
    private Map<String, List<HeaderDTO>> operationsHeaders;
@@ -46,8 +46,8 @@ public class TestRequestDTO {
       return runnerType;
    }
 
-   public String getSecretId() {
-      return secretId;
+   public String getSecretName() {
+      return secretName;
    }
 
    public Long getTimeout() {

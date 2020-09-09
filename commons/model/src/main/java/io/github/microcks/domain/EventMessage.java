@@ -21,6 +21,7 @@ package io.github.microcks.domain;
 import org.springframework.data.annotation.Id;
 
 /**
+ * A simple event message published or sent in an asynchronous exchange.
  * @author laurent
  */
 public class EventMessage extends Message {

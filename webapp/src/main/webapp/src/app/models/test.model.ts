@@ -16,6 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { SecretRef } from './secret.model';
+
 export class TestRequest {
   serviceId: string;
   testEndpoint: string;
@@ -35,6 +37,7 @@ export class TestResult {
   inProgress: boolean = true;
   runnerType: TestRunnerType;
   testCaseResults: TestCaseResult[];
+  secretRef: SecretRef;
 }
 
 export class TestCaseResult {
@@ -48,6 +51,7 @@ export class TestStepResult {
   success: boolean = false;
   elapsedTime: number;
   requestName: string;
+  eventMessageName: string;
   message: string;
 }
 
@@ -56,5 +60,6 @@ export enum TestRunnerType {
   SOAP_HTTP,
   SOAP_UI,
   POSTMAN,
-  OPEN_API_SCHEMA
+  OPEN_API_SCHEMA,
+  ASYNC_API_SCHEMA
 }

@@ -21,7 +21,8 @@ import { Component, OnInit, ViewChild, ViewEncapsulation, Host } from '@angular/
 import { WizardComponent, WizardConfig, WizardEvent, WizardStep, WizardStepComponent, WizardStepConfig } from 'patternfly-ng/wizard';
 
 import { ImportersPageComponent } from '../importers.page';
-import { ImportJob, Secret, SecretRef } from '../../../models/importer.model';
+import { ImportJob } from '../../../models/importer.model';
+import { Secret, SecretRef } from '../../../models/secret.model';
 import { SecretsService } from '../../../services/secrets.service';
 
 

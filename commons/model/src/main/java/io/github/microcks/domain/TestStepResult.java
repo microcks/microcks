@@ -20,7 +20,7 @@ package io.github.microcks.domain;
 
 /**
  * TestStepResult is an entity embedded within TestCaseResult. They are created
- * for each request associated with an operation / action of a microservice.
+ * for each request or message associated with an operation / action of a microservice.
  * @author laurent
  */
 public class TestStepResult {
@@ -28,6 +28,7 @@ public class TestStepResult {
    private boolean success = false;
    private long elapsedTime;
    private String requestName;
+   private String eventMessageName;
    private String message;
 
    public boolean isSuccess() {
@@ -52,6 +53,14 @@ public class TestStepResult {
 
    public void setRequestName(String requestName) {
       this.requestName = requestName;
+   }
+
+   public String getEventMessageName() {
+      return eventMessageName;
+   }
+
+   public void setEventMessageName(String eventMessageName) {
+      this.eventMessageName = eventMessageName;
    }
 
    public String getMessage() {

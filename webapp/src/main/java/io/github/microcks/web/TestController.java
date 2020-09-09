@@ -101,9 +101,9 @@ public class TestController {
       TestRunnerType testRunner = TestRunnerType.valueOf(test.getRunnerType());
       // Build additional header entries for operations.
       OperationsHeaders operationsHeaders = buildOperationsHeaders(test.getOperationsHeaders());
-      TestOptionals testOptionals = new TestOptionals(test.getSecretId(), test.getTimeout(), test.getFilteredOperations(), operationsHeaders);
+      TestOptionals testOptionals = new TestOptionals(test.getSecretName(), test.getTimeout(), test.getFilteredOperations(), operationsHeaders);
       TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, testOptionals);
-      return new ResponseEntity<TestResult>(testResult, HttpStatus.CREATED);
+      return new ResponseEntity<>(testResult, HttpStatus.CREATED);
    }
 
    @RequestMapping(value = "/tests/{id}", method = RequestMethod.GET)
@@ -128,6 +128,22 @@ public class TestController {
       return messageService.getRequestResponseByTestCase(testCaseId);
    }
 
+   @RequestMapping(value = "tests/{id}/events/{testCaseId}", method = RequestMethod.GET)
+   public List<UnidirectionalEvent> getEventMessagesForTestCase(
+         @PathVariable("id") String testResultId,
+         @PathVariable("testCaseId") String testCaseId
+   ) {
+      // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
+      try {
+         testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
+         testCaseId = testCaseId.replace('_', '/');
+      } catch (UnsupportedEncodingException e) {
+         return null;
+      }
+      log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
+      return messageService.getEventByTestCase(testCaseId);
+   }
+
    @RequestMapping(value = "tests/{id}/testCaseResult", method = RequestMethod.POST)
    public ResponseEntity<TestCaseResult> reportTestCaseResult(
          @PathVariable("id") String testResultId,
@@ -139,7 +155,7 @@ public class TestController {
       if (testCaseResult != null) {
          return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
       }
-      return new ResponseEntity<TestCaseResult>(HttpStatus.BAD_REQUEST);
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
    /**

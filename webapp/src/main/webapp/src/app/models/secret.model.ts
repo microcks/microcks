@@ -16,26 +16,23 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { SecretRef } from './secret.model';
-
-export class ImportJob {
+export class Secret {
   id: string;
   name: string;
-  repositoryUrl: string;
-  repositoryDisableSSLValidation: boolean = false;
-  frequency: string;
-  createdDate: Date;
-  lastImportDate: Date;
-  lastImportError: string;
-  active: boolean = false;
-  etag: string;
-
-  secretRef: SecretRef;
-  serviceRefs: ServiceRef[];
+  description: string;
+  username: string;
+  password: string;
+  token: string;
+  tokenHeader: string;
+  caCertPem: string;
 }
 
-export class ServiceRef {
-  serviceId: string;
+export class SecretRef {
+  secretId: string;
   name: string;
-  version: string;
+  
+  constructor(secretId: string, name: string) {
+    this.secretId = secretId;
+    this.name = name;
+  }
 }

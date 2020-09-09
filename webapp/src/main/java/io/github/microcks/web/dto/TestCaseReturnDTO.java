@@ -18,7 +18,7 @@
  */
 package io.github.microcks.web.dto;
 
-import io.github.microcks.util.test.TestReturn;
+import io.github.microcks.domain.TestReturn;
 
 import java.util.List;
 

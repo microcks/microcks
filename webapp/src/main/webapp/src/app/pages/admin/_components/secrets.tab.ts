@@ -23,7 +23,7 @@ import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 import { ToolbarConfig } from 'patternfly-ng/toolbar';
 import { FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-ng/filter';
 
-import { Secret } from '../../../models/importer.model';
+import { Secret } from '../../../models/secret.model';
 import { SecretsService } from '../../../services/secrets.service';
 
 

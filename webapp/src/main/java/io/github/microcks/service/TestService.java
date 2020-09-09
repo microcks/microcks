@@ -18,19 +18,13 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestOptionals;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.domain.TestStepResult;
+import io.github.microcks.domain.*;
+import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.test.TestReturn;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +49,9 @@ public class TestService {
 
    @Autowired
    private ResponseRepository responseRepository;
+
+   @Autowired
+   private EventMessageRepository eventMessageRepository;
 
    @Autowired
    private TestResultRepository testResultRepository;
@@ -161,27 +158,42 @@ public class TestService {
     *
     */
    private void createTestReturns(List<TestReturn> testReturns, String testCaseId) {
-      List<Response> responses = new ArrayList<Response>();
-      List<Request> actualRequests = new ArrayList<Request>();
+      List<Response> responses = new ArrayList<>();
+      List<Request> actualRequests = new ArrayList<>();
+      List<EventMessage> eventMessages = new ArrayList<>();
 
       for (TestReturn testReturn : testReturns) {
-         // Extract, complete and store response and request.
-         testReturn.getResponse().setTestCaseId(testCaseId);
-         testReturn.getRequest().setTestCaseId(testCaseId);
-         responses.add(testReturn.getResponse());
-         actualRequests.add(testReturn.getRequest());
+         if (testReturn.isRequestResponseTest()) {
+            // Extract, complete and store response and request.
+            testReturn.getResponse().setTestCaseId(testCaseId);
+            testReturn.getRequest().setTestCaseId(testCaseId);
+            responses.add(testReturn.getResponse());
+            actualRequests.add(testReturn.getRequest());
+         } else if (testReturn.isEventTest()) {
+            // Complete and store event messages for tracking testCaseId.
+            testReturn.getEventMessage().setTestCaseId(testCaseId);
+            eventMessages.add(testReturn.getEventMessage());
+         }
       }
 
-      // Save the responses into repository to get their ids.
-      log.debug("Saving {} responses with testCaseId {}", responses.size(), testCaseId);
-      responseRepository.saveAll(responses);
+      if (!responses.isEmpty() && !actualRequests.isEmpty()) {
+         // Save the responses into repository to get their ids.
+         log.debug("Saving {} responses with testCaseId {}", responses.size(), testCaseId);
+         responseRepository.saveAll(responses);
 
-      // Associate responses to requests before saving requests.
-      for (int i=0; i<actualRequests.size(); i++){
-         actualRequests.get(i).setResponseId(responses.get(i).getId());
+         // Associate responses to requests before saving requests.
+         for (int i = 0; i < actualRequests.size(); i++) {
+            actualRequests.get(i).setResponseId(responses.get(i).getId());
+         }
+         log.debug("Saving {} requests with testCaseId {}", responses.size(), testCaseId);
+         requestRepository.saveAll(actualRequests);
       }
-      log.debug("Saving {} requests with testCaseId {}", responses.size(), testCaseId);
-      requestRepository.saveAll(actualRequests);
+
+      if (!eventMessages.isEmpty()) {
+         // Save the eventMessages into repository.
+         log.debug("Saving {} eventMessages with testCaseId {}", eventMessages.size(), testCaseId);
+         eventMessageRepository.saveAll(eventMessages);
+      }
    }
    
    /**
