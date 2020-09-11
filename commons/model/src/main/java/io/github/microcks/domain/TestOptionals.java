@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class TestOptionals {
 
-   private String secretId;
+   private SecretRef secretRef;
    private Long timeout;
    private List<String> filteredOperations;
    private OperationsHeaders operationsHeaders;
@@ -35,19 +35,19 @@ public class TestOptionals {
    public TestOptionals() {
    }
 
-   public TestOptionals(String secretId, Long timeout, List<String> filteredOperations, OperationsHeaders operationsHeaders) {
-      this.secretId = secretId;
+   public TestOptionals(SecretRef secretRef, Long timeout, List<String> filteredOperations, OperationsHeaders operationsHeaders) {
+      this.secretRef = secretRef;
       this.timeout = timeout;
       this.filteredOperations = filteredOperations;
       this.operationsHeaders = operationsHeaders;
    }
 
-   public String getSecretId() {
-      return secretId;
+   public SecretRef getSecretRef() {
+      return secretRef;
    }
 
-   public void setSecretId(String secretId) {
-      this.secretId = secretId;
+   public void setSecretRef(SecretRef secretRef) {
+      this.secretRef = secretRef;
    }
 
    public Long getTimeout() {

@@ -30,6 +30,8 @@ import java.util.List;
  */
 public interface SecretRepository extends MongoRepository<Secret, String> {
 
+   List<Secret> findByName(String name);
+
    @Query("{'name' : {'$regex':?0, '$options':'i'}}")
    List<Secret> findByNameLike(String name);
 }

@@ -44,6 +44,7 @@ public class TestResult {
    private String testedEndpoint;
    private String serviceId;
    private SecretRef secretRef;
+   private long timeout;
    private long elapsedTime;
    private boolean success = false;
    private boolean inProgress = true;
@@ -106,6 +107,14 @@ public class TestResult {
 
    public void setSecretRef(SecretRef secretRef) {
       this.secretRef = secretRef;
+   }
+
+   public long getTimeout() {
+      return timeout;
+   }
+
+   public void setTimeout(long timeout) {
+      this.timeout = timeout;
    }
 
    public long getElapsedTime() {
