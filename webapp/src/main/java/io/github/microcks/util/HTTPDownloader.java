@@ -113,7 +113,7 @@ public class HTTPDownloader {
 
       // Build remote URLConnection and local target file.
       HttpURLConnection connection = prepareURLConnection(remoteUrl, secret, disableSSLValidation);
-      File localFile = File.createTempFile("microcks-" + System.currentTimeMillis(), ".downlaod");
+      File localFile = File.createTempFile("microcks-" + System.currentTimeMillis(), ".download");
 
       ReadableByteChannel rbc = null;
       FileOutputStream fos = null;

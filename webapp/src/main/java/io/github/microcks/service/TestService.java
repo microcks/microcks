@@ -74,6 +74,8 @@ public class TestService {
       testResult.setTestedEndpoint(testEndpoint);
       testResult.setServiceId(service.getId());
       testResult.setRunnerType(runnerType);
+      testResult.setTimeout(testOptionals.getTimeout());
+      testResult.setSecretRef(testOptionals.getSecretRef());
       testResult.setOperationsHeaders(testOptionals.getOperationsHeaders());
       testResultRepository.save(testResult);
 

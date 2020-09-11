@@ -18,14 +18,21 @@
  */
 package io.github.microcks.util.postman;
 
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Parameter;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestReturn;
+import io.github.microcks.util.URIBuilder;
+import io.github.microcks.util.test.AbstractTestRunner;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.github.microcks.domain.*;
-import io.github.microcks.util.URIBuilder;
-import io.github.microcks.util.test.AbstractTestRunner;
-import io.github.microcks.domain.TestReturn;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -38,9 +45,16 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
+ * An implementation of HttpTestRunner that deals with tests embedded into a Postman Collection.
+ * It delegates the actual testing to the <code>microcks-postman-runner</code> component,
+ * triggering it through an API call.
  * @author laurent
  */
 public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
@@ -94,7 +108,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
    @Override
    public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
                                    List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
-      if (log. isDebugEnabled()){
+      if (log.isDebugEnabled()){
          log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
       }
 
@@ -103,36 +117,36 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
       }
 
       // Microcks-postman-runner interface object building.
-      JsonNode jsonArg = mapper.createObjectNode();
-      ((ObjectNode) jsonArg).put("operation", operation.getName());
-      ((ObjectNode) jsonArg).put("callbackUrl", testsCallbackUrl + "/api/tests/" + testResult.getId() + "/testCaseResult");
+      ObjectNode jsonArg = mapper.createObjectNode();
+      jsonArg.put("operation", operation.getName());
+      jsonArg.put("callbackUrl", testsCallbackUrl + "/api/tests/" + testResult.getId() + "/testCaseResult");
 
       // First we have to retrieved and add the test script for this operation from within Postman collection.
       JsonNode testScript = extractOperationTestScript(operation);
       if (testScript != null) {
          log.debug("Found a testScript for this operation !");
-         ((ObjectNode) jsonArg).set("testScript", testScript);
+         jsonArg.set("testScript", testScript);
       }
 
       // Then we have to add the corresponding 'requests' objects.
       ArrayNode jsonRequests = mapper.createArrayNode();
       for (Request request : requests) {
-         JsonNode jsonRequest = mapper.createObjectNode();
+         ObjectNode jsonRequest = mapper.createObjectNode();
 
          String operationName = operation.getName().substring(operation.getName().indexOf(" ") + 1);
          String customizedEndpointUrl = endpointUrl + URIBuilder.buildURIFromPattern(operationName, request.getQueryParameters());
          log.debug("Using customized endpoint url: " + customizedEndpointUrl);
 
-         ((ObjectNode) jsonRequest).put("endpointUrl", customizedEndpointUrl);
-         ((ObjectNode) jsonRequest).put("method", operation.getMethod());
-         ((ObjectNode) jsonRequest).put("name", request.getName());
+         jsonRequest.put("endpointUrl", customizedEndpointUrl);
+         jsonRequest.put("method", operation.getMethod());
+         jsonRequest.put("name", request.getName());
 
          if (request.getContent() != null && request.getContent().length() > 0) {
-            ((ObjectNode) jsonRequest).put("body", request.getContent());
+            jsonRequest.put("body", request.getContent());
          }
          if (request.getQueryParameters() != null && request.getQueryParameters().size() > 0) {
             ArrayNode jsonParams = buildQueryParams(request.getQueryParameters());
-            ((ObjectNode) jsonRequest).set("queryParams", jsonParams);
+            jsonRequest.set("queryParams", jsonParams);
          }
          // Set headers to request if any. Start with those coming from request itself.
          // Add or override existing headers with test specific ones for operation and globals.
@@ -151,12 +165,12 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          }
          if (headers != null && headers.size() > 0) {
             ArrayNode jsonHeaders = buildHeaders(headers);
-            ((ObjectNode) jsonRequest).set("headers", jsonHeaders);
+            jsonRequest.set("headers", jsonHeaders);
          }
 
          jsonRequests.add(jsonRequest);
       }
-      ((ObjectNode) jsonArg).set("requests", jsonRequests);
+      jsonArg.set("requests", jsonRequests);
 
       URI postmanRunnerURI = new URI(postmanRunnerUrl + "/tests/" + testResult.getId());
       ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(postmanRunnerURI, HttpMethod.POST);
@@ -228,9 +242,9 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
    private ArrayNode buildQueryParams(List<Parameter> queryParameters) {
       ArrayNode jsonQPS = mapper.createArrayNode();
       for (Parameter parameter : queryParameters) {
-         JsonNode jsonQP = mapper.createObjectNode();
-         ((ObjectNode) jsonQP).put("key", parameter.getName());
-         ((ObjectNode) jsonQP).put("value", parameter.getValue());
+         ObjectNode jsonQP = mapper.createObjectNode();
+         jsonQP.put("key", parameter.getName());
+         jsonQP.put("value", parameter.getValue());
          jsonQPS.add(jsonQP);
       }
       return jsonQPS;
@@ -239,9 +253,9 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
    private ArrayNode buildHeaders(Set<Header> headers) {
       ArrayNode jsonHS = mapper.createArrayNode();
       for (Header header : headers) {
-         JsonNode jsonH = mapper.createObjectNode();
-         ((ObjectNode) jsonH).put("key", header.getName());
-         ((ObjectNode) jsonH).put("value", buildValue(header.getValues()));
+         ObjectNode jsonH = mapper.createObjectNode();
+         jsonH.put("key", header.getName());
+         jsonH.put("value", buildValue(header.getValues()));
          jsonHS.add(jsonH);
       }
       return jsonHS;

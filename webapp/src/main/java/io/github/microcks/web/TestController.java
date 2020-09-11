@@ -19,6 +19,7 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.*;
+import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.service.MessageService;
@@ -57,6 +58,9 @@ public class TestController {
 
    @Autowired
    private ServiceRepository serviceRepository;
+
+   @Autowired
+   private SecretRepository secretRepository;
 
    @Autowired
    private TestService testService;
@@ -99,9 +103,21 @@ public class TestController {
          service = serviceRepository.findById(test.getServiceId()).orElse(null);
       }
       TestRunnerType testRunner = TestRunnerType.valueOf(test.getRunnerType());
+
       // Build additional header entries for operations.
       OperationsHeaders operationsHeaders = buildOperationsHeaders(test.getOperationsHeaders());
-      TestOptionals testOptionals = new TestOptionals(test.getSecretName(), test.getTimeout(), test.getFilteredOperations(), operationsHeaders);
+
+      // Deal with Secret check and retrieval if specified.
+      SecretRef secretRef = null;
+      if (test.getSecretName() != null) {
+         List<Secret> secrets = secretRepository.findByName(test.getSecretName());
+         if (!secrets.isEmpty()) {
+            secretRef = new SecretRef(secrets.get(0).getId(), secrets.get(0).getName());
+         }
+         // TODO: should we return an error and refuse creating the test without secret ?
+      }
+
+      TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(), operationsHeaders);
       TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, testOptionals);
       return new ResponseEntity<>(testResult, HttpStatus.CREATED);
    }

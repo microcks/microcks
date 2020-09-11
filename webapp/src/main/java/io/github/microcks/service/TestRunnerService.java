@@ -22,13 +22,15 @@ import io.github.microcks.domain.*;
 import io.github.microcks.repository.*;
 import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.asyncapi.AsyncAPITestRunner;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.postman.PostmanTestStepsRunner;
 import io.github.microcks.util.soapui.SoapUITestStepsRunner;
 import io.github.microcks.util.test.AbstractTestRunner;
 import io.github.microcks.util.test.HttpTestRunner;
 import io.github.microcks.util.test.SoapHttpTestRunner;
-import io.github.microcks.util.test.TestReturn;
+import io.github.microcks.domain.TestReturn;
+
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.conn.socket.ConnectionSocketFactory;
@@ -48,7 +50,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 
 import javax.net.ssl.SSLContext;
@@ -93,6 +94,9 @@ public class TestRunnerService {
    @Value("${postman-runner.url}")
    private final String postmanRunnerUrl = null;
 
+   @Value("${async-minion.url}")
+   private final String asyncMinionUrl = null;
+
    @Value("${validation.resourceUrl}")
    private final String validationResourceUrl = null;
 
@@ -136,7 +140,7 @@ public class TestRunnerService {
          List<Request> requests = requestRepository.findByOperationId(IdBuilder.buildOperationId(service, operation));
          requests = cloneRequestsForTestCase(requests, testCaseId);
 
-         List<TestReturn> results = new ArrayList<TestReturn>();
+         List<TestReturn> results = new ArrayList<>();
          try {
             HttpMethod method = testRunner.buildMethod(operation.getMethod());
             results = testRunner.runTest(service, operation, testResult, requests, testResult.getTestedEndpoint(), method);
@@ -179,8 +183,8 @@ public class TestRunnerService {
       // Prepare a bunch of flag we're going to complete.
       boolean successFlag = true;
       long caseElapsedTime = 0;
-      List<Response> responses = new ArrayList<Response>();
-      List<Request> actualRequests = new ArrayList<Request>();
+      List<Response> responses = new ArrayList<>();
+      List<Request> actualRequests = new ArrayList<>();
 
       for (TestReturn testReturn : testReturns) {
          // Deal with elapsed time and success flag.
@@ -250,7 +254,7 @@ public class TestRunnerService {
 
    /** Clone and prepare request for a test case usage. */
    private List<Request> cloneRequestsForTestCase(List<Request> requests, String testCaseId){
-      List<Request> result = new ArrayList<Request>();
+      List<Request> result = new ArrayList<>();
       for (Request request : requests){
          Request clone = new Request();
          clone.setName(request.getName());
@@ -274,7 +278,7 @@ public class TestRunnerService {
       try {
          sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
       } catch (Exception e) {
-         log.error("Exception while building SSLContext with acceptionTrustStrategy", e);
+         log.error("Exception while building SSLContext with acceptingTrustStrategy", e);
          return null;
       }
 
@@ -302,6 +306,11 @@ public class TestRunnerService {
             OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, true);
             openApiRunner.setClientHttpRequestFactory(factory);
             return openApiRunner;
+         case ASYNC_API_SCHEMA:
+            AsyncAPITestRunner asyncApiRunner = new AsyncAPITestRunner(resourceRepository, secretRepository);
+            asyncApiRunner.setClientHttpRequestFactory(factory);
+            asyncApiRunner.setAsyncMinionUrl(asyncMinionUrl);
+            return asyncApiRunner;
          case SOAP_UI:
             // Handle local download of correct project file.
             List<ImportJob> jobs = jobRepository.findByServiceRefId(serviceId);
