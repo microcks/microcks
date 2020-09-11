@@ -24,3 +24,8 @@ span.label {
   font-weight: 400;
   color: #757575;
 }
+
+.code-block {
+  display: inline-block;
+  white-space: pre-wrap;
+}

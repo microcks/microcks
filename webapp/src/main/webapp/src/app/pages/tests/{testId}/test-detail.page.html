@@ -107,14 +107,14 @@
                   <h5 class="subsection-label">Response</h5>
 
                   <dl class="dl-horizontal left" *ngIf="messagePairFor(item.operationName, testStep.requestName).response.status">
-                    <dt>Response Time</dt>
+                    <dt>Response Time:</dt>
                     <dd>{{ testStep.elapsedTime }} ms.</dd>
-                    <dt>Response Code and Type</dt>
+                    <dt>Response Code and Type:</dt>
                     <dd>
                       <code><small>{{ messagePairFor(item.operationName, testStep.requestName).response.status }}: {{messagePairFor(item.operationName, testStep.requestName).response.mediaType}}</small></code>
                     </dd>
                     <span *ngIf="testStep.message">
-                      <dt>Error</dt>
+                      <dt>Error:</dt>
                       <dd>
                         <code><small>{{ testStep.message }}</small></code>
                       </dd>
@@ -140,16 +140,16 @@
                   <h5 class="subsection-label">Event Message</h5>
 
                   <dl class="dl-horizontal left" *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType">
-                    <dt>Consumption Time</dt>
+                    <dt>Consumption Time:</dt>
                     <dd>{{ testStep.elapsedTime }} ms.</dd>
-                    <dt>Event Type</dt>
+                    <dt>Event Type:</dt>
                     <dd>
-                      <code><small>{{ eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType }}</small></code>
+                      <code>{{ eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType }}</code>
                     </dd>
                     <span *ngIf="testStep.message">
-                      <dt>Error</dt>
+                      <dt>Error:</dt>
                       <dd>
-                        <code><small>{{ testStep.message }}</small></code>
+                        <code class="code-block">{{ formatErrorMessage(testStep.message) }}</code>
                       </dd>
                     </span>
                   </dl>

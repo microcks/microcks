@@ -114,4 +114,11 @@ export class TestDetailPageComponent implements OnInit {
     operation = operation.replace(/}/g, '');
     return encodeURIComponent(operation);
   }
+
+  public formatErrorMessage(message: string): string {
+    if (message != undefined) {
+      return message.replace(/\\n/g, '\n');
+    }
+    return "";
+  }
 }
