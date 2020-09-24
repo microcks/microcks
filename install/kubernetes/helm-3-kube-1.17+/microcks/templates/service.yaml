@@ -39,6 +39,7 @@ spec:
     app: "{{ .Values.appName }}"
     container: postman-runtime
     group: microcks
+{{- if and .Values.mongodb.install }}
 ---
 kind: Service
 apiVersion: v1
@@ -61,6 +62,8 @@ spec:
     group: microcks
   type: ClusterIP
   sessionAffinity: None
+{{- end }}
+{{- if and .Values.keycloak.install }}
 ---
 kind: Service
 apiVersion: v1
@@ -104,3 +107,27 @@ spec:
     app: "{{ .Values.appName }}"
     container: keycloak-postgresql
     group: microcks
+{{- end }}
+{{- if and .Values.features.async.enabled }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-async-minion"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: async-minion
+    group: microcks
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: async-minion
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: "{{ .Values.appName }}"
+    container: async-minion
+    group: microcks
+{{- end }}

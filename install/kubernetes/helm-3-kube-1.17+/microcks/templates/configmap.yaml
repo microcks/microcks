@@ -24,6 +24,7 @@ data:
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
     postman-runner.url=${POSTMAN_RUNNER_URL}
+    async-minion.url=${ASYNC_MINION_URL}
 
     network.username=
     network.password=

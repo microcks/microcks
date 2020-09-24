@@ -64,6 +64,10 @@ spec:
             value: http://{{ .Values.appName }}:8080
           - name: KEYCLOAK_URL
             value: https://{{ .Values.keycloak.url }}/auth
+          {{- if and .Values.features.async.enabled }}
+          - name: ASYNC_MINION_URL
+            value: http://{{ .Values.appName }}-async-minion:8080
+          {{- end }}
           - name: KAFKA_BOOTSTRAP_SERVER
             {{- if eq .Values.features.async.kafka.install true }}
             value: "{{ .Values.appName }}-kafka-kafka-bootstrap:9092"
@@ -429,7 +433,7 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: "{{ .Values.appName }}-async-minon"
+  name: "{{ .Values.appName }}-async-minion"
   labels:
     app: "{{ .Values.appName }}"
     container: async-minion
