@@ -146,14 +146,14 @@
             <div class="col-md-6">
               <dl class="dl-horizontal left">
               <span *ngIf="view.service.type === 'SOAP_HTTP'">
-                <dt>Message Input Name:</dt>
-                <dd><code>{{ item.inputName }}</code></dd>
+                <dt>SOAP Action:</dt>
+                <dd><code>{{ item.action }}</code></dd>
               </span>
               <span *ngIf="view.service.type != 'EVENT'">
                 <dt>Dispatcher:</dt>
                 <dd><code>{{ item.dispatcher }}</code> &nbsp; 
                   <span class="learn-more-inline">
-                    <a href="https://microcks.github.io">Learn More 
+                    <a href="https://microcks.io/documentation/using/mocks/">Learn More 
                       <i class="fa fa-external-link" aria-hidden="true"></i>
                     </a>
                   </span>
@@ -168,7 +168,7 @@
                 <dd>
                   {{ getBindingsList(item) }} &nbsp; 
                   <span class="learn-more-inline">
-                    <a href="https://microcks.github.io">Learn More 
+                    <a href="https://microcks.io/documentation/using/asyncapi/#bindings">Learn More 
                       <i class="fa fa-external-link" aria-hidden="true"></i>
                     </a>
                   </span>
@@ -185,8 +185,8 @@
               </dl>
               <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
               <span *ngIf="view.service.type === 'SOAP_HTTP'">
-                <dt>Message Output Name:</dt>
-                <dd><code>{{ item.outputName }}</code></dd>
+                <dt>Input / Output Name:</dt>
+                <dd><code>{{ item.inputName }} / {{ item.outputName }}</code></dd>
               </span>
               <dt>HTTP Verb:</dt>
               <dd>
@@ -195,7 +195,7 @@
                   <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
                   <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
                   <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
-                  <span class="label label-info" *ngSwitchDefault>{{ item.method }}</span>
+                  <span class="label label-info" *ngSwitchDefault>{{ item.method || 'POST'}}</span>
                 </div>
               </dd>
               <dt>Default delay:</dt>

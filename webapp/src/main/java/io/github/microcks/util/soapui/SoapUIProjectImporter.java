@@ -253,6 +253,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
          // Retrieve part name from Wsdl operation coming from interface.
          WsdlOperation wo = wi.getOperationByName(mockOperation.getName());
+         operation.setAction(wo.getAction());
          operation.setInputName(wo.getInputName());
          operation.setOutputName(wo.getOutputName());
 

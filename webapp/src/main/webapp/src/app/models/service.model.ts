@@ -48,6 +48,7 @@ export enum ServiceType {
 export class Operation {
   name: string;
   method: string;
+  action: string;
   inputName: string;
   outputName: string;
   bindings: {string: Binding[]}

@@ -99,13 +99,13 @@ public class SoapController {
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
 
-      // Enhancement : try getting operation from soap:body directly!
-      String operationName = extractOperationName(body);
-      log.debug("Extracted operation name from payload: {}", operationName);
+      // Enhancement : retrieve SOAPAction from request headers
+      String action = extractSoapAction(request);
+      log.debug("Extracted SOAP action from headers: {}", action);
 
-      if (operationName != null) {
+      if (action != null && action.length() > 0) {
          for (Operation operation : service.getOperations()) {
-            if (operationName.equals(operation.getInputName()) || operationName.equals(operation.getName())) {
+            if (action.equals(operation.getAction())) {
                rOperation = operation;
                log.info("Found valid operation {}", rOperation.getName());
                break;
@@ -113,6 +113,23 @@ public class SoapController {
          }
       }
 
+      // Enhancement : if not found, try getting operation from soap:body directly!
+      if (rOperation == null) {
+         String operationName = extractOperationName(body);
+         log.debug("Extracted operation name from payload: {}", operationName);
+
+         if (operationName != null) {
+            for (Operation operation : service.getOperations()) {
+               if (operationName.equals(operation.getInputName()) || operationName.equals(operation.getName())) {
+                  rOperation = operation;
+                  log.info("Found valid operation {}", rOperation.getName());
+                  break;
+               }
+            }
+         }
+      }
+
+      // Now processing the request and send a response.
       if (rOperation != null) {
          log.debug("Found a valid operation with rules: {}", rOperation.getDispatcherRules());
 
@@ -205,6 +222,39 @@ public class SoapController {
          return matcher.group("operation");
       }
       return null;
+   }
+
+   /**
+    * Extraction Soap Action from request headers if specified.
+    * @param request The incoming HttpServletRequest to extract from
+    * @return The found Soap action if any. Can be null.
+    */
+   protected String extractSoapAction(HttpServletRequest request) {
+      String action = null;
+      // If Soap 1.2, SOAPAction is in Content-Type header.
+      String contentType = request.getContentType();
+      if (contentType != null && contentType.startsWith("application/soap+xml") && contentType.contains("action=")) {
+         action = contentType.substring(contentType.indexOf("action=") + 7);
+         // Remove any other optional param in content-type if any.
+         if (action.contains(";")) {
+            action= action.substring(0, action.indexOf(";"));
+         }
+      } else {
+         // Else, SOAPAction is in dedicated header.
+         action = request.getHeader("SOAPAction");
+      }
+      // Sanitize action value if any.
+      if (action != null) {
+         // Remove starting double-quote if any.
+         if (action.startsWith("\"")) {
+            action = action.substring(1);
+         }
+         // Remove ending double-quote if any.
+         if (action.endsWith("\"")) {
+            action = action.substring(0, action.length() - 1);
+         }
+      }
+      return action;
    }
 
    private String getDispatchCriteriaFromXPathEval(Operation operation, String body) {

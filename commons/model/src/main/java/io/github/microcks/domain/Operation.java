@@ -32,6 +32,7 @@ public class Operation {
 
    private String name;
    private String method;
+   private String action;
    private String inputName;
    private String outputName;
    private Map<String, Binding> bindings;
@@ -58,6 +59,14 @@ public class Operation {
 
    public void setMethod(String method) {
       this.method = method;
+   }
+
+   public String getAction() {
+      return action;
+   }
+
+   public void setAction(String action) {
+      this.action = action;
    }
 
    public String getInputName() {
