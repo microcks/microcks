@@ -121,8 +121,11 @@ export class ServiceDetailPageComponent implements OnInit {
       closeBtnName: 'Cancel',
       resourceName: this.resolvedServiceView.service.name + " - " + this.resolvedServiceView.service.version,
       resourceType: 'Service',
-      labels: JSON.parse(JSON.stringify(this.resolvedServiceView.service.metadata.labels))
+      labels: {}
     };
+    if (this.resolvedServiceView.service.metadata.labels != undefined) {
+      initialState.labels = JSON.parse(JSON.stringify(this.resolvedServiceView.service.metadata.labels));
+    }
     this.modalRef = this.modalService.show(EditLabelsDialogComponent, {initialState});
     this.modalRef.content.saveLabelsAction.subscribe((labels) => {
       this.resolvedServiceView.service.metadata.labels = labels;
