@@ -254,7 +254,7 @@ export class ServiceDetailPageComponent implements OnInit {
           return parts[p1];
         });
         if (paramsCriteria != null) {
-          operationName += '?' + paramsCriteria.replace('?', '&');
+          operationName += '?' + paramsCriteria.replace(/\?/g, '&');
         }
       }
 
