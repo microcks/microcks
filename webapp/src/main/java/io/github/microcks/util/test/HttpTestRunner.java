@@ -157,7 +157,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          if (httpResponse != null){
             response.setContent(responseContent);
             response.setStatus(String.valueOf(httpResponse.getRawStatusCode()));
-            System.err.println("Response Content-Type: " + httpResponse.getHeaders().getContentType());
+            log.debug("Response Content-Type: " + httpResponse.getHeaders().getContentType());
             if (httpResponse.getHeaders().getContentType() != null) {
                response.setMediaType(httpResponse.getHeaders().getContentType().toString());
             }
