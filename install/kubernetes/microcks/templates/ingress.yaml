@@ -4,6 +4,9 @@ metadata:
   name: microcks
   annotations:
     ingress.kubernetes.io/rewrite-target: /
+  {{- with .Values.microcks.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app: "{{ .Values.appName }}"
     group: microcks
@@ -27,6 +30,9 @@ metadata:
   name: keycloak
   annotations:
     ingress.kubernetes.io/rewrite-target: /
+  {{- with .Values.keycloak.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app: "{{ .Values.appName }}"
     group: microcks

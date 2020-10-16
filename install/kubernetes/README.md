@@ -143,7 +143,9 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` | 
-| `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. | 
+| `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
+| `microcks`    | `ingressAnnotations` | **Optional**. A dictionary of annotations for the Microcks `Ingress`. If annotations aims to trigger a Certificate generation (like https://cert-manager.io/), you should set the `generateCert` property to `false`.  |
+| `microcks`    | `generateCert`     | **Optional**. Whether to generate self-signed certificates for `Ingress` Default is `true`. | 
 | `microcks`    | `replicas`         | **Optional**. The number of replicas for the Microcks main pod. Default is `1`. |
 | `microcks`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `postman`     | `replicas`         | **Optional**. The number of replicas for the Microcks Postman pod. Default is `1`. |
@@ -151,7 +153,9 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `keycloak`    | `install`          | **Optional**. Flag for Keycloak installation. Default is `true`. Set to `false` if you want to reuse an existing Keycloak instance. |
 | `keycloak`    | `realm`            | **Optional**. Name of Keycloak realm to use. Should be setup only if `install` is `false` and you want to reuse an existing realm. Default is `microcks`. |
 | `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install if it already exists or the one used for exposing Keycloak `Ingress`. | 
-| `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |  
+| `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
+| `keycloak`    | `ingressAnnotations` | **Optional**. A dictionary of annotations for the Keycloak `Ingress`. If annotations aims to trigger a Certificate generation (like https://cert-manager.io/), you should set the `generateCert` property to `false`. |  
+| `keycloak`    | `generateCert`     | **Optional**. Whether to generate self-signed certificates for `Ingress` Default is `true`. |
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
 | `keycloak`    | `volumeSize`       | **Optional**. Size of persistent volume claim for Keycloak. Default is `1Gi`. Not used if not persistent install asked. |
