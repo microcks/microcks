@@ -125,7 +125,6 @@ export class ServicesPageComponent implements OnInit {
   }
 
   getServices(page: number = 1): void {
-    console.log("GET SERVICES CALLED");
     this.servicesSvc.getServices(page).subscribe(results => this.services = results);
     // Update browser URL to make the page bookmarkable.
     this.router.navigate([], {relativeTo: this.route, queryParams: {} as Params});
@@ -159,7 +158,9 @@ export class ServicesPageComponent implements OnInit {
       this.servicesLabels = results;
       var queries = [];
       // Get only the label values corresponding to key used for filtering, then transform them for Patternfly.
-      this.servicesLabels[this.repositoryFilterFeatureLabelKey()].map(label => queries.push({id: label, value: label}));
+      if (this.servicesLabels[this.repositoryFilterFeatureLabelKey()] != undefined) {
+        this.servicesLabels[this.repositoryFilterFeatureLabelKey()].map(label => queries.push({id: label, value: label}));
+      }
       this.filterConfig.fields[0].queries = queries;
     });
   }

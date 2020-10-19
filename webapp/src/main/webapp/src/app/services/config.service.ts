@@ -91,7 +91,7 @@ export class ConfigService {
     const featurePromise = this.http.get<any>('/api/features/config')
       .toPromise().then(results => {
         this.config.features = results;
-        console.info("[ConfigService] Got result: " + JSON.stringify(this.config.features));
+        console.info("[ConfigService] Got config: " + JSON.stringify(this.config.features));
         return results;
       });
     return featurePromise;
