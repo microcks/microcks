@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 
 /**
  * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an Apache Kafka Broker.
- * Endpoint URL should be specified using the following form: <code>kafka://{brokerhost[:port]}/{topic}[?option1=value1&option2=value2]</code>
+ * Endpoint URL should be specified using the following form: <code>kafka://{brokerhost[:port]}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class KafkaMessageConsumptionTask implements MessageConsumptionTask {

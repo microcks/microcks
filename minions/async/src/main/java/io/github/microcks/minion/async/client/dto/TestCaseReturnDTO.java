@@ -39,8 +39,8 @@ public class TestCaseReturnDTO {
    }
 
    /**
-    *
-    * @param operationName
+    * Create a new TestCaseReturnDTo corresponding to an operation.
+    * @param operationName The name of the operation this Test case return relates to
     */
    public TestCaseReturnDTO(String operationName) {
       this.operationName = operationName;

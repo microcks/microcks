@@ -69,8 +69,9 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
    private String asyncMinionUrl = null;
 
    /**
-    * Build a new AsyncAPITestRunner using a resource repository for retrieving AsyncAPI specification
+    * Build a new AsyncAPITestRunner using a resource repository for retrieving AsyncAPI specification.
     * @param resourceRepository The repository that contains AsyncAPI specification to validate
+    * @param secretRepository The repository for accessing secrets for connecting test endpoints
     */
    public AsyncAPITestRunner(ResourceRepository resourceRepository, SecretRepository secretRepository) {
       this.resourceRepository = resourceRepository;

@@ -81,10 +81,10 @@ public interface MicrocksAPIConnector {
                                    @QueryParam("messages") boolean messages);
 
    /**
-    *
-    * @param testResultId
-    * @param testCaseReturn
-    * @return
+    * Report a TestCaseResult associated to a TestResult.
+    * @param testResultId The unique identifier of TestResult we want to report a result for
+    * @param testCaseReturn A Test Case return data object for this TestResult
+    * @return The created TestCaseResult following reporting
     */
    @POST
    @Path("/tests/{id}/testCaseResult")
