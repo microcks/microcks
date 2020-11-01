@@ -197,7 +197,7 @@
 							"name": "get-2",
 							"originalRequest": {
 								"url": {
-									"raw": "https://petstore-api-2445581593402.staging.apicast.io:443/v2/pet/:petId/?user_key=70f735676ec46351c6699c4bb767878a",
+									"raw": "https://petstore-api-2445581593402.staging.apicast.io:443/v2/pet/:petId?user_key=70f735676ec46351c6699c4bb767878a",
 									"protocol": "https",
 									"host": [
 										"petstore-api-2445581593402",
