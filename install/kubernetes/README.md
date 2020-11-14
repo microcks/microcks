@@ -1,6 +1,6 @@
 # Microcks
 
-This chart bootstraps a new [Microcks](http://microcks.github.io) application using the [Helm](https://helm.sh) package manager.
+This chart bootstraps a new [Microcks](http://microcks.io) application using the [Helm](https://helm.sh) package manager.
 
 Resources within this directory are intended to work with Helm version 3+ (which do not need the Tiller server-side component).
 
@@ -15,7 +15,7 @@ $ helm repo add microcks https://microcks.io/helm
 
 $ kubectl create namespace microcks
 
-$ helm install microcks microcks/microcks —-version 1.0.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
+$ helm install microcks microcks/microcks —-version 1.1.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
   
 NAME: microcks
 LAST DEPLOYED: Mon Aug 10 18:57:46 2020
@@ -45,7 +45,7 @@ From the sources cloned locally:
 ```console
 $ git clone https://github.com/microcks/microcks
 
-$ cd install/kubernetes/helm-3-kube-1.17+
+$ cd install/kubernetes
 
 $ helm install microcks ./microcks --namespace microcks \
    --set microcks.url=microcks.$(minikube ip).nip.io \
@@ -80,7 +80,7 @@ Since release `1.0.0`, Microcks support mocking of event-driven API thanks to [A
 
 To install a Kafka message broker during its deployment, Microcks relies on [Strimzi Operator](https://strimzi.io) and will try to create such custom resources such as `Kafka` and `KafkaTopic`. When using this configuration, you will thus need to install Strimzi Operator cluster-wide or on targeted namespace.
 
-Here's some commands below on how to do that onto a Minikube instance:
+Here are some commands below on how to do that onto a Minikube instance:
 
 ```console
 $ helm repo add strimzi https://strimzi.io/charts/
@@ -143,9 +143,7 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` | 
-| `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `microcks`    | `ingressAnnotations` | **Optional**. A dictionary of annotations for the Microcks `Ingress`. If annotations aims to trigger a Certificate generation (like https://cert-manager.io/), you should set the `generateCert` property to `false`.  |
-| `microcks`    | `generateCert`     | **Optional**. Whether to generate self-signed certificates for `Ingress` Default is `true`. | 
+| `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. | 
 | `microcks`    | `replicas`         | **Optional**. The number of replicas for the Microcks main pod. Default is `1`. |
 | `microcks`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `postman`     | `replicas`         | **Optional**. The number of replicas for the Microcks Postman pod. Default is `1`. |
@@ -153,9 +151,7 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `keycloak`    | `install`          | **Optional**. Flag for Keycloak installation. Default is `true`. Set to `false` if you want to reuse an existing Keycloak instance. |
 | `keycloak`    | `realm`            | **Optional**. Name of Keycloak realm to use. Should be setup only if `install` is `false` and you want to reuse an existing realm. Default is `microcks`. |
 | `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install if it already exists or the one used for exposing Keycloak `Ingress`. | 
-| `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `keycloak`    | `ingressAnnotations` | **Optional**. A dictionary of annotations for the Keycloak `Ingress`. If annotations aims to trigger a Certificate generation (like https://cert-manager.io/), you should set the `generateCert` property to `false`. |  
-| `keycloak`    | `generateCert`     | **Optional**. Whether to generate self-signed certificates for `Ingress` Default is `true`. |
+| `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |  
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
 | `keycloak`    | `volumeSize`       | **Optional**. Size of persistent volume claim for Keycloak. Default is `1Gi`. Not used if not persistent install asked. |

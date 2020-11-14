@@ -13,7 +13,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <java.version>1.8</java.version>
+    <java.version>11</java.version>
     <junit.version>4.12</junit.version>
     <jackson.version>2.10.2</jackson.version>
   </properties>

@@ -204,7 +204,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
     * @param request The tested reference request
     * @param httpResponse The received response from endpoint
     * @param responseContent The response body content if any (may be null)
-    * @return The test result code, wether TestReturn.SUCCESS_CODE or TestReturn.FAILURE_CODE
+    * @return The test result code, whether TestReturn.SUCCESS_CODE or TestReturn.FAILURE_CODE
     */
    protected int extractTestReturnCode(Service service, Operation operation, Request request,
                                        ClientHttpResponse httpResponse, String responseContent){

@@ -1,6 +1,6 @@
 # Microcks
 
-This chart bootstraps a new [Microcks](http://microcks.github.io) application using the [Helm](https://helm.sh) package manager.
+This chart bootstraps a new [Microcks](http://microcks.io) application using the [Helm](https://helm.sh) package manager.
 
 Resources within this directory are intended to work with Helm version 3+ (which do not need the Tiller server-side component).
 
@@ -15,7 +15,7 @@ $ helm repo add microcks https://microcks.io/helm
 
 $ kubectl create namespace microcks
 
-$ helm install microcks microcks/microcks —-version 1.0.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
+$ helm install microcks microcks/microcks —-version 1.1.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
   
 NAME: microcks
 LAST DEPLOYED: Mon Aug 10 18:57:46 2020
@@ -45,7 +45,7 @@ From the sources cloned locally:
 ```console
 $ git clone https://github.com/microcks/microcks
 
-$ cd install/kubernetes/helm-3-kube-1.17+
+$ cd install/kubernetes
 
 $ helm install microcks ./microcks --namespace microcks \
    --set microcks.url=microcks.$(minikube ip).nip.io \
@@ -80,7 +80,7 @@ Since release `1.0.0`, Microcks support mocking of event-driven API thanks to [A
 
 To install a Kafka message broker during its deployment, Microcks relies on [Strimzi Operator](https://strimzi.io) and will try to create such custom resources such as `Kafka` and `KafkaTopic`. When using this configuration, you will thus need to install Strimzi Operator cluster-wide or on targeted namespace.
 
-Here's some commands below on how to do that onto a Minikube instance:
+Here are some commands below on how to do that onto a Minikube instance:
 
 ```console
 $ helm repo add strimzi https://strimzi.io/charts/

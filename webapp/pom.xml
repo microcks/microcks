@@ -15,7 +15,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
-    <java.version>1.8</java.version>
+    <java.version>11</java.version>
     <junit.version>4.12</junit.version>
     <keycloak.version>10.0.1</keycloak.version>
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
@@ -330,7 +330,7 @@
           <plugin>
             <groupId>com.spotify</groupId>
             <artifactId>docker-maven-plugin</artifactId>
-            <version>0.4.11</version>
+            <version>1.2.2</version>
             <configuration>
               <imageName>${docker.image.prefix}/${docker.image.name}</imageName>
               <!-- <dockerDirectory>src/main/docker</dockerDirectory> -->

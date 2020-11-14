@@ -18,6 +18,7 @@
     <logger name="org.springframework.data.mongodb" level="INFO"/>
     <logger name="org.keycloak" level="INFO"/>
 
+    <logger name="jdk.event.security" level="WARN"/>
     <logger name="javax.activation" level="WARN"/>
     <logger name="javax.mail" level="WARN"/>
     <logger name="javax.xml.bind" level="WARN"/>

@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.1-398
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.3-201
 
 MAINTAINER Laurent Broudoux <laurent@microcks.io>
 
@@ -8,7 +8,7 @@ LABEL io.k8s.description="Microcks is Open Source Kubernetes native tool for API
       maintainer="Laurent Broudoux <laurent@microcks.io>"
 
 # Install Java runtime
-RUN microdnf install java-1.8.0-openjdk-headless openssl curl ca-certificates \
+RUN microdnf install java-11-openjdk-headless openssl curl ca-certificates \
  && microdnf clean all \
  && mkdir -p /deployments
 
@@ -37,7 +37,7 @@ RUN chown 1001 /deployments \
     && chmod "g+rwX" /deployments \
     && chown 1001:root /deployments \
     && chmod g+rw /etc/passwd \
-    && curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/1.3.5/run-java-sh-1.3.5-sh.sh \
+    && curl https://repo1.maven.org/maven2/io/fabric8/run-java-sh/1.3.8/run-java-sh-1.3.8-sh.sh \
             -o /deployments/run-java.sh \
     && mkdir -p /deployments/data \
     && chown 1001 /deployments/run-java.sh \

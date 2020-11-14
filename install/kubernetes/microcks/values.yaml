@@ -9,7 +9,7 @@ microcks:
     #kubernetes.io/tls-acme: "true"
     #kubernetes.io/ingress.class: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:1.0.0
+  image: quay.io/microcks/microcks:1.1.0
   replicas: 1
   
 postman:
@@ -69,7 +69,7 @@ features:
     defaultBinding: KAFKA
     defaultFrequency: 10
     
-    image: quay.io/microcks/microcks-async-minion:1.0.0
+    image: quay.io/microcks/microcks-async-minion:1.1.0
 
     kafka:
       install: true
