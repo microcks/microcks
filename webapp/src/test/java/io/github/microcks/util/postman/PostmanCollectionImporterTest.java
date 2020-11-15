@@ -446,4 +446,54 @@ public class PostmanCollectionImporterTest {
       }
       assertTrue(failure);
    }
+
+   @Test
+   public void testPetstoreWithTrailingSlashImport() {
+      PostmanCollectionImporter importer = null;
+      try {
+         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/PetstoreAPI-collection-sample.json");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Petstore API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+
+      // Check that operations and and input/output have been found.
+      assertEquals(2, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("GET /v2/pet/:petId".equals(operation.getName())) {
+            // assertions for findById.
+            assertEquals("GET", operation.getMethod());
+            //assertEquals(2, operation.getResourcePaths().size());
+            assertEquals(DispatchStyles.URI_ELEMENTS, operation.getDispatcher());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
+            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
+                  || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
+            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
+                  || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
+         }
+      }
+   }
 }

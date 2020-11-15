@@ -448,6 +448,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       if (operationNameRadix != null && result.indexOf(operationNameRadix) != -1) {
          result = result.substring(result.indexOf(operationNameRadix));
       }
+      // Remove trailing / if present.
+      if (result.endsWith("/")) {
+         result= result.substring(0, result.length() - 1);
+      }
       return result;
    }
 

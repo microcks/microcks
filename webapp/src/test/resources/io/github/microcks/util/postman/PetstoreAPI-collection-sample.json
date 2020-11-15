@@ -1,0 +1,412 @@
+{
+  "variables": [],
+  "info": {
+    "name": "Petstore API",
+    "_postman_id": "c0bc3513-c83a-8b5d-bbff-1a4a0dc001d7",
+    "description": "version=1.0 - This is a PetStore API description",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "pet",
+      "description": "",
+      "item": [
+        {
+          "name": "Finds Pets by status",
+          "request": {
+            "url": {
+              "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available",
+              "protocol": "https",
+              "host": [
+                "petstore-api-2445581593402",
+                "apicast",
+                "io"
+              ],
+              "port": "443",
+              "path": [
+                "v2",
+                "pet",
+                "findByStatus"
+              ],
+              "query": [
+                {
+                  "key": "user_key",
+                  "value": "998bac0775b1d5f588e0a6ca7c11b852",
+                  "equals": true,
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "available",
+                  "equals": true,
+                  "description": ""
+                }
+              ],
+              "variable": []
+            },
+            "method": "GET",
+            "header": [],
+            "body": {},
+            "description": ""
+          },
+          "response": [
+            {
+              "id": "c7e562f0-3d87-4925-96d1-c38e0dc4c0d6",
+              "name": "available response",
+              "originalRequest": {
+                "url": {
+                  "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=70f735676ec46351c6699c4bb767878a&status=available",
+                  "protocol": "https",
+                  "host": [
+                    "petstore-api-2445581593402",
+                    "apicast",
+                    "io"
+                  ],
+                  "port": "443",
+                  "path": [
+                    "v2",
+                    "pet",
+                    "findByStatus"
+                  ],
+                  "query": [
+                    {
+                      "key": "user_key",
+                      "value": "70f735676ec46351c6699c4bb767878a",
+                      "equals": true,
+                      "description": ""
+                    },
+                    {
+                      "key": "status",
+                      "value": "available",
+                      "equals": true,
+                      "description": ""
+                    }
+                  ],
+                  "variable": []
+                },
+                "method": "GET",
+                "header": [],
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "_postman_previewtype": "text",
+              "header": [
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "key": "Access-Control-Allow-Headers",
+                  "value": "Content-Type, api_key, Authorization",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Methods",
+                  "key": "Access-Control-Allow-Methods",
+                  "value": "GET, POST, DELETE, PUT",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*",
+                  "description": ""
+                },
+                {
+                  "name": "Connection",
+                  "key": "Connection",
+                  "value": "keep-alive",
+                  "description": ""
+                },
+                {
+                  "name": "Content-Type",
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": ""
+                },
+                {
+                  "name": "Date",
+                  "key": "Date",
+                  "value": "Wed, 07 Dec 2016 15:31:45 GMT",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "key": "Server",
+                  "value": "openresty/1.9.15.1",
+                  "description": ""
+                },
+                {
+                  "name": "X-Powered-By",
+                  "key": "X-Powered-By",
+                  "value": "3scale API Management - http://www.3scale.net",
+                  "description": ""
+                },
+                {
+                  "name": "transfer-encoding",
+                  "key": "transfer-encoding",
+                  "value": "chunked",
+                  "description": ""
+                }
+              ],
+              "cookie": [],
+              "responseTime": 1466,
+              "body": "[\n    {\n        \"id\": 190192062,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192063,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192285,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192654,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192671,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192727,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192736,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192768,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192878,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192907,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190193000,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": -98125093,\n        \"category\": {\n            \"id\": -517488397,\n            \"name\": \"EJvNbK\"\n        },\n        \"name\": \"LuEfMZATrHz\",\n        \"photoUrls\": [\n            \"XCXOVVkaxa\",\n            \"gNwYqHEmC\",\n            \"nvCvphDeuqztysUBNed\",\n            \"W\",\n            \"vmrxRIViyXqumolLIeoB\",\n            \"JRqHVxk\",\n            \"tCUGbegVHoXajm\",\n            \"UiHppQn\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 727599428,\n                \"name\": \"RemggEDzxPljbrlktdWf\"\n            },\n            {\n                \"id\": 1987753751,\n                \"name\": \"zWqdKAGHMmhPPlomljaNtuvm\"\n            },\n            {\n                \"id\": 1251632392,\n                \"name\": \"BAgtgtKOxZGdsS\"\n            },\n            {\n                \"id\": -1813025208,\n                \"name\": \"OkKxtfAkCMEICbbQDVPi\"\n            },\n            {\n                \"id\": -730110346,\n                \"name\": \"WshDF\"\n            },\n            {\n                \"id\": 2100951153,\n                \"name\": \"yxUFSknQEleIAQCoocl\"\n            },\n            {\n                \"id\": -2135188117,\n                \"name\": \"M\"\n            },\n            {\n                \"id\": 1352243140,\n                \"name\": \"koKHsjysHXW\"\n            },\n            {\n                \"id\": 1696778814,\n                \"name\": \"KaihiyarcZkIzkkquWPZ\"\n            },\n            {\n                \"id\": 659492963,\n                \"name\": \"xqIzulcBPzWMyUpQwQK\"\n            },\n            {\n                \"id\": -2118372841,\n                \"name\": \"naYFGuHmqDqOpfHH\"\n            }\n        ],\n        \"status\": \"available\"\n    }\n]"
+            }
+          ]
+        },
+        {
+          "name": "Find pet by ID",
+          "request": {
+            "url": {
+              "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/:petId?user_key={{user_key}}",
+              "protocol": "https",
+              "host": [
+                "petstore-api-2445581593402",
+                "apicast",
+                "io"
+              ],
+              "port": "443",
+              "path": [
+                "v2",
+                "pet",
+                ":petId"
+              ],
+              "query": [
+                {
+                  "key": "user_key",
+                  "value": "{{user_key}}",
+                  "equals": true,
+                  "description": ""
+                }
+              ],
+              "variable": [
+                {
+                  "key": "petId",
+                  "value": ""
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {},
+            "description": ""
+          },
+          "response": [
+            {
+              "id": "05486047-439f-408d-97e7-a9925107a2a1",
+              "name": "get-2",
+              "originalRequest": {
+                "url": {
+                  "raw": "https://petstore-api-2445581593402.staging.apicast.io:443/v2/pet/:petId/?user_key=70f735676ec46351c6699c4bb767878a",
+                  "protocol": "https",
+                  "host": [
+                    "petstore-api-2445581593402",
+                    "staging",
+                    "apicast",
+                    "io"
+                  ],
+                  "port": "443",
+                  "path": [
+                    "v2",
+                    "pet",
+                    ":petId",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "user_key",
+                      "value": "70f735676ec46351c6699c4bb767878a",
+                      "equals": true,
+                      "description": ""
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "petId",
+                      "value": "2"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "_postman_previewtype": "text",
+              "header": [
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "key": "Access-Control-Allow-Headers",
+                  "value": "Content-Type, api_key, Authorization",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Methods",
+                  "key": "Access-Control-Allow-Methods",
+                  "value": "GET, POST, DELETE, PUT",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*",
+                  "description": ""
+                },
+                {
+                  "name": "Connection",
+                  "key": "Connection",
+                  "value": "keep-alive",
+                  "description": ""
+                },
+                {
+                  "name": "Content-Length",
+                  "key": "Content-Length",
+                  "value": "137",
+                  "description": ""
+                },
+                {
+                  "name": "Content-Type",
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": ""
+                },
+                {
+                  "name": "Date",
+                  "key": "Date",
+                  "value": "Wed, 07 Dec 2016 15:27:18 GMT",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "key": "Server",
+                  "value": "openresty/1.9.7.4",
+                  "description": ""
+                },
+                {
+                  "name": "X-Powered-By",
+                  "key": "X-Powered-By",
+                  "value": "3scale API Management - http://www.3scale.net",
+                  "description": ""
+                }
+              ],
+              "cookie": [],
+              "responseTime": 233,
+              "body": "{\"id\":2,\"category\":{\"id\":1,\"name\":\"Animal\"},\"name\":\"cat\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":1,\"name\":\"domestic\"}],\"status\":\"available\"}"
+            },
+            {
+              "id": "187fb73f-edbb-47d4-89ae-7e3e4a8cfcbd",
+              "name": "get-1",
+              "originalRequest": {
+                "url": {
+                  "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/:petId?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+                  "protocol": "https",
+                  "host": [
+                    "petstore-api-2445581593402",
+                    "apicast",
+                    "io"
+                  ],
+                  "port": "443",
+                  "path": [
+                    "v2",
+                    "pet",
+                    ":petId"
+                  ],
+                  "query": [
+                    {
+                      "key": "user_key",
+                      "value": "998bac0775b1d5f588e0a6ca7c11b852",
+                      "equals": true,
+                      "description": ""
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "key": "petId",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "",
+              "_postman_previewtype": "parsed",
+              "header": [
+                {
+                  "key": "Access-Control-Allow-Headers",
+                  "value": "Content-Type, api_key, Authorization",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Headers"
+                },
+                {
+                  "key": "Access-Control-Allow-Methods",
+                  "value": "GET, POST, DELETE, PUT",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Methods"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Origin"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "name": "Content-Type",
+                  "description": ""
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "0",
+                  "description": "",
+                  "type": "text",
+                  "name": "Content-Length"
+                },
+                {
+                  "key": "Server",
+                  "value": "openresty/1.9.7.4",
+                  "description": "",
+                  "type": "text",
+                  "name": "Server"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Dec 2016 15:27:22 GMT",
+                  "description": "",
+                  "type": "text",
+                  "name": "Date"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "3scale API Management - http://www.3scale.net",
+                  "description": "",
+                  "type": "text",
+                  "name": "X-Powered-By"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive",
+                  "description": "",
+                  "type": "text",
+                  "name": "Connection"
+                }
+              ],
+              "cookie": [],
+              "responseTime": 0,
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
