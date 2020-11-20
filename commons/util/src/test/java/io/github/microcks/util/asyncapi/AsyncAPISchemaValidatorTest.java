@@ -125,7 +125,7 @@ public class AsyncAPISchemaValidatorTest {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
                new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml"));
-         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
          contentNode = AsyncAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
@@ -134,7 +134,7 @@ public class AsyncAPISchemaValidatorTest {
 
       // Validate the content of user/signedup subscribe chanel.
       List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
-            "/channels/user~1signedup/subscribe/message/payload");
+            "/channels/user~1signedup/subscribe/message");
       assertTrue(errors.isEmpty());
    }
 
@@ -149,7 +149,7 @@ public class AsyncAPISchemaValidatorTest {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
                new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml"));
-         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
          contentNode = AsyncAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
@@ -158,7 +158,7 @@ public class AsyncAPISchemaValidatorTest {
 
       // Validate the content of user/signedup subscribe chanel.
       List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
-            "/channels/user~1signedup/subscribe/message/payload");
+            "/channels/user~1signedup/subscribe/message");
       assertFalse(errors.isEmpty());
 
       assertEquals(2, errors.size());
@@ -178,7 +178,7 @@ public class AsyncAPISchemaValidatorTest {
          // Load full specification from file.
          asyncAPIText = FileUtils.readFileToString(
                new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-out-asyncapi.yaml"));
-         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
          asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
          contentNode = AsyncAPISchemaValidator.getJsonNode(jsonText);
       } catch (Exception e) {
@@ -186,9 +186,37 @@ public class AsyncAPISchemaValidatorTest {
          fail("Exception should not be thrown");
       }
 
-      // Validate the content of user/signedup subscribe chanel.
+      // Validate the content of user/signedup subscribe channel.
       List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
-            "/channels/user~1signedup/subscribe/message/payload");
+            "/channels/user~1signedup/subscribe/message");
+      assertTrue(errors.isEmpty());
+   }
+
+   @Test
+   public void testFullProcedureFromAsyncAPIWithDeepRefsResource() {
+      String asyncAPIText = null;
+      String jsonText = "{\"streetlightId\":\"dev0\", \"lumens\":1000, \"sentAt\":\"2020-11-20T21:46:38Z\"}";
+      JsonNode asyncAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml"));
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+         contentNode = AsyncAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         e.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content of smartylighting/streetlights/event/lighting/measured subscribe channel.
+      List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
+            "/channels/smartylighting~1streetlights~1event~1lighting~1measured/subscribe/message");
+      for (String error : errors) {
+         System.err.println(error);
+      }
       assertTrue(errors.isEmpty());
    }
 }

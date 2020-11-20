@@ -72,7 +72,7 @@ public class AsyncAPISchemaValidator {
    /**
     * Validate a Json object representing by its text against a schema object representing byt its
     * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
+    * is respectful of AsyncAPI schema spec semantics regarding additional or unknown attributes: schema must
     * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
     * as validation errors. It returns a list of validation error messages.
     * @param schemaText The AsyncAPI schema specification as a string
@@ -87,10 +87,10 @@ public class AsyncAPISchemaValidator {
    /**
     * Validate a Json object representing by its text against a schema object representing byt its
     * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
+    * is respectful of AsyncAPI schema spec semantics regarding additional or unknown attributes: schema must
     * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
     * as validation errors. It returns a list of validation error messages.
-    * @param schemaNode The OpenAPI schema specification as a Jackson node
+    * @param schemaNode The AsyncAPI schema specification as a Jackson node
     * @param jsonNode The Json object as a Jackson node
     * @return The list of validation failures. If empty, json object is valid !
     */
@@ -102,7 +102,7 @@ public class AsyncAPISchemaValidator {
       } catch (ProcessingException e) {
          log.debug("Got a ProcessingException while trying to interpret schemaNode as a real schema");
          List<String> errors = new ArrayList<>();
-         errors.add("schemaNode does not seem to represent a valid OpenAPI schema");
+         errors.add("schemaNode does not seem to represent a valid AsyncAPI schema");
          return errors;
       }
    }
@@ -112,7 +112,7 @@ public class AsyncAPISchemaValidator {
     * a full AsyncAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
     * for <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
     * schema information. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
+    * is respectful of AsyncAPI schema spec semantics regarding additional or unknown attributes: schema must
     * explicitly set <code>additionalProperties</code> to false if you want to consider unknown attributes
     * as validation errors. It returns a list of validation error messages.
     * @param specificationNode The AsyncAPI full specification as a Jackson node
@@ -125,9 +125,23 @@ public class AsyncAPISchemaValidator {
       JsonNode messageNode = specificationNode.at(messagePathPointer);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
-         return Arrays.asList("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
+         return Arrays.asList("messagePathPointer does not represent a valid JSON Pointer in AsyncAPI specification");
       }
       // Message node can be just a reference.
+      if (messageNode.has("$ref")) {
+         String ref = messageNode.path("$ref").asText();
+         messageNode = specificationNode.at(ref.substring(1));
+      }
+
+      // Check that message node has a payload attribute.
+      if (!messageNode.has("payload")) {
+         log.debug("messageNode {} has no 'payload' attribute", messageNode);
+         return Arrays.asList("message definition has no valid payload in AsyncAPI specification");
+      }
+      // Navigate to payload definition.
+      messageNode = messageNode.path("payload");
+
+      // Payload node can be just a reference to another schema...
       if (messageNode.has("$ref")) {
          String ref = messageNode.path("$ref").asText();
          messageNode = specificationNode.at(ref.substring(1));
@@ -153,7 +167,7 @@ public class AsyncAPISchemaValidator {
 
    /**
     * Get a Jackson JsonNode representation for AsyncAPI schema text. This handles
-    * the fact that OpenAPI spec may be formatted in YAML. In that case, it handles the
+    * the fact that AsyncAPI spec may be formatted in YAML. In that case, it handles the
     * conversion.
     * @param schemaText The JSON or YAML string for AsyncAPI schema
     * @return The Jackson JsonNode corresponding to AsyncAPI schema string
