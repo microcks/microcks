@@ -1,0 +1,84 @@
+asyncapi: '2.0.0'
+id: 'urn:io.microcks.example.streetlights'
+info:
+  title: Streetlights API
+  version: 1.0.0
+  description: The Smartylighting Streetlights API allows you to remotely manage the city lights.
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json
+channels:
+  smartylighting/streetlights/event/lighting/measured:
+    description: The topic on which measure values may be consumed
+    subscribe:
+      summary: Receive informations about streelights measures
+      operationId: receiveStreelightsMeasures
+      bindings:
+        mqtt:
+          qos: 0
+          retain: false
+      message:
+        $ref: '#/components/messages/lightMeasured'
+components:
+  messages:
+    lightMeasured:
+      name: lightMeasured
+      title: Light measured
+      summary: Inform about environmental lighting conditions of a particular streetlight.
+      contentType: application/json
+      traits:
+        - $ref: '#/components/messageTraits/commonHeaders'
+      payload:
+        $ref: '#/components/schemas/lightMeasuredPayload'
+      examples:
+        - dev0:
+            summary: Example for Device 0
+            headers: |-
+              {"my-app-header": 14}
+            payload: |-
+              {"streetlightId":"dev0", "lumens":1000, "sentAt":"{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"}
+        - dev1:
+            summary: Example for Device 1
+            headers:
+              my-app-header: 14
+            payload:
+              streetlightId: dev1
+              lumens: 1100
+              sentAt: "{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"
+        - dev2:
+            summary: Example for Device 2
+            headers:
+              my-app-header: 14
+            payload:
+              streetlightId: dev2
+              lumens: 1200
+              sentAt: "{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"
+  schemas:
+    lightMeasuredPayload:
+      type: object
+      properties:
+        streetlightId:
+          type: string
+          description: The ID of the streetlight.
+        lumens:
+          type: integer
+          minimum: 0
+          description: Light intensity measured in lumens.
+        sentAt:
+          type: string
+          format: date-time
+          description: Date and time when the message was sent.
+  messageTraits:
+    commonHeaders:
+      headers:
+        type: object
+        properties:
+          my-app-header:
+            type: integer
+            minimum: 0
+            maximum: 100

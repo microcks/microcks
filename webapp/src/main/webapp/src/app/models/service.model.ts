@@ -70,9 +70,12 @@ export class Binding {
   keyType: string;
   destinationType: string;
   destinationName: string;
+  qoS: string;
+  persistent: boolean;
 }
 export enum BindingType {
   KAFKA,
+  MQTT,
   AMQP1
 }
 export class ParameterConstraint {

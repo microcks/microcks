@@ -193,6 +193,9 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'KAFKA':
             result += 'Kafka';
             break;
+          case 'MQTT':
+            result += 'MQTT';
+            break;
           case 'AMQP1':
             result += 'AMQP 1.0';
             break;

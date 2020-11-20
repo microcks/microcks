@@ -182,6 +182,10 @@
                   <dt>Kafka endpoint:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('KAFKA') }}</a></dd>
                 </span>
+                <span *ngIf="hasBinding(item, 'MQTT')">
+                  <dt>MQTT endpoint:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('MQTT') }}</a></dd>
+                </span>
               </dl>
               <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
               <span *ngIf="view.service.type === 'SOAP_HTTP'">
@@ -282,6 +286,24 @@
                       </dd>
                       <dt>Kafka Key type:</dt>
                       <dd>{{ getBindingProperty(item, 'KAFKA', 'keyType') }}</dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'MQTT')">
+                    <dl class="dl-horizontal left">
+                      <dt>MQTT topic:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage) }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                              (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage))"></i>
+                          </span>
+                        </div>
+                      </dd>
+                      <dt>MQTT QoS:</dt>
+                      <dd>{{ getBindingProperty(item, 'MQTT', 'qoS') }}</dd>
+                      <dt>MQTT retain:</dt>
+                      <dd>{{ getBindingProperty(item, 'MQTT', 'persistent') }}</dd>
                     </dl>
                   </span>
                   <span *ngIf="hasBinding(item, 'AMQP1')">

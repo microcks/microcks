@@ -136,4 +136,59 @@ public class AsyncAPIImporterTest {
          }
       }
    }
+
+   @Test
+   public void testReferenceAsyncAPIImportYAML() {
+      AsyncAPIImporter importer = null;
+      try {
+         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Streetlights API", service.getName());
+      assertEquals(ServiceType.EVENT, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+      assertEquals(ResourceType.ASYNC_API_SPEC, resources.get(0).getType());
+      assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
+      assertNotNull(resources.get(0).getContent());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+
+         if ("SUBSCRIBE smartylighting/streetlights/event/lighting/measured".equals(operation.getName())) {
+            assertEquals("SUBSCRIBE", operation.getMethod());
+
+            assertEquals(1, operation.getBindings().size());
+            assertNotNull(operation.getBindings().get("MQTT"));
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(3, exchanges.size());
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
 }

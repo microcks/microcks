@@ -24,5 +24,6 @@ package io.github.microcks.domain;
  */
 public enum BindingType {
    KAFKA,
+   MQTT,
    AMQP1
 }

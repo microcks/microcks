@@ -40,7 +40,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of MockReopsitoryImporter that deals with AsyncAPI v2.0.x specification
+ * An implementation of MockRepositoryImporter that deals with AsyncAPI v2.0.x specification
  * file ; whether encoding into JSON or YAML documents.
  * @author laurent
  */
@@ -159,6 +159,13 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
             if (operation.getName().equals(verbName.toUpperCase() + " " + channelName.trim())) {
                JsonNode messageBody = verb.getValue().path("message");
 
+               // If it's a $ref, then navigate to it.
+               if (messageBody.has("$ref")) {
+                  // $ref: '#/components/messages/lightMeasured'
+                  String ref = messageBody.path("$ref").asText();
+                  messageBody = spec.at(ref.substring(1));
+               }
+
                // Get message content type.
                String contentType = defaultContentType;
                if (messageBody.has("contentType")) {
@@ -192,49 +199,6 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                            }
 
                            result.add(new UnidirectionalEvent(eventMessage));
-                        }
-                     }
-                  }
-
-                  // If we've got examples, look also for bindings. First at the channel level.
-                  if (verb.getValue().has("bindings")) {
-                     Iterator<String> bindingNames = verb.getValue().path("bindings").fieldNames();
-                     while (bindingNames.hasNext()) {
-                        String bindingName = bindingNames.next();
-                        JsonNode binding = verb.getValue().path("bindings").path(bindingName);
-
-                        switch (bindingName) {
-                           case "kafka":
-                              break;
-                           case "amqp1":
-                              Binding b = retrieveOrInitOperationBinding(operation, BindingType.AMQP1);
-                              if (binding.has("destinationName")) {
-                                 b.setDestinationName(binding.path("destinationName").asText());
-                              }
-                              if (binding.has("destinationType")) {
-                                 b.setDestinationType(binding.path("destinationType").asText());
-                              }
-                              break;
-                        }
-                     }
-                  }
-
-                  // Then look for bindings at the message level.
-                  if (messageBody.has("bindings")) {
-                     Iterator<String> bindingNames = messageBody.path("bindings").fieldNames();
-                     while (bindingNames.hasNext()) {
-                        String bindingName = bindingNames.next();
-                        JsonNode binding = messageBody.path("bindings").path(bindingName);
-
-                        switch (bindingName) {
-                           case "kafka":
-                              Binding b = retrieveOrInitOperationBinding(operation, BindingType.KAFKA);
-                              if (binding.has("key")) {
-                                 b.setKeyType(binding.path("key").path("type").asText());
-                              }
-                              break;
-                           case "amqp1":
-                              break;
                         }
                      }
                   }
@@ -276,6 +240,60 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                   operation.setDispatcher(DispatchStyles.URI_PARTS);
                } else {
                   operation.addResourcePath(channelName);
+               }
+
+               // We have to look also for bindings. First at the operation level.
+               if (verb.getValue().has("bindings")) {
+                  Iterator<String> bindingNames = verb.getValue().path("bindings").fieldNames();
+                  while (bindingNames.hasNext()) {
+                     String bindingName = bindingNames.next();
+                     JsonNode binding = verb.getValue().path("bindings").path(bindingName);
+
+                     switch (bindingName) {
+                        case "kafka":
+                           break;
+                        case "mqtt":
+                           Binding b = retrieveOrInitOperationBinding(operation, BindingType.MQTT);
+                           if (binding.has("qos")) {
+                              b.setQoS(binding.path("qos").asText());
+                           }
+                           if (binding.has("retain")) {
+                              b.setPersistent(binding.path("retain").asBoolean());
+                           }
+                           break;
+                        case "amqp1":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.AMQP1);
+                           if (binding.has("destinationName")) {
+                              b.setDestinationName(binding.path("destinationName").asText());
+                           }
+                           if (binding.has("destinationType")) {
+                              b.setDestinationType(binding.path("destinationType").asText());
+                           }
+                           break;
+                     }
+                  }
+               }
+
+               // Then look for bindings at the message level.
+               JsonNode messageBody = verb.getValue().path("message");
+               if (messageBody.has("bindings")) {
+                  Iterator<String> bindingNames = messageBody.path("bindings").fieldNames();
+                  while (bindingNames.hasNext()) {
+                     String bindingName = bindingNames.next();
+                     JsonNode binding = messageBody.path("bindings").path(bindingName);
+
+                     switch (bindingName) {
+                        case "kafka":
+                           Binding b = retrieveOrInitOperationBinding(operation, BindingType.KAFKA);
+                           if (binding.has("key")) {
+                              b.setKeyType(binding.path("key").path("type").asText());
+                           }
+                           break;
+                        case "mqtt":
+                        case "amqp1":
+                           break;
+                     }
+                  }
                }
 
                results.add(operation);

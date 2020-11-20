@@ -1,0 +1,16 @@
+# A docker compose file to start an Artemis AMQP broker
+# more details on https://github.com/vromero/activemq-artemis-docker.
+version: '2'
+
+services:
+
+  artemis:
+    image: vromero/activemq-artemis:2.15.0-alpine
+    ports:
+      - "8161:8161"
+      - "61616:61616"
+      - "5672:5672"
+      - "1883:1883"
+    environment:
+      ARTEMIS_USERNAME: microcks
+      ARTEMIS_PASSWORD: microcks
