@@ -38,7 +38,7 @@ import java.util.Set;
 @Unremovable
 @ApplicationScoped
 /**
- * ProducerManager is the responsible for emitting mock event messages when specific frewuency triggered is reached.
+ * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached.
  * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere
  * (this one is resolved using Arc.container().instance() method from ProducerScheduler).
  * @author laurent
@@ -53,6 +53,9 @@ public class ProducerManager {
 
    @Inject
    KafkaProducerManager kafkaProducerManager;
+
+   @Inject
+   MQTTProducerManager mqttProducerManager;
 
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
@@ -79,6 +82,12 @@ public class ProducerManager {
                         kafkaProducerManager.publishMessage(topic, key, message);
                      }
                      break;
+                  case MQTT:
+                     topic = getMQTTTopicName(definition);
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String message = renderEventMessageContent(eventMessage);
+                        mqttProducerManager.publishMessage(topic, message);
+                     }
                }
             }
          }
@@ -102,8 +111,25 @@ public class ProducerManager {
       return content;
    }
 
-   /** Get the Kafka topic name corresponding to a AsyncMockDefinition, santizing all parameters.*/
+   /** Get the Kafka topic name corresponding to a AsyncMockDefinition, sanitizing all parameters. */
    private String getKafkaTopicName(AsyncMockDefinition definition) {
+      // Produce service name part of topic name.
+      String serviceName = definition.getOwnerService().getName().replace(" ", "");
+      serviceName = serviceName.replace("-", "");
+      // Produce version name part of topic name.
+      String versionName = definition.getOwnerService().getVersion().replace(" " , "");
+      // Produce operation name part of topic name.
+      String operationName = definition.getOperation().getName();
+      if (operationName.startsWith("SUBSCRIBE ")) {
+         operationName = operationName.substring(operationName.indexOf(" ") + 1);
+      }
+      operationName = operationName.replace('/', '-');
+      // Aggregate the 3 parts using '_' as delimiter.
+      return serviceName + "_" + versionName + "_" + operationName;
+   }
+
+   /** Get the MQTT topic name corresponding to a AsyncMockDefinition, sanitizing all parameters. */
+   private String getMQTTTopicName(AsyncMockDefinition definition) {
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");

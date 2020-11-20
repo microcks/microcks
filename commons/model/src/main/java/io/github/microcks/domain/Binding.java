@@ -28,7 +28,8 @@ public class Binding {
    private String keyType;
    private String destinationType;
    private String destinationName;
-
+   private String qoS;
+   private boolean persistent;
 
    public Binding() {
    }
@@ -67,5 +68,21 @@ public class Binding {
 
    public void setDestinationName(String destinationName) {
       this.destinationName = destinationName;
+   }
+
+   public String getQoS() {
+      return qoS;
+   }
+
+   public void setQoS(String qoS) {
+      this.qoS = qoS;
+   }
+
+   public boolean isPersistent() {
+      return persistent;
+   }
+
+   public void setPersistent(boolean persistent) {
+      this.persistent = persistent;
    }
 }

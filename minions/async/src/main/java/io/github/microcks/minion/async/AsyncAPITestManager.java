@@ -24,6 +24,7 @@ import io.github.microcks.minion.async.client.MicrocksAPIConnector;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 import io.github.microcks.minion.async.consumer.ConsumedMessage;
 import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
+import io.github.microcks.minion.async.consumer.MQTTMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MessageConsumptionTask;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 
@@ -154,15 +155,16 @@ public class AsyncAPITestManager {
                   payloadNode = AsyncAPISchemaValidator.getJsonNode(responseContent);
 
                   String[] operationElements = specification.getOperationName().split(" ");
-                  String operationNamePtr = "/channels/" + operationElements[1].replace("/", "~1");
+                  String operationNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
                   if ("SUBSCRIBE".equals(operationElements[0])) {
                      operationNamePtr += "/subscribe";
                   } else {
                      operationNamePtr += "/publish";
                   }
 
+                  logger.infof("Validating received message {%s} against {%s}", responseContent, operationNamePtr + "/message");
                   // Now validate the payloadNode according the operation message found in specificationNode.
-                  List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode, operationNamePtr + "/message/payload");
+                  List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode, operationNamePtr + "/message");
 
                   if (errors == null || errors.isEmpty()) {
                      // This is a success.
@@ -189,6 +191,9 @@ public class AsyncAPITestManager {
       private MessageConsumptionTask buildMessageConsumptionTask(AsyncTestSpecification testSpecification) {
          if (KafkaMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl())) {
             return new KafkaMessageConsumptionTask(testSpecification);
+         }
+         if (MQTTMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl())) {
+            return new MQTTMessageConsumptionTask(testSpecification);
          }
          return null;
       }

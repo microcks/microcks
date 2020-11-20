@@ -57,17 +57,10 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   /** The string for Regular Expression that helps validating aceptable endpoints. */
+   /** The string for Regular Expression that helps validating acceptable endpoints. */
    public static final String ENDPOINT_PATTERN_STRING = "kafka://(?<brokerUrl>[^:]+(:\\d+)?)/(?<topic>.+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
-
-   /** Constant representing the header line in a custom CA Cert in PEM format. */
-   private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
-   /** Constant representing the footer line in a custom CA Cert in PEM format. */
-   private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
-   /** The password that isused when generating a custom truststore. */
-   private static final String TRUSTSTORE_PASSWORD = "password";
 
    private File trustStore;
 
@@ -158,12 +151,12 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
             // Because Kafka Java client does not support any other sources for SSL configuration,
             // we need to create a Truststore holding the secret certificate and credentials. See below:
             // https://cwiki.apache.org/confluence/display/KAFKA/KIP-486%3A+Support+custom+way+to+load+KeyStore+and+TrustStore
-            installBrokerCertificate();
+            trustStore = ConsumptionTaskCommons.installBrokerCertificate(specification);
 
             // Then we have to add SSL specific properties.
             props.put("security.protocol", "SSL");
             props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStore.getAbsolutePath());
-            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, TRUSTSTORE_PASSWORD);
+            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, ConsumptionTaskCommons.TRUSTSTORE_PASSWORD);
          } catch (Exception e) {
             logger.error("Exception while installing custom truststore: " + e.getMessage());
          }
@@ -172,32 +165,6 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       // Create the consumer from properties and subscribe to given topis.
       consumer = new KafkaConsumer<>(props);
       consumer.subscribe(Arrays.asList(endpointTopic));
-   }
-
-   /** Install broker custom certificate into a truststore file. */
-   private void installBrokerCertificate() throws Exception {
-      String caCertPem = specification.getSecret().getCaCertPem();
-
-      // First compute a stripped PEM certificate and decode it from base64.
-      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
-            .replaceAll(END_CERTIFICATE, "");
-      InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
-
-      // Generate a new x509 certificate from the stripped decoded pem.
-      CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      X509Certificate caCert = (X509Certificate)cf.generateCertificate(is);
-
-      // Create a new TrustStore using KeyStore API.
-      char[] password = TRUSTSTORE_PASSWORD.toCharArray();
-      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-      ks.load(null, password);
-      ks.setCertificateEntry("root", caCert);
-
-      trustStore = File.createTempFile("microcks-truststore-" + System.currentTimeMillis(), ".jks");
-
-      try (FileOutputStream fos = new FileOutputStream(trustStore)) {
-         ks.store(fos, password);
-      }
    }
 
    /** Build set of Microcks headers from Kafka headers. */

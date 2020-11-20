@@ -43,7 +43,7 @@ public class MockRepositoryImporterFactory {
    private static Logger log = LoggerFactory.getLogger(MockRepositoryImporterFactory.class);
 
    /**
-    * Create the right MockRepsoitoryImporter implementation depending on repository type.
+    * Create the right MockRepositoryImporter implementation depending on repository type.
     * @param mockRepository The file representing the repository type
     * @return An instance of MockRepositoryImporter implementation
     * @throws IOException in case of file access

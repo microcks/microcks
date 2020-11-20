@@ -39,7 +39,7 @@
           </span>
           <span *ngIf="service.type === 'EVENT'">
             <input type="url" placeholder="eg. kafka://{kafka.broker.url:port}/{kafka.topic.name}" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
-            <p class="help-block">A valid endpoint to use for testing (Kafka broker + topic name for Asynchronous API).</p>
+            <p class="help-block">A valid endpoint to use for testing (Kafka broker or MQTT broker + topic name for Asynchronous API).</p>
           </span>
         </div>
       </div>
