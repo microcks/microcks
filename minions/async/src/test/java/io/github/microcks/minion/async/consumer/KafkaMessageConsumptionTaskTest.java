@@ -16,10 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.async.consumer;
+package io.github.microcks.minion.async.consumer;
 
 import io.github.microcks.minion.async.AsyncTestSpecification;
-import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
 
 import org.junit.jupiter.api.Test;
 
@@ -45,9 +44,6 @@ public class KafkaMessageConsumptionTaskTest {
 
       assertTrue(KafkaMessageConsumptionTask
             .acceptEndpoint("kafka://localhost/testTopic?securityProtocol=SASL_PLAINTEXT"));;
-
-      assertTrue(KafkaMessageConsumptionTask
-            .acceptEndpoint("kafka://localhost:9094/testTopic?securityProtocol=SASL_PLAINTEXT"));
 
       assertTrue(KafkaMessageConsumptionTask
             .acceptEndpoint("kafka://localhost:9094/testTopic?securityProtocol=SASL_PLAINTEXT"));
