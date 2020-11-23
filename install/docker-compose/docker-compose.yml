@@ -39,4 +39,4 @@ services:
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      - KEYCLOAK_URL=http://host.docker.internal:18080/auth
+      - KEYCLOAK_URL=http://kubernetes.docker.internal:18080/auth
