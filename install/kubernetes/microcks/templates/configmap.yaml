@@ -20,6 +20,9 @@ data:
     {{- else }}
     features.feature.async-api.endpoint-KAFKA={{ .Values.features.async.kafka.url }}"
     {{- end }}
+    {{- if .Values.features.async.mqtt.url }}
+    features.feature.async-api.endpoint-MQTT={{ .Values.features.async.mqtt.url }}"
+    {{- end }}
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
@@ -271,7 +274,15 @@ data:
     %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.features.async.kafka.url }}
     {{- end }}
 
+
+    {{- if .Values.features.async.mqtt.url }}
+    # Access to MQTT broker.
+    %kube.mqtt.server={{ .Values.features.async.mqtt.url }}
+    %kube.mqtt.username={{ .Values.features.async.mqtt.username }}
+    %kube.mqtt.password={{ .Values.features.async.mqtt.password }}
+    {{- end }}
+
     # Configure the minion own behavioral properties.
-    %kube.minion.supported-bindings=KAFKA
+    %kube.minion.supported-bindings=KAFKA{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}
     %kube.minion.restricted-frequencies=30,10
 {{- end -}}

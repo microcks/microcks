@@ -53,7 +53,7 @@ mongodb:
   volumeSize: 2Gi
   
   username: userM
-  # Unless you uncomment following line, admin password will be randowly generated.
+  # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.
   #password: 123
 
@@ -77,6 +77,13 @@ features:
       #url: kafka-bootstrap:9092
       persistent: false
       volumeSize: 2Gi
+
+    # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
+    mqtt:
+      #url: 192.168.99.100.nip.io
+      #url: artemis:1883
+      username: microcks
+      password: microcks
 
   repositoryFilter:
     enabled: false
