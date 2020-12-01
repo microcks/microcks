@@ -23,6 +23,9 @@ data:
     {{- if .Values.features.async.mqtt.url }}
     features.feature.async-api.endpoint-MQTT={{ .Values.features.async.mqtt.url }}
     {{- end }}
+    {{- if .Values.features.async.mqtt.url }}
+    features.feature.async-api.endpoint-MQTT={{ .Values.features.async.mqtt.url }}"
+    {{- end }}
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
