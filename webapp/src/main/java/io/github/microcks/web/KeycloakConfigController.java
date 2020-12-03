@@ -40,10 +40,10 @@ public class KeycloakConfigController {
    private static Logger log = LoggerFactory.getLogger(KeycloakConfigController.class);
 
 
-   @Value("${keycloak.auth-server-url}")
+   @Value("${external_url}")
    private final String keycloakServerUrl = null;
 
-   @Value("${keycloak.realm}")
+   @Value("${external_realm}")
    private final String keycloakRealmName = null;
 
    @RequestMapping(value = "/config", method = RequestMethod.GET)
