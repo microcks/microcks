@@ -18,7 +18,7 @@ host_ip="$(ip -o route get to 8.8.8.8 2>/dev/null | sed -n 's/.*src \([0-9.]\+\)
 if [ -z "$host_ip" ]; then
   # Fallback method
   iface="$(awk -F "\t" '$2 == "00000000" { print $1 }' /proc/net/route 2>/dev/null)"
-  host_ip="$(ifconfig wlp3s0 2>/dev/null |awk '$1 == "inet" { print $2 }')"
+  host_ip="$(ifconfig "$iface" 2>/dev/null |awk '$1 == "inet" { print $2 }')"
 fi
 
 # Generate a podman-compose file from the supplied template
