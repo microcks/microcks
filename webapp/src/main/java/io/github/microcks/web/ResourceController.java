@@ -77,12 +77,15 @@ public class ResourceController {
       Resource resource = resourceRepository.findByName(name);
       if (resource != null){
          HttpHeaders headers = new HttpHeaders();
+
          if (".json".equals(extension)) {
             headers.set("Content-Type", "application/json");
          } else if (".yaml".equals(extension) || ".yml".equals(extension)) {
             headers.set("Content-Type", "text/yaml");
          } else if (".wsdl".equals(extension) || ".xsd".equals(extension)) {
             headers.set("Content-Type", "text/xml");
+         } else if (".avsc".equals(extension)) {
+            headers.set("Content-Type", "application/json");
          }
          return new ResponseEntity<Object>(resource.getContent(), headers, HttpStatus.OK);
       }

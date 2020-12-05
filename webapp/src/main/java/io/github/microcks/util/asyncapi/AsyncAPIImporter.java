@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.microcks.domain.*;
 import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
    private boolean isYaml = true;
    private JsonNode spec;
    private String specContent;
+   private ReferenceResolver referenceResolver;
 
    private static final List<String> VALID_VERBS = Arrays.asList("subscribe", "publish");
 
@@ -60,7 +62,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
     * @param specificationFilePath The path to local AsyncAPI spec file
     * @throws IOException if project file cannot be found or read.
     */
-   public AsyncAPIImporter(String specificationFilePath) throws IOException {
+   public AsyncAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
+      this.referenceResolver = referenceResolver;
       try {
          // Analyse first lines of file content to guess repository type.
          String line = null;
@@ -133,6 +136,78 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
       resource.setContent(specContent);
       results.add(resource);
 
+      // Browser operations messages and message traits to see if we have
+      // references for external schemas only if we have a resolver available.
+      if (referenceResolver != null) {
+         for (Operation operation : service.getOperations()) {
+            String[] operationElements = operation.getName().split(" ");
+            String messageNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
+            messageNamePtr += "/" + operationElements[0].toLowerCase() + "/message";
+
+            JsonNode messageNode = spec.at(messageNamePtr);
+            if (messageNode != null) {
+               // If it's a $ref, then navigate to it.
+               if (messageNode.has("$ref")) {
+                  // $ref: '#/components/messages/lightMeasured'
+                  String ref = messageNode.path("$ref").asText();
+                  messageNode = spec.at(ref.substring(1));
+               }
+
+               // Extract payload schema here.
+               if (messageNode.has("payload")) {
+                  JsonNode payloadNode = messageNode.path("payload");
+
+                  // Check we have a reference that is not a local one.
+                  if (payloadNode.has("$ref")
+                        && !payloadNode.path("$ref").asText().startsWith("#")) {
+                     String ref = payloadNode.path("$ref").asText();
+
+                     // Remove trailing anchor marker.
+                     if (ref.contains("#")) {
+                        ref = ref.substring(0, ref.indexOf("#"));
+                     }
+
+                     try {
+                        // Extract content using resolver.
+                        String content = referenceResolver.getHttpReferenceContent(ref, "UTF-8");
+
+                        // Build a new resource from content. Use the escaped operation path.
+                        Resource schemaResource = new Resource();
+                        schemaResource.setName(service.getName() + "-" + service.getVersion() + "-"
+                              + operationElements[1].replaceAll("/", "~1")
+                              + ref.substring(ref.lastIndexOf('.')));
+                        schemaResource.setContent(content);
+
+                        // We have to look at schema format to know the type.
+                        // Default value is set at first.
+                        String schemaFormat = "application/vnd.aai.asyncapi";
+                        if (messageNode.has("schemaFormat")) {
+                           schemaFormat = messageNode.path("schemaFormat").asText();
+                        }
+
+                        if (schemaFormat.startsWith("application/vnd.aai.asyncapi")) {
+                           schemaResource.setType(ResourceType.ASYNC_API_SCHEMA);
+                        } else if (schemaFormat.startsWith("application/vnd.oai.openapi")) {
+                           schemaResource.setType(ResourceType.OPEN_API_SCHEMA);
+                        } else if (schemaFormat.startsWith("application/schema+json")
+                              || schemaFormat.startsWith("application/schema+yaml")) {
+                           schemaResource.setType(ResourceType.JSON_SCHEMA);
+                        } else if (schemaFormat.startsWith("application/vnd.apache.avro")) {
+                           schemaResource.setType(ResourceType.AVRO_SCHEMA);
+                        }
+                        results.add(schemaResource);
+                     } catch (IOException ioe) {
+                        log.error("IOException while trying to resolve reference " + ref, ioe);
+                        log.info("Ignoring the reference {} cause it could not be resolved", ref);
+                     }
+                  }
+               }
+            }
+         }
+
+         // Finally try to clean up resolved references and associated resources (files)
+         referenceResolver.cleanResolvedReferences();
+      }
       return results;
    }
 

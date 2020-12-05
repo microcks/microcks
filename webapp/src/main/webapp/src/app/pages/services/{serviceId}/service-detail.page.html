@@ -39,12 +39,16 @@
         </span>
         <dt>Contracts:</dt>
         <dd>
-          <a *ngFor="let contract of contracts | async" href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
-            {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i>
-          </a>
-          <div *ngIf="!contracts | async">
-            No contracts attached
-          </div>
+          <span *ngIf="contracts | async as contracts$; else loadingc">
+            <ng-container *ngIf="contracts$.length; else noContracts">
+              <a *ngFor="let contract of contracts$" href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
+                {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i> <br/>
+              </a>
+            </ng-container>
+            <ng-template #noContracts>No contracts attached</ng-template>
+          </span>
+          <ng-template #loadingc>Loading contracts...</ng-template>
+
           <span *ngIf="view.service.type === 'GENERIC_REST'">
             <a href="/api/resources/{{ view.service.id }}/swagger_20" target="new" alt="Swagger 2.0 spec">
               Swagger 2.0 spec <i class="glyphicon glyphicon-globe"></i>

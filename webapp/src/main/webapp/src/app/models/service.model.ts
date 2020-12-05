@@ -105,7 +105,10 @@ export enum ContractType {
   SWAGGER,
   RAML,
   OPEN_API_SPEC,
-  ASYNC_API_SPEC
+  OPEN_API_SCHEMA,
+  ASYNC_API_SPEC,
+  ASYNC_API_SCHEMA,
+  AVRO_SCHEMA
 }
 
 export class Header {
