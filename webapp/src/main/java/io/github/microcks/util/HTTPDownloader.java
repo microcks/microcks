@@ -133,7 +133,7 @@ public class HTTPDownloader {
    }
 
    /**
-    * Prepare an URLConnection with all the seurity related stuffs specified by optional secret.
+    * Prepare an URLConnection with all the security related stuffs specified by optional secret.
     */
    private static HttpURLConnection prepareURLConnection(String remoteUrl, Secret secret, boolean disableSSLValidation) throws IOException {
 
