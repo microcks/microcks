@@ -413,7 +413,8 @@ public class SoapUIProjectImporterTest {
       MockRepositoryImporter importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(
-               new java.io.File("target/test-classes/io/github/microcks/util/soapui/HelloAPI-soapui-project.xml"));
+               new java.io.File("target/test-classes/io/github/microcks/util/soapui/HelloAPI-soapui-project.xml"),
+               null);
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }

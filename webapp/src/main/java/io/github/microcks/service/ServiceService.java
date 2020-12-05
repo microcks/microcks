@@ -27,13 +27,7 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.EntityAlreadyExistsException;
-import io.github.microcks.util.HTTPDownloader;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.MockRepositoryImporterFactory;
+import io.github.microcks.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,22 +107,28 @@ public class ServiceService {
          localFile = new File(repositoryUrl);
       }
 
-      return importServiceDefinition(localFile);
+      // Initialize a reference resolver to the folder of this repositoryUrl.
+      ReferenceResolver referenceResolver = new ReferenceResolver(
+            repositoryUrl.substring(0, repositoryUrl.lastIndexOf("/")),
+            repositorySecret,
+            disableSSLValidation);
+      return importServiceDefinition(localFile, referenceResolver);
    }
 
 
    /**
     * Import definitions of services and bounded resources and messages into Microcks
-    * repository. This uses a MockRepositoryImporter underhood.
+    * repository. This uses a MockRepositoryImporter under hood.
     * @param repositoryFile The File for mock repository.
+    * @param referenceResolver The Resolver to be used during import (may be null).
     * @return The list of imported Services
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
-   public List<Service> importServiceDefinition(File repositoryFile) throws MockRepositoryImportException {
+   public List<Service> importServiceDefinition(File repositoryFile, ReferenceResolver referenceResolver) throws MockRepositoryImportException {
       // Retrieve the correct importer based on file path.
       MockRepositoryImporter importer = null;
       try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile);
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile, referenceResolver);
       } catch (IOException ioe) {
          log.error("Exception while accessing file " + repositoryFile.getPath(), ioe);
          throw new MockRepositoryImportException(ioe.getMessage(), ioe);

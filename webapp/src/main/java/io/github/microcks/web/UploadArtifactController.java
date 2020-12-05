@@ -22,6 +22,7 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.MockRepositoryImportException;
+import io.github.microcks.util.ReferenceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +65,7 @@ public class UploadArtifactController {
             File localFile = HTTPDownloader.handleHTTPDownloadToFile(url, null, true);
 
             // Now try importing services.
-            services = serviceService.importServiceDefinition(localFile);
+            services = serviceService.importServiceDefinition(localFile, new ReferenceResolver(url, null, true));
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item " + url, ioe);
             return new ResponseEntity<Object>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -105,7 +106,7 @@ public class UploadArtifactController {
             }
 
             // Now try importing services.
-            services = serviceService.importServiceDefinition(new File(localFile));
+            services = serviceService.importServiceDefinition(new File(localFile), null);
          } catch (IOException ioe) {
             log.error("Exception while writing uploaded item " + file.getOriginalFilename(), ioe);
             return new ResponseEntity<Object>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);

@@ -41,7 +41,7 @@ public class MockRepositoryImporterFactoryTest {
       File soapUIProject = new File("../samples/HelloService-soapui-project.xml");
       MockRepositoryImporter importer = null;
       try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(soapUIProject);
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(soapUIProject, null);
       } catch (Throwable t) {
          fail("Getting importer should not fail !");
       }
@@ -51,7 +51,7 @@ public class MockRepositoryImporterFactoryTest {
       File postmanCollection = new File("../samples/PetstoreAPI-collection.json");
       importer = null;
       try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(postmanCollection);
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(postmanCollection, null);
       } catch (Throwable t) {
          fail("Getting importer should not fail !");
       }
@@ -61,7 +61,7 @@ public class MockRepositoryImporterFactoryTest {
       importer = null;
       File openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml");
       try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec);
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
       } catch (Throwable t) {
          fail("Getting importer should not fail !");
       }
@@ -71,7 +71,7 @@ public class MockRepositoryImporterFactoryTest {
       openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/cars-openapi.json");
       importer = null;
       try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec);
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
       } catch (Throwable t) {
          fail("Getting importer should not fail !");
       }
@@ -81,7 +81,7 @@ public class MockRepositoryImporterFactoryTest {
       File asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml");
       importer = null;
       try {
-         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec);
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
       } catch (Throwable t) {
          fail("Getting importer should not fail !");
       }

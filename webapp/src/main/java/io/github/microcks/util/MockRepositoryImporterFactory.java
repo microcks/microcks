@@ -45,10 +45,12 @@ public class MockRepositoryImporterFactory {
    /**
     * Create the right MockRepositoryImporter implementation depending on repository type.
     * @param mockRepository The file representing the repository type
+    * @param referenceResolver The Resolver to be used during import (may be null).
     * @return An instance of MockRepositoryImporter implementation
     * @throws IOException in case of file access
     */
-   public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository) throws IOException {
+   public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository, ReferenceResolver referenceResolver)
+         throws IOException {
       MockRepositoryImporter importer = null;
 
       // Analyse first lines of file content to guess repository type.
@@ -75,7 +77,7 @@ public class MockRepositoryImporterFactory {
                || line.startsWith("asyncapi: \"2") || line.startsWith("\"asyncapi\": \"2")
                || line.startsWith("'asyncapi': '2")) {
             log.info("Found an asyncapi: 2 pragma in file so assuming it's an OpenAPI spec to import");
-            importer = new AsyncAPIImporter(mockRepository.getPath());
+            importer = new AsyncAPIImporter(mockRepository.getPath(), referenceResolver);
             break;
          } else if (line.startsWith("\"swagger\":") || line.startsWith("swagger:")) {
             log.warn("Swagger v2 format is not supported as it does not allow full examples specification, raising an exception");
