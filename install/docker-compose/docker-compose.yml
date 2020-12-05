@@ -16,6 +16,7 @@ services:
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "admin"
       KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
+      KEYCLOAK_FRONTEND_URL: "http://localhost:18080/auth"
     volumes: 
       - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
 
@@ -39,4 +40,5 @@ services:
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      - KEYCLOAK_URL=http://host.docker.internal:18080/auth
+      - KEYCLOAK_URL=http://keycloak:8080/auth
+      - KEYCLOAK_EXTERNAL_URL=http://localhost:18080/auth
