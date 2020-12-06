@@ -2,37 +2,9 @@
   "id": "microcks",
   "realm": "microcks",
   "displayName": "Microcks",
-  "notBefore": 0,
-  "revokeRefreshToken": false,
-  "refreshTokenMaxReuse": 0,
-  "accessTokenLifespan": 300,
-  "accessTokenLifespanForImplicitFlow": 900,
-  "ssoSessionIdleTimeout": 1800,
-  "ssoSessionMaxLifespan": 36000,
-  "offlineSessionIdleTimeout": 2592000,
-  "accessCodeLifespan": 60,
-  "accessCodeLifespanUserAction": 300,
-  "accessCodeLifespanLogin": 1800,
-  "actionTokenGeneratedByAdminLifespan": 43200,
-  "actionTokenGeneratedByUserLifespan": 300,
   "enabled": true,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": false,
-  "registrationEmailAsUsername": false,
-  "rememberMe": false,
-  "verifyEmail": false,
-  "loginWithEmailAllowed": true,
-  "duplicateEmailsAllowed": false,
-  "resetPasswordAllowed": false,
-  "editUsernameAllowed": false,
-  "bruteForceProtected": false,
-  "permanentLockout": false,
-  "maxFailureWaitSeconds": 900,
-  "minimumQuickLoginWaitSeconds": 60,
-  "waitIncrementSeconds": 60,
-  "quickLoginCheckMilliSeconds": 1000,
-  "maxDeltaTimeSeconds": 43200,
-  "failureFactor": 30,
   "users" : [
     {
       "username" : "admin",
@@ -40,9 +12,6 @@
       "credentials" : [
         { "type" : "password",
           "value" : "123" }
-      ],
-      "requiredActions": [
-        "UPDATE_PASSWORD"
       ],
       "realmRoles": [],
       "applicationRoles": {
@@ -109,7 +78,7 @@
         "+"
       ],
       "redirectUris": [
-        "https://localhost:8080/*"
+        "http://localhost:8080/*"
       ],
       "fullScopeAllowed": false
     },
