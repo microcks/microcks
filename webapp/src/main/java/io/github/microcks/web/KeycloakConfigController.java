@@ -40,7 +40,7 @@ public class KeycloakConfigController {
    private static Logger log = LoggerFactory.getLogger(KeycloakConfigController.class);
 
 
-   @Value("${keycloak.auth-server-url}")
+   @Value("${sso.public-url}")
    private final String keycloakServerUrl = null;
 
    @Value("${keycloak.realm}")
