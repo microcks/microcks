@@ -1,0 +1,49 @@
+version: '2'
+networks:
+  main:
+services:
+  mongo:
+    image: mongo:3.4.23
+    container_name: microcks-mongo
+    volumes:
+      # Podman does not create missing folders, so we need to use an existing one
+      # Adding the "z" flag to get SELinux configured automatically
+      - "./microcks-data:/data/db:z"
+    ports:
+      - "27017:27017"
+  postman:
+    image: quay.io/microcks/microcks-postman-runtime:latest
+    container_name: microcks-postman-runtime
+    ports:
+      - "3000:3000"
+  keycloak:
+    image: jboss/keycloak:10.0.1
+    command: "-b 0.0.0.0 -Dkeycloak.import=/microcks-keycloak-config/microcks-realm-sample.json"
+    container_name: microcks-keycloak
+    ports:
+      - "8180:8080"
+    volumes:
+      # Adding the "z" flag to get SELinux configured automatically
+      - ./keycloak-realm:/microcks-keycloak-config:z
+    environment:
+      KEYCLOAK_USER: "admin"
+      KEYCLOAK_PASSWORD: "123"
+  app:
+    depends_on:
+      - mongo
+      - postman
+      - keycloak
+    image: quay.io/microcks/microcks:latest
+    container_name: microcks
+    volumes:
+      - ./config:/deployments/config
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATA_MONGODB_URI=mongodb://__HOST__:27017
+      - SPRING_DATA_MONGODB_DATABASE=microcks
+      - POSTMAN_RUNNER_URL=http://__HOST__:3000
+      - TEST_CALLBACK_URL=http://__HOST__:8080
+      - KEYCLOAK_URL=http://__HOST__:8180/auth
+      - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *

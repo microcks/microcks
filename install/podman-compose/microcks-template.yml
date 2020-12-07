@@ -6,35 +6,24 @@ services:
     image: mongo:3.4.23
     container_name: microcks-mongo
     volumes:
-      - "~/tmp/microcks-data:/data/db"
-    networks:
-      main:
-        aliases:
-          - mongo
+      # Podman does not create missing folders, so we need to use an existing one
+      # Adding the "z" flag to get SELinux configured automatically
+      - "./microcks-data:/data/db:z"
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
-    networks:
-      main:
-        aliases:
-          - postman
   keycloak:
     image: jboss/keycloak:10.0.1
     command: "-b 0.0.0.0 -Dkeycloak.import=/microcks-keycloak-config/microcks-realm-sample.json"
     container_name: microcks-keycloak
     ports:
       - "8180:8080"
-      - "8543:8443"
     volumes:
-      - ./keycloak-realm:/microcks-keycloak-config
-      - ./keystore:/etc/x509/https
+      # Adding the "z" flag to get SELinux configured automatically
+      - ./keycloak-realm:/microcks-keycloak-config:z
     environment:
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "123"
-    networks:
-      main:
-        aliases:
-          - keycloak
   app:
     depends_on:
       - mongo
@@ -44,20 +33,13 @@ services:
     container_name: microcks
     volumes:
       - ./config:/deployments/config
-      - ./keystore:/deployments/keystore
     ports:
       - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017
+      - SPRING_DATA_MONGODB_URI=mongodb://microcks-mongo:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
-      - POSTMAN_RUNNER_URL=http://postman:3000
+      - POSTMAN_RUNNER_URL=http://microcks-postman-runtime:3000
       - TEST_CALLBACK_URL=http://microcks:8080
-      #- KEYCLOAK_URL=https://localhost:8543/auth
+      - KEYCLOAK_URL=http://__HOST__:8180/auth
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      - KEYCLOAK_URL=https://docker.for.mac.localhost:8543/auth
-      #- KEYCLOAK_URL=https://docker.for.win.localhost:8543/auth
-    networks:
-      main:
-        aliases:
-          - microcks

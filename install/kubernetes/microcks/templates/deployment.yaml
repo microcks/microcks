@@ -62,8 +62,12 @@ spec:
             value: http://{{ .Values.appName }}-postman-runtime:8080
           - name: TEST_CALLBACK_URL
             value: http://{{ .Values.appName }}:8080
+          {{- if hasKey .Values.keycloak "privateUrl" }}
           - name: KEYCLOAK_URL
             value: https://{{ .Values.keycloak.url }}/auth
+          - name: KEYCLOAK_PUBLIC_URL
+            value: "{{ .Values.keycloak.privateUrl }}"
+          {{- end } }
           {{- if and .Values.features.async.enabled }}
           - name: ASYNC_MINION_URL
             value: http://{{ .Values.appName }}-async-minion:8080
@@ -337,6 +341,10 @@ spec:
           value: "{{ .Values.appName }}-keycloak-postgresql"
         - name: PROXY_ADDRESS_FORWARDING
           value: 'true'
+        {{- if hasKey .Values.keycloak "publicUrl" }}
+        - name: KEYCLOAK_FRONTEND_URL
+          value: "{{ .Values.keycloak.publicUrl }}"
+        {{- end }}
         volumeMounts:
         - name: {{ .Values.appName }}-keycloak-config
           mountPath: "/opt/jboss/keycloak/standalone/configuration/realm"
