@@ -150,7 +150,8 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `postman`     | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `install`          | **Optional**. Flag for Keycloak installation. Default is `true`. Set to `false` if you want to reuse an existing Keycloak instance. |
 | `keycloak`    | `realm`            | **Optional**. Name of Keycloak realm to use. Should be setup only if `install` is `false` and you want to reuse an existing realm. Default is `microcks`. |
-| `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install if it already exists or the one used for exposing Keycloak `Ingress`. | 
+| `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install if it already exists or the one used for exposing Keycloak `Ingress`. |
+| `keycloak`    | `privateUrl`       | **Optional**.  | 
 | `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |  
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
