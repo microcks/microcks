@@ -64,10 +64,13 @@ spec:
             value: http://{{ .Values.appName }}:8080
           {{- if hasKey .Values.keycloak "privateUrl" }}
           - name: KEYCLOAK_URL
-            value: https://{{ .Values.keycloak.url }}/auth
-          - name: KEYCLOAK_PUBLIC_URL
             value: "{{ .Values.keycloak.privateUrl }}"
-          {{- end } }
+          - name: KEYCLOAK_PUBLIC_URL
+            value: https://{{ .Values.keycloak.url }}/auth
+          {{- else }}
+          - name: KEYCLOAK_URL
+            value: https://{{ .Values.keycloak.url }}/auth
+          {{- end }}
           {{- if and .Values.features.async.enabled }}
           - name: ASYNC_MINION_URL
             value: http://{{ .Values.appName }}-async-minion:8080
@@ -341,9 +344,9 @@ spec:
           value: "{{ .Values.appName }}-keycloak-postgresql"
         - name: PROXY_ADDRESS_FORWARDING
           value: 'true'
-        {{- if hasKey .Values.keycloak "publicUrl" }}
+        {{- if hasKey .Values.keycloak "privateUrl" }}
         - name: KEYCLOAK_FRONTEND_URL
-          value: "{{ .Values.keycloak.publicUrl }}"
+          value: https://{{ .Values.keycloak.url }}/auth
         {{- end }}
         volumeMounts:
         - name: {{ .Values.appName }}-keycloak-config
