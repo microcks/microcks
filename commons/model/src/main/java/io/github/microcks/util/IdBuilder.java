@@ -26,7 +26,7 @@ import io.github.microcks.domain.TestResult;
  * Helper class for building composite/aggregates keys or Ids.
  * @author laurent
  */
-public class IdBuilder{
+public class IdBuilder {
    
    /**
     * Build a unique operation Id from service and operation.
@@ -34,7 +34,7 @@ public class IdBuilder{
     * @param operation A domain bean representing operation to build an id for
     * @return A unique identifier for operation.
     */
-   public static String buildOperationId(Service service, Operation operation){
+   public static String buildOperationId(Service service, Operation operation) {
       return service.getId() + "-" + operation.getName();
    }
    
@@ -44,7 +44,7 @@ public class IdBuilder{
     * @param operation A domain bean representing operation matching case
     * @return A unique identifier for test case.
     */
-   public static String buildTestCaseId(TestResult testResult, Operation operation){
+   public static String buildTestCaseId(TestResult testResult, Operation operation) {
       return testResult.getId() + "-" + testResult.getTestNumber() + "-" + operation.getName();
    }
 
@@ -54,7 +54,21 @@ public class IdBuilder{
     * @param operationName A string representing matching operation name case
     * @return A unique identifier for test case.
     */
-   public static String buildTestCaseId(TestResult testResult, String operationName){
+   public static String buildTestCaseId(TestResult testResult, String operationName) {
       return testResult.getId() + "-" + testResult.getTestNumber() + "-" + operationName;
+   }
+
+   /**
+    * Build the full name of a Resource dedicated to a Service operation. Such a Resource is typically
+    * a Schema associated to operation expected input or output, so that you'll be able to easily retrieve it later.
+    * @param service The domain service owning this resource
+    * @param operation The operation with resource it related to.
+    * @return A full name for this operation attached resource.
+    */
+   public static String buildResourceFullName(Service service, Operation operation) {
+      // Split operation name to remove starting verb (GET, POST, PUT, DELETE, SUBSCRIBE, PRODUCE).
+      String[] operationElements = operation.getName().split(" ");
+      return service.getName() + "-" + service.getVersion() + "-"
+            + operationElements[1].replaceAll("/", "~1");
    }
 }

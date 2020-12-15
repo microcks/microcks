@@ -24,7 +24,8 @@ import io.github.microcks.domain.TestRunnerType;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
- *
+ * This is a bean representing the specification of an Asynchronous test using AsyncAPI specification
+ * elements.
  * @author laurent
  */
 @RegisterForReflection

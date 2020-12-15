@@ -27,6 +27,7 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
 
@@ -340,7 +341,7 @@ public class AsyncAPIImporterTest {
 
       // Second resource should be the referenced relative Avro schema.
       assertEquals(ResourceType.AVRO_SCHEMA, resources.get(1).getType());
-      assertEquals(resources.get(1).getName(), "User signed-up Avro API-0.1.2-user~1signedup.avsc");
+      assertEquals(resources.get(1).getName(), "User signed-up Avro API-0.1.2-user~1signedup");
       assertNotNull(resources.get(1).getContent());
       assertTrue(resources.get(1).getContent().contains("\"namespace\": \"microcks.avro\""));
 
@@ -351,6 +352,7 @@ public class AsyncAPIImporterTest {
 
          if ("SUBSCRIBE user/signedup".equals(operation.getName())) {
             assertEquals("SUBSCRIBE", operation.getMethod());
+            assertEquals(resources.get(1).getName(), IdBuilder.buildResourceFullName(service, operation));
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;

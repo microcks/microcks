@@ -22,6 +22,9 @@ import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
+import io.github.microcks.minion.async.SchemaRegistry;
+import io.github.microcks.minion.async.format.AvroUtil;
+import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
@@ -52,6 +55,9 @@ public class ProducerManager {
    AsyncMockRepository mockRepository;
 
    @Inject
+   SchemaRegistry schemaRegistry;
+
+   @Inject
    KafkaProducerManager kafkaProducerManager;
 
    @Inject
@@ -79,7 +85,22 @@ public class ProducerManager {
                      for (EventMessage eventMessage : definition.getEventMessages()) {
                         String key = String.valueOf(System.currentTimeMillis());
                         String message = renderEventMessageContent(eventMessage);
-                        kafkaProducerManager.publishMessage(topic, key, message);
+
+                        // Check it Avro binary is expected, we should convert to bytes.
+                        if ("avro/binary".equals(eventMessage.getMediaType())) {
+                           // Build the name of expected schema.
+                           String schemaName = IdBuilder.buildResourceFullName(definition.getOwnerService(), definition.getOperation());
+                           String schemaContent = schemaRegistry.getSchemaEntryContent(definition.getOwnerService(), schemaName);
+
+                           try {
+                              byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
+                              kafkaProducerManager.publishMessage(topic, key, avroBinary);
+                           } catch (Exception e) {
+                              logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
+                           }
+                        } else {
+                           kafkaProducerManager.publishMessage(topic, key, message);
+                        }
                      }
                      break;
                   case MQTT:
@@ -88,6 +109,7 @@ public class ProducerManager {
                         String message = renderEventMessageContent(eventMessage);
                         mqttProducerManager.publishMessage(topic, message);
                      }
+                     break;
                }
             }
          }

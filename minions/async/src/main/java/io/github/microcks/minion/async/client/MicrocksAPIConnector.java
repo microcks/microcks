@@ -18,6 +18,7 @@
  */
 package io.github.microcks.minion.async.client;
 
+import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.TestCaseResult;
@@ -72,13 +73,23 @@ public interface MicrocksAPIConnector {
     * @param authorization The Authorization header containing the OAuth access token for this API call
     * @param serviceId The unique identifier of Service to get the view for
     * @param messages Whether to include full descriptions of operations messages
-    * @return A list of ServiceViewDTO
+    * @return The complete ServiceView for Service
     */
    @GET
    @Path("/services/{id}")
    @Produces("application/json")
    ServiceView getService(@HeaderParam("Authorization") String authorization, @PathParam("id") String serviceId,
                                    @QueryParam("messages") boolean messages);
+
+   /**
+    * Retrieve the list of contract resources for a Service.
+    * @param serviceId he unique identifier of Service to get resources for
+    * @return A list of Resources associated to Service
+    */
+   @GET
+   @Path("/resources/service/{id}")
+   @Produces("application/json")
+   List<Resource> getResources(@PathParam("id") String serviceId);
 
    /**
     * Report a TestCaseResult associated to a TestResult.

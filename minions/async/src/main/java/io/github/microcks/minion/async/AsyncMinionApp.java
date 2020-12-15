@@ -73,12 +73,15 @@ public class AsyncMinionApp {
    AsyncMockRepository mockRepository;
 
    @Inject
+   SchemaRegistry schemaRegistry;
+
+   @Inject
    ProducerScheduler producerScheduler;
 
 
    /** Application startup method. */
    void onStart(@Observes StartupEvent ev) {
-      // We need to retrieve Keycloak server from Microckd config.
+      // We need to retrieve Keycloak server from Microcks config.
       KeycloakConfig config = microcksAPIConnector.getKeycloakConfig();
       logger.infof("Microcks Keycloak server url {%s} and realm {%s}", config.getAuthServerUrl(), config.getRealm());
 
@@ -119,6 +122,7 @@ public class AsyncMinionApp {
                                     .collect(Collectors.toList())
                               );
                         mockRepository.storeMockDefinition(mockDefinition);
+                        schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
                      }
                   }
                }

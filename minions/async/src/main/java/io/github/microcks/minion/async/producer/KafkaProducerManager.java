@@ -22,6 +22,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -44,20 +45,32 @@ public class KafkaProducerManager {
 
    private Producer<String, String> producer;
 
+   private Producer<String, byte[]> bytesProducer;
+
    @ConfigProperty(name = "kafka.bootstrap.servers")
    String bootstrapServers;
 
    @PostConstruct
    public void create() {
       producer = createProducer();
+      bytesProducer = createBytesProducer();
    }
 
    protected Producer<String, String> createProducer() {
       Properties props = new Properties();
       props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-      props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion");
+      props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-str-producer");
       props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
       props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+      return new KafkaProducer<>(props);
+   }
+
+   protected Producer<String, byte[]> createBytesProducer() {
+      Properties props = new Properties();
+      props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+      props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-bytes-producer");
+      props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+      props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
       return new KafkaProducer<>(props);
    }
 
@@ -71,5 +84,17 @@ public class KafkaProducerManager {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
       producer.send(new ProducerRecord<String, String>(topic, key, value));
       producer.flush();
+   }
+
+   /**
+    * Publish a raw byte array message on specified topic.
+    * @param topic The destination topic for message
+    * @param key The message key
+    * @param value The message payload
+    */
+   public void publishMessage(String topic, String key, byte[] value) {
+      logger.infof("Publishing on topic {%s}, bytes: %s ", topic, new String(value));
+      bytesProducer.send(new ProducerRecord<String, byte[]>(topic, key, value));
+      bytesProducer.flush();
    }
 }

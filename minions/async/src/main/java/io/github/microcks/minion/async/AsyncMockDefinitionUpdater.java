@@ -53,6 +53,9 @@ public class AsyncMockDefinitionUpdater {
    @Inject
    AsyncMockRepository mockRepository;
 
+   @Inject
+   SchemaRegistry schemaRegistry;
+
    @Incoming("microcks-services-updates")
    public void onServiceUpdate(ServiceViewChangeEvent serviceViewChangeEvent) {
       logger.info("Received a new change event [" + serviceViewChangeEvent.getChangeType() + "] for '"
@@ -62,6 +65,7 @@ public class AsyncMockDefinitionUpdater {
       if (serviceViewChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
          logger.info("Removing mock definitions for " + serviceViewChangeEvent.getServiceId());
          mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
+         schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceView().getService());
       } else {
          // Only deal with service of type EVENT...
          if (serviceViewChangeEvent.getServiceView() != null && serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)) {
@@ -79,6 +83,7 @@ public class AsyncMockDefinitionUpdater {
                               .collect(Collectors.toList())
                   );
                   mockRepository.storeMockDefinition(mockDefinition);
+                  schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
                }
             }
          }

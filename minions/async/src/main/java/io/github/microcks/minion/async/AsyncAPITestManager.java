@@ -45,12 +45,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@ApplicationScoped
 /**
  * Manager that takes care of launching and running an AsyncAPI test from an
  * <code>AsyncTestSpecification</code>.
  * @author laurent
  */
+@ApplicationScoped
 public class AsyncAPITestManager {
 
    @Inject
@@ -69,7 +69,7 @@ public class AsyncAPITestManager {
 
    /**
     * Actually run the Async test by instantiating a <code>MessageConsumptionTask</code>,
-    * gathering its outpurs and validating them against an AsyncAPI schema.
+    * gathering its outputs and validating them against an AsyncAPI schema.
     */
    class AsyncAPITestThread extends Thread {
 

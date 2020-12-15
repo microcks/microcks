@@ -23,10 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.microcks.domain.*;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.ReferenceResolver;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
+import io.github.microcks.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -173,9 +170,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
 
                         // Build a new resource from content. Use the escaped operation path.
                         Resource schemaResource = new Resource();
-                        schemaResource.setName(service.getName() + "-" + service.getVersion() + "-"
-                              + operationElements[1].replaceAll("/", "~1")
-                              + ref.substring(ref.lastIndexOf('.')));
+                        schemaResource.setName(IdBuilder.buildResourceFullName(service, operation));
                         schemaResource.setContent(content);
 
                         // We have to look at schema format to know the type.
