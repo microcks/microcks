@@ -92,7 +92,7 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
          messages.add(message);
       });
 
-      Thread.sleep(specification.getTimeoutMS() - 1000L);
+      Thread.sleep(specification.getTimeoutMS() - 200L);
 
       // Disconnect the subscriber before returning results.
       subscriber.disconnect();
@@ -132,14 +132,19 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
       connectOptions.setCleanSession(true);
       connectOptions.setConnectionTimeout(10);
 
+      // Initialize default protocol pragma for connection string.
+      String protocolPragma = "tcp://";
+
       if (specification.getSecret() != null) {
          if (specification.getSecret().getUsername() != null
                && specification.getSecret().getPassword() != null) {
+            logger.debug("Adding username/password authentication from secret " + specification.getSecret().getName());
             connectOptions.setUserName(specification.getSecret().getUsername());
             connectOptions.setPassword(specification.getSecret().getPassword().toCharArray());
          }
 
          if (specification.getSecret().getCaCertPem() != null) {
+            logger.debug("Installing a broker certificate from secret " + specification.getSecret().getName());
             trustStore = ConsumptionTaskCommons.installBrokerCertificate(specification);
 
             // Find the list of SSL properties here:
@@ -149,12 +154,15 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
             sslProperties.put("com.ibm.ssl.trustStorePassword", ConsumptionTaskCommons.TRUSTSTORE_PASSWORD);
             sslProperties.put("com.ibm.ssl.trustStoreType", "JKS");
             connectOptions.setSSLProperties(sslProperties);
+
+            // We also have to change the prococolPragma to ssl://
+            protocolPragma = "ssl://";
          }
       }
 
       // Create the subscriber and connect it to server using the properties.
       // Generate a unique clientId for each publication to avoid collisions (cleanSession is true).
-      subscriber = new MqttClient("tcp://" + endpointBrokerUrl,
+      subscriber = new MqttClient(protocolPragma + endpointBrokerUrl,
             "microcks-async-minion-test-" + System.currentTimeMillis());
       subscriber.connect(connectOptions);
    }
