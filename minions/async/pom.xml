@@ -23,6 +23,8 @@
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
     <quarkus.platform.version>1.5.2.Final</quarkus.platform.version>
     <eclipse-paho.version>1.2.0</eclipse-paho.version>
+    <apicurio-registry.version>1.3.2.Final</apicurio-registry.version>
+    <confluent-registry.version>5.4.3</confluent-registry.version>
     <surefire-plugin.version>2.22.1</surefire-plugin.version>
   </properties>
 
@@ -87,9 +89,14 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-      <version>1.9.2</version>
+      <groupId>io.apicurio</groupId>
+      <artifactId>apicurio-registry-utils-serde</artifactId>
+      <version>${apicurio-registry.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-avro-serializer</artifactId>
+      <version>${confluent-registry.version}</version>
     </dependency>
 
     <!-- Test related dependencies -->
@@ -104,6 +111,14 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <repositories>
+    <repository>
+      <id>confluent</id>
+      <name>Confluent</name>
+      <url>https://packages.confluent.io/maven/</url>
+    </repository>
+  </repositories>
 
   <build>
     <plugins>

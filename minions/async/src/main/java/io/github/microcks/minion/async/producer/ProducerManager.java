@@ -29,6 +29,7 @@ import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
 import io.quarkus.arc.Unremovable;
+import org.apache.avro.generic.GenericRecord;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -66,6 +67,9 @@ public class ProducerManager {
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
 
+   @ConfigProperty(name = "minion.default-avro-encoding", defaultValue = "RAW")
+   String defaultAvroEncoding;
+
    /**
     * Produce all the async mock messages corresponding to specified frequency.
     * @param frequency The frequency to emit messages for
@@ -93,8 +97,13 @@ public class ProducerManager {
                            String schemaContent = schemaRegistry.getSchemaEntryContent(definition.getOwnerService(), schemaName);
 
                            try {
-                              byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
-                              kafkaProducerManager.publishMessage(topic, key, avroBinary);
+                              if ("REGISTRY".equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
+                                 GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
+                                 kafkaProducerManager.publishMessage(topic, key, avroRecord);
+                              } else {
+                                 byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
+                                 kafkaProducerManager.publishMessage(topic, key, avroBinary);
+                              }
                            } catch (Exception e) {
                               logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
                            }
