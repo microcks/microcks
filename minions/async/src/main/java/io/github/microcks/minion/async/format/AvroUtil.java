@@ -88,6 +88,35 @@ public class AvroUtil {
    }
 
    /**
+    * Convert a JSON string into an Avro GenericRecord object using specified schema.
+    * @param json A JSON string to convert to Avro
+    * @param avroSchema String representation of an Avro Schema to use for conversion
+    * @return The GenericRecord representation of JSON
+    * @throws AvroTypeException if there's a mismatch between JSON string and Avro Schema
+    * @throws IOException if something goes wrong during conversion
+    */
+   public static GenericRecord jsonToAvroRecord(String json, String avroSchema)  throws AvroTypeException, IOException {
+      return jsonToAvroRecord(json, new Schema.Parser().parse(avroSchema));
+   }
+
+   /**
+    * Convert a JSON string into an Avro GenericRecord object using specified schema.
+    * @param json A JSON string to convert to Avro
+    * @param avroSchema The Avro Schema to use for conversion
+    * @return The GenericRecord representation of JSON
+    * @throws AvroTypeException if there's a mismatch between JSON string and Avro Schema
+    * @throws IOException if something goes wrong during conversion
+    */
+   public static GenericRecord jsonToAvroRecord(String json, Schema avroSchema)  throws AvroTypeException, IOException {
+      // Prepare reader an input stream from Json string.
+      GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
+      InputStream input = new ByteArrayInputStream(json.getBytes("UTF-8"));
+      JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(avroSchema, input);
+
+      return reader.read(null, jsonDecoder);
+   }
+
+   /**
     * Convert an Avro binary representation into a JSON string using specified schema.
     * @param avroBinary An Avro binary representation to convert in JSON string
     * @param avroSchema The Avro Schema to use for conversion

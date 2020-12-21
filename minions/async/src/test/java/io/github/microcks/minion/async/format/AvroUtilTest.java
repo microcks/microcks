@@ -145,4 +145,21 @@ public class AvroUtilTest {
          fail("Exception should not be thrown");
       }
    }
+
+   @Test
+   public void testJsonToAvroRecord() {
+      String jsonText = "{\"name\":\"Laurent Broudoux\", \"email\":\"laurent@microcks.io\", \"age\":42}";
+
+      try {
+         // Load schema from file.
+         Schema schema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/minion/async/format/user.avsc"));
+
+         GenericRecord record = AvroUtil.jsonToAvroRecord(jsonText, schema);
+         assertEquals("Laurent Broudoux", record.get("name").toString());
+         assertEquals("laurent@microcks.io", record.get("email").toString());
+         assertEquals(42, Integer.valueOf(record.get("age").toString()));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
 }
