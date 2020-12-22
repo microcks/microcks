@@ -68,6 +68,7 @@ features:
     enabled: false
     defaultBinding: KAFKA
     defaultFrequency: 10
+    defaultAvroEncoding: RAW
     
     image: quay.io/microcks/microcks-async-minion:1.1.0
 
@@ -78,9 +79,14 @@ features:
       persistent: false
       volumeSize: 2Gi
 
+      schemaRegistry:
+        #url: http://schema-registry.192.168.99.100.nip.io
+        confluent: true
+        username: microcks
+        credentialsSource: USER_INFO
+
     # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
     mqtt:
-      #url: 192.168.99.100.nip.io
       #url: artemis:1883
       username: microcks
       password: microcks

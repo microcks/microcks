@@ -134,16 +134,17 @@ Typically, you may want to configure the following blocks and options:
 * Global part is mandatory and contain attributes like `appName` of your install,
 * `microcks` part is mandatory and contain attributes like the number of `replicas` and the access `url` if you want some customizations, 
 * `postman` part is mandatory for the number of `replicas`
-* `keycloak` part is optional and allows to specifiy if you want a new install or reuse an existing instance,
-* `mongodb` part is optional and allows to specifiy if you want a new install or reuse an existing instance.
-* `features` part is optional and allowd to enable and configure opt-in features of Microcks.
+* `keycloak` part is optional and allows to specify if you want a new install or reuse an existing instance,
+* `mongodb` part is optional and allows to specify if you want a new install or reuse an existing instance.
+* `features` part is optional and allows to enable and configure opt-in features of Microcks.
 
 The table below describe all the fields of the `values.yaml`, providing informations on what's mandatory and what's optional as well as default values.
 
-| Section       | Property           | Description   |
+| Section    | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` | 
-| `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. | 
+| `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
+| `microcks`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. | 
 | `microcks`    | `replicas`         | **Optional**. The number of replicas for the Microcks main pod. Default is `1`. |
 | `microcks`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `postman`     | `replicas`         | **Optional**. The number of replicas for the Microcks Postman pod. Default is `1`. |
@@ -152,7 +153,8 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `keycloak`    | `realm`            | **Optional**. Name of Keycloak realm to use. Should be setup only if `install` is `false` and you want to reuse an existing realm. Default is `microcks`. |
 | `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install - indeed just the hostname + port part - if it already exists or the one used for exposing Keycloak `Ingress`. |
 | `keycloak`    | `privateUrl`       | **Optional**. A private URL - a full URL here - used by the Microcks component to internally join Keycloak. This is also known as `backendUrl` in [Keycloak doc](https://www.keycloak.org/docs/latest/server_installation/#_hostname). When specified, the `keycloak.url` is used as `frontendUrl` in Keycloak terms. | 
-| `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |  
+| `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
+| `keycloak`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. |  
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
 | `keycloak`    | `volumeSize`       | **Optional**. Size of persistent volume claim for Keycloak. Default is `1Gi`. Not used if not persistent install asked. |
@@ -168,9 +170,24 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `features`    | `repositoryFilter` | **Optional**. Feature allowing to filter API and services on main page. Must be explicitely `enabled`. See [Organizing repository](https://microcks.io/documentation/using/advanced/organizing/#master-level-filter) for more informations. |
 | `features`    | `async.enabled`    | **Optional**. Feature allowing to mock an tests asynchronous APIs through Events. Enebling it requires an active message broker. Default is `false`. |
 | `features`    | `async.image`      | **Optional**. The reference of container image used for `async-minion` component. Chart comes with its default version. |
-| `features`    | `async.kafka.install` | **Optional**. Flag for Kafka installation. Default is `true` and required Strinzi Operator to be setup. Set to `false` if you want to reuse an existing Kafka instance. |
-| `features`    | `async.kafka.url`  | **Optional**. The URL of Kafka broker if it already exists or the one used for exposing Kafka `Ingress` when we install it. In this later case, it should only be the subdomain part (eg: `apps.example.com`). |
 
+
+### Kafka feature details
+
+Here are below the configuration properties of the Kafka support features:
+ 
+| Section    | Property           | Description   |
+| ------------- | ------------------ | ------------- |
+| `features.async.kafka` | `install`    | **Optional**. Flag for Kafka installation. Default is `true` and required Strinzi Operator to be setup. Set to `false` if you want to reuse an existing Kafka instance. |
+| `features.async.kafka` | `url`        | **Optional**. The URL of Kafka broker if it already exists or the one used for exposing Kafka `Ingress` when we install it. In this later case, it should only be the subdomain part (eg: `apps.example.com`). |
+| `features.async.kafka` | `persistent` | **Optional**. Flag for Kafka persistence. Default is `false`. Set to `true` if you want a persistent Kafka installation. |
+| `features.async.kafka` | `volumeSize` | **Optional**. Size of persistent volume claim for Kafka. Default is `2Gi`. Not used if not persistent install asked. |
+| `features.async.kafka.schemaRegistry` | `url` | **Optional**. The API URL of a Kafka Schema Registry. Used for Avro based serialization |
+| `features.async.kafka.schemaRegistry` | `confluent` | **Optional**. Flag for indicating that registry is a Confluent one. Default to `true` |
+| `features.async.kafka.schemaRegistry` | `username`  | **Optional**. Username for connecting to the specified Schema registry. Default to `` |
+| `features.async.kafka.schemaRegistry` | `credentialsSource`  | **Optional**. Source of the credentials for connecting to the specified Schema registry. Default to `USER_INFO` |
+
+### Examples
 
 You may want to launch custom installation with such a command:
  

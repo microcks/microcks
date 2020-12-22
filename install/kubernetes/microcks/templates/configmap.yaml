@@ -273,11 +273,18 @@ data:
     {{- if .Values.features.async.kafka.install }}
     %kube.kafka.bootstrap.servers={{ .Values.appName }}-kafka-kafka-bootstrap:9092
     %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.appName }}-kafka-kafka-bootstrap:9092
-    {{- else }}
+    {{ else }}
     %kube.kafka.bootstrap.servers={{ .Values.features.async.kafka.url }}
     %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.features.async.kafka.url }}
-    {{- end }}
+    {{ end }}
 
+    {{- if .Values.features.async.kafka.schemaRegistry.url }}
+    # Access to Kafka schema registry.
+    %kube.kafka.schema.registry.url={{ .Values.features.async.kafka.schemaRegistry.url }}
+    %kube.kafka.schema.registry.confluent={{ .Values.features.async.kafka.schemaRegistry.confluent }}
+    %kube.kafka.schema.registry.username={{ .Values.features.async.kafka.schemaRegistry.username | default "" }}
+    %kube.kafka.schema.registry.credentials.source={{ .Values.features.async.kafka.schemaRegistry.credentialsSource | default "USER_INFO" }}
+    {{ end }}
 
     {{- if .Values.features.async.mqtt.url }}
     # Access to MQTT broker.
@@ -289,4 +296,5 @@ data:
     # Configure the minion own behavioral properties.
     %kube.minion.supported-bindings=KAFKA{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}
     %kube.minion.restricted-frequencies=30,10
+    %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
 {{- end -}}
