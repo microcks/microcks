@@ -18,6 +18,8 @@
  */
 package io.github.microcks.util.el.function;
 
+import io.github.microcks.util.el.EvaluationContext;
+
 import java.util.Random;
 
 /**
@@ -33,7 +35,7 @@ public class RandomStringELFunction implements ELFunction {
    private static final int rightLimit = 122; // letter 'z'
 
    @Override
-   public String evalute(String... args) {
+   public String evaluate(EvaluationContext evaluationContext, String... args) {
       Random generator = new Random();
 
       if (args != null) {

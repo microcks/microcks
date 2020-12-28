@@ -18,6 +18,8 @@
  */
 package io.github.microcks.util.el.function;
 
+import io.github.microcks.util.el.EvaluationContext;
+
 import java.util.Random;
 
 /**
@@ -31,7 +33,7 @@ import java.util.Random;
 public class RandomIntELFunction implements ELFunction {
 
    @Override
-   public String evalute(String... args) {
+   public String evaluate(EvaluationContext evaluationContext, String... args) {
       Random generator = new Random();
 
       if (args != null) {

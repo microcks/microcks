@@ -32,7 +32,7 @@ public class UUIDELFunctionTest {
    public void testSimpleEvaluation() {
       // Compute uuid.
       UUIDELFunction function = new UUIDELFunction();
-      String uuid = function.evalute();
+      String uuid = function.evaluate(null);
 
       // Check its RFC 4122 compliant.
       assertEquals(36, uuid.length());

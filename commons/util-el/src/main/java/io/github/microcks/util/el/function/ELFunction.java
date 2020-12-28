@@ -18,10 +18,18 @@
  */
 package io.github.microcks.util.el.function;
 
+import io.github.microcks.util.el.EvaluationContext;
+
 /**
  * @author laurent
  */
 public interface ELFunction {
 
-   String evalute(String... args);
+   /**
+    *
+    * @param evaluationContext
+    * @param args
+    * @return
+    */
+   String evaluate(EvaluationContext evaluationContext, String... args);
 }

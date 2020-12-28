@@ -18,6 +18,8 @@
  */
 package io.github.microcks.util.el.function;
 
+import io.github.microcks.util.el.EvaluationContext;
+
 import java.util.UUID;
 
 /**
@@ -28,7 +30,7 @@ import java.util.UUID;
 public class UUIDELFunction implements ELFunction {
 
    @Override
-   public String evalute(String... args) {
+   public String evaluate(EvaluationContext evaluationContext, String... args) {
       return UUID.randomUUID().toString();
    }
 }

@@ -18,31 +18,18 @@
  */
 package io.github.microcks.util.el.function;
 
-import org.junit.Test;
-
-import static junit.framework.TestCase.assertEquals;
+import com.github.javafaker.Faker;
+import io.github.microcks.util.el.EvaluationContext;
 
 /**
- * This is a test case for RandomStringELFunction class.
+ * Implementation of ELFunction that generates a random name suffix.
  * @author laurent
  */
-public class RandomStringELFunctionTest {
+public class RandomNameSuffixELFunction extends FakerELFunction {
 
-   @Test
-   public void testSimpleEvaluation() {
-      // Compute evaluation.
-      RandomStringELFunction function = new RandomStringELFunction();
-      String result = function.evaluate(null);
-
-      assertEquals(RandomStringELFunction.DEFAULT_LENGTH, result.length());
-   }
-
-   @Test
-   public void testCustomSizeEvaluation() {
-      // Compute evaluation.
-      RandomStringELFunction function = new RandomStringELFunction();
-      String result = function.evaluate(null, "64");
-
-      assertEquals(64, result.length());
+   @Override
+   public String evaluate(EvaluationContext evaluationContext, String... args) {
+      Faker faker = retrieveFaker(evaluationContext);
+      return faker.name().suffix();
    }
 }

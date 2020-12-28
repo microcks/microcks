@@ -20,7 +20,7 @@ package io.github.microcks.util.el;
 
 import io.github.microcks.util.el.function.ELFunction;
 /**
- * An implementation of {@code Expression} that invokes an {@code EFFunction}
+ * An implementation of {@code Expression} that invokes an {@code ELFunction}
  * @author laurent
  */
 public class FunctionExpression implements Expression {
@@ -29,9 +29,9 @@ public class FunctionExpression implements Expression {
    private final String[] functionArgs;
 
    /**
-    * Build a new function expression with a function and its invokation arguments.
+    * Build a new function expression with a function and its invocation arguments.
     * @param function The ELFunction associated to this expression
-    * @param functionArgs The invokation arguments of this function
+    * @param functionArgs The invocation arguments of this function
     */
    public FunctionExpression(ELFunction function, String[] functionArgs) {
       this.function = function;
@@ -40,7 +40,6 @@ public class FunctionExpression implements Expression {
 
    @Override
    public String getValue(EvaluationContext context) {
-      // TODO: Retrieve functionArgs value from context.
-      return function.evalute(functionArgs);
+      return function.evaluate(context, functionArgs);
    }
 }

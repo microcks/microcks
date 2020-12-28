@@ -18,6 +18,8 @@
  */
 package io.github.microcks.util.el.function;
 
+import io.github.microcks.util.el.EvaluationContext;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -30,7 +32,7 @@ import java.util.Calendar;
 public class NowELFunction implements ELFunction {
 
    @Override
-   public String evalute(String... args) {
+   public String evaluate(EvaluationContext evaluationContext, String... args) {
       SimpleDateFormat dateFormat = null;
 
       if (args != null) {

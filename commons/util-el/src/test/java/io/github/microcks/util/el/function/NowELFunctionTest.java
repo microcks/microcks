@@ -37,7 +37,7 @@ public class NowELFunctionTest {
 
       // Compute evaluation.
       NowELFunction function = new NowELFunction();
-      String result = function.evalute();
+      String result = function.evaluate(null);
       long resultLong = Long.parseLong(result);
 
       // Get new timestamp and compare.
@@ -52,7 +52,7 @@ public class NowELFunctionTest {
 
       // Compute evaluation.
       NowELFunction function = new NowELFunction();
-      String result = function.evalute("dd/MM/yyyy HH:mm:ss");
+      String result = function.evaluate(null, "dd/MM/yyyy HH:mm:ss");
 
       // Assert formatting.
       int day = currentDate.get(Calendar.DAY_OF_MONTH);
@@ -70,7 +70,7 @@ public class NowELFunctionTest {
 
       // Compute evaluation.
       NowELFunction function = new NowELFunction();
-      String result = function.evalute("dd/MM/yyyy HH:mm:ss", "1d");
+      String result = function.evaluate(null, "dd/MM/yyyy HH:mm:ss", "1d");
 
       // Assert formatting.
       currentDate.add(Calendar.DAY_OF_YEAR, 1);
@@ -80,7 +80,7 @@ public class NowELFunctionTest {
       assertTrue(result.startsWith(dateString));
 
       // Now add 1 month.
-      result = function.evalute("dd/MM/yyyy HH:mm:ss", "1M");
+      result = function.evaluate(null, "dd/MM/yyyy HH:mm:ss", "1M");
       currentDate.add(Calendar.DAY_OF_YEAR, -1);
       currentDate.add(Calendar.MONTH, 1);
       dateString = dateFormat.format(currentDate.getTime());

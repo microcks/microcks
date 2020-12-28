@@ -55,14 +55,13 @@ public class TemplateEngineTest {
 
    @Test
    public void testContextlessTemplate() {
-      String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41} \n";
+      String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": {{ randomInt(20, 99) }}} \n";
 
       TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
       String content = null;
       try {
          content = engine.getValue(template);
-         System.err.println("Content: " + content);
       } catch (Throwable t) {
          fail("Contextless template should not fail.");
       }

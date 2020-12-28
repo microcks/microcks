@@ -32,7 +32,7 @@ public class RandomIntELFunctionTest {
    public void testSimpleEvaluation() {
       // Compute evaluation.
       RandomIntELFunction function = new RandomIntELFunction();
-      String randomIntString = function.evalute();
+      String randomIntString = function.evaluate(null);
 
       int randomInt = Integer.parseInt(randomIntString);
       assertTrue(randomInt >= Integer.MIN_VALUE);
@@ -43,7 +43,7 @@ public class RandomIntELFunctionTest {
    public void testBoundedEvaluation() {
       // Compute evaluation.
       RandomIntELFunction function = new RandomIntELFunction();
-      String randomIntString = function.evalute("50");
+      String randomIntString = function.evaluate(null, "50");
 
       int randomInt = Integer.parseInt(randomIntString);
       assertTrue(randomInt >= 0);
@@ -54,7 +54,7 @@ public class RandomIntELFunctionTest {
    public void testIntervalEvaluation() {
       // Compute evaluation.
       RandomIntELFunction function = new RandomIntELFunction();
-      String randomIntString = function.evalute("25", "50");
+      String randomIntString = function.evaluate(null, "25", "50");
 
       int randomInt = Integer.parseInt(randomIntString);
       assertTrue(randomInt >= 25);
