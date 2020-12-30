@@ -118,15 +118,22 @@ public class ExpressionParser {
       int argsStart = expressionString.indexOf('(');
       int argsEnd = expressionString.indexOf(')');
 
-      if (argsStart != 1 && argsEnd != -1 && argsStart < argsEnd) {
+      if (argsStart != 1 && argsEnd != -1 && argsStart < argsEnd || expressionString.startsWith("$")) {
          log.debug("Found a function expression " + expressionString);
-         String functionName = expressionString.substring(0, argsStart);
-         String argsString = expressionString.substring(argsStart + 1, argsEnd);
+
+         String functionName = null;
          String[] args = new String[0];
-         // Parse arguments if non empty string.
-         if (argsString.length() > 0) {
-            args = Arrays.stream(argsString.split(","))
-                  .map(arg -> arg.trim()).toArray(String[]::new);
+         // Checking for easier Postman compatibility notation first.
+         if (expressionString.startsWith("$")) {
+            functionName = expressionString.substring(1);
+         } else {
+            functionName = expressionString.substring(0, argsStart);
+            String argsString = expressionString.substring(argsStart + 1, argsEnd);
+            // Parse arguments if non empty string.
+            if (argsString.length() > 0) {
+               args = Arrays.stream(argsString.split(","))
+                     .map(arg -> arg.trim()).toArray(String[]::new);
+            }
          }
 
          Class<ELFunction> functionClazz = context.lookupFunction(functionName);

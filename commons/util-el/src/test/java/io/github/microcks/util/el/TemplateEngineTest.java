@@ -67,4 +67,23 @@ public class TemplateEngineTest {
       }
       assertTrue(content.startsWith("{\"signedAt\": \"1"));
    }
+
+   @Test
+   public void testPostmanNotationCompatibility() {
+      String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"{{ randomFullName() }}\", \"email\": \"{{ randomEmail() }}\", \"age\": {{ randomInt(20, 99) }}} \n";
+      String postmanTemplate = "{\"signedAt\": \"{{ $timestamp }}\", \"fullName\": \"{{ $randomFullName }}\", \"email\": \"{{ $randomEmail }}\", \"age\": {{ $randomInt }}} \n";
+
+      TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+
+      String content = null;
+      String postmanContent = null;
+      try {
+         content = engine.getValue(template);
+         postmanContent = engine.getValue(postmanTemplate);
+      } catch (Throwable t) {
+         fail("Contextless template should not fail.");
+      }
+      assertTrue(content.startsWith("{\"signedAt\": \"1"));
+      assertTrue(postmanContent.startsWith("{\"signedAt\": \"1"));
+   }
 }

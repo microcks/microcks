@@ -35,7 +35,10 @@ public class TemplateEngineFactory {
 
       // Register some built-in functions into evaluation context.
       engine.getContext().registerFunction("now", NowELFunction.class);
+      engine.getContext().registerFunction("timestamp", NowELFunction.class);
       engine.getContext().registerFunction("uuid", UUIDELFunction.class);
+      engine.getContext().registerFunction("guid", UUIDELFunction.class);
+      engine.getContext().registerFunction("randomUUID", UUIDELFunction.class);
       engine.getContext().registerFunction("randomInt", RandomIntELFunction.class);
       engine.getContext().registerFunction("randomString", RandomStringELFunction.class);
 
