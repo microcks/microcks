@@ -46,6 +46,15 @@ public class TemplateEngineFactory {
       engine.getContext().registerFunction("randomNameSuffix", RandomNameSuffixELFunction.class);
 
       engine.getContext().registerFunction("randomCity", RandomCityELFunction.class);
+      engine.getContext().registerFunction("randomCountry", RandomCountryELFunction.class);
+      engine.getContext().registerFunction("randomCountryCode", RandomCountryCodeELFunction.class);
+      engine.getContext().registerFunction("randomStreetName", RandomStreetNameELFunction.class);
+      engine.getContext().registerFunction("randomStreetAddress", RandomStreetAddressELFunction.class);
+      engine.getContext().registerFunction("randomLatitude", RandomLatitudeELFunction.class);
+      engine.getContext().registerFunction("randomLongitude", RandomLongitudeELFunction.class);
+      engine.getContext().registerFunction("randomPhoneNumber", RandomPhoneNumberELFunction.class);
+
+      engine.getContext().registerFunction("randomEmail", RandomEmailELFunction.class);
 
       return engine;
    }

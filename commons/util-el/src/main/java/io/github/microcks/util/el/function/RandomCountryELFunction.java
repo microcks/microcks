@@ -22,14 +22,14 @@ import com.github.javafaker.Faker;
 import io.github.microcks.util.el.EvaluationContext;
 
 /**
- * Implementation of ELFunction that generates a random city.
+ * Implementation of ELFunction that generates a random country.
  * @author laurent
  */
-public class RandomCityELFunction extends FakerELFunction {
+public class RandomCountryELFunction extends FakerELFunction {
 
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
       Faker faker = retrieveFaker(evaluationContext);
-      return faker.address().cityName();
+      return faker.address().country();
    }
 }

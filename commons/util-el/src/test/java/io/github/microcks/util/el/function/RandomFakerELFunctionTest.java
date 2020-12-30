@@ -55,5 +55,31 @@ public class RandomFakerELFunctionTest {
       // Test simple evaluations.
       RandomCityELFunction cFunction = new RandomCityELFunction();
       assertNotNull(cFunction.evaluate(context));
+
+      RandomCountryELFunction coFunction = new RandomCountryELFunction();
+      assertNotNull(coFunction.evaluate(context));
+
+      RandomStreetNameELFunction snFunction = new RandomStreetNameELFunction();
+      assertNotNull(snFunction.evaluate(context));
+
+      RandomStreetAddressELFunction saFunction = new RandomStreetAddressELFunction();
+      assertNotNull(saFunction.evaluate(context));
+
+      RandomPhoneNumberELFunction pFunction = new RandomPhoneNumberELFunction();
+      assertNotNull(pFunction.evaluate(context));
+
+      RandomLatitudeELFunction laFunction = new RandomLatitudeELFunction();
+      assertNotNull(laFunction.evaluate(context));
+
+      RandomLongitudeELFunction loFunction = new RandomLongitudeELFunction();
+      assertNotNull(loFunction.evaluate(context));
+   }
+
+   @Test
+   public void testInternetEvaluations() {
+      EvaluationContext context = new EvaluationContext();
+      // Test simple evaluations.
+      RandomEmailELFunction eFunction = new RandomEmailELFunction();
+      assertNotNull(eFunction.evaluate(context));
    }
 }
