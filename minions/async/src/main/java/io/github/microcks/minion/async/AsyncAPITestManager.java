@@ -100,32 +100,50 @@ public class AsyncAPITestManager {
          // Actually start test counter.
          long startTime = System.currentTimeMillis();
          List<ConsumedMessage> outputs = null;
-         try {
-            logger.debugf("Starting consuming messages for {%d} ms", specification.getTimeoutMS());
-            outputs = executorService.invokeAny(Collections.singletonList(messageConsumptionTask),
-                  specification.getTimeoutMS(), TimeUnit.MILLISECONDS);
-            logger.debugf("Consumption ends and we got {%d} messages to validate", outputs.size());
-         } catch (InterruptedException e) {
-            logger.infof("AsyncAPITestThread for {%s} was interrupted", specification.getTestResultId());
-         } catch (ExecutionException e) {
-            logger.errorf(e, "AsyncAPITestThread for {%s} raise an ExecutionException", specification.getTestResultId());
-         } catch (TimeoutException e) {
-            // Message consumption has timed-out, add an empty test return with failure and message.
-            logger.infof("AsyncAPITestThread for {%s} was timed-out", specification.getTestResultId());
+
+         if (messageConsumptionTask != null) {
+            try {
+               logger.debugf("Starting consuming messages for {%d} ms", specification.getTimeoutMS());
+               outputs = executorService.invokeAny(Collections.singletonList(messageConsumptionTask),
+                     specification.getTimeoutMS(), TimeUnit.MILLISECONDS);
+               logger.debugf("Consumption ends and we got {%d} messages to validate", outputs.size());
+            } catch (InterruptedException e) {
+               logger.infof("AsyncAPITestThread for {%s} was interrupted", specification.getTestResultId());
+            } catch (ExecutionException e) {
+               logger.errorf(e, "AsyncAPITestThread for {%s} raise an ExecutionException", specification.getTestResultId());
+            } catch (TimeoutException e) {
+               // Message consumption has timed-out, add an empty test return with failure and message.
+               logger.infof("AsyncAPITestThread for {%s} was timed-out", specification.getTestResultId());
+               testCaseReturn.addTestReturn(
+                     new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
+                           "Timeout: no message received in " + specification.getTimeoutMS() + " ms",
+                           null, null)
+               );
+            } catch (Throwable t) {
+               // We faced a low-level issue... add an empty test return with failure and message.
+               logger.error("Caught a low-level throwable", t);
+               testCaseReturn.addTestReturn(
+                     new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
+                           "Exception: low-level failure: " + t.getMessage(),
+                           null, null)
+               );
+            } finally {
+               if (messageConsumptionTask != null) {
+                  try {
+                     messageConsumptionTask.close();
+                  } catch (Throwable t) {
+                     // This was best effort, just ignore the exception...
+                  }
+               }
+               executorService.shutdown();
+            }
+         } else {
+            logger.errorf("Found no suitable MessageConsumptionTask implementation. {%s} is not a supported endpoint", specification.getEndpointUrl());
             testCaseReturn.addTestReturn(
-                  new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
-                        "Timeout: no message received in " + specification.getTimeoutMS()+ " ms",
+                  new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
+                        "Exception: found no suitable MessageConsumptionTask implementation for endpoint",
                         null, null)
             );
-         } finally {
-            if (messageConsumptionTask != null) {
-               try {
-                  messageConsumptionTask.close();
-               } catch (Throwable t) {
-                  // This was best effort, just ignore the exception...
-               }
-            }
-            executorService.shutdown();
          }
          // Now it's time to get elapsed timer.
          long elapsedTime = System.currentTimeMillis() - startTime;
@@ -189,10 +207,10 @@ public class AsyncAPITestManager {
 
       /** Find the appropriate MessageConsumptionTask implementation depending on specification. */
       private MessageConsumptionTask buildMessageConsumptionTask(AsyncTestSpecification testSpecification) {
-         if (KafkaMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl())) {
+         if (KafkaMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new KafkaMessageConsumptionTask(testSpecification);
          }
-         if (MQTTMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl())) {
+         if (MQTTMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new MQTTMessageConsumptionTask(testSpecification);
          }
          return null;
