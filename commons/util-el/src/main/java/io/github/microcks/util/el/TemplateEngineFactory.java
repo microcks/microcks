@@ -41,6 +41,7 @@ public class TemplateEngineFactory {
       engine.getContext().registerFunction("randomUUID", UUIDELFunction.class);
       engine.getContext().registerFunction("randomInt", RandomIntELFunction.class);
       engine.getContext().registerFunction("randomString", RandomStringELFunction.class);
+      engine.getContext().registerFunction("randomBoolean", RandomBooleanELFunction.class);
 
       engine.getContext().registerFunction("randomFirstName", RandomFirstNameELFunction.class);
       engine.getContext().registerFunction("randomLastName", RandomLastNameELFunction.class);
