@@ -18,7 +18,16 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestCaseResult;
+import io.github.microcks.domain.TestOptionals;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestReturn;
+import io.github.microcks.domain.TestRunnerType;
+import io.github.microcks.domain.TestStepResult;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
@@ -129,11 +138,13 @@ public class TestService {
                updatedTestCaseResult = testCaseResult;
                // If results we now update the success flag and elapsed time of testCase?
                if (testReturns == null || testReturns.isEmpty()) {
-                  log.info("testReturns are null or empty, setting elapsedTime to -I and success to false for {}", operationName);
+                  log.info("testReturns are null or empty, setting elapsedTime to -1 and success to false for {}", operationName);
                   testCaseResult.setElapsedTime(-1);
                   testCaseResult.setSuccess(false);
                } else {
-                  updateTestCaseResultWithReturns(testCaseResult, testReturns);
+                  updateTestCaseResultWithReturns(testCaseResult, testReturns,
+                        TestRunnerType.ASYNC_API_SCHEMA != testResult.getRunnerType(),
+                        TestRunnerType.ASYNC_API_SCHEMA == testResult.getRunnerType());
                }
                break;
             }
@@ -201,7 +212,7 @@ public class TestService {
    /**
     *
     */
-   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult, List<TestReturn> testReturns) {
+   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult, List<TestReturn> testReturns, boolean sumElapsedTimes, boolean findMaxElapsedTime) {
 
       // Prepare a bunch of flag we're going to complete.
       boolean successFlag = true;
@@ -209,7 +220,13 @@ public class TestService {
 
       for (TestReturn testReturn : testReturns) {
          // Deal with elapsed time and success flag.
-         caseElapsedTime += testReturn.getElapsedTime();
+         if (sumElapsedTimes) {
+            caseElapsedTime += testReturn.getElapsedTime();
+         } else if (findMaxElapsedTime) {
+            if (testReturn.getElapsedTime() > caseElapsedTime) {
+               caseElapsedTime = testReturn.getElapsedTime();
+            }
+         }
          TestStepResult testStepResult = testReturn.buildTestStepResult();
          if (!testStepResult.isSuccess()){
             successFlag = false;

@@ -145,8 +145,6 @@ public class AsyncAPITestManager {
                         null, null)
             );
          }
-         // Now it's time to get elapsed timer.
-         long elapsedTime = System.currentTimeMillis() - startTime;
 
          // Validate all the received outputs if any.
          if (outputs != null && !outputs.isEmpty()) {
@@ -158,7 +156,10 @@ public class AsyncAPITestManager {
             }
 
             for (int i=0; specificationNode!=null && i<outputs.size(); i++) {
+               // Treat each message and compute elapsed time of each.
                ConsumedMessage message = outputs.get(i);
+               long elapsedTime = message.getReceivedAt() - startTime;
+
                // Initialize an EventMessage with message content.
                String responseContent = new String(message.getPayload());
                EventMessage eventMessage = new EventMessage();
