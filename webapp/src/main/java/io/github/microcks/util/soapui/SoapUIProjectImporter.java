@@ -167,7 +167,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
             return getSoapMessageDefinitions(mockService, operation);
          } catch (XPathExpressionException xpe) {
             log.error("Got a XPathExpressionException while retrieving soap messages", xpe);
-            throw new MockRepositoryImportException("XPathExpressionExcpetion while retrieving soap messages", xpe);
+            throw new MockRepositoryImportException("XPathExpressionExceotion while retrieving soap messages", xpe);
          }
       }
       // ... then with a Rest Service mock.
