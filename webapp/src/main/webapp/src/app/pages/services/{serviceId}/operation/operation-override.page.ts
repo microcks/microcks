@@ -48,6 +48,12 @@ export class OperationOverridePageComponent implements OnInit {
     'query': []
   }
 
+  fallback = `{
+  "dispatcher": "URI_PARTS",
+  "dispatcherRules": "name",
+  "fallback": "John Doe"
+}`;
+
   examplePayload =  `{
   "name": "Abbey Brune",
   "country": "Belgium",

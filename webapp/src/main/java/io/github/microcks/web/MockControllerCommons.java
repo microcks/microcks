@@ -18,10 +18,14 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.event.MockInvocationEvent;
 
+import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.dispatcher.FallbackSpecification;
+import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
@@ -42,6 +46,23 @@ public class MockControllerCommons {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
+
+   /**
+    *
+    * @param rOperation
+    * @return
+    */
+   public static FallbackSpecification getFallbackIfAny(Operation rOperation) {
+      FallbackSpecification fallback = null;
+      if (DispatchStyles.FALLBACK.equals(rOperation.getDispatcher())) {
+         try {
+            fallback = FallbackSpecification.buildFromJsonString(rOperation.getDispatcherRules());
+         } catch (JsonMappingException jme) {
+            log.error("Dispatching rules of operation cannot be interpreted as FallbackSpecification", jme);
+         }
+      }
+      return fallback;
+   }
 
    /**
     * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.

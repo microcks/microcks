@@ -146,6 +146,7 @@
                 <option value="URI_PARTS">URI PARTS</option>
                 <option value="URI_ELEMENTS">URI ELEMENTS</option>
                 <option value="JSON_BODY">JSON BODY</option>
+                <option value="FALLBACK">FALLBACK</option>
               </select>
               <p class="help-block">The dispatcher used by Operation.</p>
             </div>
@@ -153,9 +154,9 @@
           <div class="control-group">
             <label class="control-label" for="dispatcherRules">Dispatcher rules</label>
             <div class="controls">
-              <textarea class="form-control" rows="10" id="dispatcherRules" name="dispatcherRules" [(ngModel)]="newOperation.dispatcherRules" (ngModelChange)="updateSecretProperties()">
+              <textarea class="form-control" rows="10" id="dispatcherRules" name="dispatcherRules" [(ngModel)]="newOperation.dispatcherRules">
               </textarea>
-              <p class="help-block">The dispatcher rules for above dispatcher</p>
+              <p class="help-block">The dispatcher rules for above dispatcher.</p>
             </div>
           </div>
         </div>
@@ -175,8 +176,9 @@
     </div>
     <div class="col-md-4 help-bar">
       <h3 class="section-label">Help needed?</h3>
-      <small>This sidebar provides some explanations and examples on how to setup parameter constraints and use the <code>JSON_BODY</code> dispatcher.</small>
-      <br/><br/>
+      <small>This sidebar provides some explanations and examples on how to setup parameter constraints and use the evolved dispatchers.</small>
+      <br/>
+      <h4>Parameters Constraints</h4>
       <p>
         Parameters constraints allows you to define expectations regarding incoming header or query parameters values.
         Adding constraints add new behaviour on your operation mocks so that they can:
@@ -186,68 +188,98 @@
         <li><code>recopy</code> incoming parameter value into an outgoing header (think of transaction propagation for example),</li>
         <li><code>match</code> parameter value using a `regular expression` (think of Authorization token validation for example)</li>
       </ul>
-      
+    
+      <div id="fallback-help" *ngIf="newOperation.dispatcher === 'FALLBACK'">
+        <br/>
+        <h4>Fallback Dispatcher</h4>
+        <p>
+          Fallback dispatcher allows you to declare a <code>fallback</code> response in case the incoming request to your mocks do not
+          match any existing dispatch criteria.
+        </p>
+        <p>
+          Consider the following case where you have a single <code>GET /user/:name</code> operation. You've have defined mocks responses called
+          <code>Andrew</code>, <code>Anna</code> and <code>John Doe</code> that are matching with corresponding <code>:name</code> resource path.
+          What if name does not have one of theses values?
+        </p>
+        <p>
+          By default Microcks will return a <code>404</code> error. But if you've defined a <code>FALLBACK</code> dispatcher, you'll default to
+          the response of your choice. Just say you want to default to <code>John Doe</code> response:
+        </p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="copyDispatcherRules(fallback)">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>{{ fallback }}</code></pre>
+      </div>
 
-      <br/><br/>
-      <p>
-        Consider the following JSON payload representing a request body for creating new Beer entity:
-      </p>
-      <pre><code highlight>{{ examplePayload }}</code></pre>
-  
-      <p>
-        Using the <code>JSON_BODY</code> dispatcher, you can select target response depending of the value of a payload element.
-        Below we are checking for <code>country</code> with the <code>equals</code> operator. Note that you should always have a <code>default</code> case.
-      </p>
-      <div style="position: absolute; right: 20px">
-        <button class="btn btn-default" (click)="copyDispatcherRules(equalsOperator)">
-          <span class="fa fa-paste"></span> Copy
-        </button>
+      <div id="json-body-help" *ngIf="newOperation.dispatcher === 'JSON_BODY'">
+        <br/>
+        <h4>JSON Body Dispatcher</h4>
+        <p>
+          JSON Body dispatcher allows you to introspect the content of incoming JSON payload for matching values that you'll map to response.
+          It is paricully well suited for dealing with <code>POST</code> requests where you'll want different responses depending on request content.
+        </p>
+        <p>
+          Consider the following JSON payload representing a request body for creating new Beer entity:
+        </p>
+        <pre><code highlight>{{ examplePayload }}</code></pre>
+    
+        <p>
+          Using the <code>JSON_BODY</code> dispatcher, you can select target response depending of the value of a payload element.
+          Below we are checking for <code>country</code> with the <code>equals</code> operator. Note that you should always have a <code>default</code> case.
+        </p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="copyDispatcherRules(equalsOperator)">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>{{ equalsOperator }}</code></pre>
+    
+        <p>
+          You can also dispatch depending on a payload number value using the <code>range</code> operator. Note the orientation
+          of brackets to include or exclude edge values. <code>default</code> is still required.
+        </p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="copyDispatcherRules(rangeOperator)">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>{{ rangeOperator }}</code></pre>
+    
+        <p>
+          The <code>size</code> operator allows you to define dispatching rules depending on the size of an array. Here we only accept
+          beers that have at least 2 references and at most 100.
+        </p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="copyDispatcherRules(sizeOperator)">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>{{ sizeOperator }}</code></pre>
+    
+        <p>
+          For much more complex rules, you may use the <code>regexp</code> operator. There's no guarantee that cases will in the given
+          order so regular expressions should be exclusives. Otherwise, it falls within the <code>default</code> case.
+        </p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="copyDispatcherRules(regexpOperator)">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>{{ regexpOperator }}</code></pre>
+    
+        <p>
+          Finally, you may want to dispatch according the presence of an element within JSON payload. For that, you'll use the <code>presence</code>
+          operator that implies defining one <code>found</code> OR one <code>missing</code> case. Alternative falls into <code>default</code> case.
+        </p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="copyDispatcherRules(presenceOperator)">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>{{ presenceOperator }}</code></pre>
       </div>
-      <pre><code highlight>{{ equalsOperator }}</code></pre>
-  
-      <p>
-        You can also dispatch depending on a payload number value using the <code>range</code> operator. Note the orientation
-        of brackets to include or exclude edge values. <code>default</code> is still required.
-      </p>
-      <div style="position: absolute; right: 20px">
-        <button class="btn btn-default" (click)="copyDispatcherRules(rangeOperator)">
-          <span class="fa fa-paste"></span> Copy
-        </button>
-      </div>
-      <pre><code highlight>{{ rangeOperator }}</code></pre>
-  
-      <p>
-        The <code>size</code> operator allows you to define dispatching rules depending on the size of an array. Here we only accept
-        beers that have at least 2 references and at most 100.
-      </p>
-      <div style="position: absolute; right: 20px">
-        <button class="btn btn-default" (click)="copyDispatcherRules(sizeOperator)">
-          <span class="fa fa-paste"></span> Copy
-        </button>
-      </div>
-      <pre><code highlight>{{ sizeOperator }}</code></pre>
-  
-      <p>
-        For much more complex rules, you may use the <code>regexp</code> operator. There's no guarantee that cases will in the given
-        order so regular expressions should be exclusives. Otherwise, it falls within the <code>default</code> case.
-      </p>
-      <div style="position: absolute; right: 20px">
-        <button class="btn btn-default" (click)="copyDispatcherRules(regexpOperator)">
-          <span class="fa fa-paste"></span> Copy
-        </button>
-      </div>
-      <pre><code highlight>{{ regexpOperator }}</code></pre>
-  
-      <p>
-        Finally, you may want to dispatch according the presence of an element within JSON payload. For that, you'll use the <code>presence</code>
-        operator that implies defining one <code>found</code> OR one <code>missing</code> case. Alternative falls into <code>default</code> case.
-      </p>
-      <div style="position: absolute; right: 20px">
-        <button class="btn btn-default" (click)="copyDispatcherRules(presenceOperator)">
-          <span class="fa fa-paste"></span> Copy
-        </button>
-      </div>
-      <pre><code highlight>{{ presenceOperator }}</code></pre>
     </div>
   </div>
 </div>

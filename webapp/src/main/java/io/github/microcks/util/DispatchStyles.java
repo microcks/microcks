@@ -44,4 +44,7 @@ public class DispatchStyles{
 
    /** Constant for JSON_BODY dispatch style. */
    public static final String JSON_BODY = "JSON_BODY";
+
+   /** Constant for FALLBACK dispatch style. */
+   public static final String FALLBACK = "FALLBACK";
 }
