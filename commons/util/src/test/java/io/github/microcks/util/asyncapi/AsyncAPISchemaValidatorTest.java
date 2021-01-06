@@ -19,7 +19,11 @@
 package io.github.microcks.util.asyncapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.github.microcks.util.SchemaMap;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
@@ -218,5 +222,149 @@ public class AsyncAPISchemaValidatorTest {
          System.err.println(error);
       }
       assertTrue(errors.isEmpty());
+   }
+
+   @Test
+   public void testValidateAvroSuccessFromAsyncAPIResource() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+      Schema avroSchema = null;
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml"));
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Load schema from file.
+         avroSchema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+
+         GenericRecord record = new GenericData.Record(avroSchema);
+         record.put("fullName", "Laurent Broudoux");
+         record.put("email", "laurent@microcks.io");
+         record.put("age", 42);
+
+         // Validate the content of user/signedup subscribe chanel.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, record,
+               "/channels/user~1signedup/subscribe/message", null);
+         assertTrue(errors.isEmpty());
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   public void testValidateAvroFailureFromAsyncAPIResource() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+      Schema avroSchema = null;
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml"));
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Load schema from file.
+         avroSchema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-bad.avsc"));
+
+         GenericRecord record = new GenericData.Record(avroSchema);
+         record.put("name", "Laurent");
+         record.put("email", "laurent@microcks.io");
+         record.put("age", 42);
+
+         // Validate the content of user/signedup subscribe chanel.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, record,
+               "/channels/user~1signedup/subscribe/message", null);
+         assertFalse(errors.isEmpty());
+         assertEquals(1, errors.size());
+         assertEquals("Required field fullName cannot be found in record", errors.get(0));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   public void testValidateAvroSuccessFromAsyncAPIWithRefsResource() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+      Schema avroSchema = null;
+
+      SchemaMap schemaMap = new SchemaMap();
+      schemaMap.putSchemaEntry("./user-signedup.avsc", "{\"namespace\": \"microcks.avro\",\n" +
+            " \"type\": \"record\",\n" +
+            " \"name\": \"User\",\n" +
+            " \"fields\": [\n" +
+            "     {\"name\": \"fullName\", \"type\": \"string\"},\n" +
+            "     {\"name\": \"email\",  \"type\": \"string\"},\n" +
+            "     {\"name\": \"age\", \"type\": \"int\"}\n" +
+            " ]\n" +
+            "}");
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml"));
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Load schema from file.
+         avroSchema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup.avsc"));
+
+         GenericRecord record = new GenericData.Record(avroSchema);
+         record.put("fullName", "Laurent Broudoux");
+         record.put("email", "laurent@microcks.io");
+         record.put("age", 42);
+
+         // Validate the content of user/signedup subscribe chanel.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, record,
+               "/channels/user~1signedup/subscribe/message", schemaMap);
+         assertTrue(errors.isEmpty());
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   public void testValidateAvroFailureFromAsyncAPIWithRefsResource() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+      Schema avroSchema = null;
+
+      SchemaMap schemaMap = new SchemaMap();
+      schemaMap.putSchemaEntry("./user-signedup.avsc", "{\"namespace\": \"microcks.avro\",\n" +
+            " \"type\": \"record\",\n" +
+            " \"name\": \"User\",\n" +
+            " \"fields\": [\n" +
+            "     {\"name\": \"fullName\", \"type\": \"string\"},\n" +
+            "     {\"name\": \"email\",  \"type\": \"string\"},\n" +
+            "     {\"name\": \"age\", \"type\": \"int\"}\n" +
+            " ]\n" +
+            "}");
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml"));
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Load schema from file.
+         avroSchema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-bad.avsc"));
+
+         GenericRecord record = new GenericData.Record(avroSchema);
+         record.put("name", "Laurent");
+         record.put("email", "laurent@microcks.io");
+         record.put("age", 42);
+
+         // Validate the content of user/signedup subscribe chanel.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, record,
+               "/channels/user~1signedup/subscribe/message", schemaMap);
+         assertFalse(errors.isEmpty());
+         assertEquals(1, errors.size());
+         assertEquals("Required field fullName cannot be found in record", errors.get(0));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
    }
 }

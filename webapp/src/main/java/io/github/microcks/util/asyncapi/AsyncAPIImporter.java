@@ -171,6 +171,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                         // Build a new resource from content. Use the escaped operation path.
                         Resource schemaResource = new Resource();
                         schemaResource.setName(IdBuilder.buildResourceFullName(service, operation));
+                        schemaResource.setPath(ref);
                         schemaResource.setContent(content);
 
                         // We have to look at schema format to know the type.

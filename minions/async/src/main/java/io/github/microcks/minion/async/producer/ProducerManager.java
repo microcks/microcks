@@ -23,7 +23,7 @@ import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.format.AvroUtil;
+import io.github.microcks.util.AvroUtil;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;

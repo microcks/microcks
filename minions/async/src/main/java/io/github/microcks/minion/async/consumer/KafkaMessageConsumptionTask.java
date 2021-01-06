@@ -18,30 +18,26 @@
  */
 package io.github.microcks.minion.async.consumer;
 
+import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+
 import io.github.microcks.domain.Header;
 import io.github.microcks.minion.async.AsyncTestSpecification;
 
+import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.jboss.logging.Logger;
 
 import java.io.*;
-import java.security.KeyStore;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -58,15 +54,26 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    private final Logger logger = Logger.getLogger(getClass());
 
    /** The string for Regular Expression that helps validating acceptable endpoints. */
-   public static final String ENDPOINT_PATTERN_STRING = "kafka://(?<brokerUrl>[^:]+(:\\d+)?)/(?<topic>.+)(\\?(?<options>.+))?";
+   public static final String ENDPOINT_PATTERN_STRING = "kafka://(?<brokerUrl>[^:]+(:\\d+)?)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
+
+   /** The endpoint URL option representing schema registry URL. */
+   public static final String REGISTRY_URL_OPTION = "registryUrl";
+   /** The endpoint URL option representing schema registry username. */
+   public static final String REGISTRY_USERNAME_OPTION = "registryUsername";
+   /** The endpoint URL option representing schema registry auth credentials source. */
+   public static final String REGISTRY_AUTH_CREDENTIALS_SOURCE = "registryAuthCredSource";
 
    private File trustStore;
 
    private AsyncTestSpecification specification;
 
-   private KafkaConsumer<String, String> consumer;
+   protected Map<String, String> optionsMap;
+
+   protected KafkaConsumer<String, byte[]> consumer;
+
+   protected KafkaConsumer<String, GenericRecord> avroConsumer;
 
 
    /**
@@ -88,29 +95,25 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
 
    @Override
    public List<ConsumedMessage> call() throws Exception {
-      if (consumer == null) {
+      if (consumer == null && avroConsumer == null) {
          initializeKafkaConsumer();
       }
       List<ConsumedMessage> messages = new ArrayList<>();
 
-      // Start polling consumer for records.
-      ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(specification.getTimeoutMS()));
-
-      for (ConsumerRecord<String, String> record : records) {
-         // Build a ConsumedMessage from Kafka record.
-         ConsumedMessage message = new ConsumedMessage();
-         message.setReceivedAt(System.currentTimeMillis());
-         message.setHeaders(buildHeaders(record.headers()));
-         message.setPayload(record.value().getBytes("UTF-8"));
-         messages.add(message);
+      // Start polling with appropriate consumer for records.
+      // Do not forget to close the consumer before returning results.
+      if (consumer != null) {
+         consumeByteArray(messages);
+         consumer.close();
+      } else {
+         consumeAvro(messages);
+         avroConsumer.close();
       }
-      // Close the consumer before returning results.
-      consumer.close();
       return messages;
    }
 
    /**
-    * Close the resources used by this task. Namely the Kafka consumer and
+    * Close the resources used by this task. Namely the Kafka consumer(s) and
     * the optionally created truststore holding Kafka client SSL credentials.
     * @throws IOException should not happen.
     */
@@ -119,6 +122,9 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       if (consumer != null) {
          consumer.close();
       }
+      if (avroConsumer != null) {
+         avroConsumer.close();
+      }
       if (trustStore != null && trustStore.exists()) {
          trustStore.delete();
       }
@@ -126,12 +132,17 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
 
    /** Initialize Kafka consumer from built properties and subscribe to target topic. */
    private void initializeKafkaConsumer() {
-      Matcher matcher = ENDPOINT_PATTERN.matcher(specification.getEndpointUrl());
-      // Call matcher.find() to be abled to use named expressions.
+      Matcher matcher = ENDPOINT_PATTERN.matcher(specification.getEndpointUrl().trim());
+      // Call matcher.find() to be able to use named expressions.
       matcher.find();
       String endpointBrokerUrl = matcher.group("brokerUrl");
       String endpointTopic = matcher.group("topic");
       String options = matcher.group("options");
+
+      // Parse options if specified.
+      if (options != null && !options.isBlank()) {
+         initializeOptionsMap(options);
+      }
 
       Properties props = new Properties();
       props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, endpointBrokerUrl);
@@ -139,8 +150,21 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       // Generate a unique GroupID for no collision with previous or other consumers.
       props.put(ConsumerConfig.GROUP_ID_CONFIG, specification.getTestResultId() + "-" + System.currentTimeMillis());
       props.put(ConsumerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-test");
+
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
-      props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+
+      // Value deserializer depends on schema registry presence.
+      if (hasOption(REGISTRY_URL_OPTION)) {
+         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class.getName());
+         props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, optionsMap.get(REGISTRY_URL_OPTION));
+         // Configure schema registry credentials if any.
+         if (hasOption(REGISTRY_USERNAME_OPTION) || hasOption(REGISTRY_AUTH_CREDENTIALS_SOURCE)) {
+            props.put(AbstractKafkaAvroSerDeConfig.USER_INFO_CONFIG, optionsMap.get(REGISTRY_USERNAME_OPTION));
+            props.put(AbstractKafkaAvroSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, optionsMap.get(REGISTRY_AUTH_CREDENTIALS_SOURCE));
+         }
+      } else {
+         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
+      }
 
       // Only retrieve incoming messages and do not persist offset.
       props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
@@ -162,9 +186,62 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
          }
       }
 
-      // Create the consumer from properties and subscribe to given topis.
-      consumer = new KafkaConsumer<>(props);
-      consumer.subscribe(Arrays.asList(endpointTopic));
+      // Create the consumer from properties and subscribe to given topic.
+      if (hasOption(REGISTRY_URL_OPTION)) {
+         avroConsumer = new KafkaConsumer<>(props);
+         avroConsumer.subscribe(Arrays.asList(endpointTopic));
+      } else {
+         consumer = new KafkaConsumer<>(props);
+         consumer.subscribe(Arrays.asList(endpointTopic));
+      }
+   }
+
+   /** Initialize options map from options string found in Endpoint URL. */
+   protected void initializeOptionsMap(String options) {
+      optionsMap = new HashMap<>();
+      String[] keyValuePairs = options.split("&");
+      for (String keyValuePair : keyValuePairs) {
+         String[] keyValue = keyValuePair.split("=");
+         if (keyValue.length > 1) {
+            optionsMap.put(keyValue[0], keyValue[1]);
+         }
+      }
+   }
+
+   /** Safe method for checking if an option has been set. */
+   protected boolean hasOption(String optionKey) {
+      if (optionsMap != null) {
+         return optionsMap.containsKey(optionKey);
+      }
+      return false;
+   }
+
+   /** Consume simple byte[] on default consumer. Fill messages array. */
+   private void consumeByteArray(List<ConsumedMessage> messages){
+      ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(specification.getTimeoutMS()));
+
+      for (ConsumerRecord<String, byte[]> record : records) {
+         // Build a ConsumedMessage from Kafka record.
+         ConsumedMessage message = new ConsumedMessage();
+         message.setReceivedAt(System.currentTimeMillis());
+         message.setHeaders(buildHeaders(record.headers()));
+         message.setPayload(record.value());
+         messages.add(message);
+      }
+   }
+
+   /** Consumer avro records when connected to registry. Fill messages array. */
+   private void consumeAvro(List<ConsumedMessage> messages) {
+      ConsumerRecords<String, GenericRecord> records = avroConsumer.poll(Duration.ofMillis(specification.getTimeoutMS()));
+
+      for (ConsumerRecord<String, GenericRecord> record : records) {
+         // Build a ConsumedMessage from Kafka record.
+         ConsumedMessage message = new ConsumedMessage();
+         message.setReceivedAt(System.currentTimeMillis());
+         message.setHeaders(buildHeaders(record.headers()));
+         message.setPayloadRecord(record.value());
+         messages.add(message);
+      }
    }
 
    /** Build set of Microcks headers from Kafka headers. */

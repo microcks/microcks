@@ -19,16 +19,19 @@
 package io.github.microcks.minion.async.consumer;
 
 import io.github.microcks.domain.Header;
+import org.apache.avro.generic.GenericRecord;
 
 import java.util.Set;
 
 /**
+ * This is a simple wrapper allowing to track a consumed messages from endpoint.
  * @author laurent
  */
 public class ConsumedMessage {
 
    private long receivedAt;
    private byte[] payload;
+   private GenericRecord payloadRecord;
    private Set<Header> headers;
 
    public long getReceivedAt() {
@@ -45,6 +48,14 @@ public class ConsumedMessage {
 
    public void setPayload(byte[] payload) {
       this.payload = payload;
+   }
+
+   public GenericRecord getPayloadRecord() {
+      return payloadRecord;
+   }
+
+   public void setPayloadRecord(GenericRecord payloadRecord) {
+      this.payloadRecord = payloadRecord;
    }
 
    public Set<Header> getHeaders() {

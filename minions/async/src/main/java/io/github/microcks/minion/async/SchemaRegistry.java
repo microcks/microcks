@@ -49,7 +49,7 @@ public class SchemaRegistry {
    @RestClient
    MicrocksAPIConnector microcksAPIConnector;
 
-   /** The intenal map backing schemas storage. This is an in-memory map. */
+   /** The internal map backing schemas storage. This is an in-memory map. */
    private Map<String, List<SchemaEntry>> schemaEntries = new HashMap<>();
 
    /**
@@ -63,6 +63,43 @@ public class SchemaRegistry {
       schemaEntries.put(service.getId(), resources.stream()
             .map(resource -> new SchemaEntry(resource))
             .collect(Collectors.toList()));
+   }
+
+   /**
+    * Updating the registry with resources attached to specified service.
+    * @param serviceId The Id of service to retrieve resources for and update registry with
+    */
+   public void updateRegistryForService(String serviceId) {
+      clearRegistryForService(serviceId);
+      List<Resource> resources = microcksAPIConnector.getResources(serviceId);
+      logger.infof("Updating schema registry for Service '%s' with %d entries", serviceId, resources.size());
+      schemaEntries.put(serviceId, resources.stream()
+            .map(resource -> new SchemaEntry(resource))
+            .collect(Collectors.toList()));
+   }
+
+   /**
+    * Retrieve the schema entries for a specified Service.
+    * @param service The Service to get schema entries for
+    * @return A list of {@ode SchemaEntry}
+    */
+   public List<SchemaEntry> getSchemaEntries(Service service) {
+      return getSchemaEntries(service.getId());
+   }
+
+   /**
+    * Retrieve the schema entries for a specified Service.
+    * @param serviceId The Id of service to get schema entries for
+    * @return A list of {@ode SchemaEntry}
+    */
+   public List<SchemaEntry> getSchemaEntries(String serviceId) {
+      // Do we have local entries already ? If not, retrieve them.
+      List<SchemaEntry> entries = schemaEntries.get(serviceId);
+      if (entries == null) {
+         updateRegistryForService(serviceId);
+         entries = schemaEntries.get(serviceId);
+      }
+      return entries;
    }
 
    /**
@@ -103,6 +140,14 @@ public class SchemaRegistry {
    }
 
    /**
+    * Clear the registry for specified service.
+    * @param serviceId The identifier of Service whose schema entries should be removed from registry.
+    */
+   public void clearRegistryForService(String serviceId) {
+      schemaEntries.remove(serviceId);
+   }
+
+   /**
     * SchemaEntry represents an image of remote resources and allow access to content.
     * For now, content remains in-memory but a future direction for handling load could be
     * to manage overflow to local files.
@@ -110,12 +155,14 @@ public class SchemaRegistry {
    public class SchemaEntry {
       private String name;
       private String serviceId;
+      private String path;
       private ResourceType type;
       private String content;
 
       public SchemaEntry(Resource resource) {
          this.name = resource.getName();
          this.serviceId = resource.getServiceId();
+         this.path = resource.getPath();
          this.type = resource.getType();
          this.content = resource.getContent();
       }
@@ -125,6 +172,9 @@ public class SchemaRegistry {
       }
       public String getServiceId() {
          return serviceId;
+      }
+      public String getPath() {
+         return path;
       }
       public ResourceType getType() {
          return type;

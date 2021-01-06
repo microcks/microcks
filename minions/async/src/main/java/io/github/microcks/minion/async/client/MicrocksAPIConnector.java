@@ -83,7 +83,7 @@ public interface MicrocksAPIConnector {
 
    /**
     * Retrieve the list of contract resources for a Service.
-    * @param serviceId he unique identifier of Service to get resources for
+    * @param serviceId The unique identifier of Service to get resources for
     * @return A list of Resources associated to Service
     */
    @GET

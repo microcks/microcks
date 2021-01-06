@@ -24,7 +24,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import io.github.microcks.util.AvroUtil;
 import io.github.microcks.util.JsonSchemaValidator;
+import io.github.microcks.util.SchemaMap;
+import org.apache.avro.AvroTypeException;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,13 +113,12 @@ public class AsyncAPISchemaValidator {
    }
 
    /**
-    * Validate a Json object representing an AsyncAPI message (response or request) against a node representing
+    * Validate a Json object representing an AsyncAPI message against a node representing
     * a full AsyncAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
-    * for <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
-    * schema information. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of AsyncAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitly set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * for {@code messagePathPointer} to allow finding the correct schema information. Validation is a deep one: its
+    * pursue checking children nodes on a failed parent. Validation is respectful of AsyncAPI schema spec semantics
+    * regarding additional or unknown attributes: schema must explicitly set {@code additionalProperties} to false if
+    * you want to consider unknown attributes as validation errors. It returns a list of validation error messages.
     * @param specificationNode The AsyncAPI full specification as a Jackson node
     * @param jsonNode The Json object representing actual message as a Jackson node
     * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
@@ -147,12 +151,78 @@ public class AsyncAPISchemaValidator {
          messageNode = specificationNode.at(ref.substring(1));
       }
 
-      // Build a schema object with responseNode as root and by importing
+      // Build a schema object with messageNode as root and by importing
       // all the common parts that may be referenced by references.
       JsonNode schemaNode = messageNode.deepCopy();
       ((ObjectNode) schemaNode).set("components", specificationNode.path("components").deepCopy());
 
       return validateJson(schemaNode, jsonNode);
+   }
+
+   /**
+    * Validate an Avro binary representing an AsyncAPI message against a node representing
+    * a full AsyncAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
+    * for {@code messagePathPointer} within specification to allow finding the correct schema information.
+    * Validation with avro binary is a shallow one: because we do not have the schema used for writing the bytes,
+    * we can only check the given bytes are fitting into the read schema from AsyncAPI document. It returns a
+    * list of validation error messages.
+    * @param specificationNode The AsyncAPI full specification as a Jackson node
+    * @param avroBinary The avro binary representing actual message
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param schemaMap An optional local Schema registry snapshot for resolving Avro schemas
+    * @return The list of validation failures. If empty, avro binary is valid !
+    */
+   public static List<String> validateAvroMessage(JsonNode specificationNode, byte[] avroBinary,
+                                                  String messagePathPointer, SchemaMap schemaMap) {
+      // Retrieve the schema to validate binary against.
+      Schema avroSchema;
+      try {
+         avroSchema = retrieveMessageAvroSchema(specificationNode, messagePathPointer, schemaMap);
+      } catch (Exception e) {
+         return Arrays.asList(e.getMessage());
+      }
+
+      try {
+         // Validation is shallow: we cannot detect schema incompatibilities as we do not
+         // have the schema used for reading. Just checking we can read with given schema.
+         AvroUtil.avroToAvroRecord(avroBinary, avroSchema);
+      } catch (AvroTypeException ate) {
+         return Arrays.asList("Avro schema cannot be used to read message: " + ate.getMessage());
+      } catch (IOException ioe) {
+         return Arrays.asList("IOException while trying to validate message: " + ioe.getMessage());
+      }
+      return Arrays.asList();
+   }
+
+   /**
+    * Validate an Avro binary representing an AsyncAPI message against a node representing
+    * a full AsyncAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
+    * for {@code messagePathPointer} within specification to allow finding the correct schema information.
+    * Validation with avro binary is a deep one: each element of the reading schema from AsyncAPI spec is
+    * checked in terms of type compatibility, name and required/optional property. It returns a
+    * list of validation error messages.
+    * @param specificationNode The AsyncAPI full specification as a Jackson node
+    * @param record The avro record representing actual message
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param schemaMap An optional local Schema registry snapshot for resolving Avro schemas
+    * @return The list of validation failures. If empty, avro record is valid !
+    */
+   public static List<String> validateAvroMessage(JsonNode specificationNode, GenericRecord record,
+                                                  String messagePathPointer, SchemaMap schemaMap) {
+      // Retrieve the schema to validate record against.
+      Schema avroSchema = null;
+      try {
+         avroSchema = retrieveMessageAvroSchema(specificationNode, messagePathPointer, schemaMap);
+      } catch (Exception e) {
+         return Arrays.asList(e.getMessage());
+      }
+
+      // Validation is a deep one. Each element
+      if (AvroUtil.validate(avroSchema, record)) {
+         return Arrays.asList();
+      }
+      // Produce some insights on what's going wrong.
+      return AvroUtil.getValidationErrors(avroSchema, record);
    }
 
    /**
@@ -256,5 +326,61 @@ public class AsyncAPISchemaValidator {
             typeArray.add(type).add("null");
          }
       }
+   }
+
+   /**
+    * Retrieve the Avro schema corresponding to a message using its JSON points in Spec. Complete the
+    * {@code schemaMap} if provided. Raise a simple exception with message if problem while navigating the spec.
+    */
+   private static Schema retrieveMessageAvroSchema(JsonNode specificationNode,
+                                                   String messagePathPointer, SchemaMap schemaMap) throws Exception {
+      // Extract Json node for message pointer.
+      JsonNode messageNode = specificationNode.at(messagePathPointer);
+      if (messageNode == null || messageNode.isMissingNode()) {
+         log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
+         throw new Exception("messagePathPointer does not represent a valid JSON Pointer in AsyncAPI specification");
+      }
+
+      // Message node can be just a reference.
+      if (messageNode.has("$ref")) {
+         String ref = messageNode.path("$ref").asText();
+         messageNode = specificationNode.at(ref.substring(1));
+      }
+
+      // Check that message node has a payload attribute.
+      if (!messageNode.has("payload")) {
+         log.debug("messageNode {} has no 'payload' attribute", messageNode);
+         throw new Exception("message definition has no valid payload in AsyncAPI specification");
+      }
+      // Navigate to payload definition.
+      messageNode = messageNode.path("payload");
+
+      // Payload node can be just a reference to another schema... But in the case of Avro, this is an external schema
+      // as #/components/schemas can only hold JSON schemas. So we have to use a registry for resolving and accessing
+      // this Avro schema. We'll have to build an Avro Schema either from payload content or registry content.
+      String schemaContent = null;
+
+      if (messageNode.has("$ref")) {
+         // Remove trailing anchor marker if any.
+         // './user-signedup.avsc#/User' => './user-signedup.avsc'
+         String ref = messageNode.path("$ref").asText();
+         log.debug("Looking for an external Avro schema in registry: {}", ref);
+         if (ref.contains("#")) {
+            ref = ref.substring(0, ref.indexOf("#"));
+         }
+         if (schemaMap != null) {
+            schemaContent = schemaMap.getSchemaEntry(ref);
+         }
+         if (schemaContent == null) {
+            log.info("No schema content found in SchemaMap. {} is not found", ref);
+            throw new Exception("no schema content found for " + ref + " in used SchemaMap.");
+         }
+      } else {
+         // Schema is specified within the payload definition.
+         schemaContent = messageNode.toString();
+      }
+
+      // Now build and return the schema.
+      return new Schema.Parser().parse(schemaContent);
    }
 }

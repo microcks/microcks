@@ -33,6 +33,7 @@ public class AsyncTestSpecification {
 
    private TestRunnerType runnerType;
    private String testResultId;
+   private String serviceId;
    private String operationName;
    private String endpointUrl;
    private String asyncAPISpec;
@@ -53,6 +54,14 @@ public class AsyncTestSpecification {
 
    public void setTestResultId(String testResultId) {
       this.testResultId = testResultId;
+   }
+
+   public String getServiceId() {
+      return serviceId;
+   }
+
+   public void setServiceId(String serviceId) {
+      this.serviceId = serviceId;
    }
 
    public String getOperationName() {

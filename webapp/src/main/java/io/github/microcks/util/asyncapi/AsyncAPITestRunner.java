@@ -112,6 +112,7 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
       ObjectNode jsonArg = mapper.createObjectNode();
       jsonArg.put("runnerType", TestRunnerType.ASYNC_API_SCHEMA.toString());
       jsonArg.put("testResultId", testResult.getId());
+      jsonArg.put("serviceId", service.getId());
       jsonArg.put("operationName", operation.getName());
       jsonArg.put("endpointUrl", endpointUrl);
       jsonArg.put("timeoutMS", testResult.getTimeout());
