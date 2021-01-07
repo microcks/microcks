@@ -92,7 +92,7 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
          messages.add(message);
       });
 
-      Thread.sleep(specification.getTimeoutMS() - 200L);
+      Thread.sleep(specification.getTimeoutMS() - 1000L);
 
       // Disconnect the subscriber before returning results.
       subscriber.disconnect();
@@ -120,7 +120,7 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
 
    /** */
    private void intializeMQTTClient() throws Exception {
-      Matcher matcher = ENDPOINT_PATTERN.matcher(specification.getEndpointUrl());
+      Matcher matcher = ENDPOINT_PATTERN.matcher(specification.getEndpointUrl().trim());
       // Call matcher.find() to be able to use named expressions.
       matcher.find();
       String endpointBrokerUrl = matcher.group("brokerUrl");
