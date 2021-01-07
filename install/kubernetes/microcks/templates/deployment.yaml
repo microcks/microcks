@@ -81,6 +81,8 @@ spec:
             {{- else }}
             value: "{{ .Values.features.async.kafka.url }}"
             {{- end }}
+        resources:
+          {{- toYaml .Values.microcks.resources | nindent 10 }}
         livenessProbe:
           httpGet:
             path: "/api/health"
