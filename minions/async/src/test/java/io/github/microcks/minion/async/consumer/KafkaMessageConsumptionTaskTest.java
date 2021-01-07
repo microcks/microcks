@@ -18,12 +18,35 @@
  */
 package io.github.microcks.minion.async.consumer;
 
+import io.apicurio.registry.utils.serde.AbstractKafkaSerDe;
+import io.apicurio.registry.utils.serde.AvroKafkaDeserializer;
+import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
+import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.github.microcks.minion.async.AsyncTestSpecification;
 
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericData;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.generic.IndexedRecord;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import java.io.File;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for KafkaMessageConsumptionTask.
@@ -72,4 +95,132 @@ public class KafkaMessageConsumptionTaskTest {
       assertFalse(KafkaMessageConsumptionTask
             .acceptEndpoint("kafka://localhost:port/testTopic"));
    }
+
+   @Test
+   public void testEndpointPattern() {
+      Matcher matcher = KafkaMessageConsumptionTask.ENDPOINT_PATTERN.matcher("kafka://localhost:9092/UsersignedupAPI_0.1.2_user-signedup?registryUrl=http://localhost:8888");
+      // Call matcher.find() to be able to use named expressions.
+      matcher.find();
+      String endpointBrokerUrl = matcher.group("brokerUrl");
+      String endpointTopic = matcher.group("topic");
+      String options = matcher.group("options");
+
+      assertEquals("localhost:9092", endpointBrokerUrl);
+      assertEquals("UsersignedupAPI_0.1.2_user-signedup", endpointTopic);
+      assertEquals("registryUrl=http://localhost:8888", options);
+   }
+
+   @Test
+   public void testInitializeOptionsMap() {
+      AsyncTestSpecification specification = new AsyncTestSpecification();
+      specification.setEndpointUrl("kafka://localhost/testTopic?registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO");
+      String options = "registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO";
+
+      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
+      task.initializeOptionsMap(options);
+
+      assertNotNull(task.optionsMap);
+      assertEquals("http://localhost:8888", task.optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_URL_OPTION));
+      assertEquals("reg-user", task.optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_USERNAME_OPTION));
+      assertEquals("USER_INFO", task.optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_AUTH_CREDENTIALS_SOURCE));
+   }
+
+   /*
+   @Test
+   public void testApicurioSchemaRegistry() {
+      try {
+         Properties props = new Properties();
+         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+         props.put(ConsumerConfig.GROUP_ID_CONFIG, "microcks-async-minion-apicurio-consumer");
+         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, AvroKafkaDeserializer.class.getName());
+
+         // Configure Schema registry access
+         props.put(AbstractKafkaSerDe.REGISTRY_URL_CONFIG_PARAM, "http://localhost:8888/api");
+         props.put(AbstractKafkaSerDe.REGISTRY_CONFLUENT_ID_HANDLER_CONFIG_PARAM, true);
+
+         KafkaConsumer<String, GenericRecord> consumer = new KafkaConsumer<>(props);
+         consumer.subscribe(Arrays.asList("users"));
+
+         // Start polling consumer for records.
+         ConsumerRecords<String, GenericRecord> records = consumer.poll(Duration.ofMillis(10000));
+
+         Schema schema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/minion/async/format/user-signedup-bad.avsc"));
+         Schema badSchema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/minion/async/format/user-signedup.avsc"));
+
+         for (ConsumerRecord<String, GenericRecord> record : records) {
+            System.err.println("Received: " + record.value());
+
+            System.err.println("Validation with correct schema: " + GenericData.get().validate(schema, record.value()));
+            Iterator iterator = schema.getFields().iterator();
+            while (iterator.hasNext()) {
+               Schema.Field f = (Schema.Field)iterator.next();
+               System.err.println("  Field: " + f.name()
+                     + " => " + GenericData.get().validate(f.schema(), record.value().get(f.name())));
+            }
+
+            System.err.println("Validation with bad schema: " + GenericData.get().validate(badSchema, record.value()));
+            iterator = badSchema.getFields().iterator();
+            while (iterator.hasNext()) {
+               Schema.Field f = (Schema.Field)iterator.next();
+               System.err.println("  Field: " + f.name()
+                     + " => " + GenericData.get().validate(f.schema(), record.value().get(f.name())));
+            }
+         }
+      } catch (Throwable t) {
+         t.printStackTrace();
+      }
+   }
+
+   @Test
+   public void testConfluentSchemaRegistry() {
+      try {
+         Properties props = new Properties();
+         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+         props.put(ConsumerConfig.GROUP_ID_CONFIG, "microcks-async-minion-confluent-consumer");
+         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
+         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class.getName());
+
+         // Configure Schema registry access
+         //props.put(AbstractKafkaSerDe.REGISTRY_URL_CONFIG_PARAM, "http://localhost:8888");
+         //props.put(AbstractKafkaSerDe.REGISTRY_CONFLUENT_ID_HANDLER_CONFIG_PARAM, true);
+         props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://localhost:8888");
+
+         KafkaConsumer<String, GenericRecord> consumer = new KafkaConsumer<>(props);
+         consumer.subscribe(Arrays.asList("users"));
+
+         // Start polling consumer for records.
+         ConsumerRecords<String, GenericRecord> records = consumer.poll(Duration.ofMillis(10000));
+
+         Schema schema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/minion/async/format/user.avsc"));
+         Schema badSchema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/minion/async/format/user-signedup.avsc"));
+
+         for (ConsumerRecord<String, GenericRecord> record : records) {
+            System.err.println("Received: " + record.value());
+
+            System.err.println("Validation with correct schema: " + GenericData.get().validate(schema, record.value()));
+            Iterator iterator = schema.getFields().iterator();
+            while (iterator.hasNext()) {
+               Schema.Field f = (Schema.Field)iterator.next();
+               System.err.println("  Field: " + f.name()
+                     + " => " + GenericData.get().validate(f.schema(), record.value().get(f.name())));
+            }
+
+            System.err.println("Validation with bad schema: " + GenericData.get().validate(badSchema, record.value()));
+            iterator = badSchema.getFields().iterator();
+            while (iterator.hasNext()) {
+               Schema.Field f = (Schema.Field)iterator.next();
+               System.err.println("  Field: " + f.name()
+                     + " => " + GenericData.get().validate(f.schema(), record.value().get(f.name())));
+            }
+         }
+      } catch (Throwable t) {
+         t.printStackTrace();
+      }
+   }
+   */
 }
