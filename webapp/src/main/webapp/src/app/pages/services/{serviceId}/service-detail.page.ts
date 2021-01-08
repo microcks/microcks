@@ -329,6 +329,15 @@ export class ServiceDetailPageComponent implements OnInit {
     return this.authService.hasRole(role);
   }
 
+  public allowOperationsPropertiesEdit(): boolean {
+    return (this.hasRole('admin') || this.hasRole('manager')) 
+        && (this.resolvedServiceView.service.type === 'REST' || (this.resolvedServiceView.service.type === 'EVENT' && this.asyncAPIFeatureEnabled()));
+  }
+
+  public asyncAPIFeatureEnabled(): boolean {
+    return this.config.getFeatureProperty('async-api', 'enabled').toLowerCase() === 'true';
+  }
+
   public asyncAPIFeatureEndpoint(binding: string): string {
     return this.config.getFeatureProperty('async-api', 'endpoint-' + binding);
   }

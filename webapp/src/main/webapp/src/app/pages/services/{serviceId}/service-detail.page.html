@@ -132,7 +132,7 @@
             </div>
             
             <div class="list-view-pf-actions">
-              <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="view.service.type === 'REST' && (hasRole('admin') || hasRole('manager'))">
+              <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="allowOperationsPropertiesEdit()">
                 <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                   <span class="fa fa-ellipsis-v"></span>
                 </button>
@@ -181,7 +181,7 @@
               </dl>
             </div>
             <div class="col-md-6">
-              <dl class="dl-horizontal left" *ngIf="view.service.type == 'EVENT'">
+              <dl class="dl-horizontal left" *ngIf="view.service.type === 'EVENT'">
                 <span *ngIf="hasBinding(item, 'KAFKA')">
                   <dt>Kafka endpoint:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('KAFKA') }}</a></dd>

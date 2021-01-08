@@ -356,12 +356,12 @@ public class ServiceService {
                operation.setDefaultDelay(delay);
                operation.setOverride(true);
                serviceRepository.save(service);
+
+               // Publish a Service update event before returning.
+               publishServiceChangeEvent(service, ChangeType.UPDATED);
                return true;
             }
          }
-
-         // Publish a Service update event before returning.
-         publishServiceChangeEvent(service, ChangeType.UPDATED);
       }
       return false;
    }

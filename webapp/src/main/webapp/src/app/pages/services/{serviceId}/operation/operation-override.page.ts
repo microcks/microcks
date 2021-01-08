@@ -26,6 +26,7 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 
 import { Operation, Service, ServiceType, ServiceView, OperationMutableProperties, ParameterConstraint, ParameterLocation } from '../../../../models/service.model';
 import { ServicesService } from '../../../../services/services.service';
+import { ConfigService } from '../../../../services/config.service';
 import { dispatch } from 'rxjs/internal/observable/range';
 import { ValueTransformer } from '@angular/compiler/src/util';
 
@@ -43,10 +44,30 @@ export class OperationOverridePageComponent implements OnInit {
   operation: Operation;
   newOperation: Operation;
   notifications: Notification[];
+  frequencies: string[];
   paramConstraints: any = {
     'header': [],
     'query': []
   }
+
+  dispatchersByServiceType: any = {
+    'REST': [ 
+      {"value": "SEQUENCE", "label": "SEQUENCE"},
+      {"value": "URI_PARAMS", "label": "URI PARAMS"}, 
+      {"value": "URI_PARTS", "label": "URI PARTS"}, 
+      {"value": "URI_ELEMENTS", "label": "URI ELEMENTS"}, 
+      {"value": "SCRIPT", "label": "SCRIPT"}, 
+      {"value": "JSON_BODY", "label": "JSON BODY"},
+      {"value": "FALLBACK", "label": "FALLBACK"},
+    ],
+    'SOAP': [ 
+      {"value": "QUERY_MATCH", "label": "QUERY MATCH"},
+      {"value": "SCRIPT", "label": "SCRIPT"}, 
+      {"value": "FALLBACK", "label": "FALLBACK"},
+    ],
+    'EVENT': []
+  }
+
 
   fallback = `{
   "dispatcher": "URI_PARTS",
@@ -111,7 +132,7 @@ export class OperationOverridePageComponent implements OnInit {
   }
 }`;
 
-  constructor(private servicesSvc: ServicesService, private notificationService: NotificationService,
+  constructor(private servicesSvc: ServicesService, private config: ConfigService, private notificationService: NotificationService,
     private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit() {
@@ -129,7 +150,7 @@ export class OperationOverridePageComponent implements OnInit {
           this.operation = this.resolvedServiceView.service.operations[i];
           // Clone mutable properties from operation.
           this.newOperation = new Operation();
-          this.newOperation.defaultDelay = this.operation.defaultDelay;
+          this.newOperation.defaultDelay = this.operation.defaultDelay || 0;
           this.newOperation.dispatcher = this.operation.dispatcher;
           this.newOperation.dispatcherRules = this.operation.dispatcherRules;
           this.newOperation.parameterConstraints = this.operation.parameterConstraints;
@@ -142,6 +163,7 @@ export class OperationOverridePageComponent implements OnInit {
         }
       }
     });
+    this.frequencies = this.config.getFeatureProperty('async-api', 'frequencies').split(",");
   }
 
   public resetOperationProperties() {

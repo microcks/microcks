@@ -20,9 +20,9 @@
       <h1>{{ view.service.name }} - {{ view.service.version }} - {{ operationName }}</h1>
       <small>Review and adapt parameters constraints and dispatcher properties for mocks on operation {{ operationName }}. Be sure to know what you're doing: it may break your mocks!</small>
 
-      <h3 class="section-label">Parameters Constraints</h3>
+      <h3 class="section-label" *ngIf="view.service.type === 'REST'">Parameters Constraints</h3>
 
-      <div class="parameters-constraints">
+      <div class="parameters-constraints" *ngIf="view.service.type === 'REST'">
         <h5 class="subsection">Query parameters</h5>
         <div class="constraint-editor-entry constraint-editor-entry-header" 
                 *ngIf="paramConstraints['query'] != null && paramConstraints['query'].length > 0">
@@ -85,7 +85,7 @@
         </div>
         <a (click)="addParameterConstraint('header')" role="button">Add Header Constraint</a>
       </div>
-      <div class="pull-right">
+      <div class="pull-right" *ngIf="view.service.type === 'REST'">
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
         <button type="submit" class="btn btn-primary" (click)="saveOperationProperties(secret)" ng-disabled="form.$invalid">Save</button>
       </div>
@@ -97,8 +97,8 @@
         <div class="col-md-6">
           <dl class="dl-horizontal left">
           <span *ngIf="view.service.type === 'SOAP_HTTP'">
-            <dt>Message Input Name:</dt>
-            <dd><code>{{ operation.inputName }}</code></dd>
+            <dt>SOAP Action:</dt>
+            <dd><code>{{ operation.action }}</code></dd>
           </span>
           <dt>Dispatcher:</dt>
           <dd><code>{{ operation.dispatcher }}</code> &nbsp; 
@@ -114,22 +114,29 @@
         </div>
         <div class="col-md-6">
           <dl class="dl-horizontal left">
-          <span *ngIf="view.service.type === 'SOAP_HTTP'">
-            <dt>Message Output Name:</dt>
-            <dd><code>{{ operation.outputName }}</code></dd>
-          </span>
-          <dt>HTTP Verb:</dt>
-          <dd>
-            <div [ngSwitch]="operation.method">
-              <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
-              <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
-              <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
-              <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
-              <span class="label label-info" *ngSwitchDefault>{{ operation.method }}</span>
-            </div>
-          </dd>
-          <dt>Default delay:</dt>
-          <dd>{{ operation.defaultDelay || 0 }} ms</dd>
+            <span *ngIf="view.service.type === 'SOAP_HTTP'">
+              <dt>Message Output Name:</dt>
+              <dd><code>{{ operation.outputName }}</code></dd>
+            </span>
+            <dt *ngIf="view.service.type != 'EVENT'">HTTP Verb:</dt>
+            <dt *ngIf="view.service.type === 'EVENT'">Type:</dt>
+            <dd>
+              <div [ngSwitch]="operation.method">
+                <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
+                <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
+                <span class="label label-info" *ngSwitchDefault>{{ operation.method }}</span>
+              </div>
+            </dd>
+            <span *ngIf="view.service.type != 'EVENT'">
+              <dt>Default delay:</dt>
+              <dd>{{ operation.defaultDelay || 0 }} ms</dd>
+            </span>
+            <span *ngIf="view.service.type === 'EVENT'">
+              <dt>Frequency:</dt>
+              <dd>{{ operation.defaultDelay || 30 }} sec</dd>
+            </span>
           </dl>
         </div>
       </div>
@@ -138,15 +145,29 @@
 
       <div class="row">
         <div class="col-md-7">
+          <div class="control-group form-inline">
+            <span *ngIf="view.service.type != 'EVENT'">
+              <label class="control-label" for="defaultDelay">Default delay</label> 
+              <div class="controls">
+                <input class="form-control" id="defaultDelay" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay"/> ms
+                <p class="help-block">The delay to wait before returning response.</p>
+              </div>
+            </span>
+            <span *ngIf="view.service.type === 'EVENT'">
+              <label class="control-label" for="defaultDelay">Frequency</label>
+              <div class="controls">
+                <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay">
+                  <option *ngFor="let frequency of frequencies" [value]="frequency">{{ frequency }} </option>
+                </select> &nbsp; sec
+                <p class="help-block">The frequency of messages publication.</p>
+              </div>
+            </span>
+          </div>
           <div class="control-group">
             <label class="control-label" for="dispatcher">Dispatcher</label>
             <div class="controls">
               <select class="form-control" name="dispatcher" [(ngModel)]="newOperation.dispatcher">
-                <option value="URI_PARAMS">URI PARAMS</option>
-                <option value="URI_PARTS">URI PARTS</option>
-                <option value="URI_ELEMENTS">URI ELEMENTS</option>
-                <option value="JSON_BODY">JSON BODY</option>
-                <option value="FALLBACK">FALLBACK</option>
+                <option *ngFor="let dispatcher of dispatchersByServiceType[view.service.type]" [value]="dispatcher.value">{{ dispatcher.value }} </option>
               </select>
               <p class="help-block">The dispatcher used by Operation.</p>
             </div>
@@ -161,10 +182,16 @@
           </div>
         </div>
         <div class="col-md-4">
-          <h4 class="section-label text-right">Available responses</h4>
+          <h4 class="section-label text-right" *ngIf="view.service.type != 'EVENT'">Available responses</h4>
+          <h4 class="section-label text-right" *ngIf="view.service.type === 'EVENT'">Available messages</h4>
 
-          <div class="text-right" *ngFor="let pair of view.messagesMap[operationName]">
-            <h2><span class="label label-primary">{{ pair.response.name }} - {{ pair.response.dispatchCriteria }}</span></h2>
+          <div class="text-right" *ngFor="let exchange of view.messagesMap[operationName]">
+            <span *ngIf="view.service.type != 'EVENT'">
+              <h2><span class="label label-primary">{{ exchange.response.name }} - {{ exchange.response.dispatchCriteria }}</span></h2>
+            </span>
+            <span *ngIf="view.service.type === 'EVENT'">
+              <h2><span class="label label-primary">{{ exchange.eventMessage.name }} </span></h2>
+            </span>
           </div>
         </div>
       </div>
