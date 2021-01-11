@@ -202,6 +202,12 @@ spec:
         container: mongodb
         group: microcks
     spec:
+      {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
+      securityContext:
+        runAsUser: 184
+        runAsGroup: 184
+        fsGroup: 184
+      {{- end }}
       containers:
       - name: mongodb
         image: {{ .Values.mongodb.image }}
