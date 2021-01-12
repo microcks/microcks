@@ -15,7 +15,7 @@
       ],
       "realmRoles": [],
       "applicationRoles": {
-        "realm-management": [ "realm-admin" ],
+        "realm-management": [ "manage-users" ],
         "account": [ "manage-account" ],
         "microcks-app": [ "admin "]
       }
@@ -57,6 +57,14 @@
           "manager",
           "admin",
           "user"
+        ]
+      }
+    ],
+    "realm-management": [
+      {
+        "client": "microcks-app-js",
+        "roles": [
+          "manage-users"
         ]
       }
     ]

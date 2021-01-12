@@ -167,6 +167,46 @@ data:
       "quickLoginCheckMilliSeconds": 1000,
       "maxDeltaTimeSeconds": 43200,
       "failureFactor": 30,
+      "users" : [
+        {
+          "username" : "user",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "microcks123" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "microcks-app": [ "user" ]
+          }
+        },
+        {
+          "username" : "manager",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "microcks123" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "microcks-app": [ "user", "manager" ]
+          }
+        },
+        {
+          "username" : "admin",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "microcks123" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "realm-management": [ "manager-users" ],
+            "account": [ "manage-account" ],
+            "microcks-app": [ "user", "manager", "admin" ]
+          }
+        }
+      ],
       "roles": {
         "realm": [],
         "client": {
@@ -203,6 +243,14 @@ data:
               "manager",
               "admin",
               "user"
+            ]
+          }
+        ],
+        "realm-management": [
+          {
+            "client": "microcks-app-js",
+            "roles": [
+              "manage-users"
             ]
           }
         ]
