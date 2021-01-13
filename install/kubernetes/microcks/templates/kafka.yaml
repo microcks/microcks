@@ -27,8 +27,12 @@ spec:
     replicas: 1
     storage:
       type: ephemeral
+    resources:
+      {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
   zookeeper:
     replicas: 1
     storage:
       type: ephemeral
+    resources:
+      {{- toYaml .Values.features.async.kafka.zkResources | nindent 6 }}
 {{- end }}

@@ -85,7 +85,20 @@ features:
       #url: kafka-bootstrap:9092
       persistent: false
       volumeSize: 2Gi
-
+      resources:
+        #requests:
+          #cpu: 100m
+          #memory: 256Mi
+        limits:
+          #cpu: 500m
+          memory: 800Mi
+      zkResources:
+        #requests:
+          #cpu: 100m
+          #memory: 256Mi
+        limits:
+          #cpu: 500m
+          memory: 800Mi
       schemaRegistry:
         #url: http://schema-registry.192.168.99.100.nip.io
         confluent: true
