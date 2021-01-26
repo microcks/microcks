@@ -41,9 +41,14 @@
         <dd>
           <span *ngIf="contracts | async as contracts$; else loadingc">
             <ng-container *ngIf="contracts$.length; else noContracts">
-              <a *ngFor="let contract of contracts$" href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
-                {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i> <br/>
-              </a>
+              <span *ngFor="let contract of contracts$">
+                <a href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
+                  {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i>
+                </a><br/>
+                <a *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC'" href="/api/documentation/{{ contract.name }}/{{ contract.type }}" target="new" title="{{ contract.name }}">
+                  View Documentation <i class="fa fa-external-link"></i>
+                </a>
+              </span>
             </ng-container>
             <ng-template #noContracts>No contracts attached</ng-template>
           </span>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Microcks-UI - API Documentation</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Remove 'webcomponentsjs' if no support for older browsers is required -->
+    <script src="https://unpkg.com/@webcomponents/webcomponentsjs@2.5.0/webcomponents-bundle.js"></script>
+    <script src="https://unpkg.com/@asyncapi/web-component@0.19.0/lib/asyncapi-web-component.js" defer></script>
+
+    <asyncapi-component
+        schemaUrl="{RESOURCE_URL}"
+        schemaFetchOptions='{"method":"GET","mode":"cors"}'
+        cssImportPath="https://unpkg.com/@asyncapi/react-component@0.19.0/lib/styles/fiori.css">
+    </asyncapi-component>
+  </body>
+</html>

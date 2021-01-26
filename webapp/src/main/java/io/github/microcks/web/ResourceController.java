@@ -41,7 +41,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 /**
- * A controller for distributing or genetation resources associated to services mocked within Microcks.
+ * A controller for distributing or generating resources associated to services mocked within Microcks.
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
