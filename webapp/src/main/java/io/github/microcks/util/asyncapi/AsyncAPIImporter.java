@@ -212,7 +212,10 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
       List<Exchange> result = new ArrayList<>();
 
       // Retrieve default content type, defaulting to application/json.
-      String defaultContentType = spec.get("defaultContentType").asText("application/json");
+      String defaultContentType = "application/json";
+      if (spec.has("defaultContentType")) {
+         defaultContentType = spec.get("defaultContentType").asText("application/json");
+      }
 
       // Iterate on specification "channels" nodes.
       Iterator<Entry<String, JsonNode>> channels = spec.path("channels").fields();
