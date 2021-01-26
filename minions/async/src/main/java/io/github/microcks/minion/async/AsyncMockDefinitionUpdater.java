@@ -65,7 +65,7 @@ public class AsyncMockDefinitionUpdater {
       if (serviceViewChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
          logger.info("Removing mock definitions for " + serviceViewChangeEvent.getServiceId());
          mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
-         schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceView().getService());
+         schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
       } else {
          // Only deal with service of type EVENT...
          if (serviceViewChangeEvent.getServiceView() != null && serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)) {
