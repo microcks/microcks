@@ -270,46 +270,48 @@ public class RestController {
       return null;
    }
 
-   /** Create a dispacthCriteria string from type, rules and request elements. */
+   /** Create a dispatchCriteria string from type, rules and request elements. */
    private String computeDispatchCriteria(String dispatcher, String dispatcherRules, String uriPattern,
                                           String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
 
       // Depending on dispatcher, evaluate request with rules.
-      switch (dispatcher) {
-         case DispatchStyles.SEQUENCE:
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
-            break;
-         case DispatchStyles.SCRIPT:
-            ScriptEngineManager sem = new ScriptEngineManager();
-            try{
-               // Evaluating request with script coming from operation dispatcher rules.
-               ScriptEngine se = sem.getEngineByExtension("groovy");
-               SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
-               dispatchCriteria = (String) se.eval(dispatcherRules);
-            } catch (Exception e){
-               log.error("Error during Script evaluation", e);
-            }
-         case DispatchStyles.URI_PARAMS:
-            String fullURI = request.getRequestURL() + "?" + request.getQueryString();
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-            break;
-         case DispatchStyles.URI_PARTS:
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
-            break;
-         case DispatchStyles.URI_ELEMENTS:
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
-            fullURI = request.getRequestURL() + "?" + request.getQueryString();
-            dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-            break;
-         case DispatchStyles.JSON_BODY:
-            try {
-               JsonEvaluationSpecification specification = JsonEvaluationSpecification.buildFromJsonString(dispatcherRules);
-               dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
-            } catch (JsonMappingException jme) {
-               log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
-            }
-            break;
+      if (dispatcher != null) {
+         switch (dispatcher) {
+            case DispatchStyles.SEQUENCE:
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+               break;
+            case DispatchStyles.SCRIPT:
+               ScriptEngineManager sem = new ScriptEngineManager();
+               try {
+                  // Evaluating request with script coming from operation dispatcher rules.
+                  ScriptEngine se = sem.getEngineByExtension("groovy");
+                  SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
+                  dispatchCriteria = (String) se.eval(dispatcherRules);
+               } catch (Exception e) {
+                  log.error("Error during Script evaluation", e);
+               }
+            case DispatchStyles.URI_PARAMS:
+               String fullURI = request.getRequestURL() + "?" + request.getQueryString();
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
+               break;
+            case DispatchStyles.URI_PARTS:
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+               break;
+            case DispatchStyles.URI_ELEMENTS:
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+               fullURI = request.getRequestURL() + "?" + request.getQueryString();
+               dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
+               break;
+            case DispatchStyles.JSON_BODY:
+               try {
+                  JsonEvaluationSpecification specification = JsonEvaluationSpecification.buildFromJsonString(dispatcherRules);
+                  dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
+               } catch (JsonMappingException jme) {
+                  log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
+               }
+               break;
+         }
       }
 
       return dispatchCriteria;
