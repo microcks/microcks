@@ -19,10 +19,15 @@
 package io.github.microcks.util.el;
 
 import io.github.microcks.util.el.function.NowELFunction;
+import io.github.microcks.util.el.function.RandomIntELFunction;
+
 import org.junit.Test;
+import org.springframework.util.ReflectionUtils;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+
+import java.lang.reflect.Field;
 
 /**
  * A TestCase for ExpressionParser class.
@@ -49,5 +54,25 @@ public class ExpressionParserTest {
 
       assertEquals("Hello ", ((LiteralExpression)expressions[0]).getValue(context));
       assertEquals(" it's ", ((LiteralExpression)expressions[2]).getValue(context));
+   }
+
+   @Test
+   public void testXpathExpressionWithNestedFunction() {
+      String template = "Hello {{ request.body//*[local-name() = 'name'] }} it's {{ now() }}";
+
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.registerFunction("now", NowELFunction.class);
+      context.setVariable("request", new EvaluableRequest("<ns:request xmlns:ns=\"http://example.com/ns\"><ns:name>Laurent</ns:name></ns:request>", null));
+
+      Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
+
+      assertEquals(4, expressions.length);
+      assertTrue(expressions[0] instanceof LiteralExpression);
+      assertTrue(expressions[1] instanceof VariableReferenceExpression);
+      assertTrue(expressions[2] instanceof LiteralExpression);
+      assertTrue(expressions[3] instanceof FunctionExpression);
+
+      assertEquals("Laurent", ((VariableReferenceExpression)expressions[1]).getValue(context));
    }
 }
