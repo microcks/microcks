@@ -114,11 +114,35 @@ public class ExpressionParser {
 
    /** Depending on expression string, try to guess if it's a Literal, a Function or a VariableReference expression. */
    private static Expression doParseExpression(String expressionString, EvaluationContext context) {
-      // First check if it's a ELFunctionExpression
+
       int argsStart = expressionString.indexOf('(');
       int argsEnd = expressionString.indexOf(')');
+      int variableStart = expressionString.indexOf('.');
 
-      if (argsStart != 1 && argsEnd != -1 && argsStart < argsEnd || expressionString.startsWith("$")) {
+      boolean hasVariable = variableStart != -1;
+      boolean hasArgs = (argsStart != 1 && argsEnd != -1 && argsStart < argsEnd);
+      boolean isPostmanFunction = expressionString.startsWith("$");
+      boolean varBeforeArgs = (variableStart < argsStart) && !isPostmanFunction;
+
+      log.debug("hasVariable:{} hasArgs:{} isPostmanFunction:{} varBeforeArgs:{}", hasVariable, hasArgs, isPostmanFunction, varBeforeArgs);
+
+      // check if it's a VariableReferenceExpression.
+      if (hasVariable && (!hasArgs || varBeforeArgs)) {
+         log.debug("Found a variable reference expression " + expressionString);
+         String variableName = expressionString.substring(0, expressionString.indexOf('.'));
+         Object variable = context.lookupVariable(variableName);
+         String pathExpression = expressionString.substring(expressionString.indexOf('.') + 1);
+
+         if (variable != null) {
+            return new VariableReferenceExpression(variable, pathExpression);
+         }
+         log.warn("Variable with name " + variableName + " cannot be found into EvaluationContext. " +
+               "Returning empty literal expression");
+         return new LiteralExpression("");
+      }
+      
+      // Check if it's a ELFunctionExpression
+      if ( hasArgs || isPostmanFunction) {
          log.debug("Found a function expression " + expressionString);
 
          String functionName = null;
@@ -146,20 +170,7 @@ public class ExpressionParser {
          }
          return new FunctionExpression(function, args);
       }
-      // Check if it's a VariableReferenceExpression.
-      if (expressionString.contains(".")) {
-         log.debug("Found a variable reference expression " + expressionString);
-         String variableName = expressionString.substring(0, expressionString.indexOf('.'));
-         Object variable = context.lookupVariable(variableName);
-         String pathExpression = expressionString.substring(expressionString.indexOf('.') + 1);
-
-         if (variable != null) {
-            return new VariableReferenceExpression(variable, pathExpression);
-         }
-         log.warn("Variable with name " + variableName + " cannot be found into EvaluationContext. " +
-               "Returning empty literal expression");
-         return new LiteralExpression("");
-      }
+      
       log.info("No ELFunction or VariableReference expressions found... Returning empty literal expression");
       return new LiteralExpression("");
    }
