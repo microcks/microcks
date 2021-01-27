@@ -19,15 +19,11 @@
 package io.github.microcks.util.el;
 
 import io.github.microcks.util.el.function.NowELFunction;
-import io.github.microcks.util.el.function.RandomIntELFunction;
 
 import org.junit.Test;
-import org.springframework.util.ReflectionUtils;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
-
-import java.lang.reflect.Field;
 
 /**
  * A TestCase for ExpressionParser class.
