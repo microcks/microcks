@@ -42,6 +42,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -61,6 +62,9 @@ public class AsyncMinionApp {
 
    @ConfigProperty(name= "minion.restricted-frequencies")
    Long[] restrictedFrequencies;
+
+   @ConfigProperty(name = "keycloak.auth.url", defaultValue = "")
+   Optional<String> keycloakAuthURL;
 
    @Inject
    @RestClient
@@ -85,10 +89,15 @@ public class AsyncMinionApp {
       KeycloakConfig config = microcksAPIConnector.getKeycloakConfig();
       logger.infof("Microcks Keycloak server url {%s} and realm {%s}", config.getAuthServerUrl(), config.getRealm());
 
+      String keycloakEndpoint = config.getAuthServerUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
+      if (!keycloakAuthURL.isEmpty() && keycloakAuthURL.get().length() > 0) {
+         logger.infof("Use locally defined Keycloak Auth URL: %s", keycloakAuthURL);
+         keycloakEndpoint = keycloakAuthURL.get() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
+      }
+
       try {
          // First retrieve an authentication token before fetching async messages to publish.
-         String oauthToken = keycloakConnector.connectAndGetOAuthToken(config.getAuthServerUrl() + "/realms/"
-               + config.getRealm() + "/protocol/openid-connect/token");
+         String oauthToken = keycloakConnector.connectAndGetOAuthToken(keycloakEndpoint);
          logger.info("Authentication to Keycloak server succeed!");
 
          int page = 0;
