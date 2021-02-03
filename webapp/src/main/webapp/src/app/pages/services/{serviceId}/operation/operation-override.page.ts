@@ -27,8 +27,6 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 import { Operation, Service, ServiceType, ServiceView, OperationMutableProperties, ParameterConstraint, ParameterLocation } from '../../../../models/service.model';
 import { ServicesService } from '../../../../services/services.service';
 import { ConfigService } from '../../../../services/config.service';
-import { dispatch } from 'rxjs/internal/observable/range';
-import { ValueTransformer } from '@angular/compiler/src/util';
 
 @Component({
   selector: 'operation-override-page',
@@ -203,11 +201,11 @@ export class OperationOverridePageComponent implements OnInit {
       );
   }
 
-  public copyDispatcherRules(operator: string) {
+  public copyDispatcherRules(operator: string): void {
     this.newOperation.dispatcherRules = operator;
   }
 
-  public addParameterConstraint(location: string) {
+  public addParameterConstraint(location: string): void {
     var parameterConstraints = this.paramConstraints[location];
     if (parameterConstraints == null) {
       this.paramConstraints[location] = [
@@ -218,11 +216,21 @@ export class OperationOverridePageComponent implements OnInit {
     }
   }
 
-  public removeParameterConstraint(location: string, index: number) {
+  public removeParameterConstraint(location: string, index: number): void {
     var parameterConstraints = this.paramConstraints[location];
     if (parameterConstraints != null) {
       parameterConstraints.splice(index, 1);
     }
+  }
+
+  public isAsyncMockEnabled(): boolean {
+    return this.config.getFeatureProperty('async-api', 'enabled').toLowerCase() === 'true' && this.newOperation.defaultDelay != 0;
+  }
+  public disableAsyncMock(): void {
+    this.newOperation.defaultDelay = 0;
+  }
+  public enableAsyncMock(): void {
+    this.newOperation.defaultDelay = parseInt(this.frequencies[0]);
   }
 
   handleCloseNotification($event: NotificationEvent): void {

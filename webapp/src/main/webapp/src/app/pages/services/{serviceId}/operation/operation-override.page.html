@@ -135,7 +135,7 @@
             </span>
             <span *ngIf="view.service.type === 'EVENT'">
               <dt>Frequency:</dt>
-              <dd>{{ operation.defaultDelay || 30 }} sec</dd>
+              <dd>{{ operation.defaultDelay || 0 }} sec</dd>
             </span>
           </dl>
         </div>
@@ -156,9 +156,13 @@
             <span *ngIf="view.service.type === 'EVENT'">
               <label class="control-label" for="defaultDelay">Frequency</label>
               <div class="controls">
-                <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay">
+                <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay" [disabled]="!isAsyncMockEnabled()">
                   <option *ngFor="let frequency of frequencies" [value]="frequency">{{ frequency }} </option>
                 </select> &nbsp; sec
+                <div class="pull-right">
+                  <button class="btn btn-warning" *ngIf="isAsyncMockEnabled()" (click)="disableAsyncMock()">Disable</button>
+                  <button class="btn btn-success" *ngIf="!isAsyncMockEnabled()" (click)="enableAsyncMock()">Enable</button>
+                </div>
                 <p class="help-block">The frequency of messages publication.</p>
               </div>
             </span>

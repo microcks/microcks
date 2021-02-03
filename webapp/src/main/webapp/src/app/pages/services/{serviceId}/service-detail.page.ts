@@ -341,4 +341,8 @@ export class ServiceDetailPageComponent implements OnInit {
   public asyncAPIFeatureEndpoint(binding: string): string {
     return this.config.getFeatureProperty('async-api', 'endpoint-' + binding);
   }
+
+  public isAsyncMockEnabled(operation: Operation): boolean {
+    return this.asyncAPIFeatureEnabled() && operation.defaultDelay != 0;
+  }
 }

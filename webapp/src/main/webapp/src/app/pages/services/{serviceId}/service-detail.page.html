@@ -47,10 +47,10 @@
                 </a><br/>
                 <a *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC'" href="/api/documentation/{{ contract.name }}/{{ contract.type }}" target="new" title="{{ contract.name }}">
                   View Documentation <i class="fa fa-external-link"></i>
-                </a>
+                </a><br *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC'"/>
               </span>
             </ng-container>
-            <ng-template #noContracts>No contracts attached</ng-template>
+            <ng-template *ngIf="view.service.type != 'GENERIC_REST'" #noContracts>No contracts attached</ng-template>
           </span>
           <ng-template #loadingc>Loading contracts...</ng-template>
 
@@ -172,7 +172,10 @@
               </span>
               <span *ngIf="view.service.type === 'EVENT'">
                 <dt>Frequency:</dt>
-                <dd>{{ item.defaultDelay || 30 }} s</dd>
+                <dd>
+                  {{ item.defaultDelay || 0 }} s
+                  <span class="label label-default async-mock-status-label" *ngIf="!isAsyncMockEnabled(item)">Mocks are disabled</span>
+                </dd>
                 <dt>Available bindings:</dt>
                 <dd>
                   {{ getBindingsList(item) }} &nbsp; 

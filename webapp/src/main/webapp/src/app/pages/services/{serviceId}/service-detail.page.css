@@ -6,3 +6,7 @@
 .metadata-labels {
   margin-top: 10px;
 }
+
+.async-mock-status-label {
+  margin-left: 20px;
+}
