@@ -25,6 +25,15 @@
           "user"
         ]
       }
+    ],
+    "realm-management": [
+      {
+        "client": "microcks-app-js",
+        "roles": [
+          "manage-users",
+          "manage-clients"
+        ]
+      }
     ]
   },
   "clients": [
