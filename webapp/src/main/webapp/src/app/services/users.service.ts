@@ -31,10 +31,33 @@ export class UsersService {
 
   private rootUrl: string = '/api';
   
+  private microcksAppClientId: string;
+
   constructor(private http: HttpClient, protected authService: IAuthenticationService) {
     if (authService instanceof KeycloakAuthenticationService) {
       this.rootUrl = (authService as KeycloakAuthenticationService).getAdminRealmUrl();
+      this.loadClientId();
     }
+  }
+
+  private loadClientId(): void {
+    this.http.get<any[]>(this.rootUrl + '/clients?clientId=microcks-app&max=2&search=true').subscribe(
+      {
+        next: res => {
+          for (let i = 0; i < res.length; i++) {
+            const client = res[i];
+            if (client['clientId'] === 'microcks-app') {
+              this.microcksAppClientId = client['id'];
+              break;
+            }
+          }
+        },
+        error: err => {
+          console.warn("Unable to retrieve microcksAppClientId from Keycloak. Maybe you do not have correct roles?");
+          this.microcksAppClientId = null;
+        },
+      }
+    );
   }
 
   getUsers(page: number = 1, pageSize: number = 20): Observable<User[]> {
@@ -44,6 +67,10 @@ export class UsersService {
     }
     const options = { params: new HttpParams().set('first', String(first)).set('max', String(pageSize)) };
     return this.http.get<User[]>(this.rootUrl + '/users', options);
+  }
+
+  getMicrocksAppClientId(): string {
+    return this.microcksAppClientId;
   }
   
   filterUsers(filter: string): Observable<User[]> {
@@ -56,13 +83,13 @@ export class UsersService {
   }
 
   getUserRoles(userId: string): Observable<any[]> {
-    return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/realm');
+    return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId);
   }
 
   assignRoleToUser(userId: string, role: string): Observable<any> { 
     return this.getRoleByName(role).pipe(
       switchMap((role: any) => {
-        return this.http.post<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/realm', [ role ]); 
+        return this.http.post<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, [ role ]); 
       })
     );
   }
@@ -71,12 +98,12 @@ export class UsersService {
     return this.getRoleByName(role).pipe(
       switchMap((role: any) => {
         return this.http.request<any[]>('delete', 
-          this.rootUrl + '/users/' + userId + '/role-mappings/realm', { body: [ role ] });
+          this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, { body: [ role ] });
       })
     );
   }
 
   private getRoleByName(role: string): Observable<any> {
-    return this.http.get<any[]>(this.rootUrl + '/roles/' + role);
+    return this.http.get<any[]>(this.rootUrl + '/clients/' + this.microcksAppClientId + '/roles/' + role);
   }
 }

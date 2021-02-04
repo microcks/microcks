@@ -110,9 +110,22 @@ export class UsersTabComponent implements OnInit {
   }
 
   getUserRoles(userId: string): void {
-    this.usersSvc.getUserRoles(userId).subscribe(results => {
-      this.usersRoles[userId] = results;
-    });
+    this.usersSvc.getUserRoles(userId).subscribe(
+      {
+        next: results => {
+          this.usersRoles[userId] = results;
+        },
+        error: err => {
+          if (err.status == 403) {
+            this.notificationService.message(NotificationType.DANGER,
+              "Authorization Error", "Current user does not appear to have the **manage-clients** role from **realm-management** client. Please contact your administrator to setup correct role.", false, null, null);
+          } else {
+            this.notificationService.message(NotificationType.WARNING,
+              "Unknown Error", err.message, false, null, null);
+          }
+        }
+      }
+    );
   }
   userHasRole(userId: string, expectedRole: string): boolean {
     if (this.usersRoles[userId] === undefined) {
