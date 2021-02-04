@@ -70,6 +70,7 @@ public class AsyncMockDefinitionUpdater {
          // Only deal with service of type EVENT...
          if (serviceViewChangeEvent.getServiceView() != null && serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)) {
             // Browse and check operation regarding restricted frequencies and supported bindings.
+            boolean scheduled = false;
             for (Operation operation : serviceViewChangeEvent.getServiceView().getService().getOperations()) {
                if (Arrays.asList(restrictedFrequencies).contains(operation.getDefaultDelay())
                      && operation.getBindings().keySet().stream().anyMatch(Arrays.asList(supportedBindings)::contains)) {
@@ -84,7 +85,14 @@ public class AsyncMockDefinitionUpdater {
                   );
                   mockRepository.storeMockDefinition(mockDefinition);
                   schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
+                  scheduled = true;
                }
+            }
+
+            if (!scheduled) {
+               logger.info("Ensure to un-schedule " + serviceViewChangeEvent.getServiceId() + " on this minion. Removing definitions.");
+               mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
+               schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
             }
          }
       }
