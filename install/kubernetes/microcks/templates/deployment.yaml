@@ -394,6 +394,12 @@ spec:
         container: keycloak-postgresql
         group: microcks
     spec:
+      {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
+      securityContext:
+        runAsUser: 26
+        runAsGroup: 26
+        fsGroup: 26
+      {{- end }}
       terminationGracePeriodSeconds: 60
       containers:
       - name: keycloak-postgresql
