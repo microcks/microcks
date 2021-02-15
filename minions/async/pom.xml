@@ -48,6 +48,14 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-jackson</artifactId>
+      <exclusions>
+        <!-- quarkus-resteasy-jackson pulls the 1.6 version of jackson-coreutils that make
+        validation of required fields fail in JSON validation. See microcks/microcks#346. -->
+        <exclusion>
+          <groupId>com.github.fge</groupId>
+          <artifactId>jackson-coreutils</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

@@ -184,7 +184,7 @@ public class AsyncAPISchemaValidator {
 
       try {
          // Validation is shallow: we cannot detect schema incompatibilities as we do not
-         // have the schema used for reading. Just checking we can read with given schema.
+         // have the schema used for writing. Just checking we can read with given schema.
          AvroUtil.avroToAvroRecord(avroBinary, avroSchema);
       } catch (AvroTypeException ate) {
          return Arrays.asList("Avro schema cannot be used to read message: " + ate.getMessage());

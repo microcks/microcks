@@ -19,6 +19,7 @@
 package io.github.microcks.util.asyncapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.github.microcks.util.AvroUtil;
 import io.github.microcks.util.SchemaMap;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 import org.apache.avro.Schema;
@@ -222,6 +223,37 @@ public class AsyncAPISchemaValidatorTest {
          System.err.println(error);
       }
       assertTrue(errors.isEmpty());
+   }
+
+   @Test
+   public void testFullProcedureFromAsyncAPIWithDeepRefsResourceFailure() {
+      String asyncAPIText = null;
+      String jsonText = "{\"streetlightId\":\"dev0\", \"location\":\"47.8509682604982, 0.11136576784773598\", \"sentAt\":\"2020-11-20T21:46:38Z\"}";
+      JsonNode asyncAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml"));
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+         contentNode = AsyncAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         e.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content of smartylighting/streetlights/event/lighting/measured subscribe channel.
+      List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
+            "/channels/smartylighting~1streetlights~1event~1lighting~1measured/subscribe/message");
+
+      assertFalse(errors.isEmpty());
+      assertEquals(3, errors.size());
+      // First error is because payload does not have any ref to components.
+      assertEquals("the following keywords are unknown and will be ignored: [components]", errors.get(0));
+      assertEquals("object instance has properties which are not allowed by the schema: [\"location\"]", errors.get(1));
+      assertEquals("object has missing required properties ([\"lumens\"])", errors.get(2));
    }
 
    @Test

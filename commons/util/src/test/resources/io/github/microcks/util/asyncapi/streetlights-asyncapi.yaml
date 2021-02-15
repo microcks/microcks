@@ -73,6 +73,11 @@ components:
           type: string
           format: date-time
           description: Date and time when the message was sent.
+      additionalProperties: false
+      required:
+        - streetlightId
+        - lumens
+        - sentAt
   messageTraits:
     commonHeaders:
       headers:
