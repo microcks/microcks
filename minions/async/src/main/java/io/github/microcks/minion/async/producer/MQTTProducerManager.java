@@ -51,6 +51,10 @@ public class MQTTProducerManager {
    @ConfigProperty(name = "mqtt.password")
    String mqttPassword;
 
+   /**
+    * Initialize the MQTT client post construction.
+    * @throws Exception If connection to MQTT Broker cannot be done.
+    */
    @PostConstruct
    public void create() throws Exception {
       try {
@@ -61,7 +65,11 @@ public class MQTTProducerManager {
       }
    }
 
-   /** Create a IMqttClient and connect it to the server. */
+   /**
+    * Create a IMqttClient and connect it to the server.
+    * @return A new IMqttClient implementation initialized with configuration properties.
+    * @throws Exception in case of connection failure
+    */
    protected IMqttClient createClient() throws Exception {
       MqttConnectOptions options = new MqttConnectOptions();
       if (mqttUsername != null && mqttUsername.length() > 0

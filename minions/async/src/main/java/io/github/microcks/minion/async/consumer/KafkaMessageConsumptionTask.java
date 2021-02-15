@@ -196,7 +196,10 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       }
    }
 
-   /** Initialize options map from options string found in Endpoint URL. */
+   /**
+    * Initialize options map from options string found in Endpoint URL.
+    * @param options A string of options having the form: option1=value1&amp;option2=value2
+    */
    protected void initializeOptionsMap(String options) {
       optionsMap = new HashMap<>();
       String[] keyValuePairs = options.split("&");
@@ -208,7 +211,11 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       }
    }
 
-   /** Safe method for checking if an option has been set. */
+   /**
+    * Safe method for checking if an option has been set.
+    * @param optionKey Check if that option is available in options map.
+    * @return true if option is present, false if undefined.
+    */
    protected boolean hasOption(String optionKey) {
       if (optionsMap != null) {
          return optionsMap.containsKey(optionKey);

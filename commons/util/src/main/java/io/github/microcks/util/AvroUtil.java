@@ -203,11 +203,11 @@ public class AvroUtil {
    }
 
    /**
-    *
-    * @param schema
-    * @param datum
-    * @param fieldName
-    * @return
+    * Get validation errors of a datum object regarding Avro schema.
+    * @param schema The Schema to check datum object against
+    * @param datum The datum object to validate
+    * @param fieldName The name of the field we're currently validating
+    * @return A list of String representing validation errors. List may be empty if no error found.
     */
    public static List<String> getValidationErrors(Schema schema, Object datum, String... fieldName) {
       List<String> errors = new ArrayList<>();

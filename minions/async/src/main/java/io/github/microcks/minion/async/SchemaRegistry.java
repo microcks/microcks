@@ -81,7 +81,7 @@ public class SchemaRegistry {
    /**
     * Retrieve the schema entries for a specified Service.
     * @param service The Service to get schema entries for
-    * @return A list of {@ode SchemaEntry}
+    * @return A list of {@code SchemaEntry}
     */
    public List<SchemaEntry> getSchemaEntries(Service service) {
       return getSchemaEntries(service.getId());
@@ -90,7 +90,7 @@ public class SchemaRegistry {
    /**
     * Retrieve the schema entries for a specified Service.
     * @param serviceId The Id of service to get schema entries for
-    * @return A list of {@ode SchemaEntry}
+    * @return A list of {@code SchemaEntry}
     */
    public List<SchemaEntry> getSchemaEntries(String serviceId) {
       // Do we have local entries already ? If not, retrieve them.

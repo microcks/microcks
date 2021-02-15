@@ -21,15 +21,16 @@ package io.github.microcks.util.el.function;
 import io.github.microcks.util.el.EvaluationContext;
 
 /**
+ * This is a Expression Language function definition. It just can be evaluted.
  * @author laurent
  */
 public interface ELFunction {
 
    /**
-    *
-    * @param evaluationContext
-    * @param args
-    * @return
+    * Evaluate the function represented by the EL notation.
+    * @param evaluationContext The context of evaluation (contextualized info, cached one, ...)
+    * @param args The arguments of the function evaluation
+    * @return The result as a String fo this function evaluation.
     */
    String evaluate(EvaluationContext evaluationContext, String... args);
 }

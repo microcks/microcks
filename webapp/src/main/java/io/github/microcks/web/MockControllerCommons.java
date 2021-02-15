@@ -48,9 +48,9 @@ public class MockControllerCommons {
    private static Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
 
    /**
-    *
-    * @param rOperation
-    * @return
+    * Retrieve a fallback specification for this operation if one is defined.
+    * @param rOperation The operation to get fallback specification
+    * @return A fallback specification or null if none defined
     */
    public static FallbackSpecification getFallbackIfAny(Operation rOperation) {
       FallbackSpecification fallback = null;

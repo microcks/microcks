@@ -57,6 +57,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local AsyncAPI spec file
+    * @param referenceResolver An optional resolver for references present into the AsyncAPI file
     * @throws IOException if project file cannot be found or read.
     */
    public AsyncAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
