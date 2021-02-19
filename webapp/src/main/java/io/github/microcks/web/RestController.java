@@ -291,6 +291,7 @@ public class RestController {
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
                }
+               break;
             case DispatchStyles.URI_PARAMS:
                String fullURI = request.getRequestURL() + "?" + request.getQueryString();
                dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
