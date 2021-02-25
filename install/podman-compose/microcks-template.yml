@@ -31,8 +31,6 @@ services:
       - keycloak
     image: quay.io/microcks/microcks:latest
     container_name: microcks
-    volumes:
-      - ./config:/deployments/config
     ports:
       - "8080:8080"
     environment:
