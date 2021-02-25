@@ -69,18 +69,11 @@ public class ServiceService {
    @Autowired
    private ApplicationContext applicationContext;
 
-   @Value("${network.username}")
-   private final String username = null;
-
-   @Value("${network.password}")
-   private final String password = null;
-
    @Value("${async-api.default-binding}")
    private final String defaultAsyncBinding = null;
 
    @Value("${async-api.default-frequency}")
    private final Long defaultAsyncFrequency = 30l;
-
 
    /**
     * Import definitions of services and bounded resources and messages into Microcks

@@ -28,7 +28,6 @@ import io.github.microcks.util.HTTPDownloader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -61,13 +60,6 @@ public class ImportServiceDefinitionTask {
    @Autowired
    private JobService jobService;
 
-
-   @Value("${network.username}")
-   private final String username = null;
-
-   @Value("${network.password}")
-   private final String password = null;
-   
    @Scheduled(cron = "${services.update.interval}")
    public void importServiceDefinition(){
       // Prepare some flags.

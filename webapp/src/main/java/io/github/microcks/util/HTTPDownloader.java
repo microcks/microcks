@@ -19,13 +19,22 @@
 package io.github.microcks.util;
 
 import io.github.microcks.domain.Secret;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 
-import javax.net.ssl.*;
-import java.io.*;
-import java.net.Authenticator;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
@@ -51,13 +60,6 @@ public class HTTPDownloader {
    private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
    /** Constant representing the footer line in a custom CA Cert in PEM format. */
    private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
-
-
-   @Value("${network.username}")
-   private static String username = "";
-
-   @Value("${network.password}")
-   private static String password = "";
 
 
    /**
@@ -137,11 +139,8 @@ public class HTTPDownloader {
     */
    private static HttpURLConnection prepareURLConnection(String remoteUrl, Secret secret, boolean disableSSLValidation) throws IOException {
 
-      // Build remote URL and local target file.
+      // Build remote URL and connection to prepare.
       URL website = new URL(remoteUrl);
-
-      // Set authenticator instance for proxies and stuffs.
-      Authenticator.setDefault(new UsernamePasswordAuthenticator(username, password));
 
       HttpURLConnection connection = (HttpURLConnection) website.openConnection();
 

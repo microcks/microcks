@@ -18,6 +18,10 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.config.ProxySettings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 
@@ -25,20 +29,33 @@ import java.net.PasswordAuthentication;
  * A simple Authenticator for basic network authentication handling.
  * @author laurent
  */
-public class UsernamePasswordAuthenticator extends Authenticator{
-   
+public class UsernamePasswordProxyAuthenticator extends Authenticator{
+
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(UsernamePasswordProxyAuthenticator.class);
+
+   private final ProxySettings settings;
+
    private final PasswordAuthentication authentication;
    
    /**
     * Constructor.
-    * @param username Name of user for network connections
-    * @param password Password of user for network connections.
+    * @param settings The proxy settings for network to reach out.
     */
-   public UsernamePasswordAuthenticator(String username, String password){
-      authentication = new PasswordAuthentication(username, password.toCharArray());
+   public UsernamePasswordProxyAuthenticator(ProxySettings settings) {
+      this.settings = settings;
+      this.authentication = new PasswordAuthentication(settings.getUsername(), settings.getPassword().toCharArray());
    }
-   
+
    protected PasswordAuthentication getPasswordAuthentication(){
-      return authentication;
+      // Return authentication information only if requester is the identified proxy.
+      log.debug("Handling proxy authentication for {}", getRequestingHost());
+      if (getRequestorType() == RequestorType.PROXY) {
+         if (getRequestingHost().equalsIgnoreCase(settings.getHost())
+               && getRequestingPort() == settings.getPort()) {
+            return authentication;
+         }
+      }
+      return null;
   }
 }
