@@ -19,52 +19,55 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 import { ImportJob } from '../models/importer.model';
 
+const ENDPOINTS = {
+  IMPORT_JOB: () => `${environment.apiUrl}api/jobs`,
+  JOB_COUNT: () => `${environment.apiUrl}api/jobs/count`
+};
 
 @Injectable({ providedIn: 'root' })
 export class ImportersService {
-
-  private rootUrl: string = '/api';
 
   constructor(private http: HttpClient) { }
 
   getImportJobs(page: number = 1, pageSize: number = 20): Observable<ImportJob[]> {
     const options = { params: new HttpParams().set('page', String(page - 1)).set('size', String(pageSize)) };
-    return this.http.get<ImportJob[]>(this.rootUrl + '/jobs', options);
+    return this.http.get<ImportJob[]>(ENDPOINTS.IMPORT_JOB(), options);
   }
 
   filterImportJobs(filter: string): Observable<ImportJob[]> {
     const options = { params: new HttpParams().set('name', filter) };
-    return this.http.get<ImportJob[]>(this.rootUrl + '/jobs', options);
+    return this.http.get<ImportJob[]>(ENDPOINTS.IMPORT_JOB(), options);
   }
 
-  countImportJobs(): Observable<any> { 
-    return this.http.get<any>(this.rootUrl + '/jobs/count');
+  countImportJobs(): Observable<any> {
+    return this.http.get<any>(ENDPOINTS.JOB_COUNT());
   }
 
   createImportJob(job: ImportJob): Observable<ImportJob> {
-    return this.http.post<ImportJob>(this.rootUrl + '/jobs', job);
+    return this.http.post<ImportJob>(ENDPOINTS.IMPORT_JOB(), job);
   }
 
   updateImportJob(job: ImportJob): Observable<ImportJob> {
-    return this.http.post<ImportJob>(this.rootUrl + '/jobs/' + job.id, job);
+    return this.http.post<ImportJob>(ENDPOINTS.IMPORT_JOB() + '/' + job.id, job);
   }
 
   deleteImportJob(job: ImportJob): Observable<ImportJob> {
-    return this.http.delete<ImportJob>(this.rootUrl + '/jobs/' + job.id);
+    return this.http.delete<ImportJob>(ENDPOINTS.IMPORT_JOB() + '/' + job.id);
   }
 
   activateImportJob(job: ImportJob): Observable<ImportJob> {
-    return this.http.put<ImportJob>(this.rootUrl + '/jobs/' + job.id + '/activate', job);
+    return this.http.put<ImportJob>(ENDPOINTS.IMPORT_JOB() + '/' + job.id + '/activate', job);
   }
 
   startImportJob(job: ImportJob): Observable<ImportJob> {
-    return this.http.put<ImportJob>(this.rootUrl + '/jobs/' + job.id + '/start', job);
+    return this.http.put<ImportJob>(ENDPOINTS.IMPORT_JOB() + '/' + job.id + '/start', job);
   }
 
   stopImportJob(job: ImportJob): Observable<ImportJob> {
-    return this.http.put<ImportJob>(this.rootUrl + '/jobs/' + job.id + '/stop', job);
+    return this.http.put<ImportJob>(ENDPOINTS.IMPORT_JOB() + '/' + job.id + '/stop', job);
   }
 }

@@ -12,6 +12,9 @@ import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from "../../models/user.model";
 import { ConfigService } from 'src/app/services/config.service';
 
+import { environment } from 'src/environments/environment';
+
+export const BASE_CONTEXT = `${environment.baseContext}`
 
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
 //import * as $ from 'jquery';
@@ -33,8 +36,8 @@ export class VerticalNavComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.user().subscribe( currentUser => {
-      this.versionInfoSvc.getVersionInfo().subscribe( versionInfo => {
+    this.user().subscribe(currentUser => {
+      this.versionInfoSvc.getVersionInfo().subscribe(versionInfo => {
         this.aboutConfig = {
           additionalInfo: 'Microcks is Open Source mocking and testing platform for API and microservices. Visit https://microcks.io for more information.',
           copyright: 'Distributed under Apache Licence v2.0',
@@ -45,7 +48,7 @@ export class VerticalNavComponent implements OnInit {
             { name: 'Version', value: versionInfo.versionId },
             { name: 'Build timestamp', value: versionInfo.buildTimestamp },
             { name: 'User Login', value: currentUser.login },
-            { name: 'User Name', value: currentUser.name } ]
+            { name: 'User Name', value: currentUser.name }]
         } as AboutModalConfig;
       });
     });
@@ -57,7 +60,7 @@ export class VerticalNavComponent implements OnInit {
 
   public openHelpDialog() {
     const initialState = {};
-    this.modalRef = this.modalService.show(HelpDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(HelpDialogComponent, { initialState });
   }
 
   public openAboutModal(template: TemplateRef<any>): void {

@@ -74,6 +74,8 @@ import { ArtifactUploaderDialogComponent } from './pages/importers/_components/u
 import { HubPageComponent } from './pages/hub/hub.page';
 import { HubPackagePageComponent } from './pages/hub/package/package.page';
 import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
+import { APP_BASE_HREF } from '@angular/common';
+
 
 import json from 'highlight.js/lib/languages/json';
 import xml from 'highlight.js/lib/languages/xml';
@@ -84,8 +86,8 @@ import xml from 'highlight.js/lib/languages/xml';
  */
 export function getHighlightLanguages() {
   return [
-    {name: 'json', func: json},
-    {name: 'xml', func: xml}
+    { name: 'json', func: json },
+    { name: 'xml', func: xml }
   ];
 }
 
@@ -109,10 +111,10 @@ export function configLoader(configService: ConfigService) {
     BrowserModule, FormsModule, AppRoutingModule, HttpClientModule,
     BsDropdownModule.forRoot(), ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(),
     HighlightModule, FileUploadModule,
-    AboutModalModule, 
+    AboutModalModule,
     CardModule, DonutChartModule, SparklineChartModule,
     ListModule, PaginationModule, ToolbarModule,
-    WizardModule, ToastNotificationListModule, 
+    WizardModule, ToastNotificationListModule,
   ],
   providers: [
     ConfigService, {
@@ -132,10 +134,14 @@ export function configLoader(configService: ConfigService) {
       useValue: {
         languages: getHighlightLanguages
       }
-    }
+    },
+    {
+      provide: APP_BASE_HREF,
+      useValue: window['base-href']
+    },
   ],
   entryComponents: [
-    HelpDialogComponent, DynamicAPIDialogComponent, 
+    HelpDialogComponent, DynamicAPIDialogComponent,
     EditLabelsDialogComponent, GenericResourcesDialogComponent,
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent
   ],

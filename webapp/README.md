@@ -4,7 +4,7 @@ For development purposes, frontend GUI and backend APIs have been separated and 
 * Frontend is an Angular 6 application served by `ng serve` with livereload enabled,
 * Backend is a Spring Boot application served by Boot internal server
 
-We also need a Keycloak server running on port `8180`. 
+We also need a Keycloak server running on port `8180`. You can run the Keycloak server as a container from docker-compose, just adjust the exposed port to `8180`.
 
 ### Pre-requisites
 
@@ -25,7 +25,7 @@ $ ./standalone.sh -Djboss.socket.binding.port-offset=100
 In a terminal, start frontend GUI server using NG :
 
 ```
-$ cd src/main/webapp
+$ cd webapp/src/main/webapp
 $ ng serve
 ```
 

@@ -32,7 +32,7 @@ data:
     network.username=
     network.password=
 
-    validation.resourceUrl=https://{{ .Values.microcks.url }}/api/resources/
+    validation.resourceUrl=https://{{ .Values.microcks.url }}{{ .Values.microcks.baseContext }}api/resources/
     services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
     mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
 
@@ -273,7 +273,7 @@ data:
             "+"
           ],
           "redirectUris": [
-            "https://{{ .Values.microcks.url }}/*"
+            "https://{{ .Values.microcks.url }}{{ .Values.microcks.baseContext }}*"
           ],
           "fullScopeAllowed": false
         },
@@ -352,3 +352,40 @@ data:
     %kube.minion.restricted-frequencies=30,10
     %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
 {{- end -}}
+{{- if .Values.keycloak.install }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-keycloak-startup"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: keycloak
+    group: microcks
+data:
+  contextPath.cli: |
+    embed-server --server-config=standalone-ha.xml --std-out=echo
+    batch
+    {{- if ne .Values.keycloak.baseContext "/auth" }}
+    /subsystem=keycloak-server/:write-attribute(name=web-context,value={{ if eq .Values.keycloak.baseContext "" }}/{{ else }}{{ trimAll "/" .Values.keycloak.baseContext }}{{ end }})
+    {{- if eq .Values.keycloak.baseContext "" }}
+    /subsystem=undertow/server=default-server/host=default-host:write-attribute(name=default-web-module,value=keycloak-server.war)
+    {{- end }}
+    {{- end }}
+    run-batch
+    stop-embedded-server
+---
+{{- end -}}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-environment-config-map"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: spring
+    group: microcks
+data:
+  environment.json: |
+    {"apiUrl":"https://{{ .Values.microcks.url }}{{ .Values.microcks.baseContext }}", "baseContext": "{{ .Values.microcks.baseContext }}" ,"production":true}
+---

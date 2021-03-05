@@ -74,6 +74,44 @@ You may want to configure an Identity Provider or add some users for your Microc
 username and password found into 'microcks-keycloak-admin' secret.
 ```
 
+### Simple install - listening on sub context
+
+From the [Helm Hub](https://hub.helm.sh) directly - assuming here for the example, you are running `minikube`:
+
+```console
+$ helm repo add microcks https://microcks.io/helm
+
+$ kubectl create namespace microcks
+
+$ helm install microcks microcks/microcks —-version 1.2.0 --namespace microcks \
+  --set microcks.url=microcks.$(minikube ip).nip.io \
+  --set 'microcks.baseContext=/mock-server/microcks/' \
+  --set keycloak.url=keycloak.$(minikube ip).nip.io \
+  --set 'keycloak.baseContext=/mock-server/auth/'
+  
+NAME: microcks
+LAST DEPLOYED: Mon Jan 15 18:57:12 2021
+NAMESPACE: microcks
+STATUS: deployed
+REVISION: 1
+TEST SUITE: None
+NOTES:
+Thank you for installing microcks.
+
+Your release is named microcks.
+
+To learn more about the release, try:
+
+  $ helm status microcks
+  $ helm get microcks
+
+Microcks is available at https://microcks.192.168.64.6.nip.io/mock-server/microcks/.
+
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/mock-server/auth/ to protect user access.
+You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
+username and password found into 'microcks-keycloak-admin' secret.
+```
+
 ### Advanced install - with asynchronous mocking
 
 Since release `1.0.0`, Microcks support mocking of event-driven API thanks to [AsyncAPI Spec](https://asyncapi.com). Microcks will take car of publishing sample messages for you on a message broker. You mey reuse an existing broker of let Microcks deploy its own (this is the default when turning on this feature).
@@ -144,8 +182,10 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | Section    | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` | 
-| `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `microcks`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. | 
+| `microcks`    | `baseContext`      | **Mandatory**. The base context the service is listening on. Default is `/` | 
+| `microcks`    | `ingress.enable`   | **Mandatory**. Install `Ingress` resources. Default is `true`. |
+| `microcks`    | `ingress.secretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
+| `microcks`    | `ingress.annotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. | 
 | `microcks`    | `replicas`         | **Optional**. The number of replicas for the Microcks main pod. Default is `1`. |
 | `microcks`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `microcks`    | `resources`        | **Optional**. Some resources constraints to apply on Microcks pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container). | 
@@ -154,9 +194,11 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `keycloak`    | `install`          | **Optional**. Flag for Keycloak installation. Default is `true`. Set to `false` if you want to reuse an existing Keycloak instance. |
 | `keycloak`    | `realm`            | **Optional**. Name of Keycloak realm to use. Should be setup only if `install` is `false` and you want to reuse an existing realm. Default is `microcks`. |
 | `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install - indeed just the hostname + port part - if it already exists or the one used for exposing Keycloak `Ingress`. |
+| `keycloak`    | `baseContext`      | **Mandatory**. The base context KeyCloak is listening on. Default is `/auth/` | 
 | `keycloak`    | `privateUrl`       | **Optional**. A private URL - a full URL here - used by the Microcks component to internally join Keycloak. This is also known as `backendUrl` in [Keycloak doc](https://www.keycloak.org/docs/latest/server_installation/#_hostname). When specified, the `keycloak.url` is used as `frontendUrl` in Keycloak terms. | 
-| `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `keycloak`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. |  
+| `keycloak`    | `ingress.enable`   | **Mandatory**. Install `Ingress` resources. Default is `true`. |
+| `keycloak`    | `ingress.secretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
+| `keycloak`    | `ingress.annotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. |  
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
 | `keycloak`    | `volumeSize`       | **Optional**. Size of persistent volume claim for Keycloak. Default is `1Gi`. Not used if not persistent install asked. |
@@ -234,9 +276,10 @@ microcks-mongodb-6d558666dc-zdhxl               1/1     Running   0          39s
 microcks-postman-runtime-58bf695b59-nm858       1/1     Running   0          39s
 ```
 
-## Deleting the Chart
+## Deleting the installed Helm release 
 
 ```console
-$ helm delete microcks
-$ helm del --purge microcks
+$ helm delete microcks --namespace microcks
+# To remove the helm repo
+$ helm repo remove microcks
 ```
