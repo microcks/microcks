@@ -189,6 +189,7 @@ public class SoapController {
             response = responses.get(0);
          }
 
+         // Set Content-Type to "text/xml".
          HttpHeaders responseHeaders = new HttpHeaders();
 
          // Check to see if we are processing a SOAP 1.2 request
