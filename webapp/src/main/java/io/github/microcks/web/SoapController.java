@@ -191,7 +191,12 @@ public class SoapController {
 
          // Set Content-Type to "text/xml".
          HttpHeaders responseHeaders = new HttpHeaders();
-         responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
+
+         if (request.getContentType().startsWith("application/soap+xml")) {
+           responseHeaders.setContentType(MediaType.valueOf("application/soap+xml;charset=UTF-8"));
+         } else {
+           responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
+         }
 
          // Render response content before waiting and returning.
          String responseContent = MockControllerCommons.renderResponseContent(body, null, request, response);
