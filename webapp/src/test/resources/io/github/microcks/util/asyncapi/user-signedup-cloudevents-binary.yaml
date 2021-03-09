@@ -57,7 +57,7 @@ channels:
               summary: Example for John Doe user
               headers:
                 ce_specversion: "1.0"
-                ce_type: "com.example.someevent"
+                ce_type: "io.microcks.example.user-signedup"
                 ce_source: "/mycontext/subcontext"
                 ce_id: "{{uuid()}}"
                 ce_time: "{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"
