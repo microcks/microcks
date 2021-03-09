@@ -23,11 +23,14 @@ import io.apicurio.registry.utils.serde.AbstractKafkaSerializer;
 import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.github.microcks.util.el.TemplateEngine;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
@@ -37,8 +40,10 @@ import org.jboss.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 
 /**
  * Kafka implementation of producer for async event messages.
@@ -150,10 +155,13 @@ public class KafkaProducerManager {
     * @param topic The destination topic for message
     * @param key The message key
     * @param value The message payload
+    * @param headers A set of headers if any (maybe null or empty)
     */
-   public void publishMessage(String topic, String key, String value) {
+   public void publishMessage(String topic, String key, String value, Set<Header> headers) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
-      producer.send(new ProducerRecord<String, String>(topic, key, value));
+      ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
+      addHeadersToRecord(record, headers);
+      producer.send(record);
       producer.flush();
    }
 
@@ -162,10 +170,13 @@ public class KafkaProducerManager {
     * @param topic The destination topic for message
     * @param key The message key
     * @param value The message payload
+    * @param headers A set of headers if any (maybe null or empty)
     */
-   public void publishMessage(String topic, String key, byte[] value) {
+   public void publishMessage(String topic, String key, byte[] value, Set<Header> headers) {
       logger.infof("Publishing on topic {%s}, bytes: %s ", topic, new String(value));
-      bytesProducer.send(new ProducerRecord<String, byte[]>(topic, key, value));
+      ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, key, value);
+      addHeadersToRecord(record, headers);
+      bytesProducer.send(record);
       bytesProducer.flush();
    }
 
@@ -175,10 +186,51 @@ public class KafkaProducerManager {
     * @param topic The destination topic for message
     * @param key The message key
     * @param value The message payload
+    * @param headers A set of headers if any (maybe null or empty)
     */
-   public void publishMessage(String topic, String key, GenericRecord value) {
+   public void publishMessage(String topic, String key, GenericRecord value, Set<Header> headers) {
       logger.infof("Publishing on topic {%s}, record: %s ", topic, value.toString());
-      registryProducer.send(new ProducerRecord<String, GenericRecord>(topic, key, value));
+      ProducerRecord<String, GenericRecord> record = new ProducerRecord<>(topic, key, value);
+      addHeadersToRecord(record, headers);
+      registryProducer.send(record);
       registryProducer.flush();
+   }
+
+   /**
+    * Transform and render Microcks headers into Kafka specific headers.
+    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the KafkaProducerManager level.)
+    * @param headers The Microcks event message headers definition.
+    * @return A set of Kafka headers.
+    */
+   public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<io.github.microcks.domain.Header> headers) {
+      if (headers != null && !headers.isEmpty()) {
+         Set<Header> renderedHeaders = new HashSet<>(headers.size());
+
+         for (io.github.microcks.domain.Header header : headers) {
+            // For Kafka, header is mono valued so just consider the first value.
+            String firstValue = header.getValues().stream().findFirst().get();
+            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+               try {
+                  renderedHeaders.add(new RecordHeader(header.getName(), engine.getValue(firstValue).getBytes()));
+               } catch (Throwable t) {
+                  logger.error("Failing at evaluating template " + firstValue, t);
+                  renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
+               }
+            } else {
+               renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
+            }
+         }
+         return renderedHeaders;
+      }
+      return null;
+   }
+
+   /** Completing the ProducerRecord with the set of provided headers. */
+   protected void addHeadersToRecord(ProducerRecord record, Set<Header> headers) {
+      if (headers != null) {
+         for (Header header : headers) {
+            record.headers().add(header);
+         }
+      }
    }
 }
