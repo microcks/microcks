@@ -32,6 +32,10 @@ channels:
               type: string
               format: date-time
               description: Date and time when the event was sent
+            content-type:
+              type: string
+              enum:
+                - 'application/cloudevents+json; charset=UTF-8'
         payload:
           $ref: '#/components/schemas/userSignedUpPayload'
         examples:
@@ -39,16 +43,17 @@ channels:
               summary: Example for Laurent user
               headers: |-
                 {
-                  "sentAt": "2020-03-11T08:03:28Z"
+                  "sentAt": "2020-03-11T08:03:28Z",
+                  "content-type": "application/cloudevents+json; charset=UTF-8"
                 }
               payload: |-
                 {
-                  "ce_specversion": "1.0",
-                  "ce_type": "com.example.someevent",
-                  "ce_source": "/mycontext/subcontext",
-                  "ce_id": "1234-1234-1234",
-                  "ce_time": "2020-03-11T08:03:28Z",
-                  "content-type": "application/avro",
+                  "specversion": "1.0",
+                  "type": "com.example.someevent",
+                  "source": "/mycontext/subcontext",
+                  "id": "1234-1234-1234",
+                  "time": "2020-03-11T08:03:28Z",
+                  "datacontenttype" : "application/json",
                   "data": {
                     "fullName": "Laurent Broudoux",
                     "email": "laurent@microcks.io",
@@ -59,13 +64,14 @@ channels:
               summary: Example for John Doe user
               headers:
                 sentAt: "2020-03-11T08:03:38Z"
+                content-type: "application/cloudevents+json; charset=UTF-8"
               payload:
-                ce_specversion: "1.0"
-                ce_type: "io.microcks.example.user-signedup"
-                ce_source: "/mycontext/subcontext"
-                ce_id: "{{uuid()}}"
-                ce_time: "{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"
-                content-type: application/avro
+                specversion: "1.0"
+                type: "io.microcks.example.user-signedup"
+                source: "/mycontext/subcontext"
+                id: "{{uuid()}}"
+                time: "{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"
+                datacontenttype : "application/json"
                 data:
                   fullName: John Doe
                   email: john@microcks.io
