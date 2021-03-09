@@ -1,0 +1,70 @@
+asyncapi: '2.0.0'
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User signed-up CloudEvents API
+  version: 0.1.3
+  description: Sample AsyncAPI for user signedup events defined using CloudEvents binary
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json
+channels:
+  user/signedup:
+    description: The topic on which user signed up events may be consumed
+    subscribe:
+      summary: Receive informations about user signed up
+      operationId: receivedUserSIgnedUp
+      message:
+        description: An event describing that a user just signed up.
+        bindings:
+          kafka:
+            key:
+              type: string
+              description: Timestamp of event as milliseconds since 1st Jan 1970
+        traits:
+          - $ref: 'https://raw.githubusercontent.com/microcks/microcks-quickstarters/main/cloud/cloudevents/cloudevents-v1.0.1-asyncapi-trait.yml'
+        headers:
+          type: object
+          properties:
+            sentAt:
+              type: string
+              format: date-time
+              description: Date and time when the event was sent
+        contentType: avro/binary
+        schemaFormat: application/vnd.apache.avro+json;version=1.9.0
+        payload:
+          $ref: './user-signedup.avsc#/User'
+        examples:
+          - laurent:
+              summary: Example for Laurent user
+              headers: |-
+                {
+                  "ce_specversion": "1.0",
+                  "ce_type": "com.example.someevent",
+                  "ce_source": "/mycontext/subcontext",
+                  "ce_id": "1234-1234-1234",
+                  "ce_time": "2020-03-11T08:03:28Z",
+                  "content-type": "application/avro",
+                  "sentAt": "2020-03-11T08:03:28Z"
+                }
+              payload: |-
+                {"fullName": "Laurent Broudoux", "email": "laurent@microcks.io", "age": 41}
+          - john:
+              summary: Example for John Doe user
+              headers:
+                ce_specversion: "1.0"
+                ce_type: "com.example.someevent"
+                ce_source: "/mycontext/subcontext"
+                ce_id: "1234-1234-1235"
+                ce_time: "2020-03-11T08:03:38Z"
+                content-type: application/avro
+                sentAt: "2020-03-11T08:03:38Z"
+              payload:
+                fullName: John Doe
+                email: john@microcks.io
+                age: 36
+
