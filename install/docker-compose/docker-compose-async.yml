@@ -1,0 +1,122 @@
+version: '2'
+
+networks:
+  default:
+    external: 
+      name: microcks_net
+services:
+
+  zookeeper:
+    image: strimzi/kafka:0.17.0-kafka-2.4.0
+    command: [
+      "sh", "-c",
+      "bin/zookeeper-server-start.sh config/zookeeper.properties"
+    ]
+    ports:
+      - "2181:2181"
+    environment:
+      LOG_DIR: /tmp/logs
+
+  kafka:
+    image: strimzi/kafka:0.17.0-kafka-2.4.0
+    command: [
+      "sh", "-c",
+      "bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}"
+    ]
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      LOG_DIR: "/tmp/logs"
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://docker-compose_kafka_1:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  mongo:
+    image: mongo:3.4.23
+    container_name: microcks-db
+    volumes:
+      - "~/tmp/microcks-data:/data/db"
+
+  keycloak:
+    image: jboss/keycloak:10.0.1
+    container_name: microcks-sso
+    ports:
+      - "18080:8080"
+    environment:
+      KEYCLOAK_USER: "admin"
+      KEYCLOAK_PASSWORD: "admin"
+      KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
+      KEYCLOAK_FRONTEND_URL: "http://localhost:18080/auth"
+    volumes: 
+      - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
+
+  postman:
+    image: quay.io/microcks/microcks-postman-runtime:latest
+    container_name: microcks-postman-runtime
+
+  minion:
+    depends_on:
+      - kafka
+      - mongo
+      - keycloak
+      - postman
+      - app
+    image: quay.io/microcks/microcks-async-minion:latest
+    container_name: microcks-async-minion
+    ports:
+      - "8081:8081"
+    environment: 
+      - kafka.bootstrap.servers=docker-compose_kafka_1:9092
+      - mp.messaging.incoming.microcks-services-updates.bootstrap.servers=docker-compose_kafka_1:9092
+      - mqtt.server=mr1i5g7tif6z9h.messaging.solace.cloud:1883
+      - mqtt.url=mr1i5g7tif6z9h.messaging.solace.cloud:1883
+      - mqtt.username=solace-cloud-client
+      - mqtt.password=enfe56t36gbp4evn4hner9grmh
+      - minion.supported-bindings=MQTT,KAFKA
+      - io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url=http://microcks:8080
+      - url=http://microcks:8080
+      - keycloak.auth.url=http://keycloak:8080/auth
+      - KEYCLOAK_URL=http://keycloak:8080/auth
+      - KAFKA_BOOTSTRAP_SERVER=docker-compose_kafka_1:9092
+      - microcks.serviceaccount=microcks-serviceaccount
+      - microcks.serviceaccount.credentials=61ea5bf5-b770-4a07-baff-5c6494569d95
+      
+  app:
+    depends_on:
+      - mongo
+      - keycloak
+      - postman
+    image: quay.io/microcks/microcks:latest
+    container_name: microcks
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017
+      - SPRING_DATA_MONGODB_DATABASE=microcks
+      - POSTMAN_RUNNER_URL=http://postman:3000
+      - ASYNC_MINION_URL=http://microcks-async-minion:8081
+      - TEST_CALLBACK_URL=http://microcks:8080
+      - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
+      - KEYCLOAK_URL=http://keycloak:8080/auth
+      - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
+      - async-api.enabled=true
+      - async-api.default-binding=MQTT
+      - async-api.default-frequency=3
+      - async-api.mqtt.url=mr1i5g7tif6z9h.messaging.solace.cloud:1883
+      - async-api.mqtt.username=solace-cloud-client
+      - async-api.mqtt.password=enfe56t36gbp4evn4hner9grmh
+      - mqtt.server=mr1i5g7tif6z9h.messaging.solace.cloud:1883
+      - mqtt.url=mr1i5g7tif6z9h.messaging.solace.cloud:1883
+      - mqtt.username=solace-cloud-client
+      - mqtt.password=enfe56t36gbp4evn4hner9grmh
+      - features.feature.async-api.endpoint-MQTT=mr1i5g7tif6z9h.messaging.solace.cloud:1883
+      - features.feature.async-api.default-binding=MQTT
+      - features.async.mqtt.url=mr1i5g7tif6z9h.messaging.solace.cloud:1883
+      - features.async.mqtt.username=solace-cloud-client
+      - features.async.mqtt.password=enfe56t36gbp4evn4hner9grmh
+      - features.async.enabled=true
+      - kafka.bootstrap.servers=docker-compose_kafka_1:9092
+      - KAFKA_BOOTSTRAP_SERVER=docker-compose_kafka_1:9092
