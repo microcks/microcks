@@ -11,7 +11,7 @@
       "enabled": true,
       "credentials" : [
         { "type" : "password",
-          "value" : "123" }
+          "value" : "microcks123" }
       ],
       "realmRoles": [],
       "applicationRoles": {
