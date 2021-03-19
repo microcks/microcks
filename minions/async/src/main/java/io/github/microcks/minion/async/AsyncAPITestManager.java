@@ -250,7 +250,7 @@ public class AsyncAPITestManager {
       /** Retrieve the expected content type for an AsyncAPI message. */
       private String getExpectedContentType(JsonNode specificationNode, String messagePathPointer) {
          // Retrieve default content type, defaulting to application/json.
-         String defaultContentType = specificationNode.get("defaultContentType").asText("application/json");
+         String defaultContentType = specificationNode.path("defaultContentType").asText("application/json");
 
          // Get message real content type if defined.
          String contentType = defaultContentType;
