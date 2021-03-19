@@ -182,7 +182,6 @@ public class ProducerManager {
       if (operationName.startsWith("SUBSCRIBE ")) {
          operationName = operationName.substring(operationName.indexOf(" ") + 1);
       }
-      operationName = operationName.replace('/', '-');
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "_" + versionName + "_" + operationName;
    }
