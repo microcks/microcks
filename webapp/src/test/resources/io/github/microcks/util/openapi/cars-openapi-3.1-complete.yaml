@@ -1,0 +1,169 @@
+---
+openapi: 3.0.0
+info:
+  title: OpenAPI Car API
+  description: Sample OpenAPI API using cars
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  version: 1.1.0
+paths:
+  /owner/{owner}/car:
+    get:
+      summary: List all cars of owner
+      description: List all cars of owner description
+      operationId: getCarsOp
+      parameters:
+      - name: page
+        in: query
+        description: Result page wanted
+        required: false
+        schema:
+          type: integer
+        examples:
+          laurent_cars:
+            value: 0
+      - name: limit
+        in: query
+        description: Number of result in page
+        required: false
+        schema:
+          type: integer
+        examples:
+          laurent_cars:
+            value: 20
+      responses:
+        200:
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Car'
+              examples:
+                laurent_cars:
+                  value: |-
+                    [
+                        {"name": "307", "model": "Peugeot 307", "year": 2003},
+                        {"name": "jean-pierre", "model": "Peugeot Traveler", "year": 2017}
+                    ]
+    post:
+      summary: Add a car to current owner
+      description: Add a car to current owner description
+      operationId: addCarOp
+      requestBody:
+        description: Car body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Car'
+            examples:
+              laurent_307:
+                summary: Creation of a valid car
+                description: Should return 201
+                value: '{"name": "307", "model": "Peugeot 307", "year": 2003}'
+        required: true
+      responses:
+        201:
+          description: Car created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Car'
+              examples:
+                laurent_307:
+                  summary: Creation of a valid car response
+                  value: '{"name": "307", "model": "Peugeot 307", "year": 2003}'
+        400: {}
+    parameters:
+    - name: owner
+      in: path
+      description: Owner of the cars
+      required: true
+      schema:
+        format: string
+        type: string
+      examples:
+        laurent_cars:
+          summary: Value for laurent related examples
+          value: laurent
+        laurent_307:
+          $ref: '#/components/examples/param_laurent'
+  /owner/{owner}/car/{car}/passenger:
+    get:
+      summary: 'Get the passengers of a car'
+      description: 'Get all the passengers of a car'
+      operationId: getPassengersOp
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+              examples:
+                laurent_307_passengers:
+                  value: "[\n    {\"firstname\": \"Nicolas\", \"lastname\": \"Masse\"},\n    {\"firstname\": \"Eric\", \"lastname\": \"Wittmann\"}\n]"
+    post:
+      summary: Add some passengers to the car
+      description: Add some passengers to the car description
+      operationId: addPassengerOp
+      responses:
+        200:
+          content:
+            application/json: {}
+    parameters:
+    - name: owner
+      in: path
+      description: Owner of the car
+      required: true
+      schema:
+        type: string
+      examples:
+        laurent_307_passengers:
+          $ref: '#/components/examples/param_laurent'
+    - name: car
+      in: path
+      description: The car to manage passengers for
+      required: true
+      schema:
+        type: string
+      examples:
+        laurent_307_passengers:
+          value: 307
+components:
+  schemas:
+    Car:
+      required:
+      - name
+      properties:
+        name:
+          description: Name of the car
+          type: string
+        year:
+          description: Build year
+          type: integer
+        model:
+          description: Model of the car
+          type: string
+    Person:
+      type: object
+      properties:
+        firstname:
+          description: 'Firstname of person'
+          type: string
+        lastname:
+          description: 'Lastname of person'
+          type: string
+  examples:
+    param_laurent:
+      value: laurent
+tags:
+- name: car
+  description:

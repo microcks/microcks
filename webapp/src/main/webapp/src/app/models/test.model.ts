@@ -32,10 +32,12 @@ export class TestResult {
   testDate: Date;
   testedEndpoint: string;
   serviceId: string;
+  timeout: number;
   elapsedTime: number;
   success: boolean = false;
   inProgress: boolean = true;
   runnerType: TestRunnerType;
+  operationHeaders: any;
   testCaseResults: TestCaseResult[];
   secretRef: SecretRef;
 }

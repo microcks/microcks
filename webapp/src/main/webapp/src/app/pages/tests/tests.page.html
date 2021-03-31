@@ -47,7 +47,12 @@
       </div>
 
       <div class="list-view-pf-actions">
+        <div class="btn-group">
         <a [routerLink]="['/tests', test.id]"><button class="btn btn-default" type="button">Details</button></a>
+        <a [routerLink]="['/tests/create', {serviceId: test.serviceId, fromTest: test.id }]" tooltip="Relaunch this test!">
+          <button class="btn btn-primary" type="button"><span class="fa fa-repeat"></span></button>
+        </a>
+        </div>
       </div>
     </div>
 

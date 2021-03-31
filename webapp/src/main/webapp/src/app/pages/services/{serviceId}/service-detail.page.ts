@@ -275,7 +275,7 @@ export class ServiceDetailPageComponent implements OnInit {
     
     return result;
   }
-  public formatAsyncDestination(operation: Operation, eventMessage: EventMessage): string {
+  public formatAsyncDestination(operation: Operation, eventMessage: EventMessage, binding: string): string {
     var serviceName = this.resolvedServiceView.service.name;
     var operationName = operation.name;
 
@@ -285,7 +285,9 @@ export class ServiceDetailPageComponent implements OnInit {
 
     // Remove verb and replace '/' by '-' in operation name.
     operationName = this.removeVerbInUrl(operationName);
-    operationName = operationName.replace(/\//g, '-');
+    if ('KAFKA' === binding) {
+      operationName = operationName.replace(/\//g, '-');
+    }
 
     return serviceName + "_" + this.resolvedServiceView.service.version + "_" + operationName;
   }

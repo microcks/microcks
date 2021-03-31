@@ -289,7 +289,7 @@
                       <dt>Kafka topic:</dt>
                       <dd>
                         <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage) }}" disabled/>
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'KAFKA') }}" disabled/>
                           <span class="input-group-addon">
                             <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage))"></i>
@@ -305,7 +305,7 @@
                       <dt>MQTT topic:</dt>
                       <dd>
                         <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage) }}" disabled/>
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'MQTT') }}" disabled/>
                           <span class="input-group-addon">
                             <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage))"></i>

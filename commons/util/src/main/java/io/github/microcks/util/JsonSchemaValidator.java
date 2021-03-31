@@ -35,7 +35,7 @@ import java.util.List;
 
 /**
  * Helper class for validating Json objects against their Json schema. Supported version
- * of Json schema is http://json-schema.org/draft-04/schema.
+ * of Json schema is http://json-schema.org/draft-07/schema.
  * @author laurent
  */
 public class JsonSchemaValidator {
@@ -45,6 +45,7 @@ public class JsonSchemaValidator {
 
    public static final String JSON_V4_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-04/schema#";
    public static final String JSON_V7_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-07/schema#";
+   public static final String JSON_V12_SCHEMA_IDENTIFIER = "http://json-schema.org/draft/2020-12/schema#";
    public static final String JSON_SCHEMA_IDENTIFIER_ELEMENT = "$schema";
 
    /**

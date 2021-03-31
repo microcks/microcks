@@ -46,6 +46,7 @@ export class TestCreatePageComponent implements OnInit {
   submitEnabled: boolean = false;
   notifications: Notification[];
   timeout: number = 10000;
+  secretId: string;
   secretName: string;
   operationsHeaders: any = {
     'globals': []
@@ -62,6 +63,9 @@ export class TestCreatePageComponent implements OnInit {
       switchMap((params: ParamMap) => {
         // (+) before `params.get()` turns the string into a number
         this.serviceId = params.get('serviceId');
+        if (params.has('fromTest')) {
+          this.initializeFromPreviousTestResult(params.get('fromTest'));
+        }
         return this.servicesSvc.getService(this.serviceId);
       })
     );
@@ -69,6 +73,36 @@ export class TestCreatePageComponent implements OnInit {
 
   getSecrets(page: number = 1): void {
     this.secretsSvc.getSecrets(page).subscribe(results => this.secrets = results);
+  }
+
+  initializeFromPreviousTestResult(testId: string): void {
+    this.testsSvc.getTestResult(testId).subscribe(
+      {
+        next: res => {
+          this.notificationService.message(NotificationType.SUCCESS,
+              "New Test", "Test has been initialized from " + testId, false, null, null);
+          this.testEndpoint = res.testedEndpoint;
+          this.runnerType = res.runnerType;
+          // Complete with optional properties.
+          if (res.operationHeaders) {
+            this.operationsHeaders = res.operationHeaders;
+          }
+          if (res.timeout) {
+            this.timeout = res.timeout;
+          }
+          if (res.secretRef) {
+            this.secretId = res.secretRef.secretId;
+            this.secretName = res.secretRef.name;
+          }
+          this.checkForm();
+        },
+        error: err => {
+          this.notificationService.message(NotificationType.DANGER,
+              "New Test", "Test cannot be initialized from " + testId, false, null, null);
+        },
+        complete: () => console.log('Observer got a complete notification'),
+      }
+    );
   }
 
   public showAdvancedPanel(show: boolean) {
