@@ -118,7 +118,7 @@ public class TestRunnerService {
       }
 
       // Initialize runner once as it is shared for each test.
-      AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, service.getId());
+      AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, testResult.getTimeout(), service.getId());
       if (testRunner == null) {
          // Set failure and stopped flags and save before exiting.
          testResult.setSuccess(false);
@@ -270,7 +270,7 @@ public class TestRunnerService {
    }
 
    /** Retrieve correct test runner according given type. */
-   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, String serviceId){
+   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, Long runnerTimeout, String serviceId){
       // TODO: remove this ugly initialization later.
       // Initialize new HttpComponentsClientHttpRequestFactory that supports https connections.
       TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
@@ -294,7 +294,7 @@ public class TestRunnerService {
 
       HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
       factory.setConnectTimeout(200);
-      factory.setReadTimeout(10000);
+      factory.setReadTimeout(runnerTimeout.intValue());
 
       switch (runnerType){
          case SOAP_HTTP:

@@ -106,13 +106,15 @@
                 <div class="col-md-6" *ngIf="service.type != 'EVENT'">
                   <h5 class="subsection-label">Response</h5>
 
-                  <dl class="dl-horizontal left" *ngIf="messagePairFor(item.operationName, testStep.requestName).response.status">
+                  <dl class="dl-horizontal left" *ngIf="messagePairFor(item.operationName, testStep.requestName).response">
                     <dt>Response Time:</dt>
                     <dd>{{ testStep.elapsedTime }} ms.</dd>
-                    <dt>Response Code and Type:</dt>
-                    <dd>
-                      <code><small>{{ messagePairFor(item.operationName, testStep.requestName).response.status }}: {{messagePairFor(item.operationName, testStep.requestName).response.mediaType}}</small></code>
-                    </dd>
+                    <span *ngIf="messagePairFor(item.operationName, testStep.requestName).response.status">
+                      <dt>Response Code and Type:</dt>
+                      <dd>
+                        <code><small>{{ messagePairFor(item.operationName, testStep.requestName).response.status }}: {{messagePairFor(item.operationName, testStep.requestName).response.mediaType}}</small></code>
+                      </dd>
+                    </span>
                     <span *ngIf="testStep.message">
                       <dt>Error:</dt>
                       <dd>
@@ -139,13 +141,15 @@
                 <div class="col-md-12" *ngIf="service.type === 'EVENT'">
                   <h5 class="subsection-label">Event Message</h5>
 
-                  <dl class="dl-horizontal left" *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType">
+                  <dl class="dl-horizontal left" *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage">
                     <dt>Consumption Time:</dt>
                     <dd>{{ testStep.elapsedTime }} ms.</dd>
-                    <dt>Event Type:</dt>
-                    <dd>
-                      <code>{{ eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType }}</code>
-                    </dd>
+                    <span *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType">
+                      <dt>Event Type:</dt>
+                      <dd>
+                        <code>{{ eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.mediaType }}</code>
+                      </dd>
+                    </span>
                     <span *ngIf="testStep.message">
                       <dt>Error:</dt>
                       <dd>
