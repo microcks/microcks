@@ -123,6 +123,9 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          }
          // If there's input content, add it to request.
          if (request.getContent() != null) {
+            // Update request content with rendered body if necessary.
+            request.setContent(TestRunnerCommons.renderRequestContent(request, headers));
+            log.trace("Sending following request content: " + request.getContent());
             httpRequest.getBody().write(request.getContent().getBytes());
          }
 
