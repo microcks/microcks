@@ -18,18 +18,17 @@
  */
 package io.github.microcks.util.test;
 
-import java.io.IOException;
-import java.io.StringWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.Set;
-
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Secret;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestReturn;
 import io.github.microcks.util.URIBuilder;
-import io.github.microcks.domain.*;
+
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +37,21 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
+
+import java.io.IOException;
+import java.io.StringWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * An extension of AbstractTestRunner that checks that returned response is
@@ -50,14 +64,18 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(HttpTestRunner.class);
 
+   private Secret secret;
+
    private ClientHttpRequestFactory clientHttpRequestFactory;
 
+   private Map<String, Secret> cachedSecrets;
+
    /**
-    * Get the ClientHttpRequestFactory used for reaching endpoint.
-    * @return The ClientHttpRequestFactory used for reaching endpoint
+    * Set the Secret used for securing the requests.
+    * @param secret The Secret used or securing the requests.
     */
-   public ClientHttpRequestFactory getClientHttpRequestFactory() {
-      return clientHttpRequestFactory;
+   public void setSecret(Secret secret) {
+      this.secret = secret;
    }
 
    /**
@@ -121,6 +139,12 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             // Update request headers for traceability of possibly added ones.
             request.setHeaders(headers);
          }
+
+         // Now manage specific authorization headers if there's a secret.
+         if (secret != null) {
+            addAuthorizationHeadersFromSecret(httpRequest, request, secret);
+         }
+
          // If there's input content, add it to request.
          if (request.getContent() != null) {
             // Update request content with rendered body if necessary.
@@ -260,5 +284,45 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          return headers;
       }
       return null;
+   }
+
+   /** Complete the test request with authorization data coming from secret. */
+   private void addAuthorizationHeadersFromSecret(ClientHttpRequest httpRequest, Request request, Secret secret) {
+      if (secret != null) {
+         // If Basic authentication required, set request property.
+         if (secret.getUsername() != null && secret.getPassword() != null) {
+            log.debug("Secret contains username/password, assuming Authorization Basic");
+            // Building a base64 string.
+            String encoded = Base64.getEncoder().encodeToString(
+                  (secret.getUsername() + ":" + secret.getPassword())
+                        .getBytes(StandardCharsets.UTF_8));
+            httpRequest.getHeaders().set(HttpHeaders.AUTHORIZATION, "Basic " + encoded);
+            // Add to Microcks request for traceability.
+            request.getHeaders().add(buildAuthHeaderWithSecret(HttpHeaders.AUTHORIZATION, "Basic "));
+         }
+
+         // If Token authentication required, set request property.
+         if (secret.getToken() != null) {
+            if (secret.getTokenHeader() != null && secret.getTokenHeader().trim().length() > 0) {
+               log.debug("Secret contains token and token header, adding them as request header");
+               httpRequest.getHeaders().set(secret.getTokenHeader().trim(), secret.getToken());
+               // Add to Microcks request for traceability.
+               request.getHeaders().add(buildAuthHeaderWithSecret(secret.getTokenHeader().trim(), ""));
+            } else {
+               log.debug("Secret contains token only, assuming Authorization Bearer");
+               httpRequest.getHeaders().set(HttpHeaders.AUTHORIZATION, "Bearer " + secret.getToken());
+               // Add to Microcks request for traceability.
+               request.getHeaders().add(buildAuthHeaderWithSecret(HttpHeaders.AUTHORIZATION, "Bearer "));
+            }
+         }
+      }
+   }
+
+   /** Build a Microcks header for traceability. */
+   private Header buildAuthHeaderWithSecret(String name, String type) {
+      Header authHeader = new Header();
+      authHeader.setName(name);
+      authHeader.setValues(new TreeSet<>(Arrays.asList(type + "<value-from-secret>")));
+      return authHeader;
    }
 }

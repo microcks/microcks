@@ -18,8 +18,23 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.*;
-import io.github.microcks.repository.*;
+import io.github.microcks.domain.ImportJob;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Secret;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestCaseResult;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestReturn;
+import io.github.microcks.domain.TestRunnerType;
+import io.github.microcks.domain.TestStepResult;
+import io.github.microcks.repository.ImportJobRepository;
+import io.github.microcks.repository.RequestRepository;
+import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.repository.ResponseRepository;
+import io.github.microcks.repository.SecretRepository;
+import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.asyncapi.AsyncAPITestRunner;
@@ -29,7 +44,6 @@ import io.github.microcks.util.soapui.SoapUITestStepsRunner;
 import io.github.microcks.util.test.AbstractTestRunner;
 import io.github.microcks.util.test.HttpTestRunner;
 import io.github.microcks.util.test.SoapHttpTestRunner;
-import io.github.microcks.domain.TestReturn;
 
 import org.apache.http.config.Registry;
 import org.apache.http.config.RegistryBuilder;
@@ -53,9 +67,14 @@ import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 
 import javax.net.ssl.SSLContext;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.security.KeyStore;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -69,6 +88,11 @@ public class TestRunnerService {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(TestRunnerService.class);
+
+   /** Constant representing the header line in a custom CA Cert in PEM format. */
+   private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
+   /** Constant representing the footer line in a custom CA Cert in PEM format. */
+   private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
 
    @Autowired
    private ResourceRepository resourceRepository;
@@ -117,8 +141,14 @@ public class TestRunnerService {
          testResult.setTestNumber(1L);
       }
 
+      Secret secret = null;
+      if (testResult.getSecretRef() != null) {
+         secret = secretRepository.findById(testResult.getSecretRef().getSecretId()).orElse(null);
+         log.debug("Using a secret to test endpoint? '{}'", secret != null ? secret.getName() : "none");
+      }
+
       // Initialize runner once as it is shared for each test.
-      AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, testResult.getTimeout(), service.getId());
+      AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, secret, testResult.getTimeout(), service.getId());
       if (testRunner == null) {
          // Set failure and stopped flags and save before exiting.
          testResult.setSuccess(false);
@@ -270,13 +300,24 @@ public class TestRunnerService {
    }
 
    /** Retrieve correct test runner according given type. */
-   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, Long runnerTimeout, String serviceId){
+   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, Secret secret, Long runnerTimeout, String serviceId){
       // TODO: remove this ugly initialization later.
       // Initialize new HttpComponentsClientHttpRequestFactory that supports https connections.
-      TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
       SSLContext sslContext = null;
       try {
-         sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
+         // Initialize trusting material depending on Secret content.
+         if (secret != null && secret.getCaCertPem() != null) {
+            log.debug("Test Secret contains a CA Cert, installing certificate into SSLContext");
+            sslContext = SSLContexts.custom().loadTrustMaterial(
+                  buildCustomCaCertTruststore(secret.getCaCertPem()),
+                  null).build();
+         } else {
+            log.debug("No Test Secret or no CA Cert found, installing accept everything strategy");
+            sslContext = SSLContexts.custom().loadTrustMaterial(
+                  null,
+                  (cert, authType) -> true).build();
+         }
+
       } catch (Exception e) {
          log.error("Exception while building SSLContext with acceptingTrustStrategy", e);
          return null;
@@ -301,10 +342,12 @@ public class TestRunnerService {
             SoapHttpTestRunner soapRunner = new SoapHttpTestRunner();
             soapRunner.setClientHttpRequestFactory(factory);
             soapRunner.setResourceUrl(validationResourceUrl);
+            soapRunner.setSecret(secret);
             return soapRunner;
          case OPEN_API_SCHEMA:
             OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, true);
             openApiRunner.setClientHttpRequestFactory(factory);
+            openApiRunner.setSecret(secret);
             return openApiRunner;
          case ASYNC_API_SCHEMA:
             AsyncAPITestRunner asyncApiRunner = new AsyncAPITestRunner(resourceRepository, secretRepository);
@@ -343,8 +386,27 @@ public class TestRunnerService {
          default:
             HttpTestRunner httpRunner = new HttpTestRunner();
             httpRunner.setClientHttpRequestFactory(factory);
+            httpRunner.setSecret(secret);
             return httpRunner;
       }
+   }
+
+   /** Build a customer truststore with provided certificate in PEM format. */
+   private KeyStore buildCustomCaCertTruststore(String caCertPem) throws Exception {
+      // First compute a stripped PEM certificate and decode it from base64.
+      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
+            .replaceAll(END_CERTIFICATE, "");
+      InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
+
+      // Generate a new x509 certificate from the stripped decoded pem.
+      CertificateFactory cf = CertificateFactory.getInstance("X.509");
+      X509Certificate caCert = (X509Certificate)cf.generateCertificate(is);
+
+      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+      ks.load(null); // You don't need the KeyStore instance to come from a file.
+      ks.setCertificateEntry("caCert", caCert);
+
+      return ks;
    }
 
    /** Download a remote HTTP URL repository into a temporary local file. */

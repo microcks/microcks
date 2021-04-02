@@ -25,6 +25,10 @@
           <dd><a [routerLink]="['/services', service.id]">{{ service.name }} - {{ service.version }}</a></dd>
           <dt>Tested Endpoint:</dt>
           <dd><code>{{ test.testedEndpoint }}</code></dd>
+          <span *ngIf="test.secretRef">
+            <dt>Secret:</dt>
+            <dd>{{ test.secretRef.name }}</dd>
+          </span>
         </dl>
       </div>
       <div class="col-md-4">
