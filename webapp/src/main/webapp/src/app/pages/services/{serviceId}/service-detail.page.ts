@@ -289,7 +289,7 @@ export class ServiceDetailPageComponent implements OnInit {
       operationName = operationName.replace(/\//g, '-');
     }
 
-    return serviceName + "_" + this.resolvedServiceView.service.version + "_" + operationName;
+    return serviceName + "-" + this.resolvedServiceView.service.version + "-" + operationName;
   }
 
 
