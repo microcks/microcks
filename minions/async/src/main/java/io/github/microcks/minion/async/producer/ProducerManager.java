@@ -20,7 +20,6 @@ package io.github.microcks.minion.async.producer;
 
 import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Header;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.SchemaRegistry;
@@ -37,17 +36,19 @@ import org.jboss.logging.Logger;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Unremovable
 @ApplicationScoped
 /**
- * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached.
- * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere
- * (this one is resolved using Arc.container().instance() method from ProducerScheduler).
+ * ProducerManager is the responsible for emitting mock event messages when specific frequency
+ * triggered is reached. Need to specify it as @Unremovable to avoid Quarkus ARC optimization
+ * removing beans that are not injected elsewhere (this one is resolved using
+ * Arc.container().instance() method from ProducerScheduler).
+ * 
  * @author laurent
  */
 public class ProducerManager {
@@ -75,6 +76,7 @@ public class ProducerManager {
 
    /**
     * Produce all the async mock messages corresponding to specified frequency.
+    * 
     * @param frequency The frequency to emit messages for
     */
    public void produceAsyncMockMessagesAt(Long frequency) {
@@ -88,8 +90,8 @@ public class ProducerManager {
             if (Arrays.asList(supportedBindings).contains(binding)) {
                switch (BindingType.valueOf(binding)) {
                   case KAFKA:
-                     String topic = getKafkaTopicName(definition);
                      for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topic = kafkaProducerManager.getTopicName(definition, eventMessage);
                         String key = String.valueOf(System.currentTimeMillis());
                         String message = renderEventMessageContent(eventMessage);
 
@@ -102,42 +104,40 @@ public class ProducerManager {
                            try {
                               if ("REGISTRY".equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
                                  GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
-                                 kafkaProducerManager.publishMessage(topic, key, avroRecord,
-                                       kafkaProducerManager.renderEventMessageHeaders(
-                                             TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()
-                                       ));
+                                 kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
+                                       .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                               } else {
                                  byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
-                                 kafkaProducerManager.publishMessage(topic, key, avroBinary,
-                                       kafkaProducerManager.renderEventMessageHeaders(
-                                             TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()
-                                       ));
+                                 kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
+                                       .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                               }
                            } catch (Exception e) {
                               logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
                            }
                         } else {
-                           kafkaProducerManager.publishMessage(topic, key, message, kafkaProducerManager.renderEventMessageHeaders(
-                                 TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()
-                           ));
+                           kafkaProducerManager.publishMessage(topic, key, message, kafkaProducerManager
+                                 .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                         }
                      }
                      break;
                   case MQTT:
-                     topic = getMQTTTopicName(definition);
                      for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topic = mqttProducerManager.getTopicName(definition, eventMessage);
                         String message = renderEventMessageContent(eventMessage);
                         mqttProducerManager.publishMessage(topic, message);
                      }
                      break;
-               }
+                  default:
+                     break;
+                }
             }
          }
-
       }
    }
 
-   /** Render event message content from definition applying template rendering if required. */
+   /**
+    * Render event message content from definition applying template rendering if required.
+    */
    private String renderEventMessageContent(EventMessage eventMessage) {
       String content = eventMessage.getContent();
       if (content.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
@@ -153,36 +153,19 @@ public class ProducerManager {
       return content;
    }
 
-   /** Get the Kafka topic name corresponding to a AsyncMockDefinition, sanitizing all parameters. */
-   private String getKafkaTopicName(AsyncMockDefinition definition) {
-      // Produce service name part of topic name.
-      String serviceName = definition.getOwnerService().getName().replace(" ", "");
-      serviceName = serviceName.replace("-", "");
-      // Produce version name part of topic name.
-      String versionName = definition.getOwnerService().getVersion().replace(" " , "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
+   public static String replacePartPlaceholders(EventMessage eventMessage, String operationName) {
+      String partsCriteria = eventMessage.getDispatchCriteria();
+      if (partsCriteria != null && !partsCriteria.isBlank()) {
+         String[] criterion = partsCriteria.split("/");
+         for (String criteria : criterion) {
+            if (criteria != null && !criteria.isBlank()) {
+               String[] element = criteria.split("=");
+               String key = String.format("\\{%s\\}", element[0]);
+               operationName = operationName.replaceAll(key, URLEncoder.encode(element[1], Charset.defaultCharset()));
+            }
+         }
       }
-      operationName = operationName.replace('/', '-');
-      // Aggregate the 3 parts using '-' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
+      return operationName;
    }
 
-   /** Get the MQTT topic name corresponding to a AsyncMockDefinition, sanitizing all parameters. */
-   private String getMQTTTopicName(AsyncMockDefinition definition) {
-      // Produce service name part of topic name.
-      String serviceName = definition.getOwnerService().getName().replace(" ", "");
-      serviceName = serviceName.replace("-", "");
-      // Produce version name part of topic name.
-      String versionName = definition.getOwnerService().getVersion().replace(" " , "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-      // Aggregate the 3 parts using '-' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
-   }
 }

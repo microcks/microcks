@@ -26,12 +26,16 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.jboss.logging.Logger;
 
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.minion.async.AsyncMockDefinition;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.UnsupportedEncodingException;
 
 /**
  * MQTT implementation of producer for async event messages.
+ * 
  * @author laurent
  */
 @ApplicationScoped
@@ -44,6 +48,9 @@ public class MQTTProducerManager {
 
    @ConfigProperty(name = "mqtt.server")
    String mqttServer;
+
+   @ConfigProperty(name = "mqtt.clientid", defaultValue="microcks-async-minion")
+   String mqttClientId;
 
    @ConfigProperty(name = "mqtt.username")
    String mqttUsername;
@@ -67,27 +74,29 @@ public class MQTTProducerManager {
 
    /**
     * Create a IMqttClient and connect it to the server.
+    * 
     * @return A new IMqttClient implementation initialized with configuration properties.
     * @throws Exception in case of connection failure
     */
    protected IMqttClient createClient() throws Exception {
       MqttConnectOptions options = new MqttConnectOptions();
-      if (mqttUsername != null && mqttUsername.length() > 0
-            && mqttPassword != null && mqttPassword.length() > 0) {
+      if (mqttUsername != null && mqttUsername.length() > 0 && mqttPassword != null && mqttPassword.length() > 0) {
          options.setUserName(mqttUsername);
          options.setPassword(mqttPassword.toCharArray());
       }
       options.setAutomaticReconnect(true);
       // Set clean session to false as we're reusing the same clientId.
       options.setCleanSession(false);
-      options.setConnectionTimeout(10);
-      IMqttClient publisher = new MqttClient("tcp://" + mqttServer, "microcks-async-minion");
+      options.setConnectionTimeout(20);
+      options.setKeepAliveInterval(10);
+      IMqttClient publisher = new MqttClient("tcp://" + mqttServer, mqttClientId);
       publisher.connect(options);
       return publisher;
    }
 
    /**
     * Publish a message on specified topic.
+    * 
     * @param topic The destination topic for message
     * @param value The message payload
     */
@@ -103,4 +112,28 @@ public class MQTTProducerManager {
          me.printStackTrace();
       }
    }
+
+   /**
+    * Get the MQTT topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
+    */
+   String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
+      logger.infof("AsyncAPI Operation  {} %s", definition.getOperation().getName());
+      // Produce service name part of topic name.
+      String serviceName = definition.getOwnerService().getName().replace(" ", "");
+      serviceName = serviceName.replace("-", "");
+      // Produce version name part of topic name.
+      String versionName = definition.getOwnerService().getVersion().replace(" ", "");
+      // Produce operation name part of topic name.
+      String operationName = definition.getOperation().getName();
+      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
+         operationName = operationName.substring(operationName.indexOf(" ") + 1);
+      }
+
+      // replace the parts
+      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+
+      // Aggregate the 3 parts using '_' as delimiter.
+      return serviceName + "-" + versionName + "-" + operationName;
+   }
+
 }

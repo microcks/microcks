@@ -29,6 +29,7 @@ public class EventMessage extends Message {
    @Id
    private String id;
    private String mediaType;
+   private String dispatchCriteria;
 
    public String getId() {
       return id;
@@ -44,5 +45,13 @@ public class EventMessage extends Message {
 
    public void setMediaType(String mediaType) {
       this.mediaType = mediaType;
+   }
+
+   public String getDispatchCriteria() {
+      return dispatchCriteria;
+   }
+
+   public void setDispatchCriteria(String dispatchCriteria) {
+      this.dispatchCriteria = dispatchCriteria;
    }
 }
