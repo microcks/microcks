@@ -143,6 +143,7 @@ export class Response extends Message {
 export class EventMessage extends Message {
   id: string;
   mediaType: string;
+  dispatchCriteria: string;  
 }
 
 export abstract class Exchange {

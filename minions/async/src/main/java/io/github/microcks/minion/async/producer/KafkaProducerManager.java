@@ -23,6 +23,8 @@ import io.apicurio.registry.utils.serde.AbstractKafkaSerializer;
 import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.util.el.TemplateEngine;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -223,6 +225,26 @@ public class KafkaProducerManager {
          return renderedHeaders;
       }
       return null;
+   }
+
+   /**
+    * Get the Kafka topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
+    */
+   public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
+      // Produce service name part of topic name.
+      String serviceName = definition.getOwnerService().getName().replace(" ", "");
+      serviceName = serviceName.replace("-", "");
+      // Produce version name part of topic name.
+      String versionName = definition.getOwnerService().getVersion().replace(" ", "");
+      // Produce operation name part of topic name.
+      String operationName = definition.getOperation().getName();
+      if (operationName.startsWith("SUBSCRIBE ")) {
+         operationName = operationName.substring(operationName.indexOf(" ") + 1);
+      }
+      operationName = operationName.replace('/', '-');
+      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      // Aggregate the 3 parts using '_' as delimiter.
+      return serviceName + "-" + versionName + "-" + operationName;
    }
 
    /** Completing the ProducerRecord with the set of provided headers. */

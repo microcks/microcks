@@ -87,10 +87,14 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
          ObjectMapper mapper = null;
          if (isYaml) {
             mapper = new ObjectMapper(new YAMLFactory());
+            // Jackson YAML parser can;t deal with any quotes around "$ref" and double
+            // quotes around the path.
+            specContent = specContent.replaceAll("[\\\"']?\\$ref[\\\"']?:\\s*[\\\"'](#.*)[\\\"']", "\\$ref: '$1'")
+                  .replaceAll("[\\\"']?pattern[\\\"']?:\\s*[\\\"'](.*)[\\\"']", "pattern: $1");
          } else {
             mapper = new ObjectMapper();
          }
-         spec = mapper.readTree(bytes);
+         spec = mapper.readTree(specContent.getBytes(Charset.forName("UTF-8")));
       } catch (Exception e) {
          log.error("Exception while parsing AsyncAPI specification file " + specificationFilePath, e);
          throw new IOException("AsyncAPI spec file parsing error");
@@ -223,6 +227,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
       while (channels.hasNext()) {
          Entry<String, JsonNode> channel = channels.next();
          String channelName = channel.getKey();
+         Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(channel.getValue());
 
          // Iterate on specification path, "verbs" nodes.
          Iterator<Entry<String, JsonNode>> verbs = channel.getValue().fields();
@@ -246,7 +251,6 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                if (messageBody.has("contentType")) {
                   contentType = messageBody.path("contentType").asText();
                }
-
                // No need to go further if no examples.
                if (messageBody.has("examples")) {
                   Iterator<JsonNode> examples = messageBody.path("examples").elements();
@@ -256,7 +260,14 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                      while (exampleNames.hasNext()) {
                         String exampleName = exampleNames.next();
                         JsonNode example = exampleNode.path(exampleName);
-
+                        String dispatchCriteria = null;
+                        if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+                           String resourcePathPattern = channelName;
+                           Map<String, String> parts = pathParametersByExample.get(exampleName);
+                           String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
+                           operation.addResourcePath(resourcePath);
+                           dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                        }
                         // No need to go further if no payload.
                         if (example.has("payload")) {
                            String exampleValue = getExamplePayload(example);
@@ -266,6 +277,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                            eventMessage.setName(exampleName);
                            eventMessage.setContent(exampleValue);
                            eventMessage.setMediaType(contentType);
+                           eventMessage.setDispatchCriteria(dispatchCriteria);
 
                            // Now complete with specified headers.
                            List<Header> headers = getExampleHeaders(example);
@@ -313,6 +325,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                // Deal with dispatcher stuffs.
                if (channelHasParts(channelName)) {
                   operation.setDispatcher(DispatchStyles.URI_PARTS);
+                  operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(channelName));
                } else {
                   operation.addResourcePath(channelName);
                }
@@ -437,22 +450,69 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
       return null;
    }
 
-   /** Check parameters presence into given operation node. */
-   private static boolean operationHasParameters(JsonNode operation) {
-      if (!operation.has("parameters")) {
-         return false;
-      }
-      Iterator<Entry<String, JsonNode>> parameters = operation.path("parameters").fields();
-      while (parameters.hasNext()) {
-         Entry<String, JsonNode> parameter = parameters.next();
-         return true;
-      }
-      return false;
-   }
-
    /** Check variables parts presence into given channel. */
    private static boolean channelHasParts(String channel) {
       return (channel.indexOf("/:") != -1 || channel.indexOf("/{") != -1);
+   }
+
+   /**
+    * Extract parameters within a channel node and organize them by example.
+    * 
+    */
+   private Map<String, Map<String, String>> extractParametersByExample(JsonNode node) {
+      Map<String, Map<String, String>> results = new HashMap<>();
+      Iterator<Entry<String, JsonNode>> parameters = node.path("parameters").fields();
+      while (parameters.hasNext()) {
+         Entry<String, JsonNode> parameterEntry = parameters.next();
+         JsonNode parameter = parameterEntry.getValue();
+
+         // If parameter is a $ref, navigate to it first.
+         if (parameter.has("$ref")) {
+            // $ref: '#/components/parameters/accountId'
+            String ref = parameter.path("$ref").asText();
+            parameter = spec.at(ref.substring(1));
+         }
+
+         String parameterName = parameterEntry.getKey();
+         log.debug("param {}", parameterName);
+         if (parameter.has("schema") && parameter.path("schema").has("examples")) {
+            Iterator<String> exampleNames = parameter.path("schema").path("examples").fieldNames();
+            while (exampleNames.hasNext()) {
+               String exampleName = exampleNames.next();
+               log.debug("processing example {}", exampleName);
+               JsonNode example = parameter.path("schema").path("examples").path(exampleName);
+               String exampleValue = getExampleValue(example);
+               log.info("{} {} {}", parameterName, exampleName, exampleValue);
+               Map<String, String> exampleParams = results.get(exampleName);
+               if (exampleParams == null) {
+                  exampleParams = new HashMap<>();
+                  results.put(exampleName, exampleParams);
+               }
+               exampleParams.put(parameterName, exampleValue);
+            }
+         }
+      }
+      return results;
+   }
+
+   /**
+    * Get the value of an example. This can be direct value field or those of followed $ref
+    */
+   private String getExampleValue(JsonNode example) {
+      log.debug("have a value {}", example.toPrettyString());
+      if (example.has("value")) {
+         if (example.path("value").getNodeType() == JsonNodeType.ARRAY || example.path("value").getNodeType() == JsonNodeType.OBJECT) {
+            return example.path("value").toString();
+         }
+         return example.path("value").asText();
+      }
+      if (example.has("$ref")) {
+         // $ref: '#/components/examples/param_laurent'
+         String ref = example.path("$ref").asText();
+         JsonNode component = spec.at(ref.substring(1));
+         return getExampleValue(component);
+      }
+      return null;
    }
 
    /** */
@@ -466,5 +526,24 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
          operation.addBinding(type.toString(), binding);
       }
       return binding;
+   }
+
+   private Iterator<String> getChannelParameterExampleNames(JsonNode node) {
+      Set<String> exampleNames = new HashSet<String>();
+      Iterator<JsonNode> parameters = node.path("parameters").elements();
+      while (parameters.hasNext()) {
+         JsonNode parameter = parameters.next();
+
+         // If parameter is a $ref, navigate to it first.
+         if (parameter.has("$ref")) {
+            // $ref: '#/components/parameters/accountId'
+            String ref = parameter.path("$ref").asText();
+            parameter = spec.at(ref.substring(1));
+         }
+         if (parameter.has("schema") && parameter.path("schema").has("examples")) {
+            return parameter.path("schema").path("examples").fieldNames();
+         }
+      }
+      return exampleNames.iterator();
    }
 }
