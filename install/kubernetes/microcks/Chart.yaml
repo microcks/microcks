@@ -1,7 +1,7 @@
 apiVersion: v2
 name: microcks
 version: 1.2.0
-kubeVersion: '>=1.17.0-0'
+kubeVersion: '>=1.17.0'
 description: Microcks - API Mocking and Testing
 type: application
 keywords:
