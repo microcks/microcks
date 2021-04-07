@@ -82,6 +82,7 @@ public class ProducerManager {
 
       Set<AsyncMockDefinition> mockDefinitions = mockRepository.getMockDefinitionsByFrequency(frequency);
       for (AsyncMockDefinition definition : mockDefinitions) {
+         logger.debugf("Processing definition of service {%s}", definition.getOwnerService().getName() + ':' + definition.getOwnerService().getVersion());
 
          for (String binding : definition.getOperation().getBindings().keySet()) {
             // Ensure this minion supports this binding.
@@ -101,12 +102,14 @@ public class ProducerManager {
 
                            try {
                               if ("REGISTRY".equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
+                                 logger.debug("Using a registry and converting message to Avro record");
                                  GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
                                  kafkaProducerManager.publishMessage(topic, key, avroRecord,
                                        kafkaProducerManager.renderEventMessageHeaders(
                                              TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()
                                        ));
                               } else {
+                                 logger.debug("Converting message to Avro bytes array");
                                  byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
                                  kafkaProducerManager.publishMessage(topic, key, avroBinary,
                                        kafkaProducerManager.renderEventMessageHeaders(
