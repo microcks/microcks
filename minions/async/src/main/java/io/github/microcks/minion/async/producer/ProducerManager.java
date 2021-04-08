@@ -44,11 +44,9 @@ import java.util.Set;
 @Unremovable
 @ApplicationScoped
 /**
- * ProducerManager is the responsible for emitting mock event messages when specific frequency
- * triggered is reached. Need to specify it as @Unremovable to avoid Quarkus ARC optimization
- * removing beans that are not injected elsewhere (this one is resolved using
- * Arc.container().instance() method from ProducerScheduler).
- * 
+ * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached. 
+ * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere 
+ * (this one is resolved using Arc.container().instance() method from ProducerScheduler).
  * @author laurent
  */
 public class ProducerManager {
@@ -76,7 +74,6 @@ public class ProducerManager {
 
    /**
     * Produce all the async mock messages corresponding to specified frequency.
-    * 
     * @param frequency The frequency to emit messages for
     */
    public void produceAsyncMockMessagesAt(Long frequency) {

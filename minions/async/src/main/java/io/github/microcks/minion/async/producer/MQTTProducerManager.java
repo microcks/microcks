@@ -80,7 +80,8 @@ public class MQTTProducerManager {
     */
    protected IMqttClient createClient() throws Exception {
       MqttConnectOptions options = new MqttConnectOptions();
-      if (mqttUsername != null && mqttUsername.length() > 0 && mqttPassword != null && mqttPassword.length() > 0) {
+      if (mqttUsername != null && mqttUsername.length() > 0 
+            && mqttPassword != null && mqttPassword.length() > 0) {
          options.setUserName(mqttUsername);
          options.setPassword(mqttPassword.toCharArray());
       }
@@ -96,7 +97,6 @@ public class MQTTProducerManager {
 
    /**
     * Publish a message on specified topic.
-    * 
     * @param topic The destination topic for message
     * @param value The message payload
     */
