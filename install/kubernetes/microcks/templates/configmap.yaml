@@ -78,7 +78,7 @@ data:
         </encoder>
       </appender>
 
-      <logger name="io.github.microcks" level="INFO"/>
+      <logger name="io.github.microcks" level="{{ .Values.microcks.logLevel }}"/>
       <!-- Change com.mongodb to org.mongodb so that com.mongodb.FongoDBCollection is ignored, set to debug and tests do not fail... -->
       <logger name="org.mongodb" level="INFO"/>
       <logger name="org.springframework.data.mongodb" level="INFO"/>

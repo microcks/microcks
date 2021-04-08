@@ -148,7 +148,8 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `microcks`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. | 
 | `microcks`    | `replicas`         | **Optional**. The number of replicas for the Microcks main pod. Default is `1`. |
 | `microcks`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
-| `microcks`    | `resources`        | **Optional**. Some resources constraints to apply on Microcks pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container). | 
+| `microcks`    | `resources`        | **Optional**. Some resources constraints to apply on Microcks pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container). |
+| `microcks`    | `logLevel`         | **Optional**. Allows to tune the verbosity level of logs. Default is `INFO` You can use `DEBUG` for more verbosity or `WARN` for less. |
 | `postman`     | `replicas`         | **Optional**. The number of replicas for the Microcks Postman pod. Default is `1`. |
 | `postman`     | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `install`          | **Optional**. Flag for Keycloak installation. Default is `true`. Set to `false` if you want to reuse an existing Keycloak instance. |

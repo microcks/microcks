@@ -19,6 +19,9 @@ microcks:
       #cpu: 500m
       memory: 512Mi
 
+  #logLevel: TRACE | DEBUG | INFO | WARN
+  logLevel: INFO
+
 postman:
   image: quay.io/microcks/microcks-postman-runtime:latest
   replicas: 1
