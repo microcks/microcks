@@ -285,6 +285,22 @@ export class ServiceDetailPageComponent implements OnInit {
 
     // Remove verb and replace '/' by '-' in operation name.
     operationName = this.removeVerbInUrl(operationName);
+    const parts = {};
+    let partsCriteria = eventMessage.dispatchCriteria;
+    if (partsCriteria != null) {
+
+      partsCriteria = this.encodeUrl(partsCriteria);
+      partsCriteria.split('/').forEach(function (element, index, array) {
+        if (element) {
+          parts[element.split('=')[0]] = element.split('=')[1];
+        }
+      });
+
+      operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function (match, p1, string) {
+        return (parts[p1] != null) ? parts[p1] : match;
+      });
+    }
+
     if ('KAFKA' === binding) {
       operationName = operationName.replace(/\//g, '-');
     }
