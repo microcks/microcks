@@ -35,7 +35,6 @@ import java.io.UnsupportedEncodingException;
 
 /**
  * MQTT implementation of producer for async event messages.
- * 
  * @author laurent
  */
 @ApplicationScoped

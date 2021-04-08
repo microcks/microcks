@@ -87,8 +87,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
          ObjectMapper mapper = null;
          if (isYaml) {
             mapper = new ObjectMapper(new YAMLFactory());
-            // Jackson YAML parser can;t deal with any quotes around "$ref" and double
-            // quotes around the path.
+            // Jackson YAML parser can't deal with any quotes around "$ref" and double quotes around the path.
             specContent = specContent.replaceAll("[\\\"']?\\$ref[\\\"']?:\\s*[\\\"'](#.*)[\\\"']", "\\$ref: '$1'")
                   .replaceAll("[\\\"']?pattern[\\\"']?:\\s*[\\\"'](.*)[\\\"']", "pattern: $1");
          } else {
@@ -457,7 +456,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
 
    /**
     * Extract parameters within a channel node and organize them by example.
-    * 
+    * Key of value map is param name. Value of value map is param value ;-)
     */
    private Map<String, Map<String, String>> extractParametersByExample(JsonNode node) {
       Map<String, Map<String, String>> results = new HashMap<>();
@@ -474,15 +473,16 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
          }
 
          String parameterName = parameterEntry.getKey();
-         log.debug("param {}", parameterName);
+         log.debug("Processing param {}", parameterName);
          if (parameter.has("schema") && parameter.path("schema").has("examples")) {
             Iterator<String> exampleNames = parameter.path("schema").path("examples").fieldNames();
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
-               log.debug("processing example {}", exampleName);
+               log.debug("Processing example {}", exampleName);
                JsonNode example = parameter.path("schema").path("examples").path(exampleName);
                String exampleValue = getExampleValue(example);
-               log.info("{} {} {}", parameterName, exampleName, exampleValue);
+
+               log.debug("{} {} {}", parameterName, exampleName, exampleValue);
                Map<String, String> exampleParams = results.get(exampleName);
                if (exampleParams == null) {
                   exampleParams = new HashMap<>();
@@ -495,13 +495,11 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
       return results;
    }
 
-   /**
-    * Get the value of an example. This can be direct value field or those of followed $ref
-    */
+   /** Get the value of an example. This can be direct value field or those of followed $ref */
    private String getExampleValue(JsonNode example) {
-      log.debug("have a value {}", example.toPrettyString());
       if (example.has("value")) {
-         if (example.path("value").getNodeType() == JsonNodeType.ARRAY || example.path("value").getNodeType() == JsonNodeType.OBJECT) {
+         if (example.path("value").getNodeType() == JsonNodeType.ARRAY ||
+               example.path("value").getNodeType() == JsonNodeType.OBJECT) {
             return example.path("value").toString();
          }
          return example.path("value").asText();
@@ -526,24 +524,5 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
          operation.addBinding(type.toString(), binding);
       }
       return binding;
-   }
-
-   private Iterator<String> getChannelParameterExampleNames(JsonNode node) {
-      Set<String> exampleNames = new HashSet<String>();
-      Iterator<JsonNode> parameters = node.path("parameters").elements();
-      while (parameters.hasNext()) {
-         JsonNode parameter = parameters.next();
-
-         // If parameter is a $ref, navigate to it first.
-         if (parameter.has("$ref")) {
-            // $ref: '#/components/parameters/accountId'
-            String ref = parameter.path("$ref").asText();
-            parameter = spec.at(ref.substring(1));
-         }
-         if (parameter.has("schema") && parameter.path("schema").has("examples")) {
-            return parameter.path("schema").path("examples").fieldNames();
-         }
-      }
-      return exampleNames.iterator();
    }
 }
