@@ -15,3 +15,9 @@ target
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+.settings
+.classpath
+.project
+.DS_Store
+*.log
+microcks-async-minion-100-tcpmr1i5g7tif6z9hmessagingsolacecloud1883/.lck

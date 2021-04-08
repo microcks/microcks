@@ -49,8 +49,9 @@ export class TestsService {
 
   public getMessages(test: TestResult, operation: string): Observable<RequestResponsePair> {
     // operation may contain / that are forbidden within encoded URI.
-    // Replace them by "_" and implement same protocole on server-side.
-    operation = operation.replace(/\//g, '_');
+    // Replace them by "!" and implement same protocole on server-side.
+    // Switched from _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
+    operation = operation.replace(/\//g, '!');
     var testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
     console.log("[getMessages] called for " + testCaseId);
     return this.http.get<RequestResponsePair>(this.rootUrl + '/tests/' + test.id + '/messages/' + testCaseId);
@@ -58,8 +59,9 @@ export class TestsService {
 
   public getEventMessages(test: TestResult, operation: string): Observable<UnidirectionalEvent> {
     // operation may contain / that are forbidden within encoded URI.
-    // Replace them by "_" and implement same protocole on server-side.
-    operation = operation.replace(/\//g, '_');
+    // Replace them by "!" and implement same protocole on server-side.
+    // Switched from _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
+    operation = operation.replace(/\//g, '!');
     var testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
     console.log("[getEventMessages] called for " + testCaseId);
     return this.http.get<UnidirectionalEvent>(this.rootUrl + '/tests/' + test.id + '/events/' + testCaseId);
