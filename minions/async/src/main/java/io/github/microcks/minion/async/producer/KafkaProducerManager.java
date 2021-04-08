@@ -18,27 +18,6 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
-import org.apache.avro.generic.GenericRecord;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.internals.RecordHeader;
-import org.apache.kafka.common.serialization.ByteArraySerializer;
-import org.apache.kafka.common.serialization.StringSerializer;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
 import io.apicurio.registry.utils.serde.AbstractKafkaSerDe;
 import io.apicurio.registry.utils.serde.AbstractKafkaSerializer;
 import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
@@ -52,9 +31,30 @@ import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
+import org.apache.avro.generic.GenericRecord;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
+import org.apache.kafka.common.serialization.ByteArraySerializer;
+import org.apache.kafka.common.serialization.StringSerializer;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+
 /**
  * Kafka implementation of producer for async event messages.
- * 
  * @author laurent
  */
 @ApplicationScoped
@@ -92,7 +92,6 @@ public class KafkaProducerManager extends BindingProducerManager {
 
    /**
     * Tells if producer is connected to a Schema registry and thus able to send Avro GenericRecord.
-    * 
     * @return True if connected to a Schema registry, false otherwise.
     */
    public boolean isRegistryEnabled() {
@@ -137,8 +136,7 @@ public class KafkaProducerManager extends BindingProducerManager {
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
             props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl.get());
-            // If authentication turned on (see
-            // https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
+            // If authentication turned on (see https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
             if (schemaRegistryUsername.isPresent() && !schemaRegistryUsername.isEmpty()) {
                props.put(AbstractKafkaAvroSerDeConfig.USER_INFO_CONFIG, schemaRegistryUsername.get());
                props.put(AbstractKafkaAvroSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, schemaRegistryCredentialsSource);
@@ -168,7 +166,6 @@ public class KafkaProducerManager extends BindingProducerManager {
 
    /**
     * Publish a message on specified topic.
-    * 
     * @param topic   The destination topic for message
     * @param key     The message key
     * @param value   The message payload
@@ -184,7 +181,6 @@ public class KafkaProducerManager extends BindingProducerManager {
 
    /**
     * Publish a raw byte array message on specified topic.
-    * 
     * @param topic   The destination topic for message
     * @param key     The message key
     * @param value   The message payload
@@ -201,7 +197,6 @@ public class KafkaProducerManager extends BindingProducerManager {
    /**
     * Publish an Avro GenericRecord built with Schema onto specified topic and using underlying schema
     * registry.
-    * 
     * @param topic   The destination topic for message
     * @param key     The message key
     * @param value   The message payload
@@ -217,9 +212,7 @@ public class KafkaProducerManager extends BindingProducerManager {
 
    /**
     * Transform and render Microcks headers into Kafka specific headers.
-    * 
-    * @param engine  The template engine to reuse (because we do not want to initialize and manage a
-    *                context at the this level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the this level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of Kafka headers.
     */
