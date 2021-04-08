@@ -78,7 +78,7 @@ data:
         </encoder>
       </appender>
 
-      <logger name="io.github.microcks" level="INFO"/>
+      <logger name="io.github.microcks" level="{{ .Values.microcks.logLevel }}"/>
       <!-- Change com.mongodb to org.mongodb so that com.mongodb.FongoDBCollection is ignored, set to debug and tests do not fail... -->
       <logger name="org.mongodb" level="INFO"/>
       <logger name="org.springframework.data.mongodb" level="INFO"/>
@@ -313,8 +313,8 @@ data:
     %kube.quarkus.http.port=8080
 
     # Configure the log level.
-    %kube.quarkus.log.level=INFO
-    %kube.quarkus.log.console.level=INFO
+    %kube.quarkus.log.level={{ .Values.microcks.logLevel }}
+    %kube.quarkus.log.console.level={{ .Values.microcks.logLevel }}
 
     # Access to Microcks API server.
     %kube.io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url=http://{{ .Values.appName }}:8080
