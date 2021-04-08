@@ -452,7 +452,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
 
    /** Check variables parts presence into given channel. */
    private static boolean channelHasParts(String channel) {
-      return (channel.indexOf("/:") != -1 || channel.indexOf("/{") != -1);
+      return (channel.indexOf("/{") != -1);
    }
 
    /**
