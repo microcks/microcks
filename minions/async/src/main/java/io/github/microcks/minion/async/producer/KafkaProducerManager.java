@@ -18,14 +18,15 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import io.apicurio.registry.utils.serde.AbstractKafkaSerDe;
-import io.apicurio.registry.utils.serde.AbstractKafkaSerializer;
-import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.util.el.TemplateEngine;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -35,27 +36,38 @@ import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import io.apicurio.registry.utils.serde.AbstractKafkaSerDe;
+import io.apicurio.registry.utils.serde.AbstractKafkaSerializer;
+import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
+import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.github.microcks.minion.async.SchemaRegistry;
+import io.github.microcks.util.AvroUtil;
+import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.el.TemplateEngine;
+import io.github.microcks.util.el.TemplateEngineFactory;
 
 /**
  * Kafka implementation of producer for async event messages.
+ * 
  * @author laurent
  */
 @ApplicationScoped
-public class KafkaProducerManager {
+public class KafkaProducerManager extends BindingProducerManager {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
+
+   @Inject
+   SchemaRegistry schemaRegistry;
+
+   @ConfigProperty(name = "minion.default-avro-encoding", defaultValue = "RAW")
+   String defaultAvroEncoding;
 
    private Producer<String, String> producer;
 
@@ -80,6 +92,7 @@ public class KafkaProducerManager {
 
    /**
     * Tells if producer is connected to a Schema registry and thus able to send Avro GenericRecord.
+    * 
     * @return True if connected to a Schema registry, false otherwise.
     */
    public boolean isRegistryEnabled() {
@@ -124,7 +137,8 @@ public class KafkaProducerManager {
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
             props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl.get());
-            // If authentication turned on (see https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
+            // If authentication turned on (see
+            // https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
             if (schemaRegistryUsername.isPresent() && !schemaRegistryUsername.isEmpty()) {
                props.put(AbstractKafkaAvroSerDeConfig.USER_INFO_CONFIG, schemaRegistryUsername.get());
                props.put(AbstractKafkaAvroSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, schemaRegistryCredentialsSource);
@@ -154,9 +168,10 @@ public class KafkaProducerManager {
 
    /**
     * Publish a message on specified topic.
-    * @param topic The destination topic for message
-    * @param key The message key
-    * @param value The message payload
+    * 
+    * @param topic   The destination topic for message
+    * @param key     The message key
+    * @param value   The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
    public void publishMessage(String topic, String key, String value, Set<Header> headers) {
@@ -169,12 +184,13 @@ public class KafkaProducerManager {
 
    /**
     * Publish a raw byte array message on specified topic.
-    * @param topic The destination topic for message
-    * @param key The message key
-    * @param value The message payload
+    * 
+    * @param topic   The destination topic for message
+    * @param key     The message key
+    * @param value   The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
-   public void publishMessage(String topic, String key, byte[] value, Set<Header> headers) {
+   private void publishMessage(String topic, String key, byte[] value, Set<Header> headers) {
       logger.infof("Publishing on topic {%s}, bytes: %s ", topic, new String(value));
       ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, key, value);
       addHeadersToRecord(record, headers);
@@ -183,11 +199,12 @@ public class KafkaProducerManager {
    }
 
    /**
-    * Publish an Avro GenericRecord built with Schema onto specified topic and
-    * using underlying schema registry.
-    * @param topic The destination topic for message
-    * @param key The message key
-    * @param value The message payload
+    * Publish an Avro GenericRecord built with Schema onto specified topic and using underlying schema
+    * registry.
+    * 
+    * @param topic   The destination topic for message
+    * @param key     The message key
+    * @param value   The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
    public void publishMessage(String topic, String key, GenericRecord value, Set<Header> headers) {
@@ -200,7 +217,9 @@ public class KafkaProducerManager {
 
    /**
     * Transform and render Microcks headers into Kafka specific headers.
-    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the KafkaProducerManager level.)
+    * 
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a
+    *                context at the this level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of Kafka headers.
     */
@@ -230,29 +249,48 @@ public class KafkaProducerManager {
    /**
     * Get the Kafka topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
     */
-   public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      // Produce service name part of topic name.
-      String serviceName = definition.getOwnerService().getName().replace(" ", "");
-      serviceName = serviceName.replace("-", "");
-      // Produce version name part of topic name.
-      String versionName = definition.getOwnerService().getVersion().replace(" ", "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-      operationName = operationName.replace('/', '-');
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
-      // Aggregate the 3 parts using '_' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
+   @Override
+   public String transformToBindingSpecificTopicName(String topic) {
+      return topic.replace('/', '-');
    }
 
    /** Completing the ProducerRecord with the set of provided headers. */
-   protected void addHeadersToRecord(ProducerRecord record, Set<Header> headers) {
+   protected void addHeadersToRecord(@SuppressWarnings("rawtypes") ProducerRecord record, Set<Header> headers) {
       if (headers != null) {
          for (Header header : headers) {
             record.headers().add(header);
          }
       }
    }
+
+   @Override
+   protected void publishOne(AsyncMockDefinition definition, EventMessage eventMessage, String topic) {
+      String key = String.valueOf(System.currentTimeMillis());
+      String message = renderEventMessageContent(eventMessage);
+
+      // Check it Avro binary is expected, we should convert to bytes.
+      if ("avro/binary".equals(eventMessage.getMediaType())) {
+         // Build the name of expected schema.
+         String schemaName = IdBuilder.buildResourceFullName(definition.getOwnerService(), definition.getOperation());
+         String schemaContent = schemaRegistry.getSchemaEntryContent(definition.getOwnerService(), schemaName);
+
+         try {
+            if ("REGISTRY".equals(defaultAvroEncoding) && this.isRegistryEnabled()) {
+               GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
+               this.publishMessage(topic, key, avroRecord,
+                     this.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+            } else {
+               byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
+               this.publishMessage(topic, key, avroBinary,
+                     this.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+            }
+         } catch (Exception e) {
+            logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
+         }
+      } else {
+         this.publishMessage(topic, key, message,
+               this.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+      }
+   }
+
 }

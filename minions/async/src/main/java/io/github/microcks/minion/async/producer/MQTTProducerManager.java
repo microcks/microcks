@@ -38,7 +38,7 @@ import java.io.UnsupportedEncodingException;
  * @author laurent
  */
 @ApplicationScoped
-public class MQTTProducerManager {
+public class MQTTProducerManager extends BindingProducerManager {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
@@ -48,7 +48,7 @@ public class MQTTProducerManager {
    @ConfigProperty(name = "mqtt.server")
    String mqttServer;
 
-   @ConfigProperty(name = "mqtt.clientid", defaultValue="microcks-async-minion")
+   @ConfigProperty(name = "mqtt.clientid", defaultValue = "microcks-async-minion")
    String mqttClientId;
 
    @ConfigProperty(name = "mqtt.username")
@@ -99,7 +99,7 @@ public class MQTTProducerManager {
     * @param topic The destination topic for message
     * @param value The message payload
     */
-   public void publishMessage(String topic, String value) {
+   private void publishMessage(String topic, String value) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
       try {
          client.publish(topic, value.getBytes("UTF-8"), 0, false);
@@ -112,27 +112,10 @@ public class MQTTProducerManager {
       }
    }
 
-   /**
-    * Get the MQTT topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
-    */
-   String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.infof("AsyncAPI Operation  {} %s", definition.getOperation().getName());
-      // Produce service name part of topic name.
-      String serviceName = definition.getOwnerService().getName().replace(" ", "");
-      serviceName = serviceName.replace("-", "");
-      // Produce version name part of topic name.
-      String versionName = definition.getOwnerService().getVersion().replace(" ", "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-
-      // replace the parts
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
-
-      // Aggregate the 3 parts using '_' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
+   @Override
+   protected void publishOne(AsyncMockDefinition definition, EventMessage eventMessage, String topic) {
+      String message = renderEventMessageContent(eventMessage);
+      this.publishMessage(topic, message);
    }
 
 }

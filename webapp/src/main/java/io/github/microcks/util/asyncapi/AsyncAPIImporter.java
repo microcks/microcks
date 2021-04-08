@@ -473,16 +473,15 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
          }
 
          String parameterName = parameterEntry.getKey();
-         log.debug("Processing param {}", parameterName);
+         log.debug("extracting examples for parameter {}", parameterName);
          if (parameter.has("schema") && parameter.path("schema").has("examples")) {
             Iterator<String> exampleNames = parameter.path("schema").path("examples").fieldNames();
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
-               log.debug("Processing example {}", exampleName);
+               log.trace("processing example {}", exampleName);
                JsonNode example = parameter.path("schema").path("examples").path(exampleName);
                String exampleValue = getExampleValue(example);
-
-               log.debug("{} {} {}", parameterName, exampleName, exampleValue);
+               log.trace("{} {} {}", parameterName, exampleName, exampleValue);
                Map<String, String> exampleParams = results.get(exampleName);
                if (exampleParams == null) {
                   exampleParams = new HashMap<>();
