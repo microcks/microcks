@@ -134,9 +134,10 @@ public class TestController {
          @PathVariable("testCaseId") String testCaseId
       ) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
+      // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
       try {
          testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
-         testCaseId = testCaseId.replace('_', '/');
+         testCaseId = testCaseId.replace('!', '/');
       } catch (UnsupportedEncodingException e) {
          return null;
       }
@@ -150,9 +151,10 @@ public class TestController {
          @PathVariable("testCaseId") String testCaseId
    ) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
+      // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
       try {
          testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
-         testCaseId = testCaseId.replace('_', '/');
+         testCaseId = testCaseId.replace('!', '/');
       } catch (UnsupportedEncodingException e) {
          return null;
       }
