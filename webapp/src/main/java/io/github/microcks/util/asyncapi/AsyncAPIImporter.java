@@ -253,40 +253,34 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
                // No need to go further if no examples.
                if (messageBody.has("examples")) {
                   Iterator<JsonNode> examples = messageBody.path("examples").elements();
+                  int exampleIndex = 0;
                   while (examples.hasNext()) {
                      JsonNode exampleNode = examples.next();
-                     Iterator<String> exampleNames = exampleNode.fieldNames();
-                     while (exampleNames.hasNext()) {
-                        String exampleName = exampleNames.next();
-                        JsonNode example = exampleNode.path(exampleName);
-                        String dispatchCriteria = null;
+
+                     EventMessage eventMessage = null;
+                     // As of https://github.com/microcks/microcks/issues/385, we should now
+                     // support the restriction coming from AsyncAPI GItHub master revision and
+                     // associated tooling...
+                     if (exampleNode.has("payload")) {
+                        eventMessage = extractFromAsyncAPIExample(contentType, exampleNode,
+                              channelName.trim() + "-" + exampleIndex);
+                     } else {
+                        eventMessage = extractFromMicrocksExample(contentType, exampleNode);
+                     }
+                     // If import succeed, deal with the dispatching criteria stuffs and
+                     // add this event message as a valid event in results exchanges.
+                     if (eventMessage != null) {
                         if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
                            String resourcePathPattern = channelName;
-                           Map<String, String> parts = pathParametersByExample.get(exampleName);
+                           Map<String, String> parts = pathParametersByExample.get(eventMessage.getName());
                            String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
                            operation.addResourcePath(resourcePath);
-                           dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                           eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(parts));
                         }
-                        // No need to go further if no payload.
-                        if (example.has("payload")) {
-                           String exampleValue = getExamplePayload(example);
 
-                           // Build and store a request object.
-                           EventMessage eventMessage = new EventMessage();
-                           eventMessage.setName(exampleName);
-                           eventMessage.setContent(exampleValue);
-                           eventMessage.setMediaType(contentType);
-                           eventMessage.setDispatchCriteria(dispatchCriteria);
-
-                           // Now complete with specified headers.
-                           List<Header> headers = getExampleHeaders(example);
-                           for (Header header : headers) {
-                              eventMessage.addHeader(header);
-                           }
-
-                           result.add(new UnidirectionalEvent(eventMessage));
-                        }
+                        result.add(new UnidirectionalEvent(eventMessage));
                      }
+                     exampleIndex++;
                   }
                }
             }
@@ -389,6 +383,59 @@ public class AsyncAPIImporter implements MockRepositoryImporter  {
       }
 
       return results;
+   }
+
+   /**
+    * Extract example using the AsyncAPI master branch restrictions.
+    */
+   private EventMessage extractFromAsyncAPIExample(String contentType, JsonNode exampleNode, String exampleName) {
+      // Retrieve payload value.
+      String exampleValue = getExamplePayload(exampleNode);
+
+      // Build and store a request object.
+      EventMessage eventMessage = new EventMessage();
+      eventMessage.setName(exampleName);
+      eventMessage.setContent(exampleValue);
+      eventMessage.setMediaType(contentType);
+
+      // Now complete with specified headers.
+      List<Header> headers = getExampleHeaders(exampleNode);
+      for (Header header : headers) {
+         eventMessage.addHeader(header);
+      }
+
+      return eventMessage;
+   }
+
+   /**
+    * Extract example using the Microcks (and Apicurio) extended notation.
+    */
+   private EventMessage extractFromMicrocksExample(String contentType, JsonNode exampleNode) {
+      EventMessage eventMessage = null;
+
+      Iterator<String> exampleNames = exampleNode.fieldNames();
+      while (exampleNames.hasNext()) {
+         String exampleName = exampleNames.next();
+         JsonNode example = exampleNode.path(exampleName);
+
+         // No need to go further if no payload.
+         if (example.has("payload")) {
+            String exampleValue = getExamplePayload(example);
+
+            // Build and store a request object.
+            eventMessage = new EventMessage();
+            eventMessage.setName(exampleName);
+            eventMessage.setContent(exampleValue);
+            eventMessage.setMediaType(contentType);
+
+            // Now complete with specified headers.
+            List<Header> headers = getExampleHeaders(example);
+            for (Header header : headers) {
+               eventMessage.addHeader(header);
+            }
+         }
+      }
+      return eventMessage;
    }
 
    /** Extract the list of Header from an example node. */
