@@ -25,9 +25,10 @@ import { switchMap } from 'rxjs/operators';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
-import { ListConfig, ListEvent } from 'patternfly-ng/list';
+import { ListConfig } from 'patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
+import { EditResponseDialogComponent } from '../../../components/edit-response-dialog/edit-response-dialog.component';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint, Exchange, UnidirectionalEvent, RequestResponsePair, EventMessage } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
@@ -150,6 +151,17 @@ export class ServiceDetailPageComponent implements OnInit {
     });
   }
 
+  public openEditResponse(response: Response): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      response: response
+    };
+    this.modalRef = this.modalService.show(EditResponseDialogComponent, {initialState});
+    this.modalRef.content.saveResponseAction.subscribe(() => {
+      console.log('Observer got a complete notification')
+    });
+  }
+
   public openResources(): void {
     const initialState = {
       closeBtnName: 'Close',
@@ -163,6 +175,14 @@ export class ServiceDetailPageComponent implements OnInit {
       return (exchange as UnidirectionalEvent).eventMessage.name;
     } else {
       return (exchange as RequestResponsePair).request.name;
+    }
+  }
+
+  public isComplete(exchange: Exchange): boolean {
+    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
+      return true;
+    } else {
+      return (exchange as RequestResponsePair).response.complete;
     }
   }
 

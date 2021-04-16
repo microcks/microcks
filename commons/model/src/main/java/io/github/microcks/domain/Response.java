@@ -36,6 +36,7 @@ public class Response extends Message {
    private String mediaType;
    private String dispatchCriteria;
    private boolean isFault = false;
+   private boolean isComplete = true;
 
    public String getId() {
       return id;
@@ -75,5 +76,13 @@ public class Response extends Message {
 
    public void setFault(boolean isFault) {
       this.isFault = isFault;
+   }
+
+   public boolean isComplete() {
+      return isComplete;
+   }
+
+   public void setComplete(boolean isComplete) {
+      this.isComplete = isComplete;
    }
 }
