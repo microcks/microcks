@@ -1,0 +1,15 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">Edit Response</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <p>
+    Here you can edit responses which are not mapped properly or need templates.
+  </p>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+    <input type="submit" class="btn btn-primary" (click)="saveResponse()" ng-disabled="form.$invalid" value="Save"/>
+  </div>
+</div>

@@ -162,6 +162,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                Map<String, Map<String, String>> headerParametersByExample = extractParametersByExample(verb.getValue(), "header");
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
 
+               Map<String, Boolean> possibleExamples = getAllRequestExampleNames(pathParametersByExample, 
+                     queryParametersByExample, headerParametersByExample, requestBodiesByExample);
+
                // No need to go further if no examples.
                if (verb.getValue().has("responses")) {
 
@@ -181,6 +184,9 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                            String exampleName = exampleNames.next();
                            JsonNode example = content.getValue().path("examples").path(exampleName);
 
+                           // Set unmapped request to mapped
+                           possibleExamples.put(exampleName, Boolean.TRUE);
+
                            // We should have everything at hand to build response here.
                            Response response = new Response();
                            response.setName(exampleName);
@@ -195,12 +201,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                               responseHeaders.stream().forEach(header -> response.addHeader(header));
                            }
 
-                           // Do we have a request for this example?
-                           Request request = requestBodiesByExample.get(exampleName);
-                           if (request == null) {
-                              request = new Request();
-                              request.setName(exampleName);
-                           }
+                           // Get Request for example name
+                           Request request = getRequest(exampleName, operation,
+                                 pathParametersByExample, queryParametersByExample,
+                                 headerParametersByExample, requestBodiesByExample);
+                           if (request == null) break;
 
                            // Complete request accept-type with response content-type.
                            Header header = new Header();
@@ -210,78 +215,39 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                            header.setValues(values);
                            request.addHeader(header);
 
-                           // Do we have to complete request with path parameters?
-                           Map<String, String> pathParameters = pathParametersByExample.get(exampleName);
-                           if (pathParameters != null) {
-                              for (Entry<String, String> paramEntry : pathParameters.entrySet()) {
-                                 Parameter param = new Parameter();
-                                 param.setName(paramEntry.getKey());
-                                 param.setValue(paramEntry.getValue());
-                                 request.addQueryParameter(param);
-                              }
-                           } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
-                                 || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
-                              // We've must have at least one path parameters but none...
-                              // Do not register this request / response pair.
-                              break;
-                           }
-                           // Do we have to complete request with query parameters?
-                           Map<String, String> queryParameters = queryParametersByExample.get(exampleName);
-                           if (queryParameters != null) {
-                              for (Entry<String, String> paramEntry : queryParameters.entrySet()) {
-                                 Parameter param = new Parameter();
-                                 param.setName(paramEntry.getKey());
-                                 param.setValue(paramEntry.getValue());
-                                 request.addQueryParameter(param);
-                              }
-                           }
-                           // Do we have to complete request with header parameters?
-                           Map<String, String> headerParameters = headerParametersByExample.get(exampleName);
-                           if (headerParameters != null) {
-                              for (Entry<String, String> headerEntry : headerParameters.entrySet()) {
-                                 header = new Header();
-                                 header.setName(headerEntry.getKey());
-                                 // Values may be multiple and CSV.
-                                 Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(","))
-                                       .map(value -> value.trim())
-                                       .collect(Collectors.toSet());
-                                 header.setValues(headerValues);
-                                 request.addHeader(header);
-                              }
-                           }
-
                            // Finally, take care about dispatchCriteria and complete operation resourcePaths.
-                           String dispatchCriteria = null;
-                           String resourcePathPattern = operation.getName().split(" ")[1];
-
-                           if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
-                              Map<String, String> queryParams = queryParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper
-                                    .buildFromParamsMap(operation.getDispatcherRules(), queryParams);
-                              // We only need the pattern here.
-                              operation.addResourcePath(resourcePathPattern);
-                           } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
-                              Map<String, String> parts = pathParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
-                              // We should complete resourcePath here.
-                              String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
-                              operation.addResourcePath(resourcePath);
-
-                           } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
-                              Map<String, String> parts = pathParametersByExample.get(exampleName);
-                              Map<String, String> queryParams = queryParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
-                              dispatchCriteria += DispatchCriteriaHelper
-                                    .buildFromParamsMap(operation.getDispatcherRules(), queryParams);
-                              // We should complete resourcePath here.
-                              String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
-                              operation.addResourcePath(resourcePath);
-                           }
+                           String dispatchCriteria = getDispatchCriteria(exampleName, operation,
+                                 pathParametersByExample, queryParametersByExample, headerParametersByExample);
                            response.setDispatchCriteria(dispatchCriteria);
 
                            result.put(request, response);
                         }
                      }
+                  }
+               }
+
+               // Add unmapped request examples to empty Responses
+               for (Entry<String, Boolean> entry: possibleExamples.entrySet()) {
+                  if (!entry.getValue()) {
+                     String exampleName = entry.getKey();
+
+                     // Get Request for example name
+                     Request request = getRequest(exampleName, operation,
+                           pathParametersByExample, queryParametersByExample,
+                           headerParametersByExample, requestBodiesByExample);
+                     if (request == null) continue;
+
+                     // Create an empty Response
+                     Response response = new Response();
+                     response.setName(exampleName);
+                     response.setComplete(false);
+
+                     // Finally, take care about dispatchCriteria and complete operation resourcePaths.
+                     String dispatchCriteria = getDispatchCriteria(exampleName, operation,
+                           pathParametersByExample, queryParametersByExample, headerParametersByExample);
+                     response.setDispatchCriteria(dispatchCriteria);
+
+                     result.put(request, response);
                   }
                }
             }
@@ -545,5 +511,119 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    /** Check variables parts presence into given url. */
    private static boolean urlHasParts(String url) {
       return (url.indexOf("/:") != -1 || url.indexOf("/{") != -1);
+   }
+
+   /** Get all possible request example names */
+   private Map<String, Boolean> getAllRequestExampleNames(Map<String, Map<String, String>> pathParametersByExample,
+         Map<String, Map<String, String>> queryParametersByExample,
+         Map<String, Map<String, String>> headerParametersByExample,
+         Map<String, Request> requestBodiesByExample) {
+
+      Map<String, Boolean> examples = new HashMap<String, Boolean>();
+      for(String key: pathParametersByExample.keySet()) {
+         examples.put(key, Boolean.FALSE);
+      }
+      for(String key: queryParametersByExample.keySet()) {
+         examples.put(key, Boolean.FALSE);
+      }
+      for(String key: headerParametersByExample.keySet()) {
+         examples.put(key, Boolean.FALSE);
+      }
+      for(String key: requestBodiesByExample.keySet()) {
+         examples.put(key, Boolean.FALSE);
+      }
+      return examples;
+   }
+
+   /** Get Request object for the specified example name */
+   private Request getRequest(String exampleName, Operation operation, 
+         Map<String, Map<String, String>> pathParametersByExample,
+         Map<String, Map<String, String>> queryParametersByExample,
+         Map<String, Map<String, String>> headerParametersByExample,
+         Map<String, Request> requestBodiesByExample) {
+      
+      // Do we have a request for this example?
+      Request request = requestBodiesByExample.get(exampleName);
+      if (request == null) {
+         request = new Request();
+         request.setName(exampleName);
+      }
+
+      // Do we have to complete request with path parameters?
+      Map<String, String> pathParameters = pathParametersByExample.get(exampleName);
+      if (pathParameters != null) {
+         for (Entry<String, String> paramEntry : pathParameters.entrySet()) {
+            Parameter param = new Parameter();
+            param.setName(paramEntry.getKey());
+            param.setValue(paramEntry.getValue());
+            request.addQueryParameter(param);
+         }
+      } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
+            || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+         // We've must have at least one path parameters but none...
+         // Do not register this request / response pair.
+         return null;
+      }
+      // Do we have to complete request with query parameters?
+      Map<String, String> queryParameters = queryParametersByExample.get(exampleName);
+      if (queryParameters != null) {
+         for (Entry<String, String> paramEntry : queryParameters.entrySet()) {
+            Parameter param = new Parameter();
+            param.setName(paramEntry.getKey());
+            param.setValue(paramEntry.getValue());
+            request.addQueryParameter(param);
+         }
+      }
+      // Do we have to complete request with header parameters?
+      Map<String, String> headerParameters = headerParametersByExample.get(exampleName);
+      if (headerParameters != null) {
+         for (Entry<String, String> headerEntry : headerParameters.entrySet()) {
+            Header header = new Header();
+            header.setName(headerEntry.getKey());
+            // Values may be multiple and CSV.
+            Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(","))
+                  .map(value -> value.trim())
+                  .collect(Collectors.toSet());
+            header.setValues(headerValues);
+            request.addHeader(header);
+         }
+      }
+
+      return request;
+   }
+
+   /** Get dispatch criteria for the specified example name */
+   private String getDispatchCriteria(String exampleName, Operation operation,
+         Map<String, Map<String, String>> pathParametersByExample,
+         Map<String, Map<String, String>> queryParametersByExample,
+         Map<String, Map<String, String>> headerParametersByExample) {
+
+      String dispatchCriteria = null;
+      String resourcePathPattern = operation.getName().split(" ")[1];
+
+      if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
+         Map<String, String> queryParams = queryParametersByExample.get(exampleName);
+         dispatchCriteria = DispatchCriteriaHelper
+               .buildFromParamsMap(operation.getDispatcherRules(), queryParams);
+         // We only need the pattern here.
+         operation.addResourcePath(resourcePathPattern);
+       } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+         Map<String, String> parts = pathParametersByExample.get(exampleName);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+         // We should complete resourcePath here.
+         String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
+         operation.addResourcePath(resourcePath);
+      } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+         Map<String, String> parts = pathParametersByExample.get(exampleName);
+         Map<String, String> queryParams = queryParametersByExample.get(exampleName);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+         dispatchCriteria += DispatchCriteriaHelper
+               .buildFromParamsMap(operation.getDispatcherRules(), queryParams);
+         // We should complete resourcePath here.
+         String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
+         operation.addResourcePath(resourcePath);
+      }
+
+      return dispatchCriteria;
    }
 }

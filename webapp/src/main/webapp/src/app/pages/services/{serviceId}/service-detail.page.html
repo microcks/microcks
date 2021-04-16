@@ -258,7 +258,8 @@
 
           <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
           <tabset>
-            <tab *ngFor="let exchange of view.messagesMap[item.name]" heading="{{ getHeaderName(exchange) }}">
+            <tab *ngFor="let exchange of view.messagesMap[item.name]">
+              <ng-template tabHeading><i *ngIf="!isComplete(exchange)" class="fa fa-exclamation" title="Response incomplete"></i> &nbsp; {{ getHeaderName(exchange) }}</ng-template>
               <div class="row" *ngIf="view.service.type === 'EVENT'">
                 <div class="col-md-6">
                   <h5 class="subsection-label">Message</h5>
@@ -366,7 +367,7 @@
                   </table>
                 </div>
                 <div class="col-md-6">
-                  <h5 class="subsection-label">Response</h5>
+                  <h5 class="subsection-label">Response &nbsp; <i class="fa fa-pencil" title="Edit response" (click)="openEditResponse(exchange.response)"></i></h5>
                   <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST'">
                     <dt>Response Code and Type:</dt>
                     <dd>
