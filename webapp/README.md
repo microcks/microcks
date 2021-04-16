@@ -8,7 +8,7 @@ We also need a Keycloak server running on port `8180`.
 
 ### Pre-requisites
 
-* NodeJS (version >= 8.0) and associated tools : NPM and ng-cli (`npm install -g ng-cli`)
+* NodeJS (version >= 8.0) and associated tools : NPM and ng-cli (`npm i -g @angular/cli`)
 * Java Development Kit (version >= 8) and Apache Maven (version >= 3.0)
 * Keycloak 4.8.0
 * MongoDB 3.4
@@ -20,6 +20,12 @@ Let's begin with starting the Keycloak server. Within the installation directory
 ```
 $ cd bin
 $ ./standalone.sh -Djboss.socket.binding.port-offset=100
+```
+
+Then start the MongoDB from the command line:
+
+```
+$ mongod --dbpath /home/test/tmp/mongodb
 ```
 
 In a terminal, start frontend GUI server using NG :

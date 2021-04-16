@@ -199,7 +199,7 @@ public class RestController {
             }
          }
 
-         if (response != null) {
+         if (response != null && response.isComplete()) {
             HttpStatus status = (response.getStatus() != null ?
                 HttpStatus.valueOf(Integer.parseInt(response.getStatus())) : HttpStatus.OK);
 
@@ -242,6 +242,9 @@ public class RestController {
             MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
 
             return new ResponseEntity<Object>(responseContent, responseHeaders, status);
+         } else if (!response.isComplete()) {
+            log.debug("Only found an incomplete response");
+            return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
          }
          return new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
       }
