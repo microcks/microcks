@@ -213,6 +213,14 @@ export class ServiceDetailPageComponent implements OnInit {
     }
   }
 
+  public isComplete(exchange: Exchange): boolean {
+    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
+      return true;
+    } else {
+      return (exchange as RequestResponsePair).response.complete;
+    }
+  }
+
   public displayParameterConstraint(constraint: ParameterConstraint): string {
     var result = "Parameter ";
     if (constraint.required) {
