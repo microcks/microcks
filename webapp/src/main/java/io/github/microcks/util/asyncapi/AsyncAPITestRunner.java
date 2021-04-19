@@ -116,7 +116,7 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
       jsonArg.put("operationName", operation.getName());
       jsonArg.put("endpointUrl", endpointUrl);
       jsonArg.put("timeoutMS", testResult.getTimeout());
-      jsonArg.put("asyncAPISpec", asyncAPISpecResource.getContent().replace("\"", "\\\""));
+      jsonArg.put("asyncAPISpec", asyncAPISpecResource.getContent());
 
       if (testResult.getSecretRef() != null) {
          Secret secret = secretRepository.findById(testResult.getSecretRef().getSecretId()).orElse(null);

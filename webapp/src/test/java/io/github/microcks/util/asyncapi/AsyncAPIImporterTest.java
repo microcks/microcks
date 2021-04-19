@@ -51,6 +51,23 @@ public class AsyncAPIImporterTest {
          fail("Exception should not be thrown");
       }
 
+      importAndAssertOnSimpleAsyncAPI(importer);
+   }
+
+   @Test
+   public void testSimpleAsyncAPIImportJSON() {
+      AsyncAPIImporter importer = null;
+      try {
+         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.json", null);
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAndAssertOnSimpleAsyncAPI(importer);
+   }
+
+   private void importAndAssertOnSimpleAsyncAPI(AsyncAPIImporter importer) {
       // Check that basic service properties are there.
       List<Service> services = null;
       try {
