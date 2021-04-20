@@ -23,6 +23,13 @@ import { FileUploader } from 'ng2-file-upload';
 
 import { Service } from '../../../models/service.model';
 import { ServicesService } from '../../../services/services.service';
+import { environment } from 'src/environments/environment';
+
+
+const ENDPOINTS = {
+  EXPORT: () => `${environment.apiUrl}api/export?`,
+  IMPORT: () => `${environment.apiUrl}api/import`
+};
 
 @Component({
   selector: 'snapshots-tab',
@@ -36,9 +43,10 @@ export class SnapshotsTabComponent implements OnInit {
   servicesCount: number;
 
   selectedServices: any = { ids: {} };
-  uploader: FileUploader = new FileUploader({url: '/api/import', itemAlias: 'file'});
+  uploader: FileUploader = new FileUploader({ url: ENDPOINTS.IMPORT(), itemAlias: 'file' });
 
-  constructor(private servicesSvc: ServicesService, private notificationService: NotificationService) {}
+
+  constructor(private servicesSvc: ServicesService, private notificationService: NotificationService) { }
 
   ngOnInit() {
     this.getAllServices();
@@ -50,7 +58,7 @@ export class SnapshotsTabComponent implements OnInit {
     };
   }
 
-  getAllServices():void {
+  getAllServices(): void {
     this.servicesSvc.getServices(1, 1000).subscribe(
       results => {
         this.halfServices = results.slice(0, (results.length / 2) + 1);
@@ -61,8 +69,8 @@ export class SnapshotsTabComponent implements OnInit {
   }
 
   public createExport(): void {
-    var downloadPath = '/api/export?';
-    Object.keys(this.selectedServices.ids).forEach(function(element, index, array) {
+    var downloadPath = ENDPOINTS.EXPORT();
+    Object.keys(this.selectedServices.ids).forEach(function (element, index, array) {
       downloadPath += '&serviceIds=' + element;
     });
     window.open(downloadPath, '_blank', '');

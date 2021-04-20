@@ -4,12 +4,12 @@ Your release is named {{ .Release.Name }}.
 
 To learn more about the release, try:
 
-  $ helm status {{ .Release.Name }}
-  $ helm get {{ .Release.Name }}
+  $ helm status {{ .Release.Name }} --namespace {{ .Release.Namespace }}
+  $ helm get all {{ .Release.Name }} --namespace {{ .Release.Namespace }}
 
-Microcks is available at https://{{ .Values.microcks.url }}.
+Microcks is available at https://{{ .Values.microcks.url }}{{ .Values.microcks.baseContext }}.
 
-Keycloak has been deployed on https://{{ .Values.keycloak.url }}/auth to protect user access.
+Keycloak has been deployed on https://{{ .Values.keycloak.url }}{{ .Values.keycloak.baseContext }} to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into '{{ .Values.appName }}-keycloak-admin' secret.
 
@@ -18,6 +18,6 @@ username and password found into '{{ .Values.appName }}-keycloak-admin' secret.
 Kafka broker has been deployed on {{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}.
 It has been exposed using TLS passthrough of the Ingress controller, you shoud extract the certificate for your client using:
 
-  $ kubectl get secret {{ .Values.appName }}-kafka-cluster-ca-cert -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
+  $ kubectl get secret {{ .Values.appName }}-kafka-cluster-ca-cert --namespace {{ .Release.Namespace }} -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
 
 {{- end }}

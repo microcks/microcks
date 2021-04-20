@@ -19,41 +19,42 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 import { Secret } from '../models/secret.model';
 import { IAuthenticationService } from './auth.service';
 
-
+const ENDPOINTS = {
+  SECRETS: () => `${environment.apiUrl}api/secrets`
+};
 @Injectable({ providedIn: 'root' })
 export class SecretsService {
-
-  private rootUrl: string = '/api';
 
   constructor(private http: HttpClient) { }
 
   getSecrets(page: number = 1, pageSize: number = 20): Observable<Secret[]> {
     const options = { params: new HttpParams().set('page', String(page - 1)).set('size', String(pageSize)) };
-    return this.http.get<Secret[]>(this.rootUrl + '/secrets', options);
+    return this.http.get<Secret[]>(ENDPOINTS.SECRETS(), options);
   }
 
   filterSecrets(filter: string): Observable<Secret[]> {
     const options = { params: new HttpParams().set('name', filter) };
-    return this.http.get<Secret[]>(this.rootUrl + '/secrets', options);
+    return this.http.get<Secret[]>(ENDPOINTS.SECRETS(), options);
   }
 
-  countSecrets(): Observable<any> { 
-    return this.http.get<any>(this.rootUrl + '/secrets/count');
+  countSecrets(): Observable<any> {
+    return this.http.get<any>(ENDPOINTS.SECRETS() + '/count');
   }
 
   createSecret(secret: Secret): Observable<Secret> {
-    return this.http.post<Secret>(this.rootUrl + '/secrets', secret);
+    return this.http.post<Secret>(ENDPOINTS.SECRETS(), secret);
   }
 
   updateSecret(secret: Secret): Observable<Secret> {
-    return this.http.put<Secret>(this.rootUrl + '/secrets/' + secret.id, secret);
+    return this.http.put<Secret>(ENDPOINTS.SECRETS() + '/' + secret.id, secret);
   }
 
   deleteSecret(secret: Secret): Observable<Secret> {
-    return this.http.delete<Secret>(this.rootUrl + '/secrets/' + secret.id);
+    return this.http.delete<Secret>(ENDPOINTS.SECRETS() + '/' + secret.id);
   }
 }

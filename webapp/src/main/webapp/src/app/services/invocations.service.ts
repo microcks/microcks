@@ -19,54 +19,61 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 import { DailyInvocations } from '../models/metric.model';
+
+const ENDPOINTS = {
+  INVOCATIONS: () => `${environment.apiUrl}api/invocations`,
+  INVOCATIONS_GLOBAL: () => ENDPOINTS.INVOCATIONS() + `/global`,
+  INVOCATIONS_GLOBAL_LAST: () => ENDPOINTS.INVOCATIONS() + `/global/last`,
+  INVOCATIONS_TOP: () => ENDPOINTS.INVOCATIONS() + `/top`,
+
+};
 
 @Injectable({ providedIn: 'root' })
 export class InvocationsService {
 
-  private rootUrl: string = '/api';
-
   constructor(private http: HttpClient) { }
 
-  public getInvocationStats(day: Date) : Observable<DailyInvocations> {
+  public getInvocationStats(day: Date): Observable<DailyInvocations> {
     if (day != null) {
       const dayStr = this.formatDayDate(day);
       const options = { params: new HttpParams().set('day', dayStr) };
-      return this.http.get<DailyInvocations>(this.rootUrl + '/invocations/global', options);
+      return this.http.get<DailyInvocations>(ENDPOINTS.INVOCATIONS_GLOBAL(), options);
     }
-    return this.http.get<DailyInvocations>(this.rootUrl + '/invocations/global');
+    return this.http.get<DailyInvocations>(ENDPOINTS.INVOCATIONS_GLOBAL());
   }
 
-  public getTopInvocations(day: Date) : Observable<DailyInvocations[]> {
+  public getTopInvocations(day: Date): Observable<DailyInvocations[]> {
     if (day != null) {
       const dayStr = this.formatDayDate(day);
       const options = { params: new HttpParams().set('day', dayStr) };
-      return this.http.get<DailyInvocations[]>(this.rootUrl + '/invocations/top', options);
+      return this.http.get<DailyInvocations[]>(ENDPOINTS.INVOCATIONS_TOP(), options);
     }
-    return this.http.get<DailyInvocations[]>(this.rootUrl + '/invocations/top');
+    return this.http.get<DailyInvocations[]>(ENDPOINTS.INVOCATIONS_TOP());
   }
 
-  public getServiceInvocationStats(serviceName: string, serviceVersion: string, day: Date) : Observable<DailyInvocations> {
+  public getServiceInvocationStats(serviceName: string, serviceVersion: string, day: Date): Observable<DailyInvocations> {
     if (day != null) {
       const dayStr = this.formatDayDate(day);
       const options = { params: new HttpParams().set('day', dayStr) };
-      return this.http.get<DailyInvocations>(this.rootUrl + '/invocations/' + serviceName + '/' + serviceVersion, options);
+      return this.http.get<DailyInvocations>(ENDPOINTS.INVOCATIONS() + '/' + serviceName + '/' + serviceVersion, options);
     }
-    return this.http.get<DailyInvocations>(this.rootUrl + '/invocations/' + serviceName + '/' + serviceVersion);
+    return this.http.get<DailyInvocations>(ENDPOINTS.INVOCATIONS() + '/' + serviceName + '/' + serviceVersion);
   }
 
-  public getInvocationsStatsTrend(limit: number) : Observable<any> {
+  public getInvocationsStatsTrend(limit: number): Observable<any> {
     if (limit != null) {
       const options = { params: new HttpParams().set('limit', limit.toString()) };
-      return this.http.get<any>(this.rootUrl + '/invocations/global/last', options);
+      return this.http.get<any>(ENDPOINTS.INVOCATIONS_GLOBAL_LAST(), options);
     }
-    return this.http.get<any>(this.rootUrl + '/invocations/global/last');
+    return this.http.get<any>(ENDPOINTS.INVOCATIONS_GLOBAL_LAST());
   }
 
-  public formatDayDate(day: Date) : string {
+  public formatDayDate(day: Date): string {
     var result = day.getFullYear().toString();
-    result += day.getMonth() < 9 ? '0' + (day.getMonth()+1).toString() : (day.getMonth()+1).toString();
+    result += day.getMonth() < 9 ? '0' + (day.getMonth() + 1).toString() : (day.getMonth() + 1).toString();
     result += day.getDate() < 10 ? '0' + day.getDate().toString() : day.getDate().toString();
     return result;
   }

@@ -21,7 +21,11 @@ import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { FileUploader, FileItem, ParsedResponseHeaders } from 'ng2-file-upload';
+import { environment } from 'src/environments/environment';
 
+const ENDPOINTS = {
+  ARTIFACT_UPLOAD: () => `${environment.apiUrl}api/artifact/upload`
+};
 
 @Component({
   selector: 'uploader-dialog',
@@ -32,10 +36,10 @@ export class ArtifactUploaderDialogComponent implements OnInit {
   title: string;
   closeBtnName: string;
 
-  uploader: FileUploader = new FileUploader({url: '/api/artifact/upload', itemAlias: 'file'});
-  
-  constructor(public bsModalRef: BsModalRef, private notificationService: NotificationService) {}
- 
+  uploader: FileUploader = new FileUploader({ url: ENDPOINTS.ARTIFACT_UPLOAD(), itemAlias: 'file' });
+
+  constructor(public bsModalRef: BsModalRef, private notificationService: NotificationService) { }
+
   ngOnInit() {
     this.uploader.onErrorItem = (item: FileItem, response: string, status: number, headers: ParsedResponseHeaders) => {
       this.notificationService.message(NotificationType.DANGER,

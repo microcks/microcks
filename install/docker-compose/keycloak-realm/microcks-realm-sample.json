@@ -5,19 +5,28 @@
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
-  "users" : [
+  "users": [
     {
-      "username" : "admin",
+      "username": "admin",
       "enabled": true,
-      "credentials" : [
-        { "type" : "password",
-          "value" : "123" }
+      "credentials": [
+        {
+          "type": "password",
+          "value": "123"
+        }
       ],
       "realmRoles": [],
       "applicationRoles": {
-        "realm-management": [ "manage-users", "manage-clients" ],
-        "account": [ "manage-account" ],
-        "microcks-app": [ "admin "]
+        "realm-management": [
+          "manage-users",
+          "manage-clients"
+        ],
+        "account": [
+          "manage-account"
+        ],
+        "microcks-app": [
+          "admin "
+        ]
       }
     }
   ],
@@ -47,7 +56,9 @@
     }
   },
   "defaultRoles": [],
-  "requiredCredentials": [ "password" ],
+  "requiredCredentials": [
+    "password"
+  ],
   "scopeMappings": [],
   "clientScopeMappings": {
     "microcks-app": [
@@ -87,7 +98,8 @@
         "+"
       ],
       "redirectUris": [
-        "http://localhost:8080/*"
+        "http://localhost:8080/*",
+        "http://localhost:4200/*"
       ],
       "fullScopeAllowed": false
     },

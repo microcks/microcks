@@ -1,10 +1,15 @@
-kind: Ingress
+{{- if .Values.microcks.ingress.enabled }}
+{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
 metadata:
   name: microcks
   annotations:
-    ingress.kubernetes.io/rewrite-target: /
-  {{- with .Values.microcks.ingressAnnotations }}
+    ingress.kubernetes.io/rewrite-target: "{{ .Values.microcks.baseContext }}"
+  {{- with .Values.microcks.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
@@ -14,23 +19,30 @@ spec:
   tls:
   - hosts:
     - "{{ .Values.microcks.url }}"
-    secretName: {{ .Values.microcks.ingressSecretRef | default (print .Values.appName "-microcks-ingress-secret") }}
+    secretName: {{ .Values.microcks.ingress.secretRef | default (print .Values.appName "-microcks-ingress-secret") }}
   rules:
   - host: "{{ .Values.microcks.url }}"
     http:
       paths:
-      - backend:
+      - path: "{{ .Values.microcks.baseContext }}"
+        pathType: Prefix
+        backend:
           serviceName: "{{ .Values.appName }}"
           servicePort: 8080
-{{- if .Values.keycloak.install }}
+{{- end }}
+{{- if and .Values.keycloak.install .Values.keycloak.ingress.enabled }}
 ---
-kind: Ingress
+{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
 apiVersion: networking.k8s.io/v1beta1
+{{- else -}}
+apiVersion: extensions/v1beta1
+{{- end }}
+kind: Ingress
 metadata:
   name: keycloak
   annotations:
-    ingress.kubernetes.io/rewrite-target: /
-  {{- with .Values.keycloak.ingressAnnotations }}
+    ingress.kubernetes.io/rewrite-target: "{{ .Values.keycloak.baseContext }}"
+  {{- with .Values.keycloak.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
   labels:
@@ -40,12 +52,14 @@ spec:
   tls:
   - hosts:
     - "{{ .Values.keycloak.url }}"
-    secretName: {{ .Values.keycloak.ingressSecretRef | default (print .Values.appName "-keycloak-ingress-secret") }}
+    secretName: {{ .Values.keycloak.ingress.secretRef | default (print .Values.appName "-keycloak-ingress-secret") }}
   rules:
   - host: "{{ .Values.keycloak.url }}"
     http:
       paths:
-      - backend:
+      - path: "{{ .Values.keycloak.baseContext }}"
+        pathType: Prefix
+        backend:
           serviceName: "{{ .Values.appName }}-keycloak"
           servicePort: 8080
 {{- end }}

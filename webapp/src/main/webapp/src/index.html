@@ -4,10 +4,13 @@
 <head>
   <meta charset="utf-8">
   <title>Microcks-UI</title>
-  <base href="/">
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+  <script>
+    window['base-href'] = window.location.pathname;
+    console.log(window['base-href']);
+  </script>
 </head>
 
 <body>

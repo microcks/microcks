@@ -80,9 +80,7 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "microcks-ui:build",
-            "proxyConfig": "proxy.conf.json"
-          },
+            "browserTarget": "microcks-ui:build"          },
           "configurations": {
             "production": {
               "browserTarget": "microcks-ui:build:production"

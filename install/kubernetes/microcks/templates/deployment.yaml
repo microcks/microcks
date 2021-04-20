@@ -66,10 +66,10 @@ spec:
           - name: KEYCLOAK_URL
             value: "{{ .Values.keycloak.privateUrl }}"
           - name: KEYCLOAK_PUBLIC_URL
-            value: https://{{ .Values.keycloak.url }}/auth
+            value: https://{{ .Values.keycloak.url }}{{ .Values.keycloak.baseContext }}
           {{- else }}
           - name: KEYCLOAK_URL
-            value: https://{{ .Values.keycloak.url }}/auth
+            value: https://{{ .Values.keycloak.url }}{{ .Values.keycloak.baseContext }}
           {{- end }}
           {{- if and .Values.features.async.enabled }}
           - name: ASYNC_MINION_URL
@@ -81,11 +81,15 @@ spec:
             {{- else }}
             value: "{{ .Values.features.async.kafka.url }}"
             {{- end }}
+          {{- if ne .Values.microcks.baseContext "/" }}
+          - name: SERVER_SERVLET_CONTEXT_PATH
+            value: {{ trimSuffix "/" .Values.microcks.baseContext }}
+          {{- end }}
         resources:
           {{- toYaml .Values.microcks.resources | nindent 10 }}
         livenessProbe:
           httpGet:
-            path: "/api/health"
+            path: "{{ .Values.microcks.baseContext }}api/health"
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 25
@@ -95,7 +99,7 @@ spec:
           failureThreshold: 3
         readinessProbe:
           httpGet:
-            path: "/api/health"
+            path: "{{ .Values.microcks.baseContext }}api/health"
             port: 8080
             scheme: HTTP
           initialDelaySeconds: 35
@@ -106,11 +110,16 @@ spec:
         volumeMounts:
           - name: "{{ .Values.appName }}-config"
             mountPath: "/deployments/config"
+          - name: "{{ .Values.appName }}-environment-config-map"
+            mountPath: "/deployments/assets/environment"
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-config"
           configMap:
             name: "{{ .Values.appName }}-config"
+        - name: "{{ .Values.appName }}-environment-config-map"
+          configMap:
+            name: "{{ .Values.appName }}-environment-config-map"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -357,14 +366,25 @@ spec:
           value: https://{{ .Values.keycloak.url }}/auth
         {{- end }}
         volumeMounts:
-        - name: {{ .Values.appName }}-keycloak-config
-          mountPath: "/opt/jboss/keycloak/standalone/configuration/realm"
+          - name: {{ .Values.appName }}-keycloak-config
+            mountPath: "/opt/jboss/keycloak/standalone/configuration/realm"
+          - name: "startup"
+            mountPath: /opt/jboss/startup-scripts/contextPath.cli
+            subPath: contextPath.cli
+            readOnly: true
         securityContext:
           privileged: false
       volumes:
-      - name: "{{ .Values.appName }}-keycloak-config"
-        configMap:
-          name: "{{ .Values.appName }}-keycloak-config"
+        - name: "{{ .Values.appName }}-keycloak-config"
+          configMap:
+            name: "{{ .Values.appName }}-keycloak-config"
+        - name: "startup"
+          configMap:
+            name: "{{ .Values.appName }}-keycloak-startup"
+            defaultMode: 0555
+            items:
+              - key: contextPath.cli
+                path: contextPath.cli
       restartPolicy: Always
       dnsPolicy: ClusterFirst
 ---

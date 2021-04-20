@@ -1,9 +1,11 @@
-version: '2'
+version: "2"
 
 services:
   mongo:
     image: mongo:3.4.23
     container_name: microcks-db
+    ports:
+      - "27017:27017"
     volumes:
       - "~/tmp/microcks-data:/data/db"
 
@@ -11,13 +13,13 @@ services:
     image: jboss/keycloak:10.0.1
     container_name: microcks-sso
     ports:
-      - "18080:8080"
+      - "8180:8080"
     environment:
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "admin"
       KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
-      KEYCLOAK_FRONTEND_URL: "http://localhost:18080/auth"
-    volumes: 
+      KEYCLOAK_FRONTEND_URL: "http://localhost:8180/auth"
+    volumes:
       - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
 
   postman:
@@ -41,4 +43,4 @@ services:
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_URL=http://keycloak:8080/auth
-      - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
+      - KEYCLOAK_PUBLIC_URL=http://localhost:8180/auth
