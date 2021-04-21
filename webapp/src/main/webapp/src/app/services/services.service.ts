@@ -20,7 +20,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { Service, ServiceView, Api, GenericResource, OperationMutableProperties, Metadata } from '../models/service.model';
+import { Service, ServiceView, Api, GenericResource, OperationMutableProperties, Metadata, RequestResponsePair } from '../models/service.model';
 
 @Injectable({ providedIn: 'root' })
 export class ServicesService {
@@ -91,6 +91,10 @@ export class ServicesService {
   public updateServiceOperationProperties(service: Service, operationName: string, properties: OperationMutableProperties): Observable<any> {
     const options = { params: new HttpParams().set('operationName', operationName) };
     return this.http.put<any>(this.rootUrl + '/services/' + service.id + '/operation', properties, options);
+  }
+
+  public updateServiceExchange(service: Service, exchange: RequestResponsePair): Observable<any> {
+    return this.http.put<any>(this.rootUrl + '/services/' + service.id + '/exchange', exchange);
   }
 
   public countGenericResources(service: Service): Observable<any> {
