@@ -25,3 +25,6 @@ Current development version is `1.2.1-SNAPSHOT`. [![Travis (.org)](https://img.s
 
 The build instructions are available in the [contribution guide](CONTRIBUTING.md).
 
+## TODO
+
+* Hover over icon

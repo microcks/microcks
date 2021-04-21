@@ -6,10 +6,30 @@
 </div>
 <div class="modal-body">
   <p>
-    Here you can edit responses which are not mapped properly or need templates.
+    Here you can edit the response {{ response.name }}.
   </p>
+  <form>
+    <div class="form-group">
+      <label class="control-label" for="status">Response Code</label>
+      <div class="controls">
+        <input type="text" class="form-control" placeholder="responsecode" id="status" name="status" [(ngModel)]="response.status">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label" for="mediaType">Response Type</label>
+      <div class="controls">
+        <input type="text" class="form-control" placeholder="responsetype" id="mediaType" name="mediaType" [(ngModel)]="response.mediaType">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="control-label" for="content">Response Content</label>
+      <div class="controls">
+        <textarea class="form-control" id="content" name="content" [(ngModel)]="response.content"></textarea>
+      </div>
+    </div>
+  </form>
   <div class="modal-footer">
     <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
-    <input type="submit" class="btn btn-primary" (click)="saveResponse()" ng-disabled="form.$invalid" value="Save"/>
+    <input type="submit" class="btn btn-primary" (click)="saveExchange()" ng-disabled="form.$invalid" value="Save"/>
   </div>
 </div>

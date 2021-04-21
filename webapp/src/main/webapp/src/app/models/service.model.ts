@@ -148,6 +148,7 @@ export class EventMessage extends Message {
 }
 
 export abstract class Exchange {
+  type: string
 }
 export class UnidirectionalEvent extends Exchange {
   eventMessage: EventMessage;

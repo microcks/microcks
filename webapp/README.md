@@ -25,7 +25,7 @@ $ ./standalone.sh -Djboss.socket.binding.port-offset=100
 Then start the MongoDB from the command line:
 
 ```
-$ mongod --dbpath /home/test/tmp/mongodb
+$ mongod --dbpath /tmp/microcks/mongodb
 ```
 
 In a terminal, start frontend GUI server using NG :

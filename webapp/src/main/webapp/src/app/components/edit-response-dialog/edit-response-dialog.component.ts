@@ -20,7 +20,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
-import { Response } from '../../models/service.model';
+import { Request, Response, RequestResponsePair } from '../../models/service.model';
 
 @Component({
   selector: 'edit-response-dialog',
@@ -28,8 +28,9 @@ import { Response } from '../../models/service.model';
   styleUrls: ['./edit-response-dialog.component.css']
 })
 export class EditResponseDialogComponent implements OnInit {
-  @Output() saveResponseAction = new EventEmitter<Response>();
+  @Output() saveExchangeAction = new EventEmitter<RequestResponsePair>();
 
+  request: Request;
   response: Response;
   closeBtnName: string;
 
@@ -38,9 +39,27 @@ export class EditResponseDialogComponent implements OnInit {
   ngOnInit() {
   }
 
-  saveResponse(): void {
+  saveExchange(): void {
     console.log("[EditResponseDialogComponent saveResponse]");
-    this.saveResponseAction.emit(this.response);
+
+    this.response.complete = true;
+    if (!this.request.headers) {
+      this.request.headers = [];
+    }
+    
+    if (this.response.mediaType) {
+      this.request.headers.push({
+        name: "Accept",
+        values: [this.response.mediaType]
+      });
+    }
+
+    let exchange = new RequestResponsePair();
+    exchange.type = "reqRespPair";
+    exchange.request = this.request;
+    exchange.response = this.response;
+
+    this.saveExchangeAction.emit(exchange);
     this.bsModalRef.hide();
   }
 }
