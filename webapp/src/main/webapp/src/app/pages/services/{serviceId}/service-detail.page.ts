@@ -151,14 +151,34 @@ export class ServiceDetailPageComponent implements OnInit {
     });
   }
 
-  public openEditResponse(response: Response): void {
+  public openEditResponse(itemName: string, responseName): void {
+    let index = this.getIndex(itemName, responseName);
     const initialState = {
       closeBtnName: 'Cancel',
-      response: response
-    };
+      request: (this.resolvedServiceView.messagesMap[itemName][index] as RequestResponsePair).request,
+      response: (this.resolvedServiceView.messagesMap[itemName][index] as RequestResponsePair).response
+    }
     this.modalRef = this.modalService.show(EditResponseDialogComponent, {initialState});
-    this.modalRef.content.saveResponseAction.subscribe(() => {
-      console.log('Observer got a complete notification')
+    this.modalRef.content.saveExchangeAction.subscribe((exchange) => {
+      (this.resolvedServiceView.messagesMap[itemName][index] as RequestResponsePair) = exchange;
+      this.servicesSvc.updateServiceExchange(this.resolvedServiceView.service, exchange).subscribe(
+        {
+          next: res => {
+            // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
+            // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
+            this.serviceView = new Observable<ServiceView>(observer => { observer.next(this.resolvedServiceView) });
+            this.notificationService.message(NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name, "Exchange has been updated", false, null, null);
+            // Then trigger view reevaluation to update the label list component and the notifications toaster.
+            this.ref.detectChanges();
+          },
+          error: err => {
+            this.notificationService.message(NotificationType.DANGER,
+              this.resolvedServiceView.service.name, "Exchange cannot be updated (" + err.message + ")", false, null, null);
+          },
+          complete: () => console.log('Observer got a complete notification'),
+        }
+      );
     });
   }
 

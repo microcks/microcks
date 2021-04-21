@@ -101,6 +101,11 @@ public class MockControllerCommons {
     * @return The rendered response body payload.
     */
    public static String renderResponseContent(String requestBody, String requestResourcePath, HttpServletRequest request, Response response) {
+      // handle empty responses (e.g. 204 - No Content)
+      if (response.getContent() == null) {
+         return "";
+      }
+
       if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          log.debug("Response contains dynamic EL expression, rendering it...");
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();

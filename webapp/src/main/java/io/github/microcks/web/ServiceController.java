@@ -216,6 +216,19 @@ public class ServiceController {
       return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
    }
 
+   @RequestMapping(value = "/services/{id}/exchange", method = RequestMethod.PUT)
+   public ResponseEntity<?> updateExchange(
+         @PathVariable("id") String serviceId,
+         @RequestBody RequestResponsePair exchange
+      ) {
+      log.debug("Updating exchange {} of service {}", exchange.getRequest().getName(), serviceId);
+      boolean result = messageService.updateExchange(exchange);
+      if (result){
+         return new ResponseEntity<>(HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+   }
+
    @RequestMapping(value = "/services/{id}", method = RequestMethod.DELETE)
    public ResponseEntity<String> deleteService(@PathVariable("id") String serviceId) {
       log.debug("Removing service with id {}", serviceId);
