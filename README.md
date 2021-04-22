@@ -24,3 +24,4 @@ Current development version is `1.2.1-SNAPSHOT`. [![Travis (.org)](https://img.s
 ## How to build Microcks
 
 The build instructions are available in the [contribution guide](CONTRIBUTING.md).
+
