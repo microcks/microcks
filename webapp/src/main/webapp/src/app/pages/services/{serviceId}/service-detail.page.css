@@ -10,3 +10,7 @@
 .async-mock-status-label {
   margin-left: 20px;
 }
+
+.icon-pointer {
+  cursor: pointer
+}
