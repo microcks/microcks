@@ -237,8 +237,8 @@ public class OpenAPIImporterTest {
       } catch (Exception e) {
          fail("No exception should be thrown when importing message definitions.");
       }
-      assertEquals(1, exchanges.size());
-      assertEquals(1, operation.getResourcePaths().size());
+      assertEquals(2, exchanges.size());
+      assertEquals(2, operation.getResourcePaths().size());
       assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
       for (Exchange exchange : exchanges) {
@@ -248,34 +248,40 @@ public class OpenAPIImporterTest {
             Response response = entry.getResponse();
             assertNotNull(request);
             assertNotNull(response);
-            assertEquals("laurent_cars", request.getName());
-            assertEquals("laurent_cars", response.getName());
-            assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-            assertEquals("200", response.getStatus());
-            assertEquals("application/json", response.getMediaType());
-            assertNotNull(response.getContent());
 
-            // Check headers now.
-            assertEquals(2, request.getHeaders().size());
-            Iterator<Header> headers = request.getHeaders().iterator();
-            while (headers.hasNext()) {
-               Header header = headers.next();
-               if ("x-user-id".equals(header.getName())) {
-                  assertEquals(1, header.getValues().size());
-                  assertEquals("poiuytrezamlkjhgfdsq", header.getValues().iterator().next());
-               } else if ("Accept".equals(header.getName())) {
-                  assertEquals(1, header.getValues().size());
-                  assertEquals("application/json", header.getValues().iterator().next());
-               } else {
-                  fail("Unexpected header name in request");
+            if (response.isComplete()) {
+               assertEquals("laurent_cars", request.getName());
+               assertEquals("laurent_cars", response.getName());
+               assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+               assertEquals("200", response.getStatus());
+               assertEquals("application/json", response.getMediaType());
+               assertNotNull(response.getContent());
+
+               // Check headers now.
+               assertEquals(2, request.getHeaders().size());
+               Iterator<Header> headers = request.getHeaders().iterator();
+               while (headers.hasNext()) {
+                  Header header = headers.next();
+                  if ("x-user-id".equals(header.getName())) {
+                     assertEquals(1, header.getValues().size());
+                     assertEquals("poiuytrezamlkjhgfdsq", header.getValues().iterator().next());
+                  } else if ("Accept".equals(header.getName())) {
+                     assertEquals(1, header.getValues().size());
+                     assertEquals("application/json", header.getValues().iterator().next());
+                  } else {
+                     fail("Unexpected header name in request");
+                  }
                }
-            }
 
-            assertEquals(1, response.getHeaders().size());
-            Header header = response.getHeaders().iterator().next();
-            assertEquals("x-result-count", header.getName());
-            assertEquals(1, header.getValues().size());
-            assertEquals("2", header.getValues().iterator().next());
+               assertEquals(1, response.getHeaders().size());
+               Header header = response.getHeaders().iterator().next();
+               assertEquals("x-result-count", header.getName());
+               assertEquals(1, header.getValues().size());
+               assertEquals("2", header.getValues().iterator().next());
+            } else {
+               assertEquals("laurent_307", request.getName());
+               assertEquals("laurent_307", response.getName());
+            }
          } else {
             fail("Exchange has the wrong type. Expecting RequestResponsePair");
          }
@@ -348,8 +354,8 @@ public class OpenAPIImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, exchanges.size());
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
             for (Exchange exchange : exchanges) {
@@ -359,12 +365,18 @@ public class OpenAPIImporterTest {
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
-                  assertEquals("laurent_cars", request.getName());
-                  assertEquals("laurent_cars", response.getName());
-                  assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
+
+                  if (response.isComplete()) {
+                     assertEquals("laurent_cars", request.getName());
+                     assertEquals("laurent_cars", response.getName());
+                     assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else {
+                     assertEquals("laurent_307", request.getName());
+                     assertEquals("laurent_307", response.getName());
+                  }
                } else {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
@@ -383,8 +395,8 @@ public class OpenAPIImporterTest {
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, exchanges.size());
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
             for (Exchange exchange : exchanges) {
@@ -394,12 +406,18 @@ public class OpenAPIImporterTest {
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
-                  assertEquals("laurent_307", request.getName());
-                  assertEquals("laurent_307", response.getName());
-                  assertEquals("/owner=laurent", response.getDispatchCriteria());
-                  assertEquals("201", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
+
+                  if (response.isComplete()) {
+                     assertEquals("laurent_307", request.getName());
+                     assertEquals("laurent_307", response.getName());
+                     assertEquals("/owner=laurent", response.getDispatchCriteria());
+                     assertEquals("201", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else {
+                     assertEquals("laurent_cars", request.getName());
+                     assertEquals("laurent_cars", response.getName());
+                  }
                } else {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
@@ -451,7 +469,17 @@ public class OpenAPIImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(0, exchanges.size());
+            assertEquals(1, exchanges.size());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertFalse(response.isComplete());
+               }
+            }
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
@@ -503,8 +531,8 @@ public class OpenAPIImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, exchanges.size());
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
             for (Exchange exchange : exchanges) {
@@ -514,12 +542,18 @@ public class OpenAPIImporterTest {
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
-                  assertEquals("laurent_cars", request.getName());
-                  assertEquals("laurent_cars", response.getName());
-                  assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
+
+                  if (response.isComplete()) {
+                     assertEquals("laurent_cars", request.getName());
+                     assertEquals("laurent_cars", response.getName());
+                     assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else {
+                     assertEquals("laurent_307", request.getName());
+                     assertEquals("laurent_307", response.getName());
+                  }
                } else {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
@@ -538,8 +572,8 @@ public class OpenAPIImporterTest {
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, exchanges.size());
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
             for (Exchange exchange : exchanges) {
@@ -549,12 +583,18 @@ public class OpenAPIImporterTest {
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
-                  assertEquals("laurent_307", request.getName());
-                  assertEquals("laurent_307", response.getName());
-                  assertEquals("/owner=laurent", response.getDispatchCriteria());
-                  assertEquals("201", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
+
+                  if (response.isComplete()) {
+                     assertEquals("laurent_307", request.getName());
+                     assertEquals("laurent_307", response.getName());
+                     assertEquals("/owner=laurent", response.getDispatchCriteria());
+                     assertEquals("201", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else {
+                     assertEquals("laurent_cars", request.getName());
+                     assertEquals("laurent_cars", response.getName());
+                  }
                } else {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
@@ -606,7 +646,19 @@ public class OpenAPIImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(0, exchanges.size());
+            assertEquals(1, exchanges.size());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertFalse(response.isComplete());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
+            }
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
@@ -659,7 +711,19 @@ public class OpenAPIImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(0, exchanges.size());
+            assertEquals(1, exchanges.size());
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertFalse(response.isComplete());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
+            }
          }
          else if ("POST /owner/{owner}/car".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
@@ -986,8 +1050,8 @@ public class OpenAPIImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, exchanges.size());
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
             for (Exchange exchange : exchanges) {
@@ -997,12 +1061,18 @@ public class OpenAPIImporterTest {
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
-                  assertEquals("laurent_cars", request.getName());
-                  assertEquals("laurent_cars", response.getName());
-                  assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
-                  assertEquals("200", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
+
+                  if (response.isComplete()) {
+                     assertEquals("laurent_cars", request.getName());
+                     assertEquals("laurent_cars", response.getName());
+                     assertEquals("/owner=laurent?limit=20?page=0", response.getDispatchCriteria());
+                     assertEquals("200", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else {
+                     assertEquals("laurent_307", request.getName());
+                     assertEquals("laurent_307", response.getName());
+                  }
                } else {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
@@ -1020,8 +1090,8 @@ public class OpenAPIImporterTest {
             } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, exchanges.size());
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
 
             for (Exchange exchange : exchanges) {
@@ -1031,12 +1101,18 @@ public class OpenAPIImporterTest {
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
-                  assertEquals("laurent_307", request.getName());
-                  assertEquals("laurent_307", response.getName());
-                  assertEquals("/owner=laurent", response.getDispatchCriteria());
-                  assertEquals("201", response.getStatus());
-                  assertEquals("application/json", response.getMediaType());
-                  assertNotNull(response.getContent());
+
+                  if (response.isComplete()) {
+                     assertEquals("laurent_307", request.getName());
+                     assertEquals("laurent_307", response.getName());
+                     assertEquals("/owner=laurent", response.getDispatchCriteria());
+                     assertEquals("201", response.getStatus());
+                     assertEquals("application/json", response.getMediaType());
+                     assertNotNull(response.getContent());
+                  } else {
+                     assertEquals("laurent_cars", request.getName());
+                     assertEquals("laurent_cars", response.getName());
+                  }
                } else {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
