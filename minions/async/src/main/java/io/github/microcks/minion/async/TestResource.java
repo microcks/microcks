@@ -45,6 +45,7 @@ public class TestResource {
    @POST
    @Consumes(MediaType.APPLICATION_JSON)
    public Response launchTestCandidate(AsyncTestSpecification specification) {
+      logger.debugf("Test AsyncAPI Spec: " + specification.getAsyncAPISpec());
       if (specification.getRunnerType() == TestRunnerType.ASYNC_API_SCHEMA) {
          logger.info("Accepting an ASYNC_API_SCHEMA test on endpoint " + specification.getEndpointUrl());
          asyncAPITestManager.launchTest(specification);

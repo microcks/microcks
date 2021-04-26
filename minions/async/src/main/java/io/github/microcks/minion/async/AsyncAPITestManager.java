@@ -185,16 +185,19 @@ public class AsyncAPITestManager {
          String messagePathPointer = operationNamePtr + "/message";
 
          // Retrieve expected content type from specification and produce a schema registry snapshot.
-         String expectedContentType = getExpectedContentType(specificationNode, messagePathPointer);
+         String expectedContentType = null;
          SchemaMap schemaMap = new SchemaMap();
-         if (expectedContentType.contains("avro")) {
-            logger.debug("Expected content type is Avro so extracting service resources into a SchemaMap");
-            schemaRegistry.updateRegistryForService(specification.getServiceId());
-            schemaRegistry.getSchemaEntries(specification.getServiceId())
-                  .stream().forEach(schemaEntry -> schemaMap.putSchemaEntry(schemaEntry.getPath(), schemaEntry.getContent()));
+         if (specificationNode != null) {
+            expectedContentType = getExpectedContentType(specificationNode, messagePathPointer);
+            if (expectedContentType.contains("avro")) {
+               logger.debug("Expected content type is Avro so extracting service resources into a SchemaMap");
+               schemaRegistry.updateRegistryForService(specification.getServiceId());
+               schemaRegistry.getSchemaEntries(specification.getServiceId())
+                     .stream().forEach(schemaEntry -> schemaMap.putSchemaEntry(schemaEntry.getPath(), schemaEntry.getContent()));
+            }
          }
 
-         for (int i=0; specificationNode!=null && i<outputs.size(); i++) {
+         for (int i=0; i<outputs.size(); i++) {
             // Treat each message and compute elapsed time of each.
             ConsumedMessage message = outputs.get(i);
             long elapsedTime = message.getReceivedAt() - startTime;
@@ -210,38 +213,50 @@ public class AsyncAPITestManager {
             eventMessage.setHeaders(message.getHeaders());
 
             TestReturn testReturn;
-            try {
-               logger.infof("Validating received message {%s} against {%s}", responseContent, messagePathPointer);
-               List<String> errors = null;
-               if (expectedContentType.contains("avro")) {
-                  // Use the correct Avro mesage validation method depending on what has been read.
-                  if (message.getPayloadRecord() != null) {
-                     errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayloadRecord(),
-                           messagePathPointer, schemaMap);
-                  } else {
-                     errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayload(),
-                           messagePathPointer, schemaMap);
-                  }
-               } else if (expectedContentType.contains("application/json")) {
-                  // Now parse the payloadNode and validate it according the operation message
-                  // found in specificationNode.
-                  JsonNode payloadNode = AsyncAPISchemaValidator.getJsonNode(responseContent);
-                  errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode, messagePathPointer);
-               }
 
-               if (errors == null || errors.isEmpty()) {
-                  // This is a success.
-                  logger.infof("No errors found while validating message payload! Reporting a success for test {%s}", specification.getTestResultId());
-                  testReturn = new TestReturn(TestReturn.SUCCESS_CODE, elapsedTime, eventMessage);
-               } else {
-                  // This is a failure. Records all errors using \\n as delimiter.
-                  logger.infof("Validation errors found... Reporting a failure for test {%s}", specification.getTestResultId());
-                  testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime, String.join("\\n", errors), eventMessage);
-               }
-            } catch (IOException e) {
-               logger.error("Exception while parsing the output message", e);
+            if (specificationNode == null) {
+               logger.infof("AsyncAPI specification cannot be read, so test {%s} cannot be validated", specification.getTestResultId());
                testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime,
-                     "Message content cannot be parsed as JSON", eventMessage);
+                     "AsyncAPI specification cannot be read, thus message cannot be validated", eventMessage);
+            } else if (expectedContentType == null) {
+               logger.infof("Expected content-type cannot be determined, so test {%s} cannot be validated", specification.getTestResultId());
+               testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime,
+                     "Content-Type cannot be determined, thus message cannot be validated", eventMessage);
+            } else {
+               //
+               try {
+                  logger.infof("Validating received message {%s} against {%s}", responseContent, messagePathPointer);
+                  List<String> errors = null;
+                  if (expectedContentType.contains("avro")) {
+                     // Use the correct Avro mesage validation method depending on what has been read.
+                     if (message.getPayloadRecord() != null) {
+                        errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayloadRecord(),
+                              messagePathPointer, schemaMap);
+                     } else {
+                        errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayload(),
+                              messagePathPointer, schemaMap);
+                     }
+                  } else if (expectedContentType.contains("application/json")) {
+                     // Now parse the payloadNode and validate it according the operation message
+                     // found in specificationNode.
+                     JsonNode payloadNode = AsyncAPISchemaValidator.getJsonNode(responseContent);
+                     errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode, messagePathPointer);
+                  }
+
+                  if (errors == null || errors.isEmpty()) {
+                     // This is a success.
+                     logger.infof("No errors found while validating message payload! Reporting a success for test {%s}", specification.getTestResultId());
+                     testReturn = new TestReturn(TestReturn.SUCCESS_CODE, elapsedTime, eventMessage);
+                  } else {
+                     // This is a failure. Records all errors using \\n as delimiter.
+                     logger.infof("Validation errors found... Reporting a failure for test {%s}", specification.getTestResultId());
+                     testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime, String.join("\\n", errors), eventMessage);
+                  }
+               } catch (IOException e) {
+                  logger.error("Exception while parsing the output message", e);
+                  testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime,
+                        "Message content cannot be parsed as JSON", eventMessage);
+               }
             }
             testCaseReturn.addTestReturn(testReturn);
          }
