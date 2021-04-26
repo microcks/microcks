@@ -18,28 +18,19 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-import io.github.microcks.minion.async.AsyncMockRepository;
-import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.util.AvroUtil;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.el.TemplateEngine;
-import io.github.microcks.util.el.TemplateEngineFactory;
-
-import io.quarkus.arc.Unremovable;
-import org.apache.avro.generic.GenericRecord;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
+import java.util.Arrays;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import java.net.URLEncoder;
-import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Set;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
+import io.github.microcks.domain.BindingType;
+import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.github.microcks.minion.async.AsyncMockRepository;
+import io.quarkus.arc.Unremovable;
 
 @Unremovable
 @ApplicationScoped
@@ -56,9 +47,6 @@ public class ProducerManager {
 
    @Inject
    AsyncMockRepository mockRepository;
-
-   @Inject
-   SchemaRegistry schemaRegistry;
 
    @Inject
    KafkaProducerManager kafkaProducerManager;
@@ -86,86 +74,23 @@ public class ProducerManager {
          for (String binding : definition.getOperation().getBindings().keySet()) {
             // Ensure this minion supports this binding.
             if (Arrays.asList(supportedBindings).contains(binding)) {
+               BindingProducerManager publisher = null;
                switch (BindingType.valueOf(binding)) {
-                  case KAFKA:
-                     for (EventMessage eventMessage : definition.getEventMessages()) {
-                        String topic = kafkaProducerManager.getTopicName(definition, eventMessage);
-                        String key = String.valueOf(System.currentTimeMillis());
-                        String message = renderEventMessageContent(eventMessage);
-
-                        // Check it Avro binary is expected, we should convert to bytes.
-                        if ("avro/binary".equals(eventMessage.getMediaType())) {
-                           // Build the name of expected schema.
-                           String schemaName = IdBuilder.buildResourceFullName(definition.getOwnerService(), definition.getOperation());
-                           String schemaContent = schemaRegistry.getSchemaEntryContent(definition.getOwnerService(), schemaName);
-
-                           try {
-                              if ("REGISTRY".equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
-                                 logger.debug("Using a registry and converting message to Avro record");
-                                 GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
-                                 kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
-                                       .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-                              } else {
-                                 logger.debug("Converting message to Avro bytes array");
-                                 byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
-                                 kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
-                                       .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-                              }
-                           } catch (Exception e) {
-                              logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
-                           }
-                        } else {
-                           kafkaProducerManager.publishMessage(topic, key, message, kafkaProducerManager
-                                 .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-                        }
-                     }
-                     break;
-                  case MQTT:
-                     for (EventMessage eventMessage : definition.getEventMessages()) {
-                        String topic = mqttProducerManager.getTopicName(definition, eventMessage);
-                        String message = renderEventMessageContent(eventMessage);
-                        mqttProducerManager.publishMessage(topic, message);
-                     }
-                     break;
-                  default:
-                     break;
-                }
+               case KAFKA:
+                  publisher = this.kafkaProducerManager;
+                  break;
+               case MQTT:
+                  publisher = this.mqttProducerManager;
+                  break;
+               default:
+                  break;
+               }
+               if (publisher != null) {
+                  publisher.publishMessages(definition);
+               }
             }
          }
       }
-   }
-
-   /**
-    * Render event message content from definition applying template rendering if required.
-    */
-   private String renderEventMessageContent(EventMessage eventMessage) {
-      String content = eventMessage.getContent();
-      if (content.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         logger.debug("EventMessage contains dynamic EL expression, rendering it...");
-         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
-
-         try {
-            content = engine.getValue(content);
-         } catch (Throwable t) {
-            logger.error("Failing at evaluating template " + content, t);
-         }
-      }
-      return content;
-   }
-
-   public static String replacePartPlaceholders(EventMessage eventMessage, String operationName) {
-      String partsCriteria = eventMessage.getDispatchCriteria();
-      if (partsCriteria != null && !partsCriteria.isBlank()) {
-         String[] criterion = partsCriteria.split("/");
-         for (String criteria : criterion) {
-            if (criteria != null && !criteria.isBlank()) {
-               String[] element = criteria.split("=");
-               String key = String.format("\\{%s\\}", element[0]);
-               operationName = operationName.replaceAll(key, URLEncoder.encode(element[1], Charset.defaultCharset()));
-            }
-         }
-      }
-      return operationName;
    }
 
 }

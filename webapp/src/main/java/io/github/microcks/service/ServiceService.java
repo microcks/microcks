@@ -75,6 +75,14 @@ public class ServiceService {
    @Value("${async-api.default-frequency}")
    private final Long defaultAsyncFrequency = 30l;
 
+   @Value("${async-api.mock-operations}")
+   private final String asyncApiMockOperations = null;
+   
+   /**
+    * Disable the Async Mock, i.e. set frequency to zero
+    */
+   private static final long DISABLE_ASYNC_MOCK = 0L;
+
    /**
     * Import definitions of services and bounded resources and messages into Microcks
     * repository. This uses a MockRepositoryImporter underhood.
@@ -149,8 +157,8 @@ public class ServiceService {
          if (service.getType().equals(ServiceType.EVENT)) {
             for (Operation operation : service.getOperations()) {
                if (operation.getDefaultDelay() == null) {
-                  operation.setDefaultDelay(defaultAsyncFrequency);
-               }
+                  operation.setDefaultDelay(this.getApplicableAsyncDelay(operation));
+               } 
                if (operation.getBindings() == null || operation.getBindings().isEmpty()) {
                   operation.addBinding(defaultAsyncBinding, new Binding(BindingType.valueOf(defaultAsyncBinding)));
                }
@@ -383,4 +391,24 @@ public class ServiceService {
       applicationContext.publishEvent(event);
       log.debug("Service change event has been published");
    }
+   /**
+    * 
+    * determine if the operation should be mocked and what the default delay should be 
+    * @param operation
+    * @return 0 if mock shall be disabled, otherwise default mock delay if applicable
+    */
+   private long getApplicableAsyncDelay(Operation operation) {
+      if (operation.getDefaultDelay() == null) {
+         log.debug("checking operation method [{}] against [{}], current operation default delay is [{}]", operation.getMethod(), asyncApiMockOperations, operation.getDefaultDelay());
+         if (asyncApiMockOperations == null || asyncApiMockOperations.isBlank() || asyncApiMockOperations.toUpperCase().contains(operation.getMethod().toUpperCase())) {
+            return defaultAsyncFrequency;
+         } else {
+            return DISABLE_ASYNC_MOCK;
+         }
+      } else
+      {
+         return operation.getDefaultDelay();
+      }
+   }
+   
 }

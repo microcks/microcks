@@ -304,8 +304,16 @@ export class ServiceDetailPageComponent implements OnInit {
     if ('KAFKA' === binding) {
       operationName = operationName.replace(/\//g, '-');
     }
+    const style = this.config.getFeatureProperty('async-api', 'namespace-style');
+    if (style === 'bare') {
+      return operationName;
+    } else if (style === 'prefixed') {
+      return serviceName + '-' + this.resolvedServiceView.service.version + '-' + operationName;
+    } else {
+      // default - generate prefixed
+      return serviceName + '-' + this.resolvedServiceView.service.version + '-' + operationName;
+    }
 
-    return serviceName + "-" + this.resolvedServiceView.service.version + "-" + operationName;
   }
 
 

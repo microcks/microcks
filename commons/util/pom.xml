@@ -52,7 +52,16 @@
       <artifactId>avro</artifactId>
       <version>${avro.version}</version>
     </dependency>
-
+    <dependency>
+      <groupId>io.github.microcks</groupId>
+      <artifactId>microcks-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+        
     <!-- Test related dependencies -->
     <dependency>
       <groupId>junit</groupId>
@@ -60,12 +69,7 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>io.github.microcks</groupId>
-      <artifactId>microcks-model</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
