@@ -22,6 +22,7 @@ import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
+import io.github.microcks.minion.async.Constants;
 import io.github.microcks.minion.async.SchemaRegistry;
 import io.github.microcks.util.AvroUtil;
 import io.github.microcks.util.IdBuilder;
@@ -94,13 +95,13 @@ public class ProducerManager {
                         String message = renderEventMessageContent(eventMessage);
 
                         // Check it Avro binary is expected, we should convert to bytes.
-                        if ("avro/binary".equals(eventMessage.getMediaType())) {
+                        if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
                            // Build the name of expected schema.
                            String schemaName = IdBuilder.buildResourceFullName(definition.getOwnerService(), definition.getOperation());
                            String schemaContent = schemaRegistry.getSchemaEntryContent(definition.getOwnerService(), schemaName);
 
                            try {
-                              if ("REGISTRY".equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
+                              if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
                                  logger.debug("Using a registry and converting message to Avro record");
                                  GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
                                  kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager

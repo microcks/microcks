@@ -223,12 +223,12 @@ public class AsyncAPITestManager {
                testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime,
                      "Content-Type cannot be determined, thus message cannot be validated", eventMessage);
             } else {
-               //
+               // We now should have everything to perform validation, go ahead!
                try {
                   logger.infof("Validating received message {%s} against {%s}", responseContent, messagePathPointer);
                   List<String> errors = null;
-                  if (expectedContentType.contains("avro")) {
-                     // Use the correct Avro mesage validation method depending on what has been read.
+                  if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(expectedContentType)) {
+                     // Use the correct Avro message validation method depending on what has been read.
                      if (message.getPayloadRecord() != null) {
                         errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayloadRecord(),
                               messagePathPointer, schemaMap);
