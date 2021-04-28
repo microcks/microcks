@@ -2,7 +2,7 @@
 
 This chart bootstraps a new [Microcks](http://microcks.io) application using the [Helm](https://helm.sh) package manager.
 
-Resources within this directory are intended to work with Helm version 3+ (which do not need the Tiller server-side component).
+Resources within this directory should work with Helm version 3+ (which do not need the Tiller server-side component).
 
 ## Installing the Chart
 
@@ -15,10 +15,10 @@ $ helm repo add microcks https://microcks.io/helm
 
 $ kubectl create namespace microcks
 
-$ helm install microcks microcks/microcks —-version 1.2.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
+$ helm install microcks microcks/microcks —-version 1.2.1 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
   
 NAME: microcks
-LAST DEPLOYED: Mon Jan 15 18:57:12 2021
+LAST DEPLOYED: Wed Apr 28 16:17:36 2021
 NAMESPACE: microcks
 STATUS: deployed
 REVISION: 1
@@ -52,7 +52,7 @@ $ helm install microcks ./microcks --namespace microcks \
    --set keycloak.url=keycloak.$(minikube ip).nip.io 
 
 NAME: microcks
-LAST DEPLOYED: Mon Jan 15 18:59:43 2021
+LAST DEPLOYED: Wed Apr 28 16:15:22 2021
 NAMESPACE: microcks
 STATUS: deployed
 REVISION: 1
@@ -97,7 +97,7 @@ $ helm install microcks ./microcks --namespace=microcks \
     --set features.async.kafka.url=$(minikube ip).nip.io 
 
 NAME: microcks
-LAST DEPLOYED: Mon Jan 15 19:21:03 2021
+LAST DEPLOYED: Wed Apr 28 16:12:47 2021
 NAMESPACE: microcks
 STATUS: deployed
 REVISION: 1
@@ -135,13 +135,13 @@ Typically, you may want to configure the following blocks and options:
 * Global part is mandatory and contain attributes like `appName` of your install,
 * `microcks` part is mandatory and contain attributes like the number of `replicas` and the access `url` if you want some customizations, 
 * `postman` part is mandatory for the number of `replicas`
-* `keycloak` part is optional and allows to specify if you want a new install or reuse an existing instance,
-* `mongodb` part is optional and allows to specify if you want a new install or reuse an existing instance.
-* `features` part is optional and allows to enable and configure opt-in features of Microcks.
+* `keycloak` part is optional and allows specifying if you want a new install or reuse an existing instance,
+* `mongodb` part is optional and allows specifying if you want a new install or reuse an existing instance.
+* `features` part is optional and allows enabling and configuring opt-in features of Microcks.
 
 The table below describe all the fields of the `values.yaml`, providing informations on what's mandatory and what's optional as well as default values.
 
-| Section    | Property           | Description   |
+| Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` | 
 | `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
@@ -179,7 +179,7 @@ The table below describe all the fields of the `values.yaml`, providing informat
 
 Here are below the configuration properties of the Kafka support features:
  
-| Section    | Property           | Description   |
+| Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `features.async.kafka` | `install`    | **Optional**. Flag for Kafka installation. Default is `true` and required Strimzi Operator to be setup. Set to `false` if you want to reuse an existing Kafka instance. |
 | `features.async.kafka` | `url`        | **Optional**. The URL of Kafka broker if it already exists or the one used for exposing Kafka `Ingress` when we install it. In this later case, it should only be the subdomain part (eg: `apps.example.com`). |
@@ -194,7 +194,7 @@ Here are below the configuration properties of the Kafka support features:
 
 Here are below the configuration properties of the MQTT support features:
  
-| Section    | Property           | Description   |
+| Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `features.async.mqtt` | `url`        | **Optional**. The URL of MQTT broker (eg: `my-mqtt-broker.example.com:1883`). Default is undefined which means that feature is disabled. |
 | `features.async.mqtt` | `username`   | **Optional**. The username to use for connecting to secured MQTT broker. Default to `microcks`. |
