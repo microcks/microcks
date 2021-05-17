@@ -32,6 +32,7 @@ public abstract class Message {
    private String content;
    private String operationId;
    private String testCaseId;
+   private String sourceArtifact;
 
    private Set<Header> headers;
 
@@ -65,6 +66,14 @@ public abstract class Message {
 
    public void setTestCaseId(String testCaseId) {
       this.testCaseId = testCaseId;
+   }
+
+   public String getSourceArtifact() {
+      return sourceArtifact;
+   }
+
+   public void setSourceArtifact(String sourceArtifact) {
+      this.sourceArtifact = sourceArtifact;
    }
 
    public Set<Header> getHeaders() {

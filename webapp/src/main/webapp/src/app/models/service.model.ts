@@ -37,6 +37,7 @@ export class Service {
   type: ServiceType;
   operations: Operation[];
   metadata: Metadata;
+  sourceArtifact: string;
 }
 export enum ServiceType {
   SOAP_HTTP = "SOAP_HTTP",
@@ -97,6 +98,7 @@ export class Contract {
   content: string;
   type: ContractType;
   serviceId: string;
+  sourceArtifact: string;
 }
 export enum ContractType {
   WSDL,
@@ -126,6 +128,7 @@ abstract class Message {
   content: string;
   operationId: string;
   testCaseId: string;
+  sourceArtifact: string;
   headers: Header[];
 }
 export class Request extends Message {

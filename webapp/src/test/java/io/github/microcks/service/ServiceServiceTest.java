@@ -19,12 +19,20 @@
 package io.github.microcks.service;
 
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.repository.RepositoryTestsConfiguration;
+import io.github.microcks.repository.RequestRepository;
+import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.EntityAlreadyExistsException;
+import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.MockRepositoryImportException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +41,13 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import static org.junit.Assert.*;
+import java.io.File;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * Test case for ServiceService class.
@@ -50,6 +64,151 @@ public class ServiceServiceTest {
 
    @Autowired
    private ServiceRepository repository;
+
+   @Autowired
+   private ResourceRepository resourceRepository;
+
+   @Autowired
+   private RequestRepository requestRepository;
+
+   @Autowired
+   private ResponseRepository responseRepository;
+
+   @Test
+   public void testImportServiceDefinition() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-openapi.yaml");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("weather-forecast-openapi.yaml", true));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("WeatherForecast API", importedSvc.getName());
+      assertEquals("1.0.0", importedSvc.getVersion());
+      assertEquals("weather-forecast-openapi.yaml", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(1, importedSvc.getOperations().size());
+      assertEquals("GET /forecast/{region}", importedSvc.getOperations().get(0).getName());
+      assertEquals(5, importedSvc.getOperations().get(0).getResourcePaths().size());
+
+      // Inspect and check resources.
+      List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(1, resources.size());
+
+      Resource resource = resources.get(0);
+      assertEquals("WeatherForecast API-1.0.0.yaml", resource.getName());
+      assertEquals("weather-forecast-openapi.yaml", resource.getSourceArtifact());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(5, requests.size());
+      for (Request request : requests) {
+         assertEquals("weather-forecast-openapi.yaml", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(5, requests.size());
+      for (Response response : responses) {
+         assertEquals("weather-forecast-openapi.yaml", response.getSourceArtifact());
+      }
+   }
+
+   @Test
+   public void testImportServiceDefinitionMainAndSecondary() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("WeatherForecast API", importedSvc.getName());
+      assertEquals("1.1.0", importedSvc.getVersion());
+      assertEquals("weather-forecast-raw-openapi.yaml", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(1, importedSvc.getOperations().size());
+      assertNull(importedSvc.getOperations().get(0).getResourcePaths());
+
+      // Inspect and check resources.
+      List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(1, resources.size());
+
+      Resource resource = resources.get(0);
+      assertEquals("WeatherForecast API-1.1.0.yaml", resource.getName());
+      assertEquals("weather-forecast-raw-openapi.yaml", resource.getSourceArtifact());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, requests.size());
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, responses.size());
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-postman.json");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("weather-forecast-postman.json", false));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      importedSvc = services.get(0);
+      assertEquals("WeatherForecast API", importedSvc.getName());
+      assertEquals("1.1.0", importedSvc.getVersion());
+      assertEquals("weather-forecast-raw-openapi.yaml", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(1, importedSvc.getOperations().size());
+      assertEquals(DispatchStyles.URI_ELEMENTS, importedSvc.getOperations().get(0).getDispatcher());
+      assertEquals(5, importedSvc.getOperations().get(0).getResourcePaths().size());
+
+      // Inspect and check resources.
+      resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(1, resources.size());
+
+      resource = resources.get(0);
+      assertEquals("WeatherForecast API-1.1.0.yaml", resource.getName());
+      assertEquals("weather-forecast-raw-openapi.yaml", resource.getSourceArtifact());
+
+      // Inspect and check requests.
+      requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(5, requests.size());
+      for (Request request : requests) {
+         assertEquals("weather-forecast-postman.json", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(5, requests.size());
+      for (Response response : responses) {
+         assertEquals("weather-forecast-postman.json", response.getSourceArtifact());
+      }
+   }
 
    @Test
    public void testCreateGenericResourceService() {

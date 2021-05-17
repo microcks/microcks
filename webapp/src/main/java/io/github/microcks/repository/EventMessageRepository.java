@@ -34,6 +34,8 @@ public interface EventMessageRepository extends MongoRepository<EventMessage, St
 
    List<EventMessage> findByTestCaseId(String testCaseId);
 
+   List<EventMessage> findByOperationIdAndSourceArtifact(String operationId, String sourceArtifact);
+
    @Query("{ 'operationId' : {'$in' : ?0}}")
    List<EventMessage> findByOperationIdIn(List<String> operationIds);
 }

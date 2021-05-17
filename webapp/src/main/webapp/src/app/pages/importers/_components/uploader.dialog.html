@@ -11,9 +11,16 @@
   <div class="container-fluid">
     <br/>
     <input type="file" name="snapshot" ng2FileSelect [uploader]="uploader" />
+    <br/>
+    <div class="control-group">
+      <h5>Is a Secondary Artifact ?</h5>
+      <label class="control-label" for="mainArtifact">
+        <input type="checkbox" id="mainArtifact" name="mainArtifact" (ngModel)="!mainArtifact" (ngModelChange)="updateMainArtifact($event)"/> &nbsp; Just merge examples into existing API | Service definition.
+      </label>
+    </div>
     <div class="pull-right">
       <button type="button" class="btn btn-success" 
-          (click)="uploader.uploadAll()" 
+          (click)="upload()" 
           [disabled]="!uploader.getNotUploadedItems().length" >
         <span class="fa fa-upload"></span> Upload
       </button>

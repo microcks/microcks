@@ -1,0 +1,208 @@
+{
+	"info": {
+		"_postman_id": "c60c547f-69c3-45e7-b985-3f23439d4edf",
+		"name": "WeatherForecast API",
+		"description": "version=1.1.0 - A simple API for demonstrating dispatching capabilities in Microcks",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "forecast",
+			"item": [
+				{
+					"name": "Get Forecast",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http:///forecast/{region}",
+							"protocol": "http",
+							"path": [
+								"forecast",
+								"{region}"
+							],
+							"variable": [
+								{
+									"key": "region",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Unknown",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http:///forecast/:region",
+									"protocol": "http",
+									"path": [
+										"forecast",
+										":region"
+									],
+									"variable": [
+										{
+											"key": "region",
+											"value": "other"
+										}
+									]
+								}
+							},
+							"code": 404,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "Region is unknown. Choose in north, west, east or south."
+						},
+						{
+							"name": "East",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http:///forecast/:region",
+									"protocol": "http",
+									"path": [
+										"forecast",
+										":region"
+									],
+									"variable": [
+										{
+											"key": "region",
+											"value": "east"
+										}
+									]
+								}
+							},
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"region\": \"east\",\n    \"temp\": -6.6,\n    \"weather\": \"frosty\",\n    \"visibility\": 523\n}"
+						},
+						{
+							"name": "North",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http:///forecast/:region",
+									"protocol": "http",
+									"path": [
+										"forecast",
+										":region"
+									],
+									"variable": [
+										{
+											"key": "region",
+											"value": "north"
+										}
+									]
+								}
+							},
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [],
+							"cookie": [],
+							"body": "{\n    \"region\": \"north\",\n    \"temp\": -1.5,\n    \"weather\": \"snowy\",\n    \"visibility\": 25\n}"
+						},
+						{
+							"name": "South",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http:///forecast/:region",
+									"protocol": "http",
+									"path": [
+										"forecast",
+										":region"
+									],
+									"variable": [
+										{
+											"key": "region",
+											"value": "south"
+										}
+									]
+								}
+							},
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"region\": \"south\",\n    \"temp\": 28.3,\n    \"weather\": \"sunny\",\n    \"visibility\": 1500\n}"
+						},
+						{
+							"name": "West",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http:///forecast/:region",
+									"protocol": "http",
+									"path": [
+										"forecast",
+										":region"
+									],
+									"variable": [
+										{
+											"key": "region",
+											"value": "west"
+										}
+									]
+								}
+							},
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"region\": \"west\",\n    \"temp\": 12.1,\n    \"weather\": \"rainy\",\n    \"visibility\": 300\n}"
+						}
+					]
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

@@ -11,13 +11,18 @@
             <p class="help-block">The name this import job will have for later controlling it (should be unique).</p>
           </div>
         </div>
-        <br/>
         <div class="control-group">
           <label class="control-label required-pf" for="repositoryUrl">Repository URL</label>
           <div class="controls">
             <input type="url" placeholder="eg. http://git.mycompany.com/repos/master/MyRepository.xml" id="repositoryUrl" name="repositoryUrl" class="form-control" [(ngModel)]="job.repositoryUrl" (ngModelChange)="updateJobProperties()" required/>
             <p class="help-block">The URL we'll use to scan your project (may be a Git or Subversion repository).</p>
           </div>
+        </div>
+        <div class="control-group">
+          <h5>Is a Secondary Artifact ?</h5>
+          <label class="control-label" for="mainArtifact">
+            <input type="checkbox" id="mainArtifact" name="mainArtifact" (ngModel)="!job.mainArtifact" (ngModelChange)="updateMainArtifact($event)"/> &nbsp; Just merge examples into existing API | Service definition.
+          </label>
         </div>
       </fieldset>
     </form>
@@ -27,7 +32,7 @@
     <form class="form-horizontal">
       <fieldset>
         <legend><span class="fa fa-lock"></span> Authentication secret</legend>
-        <div class="control-group" *ngIf="job.repositoryUrl != null && job.repositoryUrl.startsWith('https:')">
+        <div class="control-group" *ngIf="job.repositoryUrl && job.repositoryUrl.startsWith('https:')">
           <h5>Disable SSL Verification ?</h5>
           <label for="repositoryDisableSSLValidation">
             <input type="checkbox" id="repositoryDisableSSLValidation" name="repositoryDisableSSLValidation" [(ngModel)]="job.repositoryDisableSSLValidation"/> &nbsp; Ignore certificate validity when accessing repository.
@@ -68,12 +73,16 @@
       <span class="wizard-pf-review-item-label">Repository URL:</span>
       <span class="wizard-pf-review-item-value">{{ job.repositoryUrl }}</span>
     </div>
+    <div class="wizard-pf-review-item">
+      <span class="wizard-pf-review-item-label">Secondary Artifact:</span>
+      <span class="wizard-pf-review-item-value">{{ !job.mainArtifact }}</span>
+    </div>
   </form>
 </ng-template>
 <!-- Step 2A: Details -->
 <ng-template #step2ReviewTemplate>
   <form class="form">
-    <div class="wizard-pf-review-item" *ngIf="job.repositoryUrl.startsWith('https:')">
+    <div class="wizard-pf-review-item" *ngIf="job.repositoryUrl && job.repositoryUrl.startsWith('https:')">
       <span class="wizard-pf-review-item-label">SSL Validation disabled:</span>
       <span class="wizard-pf-review-item-value">{{ job.repositoryDisableSSLValidation }}</span>
     </div>
