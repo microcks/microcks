@@ -81,10 +81,11 @@ public class ServiceService {
     * @param repositoryUrl The String representing mock repository url.
     * @param repositorySecret The authentication secret associated with the repository url. Can be set to null if none.
     * @param disableSSLValidation Whether SSL certificates validation should be turned off.
+    * @param mainArtifact Whether this repository should be considered as main artifact for Services to import.
     * @return The list of imported Services
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
-   public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret, boolean disableSSLValidation) throws MockRepositoryImportException {
+   public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret, boolean disableSSLValidation, boolean mainArtifact) throws MockRepositoryImportException {
       log.info("Importing service definitions from " + repositoryUrl);
       File localFile = null;
 
@@ -105,7 +106,8 @@ public class ServiceService {
             repositoryUrl.substring(0, repositoryUrl.lastIndexOf("/")),
             repositorySecret,
             disableSSLValidation);
-      return importServiceDefinition(localFile, referenceResolver);
+      return importServiceDefinition(localFile, referenceResolver,
+            new ArtifactInfo(repositoryUrl.substring(repositoryUrl.lastIndexOf("/") + 1), mainArtifact));
    }
 
 
@@ -114,10 +116,11 @@ public class ServiceService {
     * repository. This uses a MockRepositoryImporter under hood.
     * @param repositoryFile The File for mock repository.
     * @param referenceResolver The Resolver to be used during import (may be null).
+    * @param artifactInfo The essential information on Artifact to import.
     * @return The list of imported Services
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
-   public List<Service> importServiceDefinition(File repositoryFile, ReferenceResolver referenceResolver) throws MockRepositoryImportException {
+   public List<Service> importServiceDefinition(File repositoryFile, ReferenceResolver referenceResolver, ArtifactInfo artifactInfo) throws MockRepositoryImportException {
       // Retrieve the correct importer based on file path.
       MockRepositoryImporter importer = null;
       try {
@@ -127,41 +130,58 @@ public class ServiceService {
          throw new MockRepositoryImportException(ioe.getMessage(), ioe);
       }
 
+      Service reference = null;
       boolean serviceUpdate = false;
+
       List<Service> services = importer.getServiceDefinitions();
       for (Service service : services){
          Service existingService = serviceRepository.findByNameAndVersion(service.getName(), service.getVersion());
          log.debug("Service [{}, {}] exists ? {}", service.getName(), service.getVersion(), existingService != null);
-         if (existingService != null){
-            // Retrieve its previous identifier and metadatas.
-            service.setId(existingService.getId());
-            service.setMetadata(existingService.getMetadata());
 
-            // Keep its overriden operation properties
-            copyOverridenOperations(existingService, service);
-            serviceUpdate = true;
-         }
-         if (service.getMetadata() == null) {
-            service.setMetadata(new Metadata());
-         }
+         // If it's the main artifact: retrieve previous id and props if update, save anyway.
+         if (artifactInfo.isMainArtifact()) {
+            if (existingService != null) {
+               // Retrieve its previous identifier and metadatas.
+               service.setId(existingService.getId());
+               service.setMetadata(existingService.getMetadata());
 
-         // For services of type EVENT, we should put default values on frequency and bindings.
-         if (service.getType().equals(ServiceType.EVENT)) {
-            for (Operation operation : service.getOperations()) {
-               if (operation.getDefaultDelay() == null) {
-                  operation.setDefaultDelay(defaultAsyncFrequency);
-               }
-               if (operation.getBindings() == null || operation.getBindings().isEmpty()) {
-                  operation.addBinding(defaultAsyncBinding, new Binding(BindingType.valueOf(defaultAsyncBinding)));
-               }
+               // Keep its overriden operation properties.
+               copyOverridenOperations(existingService, service);
+               serviceUpdate = true;
             }
-         }
+            if (service.getMetadata() == null) {
+               service.setMetadata(new Metadata());
+            }
 
-         service.getMetadata().objectUpdated();
-         service = serviceRepository.save(service);
+            // For services of type EVENT, we should put default values on frequency and bindings.
+            if (service.getType().equals(ServiceType.EVENT)) {
+               manageEventServiceDefaults(service);
+            }
+
+            service.getMetadata().objectUpdated();
+            service.setSourceArtifact(artifactInfo.getArtifactName());
+            service = serviceRepository.save(service);
+
+            // We're dealing with main artifact so reference is saved or updated one.
+            reference = service;
+         } else {
+            // It's a secondary artifact just for messages. We'll have problems if not having an existing service...
+            if (existingService == null) {
+               log.warn("Trying to import {} as a secondary artifact but there's no existing [{}, {}] Service. Just skipping.",
+                     artifactInfo.getArtifactName(), service.getName(), service.getVersion());
+               break;
+            }
+            // We're dealing with secondary artifact so reference is the pre-existing one.
+            // Moreover, we should replace current imported service (unbound/unsaved)
+            // by reference in the results list.
+            reference = existingService;
+            services.remove(service);
+            services.add(reference);
+         }
 
          // Remove resources previously attached to service.
-         List<Resource> existingResources = resourceRepository.findByServiceId(service.getId());
+         List<Resource> existingResources = resourceRepository.findByServiceIdAndSourceArtifact(
+               reference.getId(), artifactInfo.getArtifactName());
          if (existingResources != null && existingResources.size() > 0){
             resourceRepository.deleteAll(existingResources);
          }
@@ -169,26 +189,33 @@ public class ServiceService {
          // Save new resources.
          List<Resource> resources = importer.getResourceDefinitions(service);
          for (Resource resource : resources){
-            resource.setServiceId(service.getId());
+            resource.setServiceId(reference.getId());
+            resource.setSourceArtifact(artifactInfo.getArtifactName());
          }
          resourceRepository.saveAll(resources);
 
-         for (Operation operation : service.getOperations()){
-            String operationId = IdBuilder.buildOperationId(service, operation);
+         for (Operation operation : reference.getOperations()){
+            String operationId = IdBuilder.buildOperationId(reference, operation);
 
             // Remove messages previously attached to service.
-            requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
-            responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
-            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
+            requestRepository.deleteAll(requestRepository.findByOperationIdAndSourceArtifact(
+                  operationId, artifactInfo.getArtifactName()));
+            responseRepository.deleteAll(responseRepository.findByOperationIdAndSourceArtifact(
+                  operationId, artifactInfo.getArtifactName()));
+            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationIdAndSourceArtifact(
+                  operationId, artifactInfo.getArtifactName()));
 
             List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
                   RequestResponsePair pair = (RequestResponsePair)exchange;
 
-                  // Associate request and response with operation.
+                  // Associate request and response with operation and artifact.
                   pair.getRequest().setOperationId(operationId);
                   pair.getResponse().setOperationId(operationId);
+                  pair.getRequest().setSourceArtifact(artifactInfo.getArtifactName());
+                  pair.getResponse().setSourceArtifact(artifactInfo.getArtifactName());
 
                   // Save response and associate request with response before saving it.
                   responseRepository.save(pair.getResponse());
@@ -198,8 +225,9 @@ public class ServiceService {
                } else if (exchange instanceof UnidirectionalEvent) {
                   UnidirectionalEvent event = (UnidirectionalEvent)exchange;
 
-                  // Associate event message with operation before saving it..
+                  // Associate event message with operation and artifact before saving it..
                   event.getEventMessage().setOperationId(operationId);
+                  event.getEventMessage().setSourceArtifact(artifactInfo.getArtifactName());
                   eventMessageRepository.save(event.getEventMessage());
                }
             }
@@ -207,10 +235,10 @@ public class ServiceService {
 
          // When extracting message information, we may have modified Operation because discovered new resource paths
          // depending on variable URI parts. As a consequence, we got to update Service in repository.
-         serviceRepository.save(service);
+         serviceRepository.save(reference);
 
          // Publish a Service update event before returning.
-         publishServiceChangeEvent(service, serviceUpdate ? ChangeType.UPDATED : ChangeType.CREATED);
+         publishServiceChangeEvent(reference, serviceUpdate ? ChangeType.UPDATED : ChangeType.CREATED);
       }
       log.info("Having imported {} services definitions into repository", services.size());
       return services;
@@ -372,6 +400,21 @@ public class ServiceService {
                   op.setParameterConstraints(existingOperation.getParameterConstraints());
                   op.setOverride(true);
                }
+            }
+         }
+      }
+   }
+
+   /** Manage the default values for Service of type EVENT */
+   private void manageEventServiceDefaults(Service service) {
+      // For services of type EVENT, we should put default values on frequency and bindings.
+      if (service.getType().equals(ServiceType.EVENT)) {
+         for (Operation operation : service.getOperations()) {
+            if (operation.getDefaultDelay() == null) {
+               operation.setDefaultDelay(defaultAsyncFrequency);
+            }
+            if (operation.getBindings() == null || operation.getBindings().isEmpty()) {
+               operation.addBinding(defaultAsyncBinding, new Binding(BindingType.valueOf(defaultAsyncBinding)));
             }
          }
       }

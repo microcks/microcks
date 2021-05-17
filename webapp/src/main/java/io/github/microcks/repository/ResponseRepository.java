@@ -38,6 +38,8 @@ public interface ResponseRepository extends MongoRepository<Response, String> {
 
    List<Response> findByOperationIdAndDispatchCriteria(String operationId, String dispatchCriteria);
 
+   List<Response> findByOperationIdAndSourceArtifact(String operationId, String sourceArtifact);
+
    @Query("{ 'operationId' : {'$in' : ?0}}")
    List<Response> findByOperationIdIn(List<String> operationIds);
 }

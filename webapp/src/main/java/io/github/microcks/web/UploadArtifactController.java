@@ -19,6 +19,7 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.Service;
+import io.github.microcks.service.ArtifactInfo;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.MockRepositoryImportException;
@@ -65,7 +66,8 @@ public class UploadArtifactController {
             File localFile = HTTPDownloader.handleHTTPDownloadToFile(url, null, true);
 
             // Now try importing services.
-            services = serviceService.importServiceDefinition(localFile, new ReferenceResolver(url, null, true));
+            services = serviceService.importServiceDefinition(localFile, new ReferenceResolver(url, null, true),
+                  new ArtifactInfo(url, true));
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item " + url, ioe);
             return new ResponseEntity<Object>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -80,7 +82,8 @@ public class UploadArtifactController {
    }
 
    @RequestMapping(value = "/artifact/upload", method = RequestMethod.POST)
-   public ResponseEntity<?> importArtifact(@RequestParam(value = "file") MultipartFile file) {
+   public ResponseEntity<?> importArtifact(@RequestParam(value = "file") MultipartFile file,
+                                           @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!file.isEmpty()) {
          log.debug("Content type of " + file.getOriginalFilename() + " is " + file.getContentType());
 
@@ -106,7 +109,7 @@ public class UploadArtifactController {
             }
 
             // Now try importing services.
-            services = serviceService.importServiceDefinition(new File(localFile), null);
+            services = serviceService.importServiceDefinition(new File(localFile), null, new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
          } catch (IOException ioe) {
             log.error("Exception while writing uploaded item " + file.getOriginalFilename(), ioe);
             return new ResponseEntity<Object>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);

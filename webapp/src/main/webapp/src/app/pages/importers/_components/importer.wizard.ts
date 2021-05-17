@@ -143,6 +143,9 @@ export class ImporterWizardComponent implements OnInit {
       this.job.secretRef = null;
     }
   }
+  updateMainArtifact(event: any): void {
+    this.job.mainArtifact = !event;
+  }
   updateSecretProperties(event: any): void {
     var secretId = event.target.value;
     if ('none' != event.target.value) {

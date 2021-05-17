@@ -34,6 +34,8 @@ public interface ResourceRepository extends MongoRepository<Resource, String> {
 
    List<Resource> findByServiceId(String serviceId);
 
+   List<Resource> findByServiceIdAndSourceArtifact(String serviceId, String sourceArtifact);
+
    @Query("{ 'serviceId' : {'$in' : ?0}}")
    List<Resource> findByServiceIdIn(List<String> serviceIds);
 }

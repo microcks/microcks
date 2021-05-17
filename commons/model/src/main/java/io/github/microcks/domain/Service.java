@@ -36,6 +36,7 @@ public class Service {
    private String xmlNS;
    private ServiceType type;
    private Metadata metadata;
+   private String sourceArtifact;
 
    private List<Operation> operations = new ArrayList<>();
 
@@ -77,6 +78,14 @@ public class Service {
 
    public void setType(ServiceType type) {
       this.type = type;
+   }
+
+   public String getSourceArtifact() {
+      return sourceArtifact;
+   }
+
+   public void setSourceArtifact(String sourceArtifact) {
+      this.sourceArtifact = sourceArtifact;
    }
 
    public List<Operation> getOperations() {

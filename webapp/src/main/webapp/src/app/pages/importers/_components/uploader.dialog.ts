@@ -32,7 +32,8 @@ export class ArtifactUploaderDialogComponent implements OnInit {
   title: string;
   closeBtnName: string;
 
-  uploader: FileUploader = new FileUploader({url: '/api/artifact/upload', itemAlias: 'file'});
+  mainArtifact: boolean = true;
+  uploader: FileUploader = new FileUploader({url: '/api/artifact/upload', itemAlias: 'file', parametersBeforeFiles: true});
   
   constructor(public bsModalRef: BsModalRef, private notificationService: NotificationService) {}
  
@@ -45,5 +46,15 @@ export class ArtifactUploaderDialogComponent implements OnInit {
       this.notificationService.message(NotificationType.SUCCESS,
         item.file.name, "Import of " + response + " done!", false, null, null);
     }
+  }
+
+  private updateMainArtifact(event: any): void {
+    this.mainArtifact = !event;
+  }
+  private upload(): void {
+    this.uploader.onBuildItemForm = (item: FileItem, form: any) => {
+      form.append('mainArtifact', this.mainArtifact);
+    };
+    this.uploader.uploadAll()
   }
 }

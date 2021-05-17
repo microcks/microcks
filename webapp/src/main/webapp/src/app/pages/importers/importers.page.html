@@ -40,8 +40,8 @@
           </div>
           <div class="list-view-pf-additional-info">
             <div class="list-view-pf-additional-info-item" >
-              <span *ngIf="job.secretRef != null" class="fa fa-lock" tooltip="Using {{ job.secretRef.name }} secret"></span>
-              <span *ngIf="job.secretRef == null" class="fa"></span>
+              <span *ngIf="!job.mainArtifact" class="pficon pficon-resources-almost-empty" tooltip="Secondary artifact"></span>
+              <span *ngIf="job.secretRef != null" class="pficon pficon-locked" tooltip="Using {{ job.secretRef.name }} secret"></span>
             </div>
             <div class="list-view-pf-additional-info-item" >
               <span class="label label-info" *ngIf="job.lastImportDate">Imported</span>

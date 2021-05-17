@@ -35,6 +35,7 @@ public class Resource {
    private String content;
    private ResourceType type;
    private String serviceId;
+   private String sourceArtifact;
 
    public String getId() {
       return id;
@@ -82,5 +83,13 @@ public class Resource {
 
    public void setServiceId(String serviceId) {
       this.serviceId = serviceId;
+   }
+
+   public String getSourceArtifact() {
+      return sourceArtifact;
+   }
+
+   public void setSourceArtifact(String sourceArtifact) {
+      this.sourceArtifact = sourceArtifact;
    }
 }

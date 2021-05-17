@@ -38,6 +38,7 @@ public class ImportJob {
    private String id;
    private String name;
    private String repositoryUrl;
+   private boolean mainArtifact = true;
    private boolean repositoryDisableSSLValidation = false;
    private String frequency;
    private Date createdDate;
@@ -71,6 +72,14 @@ public class ImportJob {
 
    public void setRepositoryUrl(String repositoryUrl) {
       this.repositoryUrl = repositoryUrl;
+   }
+
+   public boolean isMainArtifact() {
+      return mainArtifact;
+   }
+
+   public void setMainArtifact(boolean mainArtifact) {
+      this.mainArtifact = mainArtifact;
    }
 
    public boolean isRepositoryDisableSSLValidation() {

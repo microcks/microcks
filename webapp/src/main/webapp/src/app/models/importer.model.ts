@@ -22,6 +22,7 @@ export class ImportJob {
   id: string;
   name: string;
   repositoryUrl: string;
+  mainArtifact: boolean = true;
   repositoryDisableSSLValidation: boolean = false;
   frequency: string;
   createdDate: Date;
