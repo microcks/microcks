@@ -158,11 +158,18 @@ export class ServiceDetailPageComponent implements OnInit {
     this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
   }
 
-  public getHeaderName(exchange: Exchange): string {
+  public getExchangeName(exchange: Exchange): string {
     if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
       return (exchange as UnidirectionalEvent).eventMessage.name;
     } else {
       return (exchange as RequestResponsePair).request.name;
+    }
+  }
+  public getExchangeSourceArtifact(exchange: Exchange): string {
+    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
+      return (exchange as UnidirectionalEvent).eventMessage.sourceArtifact;
+    } else {
+      return (exchange as RequestResponsePair).request.sourceArtifact;
     }
   }
 

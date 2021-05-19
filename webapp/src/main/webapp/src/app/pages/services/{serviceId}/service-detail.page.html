@@ -258,7 +258,14 @@
 
           <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
           <tabset>
-            <tab *ngFor="let exchange of view.messagesMap[item.name]" heading="{{ getHeaderName(exchange) }}">
+            <tab *ngFor="let exchange of view.messagesMap[item.name]">
+              <ng-template tabHeading>
+                {{ getExchangeName(exchange) }}
+                <span class="learn-more-inline">
+                  <i tooltip="Source artifact: {{ getExchangeSourceArtifact(exchange) }}" class="pficon pficon-resources-almost-empty" aria-hidden="true"></i>
+                </span>
+              </ng-template>
+
               <div class="row" *ngIf="view.service.type === 'EVENT'">
                 <div class="col-md-6">
                   <h5 class="subsection-label">Message</h5>
