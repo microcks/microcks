@@ -122,7 +122,7 @@
                     <span *ngIf="testStep.message">
                       <dt>Error:</dt>
                       <dd>
-                        <code><small>{{ testStep.message }}</small></code>
+                        <code class="code-block">{{ formatErrorMessage(testStep.message) }}</code>
                       </dd>
                     </span>
                   </dl>

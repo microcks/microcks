@@ -212,7 +212,7 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
       StringBuilder result = new StringBuilder();
       for (String message : messages){
          result.append(message);
-         result.append("<br/>").append("================").append("<br/>");
+         result.append("<br/>").append(" ================ ").append("<br/>");
       }
       return result.toString();
    }

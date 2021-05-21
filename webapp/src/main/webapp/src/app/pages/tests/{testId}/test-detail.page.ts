@@ -99,7 +99,6 @@ export class TestDetailPageComponent implements OnInit {
     if (events == undefined) {
       return undefined;
     }
-    console.log("events: " + JSON.stringify(events));
     var result = events.filter(function(item, index, array) {
       return item.eventMessage.name == eventMessageName; 
     })[0];
@@ -117,7 +116,8 @@ export class TestDetailPageComponent implements OnInit {
 
   public formatErrorMessage(message: string): string {
     if (message != undefined) {
-      return message.replace(/\\n/g, '\n');
+      var result = message.replace(/\\n/g, '\n');
+      return result.replace(/<br\/>/g, '\n');
     }
     return "";
   }
