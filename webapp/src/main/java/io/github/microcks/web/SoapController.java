@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriUtils;
 import org.xml.sax.InputSource;
 
 import javax.script.ScriptEngine;
@@ -143,7 +144,7 @@ public class SoapController {
             try {
                List<XmlError> errors = SoapMessageValidator.validateSoapMessage(
                      rOperation.getInputName(), service.getXmlNS(), body,
-                     resourceUrl + service.getName() + "-" + version + ".wsdl", true);
+                     resourceUrl + UriUtils.encodePath(service.getName() + "-" + version, "UTF-8") + ".wsdl", true);
                log.debug("SoapBody validation errors: " + errors.size());
 
                // Return a 400 http code with errors.
