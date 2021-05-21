@@ -19,7 +19,8 @@
     <junit.version>4.13.1</junit.version>
     <keycloak.version>10.0.1</keycloak.version>
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
-    <soapui.version>5.1.1</soapui.version>
+    <soapui.version>5.6.0</soapui.version>
+    <soapui.jayway.version>0.9.1</soapui.jayway.version>
   </properties>
 
   <dependencyManagement>
@@ -30,6 +31,11 @@
         <version>${keycloak.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.jayway.jsonpath</groupId>
+        <artifactId>json-path</artifactId>
+        <version>${soapui.jayway.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -87,8 +93,48 @@
       <version>${soapui.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>javafx</groupId>
-          <artifactId>jfxrt</artifactId>
+          <groupId>com.jgoodies</groupId>
+          <artifactId>looks</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.openjfx</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>amf</groupId>
+          <artifactId>flex-messaging-common</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>amf</groupId>
+          <artifactId>flex-messaging-opt</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>amf</groupId>
+          <artifactId>flex-messaging-proxy</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>amf</groupId>
+          <artifactId>flex-messaging-remoting</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>l2fprod</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-ext-jdk15on</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.sonatype.install4j</groupId>
+          <artifactId>i4jruntime</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.smartbear.utils.analytics</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>net.sf.saxon</groupId>
+          <artifactId>saxon</artifactId>
         </exclusion>
         <exclusion>
           <artifactId>servlet-api</artifactId>
@@ -121,13 +167,15 @@
       </exclusions>
     </dependency>
 
-    <!-- Test related dependencies -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
-      <scope>test</scope>
+      <!-- Needed by SoapUI for some assertions, so remove test scope -->
+      <!-- <scope>test</scope> -->
     </dependency>
+
+    <!-- Test related dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
