@@ -41,7 +41,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +68,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    // Flag telling if V2 format is used.
    private boolean isV2Collection = false;
 
+   /** Regular expression used to evaluate operation name matching. */
+   private static final String OPERATION_NAME_EXPRESSION_PREFIX = "(GET|POST|PUT|PATH|DELETE|OPTION)?( *)(/)?";
 
    /**
     * Build a new importer.
@@ -184,7 +193,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          String operationName = buildOperationName(itemNode, folderName);
 
          // Select item based onto operation name.
-         if (operationName.equals(operation.getName())) {
+         if (areOperationsEquivalent(operation.getName(), operationName)) {
             Iterator<JsonNode> responses = itemNode.path("response").elements();
             while (responses.hasNext()) {
                JsonNode responseNode = responses.next();
@@ -218,6 +227,18 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          }
       }
       return result;
+   }
+
+   private boolean areOperationsEquivalent(String operationNameRef, String operationNameCandidate) {
+      if (operationNameRef.equals(operationNameCandidate)) {
+         return true;
+      }
+      try {
+         return operationNameCandidate.matches(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef);
+      } catch (PatternSyntaxException pse) {
+         log.warn(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef + " throws a PatternSyntaxException");
+      }
+      return false;
    }
 
    private Request buildRequest(JsonNode requestNode, String name) {
@@ -329,7 +350,6 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
     * Extract the list of operations from Collection.
     */
    private List<Operation> extractOperations() throws MockRepositoryImportException {
-
       if (isV2Collection) {
          return extractOperationsV2();
       }
