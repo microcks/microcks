@@ -19,6 +19,7 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
@@ -33,6 +34,8 @@ public interface ResourceRepository extends MongoRepository<Resource, String> {
    Resource findByName(String name);
 
    List<Resource> findByServiceId(String serviceId);
+
+   List<Resource> findByServiceIdAndType(String serviceId, ResourceType type);
 
    List<Resource> findByServiceIdAndSourceArtifact(String serviceId, String sourceArtifact);
 

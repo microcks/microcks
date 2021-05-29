@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
  * file ; whether encoding into JSON or YAML documents.
  * @author laurent
  */
-public class AsyncAPIImporter implements MockRepositoryImporter  {
+public class AsyncAPIImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(AsyncAPIImporter.class);

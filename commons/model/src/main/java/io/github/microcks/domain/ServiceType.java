@@ -26,5 +26,6 @@ public enum ServiceType {
    SOAP_HTTP,
    REST,
    GENERIC_REST,
-   EVENT
+   EVENT,
+   GRPC
 }

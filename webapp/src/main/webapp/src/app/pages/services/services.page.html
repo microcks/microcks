@@ -29,7 +29,8 @@
             [class.fa-code]="service.type === 'SOAP_HTTP'" [class.soap-icon-sm]="service.type === 'SOAP_HTTP'"
             [class.pficon-plugged]="service.type === 'REST'" [class.rest-icon-sm]="service.type === 'REST'"
             [class.fa-rocket]="service.type === 'GENERIC_REST'" [class.generic-icon-sm]="service.type === 'GENERIC_REST'"
-            [class.fa-bolt]="service.type === 'EVENT'" [class.event-icon-sm]="service.type === 'EVENT'"></span>
+            [class.fa-bolt]="service.type === 'EVENT'" [class.event-icon-sm]="service.type === 'EVENT'"
+            [class.pficon-connected]="service.type === 'GRPC'" [class.grpc-icon-sm]="service.type === 'GRPC'"></span>
         </div>
         <div class="list-view-pf-body">
           <div class="list-view-pf-description">
@@ -40,7 +41,8 @@
               <span class="label label-primary" *ngIf="service.type === 'SOAP_HTTP'">SOAP</span>
               <span class="label label-success" *ngIf="service.type === 'REST'">REST</span>
               <span class="label label-warning" *ngIf="service.type === 'EVENT'">EVENT</span>
-              <span class="label label-info" *ngIf="service.type === 'GENERIC_REST'">DYNAMIC</span>
+              <span class="label label-grpc" *ngIf="service.type === 'GRPC'">GRPC</span>
+              <span class="label label-gene" *ngIf="service.type === 'GENERIC_REST'">DYNA</span>
                   | Version <b>{{ service.version }}</b>
                   | <label-list [metadata]="service.metadata" [filter]="repositoryFilterFeatureLabelList()"></label-list>
               <br/>

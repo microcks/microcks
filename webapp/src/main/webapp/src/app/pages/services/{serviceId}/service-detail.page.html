@@ -31,7 +31,8 @@
           <span class="label label-primary" *ngIf="view.service.type === 'SOAP_HTTP'">SOAP</span>
           <span class="label label-success" *ngIf="view.service.type === 'REST'">REST</span>
           <span class="label label-warning" *ngIf="view.service.type === 'EVENT'">EVENT</span>
-          <span class="label label-info" *ngIf="view.service.type === 'GENERIC_REST'">DYNAMIC</span>
+          <span class="label label-grpc" *ngIf="view.service.type === 'GRPC'">GRPC</span>
+          <span class="label label-gene" *ngIf="view.service.type === 'GENERIC_REST'">DYNAMIC</span>
         </dd>
         <span *ngIf="view.service.type === 'SOAP_HTTP'">
           <dt>Namespace:</dt>
@@ -200,7 +201,7 @@
                 </span>
               </dl>
               <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
-              <span *ngIf="view.service.type === 'SOAP_HTTP'">
+              <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC'">
                 <dt>Input / Output Name:</dt>
                 <dd><code>{{ item.inputName }} / {{ item.outputName }}</code></dd>
               </span>

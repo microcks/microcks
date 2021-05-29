@@ -68,6 +68,33 @@ public class MockControllerCommons {
     * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
     * If rendering template fails, we just produce a log error message and stick to templatized response.
     * @param requestBody The body payload of incoming request.
+    * @param response The response that was found by dispatcher
+    * @return The rendered response body payload.
+    */
+   public static String renderResponseContent(String requestBody, Response response) {
+      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug("Response contains dynamic EL expression, rendering it...");
+         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+
+         // Create and fill an evaluable request object.
+         EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
+
+         // Register the request variable and evaluate the response.
+         engine.getContext().setVariable("request", evaluableRequest);
+         try {
+            return engine.getValue(response.getContent());
+         } catch (Throwable t) {
+            log.error("Failing at evaluating template " + response.getContent(), t);
+            return response.getContent();
+         }
+      }
+      return response.getContent();
+   }
+
+   /**
+    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
+    * If rendering template fails, we just produce a log error message and stick to templatized response.
+    * @param requestBody The body payload of incoming request.
     * @param requestResourcePath The resource path of mock request (if any, may be null)
     * @param request The incoming servlet request
     * @param response The response that was found by dispatcher

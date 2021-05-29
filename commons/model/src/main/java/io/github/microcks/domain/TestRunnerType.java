@@ -28,5 +28,6 @@ public enum TestRunnerType {
    SOAP_UI,
    POSTMAN,
    OPEN_API_SCHEMA,
-   ASYNC_API_SCHEMA
+   ASYNC_API_SCHEMA,
+   GRPC_PROTOBUF
 }

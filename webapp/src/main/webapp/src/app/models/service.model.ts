@@ -42,7 +42,8 @@ export class Service {
 export enum ServiceType {
   SOAP_HTTP = "SOAP_HTTP",
   REST = "REST",
-  EVENT= "EVENT",
+  EVENT = "EVENT",
+  GRPC = "GRPC",
   GENERIC_REST = "GENERIC_REST"
 }
 
@@ -110,7 +111,9 @@ export enum ContractType {
   OPEN_API_SCHEMA,
   ASYNC_API_SPEC,
   ASYNC_API_SCHEMA,
-  AVRO_SCHEMA
+  AVRO_SCHEMA,
+  PROTOBUF_SCHEMA,
+  PROTOBUF_DESCRIPTOR
 }
 
 export class Header {

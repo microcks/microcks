@@ -63,7 +63,11 @@ export class OperationOverridePageComponent implements OnInit {
       {"value": "SCRIPT", "label": "SCRIPT"}, 
       {"value": "FALLBACK", "label": "FALLBACK"},
     ],
-    'EVENT': []
+    'EVENT': [],
+    'GRPC': [
+      {"value": "JSON_BODY", "label": "JSON BODY"},
+      {"value": "FALLBACK", "label": "FALLBACK"}
+    ]
   }
 
 

@@ -19,6 +19,7 @@
 package io.github.microcks.util;
 
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
+import io.github.microcks.util.grpc.ProtobufImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
@@ -86,5 +87,15 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer should not fail !");
       }
       assertTrue(importer instanceof AsyncAPIImporter);
+
+      // Load a Protobuf schema file.
+      File protobufSchema = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(protobufSchema, null);
+      } catch (Throwable t) {
+         fail("Getting importer should not fail !");
+      }
+      assertTrue(importer instanceof ProtobufImporter);
    }
 }

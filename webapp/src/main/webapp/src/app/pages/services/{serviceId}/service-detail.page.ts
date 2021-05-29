@@ -356,7 +356,9 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public allowOperationsPropertiesEdit(): boolean {
     return (this.hasRole('admin') || this.hasRole('manager')) 
-        && (this.resolvedServiceView.service.type === 'REST' || (this.resolvedServiceView.service.type === 'EVENT' && this.asyncAPIFeatureEnabled()));
+        && (this.resolvedServiceView.service.type === 'REST' 
+            || this.resolvedServiceView.service.type === 'GRPC' 
+            || (this.resolvedServiceView.service.type === 'EVENT' && this.asyncAPIFeatureEnabled()));
   }
 
   public asyncAPIFeatureEnabled(): boolean {

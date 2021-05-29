@@ -38,6 +38,7 @@ import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.asyncapi.AsyncAPITestRunner;
+import io.github.microcks.util.grpc.GrpcTestRunner;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.postman.PostmanTestStepsRunner;
 import io.github.microcks.util.soapui.SoapUITestStepsRunner;
@@ -354,6 +355,11 @@ public class TestRunnerService {
             asyncApiRunner.setClientHttpRequestFactory(factory);
             asyncApiRunner.setAsyncMinionUrl(asyncMinionUrl);
             return asyncApiRunner;
+         case GRPC_PROTOBUF:
+            GrpcTestRunner grpcRunner = new GrpcTestRunner(resourceRepository);
+            grpcRunner.setSecret(secret);
+            grpcRunner.setTimeout(runnerTimeout);
+            return grpcRunner;
          case SOAP_UI:
             // Handle local download of correct project file.
             List<ImportJob> jobs = jobRepository.findByServiceRefId(serviceId);
