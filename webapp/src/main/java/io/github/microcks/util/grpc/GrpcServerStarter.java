@@ -18,9 +18,10 @@
  */
 package io.github.microcks.util.grpc;
 
+import io.grpc.Grpc;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
-
+import io.grpc.TlsServerCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,11 +29,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+
+import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ *
+ * This is starter component for building, starting and managing shutdown of a GRPC server handking mock calls.
  * @author laurent
  */
 @Component
@@ -43,6 +48,12 @@ public class GrpcServerStarter {
 
    @Value("${grpc.server.port:9090}")
    private final Integer serverPort = 9090;
+
+   @Value("${grpc.server.certChainFilePath:}")
+   private final String certChainFilePath = null;
+
+   @Value("${grpc.server.privateKeyFilePath:}")
+   private final String privateKeyFilePath = null;
 
    @Autowired
    private GrpcMockHandlerRegistry mockHandlerRegistry;
@@ -55,19 +66,33 @@ public class GrpcServerStarter {
    public void startGrpcServer() {
       try {
          latch = new CountDownLatch(1);
-         Server grpcServer = ServerBuilder.forPort(serverPort)
-               .fallbackHandlerRegistry(mockHandlerRegistry)
-               .build();
-         grpcServer.start();
 
+         Server grpcServer = null;
+         // If cert and private key is provided, build a TLS capable server.
+         if (certChainFilePath != null && certChainFilePath.length() > 0
+               && privateKeyFilePath != null && privateKeyFilePath.length() > 0) {
+            TlsServerCredentials.Builder tlsBuilder = TlsServerCredentials.newBuilder()
+                  .keyManager(new File(certChainFilePath), new File(privateKeyFilePath));
+            grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
+                  .fallbackHandlerRegistry(mockHandlerRegistry)
+                  .build();
+         } else {
+            // Else build a "plain text" server.
+            grpcServer = ServerBuilder.forPort(serverPort)
+                  .fallbackHandlerRegistry(mockHandlerRegistry)
+                  .build();
+         }
+         grpcServer.start();
          log.info("GRPC Server started on port " + serverPort);
+
+         Server finalGrpcServer = grpcServer;
          Runtime.getRuntime().addShutdownHook(new Thread() {
             @Override
             public void run() {
                try {
-                  if (grpcServer != null) {
+                  if (finalGrpcServer != null) {
                      log.info("Shutting down gRPC server since JVM is shutting down");
-                     grpcServer.shutdown().awaitTermination(2, TimeUnit.SECONDS);
+                     finalGrpcServer.shutdown().awaitTermination(2, TimeUnit.SECONDS);
                   }
                } catch (InterruptedException e) {
                   e.printStackTrace();

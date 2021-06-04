@@ -106,11 +106,16 @@ spec:
         volumeMounts:
           - name: "{{ .Values.appName }}-config"
             mountPath: "/deployments/config"
+          - name: "{{ .Values.appName }}-grpc-certs"
+            mountPath: "/deployments/config/grpc"
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-config"
           configMap:
             name: "{{ .Values.appName }}-config"
+        - name: "{{ .Values.appName }}-grpc-certs"
+          secret:
+            secretName: "{{ .Values.appName }}-microcks-grpc-secret"
 ---
 apiVersion: apps/v1
 kind: Deployment

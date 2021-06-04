@@ -67,6 +67,10 @@ data:
 
     # Kafka configuration properties
     spring.kafka.producer.bootstrap-servers=${KAFKA_BOOTSTRAP_SERVER:localhost:9092}
+
+    # Grpc server properties
+    grpc.server.certChainFilePath=/deployments/config/grpc/tls.crt
+    grpc.server.privateKeyFilePath=/deployments/config/grpc/tls.key
   logback.xml: |-
     <?xml version="1.0" encoding="UTF-8"?>
 

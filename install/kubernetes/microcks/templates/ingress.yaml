@@ -1,7 +1,7 @@
 kind: Ingress
 apiVersion: networking.k8s.io/v1beta1
 metadata:
-  name: microcks
+  name: "{{ .Values.appName }}"
   annotations:
     ingress.kubernetes.io/rewrite-target: /
   {{- with .Values.microcks.ingressAnnotations }}
@@ -22,12 +22,35 @@ spec:
       - backend:
           serviceName: "{{ .Values.appName }}"
           servicePort: 8080
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: "{{ .Values.appName }}-grpc"
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+spec:
+  tls:
+  - hosts:
+     - {{ ( include "microcks-grpc.url" . ) }}
+  rules:
+  - host: {{ ( include "microcks-grpc.url" . ) }}
+    http:
+      paths:
+      - backend:
+          serviceName: "{{ .Values.appName }}-grpc"
+          servicePort: 9090
 {{- if .Values.keycloak.install }}
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1beta1
 metadata:
-  name: keycloak
+  name: "{{ .Values.appName }}-keycloak"
   annotations:
     ingress.kubernetes.io/rewrite-target: /
   {{- with .Values.keycloak.ingressAnnotations }}
