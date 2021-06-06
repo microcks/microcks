@@ -182,6 +182,11 @@ export class ServiceDetailPageComponent implements OnInit {
     });
   }
 
+  private getIndex(itemName: string, responseName: string) {
+    const isExchange = (exchange) => (exchange as RequestResponsePair).response.name === responseName;
+    return this.resolvedServiceView.messagesMap[itemName].findIndex(isExchange);
+  }
+
   public openResources(): void {
     const initialState = {
       closeBtnName: 'Close',
@@ -202,14 +207,6 @@ export class ServiceDetailPageComponent implements OnInit {
       return (exchange as UnidirectionalEvent).eventMessage.sourceArtifact;
     } else {
       return (exchange as RequestResponsePair).request.sourceArtifact;
-    }
-  }
-
-  public isComplete(exchange: Exchange): boolean {
-    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
-      return true;
-    } else {
-      return (exchange as RequestResponsePair).response.complete;
     }
   }
 

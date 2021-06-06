@@ -21,6 +21,7 @@ keycloak.init(loginOptions).then(function (authenticated) {
       platformBrowserDynamic().bootstrapModule(AppModule)
       .catch(err => console.log(err));
   }
-}).catch(function () {
+}).catch(err => {
+  console.log(err);
   alert('Failed to initialize authentication subsystem.');
 });
