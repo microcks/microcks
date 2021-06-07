@@ -235,6 +235,11 @@ export class ServiceDetailPageComponent implements OnInit {
   public formatMockUrl(operation: Operation, dispatchCriteria: string): string {
     console.log("[ServiceDetailPageComponent.formatMockUrl()]");
     var result = document.location.origin;
+    
+    // Manage dev mode.
+    if (result.endsWith("localhost:4200")) {
+      result = "http://localhost:8080";
+    }
 
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
       result += '/rest/';
@@ -278,6 +283,13 @@ export class ServiceDetailPageComponent implements OnInit {
       result += '/dynarest/';
       var resourceName = this.removeVerbInUrl(operation.name);
       result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version + resourceName;
+    } else if (this.resolvedServiceView.service.type === ServiceType.GRPC) {
+      // Change port in Dev mode of add '-grpc' service name suffix.
+      if (result === "http://localhost:8080") {
+        result = "http://localhost:9090";
+      } else {
+        result = result.replace(/^([^.-]+)(.*)/, '$1-grpc$2');
+      }
     }
     
     return result;
