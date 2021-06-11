@@ -76,13 +76,26 @@ public class AsyncMockRepository {
    }
 
    /**
-    * Retrieve all the AsyncMockDefinition correspding to a specified operation frequencey
-    * @param frequency The operattion frewuency to get definitions for
+    * Retrieve all the AsyncMockDefinition corresponding to a specified operation frequency.
+    * @param frequency The operation frequency to get definitions for
     * @return A set of AsyncMockDefinition having specified operation frequency
     */
    public Set<AsyncMockDefinition> getMockDefinitionsByFrequency(Long frequency) {
       return mockDefinitions.stream()
             .filter(d -> d.getOperation().getDefaultDelay().equals(frequency))
+            .collect(Collectors.toSet());
+   }
+
+   /**
+    * Retrieve the AsyncMockDefinition corresponding to a specified service and version.
+    * @param serviceName The service name to get definition for
+    * @param version The service version to get definition for
+    * @return Should return an empty of 1 element set only.
+    */
+   public Set<AsyncMockDefinition> getMockDefinitionsByServiceAndVersion(String serviceName, String version) {
+      return mockDefinitions.stream()
+            .filter(d -> d.getOwnerService().getName().equals(serviceName)
+                  && d.getOwnerService().getVersion().equals(version))
             .collect(Collectors.toSet());
    }
 }

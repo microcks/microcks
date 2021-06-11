@@ -28,6 +28,7 @@ public class Binding {
    private String keyType;
    private String destinationType;
    private String destinationName;
+   private String method;
    private String qoS;
    private boolean persistent;
 
@@ -68,6 +69,14 @@ public class Binding {
 
    public void setDestinationName(String destinationName) {
       this.destinationName = destinationName;
+   }
+
+   public String getMethod() {
+      return method;
+   }
+
+   public void setMethod(String method) {
+      this.method = method;
    }
 
    public String getQoS() {

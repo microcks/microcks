@@ -323,7 +323,25 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                   operation.addResourcePath(channelName);
                }
 
-               // We have to look also for bindings. First at the operation level.
+               // We have to look also for bindings. First at the upper channel level.
+               if (channel.getValue().has("bindings")) {
+                  Iterator<String> bindingNames = channel.getValue().path("bindings").fieldNames();
+                  while (bindingNames.hasNext()) {
+                     String bindingName = bindingNames.next();
+                     JsonNode binding = channel.getValue().path("bindings").path(bindingName);
+
+                     switch (bindingName) {
+                        case "ws":
+                           Binding b = retrieveOrInitOperationBinding(operation, BindingType.WS);
+                           if (binding.has("method")) {
+                              b.setMethod(binding.path("method").asText());
+                           }
+                           break;
+                     }
+                  }
+               }
+
+               // Then look for bindings at the operation level.
                if (verb.getValue().has("bindings")) {
                   Iterator<String> bindingNames = verb.getValue().path("bindings").fieldNames();
                   while (bindingNames.hasNext()) {
