@@ -203,6 +203,9 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'MQTT':
             result += 'MQTT';
             break;
+          case 'WS':
+            result += 'WebSocket';
+            break;
           case 'AMQP1':
             result += 'AMQP 1.0';
             break;
@@ -298,6 +301,35 @@ export class ServiceDetailPageComponent implements OnInit {
     var serviceName = this.resolvedServiceView.service.name;
     var operationName = operation.name;
 
+    if (binding === "WS") {
+      serviceName = serviceName.replace(/\s/g, '+');
+      var versionName = this.resolvedServiceView.service.version.replace(/\s/g, '+');
+      operationName = this.removeVerbInUrl(operationName);
+
+      var dispatchCriteria = eventMessage.dispatchCriteria;
+      if (eventMessage.dispatchCriteria != null) {
+        var parts = {};
+        var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
+
+        partsCriteria = this.encodeUrl(partsCriteria);
+        partsCriteria.split('/').forEach(function(element, index, array) {
+          if (element){
+            parts[element.split('=')[0]] = element.split('=')[1];
+          }
+        });
+
+        operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function(match, p1, string) {
+          return parts[p1];
+        });
+        // Support also Postman syntax with /:part
+        operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, function(match, p1, string) {
+          return parts[p1];
+        });
+      }
+
+      return this.asyncAPIFeatureEndpoint('WS') + "/api/ws/" + serviceName + "/" + versionName + "/" + operationName;
+    }
+
     // Remove ' ', '-' in service name.
     serviceName = serviceName.replace(/\s/g, '');
     serviceName = serviceName.replace(/-/g, '');
@@ -346,10 +378,10 @@ export class ServiceDetailPageComponent implements OnInit {
 
   private removeVerbInUrl(operationName: string): string {
     if (operationName.startsWith("GET ") || operationName.startsWith("PUT ")
-        || operationName.startsWith("POST ") || operationName.startsWith("DELETE ")
-        || operationName.startsWith("OPTIONS ") || operationName.startsWith("PATCH ")
-        || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")
-        || operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
+        || operationName.startsWith("POST ") || operationName.startsWith("DELETE ")
+        || operationName.startsWith("OPTIONS ") || operationName.startsWith("PATCH ")
+        || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")
+        || operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
       operationName = operationName.slice(operationName.indexOf(' ') + 1);
     } 
     return operationName;
@@ -367,9 +399,9 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public allowOperationsPropertiesEdit(): boolean {
-    return (this.hasRole('admin') || this.hasRole('manager')) 
+    return (this.hasRole('admin') || this.hasRole('manager'))
         && (this.resolvedServiceView.service.type === 'REST' 
-            || this.resolvedServiceView.service.type === 'GRPC' 
+            || this.resolvedServiceView.service.type === 'GRPC'
             || (this.resolvedServiceView.service.type === 'EVENT' && this.asyncAPIFeatureEnabled()));
   }
 

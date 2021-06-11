@@ -1,0 +1,72 @@
+asyncapi: '2.0.0'
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User signed-up WebSocket API
+  version: 0.1.9
+  description: Sample AsyncAPI for user signedup events
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json
+channels:
+  user/signedup:
+    description: The topic on which user signed up events may be consumed
+    bindings:
+      ws:
+        method: POST
+    subscribe:
+      summary: Receive informations about user signed up
+      operationId: receivedUserSIgnedUp
+      message:
+        description: An event describing that a user just signed up.
+        traits:
+          - $ref: '#/components/messageTraits/commonHeaders'
+        payload:
+          type: object
+          additionalProperties: false
+          properties:
+            uid:
+              type: string
+            fullName:
+              type: string
+            email:
+              type: string
+              format: email
+            age:
+              type: integer
+              minimum: 18
+            sentAt:
+              type: string
+              format: date-time
+        examples:
+          - laurent:
+              summary: Example for Laurent user
+              headers: |-
+                {"my-app-header": 23}
+              payload: |-
+                {"uid": "{{uuid()}}", "fullName": "Laurent Broudoux", "email": "laurent@microcks.io", "age": 42, "sentAt": "{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"}
+          - john:
+              summary: Example for John Doe user
+              headers:
+                my-app-header: 24
+
+              payload:
+                uid: "{{uuid()}}"
+                fullName: John Doe
+                email: john@microcks.io
+                age: 36
+                sentAt: "{{now(yyyy-MM-dd'T'HH:mm:SS'Z')}}"
+components:
+  messageTraits:
+    commonHeaders:
+      headers:
+        type: object
+        properties:
+          my-app-header:
+            type: integer
+            minimum: 0
+            maximum: 100

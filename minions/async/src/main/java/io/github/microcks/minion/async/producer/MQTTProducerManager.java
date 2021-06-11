@@ -115,7 +115,7 @@ public class MQTTProducerManager {
    /**
     * Get the MQTT topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
     */
-   String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
+   public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
       logger.infof("AsyncAPI Operation  {} %s", definition.getOperation().getName());
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");

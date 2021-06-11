@@ -36,6 +36,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.inject.Qualifier;
 
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -66,6 +67,10 @@ public class ProducerManager {
 
    @Inject
    MQTTProducerManager mqttProducerManager;
+
+   @Inject
+   @RootWebSocketProducerManager
+   WebSocketProducerManager wsProducerManager;
 
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
@@ -128,6 +133,12 @@ public class ProducerManager {
                         mqttProducerManager.publishMessage(topic, message);
                      }
                      break;
+                  case WS:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String channel = wsProducerManager.getRequestURI(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        wsProducerManager.publishMessage(channel, message, eventMessage.getHeaders());
+                     }
                   default:
                      break;
                 }

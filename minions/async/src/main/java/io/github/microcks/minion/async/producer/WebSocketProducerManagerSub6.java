@@ -16,15 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.domain;
+package io.github.microcks.minion.async.producer;
+
+import io.quarkus.arc.Unremovable;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.websocket.server.ServerEndpoint;
 
 /**
- * Enumeration of types for asynchronous protocols bindings.
+ * WebSocket endpoint with 6 sub parts in channel name.
  * @author laurent
  */
-public enum BindingType {
-   KAFKA,
-   MQTT,
-   WS,
-   AMQP1
+@Unremovable
+@ApplicationScoped
+@ServerEndpoint("/api/ws/{service}/{version}/{path}/{sub}/{sub2}/{sub3}/{sub4}/{sub6}")
+public class WebSocketProducerManagerSub6 extends WebSocketProducerManager {
+
 }

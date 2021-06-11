@@ -16,15 +16,24 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.domain;
+package io.github.microcks.minion.async.producer;
 
+import javax.inject.Qualifier;
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.FIELD;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.PARAMETER;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
+@Qualifier
+@Retention(RUNTIME)
+@Target({METHOD, FIELD, PARAMETER, TYPE})
 /**
- * Enumeration of types for asynchronous protocols bindings.
+ * Qualifier annotation for the root WebSocketProducerManager of the hierarchy of endpoint.
  * @author laurent
  */
-public enum BindingType {
-   KAFKA,
-   MQTT,
-   WS,
-   AMQP1
+public @interface RootWebSocketProducerManager {
 }
