@@ -26,6 +26,7 @@ import io.github.microcks.minion.async.consumer.ConsumedMessage;
 import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MQTTMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MessageConsumptionTask;
+import io.github.microcks.minion.async.consumer.WebSocketMessageConsumptionTask;
 import io.github.microcks.util.SchemaMap;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 
@@ -289,6 +290,9 @@ public class AsyncAPITestManager {
          }
          if (MQTTMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new MQTTMessageConsumptionTask(testSpecification);
+         }
+         if (WebSocketMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
+            return new WebSocketMessageConsumptionTask(testSpecification);
          }
          return null;
       }

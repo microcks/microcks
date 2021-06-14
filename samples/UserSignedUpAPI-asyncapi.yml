@@ -10,7 +10,7 @@ channels:
     description: The topic on which user signed up events may be consumed
     subscribe:
       summary: Receive informations about user signed up
-      operationId: receivedUserSIgnedUp
+      operationId: receivedUserSignedUp
       message:
         description: An event describing that a user just signed up.
         traits:
