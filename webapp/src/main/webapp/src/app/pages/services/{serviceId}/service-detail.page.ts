@@ -308,22 +308,22 @@ export class ServiceDetailPageComponent implements OnInit {
 
       var dispatchCriteria = eventMessage.dispatchCriteria;
       if (eventMessage.dispatchCriteria != null) {
-        var parts = {};
-        var partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
+        const wsParts = {};
+        let wsPartsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
 
-        partsCriteria = this.encodeUrl(partsCriteria);
-        partsCriteria.split('/').forEach(function(element, index, array) {
+        wsPartsCriteria = this.encodeUrl(wsPartsCriteria);
+        wsPartsCriteria.split('/').forEach(function(element, index, array) {
           if (element){
-            parts[element.split('=')[0]] = element.split('=')[1];
+            wsParts[element.split('=')[0]] = element.split('=')[1];
           }
         });
 
         operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function(match, p1, string) {
-          return parts[p1];
+          return wsParts[p1];
         });
         // Support also Postman syntax with /:part
         operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, function(match, p1, string) {
-          return parts[p1];
+          return wsParts[p1];
         });
       }
 
