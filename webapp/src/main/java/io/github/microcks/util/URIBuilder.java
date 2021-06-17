@@ -44,11 +44,11 @@ public class URIBuilder{
       if (parameters != null) {
          // Browse parameters and choose between template or query one.
          for (Parameter parameter : parameters) {
-            String wadltemplate = "{" + parameter.getName() + "}";
+            String wadlTemplate = "{" + parameter.getName() + "}";
             String swaggerTemplate = "/:" + parameter.getName();
-            if (pattern.contains(wadltemplate)) {
+            if (pattern.contains(wadlTemplate)) {
                // It's a template parameter.
-               pattern = pattern.replace(wadltemplate, encodePath(parameter.getValue()));
+               pattern = pattern.replace(wadlTemplate, encodePath(parameter.getValue()));
             } else if (pattern.contains(swaggerTemplate)) {
                // It's a template parameter.
                pattern = pattern.replace(":" + parameter.getName(), encodePath(parameter.getValue()));

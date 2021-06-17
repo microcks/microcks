@@ -131,19 +131,21 @@ public class RestController {
       }
 
       // We may not have found an Operation because of not exact resource path matching with an operation
-      // using a Fallback dispatcher. Try again, just considering the verb and number of parts in path.
+      // using a Fallback dispatcher. Try again, just considering the verb and path pattern of operation.
       if (rOperation == null) {
-         int requestParts = resourcePath.split("/").length;
          for (Operation operation : service.getOperations()) {
             // Select operation based onto Http verb (GET, POST, PUT, etc ...)
             if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
-               // ... then check is we have a resource path with same number of parts.
+               // ... then check is current resource path matches operation path pattern.
                if (operation.getResourcePaths() != null) {
-                  int parts = operation.getResourcePaths().get(0).split("/").length;
-                  if (parts == requestParts) {
+                  // Produce a matching regexp removing {part} and :part from pattern.
+                  String operationPattern = getURIPattern(operation.getName());
+                  operationPattern = operationPattern.replaceAll("\\{.+\\}", "(.)+");
+                  operationPattern = operationPattern.replaceAll(":.+", "(.)+");
+                  if (resourcePath.matches(operationPattern)) {
                      rOperation = operation;
+                     break;
                   }
-                  break;
                }
             }
          }
