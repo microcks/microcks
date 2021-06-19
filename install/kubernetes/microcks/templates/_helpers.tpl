@@ -36,3 +36,21 @@ Generate certificates for keycloak ingress
 tls.crt: {{ $cert.Cert | b64enc }}
 tls.key: {{ $cert.Key | b64enc }}
 {{- end -}}
+
+
+{{/*
+Produce WS Ingress URL
+*/}}
+{{- define "microcks-ws.url" -}}
+{{ regexReplaceAll "^([^.-]+)(.*)" .Values.microcks.url "${1}-ws${2}" }}
+{{- end -}}
+
+{/*
+Generate certificates for microcks WS ingress
+*/}}
+{{- define "microcks-ws-ingress.gen-certs" -}}
+{{- $wsUrl := regexReplaceAll "^([^.-]+)(.*)" .Values.microcks.url "${1}-ws${2}" -}}
+{{- $cert := genSelfSignedCert $wsUrl nil (list $wsUrl "localhost") 3650 -}}
+tls.crt: {{ $cert.Cert | b64enc }}
+tls.key: {{ $cert.Key | b64enc }}
+{{- end -}}

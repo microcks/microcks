@@ -15,6 +15,7 @@ data:
 
     features.feature.async-api.enabled={{ .Values.features.async.enabled }}
     features.feature.async-api.default-binding={{ .Values.features.async.defaultBinding }}
+    features.feature.async-api.endpoint-WS={{ ( include "microcks-ws.url" . ) }}
     {{- if eq .Values.features.async.kafka.install true }}
     features.feature.async-api.endpoint-KAFKA={{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}:443
     {{- else }}
@@ -78,7 +79,7 @@ data:
       <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
           <charset>utf-8</charset>
-          <Pattern>[%p] %c - %m%n</Pattern>
+          <Pattern>%d{HH:mm:ss.SSS} [%p] %c - %m%n</Pattern>
         </encoder>
       </appender>
 
@@ -125,7 +126,7 @@ data:
         <resetJUL>true</resetJUL>
       </contextListener>
 
-      <root level="${logback.loglevel}">
+      <root level="INFO">
         <appender-ref ref="CONSOLE"/>
       </root>
     </configuration>
@@ -357,7 +358,7 @@ data:
     {{- end }}
 
     # Configure the minion own behavioral properties.
-    %kube.minion.supported-bindings=KAFKA{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}
-    %kube.minion.restricted-frequencies=30,10
+    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}
+    %kube.minion.restricted-frequencies=3,10,30
     %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
 {{- end -}}

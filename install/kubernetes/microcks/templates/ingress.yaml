@@ -72,3 +72,33 @@ spec:
           serviceName: "{{ .Values.appName }}-keycloak"
           servicePort: 8080
 {{- end }}
+{{- if and .Values.features.async.enabled }}
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1beta1
+metadata:
+  name: "{{ .Values.appName }}-ws"
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3000"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3000"
+  {{- with .Values.features.async.ws.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+spec:
+  tls:
+  - hosts:
+    - "{{ ( include "microcks-ws.url" . ) }}"
+    secretName: {{ .Values.features.async.ws.ingressSecretRef | default (print .Values.appName "-microcks-ws-ingress-secret") }}
+  rules:
+  - host: "{{ ( include "microcks-ws.url" . ) }}"
+    http:
+      paths:
+        - path: /api/ws
+          backend:
+            serviceName: "{{ .Values.appName }}-async-minion"
+            servicePort: 8080
+{{- end }}
