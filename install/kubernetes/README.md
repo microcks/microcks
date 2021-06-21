@@ -145,7 +145,8 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | ------------- | ------------------ | ------------- |
 | `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` | 
 | `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `microcks`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. | 
+| `microcks`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. If these annotations are triggering a Certificate generation (for example through https://cert-manager.io/). The `generateCert` property should be set to `false`. | 
+| `microcks`    | `generateCert`     | **Optional**. Whether to generate self-signed certificate or not if no valid `ingressSecretRef` provided. Default is `true` |
 | `microcks`    | `replicas`         | **Optional**. The number of replicas for the Microcks main pod. Default is `1`. |
 | `microcks`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `microcks`    | `resources`        | **Optional**. Some resources constraints to apply on Microcks pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container). |
@@ -157,7 +158,8 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install - indeed just the hostname + port part - if it already exists or the one used for exposing Keycloak `Ingress`. |
 | `keycloak`    | `privateUrl`       | **Optional**. A private URL - a full URL here - used by the Microcks component to internally join Keycloak. This is also known as `backendUrl` in [Keycloak doc](https://www.keycloak.org/docs/latest/server_installation/#_hostname). When specified, the `keycloak.url` is used as `frontendUrl` in Keycloak terms. | 
 | `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `keycloak`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. |  
+| `keycloak`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. If these annotations are triggering a Certificate generation (for example through https://cert-manager.io/). The `generateCert` property should be set to `false`. |
+| `keycloak`    | `generateCert`     | **Optional**. Whether to generate self-signed certificate or not if no valid `ingressSecretRef` provided. Default is `true` |  
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
 | `keycloak`    | `volumeSize`       | **Optional**. Size of persistent volume claim for Keycloak. Default is `1Gi`. Not used if not persistent install asked. |
@@ -177,7 +179,7 @@ The table below describe all the fields of the `values.yaml`, providing informat
 
 ### Kafka feature details
 
-Here are below the configuration properties of the Kafka support features:
+Here are below the configuration properties of the Kafka support feature:
  
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
@@ -192,13 +194,24 @@ Here are below the configuration properties of the Kafka support features:
 
 #### MQTT feature details
 
-Here are below the configuration properties of the MQTT support features:
+Here are below the configuration properties of the MQTT support feature:
  
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `features.async.mqtt` | `url`        | **Optional**. The URL of MQTT broker (eg: `my-mqtt-broker.example.com:1883`). Default is undefined which means that feature is disabled. |
 | `features.async.mqtt` | `username`   | **Optional**. The username to use for connecting to secured MQTT broker. Default to `microcks`. |
 | `features.async.mqtt` | `password`   | **Optional**. The password to use for connecting to secured MQTT broker. Default to `microcks`. |
+
+### WebSocket feature details
+
+Here are below the configuration properties of the WebSocket support feature:
+ 
+| Section       | Property           | Description   |
+| ------------- | ------------------ | ------------- |
+| `features.async.ws` | `ingressSecretRef`    | **Optional**. The name of a TLS Secret for securing WebSocket `Ingress`. If missing, self-signed certificate is generated. |
+| `features.async.ws` | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks WebSocket mocks. If these annotations are triggering a Certificate generation (for example through https://cert-manager.io/). The `generateCert` property should be set to `false`. |
+| `features.async.ws` | `generateCert`        | **Optional**. Whether to generate self-signed certificate or not if no valid `ingressSecretRef` provided. Default is `true` |
+
 
 ### Examples
 
