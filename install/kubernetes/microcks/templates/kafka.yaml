@@ -1,4 +1,5 @@
 {{- if and .Values.features.async.enabled .Values.features.async.kafka.install }}
+{{- if .Capabilities.APIVersions.Has "kafka.strimzi.io/v1beta1/Kafka" }}
 kind: Kafka
 apiVersion: kafka.strimzi.io/v1beta1
 metadata:
@@ -34,5 +35,53 @@ spec:
     storage:
       type: ephemeral
     resources:
-      {{- toYaml .Values.features.async.kafka.zkResources | nindent 6 }}
+      {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
+{{- else if .Capabilities.APIVersions.Has "kafka.strimzi.io/v1beta2/Kafka" }}
+kind: Kafka
+apiVersion: kafka.strimzi.io/v1beta2
+metadata:
+  name: "{{ .Values.appName }}-kafka"
+spec:
+  entityOperator:
+    topicOperator: {}
+    userOperator: {}
+  kafka:
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      log.message.format.version: '2.7'
+      inter.broker.protocol.version: '2.7'
+    version: 2.7.0
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+      - name: tls
+        port: 9093
+        type: internal
+        tls: true
+      - name: external
+        port: 9094
+        tls: true
+        type: ingress
+        configuration:
+          bootstrap:
+            host: "{{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}"
+          brokers:
+          - broker: 0
+            host: "{{ .Values.appName }}-kafka-0.{{ .Values.features.async.kafka.url }}"
+    replicas: 1
+    storage:
+      type: ephemeral
+    resources:
+      {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
+  zookeeper:
+    replicas: 1
+    storage:
+      type: ephemeral
+    resources:
+      {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
+{{- end }}
 {{- end }}
