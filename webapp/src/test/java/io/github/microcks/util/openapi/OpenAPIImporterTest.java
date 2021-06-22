@@ -949,6 +949,47 @@ public class OpenAPIImporterTest {
       }
    }
 
+   @Test
+   public void testQueryParameterRefsOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/query-param-refs-openapi.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("API-Template", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations and input/output have been found.
+      assertEquals(2, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+
+         if ("GET /accounts".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals("level", operation.getDispatcherRules());
+         } else if ("GET /resources".equals(operation.getName())) {
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals("resourceType", operation.getDispatcherRules());
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
    private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {
       // Check that basic service properties are there.
       List<Service> services = null;

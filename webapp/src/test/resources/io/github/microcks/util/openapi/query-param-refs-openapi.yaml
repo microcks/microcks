@@ -1,0 +1,130 @@
+openapi: "3.0.0"
+info:
+  title: API-Template
+  version: 1.0.0
+
+servers:
+  - url: https://dev-api.openfinance.es/api-name/v1
+    description: Development server
+  - url: https://api.openfinance.es/api-name/v1
+    description: Production server
+tags:
+  - name: examples
+    description: 'Examples for Microcks.io'
+
+paths:
+  # Example with only one query parameter
+  /resources:
+    get:
+      tags: [examples]
+      summary: Get resources by query
+      description: Get a list of resources by query
+      operationId: queryOp
+      parameters:
+        - name: resourceType
+          in: query
+          description: Get a list of resources by type
+          schema:
+            type: string
+            enum:  [standard, premium]
+          examples:
+            standard_example:
+              value: 'standard'
+            premium_example:
+              value: 'premium'
+      responses:
+        '200':
+          description: List of resources
+          content:
+            application/json:
+              schema:
+                properties:
+                  name:
+                    type: string
+                  resourceType:
+                    type: string
+                    enum: [standard, premium]
+              examples:
+                standard_example:
+                  value:
+                    - name: 'Resource One'
+                      resourceType: 'standard'
+                premium_example:
+                  value:
+                    - name: 'Resource Two'
+                      resourceType: 'premium'
+                all_example:
+                  value:
+                    - name: 'Resource One'
+                      resourceType: 'standard'
+                    - name: 'Resource Two'
+                      resourceType: 'premium'
+  # Example with problem in URI_PARAMS
+  /accounts:
+    get:
+      tags: [examples]
+      summary: Get resources by multiple query params
+      description: Get a list of resources by multiple query params
+      operationId: dobleQueryOp
+      parameters:
+        - $ref: '#/components/parameters/levelQueryParam'
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                properties:
+                  accountID:
+                    type: string
+                  level:
+                    type: string
+                    enum: [bronze, golden]
+              examples:
+                bronze_example:
+                  value:
+                    - accountID: AC001
+                      level: bronze
+                      region: national
+                    - accountID: AC002
+                      level: bronze
+                      region: international
+                golden_example:
+                  value:
+                    - accountID: AC003
+                      level: golden
+                      region: national
+                    - accountID: AC004
+                      level: golden
+                      region: international
+                all_example:
+                  value:
+                    - accountID: AC001
+                      level: bronze
+                      region: national
+                    - accountID: AC002
+                      level: bronze
+                      region: international
+                    - accountID: AC003
+                      level: golden
+                      region: national
+                    - accountID: AC004
+                      level: golden
+                      region: international
+
+components:
+  parameters:
+    levelQueryParam:
+      name: level
+      in: query
+      description: Account level
+      schema:
+        type: string
+        enum: [bronze, golden]
+      examples:
+        bronze_example:
+          value: 'bronze'
+        golden_example:
+          value: 'golden'
+        all_example:
+          value: 'all'

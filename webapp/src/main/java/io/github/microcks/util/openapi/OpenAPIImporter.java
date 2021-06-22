@@ -527,13 +527,19 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    }
 
    /** Check parameters presence into given operation node. */
-   private static boolean operationHasParameters(JsonNode operation, String parameterType) {
+   private boolean operationHasParameters(JsonNode operation, String parameterType) {
       if (!operation.has("parameters")) {
          return false;
       }
       Iterator<JsonNode> parameters = operation.path("parameters").elements();
       while (parameters.hasNext()) {
          JsonNode parameter = parameters.next();
+         // If parameter is a $ref, navigate to it first.
+         if (parameter.has("$ref")) {
+            // $ref: '#/components/parameters/accountId'
+            String ref = parameter.path("$ref").asText();
+            parameter = spec.at(ref.substring(1));
+         }
          String parameterIn = parameter.path("in").asText();
          if (parameterIn.equals(parameterType)) {
             return true;
