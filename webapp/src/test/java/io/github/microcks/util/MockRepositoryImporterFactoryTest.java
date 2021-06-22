@@ -78,8 +78,28 @@ public class MockRepositoryImporterFactoryTest {
       }
       assertTrue(importer instanceof OpenAPIImporter);
 
+      // Load an AsyncAPI JSON file.
+      File asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.json");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
+      } catch (Throwable t) {
+         fail("Getting importer should not fail !");
+      }
+      assertTrue(importer instanceof AsyncAPIImporter);
+
+      // Load an AsyncAPI JSON oneliner file.
+      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-oneliner.json");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
+      } catch (Throwable t) {
+         fail("Getting importer should not fail !");
+      }
+      assertTrue(importer instanceof AsyncAPIImporter);
+
       // Load an AsyncAPI YAML file.
-      File asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml");
+      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);

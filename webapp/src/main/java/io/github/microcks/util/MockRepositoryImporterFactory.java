@@ -70,13 +70,13 @@ public class MockRepositoryImporterFactory {
             break;
          } else if (line.startsWith("openapi: 3") || line.startsWith("openapi: '3")
                || line.startsWith("openapi: \"3") || line.startsWith("\"openapi\": \"3")
-               || line.startsWith("'openapi': '3")) {
+               || line.startsWith("'openapi': '3") || line.startsWith("{\"openapi\": \"3")) {
             log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
             importer = new OpenAPIImporter(mockRepository.getPath());
             break;
          } else if (line.startsWith("asyncapi: 2") || line.startsWith("asyncapi: '2")
                || line.startsWith("asyncapi: \"2") || line.startsWith("\"asyncapi\": \"2")
-               || line.startsWith("'asyncapi': '2")) {
+               || line.startsWith("'asyncapi': '2") || line.startsWith("{\"asyncapi\":\"2")) {
             log.info("Found an asyncapi: 2 pragma in file so assuming it's an AsyncAPI spec to import");
             importer = new AsyncAPIImporter(mockRepository.getPath(), referenceResolver);
             break;
