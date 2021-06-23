@@ -37,6 +37,7 @@ import { TestResult } from '../../../models/test.model';
 })
 export class TestDetailPageComponent implements OnInit {
 
+  now: number;
   test: Observable<TestResult>;
   service: Observable<Service>;
   testMessages: any = {};
@@ -46,6 +47,7 @@ export class TestDetailPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.now = Date.now();
     this.test = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
         this.testsSvc.getTestResult(params.get('testId')))
@@ -120,5 +122,13 @@ export class TestDetailPageComponent implements OnInit {
       return result.replace(/<br\/>/g, '\n');
     }
     return "";
+  }
+
+  public timedOut(test: TestResult): boolean {
+    return (test.inProgress && this.now > (test.testDate + test.timeout));
+  }
+
+  public displayTestType(type: string): string {
+    return type.replace(/_/g, ' ');
   }
 }

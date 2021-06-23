@@ -21,9 +21,10 @@
           <div class="list-view-pf-description">
             <div class="list-group-item-heading">
               <div>
-                <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
+                <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-fw fa-refresh fa-spin"></i>
                 <i *ngIf="!test.inProgress && test.success" class="fa fa-fw fa-check-circle"></i> 
                 <i *ngIf="!test.inProgress && !test.success" class="fa fa-fw fa-times-circle"></i>
+                <i *ngIf="timedOut(test)" class="fa fa-fw fa-clock-o"></i>
                 <a [routerLink]="['/tests', test.id]">Test #{{ test.testNumber }}</a>
               </div>
               <!-- <span class="test-timestamp">on {{ test.testDate | date : 'short' }}</span> -->
@@ -37,10 +38,11 @@
           </div>
           <div class="list-view-pf-additional-info">
             <div class="list-view-pf-additional-info-item">
-              <i *ngIf="test.inProgress" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
+              <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
               <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i> 
               <i *ngIf="!test.inProgress && !test.success" class="fa fa-2x fa-fw fa-times-circle"></i>
-              <span class="label label-info">{{ test.runnerType }}</span>
+              <i *ngIf="timedOut(test)" class="fa fa-2x fa-fw fa-clock-o"></i>
+              <span class="label label-info">{{ displayTestType(test.runnerType) }}</span>
             </div>
           </div>
         </div>

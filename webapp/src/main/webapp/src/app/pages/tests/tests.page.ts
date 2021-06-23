@@ -36,6 +36,7 @@ import { TestResult } from '../../models/test.model';
 })
 export class TestsPageComponent implements OnInit {
 
+  now: number;
   service: Service;
   testResults: Observable<TestResult[]>;
   testResultsCount: number;
@@ -47,6 +48,7 @@ export class TestsPageComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.now = Date.now();
     var serviceViewObs = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
         this.servicesSvc.getService(params.get('serviceId')))
@@ -90,5 +92,13 @@ export class TestsPageComponent implements OnInit {
 
   numberOfTestSteps(testResult: TestResult): number {
     return testResult.testCaseResults.map( tc => tc.testStepResults.length ).reduce( (acc, cur) => acc + cur);
+  }
+
+  public timedOut(test: TestResult): boolean {
+    return (test.inProgress && this.now > (test.testDate + test.timeout));
+  }
+
+  public displayTestType(type: string): string {
+    return type.replace(/_/g, ' ');
   }
 }

@@ -32,10 +32,11 @@
         </dl>
       </div>
       <div class="col-md-4">
-        <i *ngIf="test.inProgress" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
+        <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
         <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i> 
         <i *ngIf="!test.inProgress && !test.success" class="fa fa-2x fa-fw fa-times-circle"></i>
-        <span class="label label-info">{{ test.runnerType }}</span>
+        <i *ngIf="timedOut(test)" class="fa fa-2x fa-fw fa-clock-o"></i>
+        <span class="label label-info">{{ displayTestType(test.runnerType) }}</span>
       </div>
     </div>
 
@@ -70,9 +71,10 @@
             </div>
             <div class="list-pf-additional-content">
               <div>
-                <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
+                <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-fw fa-refresh fa-spin"></i>
                 <i *ngIf="!test.inProgress && item.success" class="fa fa-fw fa-check-circle"></i> 
                 <i *ngIf="!test.inProgress && !item.success" class="fa fa-fw fa-times-circle"></i>
+                <i *ngIf="timedOut(test)" class="fa fa-fw fa-clock-o"></i>
                 <span class="time-elapsed">in {{ item.elapsedTime }} ms</span>
               </div>
             </div>

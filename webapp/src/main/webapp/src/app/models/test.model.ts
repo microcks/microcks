@@ -29,7 +29,7 @@ export class TestResult {
   id: string;
   version: number;
   testNumber: number;
-  testDate: Date;
+  testDate: number;
   testedEndpoint: string;
   serviceId: string;
   timeout: number;

@@ -30,6 +30,9 @@ span.label {
   content: "\f021";
   color: #0088ce;
 }
+.fa-clock-o {
+  color: #ec7a08;
+}
 .test-timestamp {
   padding-top: 2px;
   font-size: 91%;
