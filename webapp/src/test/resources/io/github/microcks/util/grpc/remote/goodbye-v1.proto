@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package io.github.microcks.grpc.goodbye.v1;
+
+import "shared/uuid.proto";
+
+option java_multiple_files = true;
+
+message GoodbyeRequest {
+    string firstname = 1;
+    string lastname = 2;
+}
+
+message GoodbyeResponse {
+    string farewell = 1;
+    shared.UUID messageId = 2;
+}
+
+service GoodbyeService {
+    rpc goodbye(GoodbyeRequest) returns (GoodbyeResponse);
+}
