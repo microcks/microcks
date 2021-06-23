@@ -20,17 +20,26 @@ package io.github.microcks.util.grpc;
 
 import com.github.os72.protocjar.Protoc;
 import com.google.protobuf.DescriptorProtos;
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 
+import io.github.microcks.util.ReferenceResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,7 +48,8 @@ import java.util.Base64;
 import java.util.List;
 
 /**
- *
+ * An implementation of MockRepositoryImporter that deals with Protobuf v3 specification
+ * documents.
  * @author laurent
  */
 public class ProtobufImporter implements MockRepositoryImporter {
@@ -50,6 +60,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
    private String specContent;
    private String protoDirectory;
    private String protoFileName;
+   private ReferenceResolver referenceResolver;
    private DescriptorProtos.FileDescriptorSet fds;
 
    private static final String BINARY_DESCRIPTOR_EXT = ".pbb";
@@ -57,16 +68,20 @@ public class ProtobufImporter implements MockRepositoryImporter {
    /**
     * Build a new importer.
     * @param protoFilePath The path to local proto spec file
+    * @param referenceResolver An optional resolver for references present into the Protobuf file
     * @throws IOException if project file cannot be found or read.
     */
-   public ProtobufImporter(String protoFilePath) throws IOException {
+   public ProtobufImporter(String protoFilePath, ReferenceResolver referenceResolver) throws IOException {
+      this.referenceResolver = referenceResolver;
       // Prepare file, path and name for easier process.
       File protoFile = new File(protoFilePath);
       protoDirectory = protoFile.getParentFile().getAbsolutePath();
       protoFileName = protoFile.getName();
 
+      // Prepare protoc arguments.
       String[] args = {"-v3.11.4",
             "--include_std_types",
+            "--include_imports",
             "--proto_path=" + protoDirectory,
             "--descriptor_set_out=" + protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT,
             protoFileName};
@@ -76,10 +91,23 @@ public class ProtobufImporter implements MockRepositoryImporter {
          byte[] bytes = Files.readAllBytes(Paths.get(protoFilePath));
          specContent = new String(bytes, Charset.forName("UTF-8"));
 
+         // Resolve and retrieve imports if any.
+         List<File> resolvedImportsLocalFiles = null;
+         if (referenceResolver != null) {
+            resolvedImportsLocalFiles = new ArrayList<>();
+            resolveAndPrepareRemoteImports(Paths.get(protoFilePath), resolvedImportsLocalFiles);
+         }
+
+         // Run Protoc.
          int result = Protoc.runProtoc(args);
 
          File protoFileB = new File(protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT);
          fds = DescriptorProtos.FileDescriptorSet.parseFrom(new FileInputStream(protoFileB));
+
+         // Cleanup locally downloaded dependencies needed by protoc.
+         if (resolvedImportsLocalFiles != null) {
+            resolvedImportsLocalFiles.forEach(f -> f.delete());
+         }
       } catch (Exception e) {
          log.error("Exception while parsing Protobuf schema file " + protoFilePath, e);
          throw new IOException("Protobuf schema file parsing error");
@@ -139,6 +167,23 @@ public class ProtobufImporter implements MockRepositoryImporter {
          log.error("Exception while encoding Protobuf binary descriptor into base64", e);
          throw new MockRepositoryImportException("Exception while encoding Protobuf binary descriptor into base64");
       }
+
+      // Now build resources for dependencies if any.
+      if (referenceResolver != null) {
+         referenceResolver.getResolvedReferences().forEach((p, f) -> {
+            Resource protoResource = new Resource();
+            protoResource.setName(service.getName() + "-" + service.getVersion() + "-" + p.replaceAll("/", "~1"));
+            protoResource.setType(ResourceType.PROTOBUF_SCHEMA);
+            protoResource.setPath(p);
+            try {
+               protoResource.setContent(Files.readString(f.toPath(), Charset.forName("UTF-8")));
+            } catch (IOException ioe) {
+               log.error("", ioe);
+            }
+            results.add(protoResource);
+         });
+         referenceResolver.cleanResolvedReferences();
+      }
       return results;
    }
 
@@ -149,7 +194,51 @@ public class ProtobufImporter implements MockRepositoryImporter {
    }
 
    /**
-    * Extract the operations from GPRC service methods.
+    * Analyse a protofile imports, resolve and retrieve them from remote to allow protoc to run later.
+    */
+   private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles) {
+      String line = null;
+      try {
+         BufferedReader reader = Files.newBufferedReader(protoFilePath, Charset.forName("UTF-8"));
+         while ((line = reader.readLine()) != null) {
+            line = line.trim();
+            if (line.startsWith("import ")) {
+               String importStr = line.substring("import ".length() + 1);
+               // Remove semicolon and quotes/double-quotes.
+               if (importStr.endsWith(";")) {
+                  importStr = importStr.substring(0, importStr.length() - 1);
+               }
+               if (importStr.endsWith("\"") || importStr.endsWith("'")) {
+                  importStr = importStr.substring(0, importStr.length() - 1);
+               }
+               if (importStr.startsWith("\"") || importStr.startsWith("'")) {
+                  importStr = importStr.substring(1);
+               }
+               log.debug("Found an import to resolve in protobuf: {}", importStr);
+
+               // Check if import path is locally there.
+               Path importPath = protoFilePath.getParent().resolve(importStr);
+               if (!Files.exists(importPath)) {
+                  // Not there, so resolve it remotely and write to local file for protoc.
+                  String importContent = referenceResolver.getHttpReferenceContent(importStr, "UTF-8");
+                  try {
+                     Files.createDirectories(importPath.getParent());
+                     Files.createFile(importPath);
+                  } catch (FileAlreadyExistsException faee) {
+                     log.warn("Exception while writing protobuf dependency", faee);
+                  }
+                  Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
+                  resolvedImportsLocalFiles.add(importPath.toFile());
+               }
+            }
+         }
+      } catch (Exception e) {
+         log.error("Exception while retrieving protobuf dependency", e);
+      }
+   }
+
+   /**
+    * Extract the operations from GRPC service methods.
     */
    private List<Operation> extractOperations(DescriptorProtos.ServiceDescriptorProto service) {
       List<Operation> results = new ArrayList<>();

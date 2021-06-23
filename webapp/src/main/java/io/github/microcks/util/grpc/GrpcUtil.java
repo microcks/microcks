@@ -25,7 +25,9 @@ import io.grpc.MethodDescriptor;
 import io.grpc.services.BinaryLogProvider;
 
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 /**
  * Helper class containing utility methods related to Grpc/Protobuf decriptors.
@@ -51,10 +53,27 @@ public class GrpcUtil {
       byte[] decodedBinaryPB = Base64.getDecoder().decode(base64ProtobufDescriptor.getBytes("UTF-8"));
       DescriptorProtos.FileDescriptorSet fds = DescriptorProtos.FileDescriptorSet.parseFrom(decodedBinaryPB);
 
-      Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(0),
-            new Descriptors.FileDescriptor[]{}, true);
+      Descriptors.ServiceDescriptor sd = null;
+      if (fds.getFileCount() > 1) {
+         // Build dependencies.
+         List<Descriptors.FileDescriptor> dependencies = new ArrayList<>();
+         for (int i=0; i<fds.getFileCount(); i++) {
+            // Build descriptor and add to dependencies.
+            Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(i),
+                  dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
+            dependencies.add(fd);
+            // Search for service.
+            sd = fd.findServiceByName(serviceName);
+            if (sd != null) {
+               break;
+            }
+         }
+      } else {
+         Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(0),
+               new Descriptors.FileDescriptor[]{}, true);
+         sd = fd.findServiceByName(serviceName);
+      }
 
-      Descriptors.ServiceDescriptor sd = fd.findServiceByName(serviceName);
       return sd.findMethodByName(methodName);
    }
 

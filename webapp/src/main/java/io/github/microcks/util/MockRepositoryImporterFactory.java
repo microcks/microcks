@@ -82,7 +82,7 @@ public class MockRepositoryImporterFactory {
             break;
          } else if (line.startsWith("syntax = \"proto3\";")) {
             log.info("Found a syntax = proto3 pragma in file so assuming it's a GRPC Protobuf spec to import");
-            importer = new ProtobufImporter(mockRepository.getPath());
+            importer = new ProtobufImporter(mockRepository.getPath(), referenceResolver);
             break;
          } else if (line.startsWith("\"swagger\":") || line.startsWith("swagger:")) {
             log.warn("Swagger v2 format is not supported as it does not allow full examples specification, raising an exception");
