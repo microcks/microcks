@@ -1,0 +1,78 @@
+asyncapi: '2.1.0'
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User signed-up API
+  version: 0.1.0
+  description: Sample AsyncAPI for user signedup events
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json
+channels:
+  user/signedup:
+    description: The topic on which user signed up events may be consumed
+    subscribe:
+      summary: Receive informations about user signed up
+      operationId: receivedUserSIgnedUp
+      message:
+        description: An event describing that a user just signed up.
+        bindings:
+          kafka:
+            key:
+              type: string
+              description: Timestamp of event as milliseconds since 1st Jan 1970
+        traits:
+          - $ref: '#/components/messageTraits/commonHeaders'
+        headers:
+          type: object
+          properties:
+            sentAt:
+              type: string
+              format: date-time
+              description: Date and time when the event was sent
+        payload:
+          type: object
+          additionalProperties: false
+          properties:
+            fullName:
+              type: string
+            email:
+              type: string
+              format: email
+            age:
+              type: integer
+              minimum: 18
+        examples:
+          - name: Laurent
+            headers:
+              my-app-header: 23
+              sentAt: "2020-03-11T08:03:28Z"
+            payload: |-
+              {"fullName": "Laurent Broudoux", "email": "laurent@microcks.io", "age": 41}
+          - name: John
+            headers:
+              my-app-header: 24
+              sentAt: "2020-03-11T08:03:38Z"
+            payload:
+              fullName: John Doe
+              email: john@microcks.io
+              age: 36
+components:
+  messageTraits:
+    commonHeaders:
+      headers:
+        type: object
+        properties:
+          my-app-header:
+            type: integer
+            minimum: 0
+            maximum: 100
+      examples:
+        - laurent:
+          my-app-header: 21
+        - yacine:
+          my-app-header: 22

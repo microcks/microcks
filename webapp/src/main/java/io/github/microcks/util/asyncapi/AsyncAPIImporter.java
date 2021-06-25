@@ -258,10 +258,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                      JsonNode exampleNode = examples.next();
 
                      EventMessage eventMessage = null;
-                     // As of https://github.com/microcks/microcks/issues/385, we should now
-                     // support the restriction coming from AsyncAPI GItHub master revision and
-                     // associated tooling...
-                     if (exampleNode.has("payload")) {
+                     if (exampleNode.has("name")) {
+                        // As of AsyncAPI 2.1.0 () we can now have a 'name' property for examples!
+                        eventMessage = extractFromAsyncAPI21Example(contentType, exampleNode);
+                     } else if (exampleNode.has("payload")) {
+                        // As of https://github.com/microcks/microcks/issues/385, we should support the restriction
+                        // coming from AsyncAPI GItHub master revision and associated tooling...
                         eventMessage = extractFromAsyncAPIExample(contentType, exampleNode,
                               channelName.trim() + "-" + exampleIndex);
                      } else {
@@ -401,6 +403,29 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       }
 
       return results;
+   }
+
+   /**
+    * Extract example using the AsyncAPI 2.1 new 'name' property.
+    */
+   private EventMessage extractFromAsyncAPI21Example(String contentType, JsonNode exampleNode) {
+      // Retrieve name & payload value.
+      String exampleName = exampleNode.path("name").asText();
+      String exampleValue = getExamplePayload(exampleNode);
+
+      // Build and store a request object.
+      EventMessage eventMessage = new EventMessage();
+      eventMessage.setName(exampleName);
+      eventMessage.setContent(exampleValue);
+      eventMessage.setMediaType(contentType);
+
+      // Now complete with specified headers.
+      List<Header> headers = getExampleHeaders(exampleNode);
+      for (Header header : headers) {
+         eventMessage.addHeader(header);
+      }
+
+      return eventMessage;
    }
 
    /**
