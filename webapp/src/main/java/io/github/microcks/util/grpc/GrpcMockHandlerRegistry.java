@@ -34,7 +34,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Nullable;
 
 /**
- * A GRPC HandlerRegistry that delegates server calls handling to {@class GrpcServerCallHandler}.
+ * A GRPC HandlerRegistry that delegates server calls handling to GrpcServerCallHandler.
  * @author laurent
  */
 @Component
