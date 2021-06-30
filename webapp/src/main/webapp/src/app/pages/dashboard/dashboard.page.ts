@@ -133,7 +133,13 @@ export class DashboardPageComponent implements OnInit {
 	getServicesMap(): void {
 		this.servicesSvc.getServicesMap().subscribe(
 			results => {
-				this.donutChartData = [];
+				this.donutChartData = [
+					['REST', 0],
+					['DYNAMIC', 0],
+					['SOAP', 0],
+					['EVENT', 0],
+					['GRPC', 0]
+				];
 				for (let key in results) {
 					if (key === 'GENERIC_REST') {
 						this.donutChartData.push(['DYNAMIC', results[key]]);
