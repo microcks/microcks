@@ -19,7 +19,7 @@ It also reuses these assets for running compliance and non-regression tests agai
 
 ## Build Status
 
-Current development version is `1.3.0-SNAPSHOT`. [![Travis (.com)](https://img.shields.io/travis/microcks/microcks?logo=travis&style=for-the-badge)](https://travis-ci.com/microcks/microcks?branch=master)
+Current development version is `1.3.1-SNAPSHOT`. [![Travis (.com)](https://img.shields.io/travis/microcks/microcks?logo=travis&style=for-the-badge)](https://travis-ci.com/microcks/microcks?branch=master)
 
 ## How to build Microcks
 
