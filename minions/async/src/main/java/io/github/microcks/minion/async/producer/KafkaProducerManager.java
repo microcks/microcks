@@ -229,6 +229,9 @@ public class KafkaProducerManager {
 
    /**
     * Get the Kafka topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
+    * @param definition The AsyncMockDefinition
+    * @param eventMessage The message to get topic
+    * @return The topic name for definition and event
     */
    public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
       // Produce service name part of topic name.
@@ -247,7 +250,11 @@ public class KafkaProducerManager {
       return serviceName + "-" + versionName + "-" + operationName;
    }
 
-   /** Completing the ProducerRecord with the set of provided headers. */
+   /**
+    * Completing the ProducerRecord with the set of provided headers.
+    * @param record The record to complete
+    * @param headers The set of headers
+    */
    protected void addHeadersToRecord(ProducerRecord record, Set<Header> headers) {
       if (headers != null) {
          for (Header header : headers) {

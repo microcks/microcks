@@ -73,7 +73,10 @@ public class WebSocketClient extends Endpoint {
       return messages;
    }
 
-   /** Store after having transformed into a ConsumedMessage. */
+   /**
+    * Store after having transformed into a ConsumedMessage.
+    * @param messagePayload The payload to store
+    */
    protected void storeMessage(String messagePayload) {
       // Build a ConsumedMessage from Kafka record.
       ConsumedMessage message = new ConsumedMessage();

@@ -99,7 +99,10 @@ public class ReferenceResolver {
       return Files.readString(referenceFile.toPath(), Charset.forName(encoding));
    }
 
-   /** Get resolved references map. */
+   /**
+    * Get resolved references map.
+    * @return The map of resolved references
+    */
    public Map<String, File> getResolvedReferences() {
       return resolvedReferences;
    }

@@ -123,10 +123,10 @@ public class WebSocketProducerManager {
    }
 
    /**
-    *
-    * @param definition
-    * @param eventMessage
-    * @return
+    * Get the Websocket endpoint URI corresponding to a AsyncMockDefinition, sanitizing all parameters.
+    * @param definition The AsyncMockDefinition
+    * @param eventMessage The message to get topic
+    * @return The request URI corresponding to def and message
     */
    public String getRequestURI(AsyncMockDefinition definition, EventMessage eventMessage) {
 

@@ -1,0 +1,99 @@
+{
+	"info": {
+		"_postman_id": "448f2755-4b3c-45a7-b6d4-af16d8110e9d",
+		"name": "HelloService",
+		"description": "version=v1 - This collection holds mock messages for HelloService v1 GRPC",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "greeting",
+			"item": [
+				{
+					"name": "greeting",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http:///greeting",
+							"protocol": "http",
+							"path": [
+								"greeting"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "John",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"firstname\": \"John\",\n    \"lastname\": \"Doe\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http:///greeting",
+									"protocol": "http",
+									"path": [
+										"greeting"
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"greeting\": \"Hello John Doe !\"\n}"
+						},
+						{
+							"name": "Laurent",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"firstname\": \"Laurent\",\n    \"lastname\": \"Broudoux\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http:///greeting",
+									"protocol": "http",
+									"path": [
+										"greeting"
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"greeting\": \"Hello Laurent Broudoux !\"\n}"
+						}
+					]
+				}
+			]
+		}
+	]
+}
