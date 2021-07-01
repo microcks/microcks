@@ -49,6 +49,7 @@ import { ConfigService } from './services/config.service';
 
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
 import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
+import { EditResponseDialogComponent } from './components/edit-response-dialog/edit-response-dialog.component'
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { LabelListComponent } from './components/label-list/label-list.component';
 import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
@@ -97,7 +98,7 @@ export function configLoader(configService: ConfigService) {
   declarations: [
     AppComponent, TimeAgoPipe,
     ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent,
-    TestBarChartComponent, LabelListComponent, EditLabelsDialogComponent,
+    TestBarChartComponent, LabelListComponent, EditLabelsDialogComponent, EditResponseDialogComponent,
     DashboardPageComponent, ServicesPageComponent, DynamicAPIDialogComponent,
     ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
@@ -136,7 +137,7 @@ export function configLoader(configService: ConfigService) {
   ],
   entryComponents: [
     HelpDialogComponent, DynamicAPIDialogComponent, 
-    EditLabelsDialogComponent, GenericResourcesDialogComponent,
+    EditLabelsDialogComponent, EditResponseDialogComponent, GenericResourcesDialogComponent,
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent
   ],
   bootstrap: [AppComponent]
