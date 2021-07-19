@@ -76,7 +76,7 @@ username and password found into 'microcks-keycloak-admin' secret.
 
 ### Advanced install - with asynchronous mocking
 
-Since release `1.0.0`, Microcks support mocking of event-driven API thanks to [AsyncAPI Spec](https://asyncapi.com). Microcks will take car of publishing sample messages for you on a message broker. You mey reuse an existing broker of let Microcks deploy its own (this is the default when turning on this feature).
+Since release `1.0.0`, Microcks supports mocking of event-driven API thanks to [AsyncAPI Spec](https://asyncapi.com). Microcks will take care of publishing sample messages for you on a message broker. You may reuse an existing broker or let Microcks deploy its own (this is the default when turning on this feature).
 
 To install a Kafka message broker during its deployment, Microcks relies on [Strimzi Operator](https://strimzi.io) and will try to create such custom resources such as `Kafka` and `KafkaTopic`. When using this configuration, you will thus need to install Strimzi Operator cluster-wide or on targeted namespace.
 
@@ -133,22 +133,23 @@ All configurable variables and default values can be seen in `values.yaml`, with
 Typically, you may want to configure the following blocks and options:
 
 * Global part is mandatory and contain attributes like `appName` of your install,
-* `microcks` part is mandatory and contain attributes like the number of `replicas` and the access `url` if you want some customizations, 
+* `microcks` part is mandatory and contain attributes like the number of `replicas` and the access `url` if you want some customizations,
 * `postman` part is mandatory for the number of `replicas`
 * `keycloak` part is optional and allows specifying if you want a new install or reuse an existing instance,
 * `mongodb` part is optional and allows specifying if you want a new install or reuse an existing instance.
 * `features` part is optional and allows enabling and configuring opt-in features of Microcks.
 
-The table below describe all the fields of the `values.yaml`, providing informations on what's mandatory and what's optional as well as default values.
+The table below describes all the fields of the `values.yaml`, providing information on what's mandatory and what's optional as well as default values.
 
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
-| `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` | 
+| `microcks`    | `url`              | **Mandatory**. The URL to use for exposing `Ingress` |
 | `microcks`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `microcks`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. If these annotations are triggering a Certificate generation (for example through https://cert-manager.io/). The `generateCert` property should be set to `false`. | 
+| `microcks`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks main pod. If these annotations are triggering a Certificate generation (for example through [cert-mamanger.io](https://cert-manager.io/)). The `generateCert` property should be set to `false`. |
 | `microcks`    | `generateCert`     | **Optional**. Whether to generate self-signed certificate or not if no valid `ingressSecretRef` provided. Default is `true` |
 | `microcks`    | `replicas`         | **Optional**. The number of replicas for the Microcks main pod. Default is `1`. |
 | `microcks`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
+| `microcks`    | `service`          | **Optional**. Some service spec values to use. Supports `type` which defaults to `ClusterIP`. |
 | `microcks`    | `resources`        | **Optional**. Some resources constraints to apply on Microcks pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container). |
 | `microcks`    | `logLevel`         | **Optional**. Allows to tune the verbosity level of logs. Default is `INFO` You can use `DEBUG` for more verbosity or `WARN` for less. |
 | `postman`     | `replicas`         | **Optional**. The number of replicas for the Microcks Postman pod. Default is `1`. |
@@ -156,11 +157,12 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `keycloak`    | `install`          | **Optional**. Flag for Keycloak installation. Default is `true`. Set to `false` if you want to reuse an existing Keycloak instance. |
 | `keycloak`    | `realm`            | **Optional**. Name of Keycloak realm to use. Should be setup only if `install` is `false` and you want to reuse an existing realm. Default is `microcks`. |
 | `keycloak`    | `url`              | **Mandatory**. The URL of Keycloak install - indeed just the hostname + port part - if it already exists or the one used for exposing Keycloak `Ingress`. |
-| `keycloak`    | `privateUrl`       | **Optional**. A private URL - a full URL here - used by the Microcks component to internally join Keycloak. This is also known as `backendUrl` in [Keycloak doc](https://www.keycloak.org/docs/latest/server_installation/#_hostname). When specified, the `keycloak.url` is used as `frontendUrl` in Keycloak terms. | 
+| `keycloak`    | `privateUrl`       | **Optional**. A private URL - a full URL here - used by the Microcks component to internally join Keycloak. This is also known as `backendUrl` in [Keycloak doc](https://www.keycloak.org/docs/latest/server_installation/#_hostname). When specified, the `keycloak.url` is used as `frontendUrl` in Keycloak terms. |
 | `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
-| `keycloak`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. If these annotations are triggering a Certificate generation (for example through https://cert-manager.io/). The `generateCert` property should be set to `false`. |
+| `keycloak`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. If these annotations are triggering a Certificate generation (for example through [cert-mamanger.io](https://cert-manager.io/)). The `generateCert` property should be set to `false`. |
 | `keycloak`    | `generateCert`     | **Optional**. Whether to generate self-signed certificate or not if no valid `ingressSecretRef` provided. Default is `true` |  
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
+| `keycloak`    | `service`          | **Optional**. Some service spec values to use. Supports `type` which defaults to `ClusterIP`. |
 | `keycloak`    | `persistent`       | **Optional**. Flag for Keycloak persistence. Default is `true`. Set to `false` if you want an ephemeral Keycloak installation. |
 | `keycloak`    | `volumeSize`       | **Optional**. Size of persistent volume claim for Keycloak. Default is `1Gi`. Not used if not persistent install asked. |
 | `keycloak`    | `postgresImage`    | **Optional**. The reference of container image used. Chart comes with its default version. |
@@ -176,11 +178,10 @@ The table below describe all the fields of the `values.yaml`, providing informat
 | `features`    | `async.enabled`    | **Optional**. Feature allowing to mock an tests asynchronous APIs through Events. Enabling it requires an active message broker. Default is `false`. |
 | `features`    | `async.image`      | **Optional**. The reference of container image used for `async-minion` component. Chart comes with its default version. |
 
-
 ### Kafka feature details
 
 Here are below the configuration properties of the Kafka support feature:
- 
+
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `features.async.kafka` | `install`    | **Optional**. Flag for Kafka installation. Default is `true` and required Strimzi Operator to be setup. Set to `false` if you want to reuse an existing Kafka instance. |
@@ -195,7 +196,7 @@ Here are below the configuration properties of the Kafka support feature:
 #### MQTT feature details
 
 Here are below the configuration properties of the MQTT support feature:
- 
+
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `features.async.mqtt` | `url`        | **Optional**. The URL of MQTT broker (eg: `my-mqtt-broker.example.com:1883`). Default is undefined which means that feature is disabled. |
@@ -205,18 +206,17 @@ Here are below the configuration properties of the MQTT support feature:
 ### WebSocket feature details
 
 Here are below the configuration properties of the WebSocket support feature:
- 
+
 | Section       | Property           | Description   |
 | ------------- | ------------------ | ------------- |
 | `features.async.ws` | `ingressSecretRef`    | **Optional**. The name of a TLS Secret for securing WebSocket `Ingress`. If missing, self-signed certificate is generated. |
-| `features.async.ws` | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks WebSocket mocks. If these annotations are triggering a Certificate generation (for example through https://cert-manager.io/). The `generateCert` property should be set to `false`. |
+| `features.async.ws` | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Microcks WebSocket mocks. If these annotations are triggering a Certificate generation (for example through [cert-mamanger.io](https://cert-manager.io/)). The `generateCert` property should be set to `false`. |
 | `features.async.ws` | `generateCert`        | **Optional**. Whether to generate self-signed certificate or not if no valid `ingressSecretRef` provided. Default is `true` |
-
 
 ### Examples
 
 You may want to launch custom installation with such a command:
- 
+
  ```console
  $ helm install microcks ./microcks --namespace=microcks \
     --set appName=mocks --set mongodb.volumeSize=5Gi \
@@ -251,6 +251,6 @@ microcks-postman-runtime-58bf695b59-nm858       1/1     Running   0          39s
 ## Deleting the Chart
 
 ```console
-$ helm delete microcks
-$ helm del --purge microcks
+helm delete microcks
+helm del --purge microcks
 ```
