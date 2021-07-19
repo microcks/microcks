@@ -12,7 +12,7 @@ spec:
     port: 8080
     targetPort: 8080
     name: spring
-  type: {{ .Values.microcks.service.type }}
+  type: {{ .Values.microcks.service.type | default "ClusterIP" | quote }}
   sessionAffinity: None
   selector:
     app: "{{ .Values.appName }}"
@@ -100,7 +100,7 @@ spec:
     port: 8080
     targetPort: 8080
     name: keycloak
-  type: {{ .Values.keycloak.service.type }}
+  type: {{ .Values.keycloak.service.type | default "ClusterIP" | quote }}
   sessionAffinity: None
   selector:
     app: "{{ .Values.appName }}"

@@ -11,8 +11,10 @@ microcks:
   generateCert: true
   image: quay.io/microcks/microcks:1.2.1
   replicas: 1
-  service:
-    type: ClusterIP
+  # Uncomment to change Microcks Service to a NodePort
+  #service:
+  #  type: NodePort
+
   resources:
     #requests:
       #cpu: 250m
@@ -44,8 +46,10 @@ keycloak:
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
   #adminPassword: 123
-  service:
-    type: ClusterIP
+
+  # Uncomment to change Keycloak Service to a NodePort
+  #service:
+  #  type: NodePort
 
   persistent: true
   volumeSize: 1Gi
