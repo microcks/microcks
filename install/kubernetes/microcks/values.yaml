@@ -12,8 +12,7 @@ microcks:
   image: quay.io/microcks/microcks:1.2.1
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
-  #service:
-  #  type: NodePort
+  #serviceType: NodePort
 
   resources:
     #requests:
@@ -48,8 +47,7 @@ keycloak:
   #adminPassword: 123
 
   # Uncomment to change Keycloak Service to a NodePort
-  #service:
-  #  type: NodePort
+  #serviceType: NodePort
 
   persistent: true
   volumeSize: 1Gi
