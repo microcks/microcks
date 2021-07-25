@@ -163,17 +163,18 @@ public class GrpcServerCallHandler {
 
                //
                String dispatchCriteria = computeDispatchCriteria(dispatcher, dispatcherRules, jsonBody);
+               log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
 
                // For now - regarding the available dispatchers - we only dealing with response names.
                List<Response> responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), dispatchCriteria);
-               if (responses == null && fallback != null) {
+               if (responses.isEmpty() && fallback != null) {
                   // If we've found nothing and got a fallback, that's the moment!
                   responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), fallback.getFallback());
                }
 
                // No filter to apply, just check that we have a response.
-               Response response = responses.get(0);
-               if (response != null) {
+               if (responses.size() > 0) {
+                  Response response = responses.get(0);
                   // Use a builder for out type with a Json parser to merge content and build outMsg.
                   DynamicMessage.Builder outBuilder = DynamicMessage.newBuilder(md.getOutputType());
 
