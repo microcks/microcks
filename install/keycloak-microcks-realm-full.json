@@ -39,7 +39,7 @@
       "enabled": true,
       "credentials" : [
         { "type" : "password",
-          "value" : "123" }
+          "value" : "microcks123" }
       ],
       "requiredActions": [
         "UPDATE_PASSWORD"
@@ -48,7 +48,7 @@
       "applicationRoles": {
         "realm-management": [ "realm-admin" ],
         "account": [ "manage-account" ],
-        "microcks-app": [ "admin "]
+        "microcks-app": [ "user", "admin" ]
       }
     }
   ],
@@ -124,6 +124,7 @@
     },
     {
       "name": "microcks-serviceaccount",
+      "secret": "ab54d329-e435-41ae-a900-ec6b3fe15c54",
       "enabled": true,
       "bearerOnly": false,
       "publicClient": false,

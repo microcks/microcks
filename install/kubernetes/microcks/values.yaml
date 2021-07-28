@@ -9,7 +9,7 @@ microcks:
     #kubernetes.io/tls-acme: "true"
     #kubernetes.io/ingress.class: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:1.3.0
+  image: quay.io/microcks/microcks:latest
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
@@ -40,7 +40,7 @@ keycloak:
     #kubernetes.io/tls-acme: "true"
     #kubernetes.io/ingress.class: nginx
   generateCert: true
-  image: jboss/keycloak:10.0.1
+  image: jboss/keycloak:14.0.0
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
@@ -86,7 +86,7 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
     
-    image: quay.io/microcks/microcks-async-minion:1.3.0
+    image: quay.io/microcks/microcks-async-minion:latest
 
     kafka:
       install: true

@@ -3,6 +3,11 @@
     "client": {
       "microcks-app": [
         {
+          "name": "user",
+          "composite": false,
+          "clientRole": true
+        },
+        {
           "name": "admin",
           "composite": false,
           "clientRole": true

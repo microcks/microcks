@@ -7,6 +7,9 @@ dist
 .sass-cache
 bower_components
 target
+.classpath
+.project
+.settings
 
 # Package Files #
 *.jar
@@ -20,4 +23,3 @@ hs_err_pid*
 .project
 .DS_Store
 *.log
-microcks-async-minion-100-tcpmr1i5g7tif6z9hmessagingsolacecloud1883/.lck
