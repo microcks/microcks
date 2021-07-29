@@ -100,6 +100,8 @@ public class KeycloakConnector {
 
          if (tokenResponse.getStatusLine().getStatusCode() != 200) {
             logger.error("OAuth token cannot be retrieved for Keycloak server, check microcks.serviceaccount configuration");
+            logger.error("  tokenResponse.statusLine: " + tokenResponse.getStatusLine().toString());
+            logger.error("  tokenResponse.statusCode: " + tokenResponse.getStatusLine().getStatusCode());
             throw new ConnectorException("OAuth token cannot be retrieved for Microcks. Check microcks.serviceaccount.");
          }
 
