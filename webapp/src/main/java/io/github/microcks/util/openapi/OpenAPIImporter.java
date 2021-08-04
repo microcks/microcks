@@ -70,7 +70,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                isYaml = false;
                break;
             }
-            else if (line.startsWith("---") || line.startsWith("openapi: ")) {
+            else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")) {
                isYaml = true;
                break;
             }

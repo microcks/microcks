@@ -73,7 +73,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                isYaml = false;
                break;
             }
-            else if (line.startsWith("---") || line.startsWith("asyncapi: ")) {
+            else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("asyncapi: ")) {
                isYaml = true;
                break;
             }
