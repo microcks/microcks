@@ -22,8 +22,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.github.microcks.domain.*;
-import io.github.microcks.util.*;
+import io.github.microcks.domain.Binding;
+import io.github.microcks.domain.BindingType;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.util.DispatchCriteriaHelper;
+import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.MockRepositoryImportException;
+import io.github.microcks.util.MockRepositoryImporter;
+import io.github.microcks.util.ReferenceResolver;
+import io.github.microcks.util.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +49,14 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -148,11 +170,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
             JsonNode messageNode = spec.at(messageNamePtr);
             if (messageNode != null) {
                // If it's a $ref, then navigate to it.
-               if (messageNode.has("$ref")) {
-                  // $ref: '#/components/messages/lightMeasured'
-                  String ref = messageNode.path("$ref").asText();
-                  messageNode = spec.at(ref.substring(1));
-               }
+               messageNode = followRefIfAny(messageNode);
 
                // Extract payload schema here.
                if (messageNode.has("payload")) {
@@ -239,11 +257,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                JsonNode messageBody = verb.getValue().path("message");
 
                // If it's a $ref, then navigate to it.
-               if (messageBody.has("$ref")) {
-                  // $ref: '#/components/messages/lightMeasured'
-                  String ref = messageBody.path("$ref").asText();
-                  messageBody = spec.at(ref.substring(1));
-               }
+               messageBody = followRefIfAny(messageBody);
 
                // Get message content type.
                String contentType = defaultContentType;
@@ -377,6 +391,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
                // Then look for bindings at the message level.
                JsonNode messageBody = verb.getValue().path("message");
+               messageBody = followRefIfAny(messageBody);
                if (messageBody.has("bindings")) {
                   Iterator<String> bindingNames = messageBody.path("bindings").fieldNames();
                   while (bindingNames.hasNext()) {
@@ -556,11 +571,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          JsonNode parameter = parameterEntry.getValue();
 
          // If parameter is a $ref, navigate to it first.
-         if (parameter.has("$ref")) {
-            // $ref: '#/components/parameters/accountId'
-            String ref = parameter.path("$ref").asText();
-            parameter = spec.at(ref.substring(1));
-         }
+         parameter = followRefIfAny(parameter);
 
          String parameterName = parameterEntry.getKey();
          log.debug("Processing param {}", parameterName);
@@ -596,11 +607,19 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       }
       if (example.has("$ref")) {
          // $ref: '#/components/examples/param_laurent'
-         String ref = example.path("$ref").asText();
-         JsonNode component = spec.at(ref.substring(1));
+         JsonNode component = followRefIfAny(example);
          return getExampleValue(component);
       }
       return null;
+   }
+
+   /** */
+   private JsonNode followRefIfAny(JsonNode referencableNode) {
+      if (referencableNode.has("$ref")) {
+         String ref = referencableNode.path("$ref").asText();
+         return spec.at(ref.substring(1));
+      }
+      return referencableNode;
    }
 
    /** */
