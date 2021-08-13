@@ -149,4 +149,21 @@ public class MessageService {
       }
       return results;
    }
+
+   /**
+    * Updates an exchange.
+    * @param exchange The exchange to update.
+    * @return The updated exchange
+    */
+   public Boolean updateExchange(RequestResponsePair exchange) {
+      Request resultRequest = requestRepository.save(exchange.getRequest());
+      if (log.isDebugEnabled()){
+         log.debug("Saved request " + resultRequest.getName());
+      }
+      Response resultResponse = responseRepository.save(exchange.getResponse());
+      if (log.isDebugEnabled()){
+         log.debug("Saved response " + resultResponse.getName());
+      }
+      return resultRequest != null && resultResponse != null;
+   }
 }

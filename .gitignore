@@ -3,6 +3,7 @@ node
 node_modules
 dist
 .idea
+.vscode
 .tmp
 .sass-cache
 bower_components

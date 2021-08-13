@@ -25,9 +25,10 @@ import { switchMap } from 'rxjs/operators';
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
-import { ListConfig, ListEvent } from 'patternfly-ng/list';
+import { ListConfig } from 'patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
+import { EditResponseDialogComponent } from '../../../components/edit-response-dialog/edit-response-dialog.component';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint, Exchange, UnidirectionalEvent, RequestResponsePair, EventMessage } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
@@ -150,6 +151,42 @@ export class ServiceDetailPageComponent implements OnInit {
     });
   }
 
+  public openEditResponse(itemName: string, responseName): void {
+    let index = this.getIndex(itemName, responseName);
+    const initialState = {
+      closeBtnName: 'Cancel',
+      request: (this.resolvedServiceView.messagesMap[itemName][index] as RequestResponsePair).request,
+      response: (this.resolvedServiceView.messagesMap[itemName][index] as RequestResponsePair).response
+    }
+    this.modalRef = this.modalService.show(EditResponseDialogComponent, {initialState});
+    this.modalRef.content.saveExchangeAction.subscribe((exchange) => {
+      (this.resolvedServiceView.messagesMap[itemName][index] as RequestResponsePair) = exchange;
+      this.servicesSvc.updateServiceExchange(this.resolvedServiceView.service, exchange).subscribe(
+        {
+          next: res => {
+            // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
+            // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
+            this.serviceView = new Observable<ServiceView>(observer => { observer.next(this.resolvedServiceView) });
+            this.notificationService.message(NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name, "Exchange has been updated", false, null, null);
+            // Then trigger view reevaluation to update the label list component and the notifications toaster.
+            this.ref.detectChanges();
+          },
+          error: err => {
+            this.notificationService.message(NotificationType.DANGER,
+              this.resolvedServiceView.service.name, "Exchange cannot be updated (" + err.message + ")", false, null, null);
+          },
+          complete: () => console.log('Observer got a complete notification'),
+        }
+      );
+    });
+  }
+
+  private getIndex(itemName: string, responseName: string) {
+    const isExchange = (exchange) => (exchange as RequestResponsePair).response.name === responseName;
+    return this.resolvedServiceView.messagesMap[itemName].findIndex(isExchange);
+  }
+
   public openResources(): void {
     const initialState = {
       closeBtnName: 'Close',
@@ -170,6 +207,14 @@ export class ServiceDetailPageComponent implements OnInit {
       return (exchange as UnidirectionalEvent).eventMessage.sourceArtifact;
     } else {
       return (exchange as RequestResponsePair).request.sourceArtifact;
+    }
+  }
+
+  public isComplete(exchange: Exchange): boolean {
+    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
+      return true;
+    } else {
+      return (exchange as RequestResponsePair).response.complete;
     }
   }
 

@@ -146,7 +146,8 @@ export class Response extends Message {
   status: string;
   mediaType: string;
   dispatchCriteria: string;
-  isFault: boolean = false;
+  fault: boolean = false;
+  complete: boolean = true;
 }
 export class EventMessage extends Message {
   id: string;
@@ -155,6 +156,7 @@ export class EventMessage extends Message {
 }
 
 export abstract class Exchange {
+  type: string
 }
 export class UnidirectionalEvent extends Exchange {
   eventMessage: EventMessage;
