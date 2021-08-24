@@ -398,15 +398,31 @@ export class ServiceDetailPageComponent implements OnInit {
     return this.authService.hasRole(role);
   }
 
-  public allowOperationsPropertiesEdit(): boolean {
-    return (this.hasRole('admin') || this.hasRole('manager'))
-        && (this.resolvedServiceView.service.type === 'REST' 
-            || this.resolvedServiceView.service.type === 'GRPC'
-            || (this.resolvedServiceView.service.type === 'EVENT' && this.asyncAPIFeatureEnabled()));
+  public hasRoleForService(role: string): boolean {
+    if (this.hasRepositoryTenancyEnabled() && this.resolvedServiceView.service.metadata.labels) {
+      let tenant = this.resolvedServiceView.service.metadata.labels[this.repositoryTenantLabel()];
+      return this.authService.hasRoleForResource(role, tenant);
+    }
+    return this.hasRole(role);
   }
 
-  public asyncAPIFeatureEnabled(): boolean {
-    return this.config.getFeatureProperty('async-api', 'enabled').toLowerCase() === 'true';
+  public allowOperationsPropertiesEdit(): boolean {
+    return (this.hasRoleForService('manager') || this.hasRole('admin'))
+        && (this.resolvedServiceView.service.type === 'REST' 
+            || this.resolvedServiceView.service.type === 'GRPC'
+            || (this.resolvedServiceView.service.type === 'EVENT' && this.hasAsyncAPIFeatureEnabled()));
+  }
+
+  public hasRepositoryTenancyEnabled(): boolean {
+    return this.config.hasFeatureEnabled('repository-filter');
+  }
+
+  public repositoryTenantLabel(): string {
+    return this.config.getFeatureProperty('repository-filter', 'label-key').toLowerCase();
+  }
+
+  public hasAsyncAPIFeatureEnabled(): boolean {
+    return this.config.hasFeatureEnabled('async-api');
   }
 
   public asyncAPIFeatureEndpoint(binding: string): string {
@@ -414,6 +430,6 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public isAsyncMockEnabled(operation: Operation): boolean {
-    return this.asyncAPIFeatureEnabled() && operation.defaultDelay != 0;
+    return this.hasAsyncAPIFeatureEnabled() && operation.defaultDelay != 0;
   }
 }

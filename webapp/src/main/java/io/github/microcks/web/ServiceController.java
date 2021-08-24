@@ -18,16 +18,24 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Metadata;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.ServiceView;
+import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.repository.CustomServiceRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.security.UserInfo;
 import io.github.microcks.service.MessageService;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.web.dto.GenericResourceServiceDTO;
 import io.github.microcks.web.dto.OperationOverrideDTO;
-import io.github.microcks.domain.ServiceView;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -191,9 +199,10 @@ public class ServiceController {
 
    @RequestMapping(value = "/services/{id}/metadata", method = RequestMethod.PUT)
    public ResponseEntity<?> updateMetadata(@PathVariable("id") String serviceId,
-         @RequestBody Metadata metadata) {
+         @RequestBody Metadata metadata,
+         UserInfo userInfo) {
       log.debug("Updating the metadata of service {}", serviceId);
-      boolean result = serviceService.updateMetadata(serviceId, metadata);
+      boolean result = serviceService.updateMetadata(serviceId, metadata, userInfo);
       if (result){
          return new ResponseEntity<>(HttpStatus.OK);
       }
@@ -204,12 +213,13 @@ public class ServiceController {
    public ResponseEntity<?> overrideServiceOperation(
          @PathVariable("id") String serviceId,
          @RequestParam(value = "operationName") String operationName,
-         @RequestBody OperationOverrideDTO operationOverride
+         @RequestBody OperationOverrideDTO operationOverride,
+         UserInfo userInfo
       ) {
       log.debug("Updating operation {} of service {}", operationName, serviceId);
       log.debug("ParameterConstraints?: " + operationOverride.getParameterConstraints());
       boolean result = serviceService.updateOperation(serviceId, operationName, operationOverride.getDispatcher(),
-            operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(), operationOverride.getParameterConstraints());
+            operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(), operationOverride.getParameterConstraints(), userInfo);
       if (result){
          return new ResponseEntity<>(HttpStatus.OK);
       }
@@ -217,7 +227,7 @@ public class ServiceController {
    }
 
    @RequestMapping(value = "/services/{id}", method = RequestMethod.DELETE)
-   public ResponseEntity<String> deleteService(@PathVariable("id") String serviceId) {
+   public ResponseEntity<String> deleteService(@PathVariable("id") String serviceId, UserInfo userInfo) {
       log.debug("Removing service with id {}", serviceId);
       serviceService.deleteService(serviceId);
       return new ResponseEntity<>(HttpStatus.OK);

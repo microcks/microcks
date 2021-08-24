@@ -27,6 +27,8 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
+import io.github.microcks.security.AuthorizationChecker;
+import io.github.microcks.security.UserInfo;
 import io.github.microcks.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,6 +70,9 @@ public class ServiceService {
 
    @Autowired
    private ApplicationContext applicationContext;
+
+   @Autowired
+   private AuthorizationChecker authorizationChecker;
 
    @Value("${async-api.default-binding}")
    private final String defaultAsyncBinding = null;
@@ -342,11 +347,13 @@ public class ServiceService {
     * takes care of updated the <b>lastUpdate</b> marker.
     * @param id The identifier of service to update metadata for
     * @param metadata The new metadata for this Service
+    * @param userInfo The current user information to check if authorized to do the update
     * @return True if service has been found and updated, false otherwise.
     */
-   public Boolean updateMetadata(String id, Metadata metadata) {
+   public Boolean updateMetadata(String id, Metadata metadata, UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
-      if (service != null) {
+      log.debug("Is user allowed? " + authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          service.getMetadata().setLabels(metadata.getLabels());
          service.getMetadata().setAnnotations(metadata.getAnnotations());
          service.getMetadata().objectUpdated();
@@ -364,11 +371,14 @@ public class ServiceService {
     * @param dispatcherRules The dispatcher rules to use for this operation
     * @param delay The new delay value for operation
     * @param constraints Constraints for this operation parameters
+    * @param userInfo The current user information to check if authorized to do the update
     * @return True if operation has been found and updated, false otherwise.
     */
-   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay, List<ParameterConstraint> constraints) {
+   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay,
+                                  List<ParameterConstraint> constraints, UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
-      if (service != null) {
+      log.debug("Is user allowed? " + authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
             if (operation.getName().equals(operationName)) {
                operation.setDispatcher(dispatcher);

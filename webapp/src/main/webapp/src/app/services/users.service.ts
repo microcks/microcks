@@ -25,7 +25,6 @@ import { User } from '../models/user.model';
 import { IAuthenticationService } from './auth.service';
 import { KeycloakAuthenticationService } from './auth-keycloak.service';
 
-
 @Injectable({ providedIn: 'root' })
 export class UsersService {
 
@@ -58,6 +57,15 @@ export class UsersService {
         },
       }
     );
+  }
+
+  getGroups(): Observable<any[]> {
+    const options = { params: new HttpParams().set('search', 'microcks') };
+    return this.http.get<any[]>(this.rootUrl + '/groups', options);
+  }
+  createGroup(parentGroupId: string, name: string): Observable<any> {
+    var group = {'name': name};
+    return this.http.post<any[]>(this.rootUrl + '/groups/' + parentGroupId + '/children', group);
   }
 
   getUsers(page: number = 1, pageSize: number = 20): Observable<User[]> {

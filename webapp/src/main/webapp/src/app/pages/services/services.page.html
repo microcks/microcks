@@ -12,7 +12,7 @@
     </button>
   </div>
 </h1>
-<small> This are the APIs | Services managed by Microcks. You can discover new ones adding Import Job or creating a new Dynamic API...</small>
+<small> This are the APIs | Services managed by Microcks. You can discover new ones adding Import Job or creating a new Dynamic API...</small>
 
 <div class="container-fluid">
   <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">
@@ -61,12 +61,12 @@
 
         <div class="list-view-pf-actions">
           <a [routerLink]="[service.id]"><button class="btn btn-default" type="button">Details</button></a>
-          <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="hasRole('admin')">
+          <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="hasRole('admin') || hasRoleForService('manager', service)">
             <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
               <span class="fa fa-ellipsis-v"></span>
             </button>
             <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
-              <li><a>Edit</a></li>
+              <!-- <li><a>Edit</a></li> -->
               <li><a (click)="confirmDeleteDialog.open(service)">Delete</a></li>
             </ul>
           </div>

@@ -25,6 +25,8 @@ import { FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-n
 
 import { User } from '../../../models/user.model';
 import { IAuthenticationService } from '../../../services/auth.service';
+import { ConfigService } from '../../../services/config.service';
+import { ServicesService } from '../../../services/services.service';
 import { UsersService } from '../../../services/users.service';
 
 @Component({
@@ -38,15 +40,23 @@ export class UsersTabComponent implements OnInit {
   users: User[];
   usersCount: number;
   usersRoles: {};
+  groups: any[];
+  managerGroup: any;
+  tenants: string[];
   toolbarConfig: ToolbarConfig;
   filterConfig: FilterConfig;
   paginationConfig: PaginationConfig;
   filterTerm: string = null;
   filtersText: string = '';
 
-  constructor(private usersSvc: UsersService, protected authService: IAuthenticationService, private notificationService: NotificationService) {}
+  constructor(private usersSvc: UsersService, protected authService: IAuthenticationService, private config: ConfigService,
+      private servicesSvc: ServicesService, private notificationService: NotificationService) {
+  }
 
   ngOnInit() {
+    if (this.hasRepositoryTenancyEnabled()) {
+      this.getAndUpdateGroups();
+    }
     this.getUsers();
     this.countUsers();
     this.paginationConfig = {
@@ -73,6 +83,43 @@ export class UsersTabComponent implements OnInit {
       sortConfig: undefined,
       views: []
     } as ToolbarConfig;
+  }
+
+  getAndUpdateGroups(): void {
+    this.usersSvc.getGroups().subscribe(
+      {
+        next: results => {
+          // Flatten the groups.
+          this.groups = results.filter(group => group.path === '/microcks').flatMap(group => group.subGroups);
+          this.groups.forEach(group => {
+            if (group.path === '/microcks/manager') { this.managerGroup = group; }
+          });
+          this.groups = this.groups.flatMap(group => group.subGroups);
+          this.checkGroupsCompleteness();
+        },
+        error: err => {
+          if (err.status == 403) {
+            this.notificationService.message(NotificationType.DANGER,
+              "Authorization Error", "Current user does not appear to have the **manage-groups** role from **realm-management** client. Please contact your administrator to setup correct role.", false, null, null);
+          } else {
+            this.notificationService.message(NotificationType.WARNING,
+              "Unknown Error", err.message, false, null, null);
+          }
+        }
+      }
+    );
+  }
+  checkGroupsCompleteness(): void {
+    this.servicesSvc.getServicesLabels().subscribe(results => {
+      this.tenants = results[this.repositoryFilterFeatureLabelKey()];
+      // Check that each tenant has correct groups, otherwise create them.
+      this.tenants.forEach(tenant => {
+        let mGroup = this.groups.find(g => g.path === '/microcks/manager/' + tenant)
+        if (mGroup == null) {
+          this.usersSvc.createGroup(this.managerGroup.id, tenant).subscribe();
+        }
+      });
+    });
   }
 
   getUsers(page: number = 1): void {
@@ -193,5 +240,16 @@ export class UsersTabComponent implements OnInit {
       });
       this.filterUsers(this.filterTerm);
     }
+  }
+
+  public hasRepositoryTenancyEnabled(): boolean {
+    return this.config.hasFeatureEnabled('repository-filter');
+  }
+  public repositoryTenantLabel(): string {
+    return this.config.getFeatureProperty('repository-filter', 'label-key').toLowerCase();
+  }
+
+  public repositoryFilterFeatureLabelKey(): string {
+    return this.config.getFeatureProperty('repository-filter', 'label-key');
   }
 }
