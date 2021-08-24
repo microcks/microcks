@@ -115,12 +115,15 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
   }
 
   /**
-   * Calles to check that user can endorse role for a specific resource.
+   * Called to check that user can endorse role for a specific resource.
    * @param role 
    * @param resource 
    */
   public hasRoleForResource(role: string, resource: string): boolean {
-    return false;
+    var rolePath = "/microcks/" + role + "/" + resource;
+    var groups = this.keycloak.tokenParsed['microcks-groups'];
+
+    return !!groups && groups.indexOf(rolePath) >= 0;
   }
 
   /**
