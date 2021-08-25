@@ -256,7 +256,7 @@ public class AsyncAPISchemaValidator {
             isYaml = false;
             break;
          }
-         if (line.startsWith("---") || line.startsWith("asyncapi: ")) {
+         if (line.startsWith("---") || line.startsWith("-") || line.startsWith("asyncapi: ")) {
             isYaml = true;
             break;
          }
