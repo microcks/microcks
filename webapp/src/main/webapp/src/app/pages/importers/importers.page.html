@@ -36,6 +36,7 @@
             </div>
             <div class="list-group-item-text repositoryUrl">
               <a href="{{ job.repositoryUrl }}">{{ job.repositoryUrl }}</a>
+              <label-list [metadata]="job.metadata" [filter]="repositoryFilterFeatureLabelList()"></label-list>
             </div>
           </div>
           <div class="list-view-pf-additional-info">
@@ -49,7 +50,7 @@
               <span class="label label-success" *ngIf="job.active">Scanned</span>
               <span class="label label-primary" *ngIf="!job.active">Not scanned</span>
               <span class="label label-danger" *ngIf="job.lastImportError"
-                  tooltip="{{ job.lastImportError }}" placement="top">
+                  tooltip="{{ job.lastImportError }}" placement="top">
                 Import Error
               </span>
               <span class="label label-warning" *ngIf="job.serviceRefs">

@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * A Rest controlle for API defined on importers.
  * @author laurent
  */
 @RestController
@@ -71,6 +72,32 @@ public class JobController {
             .getContent();
    }
 
+   @RequestMapping(value = "/jobs/search", method = RequestMethod.GET)
+   public List<ImportJob> searchJobs(@RequestParam Map<String, String> queryMap) {
+      // Parse params from queryMap.
+      String name = null;
+      Map<String, String> labels = new HashMap<>();
+      for (String paramKey: queryMap.keySet()) {
+         if ("name".equals(paramKey)) {
+            name = queryMap.get("name");
+         }
+         if (paramKey.startsWith("labels.")) {
+            labels.put(paramKey.substring(paramKey.indexOf('.') + 1), queryMap.get(paramKey));
+         }
+      }
+
+      if (labels == null || labels.isEmpty()) {
+         log.debug("Searching jobs corresponding to name {}", name);
+         return jobRepository.findByNameLike(name);
+      }
+      if (name == null || name.trim().length() == 0) {
+         log.debug("Searching jobs corresponding to labels {}", labels);
+         return jobRepository.findByLabels(labels);
+      }
+      log.debug("Searching jobs corresponding to name {} and labels {}", name, labels);
+      return jobRepository.findByLabelsAndNameLike(labels, name);
+   }
+
    @RequestMapping(value = "/jobs/count", method = RequestMethod.GET)
    public Map<String, Long> countJobs() {
       log.debug("Counting jobs...");
@@ -95,6 +122,7 @@ public class JobController {
    @RequestMapping(value = "/jobs/{id}", method = RequestMethod.POST)
    public ResponseEntity<ImportJob> saveJob(@RequestBody ImportJob job) {
       log.debug("Saving existing job: {}", job);
+      job.getMetadata().objectUpdated();
       return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
    }
 

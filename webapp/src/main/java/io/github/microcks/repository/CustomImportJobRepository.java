@@ -19,20 +19,17 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.ImportJob;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
+import java.util.Map;
 
 /**
- * Repository interface for ImportJob domain objects.
+ * Custom repository interface for ImportJob domain objects.
  * @author laurent
  */
-public interface ImportJobRepository extends MongoRepository<ImportJob, String>, CustomImportJobRepository {
+public interface CustomImportJobRepository {
 
-   @Query("{ 'name' : {'$regex':?0, '$options':'i'}}")
-   List<ImportJob> findByNameLike(String name);
+   List<ImportJob> findByLabels(Map<String, String> labels);
 
-   @Query("{ 'serviceRefs' : {'$elemMatch': {'serviceId':?0}}}")
-   List<ImportJob> findByServiceRefId(String serviceRefId);
+   List<ImportJob> findByLabelsAndNameLike(Map<String, String> labels, String name);
 }

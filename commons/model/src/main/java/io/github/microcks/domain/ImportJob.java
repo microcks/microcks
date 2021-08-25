@@ -47,6 +47,7 @@ public class ImportJob {
    private boolean active = false;
    private String etag;
 
+   private Metadata metadata;
    private SecretRef secretRef;
    private Set<ServiceRef> serviceRefs;
 
@@ -136,6 +137,14 @@ public class ImportJob {
 
    public void setEtag(String etag) {
       this.etag = etag;
+   }
+
+   public Metadata getMetadata() {
+      return metadata;
+   }
+
+   public void setMetadata(Metadata metadata) {
+      this.metadata = metadata;
    }
 
    public SecretRef getSecretRef() {

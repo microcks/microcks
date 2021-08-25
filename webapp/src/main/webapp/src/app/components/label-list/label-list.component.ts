@@ -18,7 +18,7 @@
  */
 import { Component, OnInit, ViewEncapsulation, ChangeDetectionStrategy, Input} from '@angular/core';
 
-import { Metadata } from '../../../app/models/service.model';
+import { Metadata } from '../../../app/models/commons.model';
 
 @Component({
   selector: 'label-list',
@@ -36,7 +36,8 @@ export class LabelListComponent implements OnInit {
   private labels: any = null;
 
   check() {
-    console.log('LabelListComponent view checked');
+    // Debug trace for diving into ChangeDetectionStrategy.OnPush issues...
+    //console.log('LabelListComponent view checked');
   }
 
   ngOnInit() {

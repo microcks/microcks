@@ -1,0 +1,10 @@
+<p>
+  Labels help you organize and select resources. Adding labels below will let you query for objects that have similar, overlapping or dissimilar labels.
+</p>
+<form>
+  <label class="control-label">Labels for {{ resourceType }} {{ resourceName }}</label>
+  <div class="metadata-labels-input form-control">
+    <div class="metadata-label" *ngFor="let label of getKeys(labels)">{{ label }}={{ labels[label] }}&nbsp;<a class="close" (click)="removeLabel(label)">&times;</a></div>
+    <input type="text" class="labels-input" placeholder="domain=frontend" spellcheck="false" id="labelKV" name="labelKV" [(ngModel)]="labelKV" value="" (blur)="addLabel()">
+  </div>
+</form>

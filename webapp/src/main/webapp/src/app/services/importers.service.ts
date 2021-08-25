@@ -35,9 +35,19 @@ export class ImportersService {
     return this.http.get<ImportJob[]>(this.rootUrl + '/jobs', options);
   }
 
-  filterImportJobs(filter: string): Observable<ImportJob[]> {
-    const options = { params: new HttpParams().set('name', filter) };
-    return this.http.get<ImportJob[]>(this.rootUrl + '/jobs', options);
+  filterImportJobs(labelsFilter: Map<string, string>, nameFilter: string): Observable<ImportJob[]> {
+    let httpParams: HttpParams = new HttpParams();
+    if (nameFilter != null) {
+      httpParams = httpParams.set('name', nameFilter);
+    }
+    if (labelsFilter != null) {
+      for (let key of Array.from( labelsFilter.keys() )) {
+        httpParams = httpParams.set('labels.' + key, labelsFilter.get(key));
+      }
+    }
+
+    const options = { params: httpParams };
+    return this.http.get<ImportJob[]>(this.rootUrl + '/jobs/search', options);
   }
 
   countImportJobs(): Observable<any> { 

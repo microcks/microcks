@@ -16,23 +16,9 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.repository;
-
-import io.github.microcks.domain.ImportJob;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-
-import java.util.List;
-
-/**
- * Repository interface for ImportJob domain objects.
- * @author laurent
- */
-public interface ImportJobRepository extends MongoRepository<ImportJob, String>, CustomImportJobRepository {
-
-   @Query("{ 'name' : {'$regex':?0, '$options':'i'}}")
-   List<ImportJob> findByNameLike(String name);
-
-   @Query("{ 'serviceRefs' : {'$elemMatch': {'serviceId':?0}}}")
-   List<ImportJob> findByServiceRefId(String serviceRefId);
+export class Metadata {
+  createdOn: number;
+  lastUpdate: number;
+  annotations: any;
+  labels: any;
 }

@@ -16,17 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { Metadata } from './commons.model';
+
 export class Api {
   name: string;
   version: string;
   resource: string;
-}
-
-export class Metadata {
-  createdOn: number;
-  lastUpdate: number;
-  annotations: any;
-  labels: any;
 }
 
 export class Service {

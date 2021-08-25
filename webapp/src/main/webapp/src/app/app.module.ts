@@ -48,6 +48,7 @@ import { AuthenticationHttpInterceptor } from './services/auth.http-interceptor'
 import { ConfigService } from './services/config.service';
 
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
+import { EditLabelsComponent } from './components/edit-labels/edit-labels.component'
 import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { LabelListComponent } from './components/label-list/label-list.component';
@@ -97,7 +98,7 @@ export function configLoader(configService: ConfigService) {
   declarations: [
     AppComponent, TimeAgoPipe,
     ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent,
-    TestBarChartComponent, LabelListComponent, EditLabelsDialogComponent,
+    TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
     DashboardPageComponent, ServicesPageComponent, DynamicAPIDialogComponent,
     ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,

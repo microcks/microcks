@@ -57,7 +57,16 @@
     </form>
   </pfng-wizard-step>
 
-  <pfng-wizard-step [config]="step3Config">
+  <pfng-wizard-step [config]="step3Config" [reviewTemplate]="step3ReviewTemplate">
+    <form class="form-horizontal">
+      <fieldset>
+        <legend><span class="fa fa-tag"></span> Labels</legend>
+      </fieldset>
+      <edit-labels [resourceName]="job.name" [labels]="job.metadata.labels"></edit-labels>
+    </form>
+  </pfng-wizard-step>
+
+  <pfng-wizard-step [config]="step4Config">
     <pfng-wizard-review></pfng-wizard-review>
   </pfng-wizard-step>
 </pfng-wizard>
@@ -79,7 +88,7 @@
     </div>
   </form>
 </ng-template>
-<!-- Step 2A: Details -->
+<!-- Step 2: Details -->
 <ng-template #step2ReviewTemplate>
   <form class="form">
     <div class="wizard-pf-review-item" *ngIf="job.repositoryUrl && job.repositoryUrl.startsWith('https:')">
@@ -89,6 +98,15 @@
     <div class="wizard-pf-review-item" *ngIf="job.secretRef">
       <span class="wizard-pf-review-item-label">Secret name:</span>
       <span class="wizard-pf-review-item-value">{{ job.secretRef.name }}</span>
+    </div>
+  </form>
+</ng-template>
+<!-- Step 3: Labels -->
+<ng-template #step3ReviewTemplate>
+  <form class="form">
+    <div class="wizard-pf-review-item">
+      <span class="wizard-pf-review-item-label">Job labels:</span>
+      <span class="wizard-pf-review-item-value"><label-list [metadata]="job.metadata"></label-list></span>
     </div>
   </form>
 </ng-template>

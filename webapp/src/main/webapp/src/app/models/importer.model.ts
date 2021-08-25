@@ -16,6 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+import { Metadata } from './commons.model';
 import { SecretRef } from './secret.model';
 
 export class ImportJob {
@@ -31,6 +32,7 @@ export class ImportJob {
   active: boolean = false;
   etag: string;
 
+  metadata: Metadata;
   secretRef: SecretRef;
   serviceRefs: ServiceRef[];
 }

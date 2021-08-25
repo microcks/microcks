@@ -16,18 +16,20 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
+import { ActivatedRoute, Router, Params } from '@angular/router';
 
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 import { ToolbarConfig } from 'patternfly-ng/toolbar';
-import { FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-ng/filter';
+import { FilterConfig, FilterEvent, FilterField, FilterType, Filter } from 'patternfly-ng/filter';
 
 import { ImportJob, ServiceRef } from '../../models/importer.model';
 import { ImportersService } from '../../services/importers.service';
+import { ServicesService } from '../../services/services.service';
 import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
-
+import { ConfigService } from '../../services/config.service';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
@@ -41,21 +43,44 @@ export class ImportersPageComponent implements OnInit {
   modalRef: BsModalRef;
   importJobs: ImportJob[];
   importJobsCount: number;
+  servicesLabels: Map<string, string[]>;
   toolbarConfig: ToolbarConfig;
   filterConfig: FilterConfig;
   paginationConfig: PaginationConfig;
-  filterTerm: string = null;
+  nameFilterTerm: string = null;
+  repositoryFilter: string = null;
   filtersText: string = '';
   selectedJob: ImportJob;
   notifications: Notification[];
 
-  constructor(private importersSvc: ImportersService, private modalService: BsModalService, 
-    private notificationService: NotificationService) { }
+  constructor(private importersSvc: ImportersService, private servicesSvc: ServicesService,
+    private modalService: BsModalService, private notificationService: NotificationService,
+    private config: ConfigService, private route: ActivatedRoute, private router: Router,
+    private ref: ChangeDetectorRef) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
     this.getImportJobs();
     this.countImportJobs();
+
+    var filterFieldsConfig = [];
+    if (this.hasRepositoryFilterFeatureEnabled()) {
+      this.getServicesLabels();
+      filterFieldsConfig.push({
+        id: this.repositoryFilterFeatureLabelKey(),
+        title: this.repositoryFilterFeatureLabelLabel(),
+        placeholder: 'Filter by ' + this.repositoryFilterFeatureLabelLabel() + '...',
+        type: FilterType.SELECT,
+        queries: []
+      });
+    }
+    filterFieldsConfig.push({
+      id: 'name',
+      title: 'Name',
+      placeholder: 'Filter by Name...',
+      type: FilterType.TEXT
+    });
+
     this.paginationConfig = {
       pageNumber: 1,
       pageSize: 20,
@@ -64,12 +89,7 @@ export class ImportersPageComponent implements OnInit {
     } as PaginationConfig;
 
     this.filterConfig = {
-      fields: [{
-        id: 'name',
-        title: 'Name',
-        placeholder: 'Filter by Name...',
-        type: FilterType.TEXT
-      }] as FilterField[],
+      fields: filterFieldsConfig as FilterField[],
       resultsCount: 20,
       appliedFilters: []
     } as FilterConfig
@@ -80,6 +100,32 @@ export class ImportersPageComponent implements OnInit {
       sortConfig: undefined,
       views: []
     } as ToolbarConfig;
+
+    this.route.queryParams.subscribe(queryParams => {
+      // Look at query parameters to apply filters.
+      this.filterConfig.appliedFilters = [];
+      if (queryParams['name']) {
+        this.nameFilterTerm = queryParams['name'];
+        this.filterConfig.appliedFilters.push({
+          field: {title: 'Name'} as FilterField,
+          value: this.nameFilterTerm
+        } as Filter);
+      }
+      if (queryParams['labels.' + this.repositoryFilterFeatureLabelKey()]) {
+        this.repositoryFilter = queryParams['labels.' + this.repositoryFilterFeatureLabelKey()];
+        this.filterConfig.appliedFilters.push({
+          field: {title: this.repositoryFilterFeatureLabelLabel()} as FilterField,
+          value: this.repositoryFilter
+        } as Filter);
+      }
+      if (this.nameFilterTerm != null || this.repositoryFilter != null) {
+        this.filterImportJobs(this.repositoryFilter, this.nameFilterTerm);
+      } else {
+        // Default - retrieve all the jobs
+        this.getImportJobs()
+        this.countImportJobs();
+      }
+    });
   }
 
   ngAfterViewInit() {
@@ -88,17 +134,39 @@ export class ImportersPageComponent implements OnInit {
   getImportJobs(page: number = 1): void {
     this.importersSvc.getImportJobs(page).subscribe(results => this.importJobs = results);
   }
-  filterImportJobs(filter: string): void {
-    this.importersSvc.filterImportJobs(filter).subscribe(results => {
+  filterImportJobs(repositoryFilter: string, nameFilterTerm: string): void {
+    var labelsFilter = new Map<string, string>();
+    if (repositoryFilter != null) {
+      labelsFilter.set(this.repositoryFilterFeatureLabelKey(), repositoryFilter);
+    }
+    this.importersSvc.filterImportJobs(labelsFilter, nameFilterTerm).subscribe(results => {
       this.importJobs = results;
       this.filterConfig.resultsCount = results.length;
     });
+    // Update browser URL to make the page bookmarkable.
+    var queryParams = { name: nameFilterTerm };
+    for (let key of Array.from( labelsFilter.keys() )) {
+      queryParams['labels.' + key] = labelsFilter.get(key);
+    }
+    this.router.navigate([], {relativeTo: this.route, queryParams: queryParams as Params, queryParamsHandling: 'merge'});
   }
 
   countImportJobs(): void {
     this.importersSvc.countImportJobs().subscribe(results => {
       this.importJobsCount = results.counter;
       this.paginationConfig.totalItems = this.importJobsCount;
+    });
+  }
+
+  getServicesLabels(): void {
+    this.servicesSvc.getServicesLabels().subscribe(results => {
+      this.servicesLabels = results;
+      var queries = [];
+      // Get only the label values corresponding to key used for filtering, then transform them for Patternfly.
+      if (this.servicesLabels[this.repositoryFilterFeatureLabelKey()] != undefined) {
+        this.servicesLabels[this.repositoryFilterFeatureLabelKey()].map(label => queries.push({id: label, value: label}));
+      }
+      this.filterConfig.fields[0].queries = queries;
     });
   }
 
@@ -113,14 +181,18 @@ export class ImportersPageComponent implements OnInit {
   handleFilter($event: FilterEvent): void {
     this.filtersText = '';
     if ($event.appliedFilters.length == 0) {
-      this.filterTerm = null;
+      this.nameFilterTerm = null;
+      this.repositoryFilter = null;
       this.getImportJobs();
     } else {
       $event.appliedFilters.forEach((filter) => {
-        this.filtersText += filter.field.title + ' : ' + filter.value + '\n';
-        this.filterTerm = filter.value;
+        if (this.hasRepositoryFilterFeatureEnabled() && filter.field.id === this.repositoryFilterFeatureLabelKey()) {
+          this.repositoryFilter = filter.value;
+        } else {
+          this.nameFilterTerm = filter.value;
+        }
       });
-      this.filterImportJobs(this.filterTerm);
+      this.filterImportJobs(this.repositoryFilter, this.nameFilterTerm);
     }
   }
 
@@ -159,6 +231,9 @@ export class ImportersPageComponent implements OnInit {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
                 job.name, "Import job has been updated", false, null, null);
+            // Trigger view reevaluation to update the label list component.
+            this.importJobs = JSON.parse(JSON.stringify(this.importJobs));
+            this.ref.detectChanges();
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
@@ -264,6 +339,20 @@ export class ImportersPageComponent implements OnInit {
 
   handleCloseNotification($event: NotificationEvent): void {
     this.notificationService.remove($event.notification);
+  }
+
+  public hasRepositoryFilterFeatureEnabled(): boolean {
+    return this.config.hasFeatureEnabled('repository-filter');
+  }
+
+  public repositoryFilterFeatureLabelKey(): string {
+    return this.config.getFeatureProperty('repository-filter', 'label-key');
+  }
+  public repositoryFilterFeatureLabelLabel(): string {
+    return this.config.getFeatureProperty('repository-filter', 'label-label');
+  }
+  public repositoryFilterFeatureLabelList(): string {
+    return this.config.getFeatureProperty('repository-filter', 'label-list');
   }
 }
 

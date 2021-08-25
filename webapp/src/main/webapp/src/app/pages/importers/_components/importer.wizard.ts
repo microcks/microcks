@@ -16,11 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Component, OnInit, ViewChild, ViewEncapsulation, Host } from '@angular/core';
+import { Component, OnInit, ViewChild, ViewEncapsulation, Host, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 
 import { WizardComponent, WizardConfig, WizardEvent, WizardStep, WizardStepComponent, WizardStepConfig } from 'patternfly-ng/wizard';
 
 import { ImportersPageComponent } from '../importers.page';
+import { Metadata } from '../../../models/commons.model';
 import { ImportJob } from '../../../models/importer.model';
 import { Secret, SecretRef } from '../../../models/secret.model';
 import { SecretsService } from '../../../services/secrets.service';
@@ -44,12 +45,14 @@ export class ImporterWizardComponent implements OnInit {
   step1Config: WizardStepConfig;
   step2Config: WizardStepConfig;
   step3Config: WizardStepConfig;
+  step4Config: WizardStepConfig;
 
   // Wizard
   wizardConfig: WizardConfig;
   wizardHost: ImportersPageComponent;
 
-  constructor(@Host() wizardHost: ImportersPageComponent, private secretsSvc: SecretsService) {
+  constructor(@Host() wizardHost: ImportersPageComponent, private secretsSvc: SecretsService,
+      private ref: ChangeDetectorRef) {
     this.wizardHost = wizardHost;
   }
   
@@ -84,6 +87,15 @@ export class ImporterWizardComponent implements OnInit {
     // Step 3
     this.step3Config = {
       id: 'step3',
+      priority: 0,
+      title: 'Labels',
+      expandReviewDetails: true,
+      nextEnabled: true
+    } as WizardStepConfig;
+
+    // Step 4
+    this.step4Config = {
+      id: 'step4',
       priority: 2,
       title: 'Review'
     } as WizardStepConfig;
@@ -107,7 +119,15 @@ export class ImporterWizardComponent implements OnInit {
   }
 
   nextClicked($event: WizardEvent): void {
-    if ($event.step.config.id === 'step3') {
+    // Because label list is eagerly loaded, it doesn't see changes in labels.
+    // And because the label list uses the ChangeDetectionStrategy.OnPush, we have to explicitely
+    // set a new value (and not only mutate) to this.job to force evaluation later on.
+    // This is the only way I know to build a deep clone of job and force reassignement...
+    this.job = JSON.parse(JSON.stringify(this.job));
+    // Trigger view reevaluation to update the label list component.
+    this.ref.detectChanges();
+
+    if ($event.step.config.id === 'step4') {
       //
       this.wizardHost.saveOrUpdateImportJob(this.job);
       this.wizardHost.closeImportJobWizardModal($event);
@@ -122,7 +142,7 @@ export class ImporterWizardComponent implements OnInit {
     }
     if ($event.step.config.id === 'step1') {
       this.updateJobProperties();
-    } else if ($event.step.config.id === 'step3') {
+    } else if ($event.step.config.id === 'step4') {
       if (this.job.id) {
         this.wizardConfig.nextTitle = 'Update';  
       } else {
@@ -141,6 +161,10 @@ export class ImporterWizardComponent implements OnInit {
       this.job.secretRef = new SecretRef('none', '');
     } else {
       this.job.secretRef = null;
+    }
+    if (this.job.metadata == undefined) {
+      this.job.metadata = new Metadata();
+      this.job.metadata.labels = {};
     }
   }
   updateMainArtifact(event: any): void {
@@ -165,6 +189,7 @@ export class ImporterWizardComponent implements OnInit {
     this.step1Config.allowClickNav = allow;
     this.step2Config.allowClickNav = allow;
     this.step3Config.allowClickNav = allow;
+    this.step4Config.allowClickNav = allow;
   }
 
   private flattenWizardSteps(wizard: WizardComponent): WizardStep[] {

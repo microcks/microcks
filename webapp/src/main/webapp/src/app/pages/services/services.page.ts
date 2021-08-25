@@ -264,19 +264,16 @@ export class ServicesPageComponent implements OnInit {
   public hasRepositoryFilterFeatureEnabled(): boolean {
     return this.config.hasFeatureEnabled('repository-filter');
   }
-
   public hasRepositoryTenancyFeatureEnabled(): boolean {
-    return this.config.hasFeatureEnabled('repository-filter');
+    return this.config.hasFeatureEnabled('repository-tenancy');
   }
 
   public repositoryFilterFeatureLabelKey(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-key');
   }
-  
   public repositoryFilterFeatureLabelLabel(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-label');
   }
-
   public repositoryFilterFeatureLabelList(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-list');
   }
