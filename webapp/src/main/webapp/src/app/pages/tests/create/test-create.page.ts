@@ -39,6 +39,7 @@ import { Secret } from '../../../models/secret.model';
 export class TestCreatePageComponent implements OnInit {
 
   service: Observable<Service>;
+  resolvedService: Service;
   serviceId: string;
   testEndpoint: string;
   runnerType: TestRunnerType;
@@ -52,6 +53,9 @@ export class TestCreatePageComponent implements OnInit {
     'globals': []
   };
   secrets: Secret[];
+
+  filteredOperation: string;
+  removedOperationsNames: string[] = [];
 
   constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private secretsSvc: SecretsService,
     private notificationService: NotificationService, private route: ActivatedRoute, private router: Router) {
@@ -69,6 +73,9 @@ export class TestCreatePageComponent implements OnInit {
         return this.servicesSvc.getService(this.serviceId);
       })
     );
+    this.service.subscribe( service => {
+      this.resolvedService = service
+    });
   }
 
   getSecrets(page: number = 1): void {
@@ -106,7 +113,7 @@ export class TestCreatePageComponent implements OnInit {
   }
 
   public showAdvancedPanel(show: boolean) {
-    if (show && (this.secrets == undefined || this.secrets.length == 0)) {
+    if (show && (this.secrets == undefined || this.secrets.length == 0)) {
       this.getSecrets();
     }
     this.showAdvanced = show;
@@ -123,6 +130,13 @@ export class TestCreatePageComponent implements OnInit {
       };
     } else {
       this.secretName = null;
+    }
+  }
+  public filterOperation(operationName: string) : void {
+    if (this.removedOperationsNames.includes(operationName)) {
+      this.removedOperationsNames.splice(this.removedOperationsNames.indexOf(operationName), 1);
+    } else {
+      this.removedOperationsNames.push(operationName);
     }
   }
 
@@ -145,7 +159,8 @@ export class TestCreatePageComponent implements OnInit {
   }
 
   public checkForm(): void {
-    this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined);
+    this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
+      && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined && this.filteredOperation.startsWith('SUBSCRIBE ')));
     console.log("submitEnabled: " + this.submitEnabled);
   }
 
@@ -154,8 +169,23 @@ export class TestCreatePageComponent implements OnInit {
   }
 
   public createTest(): void {
+    // Build filtered operations array first.
+    let filteredOperations = [];
+    if (this.filteredOperation !== undefined) {
+      filteredOperations.push(this.filteredOperation)
+    } else {
+      if (this.removedOperationsNames.length > 0) {
+        this.resolvedService.operations.forEach(op => {
+          if (!this.removedOperationsNames.includes(op.name)) {
+            filteredOperations.push(op.name)
+          }
+        });
+      }
+    }
+    // Then, create thee test invoking the API.
     var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, 
-        timeout: this.timeout, secretName: this.secretName, operationsHeaders: this.operationsHeaders};
+        timeout: this.timeout, secretName: this.secretName,
+        filteredOperations: filteredOperations, operationsHeaders: this.operationsHeaders};
     console.log("[createTest] test: " + JSON.stringify(test));
     this.testsSvc.create(test).subscribe(
       {

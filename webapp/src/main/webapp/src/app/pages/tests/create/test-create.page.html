@@ -3,7 +3,7 @@
   </pfng-toast-notification-list>
 </div>
 
-<div *ngIf="service | async as service">
+<div *ngIf="service | async as service">
   <div class="container-fluid breadcrumb-bar">
     <div class="row">
       <ol class="breadcrumb">
@@ -43,6 +43,15 @@
           </span>
         </div>
       </div>
+      <div class="control-group" *ngIf="service.type === 'EVENT' && service.operations.length > 1">
+        <label class="control-label required-pf" for="filteredOperation">Operation</label>
+        <div class="controls">
+          <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
+            <option *ngFor="let operation of service.operations" [value]="operation.name">{{ operation.name }}</option>
+          </select>
+          <p class="help-block">Select the Asynchronous operation you want to test (only SUBSCRIBE is supported at the moment).</p>
+        </div>
+      </div>
       <div class="control-group">
         <label class="control-label required-pf" for="runnerType">Runner</label>
         <div class="controls">
@@ -66,10 +75,12 @@
           </p>
         </div>
       </div>
+
       <div class="control-group">
         <span *ngIf="!showAdvanced"><a (click)="showAdvancedPanel(true)" role="button">Show advanced options</a></span>
         <span *ngIf="showAdvanced"><a (click)="showAdvancedPanel(false)" role="button">Hide advanced options</a></span>
       </div>
+
       <div *ngIf="showAdvanced" >
         <small>This section allows to add timeout, security credentials for connecting endpoint and filter operations to test.</small>
         <div class="control-group">
@@ -82,14 +93,29 @@
         <div class="control-group">
           <label class="control-label" for="secret">Secret</label>
           <div class="controls">
-            <select class="form-control" name="secret" [(ngModel)]="secretId" (change)="updateSecretProperties($event)">
+            <select class="form-control" id="secret" name="secret" [(ngModel)]="secretId" (change)="updateSecretProperties($event)">
               <option value="none">None</option>
               <option *ngFor="let secret of secrets" [value]="secret.id">{{ secret.name }} </option>
             </select>
             <p class="help-block">Pick the authentication secret that will be associated for connecting the test endpoint.</p>
           </div>
         </div>
-        <span *ngIf="service.type != 'EVENT'">
+        <div class="control-group" *ngIf="service.type != 'EVENT'">
+          <label class="control-label required-pf" for="filteredOperationsNames">Operations</label>
+          <div class="controls">
+            <ul class="unstyled">
+              <li *ngFor="let operation of service.operations">
+                <label class="checkbox">
+                  <input type="checkbox" id="filteredOperationsNames" name="filteredOperationsNames" (change)="filterOperation(operation.name)" checked>
+                  {{ operation.name }}
+                </label>
+              </li>
+            </ul>
+            <p class="help-block">Remove the operations would don't want to include within this test.</p>
+          </div>
+        </div>
+
+        <div *ngIf="service.type != 'EVENT'" style="margin-top: 10px">
           <small>This section allows you to add/override requests headers with global or operation specific ones. Use comma-separated string for multiple values for same header.</small>
           <div class="control-group operation-headers">
               <h5 class="subsection">Globals headers</h5>
@@ -139,7 +165,7 @@
             </div>
             <a (click)="addHeaderValue(operation.name)" role="button">Add Header</a>
           </div>
-        </span>
+        </div>
       </div>
       <div class="form-actions right pull-right">
         <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>

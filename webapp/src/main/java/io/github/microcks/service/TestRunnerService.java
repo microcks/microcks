@@ -159,13 +159,11 @@ public class TestRunnerService {
          return CompletableFuture.completedFuture(testResult);
       }
 
-      for (Operation operation : service.getOperations()) {
-         // Prepare result container for operation tests.
-         TestCaseResult testCaseResult = new TestCaseResult();
-         testCaseResult.setOperationName(operation.getName());
+      for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
+         // Retrieve operation corresponding to testCase.
+         Operation operation = service.getOperations().stream()
+               .filter(o -> o.getName().equals(testCaseResult.getOperationName())).findFirst().get();
          String testCaseId = IdBuilder.buildTestCaseId(testResult, operation);
-         testResult.getTestCaseResults().add(testCaseResult);
-         testResultRepository.save(testResult);
 
          // Prepare collection of requests to launch.
          List<Request> requests = requestRepository.findByOperationId(IdBuilder.buildOperationId(service, operation));

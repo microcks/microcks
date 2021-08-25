@@ -18,16 +18,7 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.TestCaseResult;
-import io.github.microcks.domain.TestOptionals;
-import io.github.microcks.domain.TestResult;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.domain.TestRunnerType;
-import io.github.microcks.domain.TestStepResult;
+import io.github.microcks.domain.*;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
@@ -86,6 +77,8 @@ public class TestService {
       testResult.setTimeout(testOptionals.getTimeout());
       testResult.setSecretRef(testOptionals.getSecretRef());
       testResult.setOperationsHeaders(testOptionals.getOperationsHeaders());
+      // Initialize the TestCaseResults containers before saving it.
+      initializeTestCaseResults(testResult, service, testOptionals);
       testResultRepository.save(testResult);
 
       // Launch test asynchronously before returning result.
@@ -167,9 +160,22 @@ public class TestService {
       return updatedTestCaseResult;
    }
 
-   /**
-    *
-    */
+   /** */
+   private void initializeTestCaseResults(TestResult testResult, Service service, TestOptionals testOptionals) {
+      for (Operation operation : service.getOperations()) {
+         // Pick operation if no filter or present in filtered operations.
+         if (testOptionals.getFilteredOperations() == null
+               || testOptionals.getFilteredOperations().isEmpty()
+               || testOptionals.getFilteredOperations().contains(operation.getName())) {
+            TestCaseResult testCaseResult = new TestCaseResult();
+            testCaseResult.setOperationName(operation.getName());
+            String testCaseId = IdBuilder.buildTestCaseId(testResult, operation);
+            testResult.getTestCaseResults().add(testCaseResult);
+         }
+      }
+   }
+
+   /** */
    private void createTestReturns(List<TestReturn> testReturns, String testCaseId) {
       List<Response> responses = new ArrayList<>();
       List<Request> actualRequests = new ArrayList<>();
