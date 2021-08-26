@@ -21,6 +21,7 @@ package io.github.microcks.util.openapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -180,7 +181,7 @@ public class OpenAPISchemaValidator {
             isYaml = false;
             break;
          }
-         if (line.startsWith("---") || line.startsWith("openapi: ")) {
+         if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")) {
             isYaml = true;
             break;
          }
@@ -200,12 +201,16 @@ public class OpenAPISchemaValidator {
    }
 
 
-   /** Entry point method for converting an OpenAPU schema node to Json schem */
+   /** Entry point method for converting an OpenAPI schema node to Json schema. */
    private static JsonNode convertOpenAPISchemaToJsonSchema(JsonNode jsonNode) {
       // Convert schema for all structures.
       for (String structure : STRUCTURES) {
          if (jsonNode.has(structure) && jsonNode.path(structure).isArray()) {
-            jsonNode = convertOpenAPISchemaToJsonSchema(jsonNode);
+            ArrayNode arrayNode = (ArrayNode) jsonNode.path(structure);
+            for (int i=0; i<arrayNode.size(); i++) {
+               JsonNode structureNode = arrayNode.get(i);
+               structureNode = convertOpenAPISchemaToJsonSchema(structureNode);
+            }
          }
       }
 

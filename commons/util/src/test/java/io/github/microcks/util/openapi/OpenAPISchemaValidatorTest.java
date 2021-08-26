@@ -278,4 +278,39 @@ public class OpenAPISchemaValidatorTest {
             "/paths/~1accounts~1{accountId}/get/responses/200", "application/json");
       assertFalse(errors.isEmpty());
    }
+
+   @Test
+   public void testFullProcedureFromOpenAPIResourceWithStructures() {
+      String openAPIText = null;
+      String jsonText = "{\n" +
+            "          \"id\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\",\n" +
+            "          \"realm_id\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\",\n" +
+            "          \"slug\": \"gore\",\n" +
+            "          \"tagline\": \"Blood! Blood! Blood!\",\n" +
+            "          \"avatar_url\": \"/gore.png\",\n" +
+            "          \"accent_color\": \"#f96680\",\n" +
+            "          \"delisted\": false,\n" +
+            "          \"logged_in_only\": false,\n" +
+            "          \"descriptions\": []\n" +
+            "        }";
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText =  FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/boba-openapi.json"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1boards~1{slug}/get/responses/200", "application/json");
+
+      assertTrue(errors.isEmpty());
+   }
 }

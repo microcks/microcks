@@ -1,0 +1,1654 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "BobaBoard's API documentation. Woho!",
+    "version": "0.0.1",
+    "description": "\n# Intro\nWelcome to the BobaBoard's backend API. This is still a WIP.\n\n# Example Section\nThis is just to test that sections work. It will be written better later.\n        ",
+    "contact": {
+      "name": "Ms. Boba",
+      "url": "url",
+      "email": "email"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4200/",
+      "description": "Development server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "/posts/",
+      "description": "APIs related to the /posts/ endpoints."
+    },
+    {
+      "name": "/threads/",
+      "description": "APIs related to the /threads/ endpoints."
+    },
+    {
+      "name": "/boards/",
+      "description": "APIs related to the /boards/ endpoints."
+    },
+    {
+      "name": "/realms/",
+      "description": "APIs related to the /realms/ endpoints."
+    },
+    {
+      "name": "/users/",
+      "description": "APIs related to the /users/ endpoints."
+    },
+    {
+      "name": "todo",
+      "description": "APIs whose documentation still needs work."
+    },
+    {
+      "name": "models",
+      "x-displayName": "Models",
+      "description": "\n## Contribution\n<SchemaDefinition schemaRef=\"#/components/schemas/Contribution\" />\n\n## Tags\n<SchemaDefinition schemaRef=\"#/components/schemas/Tags\" />\n\n## Comment\n<SchemaDefinition schemaRef=\"#/components/schemas/Comment\" />\n\n## Board Summary (logged in)\n<SchemaDefinition schemaRef=\"#/components/schemas/LoggedInBoardSummary\" />\n\n## Descriptions\n<SchemaDefinition schemaRef=\"#/components/schemas/Description\" />\n"
+    }
+  ],
+  "x-tagGroups": [
+    {
+      "name": "general",
+      "tags": ["/realms/", "/boards/", "/threads/", "/posts/", "/users/"]
+    },
+    {
+      "name": "models",
+      "tags": ["models"]
+    }
+  ],
+  "paths": {
+    "/boards/{slug}": {
+      "get": {
+        "summary": "Fetches board metadata.",
+        "tags": ["/boards/"],
+        "security": [
+          {
+            "firebase": []
+          },
+          []
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "The slug of the board to update.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "examples": {
+              "existing": {
+                "summary": "An existing board",
+                "value": "gore"
+              },
+              "locked": {
+                "summary": "A board for logged in users only",
+                "value": "restricted"
+              },
+              "not-found": {
+                "summary": "A board that does not exists",
+                "value": "this_does_not_exist"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The board metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/BoardMetadata"
+                    },
+                    {
+                      "$ref": "#/components/schemas/LoggedInBoardMetadata"
+                    }
+                  ]
+                },
+                "examples": {
+                  "existing": {
+                    "$ref": "#/components/examples/BoardsGore"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User was not found and board requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to fetch the metadata of this board."
+          },
+          "404": {
+            "description": "The board was not found."
+          }
+        }
+      }
+    },
+    "boards/{slug}/metadata/update": {
+      "post": {
+        "summary": "Update boards metadata",
+        "tags": ["/boards/", "todo"]
+      }
+    },
+    "boards/{slug}/visits": {
+      "get": {
+        "summary": "Sets last visited time for board",
+        "tags": ["/boards/"],
+        "security": [
+          {
+            "firebase": []
+          },
+          []
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "The slug of the board to update.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The visit was successfully registered."
+          },
+          "401": {
+            "description": "User was not found."
+          }
+        }
+      }
+    },
+    "boards/{slug}/mute": {
+      "post": {
+        "summary": "Mutes a board.",
+        "description": "Mutes the specified board for the current user.",
+        "tags": ["/boards/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "The name of the board to mute.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The board was successfully muted."
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unmutes a board.",
+        "description": "Unmutes the specified board for the current user.",
+        "tags": ["/boards/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "The name of the board to unmute.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The board was successfully unmuted."
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      }
+    },
+    "boards/{slug}/pin": {
+      "post": {
+        "summary": "Pins a board.",
+        "description": "Pins the specified board for the current user.",
+        "tags": ["/boards/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "The name of the board to pin.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The board was successfully pinned."
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Unpins a board.",
+        "description": "Unpins the specified board for the current user.",
+        "tags": ["/boards/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "The name of the board to unpin.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The board was successfully unpinned."
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      }
+    },
+    "boards/{slug}/notifications/dismiss": {
+      "post": {
+        "summary": "Dismiss all notifications for board {slug}",
+        "tags": ["/boards/", "todo"]
+      }
+    },
+    "boards/{slug}/activity/latest": {
+      "get": {
+        "summary": "Get latest board activity (TODO).",
+        "tags": ["/boards/", "todo"],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "description": "The slug of the board to fetch the activity of.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The board activity.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoardActivity"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The board was not found."
+          }
+        }
+      }
+    },
+    "posts/{post_id}/contribution": {
+      "post": {
+        "summary": "Replies to a contribution.",
+        "description": "Posts a contribution replying to the one with id {postId}.",
+        "tags": ["/posts/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "description": "The uuid of the contribution to reply to.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The details of the contribution to post.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "content": {
+                        "required": true,
+                        "type": "string",
+                        "format": "quill-delta"
+                      }
+                    }
+                  },
+                  {
+                    "$ref": "#/components/schemas/Tags"
+                  },
+                  {
+                    "$ref": "#/components/params/Identity"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The contribution was successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contribution": {
+                      "$ref": "#/components/schemas/Contribution",
+                      "description": "Finalized details of the contributions just posted."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      },
+      "patch": {
+        "summary": "Edits a contribution.",
+        "description": "Edits a contribution (for now just its tags).",
+        "tags": ["/posts/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "description": "The uuid of the contribution to edit.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The details of the contribution to edit.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Tags"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The contribution was successfully edited.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "contribution": {
+                      "$ref": "#/components/schemas/Contribution",
+                      "description": "Finalized details of the contributions just edited."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      }
+    },
+    "posts/{post_id}/comment": {
+      "post": {
+        "summary": "Add comments to a contribution, optionally nested under another comment.",
+        "description": "Creates a comment nested under the contribution with id {post_id}.",
+        "tags": ["/posts/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "post_id",
+            "in": "path",
+            "description": "The uuid of the contribution to reply to.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "The details of the comment to post.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "allOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "contents": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Comment"
+                        }
+                      },
+                      "reply_to_comment_id": {
+                        "nullable": true,
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  },
+                  {
+                    "$ref": "#/components/params/Identity"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The comments were successfully created.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "comments": {
+                      "description": "Finalized details of the comments just posted.",
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Comment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      }
+    },
+    "realms/slug/{realm_slug}/": {
+      "get": {
+        "summary": "Fetches the top-level realm metadata by slug.",
+        "tags": ["/realms/"],
+        "parameters": [
+          {
+            "name": "realm_slug",
+            "in": "path",
+            "description": "The slug of the realm.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The realm metadata.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Realm"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "realms/{realm_id}/activity": {
+      "get": {
+        "summary": "Fetches latest activity summary for the realm.",
+        "tags": ["/realms/"],
+        "security": [
+          [],
+          {
+            "firebase": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "realm_id",
+            "in": "path",
+            "description": "The id of the realm.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The realm activity summary.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RealmActivity"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "threads/{thread_id}": {
+      "get": {
+        "summary": "Fetches thread data.",
+        "tags": ["/threads/"],
+        "security": [
+          {
+            "firebase": []
+          },
+          []
+        ],
+        "parameters": [
+          {
+            "name": "thread_id",
+            "in": "path",
+            "description": "The id of the thread to fetch.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The thread data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Thread"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User was not found and thread requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to fetch this thread."
+          },
+          "404": {
+            "description": "The thread was not found."
+          }
+        }
+      }
+    },
+    "users/@me": {
+      "get": {
+        "summary": "Gets data for the current user.",
+        "tags": ["/users/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The user data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "username": {
+                      "type": "string"
+                    },
+                    "avatar_url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "pinned_boards": {
+                      "description": "A map from board id to its LoggedInSummary for each pinned board.\n",
+                      "type": "object",
+                      "additionalProperties": {
+                        "allOf": [
+                          {
+                            "$ref": "#/components/schemas/LoggedInBoardSummary"
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "index": {
+                                "type": "number"
+                              }
+                            },
+                            "required": ["index"]
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  "required": ["pinned_boards"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      }
+    },
+    "users/@me/notifications": {
+      "get": {
+        "summary": "Gets notifications data for the current user.",
+        "description": "Gets notifications data for the current user, including pinned boards.\nIf `realm_id` is present, also fetch notification data for the current realm.\n",
+        "tags": ["/users/"],
+        "security": [
+          {
+            "firebase": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The notifications data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "has_notifications": {
+                      "type": "boolean"
+                    },
+                    "is_outdated_notifications": {
+                      "type": "boolean"
+                    },
+                    "realm_boards": {
+                      "description": "A map from board id to its NotificationsStatus for each realm board.\nIf `realm_id` is not present in the params, it will be empty.\n",
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "#/components/schemas/BoardNotifications"
+                      }
+                    },
+                    "pinned_boards": {
+                      "description": "A map from board id to its NotificationsStatus for each pinned board.\n",
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "#/components/schemas/BoardNotifications"
+                      }
+                    }
+                  },
+                  "required": [
+                    "has_notifications",
+                    "is_outdated_notifications",
+                    "pinned_boards",
+                    "realm_boards"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User was not found in request that requires authentication."
+          },
+          "403": {
+            "description": "User is not authorized to perform the action."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BoardActivity": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "activity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThreadSummary"
+            }
+          }
+        }
+      },
+      "BoardActivitySummary": {
+        "type": "object",
+        "properties": {
+          "last_post_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_comment_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_activity_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_activity_from_others_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_visit_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "last_post_at",
+          "last_comment_at",
+          "last_activity_at",
+          "last_activity_from_others_at",
+          "last_visit_at"
+        ]
+      },
+      "BoardSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "realm_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "avatar_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "accent_color": {
+            "type": "string",
+            "format": "color"
+          },
+          "logged_in_only": {
+            "type": "boolean"
+          },
+          "delisted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "realm_id",
+          "slug",
+          "avatar_url",
+          "tagline",
+          "accent_color",
+          "logged_in_only",
+          "delisted"
+        ]
+      },
+      "LoggedInBoardSummary": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BoardSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "muted": {
+                "type": "boolean"
+              },
+              "pinned": {
+                "type": "boolean"
+              }
+            }
+          }
+        ],
+        "required": ["muted", "pinned"]
+      },
+      "BoardMetadata": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BoardSummary"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "slug": {
+                "type": "string"
+              },
+              "descriptions": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Description"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "LoggedInBoardMetadata": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/LoggedInBoardSummary"
+          },
+          {
+            "$ref": "#/components/schemas/BoardMetadata"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "accessories": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Accessory"
+                }
+              },
+              "permissions": {
+                "$ref": "#/components/schemas/Permissions"
+              },
+              "posting_identities": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/PostingIdentity"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Comment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parent_post_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parent_comment_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chain_parent_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "content": {
+            "type": "string",
+            "format": "quill-delta"
+          },
+          "secret_identity": {
+            "description": "The public-facing identity associated with the comment.",
+            "$ref": "#/components/schemas/SecretIdentity"
+          },
+          "user_identity": {
+            "description": "The identity of the original poster, if visible to the requester.",
+            "$ref": "#/components/schemas/Identity"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "own": {
+            "type": "boolean"
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "friend": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "parent_post_id",
+          "content",
+          "created_at",
+          "secret_identity",
+          "new",
+          "own",
+          "friend"
+        ]
+      },
+      "Contribution": {
+        "description": "A contribution to a thread.",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parent_thread_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parent_post_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "parent_board_slug": {
+            "type": "string",
+            "format": "string"
+          },
+          "content": {
+            "type": "string",
+            "format": "quill-delta"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "secret_identity": {
+            "description": "The public-facing identity associated with the contribution.",
+            "$ref": "#/components/schemas/SecretIdentity"
+          },
+          "user_identity": {
+            "description": "The identity of the original poster, if visible to the requester.",
+            "$ref": "#/components/schemas/Identity"
+          },
+          "new": {
+            "type": "boolean"
+          },
+          "own": {
+            "type": "boolean"
+          },
+          "friend": {
+            "type": "boolean"
+          },
+          "total_comments_amount": {
+            "type": "number"
+          },
+          "new_comments_amount": {
+            "type": "number"
+          },
+          "comments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Comment"
+            }
+          },
+          "tags": {
+            "type": "object",
+            "$ref": "#/components/schemas/Tags"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["text"],
+            "deprecated": true
+          },
+          "anonymity_type": {
+            "type": "string",
+            "enum": ["everyone", "friends_only"],
+            "deprecated": true
+          }
+        },
+        "required": [
+          "id",
+          "parent_post_id",
+          "parent_thread_id",
+          "parent_board_slug",
+          "content",
+          "created_at",
+          "secret_identity",
+          "friend",
+          "own",
+          "new",
+          "total_comments_amount",
+          "new_comments_amount",
+          "comments",
+          "tags"
+        ]
+      },
+      "Cursor": {
+        "type": "object",
+        "properties": {
+          "next": {
+            "description": "Pagination link pointing to the next page.",
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["next"]
+      },
+      "Description": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/TextDescription"
+          },
+          {
+            "$ref": "#/components/schemas/CategoryFilterDescription"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "type",
+          "mapping": {
+            "text": "#/components/schemas/TextDescription",
+            "category_filter": "#/components/schemas/CategoryFilterDescription"
+          }
+        }
+      },
+      "BaseDescription": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "index": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": ["id", "index", "title"]
+      },
+      "TextDescription": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseDescription"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["text"]
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "required": ["type", "description"]
+          }
+        ]
+      },
+      "CategoryFilterDescription": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/BaseDescription"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["category_filter"]
+              },
+              "categories": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": ["type", "categories"]
+          }
+        ]
+      },
+      "Feed": {
+        "type": "object",
+        "properties": {
+          "cursor": {
+            "$ref": "#/components/schemas/Cursor"
+          },
+          "activity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThreadSummary"
+            }
+          }
+        }
+      },
+      "Identity": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "url"
+          }
+        },
+        "required": ["name", "avatar"]
+      },
+      "SecretIdentity": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "url"
+          },
+          "color": {
+            "type": "string"
+          },
+          "accessory": {
+            "type": "string",
+            "format": "url"
+          }
+        },
+        "required": ["name", "avatar"]
+      },
+      "Accessory": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "accessory": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["id", "name", "accessory"]
+      },
+      "PostingIdentity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "avatar": {
+            "type": "string",
+            "format": "uri"
+          },
+          "color": {
+            "type": "string",
+            "format": "color"
+          },
+          "accessory": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": ["id", "name", "avatar"]
+      },
+      "BoardNotifications": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "has_updates": {
+            "description": "Whether the board has a notification.",
+            "type": "boolean"
+          },
+          "is_outdated": {
+            "description": "Whether the board's notifications are older than the user's last visit.",
+            "type": "boolean"
+          },
+          "last_activity_at": {
+            "description": "When the board was last updated.",
+            "type": "date-time",
+            "nullable": true
+          },
+          "last_activity_from_others_at": {
+            "description": "When the board was last updated by someone other than the current user.",
+            "type": "date-time",
+            "nullable": true
+          },
+          "last_visited at": {
+            "description": "When the board was last visited by the current user.",
+            "type": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "realm_id",
+          "slug",
+          "avatar_url",
+          "accent_color",
+          "logged_in_only",
+          "delisted"
+        ]
+      },
+      "Permissions": {
+        "type": "object",
+        "properties": {
+          "board_permissions": {
+            "$ref": "#/components/schemas/BoardPermissions"
+          },
+          "post_permissions": {
+            "$ref": "#/components/schemas/PostPermissions"
+          },
+          "thread_permissions": {
+            "$ref": "#/components/schemas/ThreadPermission"
+          }
+        },
+        "required": [
+          "board_permissions",
+          "post_permissions",
+          "thread_permissions"
+        ]
+      },
+      "BoardPermissions": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["edit_metadata"]
+        }
+      },
+      "PostPermissions": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "edit_content",
+            "edit_whisper_tags",
+            "edit_category_tags",
+            "edit_index_tags",
+            "edit_content_notices"
+          ]
+        }
+      },
+      "ThreadPermission": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["move_thread"]
+        }
+      },
+      "RealmSettings": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "obect",
+            "properties": {
+              "cursor": {
+                "type": "object"
+              }
+            }
+          },
+          "index_page": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Setting"
+            }
+          },
+          "board_page": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Setting"
+            }
+          },
+          "thread_page": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Setting"
+            }
+          }
+        },
+        "required": ["root", "index_page", "board_page", "thread_page"]
+      },
+      "Realm": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/RealmSettings"
+          },
+          "boards": {
+            "$ref": "#/components/schemas/BoardSummary"
+          }
+        },
+        "required": ["id", "slug", "settings"]
+      },
+      "RealmActivity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "The Realm id.",
+            "type": "string",
+            "format": "uuid"
+          },
+          "boards": {
+            "description": "The activity summary for each board in the realm. |\nKeys are the uuid of each board.\n",
+            "type": "object",
+            "additionalProperties": {
+              "allOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  }
+                },
+                {
+                  "$ref": "#/components/schemas/BoardActivitySummary"
+                }
+              ]
+            }
+          }
+        }
+      },
+      "Setting": {
+        "type": "object",
+        "properties": {
+          "todo": {
+            "type": "string"
+          }
+        }
+      },
+      "Tags": {
+        "description": "Types of tags associated to a contribution.",
+        "type": "object",
+        "properties": {
+          "whisper_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "index_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "category_tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "content_warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ThreadActivitySummary": {
+        "type": "object",
+        "properties": {
+          "new_posts_amount": {
+            "type": "number"
+          },
+          "new_comments_amount": {
+            "type": "number"
+          },
+          "total_comments_amount": {
+            "type": "number"
+          },
+          "total_posts_amount": {
+            "type": "number"
+          },
+          "direct_threads_amount": {
+            "type": "number"
+          },
+          "last_activity_at": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "new_posts_amount",
+          "new_comments_amount",
+          "total_comments_amount",
+          "total_posts_amount",
+          "direct_threads_amount",
+          "last_activity"
+        ]
+      },
+      "ThreadSummary": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "parent_board_slug": {
+                "type": "string"
+              },
+              "starter": {
+                "description": "The contribution that starts the thread.",
+                "$ref": "#/components/schemas/Contribution"
+              },
+              "default_view": {
+                "type": "string",
+                "enum": ["thread", "gallery", "timeline"]
+              },
+              "muted": {
+                "description": "Whether the contribution is muted. False when the user is logged out.",
+                "type": "boolean"
+              },
+              "hidden": {
+                "description": "Whether the contribution is hidden. False when the user is logged out.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "parent_board_slug",
+              "starter",
+              "default_view",
+              "muted",
+              "hidden"
+            ]
+          },
+          {
+            "$ref": "#/components/schemas/ThreadActivitySummary"
+          }
+        ]
+      },
+      "Thread": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "posts": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Contribution"
+                }
+              },
+              "comments": {
+                "description": "A map from post_id to its comments.",
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Comment"
+                  }
+                }
+              }
+            },
+            "required": ["posts", "comments"]
+          },
+          {
+            "$ref": "#/components/schemas/ThreadSummary"
+          }
+        ]
+      }
+    },
+    "securitySchemes": {
+      "firebase": {
+        "description": "Default bobaserver authentication, powered by firebase.",
+        "type": "http",
+        "scheme": "bearer",
+        "in": "header",
+        "bearerFormat": "JWT",
+        "x-google-issuer": "https://securetoken.google.com/bobaboard-fb",
+        "x-google-jwks_uri": "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com",
+        "x-google-audiences": "bobaboard-fb"
+      }
+    },
+    "params": {
+      "Identity": {
+        "type": "object",
+        "properties": {
+          "accessory_id": {
+            "description": "The accessory to associate with the attached entity.",
+            "nullable": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          "identity_id": {
+            "description": "The identity to associate with the attached entity, if fixed.",
+            "nullable": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "examples": {
+      "BoardsParam": [
+        {
+          "existing": {
+            "summary": "An existing board",
+            "value": "gore"
+          }
+        },
+        {
+          "locked": {
+            "summary": "A board for logged in users only",
+            "value": "restricted"
+          }
+        },
+        {
+          "not-found": {
+            "summary": "A board that does not exists",
+            "value": "this_does_not_exist"
+          }
+        }
+      ],
+      "BoardsGore": {
+        "summary": "An existing board",
+        "value": {
+          "id": "396be545-e2d4-4497-a5b5-700e89ab99c0",
+          "realm_id": "f377afb3-5c62-40cc-8f07-1f4749a780eb",
+          "slug": "gore",
+          "tagline": "Blood! Blood! Blood!",
+          "avatar_url": "/gore.png",
+          "accent_color": "#f96680",
+          "delisted": false,
+          "logged_in_only": false,
+          "descriptions": []
+        }
+      }
+    }
+  }
+}
