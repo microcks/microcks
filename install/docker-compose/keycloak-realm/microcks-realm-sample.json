@@ -1,7 +1,7 @@
 {
   "id": "microcks",
-  "realm": "microcks",
-  "displayName": "Microcks",
+  "realm": "microcks2",
+  "displayName": "Microcks2",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
@@ -17,7 +17,7 @@
       "applicationRoles": {
         "realm-management": [ "manage-users", "manage-clients" ],
         "account": [ "manage-account" ],
-        "microcks-app": [ "admin "]
+        "microcks-app": [ "user", "manager", "admin"]
       }
     }
   ],
@@ -46,6 +46,25 @@
       ]
     }
   },
+  "groups": [
+    {
+      "name": "microcks",
+      "path": "/microcks",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {},
+      "subGroups": [
+        {
+          "name": "manager",
+          "path": "/microcks/manager",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": []
+        }
+      ]
+    }
+  ],
   "defaultRoles": [],
   "requiredCredentials": [ "password" ],
   "scopeMappings": [],
@@ -70,6 +89,35 @@
       }
     ]
   },
+  "clients": [
+    {
+      "clientId": "microcks-app-js",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "fullScopeAllowed": false,
+      "protocolMappers": [
+        {
+          "name": "microcks-group-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "microcks-groups",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
   "applications": [
     {
       "name": "microcks-app",
@@ -78,18 +126,6 @@
       "defaultRoles": [
         "user"
       ]
-    },
-    {
-      "name": "microcks-app-js",
-      "enabled": true,
-      "publicClient": true,
-      "webOrigins": [
-        "+"
-      ],
-      "redirectUris": [
-        "http://localhost:8080/*"
-      ],
-      "fullScopeAllowed": false
     },
     {
       "name": "microcks-serviceaccount",

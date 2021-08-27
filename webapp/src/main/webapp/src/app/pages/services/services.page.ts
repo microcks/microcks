@@ -254,12 +254,12 @@ export class ServicesPageComponent implements OnInit {
   }
 
   public hasRoleForService(role: string, service: Service): boolean {
-      if (this.hasRepositoryTenancyFeatureEnabled() && service.metadata.labels) {
-        let tenant = service.metadata.labels[this.repositoryFilterFeatureLabelKey()];
-        return this.authService.hasRoleForResource(role, tenant);
-      }
-      return this.hasRole(role);
+    if (this.hasRepositoryTenancyFeatureEnabled() && service.metadata.labels) {
+      let tenant = service.metadata.labels[this.repositoryFilterFeatureLabelKey()];
+      return this.authService.hasRoleForResource(role, tenant);
     }
+    return this.hasRole(role);
+  }
 
   public hasRepositoryFilterFeatureEnabled(): boolean {
     return this.config.hasFeatureEnabled('repository-filter');

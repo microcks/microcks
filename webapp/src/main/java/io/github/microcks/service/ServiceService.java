@@ -315,31 +315,38 @@ public class ServiceService {
    /**
     * Remove a Service and its bound documents using the service id.
     * @param id The identifier of service to remove.
+    * @param userInfo The current user information to check if authorized to delete
+    * @return True if service has been found and updated, false otherwise.
     */
-   public void deleteService(String id){
+   public Boolean deleteService(String id, UserInfo userInfo){
       // Get service to remove.
       Service service = serviceRepository.findById(id).orElse(null);
 
-      // Delete all resources first.
-      resourceRepository.deleteAll(resourceRepository.findByServiceId(id));
+      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+         // Delete all resources first.
+         resourceRepository.deleteAll(resourceRepository.findByServiceId(id));
 
-      // Delete all requests and responses bound to service operation.
-      if (service != null) {
-         for (Operation operation : service.getOperations()) {
-            String operationId = IdBuilder.buildOperationId(service, operation);
-            requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
-            responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
+         // Delete all requests and responses bound to service operation.
+         if (service != null) {
+            for (Operation operation : service.getOperations()) {
+               String operationId = IdBuilder.buildOperationId(service, operation);
+               requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
+               responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
+            }
          }
+
+         // Delete all tests related to service.
+         testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
+
+         // Finally delete service and publish event.
+         serviceRepository.delete(service);
+         publishServiceChangeEvent(service, ChangeType.DELETED);
+
+         log.info("Service [{}] has been fully deleted", id);
+         return true;
       }
-
-      // Delete all tests related to service.
-      testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
-
-      // Finally delete service and publish event.
-      serviceRepository.delete(service);
-      publishServiceChangeEvent(service, ChangeType.DELETED);
-
-      log.info("Service [{}] has been fully deleted", id);
+      return false;
    }
 
    /**
@@ -352,7 +359,6 @@ public class ServiceService {
     */
    public Boolean updateMetadata(String id, Metadata metadata, UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? " + authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
       if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          service.getMetadata().setLabels(metadata.getLabels());
          service.getMetadata().setAnnotations(metadata.getAnnotations());

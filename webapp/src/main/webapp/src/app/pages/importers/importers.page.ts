@@ -29,6 +29,7 @@ import { ImportJob, ServiceRef } from '../../models/importer.model';
 import { ImportersService } from '../../services/importers.service';
 import { ServicesService } from '../../services/services.service';
 import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
+import { IAuthenticationService } from "../../services/auth.service";
 import { ConfigService } from '../../services/config.service';
 
 @Component({
@@ -55,8 +56,8 @@ export class ImportersPageComponent implements OnInit {
 
   constructor(private importersSvc: ImportersService, private servicesSvc: ServicesService,
     private modalService: BsModalService, private notificationService: NotificationService,
-    private config: ConfigService, private route: ActivatedRoute, private router: Router,
-    private ref: ChangeDetectorRef) { }
+    protected authService: IAuthenticationService, private config: ConfigService,
+    private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
@@ -341,8 +342,43 @@ export class ImportersPageComponent implements OnInit {
     this.notificationService.remove($event.notification);
   }
 
+  public canImportArtifact(): boolean {
+    if (this.hasRepositoryTenancyFeatureEnabled()) {
+      let rolesStr = this.config.getFeatureProperty('repository-tenancy', 'artifact-import-allowed-roles');
+      if (rolesStr == undefined || rolesStr === '') {
+        return true;
+      }
+      // If roles specified, check if any is endorsed.
+      let roles = rolesStr.split(',');
+      for (let i=0; i<roles.length; i++) {
+        if (this.hasRole(roles[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
+  }
+
+  public hasRole(role: string): boolean {
+    return this.authService.hasRole(role);
+  }
+
+  public hasRoleForJob(role: string, job: ImportJob): boolean {
+    if (this.hasRepositoryTenancyFeatureEnabled() && job.metadata && job.metadata.labels) {
+      let tenant = job.metadata.labels[this.repositoryFilterFeatureLabelKey()];
+      if (tenant !== undefined) {
+        return this.authService.hasRoleForResource(role, tenant);
+      }
+    }
+    return this.hasRole(role);
+  }
+
   public hasRepositoryFilterFeatureEnabled(): boolean {
     return this.config.hasFeatureEnabled('repository-filter');
+  }
+  public hasRepositoryTenancyFeatureEnabled(): boolean {
+    return this.config.hasFeatureEnabled('repository-tenancy');
   }
 
   public repositoryFilterFeatureLabelKey(): string {

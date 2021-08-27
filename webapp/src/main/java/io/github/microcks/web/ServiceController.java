@@ -206,7 +206,7 @@ public class ServiceController {
       if (result){
          return new ResponseEntity<>(HttpStatus.OK);
       }
-      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 
    @RequestMapping(value = "/services/{id}/operation", method = RequestMethod.PUT)
@@ -223,13 +223,16 @@ public class ServiceController {
       if (result){
          return new ResponseEntity<>(HttpStatus.OK);
       }
-      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 
    @RequestMapping(value = "/services/{id}", method = RequestMethod.DELETE)
    public ResponseEntity<String> deleteService(@PathVariable("id") String serviceId, UserInfo userInfo) {
       log.debug("Removing service with id {}", serviceId);
-      serviceService.deleteService(serviceId);
-      return new ResponseEntity<>(HttpStatus.OK);
+      boolean result = serviceService.deleteService(serviceId, userInfo);
+      if (result) {
+         return new ResponseEntity<>(HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 }

@@ -20,7 +20,10 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.ImportJob;
 import io.github.microcks.repository.ImportJobRepository;
+import io.github.microcks.security.AuthorizationChecker;
+import io.github.microcks.security.UserInfo;
 import io.github.microcks.service.JobService;
+import org.apache.catalina.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A Rest controlle for API defined on importers.
+ * A Rest controller for API defined on importers.
  * @author laurent
  */
 @RestController
@@ -56,6 +59,9 @@ public class JobController {
 
    @Autowired
    private JobService jobService;
+
+   @Autowired
+   private AuthorizationChecker authorizationChecker;
 
 
    @RequestMapping(value = "/jobs", method = RequestMethod.GET)
@@ -120,41 +126,64 @@ public class JobController {
    }
 
    @RequestMapping(value = "/jobs/{id}", method = RequestMethod.POST)
-   public ResponseEntity<ImportJob> saveJob(@RequestBody ImportJob job) {
+   public ResponseEntity<ImportJob> saveJob(@RequestBody ImportJob job, UserInfo userInfo) {
       log.debug("Saving existing job: {}", job);
-      job.getMetadata().objectUpdated();
-      return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+         job.getMetadata().objectUpdated();
+         return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 
    @RequestMapping(value = "/jobs/{id}/activate", method = RequestMethod.PUT)
-   public ResponseEntity<ImportJob> activateJob(@PathVariable("id") String jobId) {
+   public ResponseEntity<ImportJob> activateJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Activating job with id {}", jobId);
       ImportJob job = jobRepository.findById(jobId).orElse(null);
-      job.setActive(true);
-      return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+         job.setActive(true);
+         job.getMetadata().objectUpdated();
+         return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 
    @RequestMapping(value = "/jobs/{id}/start", method = RequestMethod.PUT)
-   public ResponseEntity<ImportJob> startJob(@PathVariable("id") String jobId) {
+   public ResponseEntity<ImportJob> startJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Starting job with id {}", jobId);
       ImportJob job = jobRepository.findById(jobId).orElse(null);
-      job.setActive(true);
-      jobService.doImportJob(job);
-      return new ResponseEntity<>(job, HttpStatus.OK);
+      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+         job.setActive(true);
+         jobService.doImportJob(job);
+         return new ResponseEntity<>(job, HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 
    @RequestMapping(value = "/jobs/{id}/stop", method = RequestMethod.PUT)
-   public ResponseEntity<ImportJob> stopJob(@PathVariable("id") String jobId) {
+   public ResponseEntity<ImportJob> stopJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Stopping job with id {}", jobId);
       ImportJob job = jobRepository.findById(jobId).orElse(null);
-      job.setActive(false);
-      return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+         job.setActive(false);
+         job.getMetadata().objectUpdated();
+         return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 
    @RequestMapping(value = "/jobs/{id}", method = RequestMethod.DELETE)
-   public ResponseEntity<String> deleteJob(@PathVariable("id") String jobId) {
+   public ResponseEntity<String> deleteJob(@PathVariable("id") String jobId, UserInfo userInfo) {
       log.debug("Removing job with id {}", jobId);
-      jobRepository.deleteById(jobId);
-      return new ResponseEntity<>(HttpStatus.OK);
+      ImportJob job = jobRepository.findById(jobId).orElse(null);
+      if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
+            || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+         jobRepository.deleteById(jobId);
+         return new ResponseEntity<>(HttpStatus.OK);
+      }
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 }

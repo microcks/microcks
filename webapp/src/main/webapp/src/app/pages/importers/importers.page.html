@@ -6,19 +6,20 @@
 
 <h1>
   Import Jobs
-  <div class="pull-right">
+  <div class="pull-right" *ngIf="canImportArtifact()">
     <button class="btn btn-default" (click)="openArtifactUploader()">
       <span class="fa fa-upload"></span> Upload
     </button>&nbsp;
     <button class="btn btn-primary" (click)="createImportJob(wizardTemplate)">
       <span class="fa fa-plus"></span> Create
     </button>
-    <ng-template #wizardTemplate>
-      <importer-wizard></importer-wizard>
-    </ng-template>
   </div>
 </h1>
 <small>Importers periodically scan source code repositories to check for update in your Services and API mock definitions.</small>
+
+<ng-template #wizardTemplate>
+  <importer-wizard></importer-wizard>
+</ng-template>
 
 <div class="container-fluid">
   <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">  
@@ -62,7 +63,7 @@
       </div>
 
       <div class="list-view-pf-actions">
-        <div class="dropdown pull-right dropdown-kebab-pf">
+        <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="hasRole('admin') || hasRoleForJob('manager', job)">
           <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
             <span class="fa fa-ellipsis-v"></span>
           </button>

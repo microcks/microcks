@@ -399,9 +399,11 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public hasRoleForService(role: string): boolean {
-    if (this.hasRepositoryTenancyEnabled() && this.resolvedServiceView.service.metadata.labels) {
+    if (this.hasRepositoryTenancyFeatureEnabled() && this.resolvedServiceView.service.metadata.labels) {
       let tenant = this.resolvedServiceView.service.metadata.labels[this.repositoryTenantLabel()];
-      return this.authService.hasRoleForResource(role, tenant);
+      if (tenant !== undefined) {
+        return this.authService.hasRoleForResource(role, tenant);
+      }
     }
     return this.hasRole(role);
   }
@@ -413,8 +415,8 @@ export class ServiceDetailPageComponent implements OnInit {
             || (this.resolvedServiceView.service.type === 'EVENT' && this.hasAsyncAPIFeatureEnabled()));
   }
 
-  public hasRepositoryTenancyEnabled(): boolean {
-    return this.config.hasFeatureEnabled('repository-filter');
+  public hasRepositoryTenancyFeatureEnabled(): boolean {
+    return this.config.hasFeatureEnabled('repository-tenancy');
   }
 
   public repositoryTenantLabel(): string {

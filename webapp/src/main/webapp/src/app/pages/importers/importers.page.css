@@ -2,6 +2,12 @@
   max-width: 700px;
   word-wrap: break-word;
 }
+@media (min-width: 1200px){
+.repositoryUrl {
+  max-width: none;
+}
+}
+
 :host >>> .tooltip-inner {
   max-width: 400px;
   word-wrap: break-word;
@@ -19,4 +25,15 @@ span.label a {
 
 .list-view-pf-description {
   flex-basis: 60%;
+}
+
+@media (min-width: 1200px){
+.list-view-pf-additional-info {
+  width: 20%;
+}
+}
+@media (min-width: 1500px){
+.list-view-pf-additional-info {
+  width: 10%;
+}
 }
