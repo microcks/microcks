@@ -1,7 +1,7 @@
 {
   "id": "microcks",
-  "realm": "microcks2",
-  "displayName": "Microcks2",
+  "realm": "microcks",
+  "displayName": "Microcks",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
