@@ -59,6 +59,7 @@ import { AdminPageComponent } from './pages/admin/admin.page';
 import { SecretsTabComponent } from './pages/admin/_components/secrets.tab';
 import { SnapshotsTabComponent } from './pages/admin/_components/snapshots.tab';
 import { UsersTabComponent } from './pages/admin/_components/users.tab';
+import { GroupsManagementDialogComponent } from './pages/admin/_components/_components/groups-management.dialog';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { ServicesPageComponent } from './pages/services/services.page';
 import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
@@ -103,7 +104,7 @@ export function configLoader(configService: ConfigService) {
     ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
     ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
-    AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
+    AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, GroupsManagementDialogComponent,
     HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
   ],
   imports: [
@@ -138,7 +139,8 @@ export function configLoader(configService: ConfigService) {
   entryComponents: [
     HelpDialogComponent, DynamicAPIDialogComponent, 
     EditLabelsDialogComponent, GenericResourcesDialogComponent,
-    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent
+    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
+    GroupsManagementDialogComponent
   ],
   bootstrap: [AppComponent]
 })

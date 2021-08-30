@@ -1,0 +1,23 @@
+.group-scrollable {
+  min-height: 140px;
+  max-height: 140px;
+  overflow-y: scroll;
+}
+
+li.group {
+  padding: 3px 0px 3px 5px;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+li.group-selected {
+  margin-top: 1px;
+  margin-bottom: 1px;
+  background-color: #def3ff;
+  border-top-color: #bee1f4;
+  border-bottom-color: #bee1f4;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+}

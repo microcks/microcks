@@ -17,7 +17,9 @@
  * under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 
+import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 import { ToolbarConfig } from 'patternfly-ng/toolbar';
@@ -28,6 +30,7 @@ import { IAuthenticationService } from '../../../services/auth.service';
 import { ConfigService } from '../../../services/config.service';
 import { ServicesService } from '../../../services/services.service';
 import { UsersService } from '../../../services/users.service';
+import { GroupsManagementDialogComponent } from './_components/groups-management.dialog';
 
 @Component({
   selector: 'users-tab',
@@ -36,6 +39,7 @@ import { UsersService } from '../../../services/users.service';
 })
 export class UsersTabComponent implements OnInit {
 
+  modalRef: BsModalRef;
   allowedToManageUsers: boolean = true;
   users: User[];
   usersCount: number;
@@ -49,8 +53,9 @@ export class UsersTabComponent implements OnInit {
   filterTerm: string = null;
   filtersText: string = '';
 
-  constructor(private usersSvc: UsersService, protected authService: IAuthenticationService, private config: ConfigService,
-      private servicesSvc: ServicesService, private notificationService: NotificationService) {
+  constructor(private usersSvc: UsersService, protected authService: IAuthenticationService,
+      private config: ConfigService, private servicesSvc: ServicesService,
+      private modalService: BsModalService, private notificationService: NotificationService) {
   }
 
   ngOnInit() {
@@ -157,10 +162,15 @@ export class UsersTabComponent implements OnInit {
   }
 
   getUserRoles(userId: string): void {
-    this.usersSvc.getUserRoles(userId).subscribe(
+    let userRoles = this.usersSvc.getUserRoles(userId);
+    let userRealmRoles = this.usersSvc.getUserRealmRoles(userId);
+
+    forkJoin([userRoles, userRealmRoles]).subscribe(
       {
         next: results => {
-          this.usersRoles[userId] = results;
+          this.usersRoles[userId] = results[0];
+          this.usersRoles[userId].push(...results[1]);
+          console.log(JSON.stringify(this.usersRoles[userId]));
         },
         error: err => {
           if (err.status == 403) {
@@ -175,6 +185,9 @@ export class UsersTabComponent implements OnInit {
     );
   }
   userHasRole(userId: string, expectedRole: string): boolean {
+    if (expectedRole === 'user') {
+      expectedRole = 'default-roles-' + this.usersSvc.getRealmName();
+    }
     if (this.usersRoles[userId] === undefined) {
       return false;
     }
@@ -218,6 +231,18 @@ export class UsersTabComponent implements OnInit {
         complete: () => console.log('Observer got a complete notification'),
       }
     );
+  }
+
+  openGroupsManagementDialog(user: User): void {
+    this.usersSvc.getUserGroups(user.id).subscribe(userGroups => {
+      const initialState = {
+        user: user,
+        userGroups: userGroups,
+        groups: this.groups
+      };
+      this.modalRef = this.modalService.show(GroupsManagementDialogComponent, {initialState});
+      this.modalRef.content.closeBtnName = 'Close';
+    });
   }
 
   handlePageSize($event: PaginationEvent) {

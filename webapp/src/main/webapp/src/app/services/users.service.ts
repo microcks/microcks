@@ -59,6 +59,13 @@ export class UsersService {
     );
   }
 
+  getRealmName(): string {
+    if (this.authService instanceof KeycloakAuthenticationService) {
+      return (this.authService as KeycloakAuthenticationService).getRealmName();
+    }
+    return null;
+  }
+
   getGroups(): Observable<any[]> {
     const options = { params: new HttpParams().set('search', 'microcks') };
     return this.http.get<any[]>(this.rootUrl + '/groups', options);
@@ -90,8 +97,15 @@ export class UsersService {
     return this.http.get<User[]>(this.rootUrl + '/users/count');
   }
 
+  getUserRealmRoles(userId: string): Observable<any[]> {
+    return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/realm');
+  }
   getUserRoles(userId: string): Observable<any[]> {
     return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId);
+  }
+  getUserGroups(userId: string): Observable<any[]> {
+    const options = { params: new HttpParams().set('search', 'microcks') };
+    return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/groups', options);
   }
 
   assignRoleToUser(userId: string, role: string): Observable<any> { 
@@ -101,7 +115,6 @@ export class UsersService {
       })
     );
   }
-
   removeRoleFromUser(userId: string, role: string): Observable<any> {
     return this.getRoleByName(role).pipe(
       switchMap((role: any) => {
@@ -109,6 +122,15 @@ export class UsersService {
           this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, { body: [ role ] });
       })
     );
+  }
+
+  putUserInGroup(userId: string, groupId: string): Observable<any> {
+    let data = {realm: this.getRealmName(), userId: userId, groupId: groupId};
+    return this.http.put<any[]>(this.rootUrl + '/users/' + userId + '/groups/' + groupId, { body: data });
+  }
+  removeUserFromGroup(userId: string, groupId: string): Observable<any> {
+    return this.http.request<any[]>('delete',
+      this.rootUrl + '/users/' + userId + '/groups/' + groupId);
   }
 
   private getRoleByName(role: string): Observable<any> {

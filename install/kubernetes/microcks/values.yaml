@@ -133,3 +133,7 @@ features:
     labelKey: app
     labelLabel: Application
     labelList: app,status
+
+  repositoryTenancy:
+    enabled: false
+    artifactImportAllowedRoles: admin,manager

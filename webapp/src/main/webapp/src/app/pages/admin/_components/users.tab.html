@@ -43,6 +43,7 @@
               <li *ngIf="usersRoles[user.id] && !userHasRole(user.id, 'admin')"><a (click)="assignRoleToUser(user.id, user.username, 'admin')">Add Admin Role</a></li>
               <li *ngIf="usersRoles[user.id] && userHasRole(user.id, 'manager')"><a (click)="removeRoleFromUser(user.id, user.username, 'manager')">Remove Manager Role</a></li>
               <li *ngIf="usersRoles[user.id] && userHasRole(user.id, 'admin')"><a (click)="removeRoleFromUser(user.id, user.username, 'manager')">Remove Admin Role</a></li>
+              <li *ngIf="hasRepositoryTenancyEnabled()"><a (click)="openGroupsManagementDialog(user)">Manage Groups</a></li>
               <li><a (click)="confirmDeleteDialog.open(user)">Delete</a></li>
             </ul>
           </div>

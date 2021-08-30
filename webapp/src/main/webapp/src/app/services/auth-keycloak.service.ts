@@ -150,6 +150,13 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
   }
 
   /**
+   * Return the Keycloak realm name.
+   */
+  public getRealmName(): string {
+    return this.keycloak.realm;
+  }
+
+  /**
    * Return the Keycloak realm url.
    */
   public getRealmUrl(): string {

@@ -1,0 +1,57 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">
+    User groups management for <b>{{user.username}}</b>
+  </h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <small>Review Group Membership and assign new Available Groups.</small>
+  <div class="container-fluid">
+    <br/>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+           <h5><i class="fa fa-group"></i> Group Membership</h5>
+          </div>
+          <div>
+            <ul class="unstyled group-scrollable">
+              <li *ngFor="let group of userGroups" class="group" [ngClass]="{'group-selected': isMemberGroupSelected(group)}">
+                <span (click)="toggleMember(group)">{{ group.path }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary"
+                (click)="leaveSelectedGroups()"
+                [disabled]="memberSelected.length == 0">
+          Leave selected <span class="fa fa-angle-double-right"></span>
+        </button>
+      </div>
+      <div class="col-md-6">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h5><i class="fa fa-group pf-blue-100"></i> Available Groups</h5>
+          </div>
+          <div>
+            <ul class="unstyled group-scrollable">
+              <li *ngFor="let group of availableGroups" class="group" [ngClass]="{'group-selected': isAvailableGroupSelected(group)}">
+                <span (click)="toggleAvailable(group)">{{ group.path }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary"
+                (click)="joinSelectedGroups()"
+                [disabled]="availableSelected.length == 0">
+          <span class="fa fa-angle-double-left"></span> Join selected
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+</div>

@@ -13,6 +13,9 @@ data:
     features.feature.repository-filter.label-label={{ .Values.features.repositoryFilter.labelLabel }}
     features.feature.repository-filter.label-list={{ .Values.features.repositoryFilter.labelList }}
 
+    features.feature.repository-tenancy.enabled={{ .Values.features.repositoryTenancy.enabled }}
+    features.feature.repository-tenancy.artifact-import-allowed-roles={{ .Values.features.repositoryTenancy.artifactImportAllowedRoles }}
+
     features.feature.async-api.enabled={{ .Values.features.async.enabled }}
     features.feature.async-api.default-binding={{ .Values.features.async.defaultBinding }}
     features.feature.async-api.endpoint-WS={{ ( include "microcks-ws.url" . ) }}

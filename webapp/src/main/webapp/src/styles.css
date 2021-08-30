@@ -160,3 +160,8 @@ span.card-pf-footer-text {
   position: absolute;
   right: 15px;
 }
+
+ul.unstyled {
+  list-style-type: none;
+  padding-inline-start: 0px;
+}
