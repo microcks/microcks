@@ -26,8 +26,8 @@ services:
       - "19092:19092"
     environment:
       LOG_DIR: "/tmp/logs"
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:19092
-      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,EXTERNAL://0.0.0.0:19092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
 
@@ -53,7 +53,7 @@ services:
       - KEYCLOAK_URL=http://keycloak:8080/auth
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
       - ASYNC_MINION_URL=http://async-minion:8080
-      - KAFKA_BOOTSTRAP_SERVER=kafka:9092
+      - KAFKA_BOOTSTRAP_SERVER=kafka:19092
 
   async-minion:
     depends_on:
