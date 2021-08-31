@@ -102,47 +102,55 @@ export class HubAPIVersionPageComponent implements OnInit {
   installByDirectUpload(): void {
     this.notificationService.message(NotificationType.INFO,
       this.resolvedAPIVersion.name, "Starting install in Microcks. Hold on...", false, null, null);
-    this.packagesSvc.importAPIVersionContractContent(this.resolvedAPIVersion.contract.url).subscribe(
-      {
-        next: res => {
-          console.log("Retrieved content: " + res);
-        },
-        error: err => {
-          if (err.status == 201) {
-            this.discoveredService = err.error.text;
-            this.notificationService.message(NotificationType.SUCCESS,
-              this.discoveredService, "Import and discovery of service has been done", false, null, null);
-          } else {
-            this.notificationService.message(NotificationType.DANGER,
-              this.resolvedAPIVersion.name, "Importation error on server side (" + err.error.text + ")", false, null, null);
-          }
-        },
-        complete: () => console.log('Observer got a complete notification'),
-      }
-    );
+    for (let i=0; this.resolvedAPIVersion.contracts.length; i++) {
+      this.packagesSvc.importAPIVersionContractContent(this.resolvedAPIVersion.contracts[i].url).subscribe(
+        {
+          next: res => {
+            console.log("Retrieved content: " + res);
+          },
+          error: err => {
+            if (err.status == 201) {
+              this.discoveredService = err.error.text;
+              this.notificationService.message(NotificationType.SUCCESS,
+                this.discoveredService, "Import and discovery of service has been done", false, null, null);
+            } else {
+              this.notificationService.message(NotificationType.DANGER,
+                this.resolvedAPIVersion.name, "Importation error on server side (" + err.error.text + ")", false, null, null);
+            }
+          },
+          complete: () => console.log('Observer got a complete notification'),
+        }
+      );
+    }
   }
 
   installByImporterCreation(): void {
-    var job = new ImportJob();
-    job.name = this.resolvedAPIVersion.displayName + " - v. " + this.resolvedAPIVersion.version;
-    job.repositoryUrl = this.resolvedAPIVersion.contract.url;
-    this.importersSvc.createImportJob(job).subscribe(
-      {
-        next: res => {
-          this.notificationService.message(NotificationType.SUCCESS,
-              job.name, "Import job has been created", false, null, null);
-          // Retrieve job id before activating.
-          job.id = res.id;
-          this.importJobId = job.id;
-          this.activateImportJob(job);
-        },
-        error: err => {
-          this.notificationService.message(NotificationType.DANGER,
-              job.name, "Import job cannot be created (" + err.message + ")", false, null, null);
-        },
-        complete: () => console.log('Observer got a complete notification'),
+    for (let i=0; this.resolvedAPIVersion.contracts.length; i++) {
+      var job = new ImportJob();
+      job.name = this.resolvedAPIVersion.id + " - v. " + this.resolvedAPIVersion.version + " [" + i + "]";
+      job.repositoryUrl = this.resolvedAPIVersion.contracts[i].url;
+      // Mark is as secondary artifact if not the first.
+      if (i > 0) {
+        job.mainArtifact = false;
       }
-    );
+      this.importersSvc.createImportJob(job).subscribe(
+        {
+          next: res => {
+            this.notificationService.message(NotificationType.SUCCESS,
+                job.name, "Import job has been created", false, null, null);
+            // Retrieve job id before activating.
+            job.id = res.id;
+            this.importJobId = job.id;
+            this.activateImportJob(job);
+          },
+          error: err => {
+            this.notificationService.message(NotificationType.DANGER,
+                job.name, "Import job cannot be created (" + err.message + ")", false, null, null);
+          },
+          complete: () => console.log('Observer got a complete notification'),
+        }
+      );
+    }
   }
 
   activateImportJob(job: ImportJob): void {

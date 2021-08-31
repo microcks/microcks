@@ -55,7 +55,7 @@
     </li>
     <li class="list-group-item">
       <a routerLink="/services">
-        <span class="pficon pficon-plugged" data-toggle="tooltip" title="APIs | Services"></span>
+        <span class="pficon pficon-plugged" data-toggle="tooltip" title="APIs | Services"></span>
         <span class="list-group-item-value">APIs | Services</span>
       </a>
     </li>
@@ -65,7 +65,7 @@
         <span class="list-group-item-value">Importers</span>
       </a>
     </li>
-    <li class="list-group-item" *ngIf="hasFeatureEnabled('microcks-hub')">
+    <li class="list-group-item" *ngIf="canUseMicrocksHub()">
       <a routerLink="/hub">
         <span class="pficon pficon-topology" data-toggle="tooltip" title="Mocks Hub"></span>
         <span class="list-group-item-value">Microcks Hub</span>

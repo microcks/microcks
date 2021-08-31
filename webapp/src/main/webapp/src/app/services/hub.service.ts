@@ -62,7 +62,7 @@ export class HubService {
 
   private ensureRootUrl(): void {
     if (this.rootUrl == null) {
-      //this.rootUrl = this.config.getFeatureProperty('microcks-hub', 'endpoint');
+      this.rootUrl = this.config.getFeatureProperty('microcks-hub', 'endpoint');
     }
   }
 }

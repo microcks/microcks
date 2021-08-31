@@ -80,8 +80,25 @@ export class VerticalNavComponent implements OnInit {
     return this.authService.hasRole(role);
   }
 
+  public canUseMicrocksHub(): boolean {
+    if (this.hasFeatureEnabled('microcks-hub')) {
+      let rolesStr = this.config.getFeatureProperty('microcks-hub', 'allowed-roles');
+      if (rolesStr == undefined || rolesStr === '') {
+        return true;
+      }
+      // If roles specified, check if any is endorsed.
+      let roles = rolesStr.split(',');
+      for (let i=0; i<roles.length; i++) {
+        if (this.hasRole(roles[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+    return true;
+  }
+
   public hasFeatureEnabled(feature: string): boolean {
-    console.info("hasFeatureEnabled called");
     return this.config.hasFeatureEnabled(feature);
   }
 }

@@ -61,14 +61,17 @@
                 </h5>
                 <div class="properties-side-panel-pf-property-value">
                   <span>
-                    <span class="sr-only">{{ resolvedAPIVersion.capabilityLevel }}</span>
-                    <img class="mh-api-page_side-panel_image" src="{{ renderCapabilityLevel() }}" alt="{{ resolvedAPIVersion.capabilityLevel }}">
+                    <span class="sr-only">{{ resolvedAPIVersion.capabilityLevel }}</span>
+                    <img class="mh-api-page_side-panel_image" src="{{ renderCapabilityLevel() }}" alt="{{ resolvedAPIVersion.capabilityLevel }}">
                   </span>
                 </div>
               </div>
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Provider</h5>
-                <div class="properties-side-panel-pf-property-value">{{ resolvedAPIVersion.provider }}</div>
+                <div class="properties-side-panel-pf-property-value">
+                  {{ resolvedAPIVersion.provider }} &nbsp;
+                  <span class="badge" [ngClass]="{'badge-light':resolvedPackage.source=='Community', 'badge-success':resolvedPackage.source=='Enterprise'}">{{ resolvedPackage.source }}</span>
+                </div>
               </div>
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Links</h5>
@@ -78,13 +81,13 @@
               </div>
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Contracts</h5>
-                <div class="properties-side-panel-pf-property-value">
-                  <a class="mh-external-link indicator" href="{{ resolvedAPIVersion.contract.url }}" target="_blank" rel="noopener noreferrer">{{ resolvedAPIVersion.contract.type }}</a>
+                <div *ngFor="let contract of resolvedAPIVersion.contracts" class="properties-side-panel-pf-property-value">
+                  <a class="mh-external-link indicator" href="{{ contract.url }}" target="_blank" rel="noopener noreferrer">{{ contract.type }}</a>
                 </div>
               </div>
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Created At</h5>
-                <div class="properties-side-panel-pf-property-value">{{ resolvedAPIVersion.createdAt | date:'EE MMM d, y'}}</div>
+                <div class="properties-side-panel-pf-property-value">{{ resolvedAPIVersion.createdAt | date:'EE MMM d, y'}}</div>
               </div>
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Maintainers</h5>
@@ -129,7 +132,7 @@
               
               <div class="row mh-api-install-modal_row">
                 <div class="col-md-6">
-                  <h4>1. Create a new Import Job for API mocks</h4>
+                  <h4>1. Create new Import Jobs for API mocks</h4>
                 </div>
                 <div class="col-md-3">
                   <button class="mh-button mh-button-primary" (click)="installByImporterCreation()"><span class="fa fa-plus"></span> Add an Import Job</button>

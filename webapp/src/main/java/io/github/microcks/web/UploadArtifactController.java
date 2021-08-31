@@ -57,7 +57,8 @@ public class UploadArtifactController {
    private ServiceService serviceService;
 
    @RequestMapping(value = "/artifact/download", method = RequestMethod.POST)
-   public ResponseEntity<?> importArtifact(@RequestParam(value = "url", required = true) String url) {
+   public ResponseEntity<?> importArtifact(@RequestParam(value = "url", required = true) String url,
+                                           @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!url.isEmpty()) {
          List<Service> services = null;
 
@@ -67,7 +68,7 @@ public class UploadArtifactController {
 
             // Now try importing services.
             services = serviceService.importServiceDefinition(localFile, new ReferenceResolver(url, null, true),
-                  new ArtifactInfo(url, true));
+                  new ArtifactInfo(url, mainArtifact));
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item " + url, ioe);
             return new ResponseEntity<Object>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);

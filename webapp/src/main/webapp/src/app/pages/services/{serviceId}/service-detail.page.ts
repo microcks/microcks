@@ -190,7 +190,7 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public getBindingsList(operation: Operation): string {
-    console.log("[ServiceDetailPageComponent.getBindingsList()]");
+    //console.log("[ServiceDetailPageComponent.getBindingsList()]");
     if (operation.bindings != null) {
       var result = "";
       var bindings = Object.keys(operation.bindings);
@@ -225,7 +225,7 @@ export class ServiceDetailPageComponent implements OnInit {
     return false;
   }
   public getBindingProperty(operation: Operation, binding: string, property: string): string {
-    console.log("[ServiceDetailPageComponent.getBindingProperty()]");
+    //console.log("[ServiceDetailPageComponent.getBindingProperty()]");
     if (operation.bindings != null) {
       var b = operation.bindings[binding];
       if (b.hasOwnProperty(property)) {
@@ -236,7 +236,7 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public formatMockUrl(operation: Operation, dispatchCriteria: string): string {
-    console.log("[ServiceDetailPageComponent.formatMockUrl()]");
+    //console.log("[ServiceDetailPageComponent.formatMockUrl()]");
     var result = document.location.origin;
     
     // Manage dev mode.
@@ -400,6 +400,7 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public hasRoleForService(role: string): boolean {
     if (this.hasRepositoryTenancyFeatureEnabled() && this.resolvedServiceView.service.metadata.labels) {
+      console.log("hasRepositoryTenancyFeatureEnabled");
       let tenant = this.resolvedServiceView.service.metadata.labels[this.repositoryTenantLabel()];
       if (tenant !== undefined) {
         return this.authService.hasRoleForResource(role, tenant);
