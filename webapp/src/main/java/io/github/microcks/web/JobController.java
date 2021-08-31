@@ -19,11 +19,12 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.ImportJob;
+import io.github.microcks.domain.Metadata;
 import io.github.microcks.repository.ImportJobRepository;
 import io.github.microcks.security.AuthorizationChecker;
 import io.github.microcks.security.UserInfo;
 import io.github.microcks.service.JobService;
-import org.apache.catalina.User;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -115,6 +116,7 @@ public class JobController {
    @RequestMapping(value = "/jobs", method = RequestMethod.POST)
    public ResponseEntity<ImportJob> createJob(@RequestBody ImportJob job) {
       log.debug("Creating new job: {}", job);
+      job.setMetadata(new Metadata());
       job.setCreatedDate(new Date());
       return new ResponseEntity<>(jobRepository.save(job), HttpStatus.CREATED);
    }
