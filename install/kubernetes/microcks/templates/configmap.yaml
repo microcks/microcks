@@ -57,9 +57,9 @@ data:
     keycloak.security-constraints[0].authRoles[2]=user
     keycloak.security-constraints[0].securityCollections[0].name=Insecure stuffs
     keycloak.security-constraints[0].securityCollections[0].patterns[0]=/api/services
-    keycloak.security-constraints[0].securityCollections[0].patterns[1]=/api/services/count
+    keycloak.security-constraints[0].securityCollections[0].patterns[1]=/api/services/*
     keycloak.security-constraints[0].securityCollections[0].patterns[2]=/api/jobs
-    keycloak.security-constraints[0].securityCollections[0].patterns[3]=/api/jobs/count
+    keycloak.security-constraints[0].securityCollections[0].patterns[3]=/api/jobs/*
 
     # Keycloak access configuration properties
     sso.public-url=${KEYCLOAK_PUBLIC_URL:${keycloak.auth-server-url}}
@@ -245,6 +245,25 @@ data:
           ]
         }
       },
+      "groups": [
+        {
+          "name": "microcks",
+          "path": "/microcks",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": [
+            {
+              "name": "manager",
+              "path": "/microcks/manager",
+              "attributes": {},
+              "realmRoles": [],
+              "clientRoles": {},
+              "subGroups": []
+            }
+          ]
+        }
+      ],
       "defaultRoles": [ ],
       "requiredCredentials": [ "password" ],
       "scopeMappings": [],
@@ -269,6 +288,35 @@ data:
           }
         ]
       },
+      "clients": [
+        {
+          "clientId": "microcks-app-js",
+          "enabled": true,
+          "publicClient": true,
+          "redirectUris": [
+            "https://{{ .Values.microcks.url }}/*"
+          ],
+          "webOrigins": [
+            "+"
+          ],
+          "fullScopeAllowed": false,
+          "protocolMappers": [
+            {
+              "name": "microcks-group-mapper",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "consentRequired": false,
+              "config": {
+                "full.path": "true",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "claim.name": "microcks-groups",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        }
+      ],
       "applications": [
         {
           "name": "microcks-app",
@@ -277,18 +325,6 @@ data:
           "defaultRoles": [
             "user"
           ]
-        },
-        {
-          "name": "microcks-app-js",
-          "enabled": true,
-          "publicClient": true,
-          "webOrigins": [
-            "+"
-          ],
-          "redirectUris": [
-            "https://{{ .Values.microcks.url }}/*"
-          ],
-          "fullScopeAllowed": false
         },
         {
           "name": "{{ .Values.keycloak.serviceAccount }}",

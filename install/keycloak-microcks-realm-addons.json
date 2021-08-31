@@ -20,6 +20,25 @@
       ]
     }
   },
+  "groups": [
+    {
+      "name": "microcks",
+      "path": "/microcks",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {},
+      "subGroups": [
+        {
+          "name": "manager",
+          "path": "/microcks/manager",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": []
+        }
+      ]
+    }
+  ],
   "clientScopeMappings": {
     "microcks-app": [
       {
@@ -60,7 +79,22 @@
       "redirectUris": [
         "https://localhost:8080/*"
       ],
-      "fullScopeAllowed": false
+      "fullScopeAllowed": false,
+      "protocolMappers": [
+        {
+          "name": "microcks-group-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "microcks-groups",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
     },
     {
       "clientId": "microcks-serviceaccount",
