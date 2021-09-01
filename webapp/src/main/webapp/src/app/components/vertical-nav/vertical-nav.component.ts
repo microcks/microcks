@@ -76,7 +76,6 @@ export class VerticalNavComponent implements OnInit {
   }
 
   public hasRole(role: string): boolean {
-    console.info("hasRole called");
     return this.authService.hasRole(role);
   }
 
@@ -95,7 +94,8 @@ export class VerticalNavComponent implements OnInit {
       }
       return false;
     }
-    return true;
+    // Default is false to keep behaviour of previous releases.
+    return false;
   }
 
   public hasFeatureEnabled(feature: string): boolean {

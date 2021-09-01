@@ -357,6 +357,7 @@ export class ImportersPageComponent implements OnInit {
       }
       return false;
     }
+    // Default is true to keep behaviour of previous releases.
     return true;
   }
 
