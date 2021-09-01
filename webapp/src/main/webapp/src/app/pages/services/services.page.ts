@@ -256,7 +256,9 @@ export class ServicesPageComponent implements OnInit {
   public hasRoleForService(role: string, service: Service): boolean {
     if (this.hasRepositoryTenancyFeatureEnabled() && service.metadata.labels) {
       let tenant = service.metadata.labels[this.repositoryFilterFeatureLabelKey()];
-      return this.authService.hasRoleForResource(role, tenant);
+      if (tenant !== undefined && this.authService.hasRoleForResource(role, tenant)) {
+        return true;
+      }
     }
     return this.hasRole(role);
   }

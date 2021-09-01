@@ -53,7 +53,13 @@ export abstract class IAuthenticationService {
   abstract hasRole(role: string): boolean;
 
   /**
-   * Calles to check that user can endorse role for a specific resource.
+   * Called to check that user can endorse role for at least one resource.
+   * @param role
+   */
+  abstract hasRoleForAnyResource(role: string): boolean;
+
+  /**
+   * Called to check that user can endorse role for a specific resource.
    * @param role 
    * @param resource 
    */

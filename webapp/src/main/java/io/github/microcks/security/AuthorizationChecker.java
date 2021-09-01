@@ -50,7 +50,7 @@ public class AuthorizationChecker {
    private static final String MICROCKS_GROUPS_PREFIX = "/microcks/";
 
    @Value("${features.feature.repository-tenancy.enabled}")
-   private final boolean authorizationEnabled = false;
+   private final Boolean authorizationEnabled = false;
 
    @Value("${features.feature.repository-filter.label-key}")
    private final String filterLabelKey = null;

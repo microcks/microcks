@@ -354,6 +354,12 @@ export class ImportersPageComponent implements OnInit {
         if (this.hasRole(roles[i])) {
           return true;
         }
+        if (roles[i] === 'manager-any') {
+          let managerOfAny = this.hasRoleForAny('manager');
+          if (managerOfAny) {
+            return true;
+          }
+        }
       }
       return false;
     }
@@ -364,12 +370,14 @@ export class ImportersPageComponent implements OnInit {
   public hasRole(role: string): boolean {
     return this.authService.hasRole(role);
   }
-
+  public hasRoleForAny(role: string): boolean {
+    return this.authService.hasRoleForAnyResource(role);
+  }
   public hasRoleForJob(role: string, job: ImportJob): boolean {
     if (this.hasRepositoryTenancyFeatureEnabled() && job.metadata && job.metadata.labels) {
       let tenant = job.metadata.labels[this.repositoryFilterFeatureLabelKey()];
-      if (tenant !== undefined) {
-        return this.authService.hasRoleForResource(role, tenant);
+      if (tenant !== undefined && this.authService.hasRoleForResource(role, tenant)) {
+        return true;
       }
     }
     return this.hasRole(role);
