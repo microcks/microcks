@@ -1,5 +1,5 @@
 kind: Ingress
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}"
   annotations:
@@ -24,7 +24,7 @@ spec:
           servicePort: 8080
 ---
 kind: Ingress
-apiVersion: networking.k8s.io/v1beta1
+apiVersion:networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}-grpc"
   annotations:
@@ -48,7 +48,7 @@ spec:
 {{- if .Values.keycloak.install }}
 ---
 kind: Ingress
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}-keycloak"
   annotations:
@@ -75,7 +75,7 @@ spec:
 {{- if and .Values.features.async.enabled }}
 ---
 kind: Ingress
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}-ws"
   annotations:
