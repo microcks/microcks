@@ -19,12 +19,16 @@ spec:
   - host: "{{ .Values.microcks.url }}"
     http:
       paths:
-      - backend:
-          serviceName: "{{ .Values.appName }}"
-          servicePort: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "{{ .Values.appName }}"
+            port:
+              number: 8080
 ---
 kind: Ingress
-apiVersion:networking.k8s.io/v1
+apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}-grpc"
   annotations:
@@ -42,9 +46,13 @@ spec:
   - host: {{ ( include "microcks-grpc.url" . ) }}
     http:
       paths:
-      - backend:
-          serviceName: "{{ .Values.appName }}-grpc"
-          servicePort: 9090
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "{{ .Values.appName }}-grpc"
+            port:
+              number: 9090
 {{- if .Values.keycloak.install }}
 ---
 kind: Ingress
@@ -68,9 +76,13 @@ spec:
   - host: "{{ .Values.keycloak.url }}"
     http:
       paths:
-      - backend:
-          serviceName: "{{ .Values.appName }}-keycloak"
-          servicePort: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "{{ .Values.appName }}-keycloak"
+            port:
+              number: 8080
 {{- end }}
 {{- if and .Values.features.async.enabled }}
 ---
@@ -98,7 +110,10 @@ spec:
     http:
       paths:
         - path: /api/ws
+          pathType: Prefix
           backend:
-            serviceName: "{{ .Values.appName }}-async-minion"
-            servicePort: 8080
+            service:
+              name: "{{ .Values.appName }}-async-minion"
+              port:
+                number: 8080
 {{- end }}
