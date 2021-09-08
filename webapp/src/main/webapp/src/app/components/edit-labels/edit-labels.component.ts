@@ -58,7 +58,7 @@ export class EditLabelsComponent implements OnInit {
   }
 
   saveLabels(): void {
-    console.log("[EditLabelsComponent saveLabels]");
+    //console.log("[EditLabelsComponent saveLabels] with " + JSON.stringify(this.labels)");
     this.onSave.emit(this.labels);
   }
 }

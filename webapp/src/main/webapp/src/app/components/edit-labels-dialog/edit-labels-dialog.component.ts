@@ -44,27 +44,8 @@ export class EditLabelsDialogComponent implements OnInit {
     }
   }
 
-  getKeys(map){
-    return Object.keys(map);
-  }
-
-  removeLabel(labelK: string): void {
-    delete this.labels[labelK];
-    this.labelKV = "";
-  }
-
-  addLabel(): void {
-    if (this.labelKV.indexOf('=') != -1) {
-      var kv: string[] = this.labelKV.split('=');
-      if (kv.length == 2) {
-        this.labels[kv[0]] = kv[1];
-      }
-    }
-    this.labelKV = "";
-  }
-
   saveLabels(): void {
-    console.log("[EditLabelsDialogComponent saveLabels]");
+    //console.log("[EditLabelsDialogComponent saveLabels] with " + JSON.stringify(this.labels));
     this.saveLabelsAction.emit(this.labels);
     this.bsModalRef.hide();
   }

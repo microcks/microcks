@@ -36,8 +36,11 @@
               {{ job.name }}
             </div>
             <div class="list-group-item-text repositoryUrl">
-              <a href="{{ job.repositoryUrl }}">{{ job.repositoryUrl }}</a>
+              <a href="{{ job.repositoryUrl }}">{{ job.repositoryUrl }}</a><br/>
               <label-list [metadata]="job.metadata" [filter]="repositoryFilterFeatureLabelList()"></label-list>
+              <div *ngIf="job.metadata" class="job-update">
+                <small>Updated on {{ job.metadata.lastUpdate | date : 'medium' }}</small>
+              </div>
             </div>
           </div>
           <div class="list-view-pf-additional-info">
