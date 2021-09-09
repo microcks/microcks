@@ -37,7 +37,7 @@ export class LabelListComponent implements OnInit {
 
   check() {
     // Debug trace for diving into ChangeDetectionStrategy.OnPush issues...
-    //console.log('LabelListComponent view checked');
+    console.log('[LabelListComponent] View checked');
   }
 
   ngOnInit() {

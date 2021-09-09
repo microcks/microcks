@@ -1,0 +1,1 @@
+{"openapi":"3.0.1","info":{"title":"feature-flags-service","description":"Web service to enable feature flag lookup by application and environment.","version":"0.1"}}

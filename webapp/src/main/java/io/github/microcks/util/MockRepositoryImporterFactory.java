@@ -70,7 +70,7 @@ public class MockRepositoryImporterFactory {
             break;
          } else if (line.startsWith("openapi: 3") || line.startsWith("openapi: '3")
                || line.startsWith("openapi: \"3") || line.startsWith("\"openapi\": \"3")
-               || line.startsWith("'openapi': '3") || line.startsWith("{\"openapi\": \"3")) {
+               || line.startsWith("'openapi': '3") || line.startsWith("{\"openapi\":\"3")) {
             log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
             importer = new OpenAPIImporter(mockRepository.getPath());
             break;

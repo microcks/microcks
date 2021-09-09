@@ -78,6 +78,16 @@ public class MockRepositoryImporterFactoryTest {
       }
       assertTrue(importer instanceof OpenAPIImporter);
 
+      // Load an OpenAPI JSON oneliner file.
+      openAPISpec = new File("target/test-classes/io/github/microcks/util/openapi/openapi-oneliner.json");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
+      } catch (Throwable t) {
+         fail("Getting importer should not fail !");
+      }
+      assertTrue(importer instanceof OpenAPIImporter);
+
       // Load an AsyncAPI JSON file.
       File asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.json");
       importer = null;

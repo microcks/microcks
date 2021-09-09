@@ -37,3 +37,11 @@ span.label a {
   width: 10%;
 }
 }
+
+.metadata-label {
+  margin-top: 10px !important;
+}
+.job-update {
+  margin-top: 10px;
+  display: inline-block;
+}

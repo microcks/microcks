@@ -134,6 +134,10 @@ export class ServiceDetailPageComponent implements OnInit {
           next: res => {
             // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
             // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
+            // When done multiple times, serviceView re-assignation is not detected... So we have to force
+            // null, redetect and then re-assign a new Observable...
+            this.serviceView = null;
+            this.ref.detectChanges();
             this.serviceView = new Observable<ServiceView>(observer => { observer.next(this.resolvedServiceView) });
             this.notificationService.message(NotificationType.SUCCESS,
               this.resolvedServiceView.service.name, "Labels have been updated", false, null, null);
