@@ -113,7 +113,7 @@ export class TestCreatePageComponent implements OnInit {
               var operation = this.resolvedService.operations[i];
               var foundOperation = res.testCaseResults.find(tc => tc.operationName === operation.name);
               if (foundOperation == undefined || foundOperation == null) {
-                this.removedOperationsNames.push(operationName);
+                this.removedOperationsNames.push(operation.name);
               }
             }
           }
