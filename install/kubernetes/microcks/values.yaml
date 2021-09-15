@@ -49,6 +49,14 @@ keycloak:
   # Uncomment to change Keycloak Service to a NodePort
   #serviceType: NodePort
 
+  resources:
+    requests:
+      cpu: 400m
+      memory: 400Mi
+    limits:
+      #cpu: 500m
+      #memory: 512Mi
+
   persistent: true
   volumeSize: 1Gi
   postgresImage: centos/postgresql-95-centos7:latest
@@ -78,6 +86,14 @@ mongodb:
     #secret: mongodb
     #usernameKey: database-user
     #passwordKey: database-password
+
+  resources:
+    #requests:
+      #cpu: 250m
+      #memory: 400Mi
+    limits:
+      #cpu: 500m
+      memory: 512Mi
 
 features:
   async:

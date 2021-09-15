@@ -253,8 +253,7 @@ spec:
         - name: MONGODB_DATABASE
           value: "{{ .Values.appName }}"
         resources:
-          limits:
-            memory: 512Mi
+          {{- toYaml .Values.mongodb.resources | nindent 10 }}
         volumeMounts:
         - name: "{{ .Values.appName }}-mongodb-data"
           mountPath: "/var/lib/mongodb/data"
@@ -307,9 +306,7 @@ spec:
       - name: keycloak-server
         image: {{ .Values.keycloak.image }}
         resources:
-          requests:
-            cpu: 400m
-            memory: 400Mi
+          {{- toYaml .Values.keycloak.resources | nindent 10 }}
         ports:
         - name: http
           containerPort: 8080
