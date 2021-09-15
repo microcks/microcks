@@ -103,7 +103,7 @@
         <div class="control-group" *ngIf="service.type != 'EVENT'">
           <label class="control-label required-pf" for="filteredOperationsNames">Operations</label>
           <div class="controls">
-            <ul class="unstyled">
+            <ul>
               <li *ngFor="let operation of service.operations">
                 <label class="checkbox">
                   <input type="checkbox" id="filteredOperationsNames" name="filteredOperationsNames" (change)="filterOperation(operation.name)" checked>
@@ -142,7 +142,7 @@
               <a (click)="addHeaderValue('globals')" role="button">Add Header</a>
             </div>
           <div class="control-group operation-headers" *ngFor="let operation of service.operations; index as i;">
-            <h5 class="subsection">Headers for {{ operation.name }}</h5>
+            <h5 class="subsection">Headers for {{ operation.name }}</h5>
             <div class="key-value-editor-entry key-value-editor-entry-header" 
                 *ngIf="operationsHeaders[operation.name] != null && operationsHeaders[operation.name].length > 0">
               <div class="key-value-editor-header key-header">Name</div>

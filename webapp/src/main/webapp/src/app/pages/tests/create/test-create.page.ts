@@ -63,18 +63,22 @@ export class TestCreatePageComponent implements OnInit {
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
+    let fromTestId = null;
     this.service = this.route.paramMap.pipe(
       switchMap((params: ParamMap) => {
         // (+) before `params.get()` turns the string into a number
         this.serviceId = params.get('serviceId');
         if (params.has('fromTest')) {
-          this.initializeFromPreviousTestResult(params.get('fromTest'));
+          fromTestId = params.get('fromTest');
         }
         return this.servicesSvc.getService(this.serviceId);
       })
     );
     this.service.subscribe( service => {
-      this.resolvedService = service
+      this.resolvedService = service;
+      if (fromTestId != null) {
+        this.initializeFromPreviousTestResult(fromTestId);
+      }
     });
   }
 
@@ -100,6 +104,18 @@ export class TestCreatePageComponent implements OnInit {
           if (res.secretRef) {
             this.secretId = res.secretRef.secretId;
             this.secretName = res.secretRef.name;
+          }
+          // Finalize with filtered operations.
+          if (this.resolvedService.type === "EVENT" && res.testCaseResults.length == 1) {
+            this.filteredOperation = res.testCaseResults[0].operationName;
+          } else {
+            for (var i=0; i<this.resolvedService.operations.length; i++) {
+              var operation = this.resolvedService.operations[i];
+              var foundOperation = res.testCaseResults.find(tc => tc.operationName === operation.name);
+              if (foundOperation == undefined || foundOperation == null) {
+                this.removedOperationsNames.push(operationName);
+              }
+            }
           }
           this.checkForm();
         },
