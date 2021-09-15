@@ -58,6 +58,8 @@ services:
   async-minion:
     depends_on:
       - app
+    ports:
+      - "8081:8081"
     image: quay.io/microcks/microcks-async-minion:latest
     container_name: microcks-async-minion
     restart: on-failure
