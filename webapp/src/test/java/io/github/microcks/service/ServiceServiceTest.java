@@ -211,6 +211,56 @@ public class ServiceServiceTest {
    }
 
    @Test
+   public void testImportServiceDefinitionMainAndSecondariesWithAPIMetadata() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-postman.json");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("weather-forecast-postman.json", false));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-metadata.yaml");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("weather-forecast-metadata.yaml", false));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("WeatherForecast API", importedSvc.getName());
+      assertEquals("1.1.0", importedSvc.getVersion());
+      assertEquals("weather-forecast-raw-openapi.yaml", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+
+      assertEquals(3, importedSvc.getMetadata().getLabels().size());
+      assertEquals("weather", importedSvc.getMetadata().getLabels().get("domain"));
+      assertEquals("GA", importedSvc.getMetadata().getLabels().get("status"));
+      assertEquals("Team C", importedSvc.getMetadata().getLabels().get("team"));
+
+      assertEquals(1, importedSvc.getOperations().size());
+      assertEquals(100, importedSvc.getOperations().get(0).getDefaultDelay().longValue());
+      assertEquals(DispatchStyles.FALLBACK, importedSvc.getOperations().get(0).getDispatcher());
+      assertNotNull(importedSvc.getOperations().get(0).getDispatcherRules());
+      assertEquals(5, importedSvc.getOperations().get(0).getResourcePaths().size());
+   }
+
+
+   @Test
    public void testCreateGenericResourceService() {
       Service created = null;
       try {

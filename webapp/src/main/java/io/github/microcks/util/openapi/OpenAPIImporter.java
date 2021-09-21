@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.microcks.domain.*;
 import io.github.microcks.util.*;
+import io.github.microcks.util.metadata.MetadataExtensions;
+import io.github.microcks.util.metadata.MetadataExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +106,13 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       service.setName(spec.path("info").path("title").asText());
       service.setVersion(spec.path("info").path("version").asText());
       service.setType(ServiceType.REST);
+
+      // Complete metadata if specified via extension.
+      if (spec.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
+         Metadata metadata = new Metadata();
+         MetadataExtractor.completeMetadata(metadata, spec.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         service.setMetadata(metadata);
+      }
 
       // Then build its operations.
       service.setOperations(extractOperations());
@@ -320,17 +329,25 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                operation.setName(operationName);
                operation.setMethod(verbName.toUpperCase());
 
-               // Deal with dispatcher stuffs.
-               if (operationHasParameters(verb.getValue(), "query") && urlHasParts(pathName)) {
-                  operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName)
-                        + " ?? " + extractOperationParams(verb.getValue()));
-                  operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
-               } else if (operationHasParameters(verb.getValue(), "query")) {
-                  operation.setDispatcherRules(extractOperationParams(verb.getValue()));
-                  operation.setDispatcher(DispatchStyles.URI_PARAMS);
-               } else if (urlHasParts(pathName)) {
-                  operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName));
-                  operation.setDispatcher(DispatchStyles.URI_PARTS);
+               // Complete operation properties if any.
+               if (verb.getValue().has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
+                  MetadataExtractor.completeOperationProperties(operation,
+                        verb.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
+               }
+
+               // Deal with dispatcher stuffs if needed.
+               if (operation.getDispatcher() == null) {
+                  if (operationHasParameters(verb.getValue(), "query") && urlHasParts(pathName)) {
+                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName)
+                           + " ?? " + extractOperationParams(verb.getValue()));
+                     operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
+                  } else if (operationHasParameters(verb.getValue(), "query")) {
+                     operation.setDispatcherRules(extractOperationParams(verb.getValue()));
+                     operation.setDispatcher(DispatchStyles.URI_PARAMS);
+                  } else if (urlHasParts(pathName)) {
+                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName));
+                     operation.setDispatcher(DispatchStyles.URI_PARTS);
+                  }
                } else {
                   operation.addResourcePath(pathName);
                }

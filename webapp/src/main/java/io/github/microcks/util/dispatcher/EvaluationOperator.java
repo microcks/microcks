@@ -19,7 +19,7 @@
 package io.github.microcks.util.dispatcher;
 
 /**
- * This is an enumerationf of evaluation operators.
+ * This is an enumeration of evaluation operators.
  * @author laurent
  */
 public enum EvaluationOperator {

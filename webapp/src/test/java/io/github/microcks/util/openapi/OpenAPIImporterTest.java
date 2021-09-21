@@ -36,6 +36,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -68,6 +69,32 @@ public class OpenAPIImporterTest {
       }
 
       importAndAssertOnSimpleOpenAPI(importer);
+   }
+
+   @Test
+   public void testSimpleOpenAPIImportYAMLWithExtensions() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.yaml");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAnAssertOnSimpleOpenAPIWithExtensions(importer);
+   }
+
+   @Test
+   public void testSimpleOpenAPIImportJSONWithExtensions() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.json");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      importAnAssertOnSimpleOpenAPIWithExtensions(importer);
    }
 
    @Test
@@ -177,7 +204,6 @@ public class OpenAPIImporterTest {
          }
       }
    }
-
 
    @Test
    public void testOpenAPIImportYAMLWithSpacesOps() {
@@ -1099,6 +1125,82 @@ public class OpenAPIImporterTest {
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
+      }
+   }
+
+   private void importAnAssertOnSimpleOpenAPIWithExtensions(OpenAPIImporter importer) {
+      // Basic import and assertions.
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("OpenAPI Car API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+      assertEquals(ResourceType.OPEN_API_SPEC, resources.get(0).getType());
+      assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
+      assertNotNull(resources.get(0).getContent());
+
+      // Check that operations and input/output have been found.
+      assertEquals(3, service.getOperations().size());
+
+      try {
+         // Now assert extensions parsing has been done.
+         assertNotNull(service.getMetadata());
+         assertEquals(3, service.getMetadata().getLabels().size());
+         assertEquals("cars", service.getMetadata().getLabels().get("domain"));
+         assertEquals("beta", service.getMetadata().getLabels().get("status"));
+         assertEquals("Team A", service.getMetadata().getLabels().get("team"));
+
+         Operation postOp = service.getOperations().stream()
+               .filter(operation -> operation.getName().equals("POST /owner/{owner}/car"))
+               .findFirst().get();
+
+         assertEquals("POST", postOp.getMethod());
+         assertEquals(100, postOp.getDefaultDelay().longValue());
+         assertEquals("SCRIPT", postOp.getDispatcher());
+         assertTrue(postOp.getDispatcherRules().contains("groovy.json.JsonSlurper"));
+
+         // Check that messages have been correctly found.
+         List<Exchange> exchanges = null;
+         try {
+            exchanges = importer.getMessageDefinitions(service, postOp);
+         } catch (Exception e) {
+            fail("No exception should be thrown when importing message definitions.");
+         }
+         assertEquals(1, exchanges.size());
+         assertEquals(1, postOp.getResourcePaths().size());
+         assertEquals("/owner/{owner}/car", postOp.getResourcePaths().get(0));
+
+         for (Exchange exchange : exchanges) {
+            if (exchange instanceof RequestResponsePair) {
+               RequestResponsePair entry = (RequestResponsePair) exchange;
+               Request request = entry.getRequest();
+               Response response = entry.getResponse();
+               assertNotNull(request);
+               assertNotNull(response);
+               assertEquals("laurent_307", request.getName());
+               assertEquals("laurent_307", response.getName());
+               assertNull(response.getDispatchCriteria());
+               assertEquals("201", response.getStatus());
+               assertEquals("application/json", response.getMediaType());
+               assertNotNull(response.getContent());
+            } else {
+               fail("Exchange has the wrong type. Expecting RequestResponsePair");
+            }
+         }
+      } catch (Exception e) {
+         e.printStackTrace();
+         fail("Exception should not be thrown");
       }
    }
 

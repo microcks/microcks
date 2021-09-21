@@ -1,5 +1,5 @@
 ---
-openapi: 3.1.0
+openapi: 3.0.0
 info:
   title: OpenAPI Car API
   description: Sample OpenAPI API using cars
@@ -10,7 +10,12 @@ info:
   license:
     name: MIT License
     url: https://opensource.org/licenses/MIT
-  version: 1.1.0
+  version: 1.0.0
+  x-microcks:
+    labels:
+      domain: cars
+      status: beta
+      team: Team A
 paths:
   /owner/{owner}/car:
     get:
@@ -80,6 +85,20 @@ paths:
                   summary: Creation of a valid car response
                   value: '{"name": "307", "model": "Peugeot 307", "year": 2003}'
         400: {}
+      x-microcks-operation:
+        delay: 100
+        dispatcher: SCRIPT
+        dispatcherRules: |-
+          def path = mockRequest.getRequest().getRequestURI();
+          if (!path.contains("/laurent/car")) {
+            return "Not Accepted"
+          }
+          def jsonSlurper = new groovy.json.JsonSlurper();
+          def car = jsonSlurper.parseText(mockRequest.getRequestContent());
+          if (car.name == null) {
+            return "Not Accepted"
+          }
+          return "laurent_307"
     parameters:
     - name: owner
       in: path
@@ -95,21 +114,6 @@ paths:
         laurent_307:
           $ref: '#/components/examples/param_laurent'
   /owner/{owner}/car/{car}/passenger:
-    get:
-      summary: 'Get the passengers of a car'
-      description: 'Get all the passengers of a car'
-      operationId: getPassengersOp
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Person'
-              examples:
-                laurent_307_passengers:
-                  value: "[\n    {\"firstname\": \"Nicolas\", \"lastname\": \"Masse\"},\n    {\"firstname\": \"Eric\", \"lastname\": \"Wittmann\"}\n]"
     post:
       summary: Add some passengers to the car
       description: Add some passengers to the car description
@@ -125,18 +129,12 @@ paths:
       required: true
       schema:
         type: string
-      examples:
-        laurent_307_passengers:
-          $ref: '#/components/examples/param_laurent'
     - name: car
       in: path
       description: The car to manage passengers for
       required: true
       schema:
         type: string
-      examples:
-        laurent_307_passengers:
-          value: 307
 components:
   schemas:
     Car:
@@ -151,15 +149,6 @@ components:
           type: integer
         model:
           description: Model of the car
-          type: string
-    Person:
-      type: object
-      properties:
-        firstname:
-          description: 'Firstname of person'
-          type: string
-        lastname:
-          description: 'Lastname of person'
           type: string
   examples:
     param_laurent:

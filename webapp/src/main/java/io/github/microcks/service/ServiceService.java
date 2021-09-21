@@ -39,6 +39,7 @@ import org.springframework.context.ApplicationContext;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Bean defining service operations around Service domain objects.
@@ -146,9 +147,16 @@ public class ServiceService {
          // If it's the main artifact: retrieve previous id and props if update, save anyway.
          if (artifactInfo.isMainArtifact()) {
             if (existingService != null) {
-               // Retrieve its previous identifier and metadatas.
+               // Retrieve its previous identifier and metadatas
+               // (backup metadata that may have been imported with extensions).
+               Metadata backup = service.getMetadata();
                service.setId(existingService.getId());
                service.setMetadata(existingService.getMetadata());
+               // If there was metadata found through extensions, overwrite historical ones.
+               if (backup != null) {
+                  existingService.getMetadata().setLabels(backup.getLabels());
+                  existingService.getMetadata().setAnnotations(backup.getAnnotations());
+               }
 
                // Keep its overriden operation properties.
                copyOverridenOperations(existingService, service);
@@ -170,12 +178,35 @@ public class ServiceService {
             // We're dealing with main artifact so reference is saved or updated one.
             reference = service;
          } else {
-            // It's a secondary artifact just for messages. We'll have problems if not having an existing service...
+            // It's a secondary artifact just for messages or metadata. We'll have problems if not having an existing service...
             if (existingService == null) {
                log.warn("Trying to import {} as a secondary artifact but there's no existing [{}, {}] Service. Just skipping.",
                      artifactInfo.getArtifactName(), service.getName(), service.getVersion());
                break;
             }
+
+            // If metadata and operation properties found through metadata import,
+            // update the existing service with them.
+            if (service.getMetadata() != null) {
+               existingService.getMetadata().setLabels(service.getMetadata().getLabels());
+               existingService.getMetadata().setAnnotations(service.getMetadata().getAnnotations());
+            }
+            for (Operation operation : service.getOperations()) {
+               Operation existingOp = existingService.getOperations().stream()
+                     .filter(op -> op.getName().equals(operation.getName())).findFirst().orElse(null);
+               if (existingOp != null) {
+                  if (operation.getDefaultDelay() != null) {
+                     existingOp.setDefaultDelay(operation.getDefaultDelay());
+                  }
+                  if (operation.getDispatcher() != null) {
+                     existingOp.setDispatcher(operation.getDispatcher());
+                  }
+                  if (operation.getDispatcherRules() != null) {
+                     existingOp.setDispatcherRules(operation.getDispatcherRules());
+                  }
+               }
+            }
+
             // We're dealing with secondary artifact so reference is the pre-existing one.
             // Moreover, we should replace current imported service (unbound/unsaved)
             // by reference in the results list.

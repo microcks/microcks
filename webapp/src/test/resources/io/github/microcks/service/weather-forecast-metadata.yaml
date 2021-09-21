@@ -1,0 +1,19 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIMetadata
+metadata:
+  name: WeatherForecast API
+  version: 1.1.0
+  labels:
+    domain: weather
+    status: GA
+    team: Team C
+operations:
+  'GET /forecast/{region}':
+    delay: 100
+    dispatcher: FALLBACK
+    dispatcherRules: |-
+      {
+        "dispatcher": "URI_PARTS",
+        "dispatcherRules": "region",
+        "fallback": "Unknown"
+      }

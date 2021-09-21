@@ -22,17 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.domain.Exchange;
-import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.domain.*;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
@@ -40,6 +30,8 @@ import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
+import io.github.microcks.util.metadata.MetadataExtensions;
+import io.github.microcks.util.metadata.MetadataExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,6 +124,13 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       service.setName(spec.path("info").path("title").asText());
       service.setVersion(spec.path("info").path("version").asText());
       service.setType(ServiceType.EVENT);
+
+      // Complete metadata if specified via extension.
+      if (spec.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
+         Metadata metadata = new Metadata();
+         MetadataExtractor.completeMetadata(metadata, spec.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         service.setMetadata(metadata);
+      }
 
       // Then build its operations.
       service.setOperations(extractOperations());
@@ -331,8 +330,14 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                operation.setName(operationName);
                operation.setMethod(verbName.toUpperCase());
 
+               // Complete operation properties if any.
+               if (channel.getValue().has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
+                  MetadataExtractor.completeOperationProperties(operation,
+                        channel.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
+               }
+
                // Deal with dispatcher stuffs.
-               if (channelHasParts(channelName)) {
+               if (operation.getDispatcher() == null && channelHasParts(channelName)) {
                   operation.setDispatcher(DispatchStyles.URI_PARTS);
                   operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(channelName));
                } else {
@@ -575,15 +580,18 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
          String parameterName = parameterEntry.getKey();
          log.debug("Processing param {}", parameterName);
+
          if (parameter.has("schema") && parameter.path("schema").has("examples")) {
             Iterator<String> exampleNames = parameter.path("schema").path("examples").fieldNames();
+
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
                log.debug("Processing example {}", exampleName);
+
                JsonNode example = parameter.path("schema").path("examples").path(exampleName);
                String exampleValue = getExampleValue(example);
-
                log.debug("{} {} {}", parameterName, exampleName, exampleValue);
+
                Map<String, String> exampleParams = results.get(exampleName);
                if (exampleParams == null) {
                   exampleParams = new HashMap<>();
