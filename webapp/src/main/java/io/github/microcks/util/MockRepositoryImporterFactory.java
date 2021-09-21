@@ -20,6 +20,7 @@ package io.github.microcks.util;
 
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
+import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
@@ -84,6 +85,9 @@ public class MockRepositoryImporterFactory {
             log.info("Found a syntax = proto3 pragma in file so assuming it's a GRPC Protobuf spec to import");
             importer = new ProtobufImporter(mockRepository.getPath(), referenceResolver);
             break;
+         } else if (line.contains("kind: APIMetadata")) {
+            log.info("Found a kind: APIMetadata pragma in file so assuming it's a Microcks APIMetadata to import");
+            importer = new MetadataImporter(mockRepository.getPath());
          } else if (line.startsWith("\"swagger\":") || line.startsWith("swagger:")) {
             log.warn("Swagger v2 format is not supported as it does not allow full examples specification, raising an exception");
             throw new IOException("Swagger v2 format is not supported as it does not allow full examples specification");

@@ -20,6 +20,7 @@ package io.github.microcks.util;
 
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
+import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
@@ -127,5 +128,15 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer should not fail !");
       }
       assertTrue(importer instanceof ProtobufImporter);
+
+      // Load an APIMetadata file.
+      File apiMetadata = new File("target/test-classes/io/github/microcks/util/metadata/hello-grpc-v1-metadata.yml");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(apiMetadata, null);
+      } catch (Throwable t) {
+         fail("Getting importer should not fail !");
+      }
+      assertTrue(importer instanceof MetadataImporter);
    }
 }

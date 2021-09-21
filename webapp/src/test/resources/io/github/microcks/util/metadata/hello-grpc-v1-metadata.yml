@@ -1,0 +1,22 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIMetadata
+metadata:
+  name: HelloService
+  version: v1
+  labels:
+    domain: greeting
+    status: stable
+    team: Team A
+operations:
+  'POST /greeting':
+    delay: 100
+    dispatcher: JSON_BODY
+    dispatcherRules: |-
+      {
+        "exp": "/firstname",
+        "operator": "equals",
+        "cases": {
+          "Laurent": "Laurent",
+          "default": "Philippe"
+        }
+      }
