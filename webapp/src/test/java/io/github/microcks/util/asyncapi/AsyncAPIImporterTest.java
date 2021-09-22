@@ -160,6 +160,52 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
+   public void testSimpleAsyncAPIImportYAMLWithExtensions() {
+      AsyncAPIImporter importer = null;
+      try {
+         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml", null);
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Account Service", service.getName());
+      assertEquals(ServiceType.EVENT, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      assertNotNull(service.getMetadata());
+      assertEquals("authentication", service.getMetadata().getLabels().get("domain"));
+      assertEquals("GA", service.getMetadata().getLabels().get("status"));
+      assertEquals("Team B", service.getMetadata().getLabels().get("team"));
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+
+         if ("SUBSCRIBE user/signedup".equals(operation.getName())) {
+            assertEquals("SUBSCRIBE", operation.getMethod());
+            assertEquals(30, operation.getDefaultDelay().longValue());
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   @Test
    public void testAsyncAPIImportGHMasterYAML() {
       AsyncAPIImporter importer = null;
       try {
