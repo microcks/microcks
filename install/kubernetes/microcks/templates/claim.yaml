@@ -14,6 +14,9 @@ spec:
   resources:
     requests:
       storage: {{ .Values.mongodb.volumeSize }}
+  {{- if hasKey .Values.mongodb "storageClassName" }}
+  storageClassName: {{ .Values.mongodb.storageClassName }}
+  {{- end }}
 {{- end }}
 {{- if and .Values.keycloak.install .Values.keycloak.persistent }}
 ---
@@ -31,4 +34,7 @@ spec:
   resources:
     requests:
       storage: {{ .Values.keycloak.volumeSize }}
+  {{- if hasKey .Values.keycloak "storageClassName" }}
+  storageClassName: {{ .Values.keycloak.storageClassName }}
+  {{- end }}
 {{- end }}
