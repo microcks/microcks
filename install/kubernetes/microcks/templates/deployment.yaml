@@ -81,6 +81,22 @@ spec:
             {{- else }}
             value: "{{ .Values.features.async.kafka.url }}"
             {{- end }}
+          {{- if eq .Values.features.async.kafka.install false }}
+            {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+          - name: KAFKA_TRUSTSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.features.async.kafka.authentication.truststoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-truststore"
+            {{- end }}
+            {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+          - name: KAFKA_KEYSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.features.async.kafka.authentication.keystoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-keystore"
+            {{- end }}
+          {{- end }}
         resources:
           {{- toYaml .Values.microcks.resources | nindent 10 }}
         livenessProbe:
@@ -108,6 +124,16 @@ spec:
             mountPath: "/deployments/config"
           - name: "{{ .Values.appName }}-grpc-certs"
             mountPath: "/deployments/config/grpc"
+          {{- if eq .Values.features.async.kafka.install false }}
+            {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+          - name: "{{ .Values.appName }}-kafka-truststore"
+            mountPath: "/deployments/config/kafka/truststore"
+            {{- end }}
+            {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+          - name: "{{ .Values.appName }}-kafka-keystore"
+            mountPath: "/deployments/config/kafka/keystore"
+            {{- end }}
+          {{- end }}
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-config"
@@ -116,6 +142,18 @@ spec:
         - name: "{{ .Values.appName }}-grpc-certs"
           secret:
             secretName: "{{ .Values.appName }}-microcks-grpc-secret"
+        {{- if eq .Values.features.async.kafka.install false }}
+          {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+        - name: "{{ .Values.appName }}-kafka-truststore"
+          secret:
+            secretName: "{{ .Values.features.async.kafka.authentication.truststoreSecretRef.secret }}"
+          {{- end }}
+          {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+        - name: "{{ .Values.appName }}-kafka-keystore"
+          secret:
+            secretName: "{{ .Values.features.async.kafka.authentication.keystoreSecretRef.secret }}"
+          {{- end }}
+        {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -490,6 +528,22 @@ spec:
         env:
           - name: QUARKUS_PROFILE
             value: kube
+          {{- if eq .Values.features.async.kafka.install false }}
+            {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+          - name: KAFKA_TRUSTSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.features.async.kafka.authentication.truststoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-truststore"
+            {{- end }}
+            {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+          - name: KAFKA_KEYSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.features.async.kafka.authentication.keystoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-keystore"
+            {{- end }}
+          {{- end }}
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -516,9 +570,31 @@ spec:
         volumeMounts:
           - name: "{{ .Values.appName }}-async-minion-config"
             mountPath: "/deployments/config"
+          {{- if eq .Values.features.async.kafka.install false }}
+            {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+          - name: "{{ .Values.appName }}-kafka-truststore"
+            mountPath: "/deployments/config/kafka/truststore"
+            {{- end }}
+            {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+          - name: "{{ .Values.appName }}-kafka-keystore"
+            mountPath: "/deployments/config/kafka/keystore"
+            {{- end }}
+          {{- end }}
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-async-minion-config"
           configMap:
             name: "{{ .Values.appName }}-async-minion-config"
+        {{- if eq .Values.features.async.kafka.install false }}
+          {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+        - name: "{{ .Values.appName }}-kafka-truststore"
+          secret:
+            secretName: "{{ .Values.features.async.kafka.authentication.truststoreSecretRef.secret }}"
+          {{- end }}
+          {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+        - name: "{{ .Values.appName }}-kafka-keystore"
+          secret:
+            secretName: "{{ .Values.features.async.kafka.authentication.keystoreSecretRef.secret }}"
+          {{- end }}
+        {{- end }}
 {{- end }}

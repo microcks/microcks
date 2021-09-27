@@ -61,8 +61,8 @@ keycloak:
   volumeSize: 1Gi
   postgresImage: centos/postgresql-95-centos7:latest
   username: userP
-  # Unless you uncomment following line, admin password will be randoMly generated.
-  # Beware that in case of update, new value will be generated and
+  # Unless you uncomment following line, admin password will be randomly generated.
+  # Beware that in case of update, new value will be generated and overwrite existing one.
   #password: 123
 
   serviceAccount: microcks-serviceaccount
@@ -129,6 +129,30 @@ features:
         confluent: true
         username: microcks
         credentialsSource: USER_INFO
+
+      # If you choose not to install a Kafka broker and reuse on pre-existing,
+      # you may need to set some authentication parameters.
+      authentication:
+        # If not 'none', we support 'SSL' for mutual TLS and 'SASL_SSL' for SASL over TLS.
+        type: none #SSL #SASL_SSL
+        # For TLS transport, you'll always need a truststore to hold your cluster certificate.
+        # You have to setup a truststore type and a secret reference for retrieving content and password.
+        truststoreType: PKCS12
+        truststoreSecretRef:
+          secret: kafka-cluster-ca-cert
+          storeKey: ca.p12
+          passwordKey: ca.password
+        # For mutual TLS authentication, you'll also need a keystore to hold your user private key.
+        # You have to setup a keystore type and a secret reference for retrieving content and password.
+        keystoreType: PKCS12
+        keystoreSecretRef:
+          secret: mtls-user
+          storeKey: user.p12
+          passwordKey: user.password
+        # For SASL authentication, you'll have to specify an additional authentication mechanism
+        # as well as a JAAS configuration line with login module, username and password.
+        #saslMechanism: SCRAM-SHA-512
+        #saslJaasConfig: org.apache.kafka.common.security.scram.ScramLoginModule required username="scram-user" password="tDtDCT3pYKE5";
 
     # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
     mqtt:
