@@ -45,13 +45,16 @@ public class MetadataExtractor {
    }
 
    /**
-    * Complete an Operation object woth extracted properties from JsonNode.
+    * Complete an Operation object with extracted properties from JsonNode.
     * @param operation The object to complete
     * @param node Node representing an operation node
     */
    public static void completeOperationProperties(Operation operation, JsonNode node) {
       if (node.has("delay")) {
          operation.setDefaultDelay(node.path("delay").asLong(0));
+      }
+      if (node.has("frequency")) {
+         operation.setDefaultDelay(node.path("frequency").asLong());
       }
       if (node.has("dispatcher")) {
          operation.setDispatcher(node.path("dispatcher").asText());
