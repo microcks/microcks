@@ -182,4 +182,8 @@ features:
 
   repositoryTenancy:
     enabled: false
-    artifactImportAllowedRoles: admin,manager
+    artifactImportAllowedRoles: admin,manager,manager-any
+
+  microcksHub:
+    enabled: false
+    allowedRoles: admin,manager,manager-any

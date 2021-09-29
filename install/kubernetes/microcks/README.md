@@ -180,6 +180,7 @@ The table below describes all the fields of the `values.yaml`, providing informa
 | `mongodb`     | `storageClassName` | **Optional**. The cluster storage class to use for persistent volume claim. If not specified, we rely on cluster default storage class. |
 | `features`    | `repositoryFilter` | **Optional**. Feature allowing to filter API and services on main page. Must be explicitly `enabled`. See [Organizing repository](https://microcks.io/documentation/using/advanced/organizing/#master-level-filter) for more information. |
 | `features`    | `repositoryTenancy` | **Optional**. Feature allowing to segment and delegate API and services management according the `repositoryFilter` master criteria. Must be explicitly `enabled`. See [Organizing repository](https://microcks.io/documentation/using/advanced/organizing/#rbac-security-segmentation) for more information. |
+| `features`    | `microcksHub`      | **Optional**. Feature allowing to directly import mocks coming from `hub.microcks.io` marketplace. Must be explicitly `enabled`. See [Micorkcs Hub](https://microcks.io/documentation/using/advanced/microcks-hub) for more information. |
 | `features`    | `async.enabled`    | **Optional**. Feature allowing to mock an tests asynchronous APIs through Events. Enabling it requires an active message broker. Default is `false`. |
 | `features`    | `async.image`      | **Optional**. The reference of container image used for `async-minion` component. Chart comes with its default version. |
 

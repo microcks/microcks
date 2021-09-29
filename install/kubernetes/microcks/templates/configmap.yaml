@@ -8,6 +8,10 @@ metadata:
     group: microcks
 data:
   features.properties: |-
+    features.feature.microcks-hub.enabled={{ .Values.features.microcksHub.enabled }}
+    features.feature.microcks-hub.endpoint=https://hub.microcks.io/api
+    features.feature.microcks-hub.allowed-roles={{ .Values.features.microcksHub.allowedRoles }}
+
     features.feature.repository-filter.enabled={{ .Values.features.repositoryFilter.enabled }}
     features.feature.repository-filter.label-key={{ .Values.features.repositoryFilter.labelKey }}
     features.feature.repository-filter.label-label={{ .Values.features.repositoryFilter.labelLabel }}
