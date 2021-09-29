@@ -1,0 +1,58 @@
+asyncapi: '2.1.0'
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User events API
+  version: 0.1.0
+  description: Sample AsyncAPI for user related events
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json
+channels:
+  user/events:
+    subscribe:
+      message:
+        anyOf:
+          - $ref: '#/components/messages/UserSignedUp'
+          - $ref: '#/components/messages/UserResign'
+components:
+  messages:
+    UserSignedUp:
+      payload:
+        type: object
+        properties:
+          displayName:
+            type: string
+            description: Name of the user
+          email:
+            type: string
+            format: email
+            description: Email of the user
+      examples:
+        - name: laurent
+          payload:
+            displayName: Laurent Broudoux
+            email: laurent@microcks.io
+        - name: random
+          payload:
+            displayName: '{{randomFullName()}}'
+            email: '{{randomEmail()}}'
+    UserResign:
+      payload:
+        type: object
+        properties:
+          displayName:
+            type: string
+            description: Name of the user
+          reason:
+            type: string
+            description: Reason of resignation
+      examples:
+        - name: john
+          payload:
+            displayName: John Doe
+            resignation: Employee leaves

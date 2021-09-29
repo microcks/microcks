@@ -18,11 +18,18 @@
  */
 package io.github.microcks.util.asyncapi;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.Binding;
+import io.github.microcks.domain.BindingType;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Metadata;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
@@ -32,6 +39,12 @@ import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +73,10 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(AsyncAPIImporter.class);
+
+   private static final String[] MULTI_STRUCTURES = {
+         "allOf", "anyOf", "oneOf"
+   };
 
    private boolean isYaml = true;
    private JsonNode spec;
@@ -255,47 +272,48 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
             if (operation.getName().equals(verbName.toUpperCase() + " " + channelName.trim())) {
                JsonNode messageBody = verb.getValue().path("message");
 
-               // If it's a $ref, then navigate to it.
-               messageBody = followRefIfAny(messageBody);
+               // If it's a $ref or multi-structure (oneOf, anyOf, allOf), then navigate to them.
+               List<JsonNode> messageBodies = followRefsIfAny(messageBody);
 
-               // Get message content type.
-               String contentType = defaultContentType;
-               if (messageBody.has("contentType")) {
-                  contentType = messageBody.path("contentType").asText();
-               }
-               // No need to go further if no examples.
-               if (messageBody.has("examples")) {
-                  Iterator<JsonNode> examples = messageBody.path("examples").elements();
-                  int exampleIndex = 0;
-                  while (examples.hasNext()) {
-                     JsonNode exampleNode = examples.next();
+               for (JsonNode extractedMsgBody : messageBodies) {
+                  // Get message content type.
+                  String contentType = defaultContentType;
+                  if (extractedMsgBody.has("contentType")) {
+                     contentType = extractedMsgBody.path("contentType").asText();
+                  }
+                  // No need to go further if no examples.
+                  if (extractedMsgBody.has("examples")) {
+                     Iterator<JsonNode> examples = extractedMsgBody.path("examples").elements();
+                     int exampleIndex = 0;
+                     while (examples.hasNext()) {
+                        JsonNode exampleNode = examples.next();
 
-                     EventMessage eventMessage = null;
-                     if (exampleNode.has("name")) {
-                        // As of AsyncAPI 2.1.0 () we can now have a 'name' property for examples!
-                        eventMessage = extractFromAsyncAPI21Example(contentType, exampleNode);
-                     } else if (exampleNode.has("payload")) {
-                        // As of https://github.com/microcks/microcks/issues/385, we should support the restriction
-                        // coming from AsyncAPI GItHub master revision and associated tooling...
-                        eventMessage = extractFromAsyncAPIExample(contentType, exampleNode,
-                              channelName.trim() + "-" + exampleIndex);
-                     } else {
-                        eventMessage = extractFromMicrocksExample(contentType, exampleNode);
-                     }
-                     // If import succeed, deal with the dispatching criteria stuffs and
-                     // add this event message as a valid event in results exchanges.
-                     if (eventMessage != null) {
-                        if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
-                           String resourcePathPattern = channelName;
-                           Map<String, String> parts = pathParametersByExample.get(eventMessage.getName());
-                           String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
-                           operation.addResourcePath(resourcePath);
-                           eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(parts));
+                        EventMessage eventMessage = null;
+                        if (exampleNode.has("name")) {
+                           // As of AsyncAPI 2.1.0 () we can now have a 'name' property for examples!
+                           eventMessage = extractFromAsyncAPI21Example(contentType, exampleNode);
+                        } else if (exampleNode.has("payload")) {
+                           // As of https://github.com/microcks/microcks/issues/385, we should support the restriction
+                           // coming from AsyncAPI GItHub master revision and associated tooling...
+                           eventMessage = extractFromAsyncAPIExample(contentType, exampleNode, channelName.trim() + "-" + exampleIndex);
+                        } else {
+                           eventMessage = extractFromMicrocksExample(contentType, exampleNode);
                         }
+                        // If import succeed, deal with the dispatching criteria stuffs and
+                        // add this event message as a valid event in results exchanges.
+                        if (eventMessage != null) {
+                           if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+                              String resourcePathPattern = channelName;
+                              Map<String, String> parts = pathParametersByExample.get(eventMessage.getName());
+                              String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
+                              operation.addResourcePath(resourcePath);
+                              eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(parts));
+                           }
 
-                        result.add(new UnidirectionalEvent(eventMessage));
+                           result.add(new UnidirectionalEvent(eventMessage));
+                        }
+                        exampleIndex++;
                      }
-                     exampleIndex++;
                   }
                }
             }
@@ -304,9 +322,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       return result;
    }
 
-   /**
-    * Extract the list of operations from Specification.
-    */
+   /** Extract the list of operations from Specification. */
    private List<Operation> extractOperations() throws MockRepositoryImportException {
       List<Operation> results = new ArrayList<>();
 
@@ -425,9 +441,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       return results;
    }
 
-   /**
-    * Extract example using the AsyncAPI 2.1 new 'name' property.
-    */
+   /** Extract example using the AsyncAPI 2.1 new 'name' property. */
    private EventMessage extractFromAsyncAPI21Example(String contentType, JsonNode exampleNode) {
       // Retrieve name & payload value.
       String exampleName = exampleNode.path("name").asText();
@@ -448,9 +462,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       return eventMessage;
    }
 
-   /**
-    * Extract example using the AsyncAPI master branch restrictions.
-    */
+   /** Extract example using the AsyncAPI master branch restrictions. */
    private EventMessage extractFromAsyncAPIExample(String contentType, JsonNode exampleNode, String exampleName) {
       // Retrieve payload value.
       String exampleValue = getExamplePayload(exampleNode);
@@ -470,9 +482,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       return eventMessage;
    }
 
-   /**
-    * Extract example using the Microcks (and Apicurio) extended notation.
-    */
+   /** Extract example using the Microcks (and Apicurio) extended notation. */
    private EventMessage extractFromMicrocksExample(String contentType, JsonNode exampleNode) {
       EventMessage eventMessage = null;
 
@@ -628,6 +638,32 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          return spec.at(ref.substring(1));
       }
       return referencableNode;
+   }
+
+   /** */
+   private List<JsonNode> followRefsIfAny(JsonNode referencableNode) {
+      List<JsonNode> results = new ArrayList<>();
+      if (referencableNode.has("$ref")) {
+         // Extract single reference.
+         String ref = referencableNode.path("$ref").asText();
+         results.add(spec.at(ref.substring(1)));
+      } else {
+         // Check for multi-structures.
+         for (String structure : MULTI_STRUCTURES) {
+            if (referencableNode.has(structure) && referencableNode.path(structure).isArray()) {
+               ArrayNode arrayNode = (ArrayNode) referencableNode.path(structure);
+               for (int i=0; i<arrayNode.size(); i++) {
+                  JsonNode structureNode = arrayNode.get(i);
+                  results.add(followRefIfAny(structureNode));
+               }
+            }
+         }
+      }
+      // If no reference found, put the node itself.
+      if (results.isEmpty()) {
+         results.add(referencableNode);
+      }
+      return results;
    }
 
    /** */
