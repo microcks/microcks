@@ -21,7 +21,7 @@ import { ActivatedRoute, Router, ParamMap } from "@angular/router";
 
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 
-import { Observable } from 'rxjs';
+import { Observable, concat } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { HubService } from '../../../../services/hub.service';
@@ -100,32 +100,32 @@ export class HubAPIVersionPageComponent implements OnInit {
   }
 
   installByDirectUpload(): void {
-    this.notificationService.message(NotificationType.INFO,
-      this.resolvedAPIVersion.name, "Starting install in Microcks. Hold on...", false, null, null);
-    for (let i=0; this.resolvedAPIVersion.contracts.length; i++) {
-      this.packagesSvc.importAPIVersionContractContent(this.resolvedAPIVersion.contracts[i].url).subscribe(
-        {
-          next: res => {
-            console.log("Retrieved content: " + res);
-          },
-          error: err => {
-            if (err.status == 201) {
-              this.discoveredService = err.error.text;
-              this.notificationService.message(NotificationType.SUCCESS,
-                this.discoveredService, "Import and discovery of service has been done", false, null, null);
-            } else {
-              this.notificationService.message(NotificationType.DANGER,
-                this.resolvedAPIVersion.name, "Importation error on server side (" + err.error.text + ")", false, null, null);
-            }
-          },
-          complete: () => console.log('Observer got a complete notification'),
-        }
-      );
+    this.notificationService.message(NotificationType.INFO, this.resolvedAPIVersion.name, "Starting install in Microcks. Hold on...", false, null, null);
+
+    let uploadBatch = [];
+    for (let i=0; i<this.resolvedAPIVersion.contracts.length; i++) {
+      uploadBatch.push(this.packagesSvc.importAPIVersionContractContent(this.resolvedAPIVersion.contracts[i].url, (i == 0)));
     }
+
+    // Concat all the observables to run them in sequence.
+    concat(...uploadBatch).subscribe(
+      {
+        next: res => {
+          this.discoveredService = res.name;
+          this.notificationService.message(NotificationType.SUCCESS,
+            this.discoveredService, "Import and discovery of service has been done", false, null, null);
+        },
+        error: err => {
+          this.notificationService.message(NotificationType.DANGER,
+            this.resolvedAPIVersion.name, "Importation error on server side (" + err.error.text + ")", false, null, null);
+        },
+        complete: () => console.log('Observer got a complete notification'),
+      }
+    );
   }
 
   installByImporterCreation(): void {
-    for (let i=0; this.resolvedAPIVersion.contracts.length; i++) {
+    for (let i=0; i<this.resolvedAPIVersion.contracts.length; i++) {
       var job = new ImportJob();
       job.name = this.resolvedAPIVersion.id + " - v. " + this.resolvedAPIVersion.version + " [" + i + "]";
       job.repositoryUrl = this.resolvedAPIVersion.contracts[i].url;

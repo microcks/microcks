@@ -54,10 +54,10 @@ export class HubService {
     return this.http.get<APIVersion>(this.rootUrl + '/mocks/' + packageName + "/apis/" + apiVersionName);
   }
 
-  public importAPIVersionContractContent(contractUrl: string): Observable<any> {
+  public importAPIVersionContractContent(contractUrl: string, mainArtifact: boolean = true): Observable<any> {
     this.ensureRootUrl();
-    const options = { params: new HttpParams().set('url', contractUrl) };
-    return this.http.post<any>('/api/artifact/download', null, options);
+    const options = { params: new HttpParams().set('url', contractUrl).set('mainArtifact', String(mainArtifact)) };
+    return this.http.post<any>('/api/artifact/download', {}, options);
   }
 
   private ensureRootUrl(): void {
