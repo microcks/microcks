@@ -111,7 +111,7 @@ export class HubAPIVersionPageComponent implements OnInit {
     concat(...uploadBatch).subscribe(
       {
         next: res => {
-          this.discoveredService = res.name;
+          this.discoveredService = res['name'];
           this.notificationService.message(NotificationType.SUCCESS,
             this.discoveredService, "Import and discovery of service has been done", false, null, null);
         },
