@@ -43,7 +43,7 @@
           </span>
         </div>
       </div>
-      <div class="control-group" *ngIf="service.type === 'EVENT' && service.operations.length > 1">
+      <div class="control-group" *ngIf="service.type === 'EVENT'">
         <label class="control-label required-pf" for="filteredOperation">Operation</label>
         <div class="controls">
           <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
