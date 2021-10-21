@@ -347,8 +347,12 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                   } else if (urlHasParts(pathName)) {
                      operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName));
                      operation.setDispatcher(DispatchStyles.URI_PARTS);
+                  } else {
+                     operation.addResourcePath(pathName);
                   }
                } else {
+                  // If dispatcher has been forced via Metadata, we should still put a generic resourcePath
+                  // (maybe containing {} parts) to later force operation matching at the mock controller level.
                   operation.addResourcePath(pathName);
                }
 

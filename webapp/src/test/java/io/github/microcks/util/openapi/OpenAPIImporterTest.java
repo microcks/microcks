@@ -111,6 +111,123 @@ public class OpenAPIImporterTest {
    }
 
    @Test
+   public void testApicurioPetstoreOpenAPI() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json");
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("PetStore API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      // Check that operations and input/output have been found.
+      assertEquals(4, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+
+         if ("GET /pets".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals("tags && limit", operation.getDispatcherRules());
+
+         } else if ("GET /pets/{id}".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+            assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+            assertEquals("id", operation.getDispatcherRules());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals("/pets/1", operation.getResourcePaths().get(0));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("zaza", request.getName());
+                  assertEquals("zaza", response.getName());
+                  assertEquals("/id=1", response.getDispatchCriteria());
+                  assertEquals("200", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
+            }
+         } else if ("POST /pets".equals(operation.getName())) {
+            assertEquals("POST", operation.getMethod());
+            assertNull(operation.getDispatcher());
+            assertNull(operation.getDispatcherRules());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals("/pets", operation.getResourcePaths().get(0));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertEquals("tigresse", request.getName());
+                  assertEquals("tigresse", response.getName());
+                  assertNull(response.getDispatchCriteria());
+                  assertEquals("201", response.getStatus());
+                  assertEquals("application/json", response.getMediaType());
+                  assertNotNull(response.getContent());
+               } else {
+                  fail("Exchange has the wrong type. Expecting RequestResponsePair");
+               }
+            }
+         } else if ("DELETE /pets/{id}".equals(operation.getName())) {
+            assertEquals("DELETE", operation.getMethod());
+            assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+            assertEquals("id", operation.getDispatcherRules());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(0, exchanges.size());
+            assertNull(operation.getResourcePaths());
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   @Test
    public void testSimpleOpenAPIImportYAMLNoDashesWithJSON() {
       OpenAPIImporter importer = null;
       try {
