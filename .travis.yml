@@ -3,7 +3,7 @@ sudo: required
 language: java
 jdk:
   - openjdk11
-node_js: "8.11.3"
+node_js: "16.10.0"
 
 services:
   - docker
@@ -12,25 +12,19 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "master" ]; then
     cd webapp/;
     mvn -B -q -Pprod -DskipTests package docker:build;
-    docker tag microcks/microcks microcks/microcks:latest;
-    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker push microcks/microcks:latest;
-    docker tag microcks/microcks:latest quay.io/microcks/microcks:latest;
+    docker tag microcks/microcks quay.io/microcks/microcks:master;
     docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
-    docker push quay.io/microcks/microcks:latest;
+    docker push quay.io/microcks/microcks:master;
     cd ../minions/async/;
     mvn -B -q -DskipTests package;
-    docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:latest .;
+    docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:master .;
     docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
     docker push quay.io/microcks/microcks-async-minion:latest;
     fi
-  - if [ "$TRAVIS_BRANCH" == "1.0.x" ]; then
+  - if [ "$TRAVIS_BRANCH" == "1.5.x" ]; then
     cd webapp/;
     mvn -B -q -Pprod -DskipTests package docker:build;
-    docker tag microcks/microcks microcks/microcks:nightly;
-    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker push microcks/microcks:nightly;
-    docker tag microcks/microcks:nightly quay.io/microcks/microcks:nightly;
+    docker tag microcks/microcks quay.io/microcks/microcks:nightly;
     docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
     docker push quay.io/microcks/microcks:nightly;
     cd ../minions/async/;
@@ -42,10 +36,7 @@ after_success:
   - if [ "$TRAVIS_BRANCH" == "$TRAVIS_TAG" ]; then
     cd webapp/;
     mvn -B -q -Pprod -DskipTests package docker:build;
-    docker tag microcks/microcks microcks/microcks:$TRAVIS_TAG;
-    docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD";
-    docker push microcks/microcks:$TRAVIS_TAG;
-    docker tag microcks/microcks:$TRAVIS_TAG quay.io/microcks/microcks:$TRAVIS_TAG;
+    docker tag microcks/microcks quay.io/microcks/microcks:$TRAVIS_TAG;
     docker login -u "$QUAY_USERNAME" -p "$QUAY_PASSWORD" quay.io;
     docker push quay.io/microcks/microcks:$TRAVIS_TAG;
     cd ../minions/async/;
