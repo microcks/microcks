@@ -302,7 +302,7 @@
     </repository>
     <repository>
       <id>soapui</id>
-      <url>http://smartbearsoftware.com/repository/maven2</url>
+      <url>https://rapi.tools.ops.smartbear.io/nexus/content/groups/public</url>
     </repository>
   </repositories>
   <pluginRepositories>
