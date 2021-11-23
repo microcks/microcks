@@ -290,9 +290,15 @@
   </build>
 
   <repositories>
+    <!--
     <repository>
       <id>spring-releases</id>
       <url>https://repo.spring.io/libs-release</url>
+    </repository>
+    -->
+    <repository>
+      <id>central</id>
+      <url>https://repo.maven.apache.org/maven2</url>
     </repository>
     <repository>
       <id>soapui</id>
@@ -300,10 +306,12 @@
     </repository>
   </repositories>
   <pluginRepositories>
+    <!--
     <pluginRepository>
       <id>spring-releases</id>
       <url>https://repo.spring.io/libs-release</url>
     </pluginRepository>
+    -->
   </pluginRepositories>
 
   <profiles>

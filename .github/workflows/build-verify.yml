@@ -1,4 +1,4 @@
-name: Build and verify workflow
+name: Build and verify
 on:
   push:
     paths-ignore:
@@ -28,12 +28,15 @@ jobs:
           architecture: x64
 
       - name: Build Java components
-        run: mvn clean install
+        run: mvn -B -q clean install
 
       - name: Build Angular app
         run: |
           set -x
           cd ${{github.workspace}}/webapp
-          mvn -Pprod -DskipTests package
+          mvn -B -q -Pprod -DskipTests package
+
+      - name: Check Javadoc completion
+        run: mvn javadoc:javadoc
 
 
