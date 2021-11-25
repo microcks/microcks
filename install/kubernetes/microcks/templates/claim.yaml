@@ -8,6 +8,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: mongodb
     group: microcks
+  {{- with .Values.mongodb.pvcAnnotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -28,6 +32,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak-postgresql
     group: microcks
+  {{- with .Values.keycloak.pvcAnnotations }}
+  annotations:
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   accessModes:
     - ReadWriteOnce
