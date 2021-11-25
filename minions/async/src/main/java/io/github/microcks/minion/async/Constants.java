@@ -31,5 +31,5 @@ public class Constants {
    public static final String REGISTRY_AVRO_ENCODING = "REGISTRY";
 
    /** Supported content-types representing Avro binary encoded content. */
-   public static final List<String> AVRO_BINARY_CONTENT_TYPES = Arrays.asList("avro/binary", "application/octet-stream");
+   public static final List<String> AVRO_BINARY_CONTENT_TYPES = Arrays.asList("avro/binary", "application/octet-stream", "application/avro");
 }
