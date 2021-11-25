@@ -30,7 +30,7 @@ jobs:
           cache: maven
 
       - name: Build Java components
-        run: mvn -B clean verify
+        run: mvn -B clean install
 
       - name: Build Angular app
         run: |
