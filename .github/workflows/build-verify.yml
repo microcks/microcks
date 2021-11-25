@@ -1,4 +1,4 @@
-name: Build and verify
+name: Build, verify and package container images
 on:
   push:
     paths-ignore:
@@ -14,8 +14,9 @@ on:
       - 'README*'
 
 jobs:
-  build:
+  build-verify-package:
     runs-on: ubuntu-latest
+    environment: Build
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
@@ -26,17 +27,49 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
           architecture: x64
+          cache: maven
 
       - name: Build Java components
-        run: mvn -B -q clean install
+        run: mvn -B clean verify
 
       - name: Build Angular app
         run: |
-          set -x
           cd ${{github.workspace}}/webapp
-          mvn -B -q -Pprod -DskipTests package
+          mvn -B -Pprod -DskipTests package
 
-      - name: Check Javadoc completion
-        run: mvn javadoc:javadoc
+      - name: Verify Javadoc completion
+        run: mvn -B javadoc:javadoc
 
+      - name: Set environment for branch
+        run: |
+          set -x
+          if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+            echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == 'refs/heads/1.5.x' ]]; then
+            echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+          else
+            echo "PACKAGE_IMAGE=false" >> "$GITHUB_ENV"
+          fi
 
+      - name: Package container image for webapp
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/webapp
+          mvn -B -q -Pprod -DskipTests package docker:build;
+          docker tag microcks/microcks quay.io/microcks/microcks:$IMAGE_TAG
+
+      - name: Package container image for async minion
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/minions/async
+          mvn -B -q -DskipTests package
+          docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
+
+      - name: Login and push to Quay.io Registry
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+          docker push quay.io/microcks/microcks:$IMAGE_TAG
+          docker push quay.io/microcks/microcks-async-minion:$IMAGE_TAG
