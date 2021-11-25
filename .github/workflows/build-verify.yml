@@ -1,4 +1,4 @@
-name: Build, verify and package container images
+name: build-verify-package
 on:
   push:
     paths-ignore:
@@ -36,6 +36,11 @@ jobs:
         run: |
           cd ${{github.workspace}}/webapp
           mvn -B -Pprod -DskipTests package
+
+      - name: Run Integration tests
+        run: |
+          cd ${{github.workspace}}/webapp
+          mvn -Pit test
 
       - name: Verify Javadoc completion
         run: mvn -B javadoc:javadoc
