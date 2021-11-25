@@ -161,6 +161,7 @@ The table below describes all the fields of the `values.yaml`, providing informa
 | `keycloak`    | `ingressSecretRef` | **Optional**. The name of a TLS Secret for securing `Ingress`. If missing, self-signed certificate is generated. |
 | `keycloak`    | `ingressAnnotations`  | **Optional**. A map of annotations that will be added to the `Ingress` for Keycloak pod. If these annotations are triggering a Certificate generation (for example through [cert-mamanger.io](https://cert-manager.io/)). The `generateCert` property should be set to `false`. |
 | `keycloak`    | `generateCert`     | **Optional**. Whether to generate self-signed certificate or not if no valid `ingressSecretRef` provided. Default is `true` |  
+| `keycloak`    | `pvcAnnotations`   | **Optional**. A map of annotations that will be added to the `pvc` for the Keycloak pod. |
 | `keycloak`    | `image`            | **Optional**. The reference of container image used. Chart comes with its default version. |
 | `keycloak`    | `serviceType`      | **Optional**. The service type used. Defaults to `ClusterIP`. |
 | `keycloak`    | `resources`        | **Optional**. Some resources constraints to apply on Keycloak pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container). |
@@ -174,6 +175,7 @@ The table below describes all the fields of the `values.yaml`, providing informa
 | `mongodb`     | `uri`              | **Optional**. MongoDB URI in case you're reusing existing MongoDB instance. Mandatory if `install` is `false`. |
 | `mongodb`     | `database`         | **Optional**. MongoDB database name in case you're reusing existing MongoDB instance. Used if `install` is `false`. Default to `appName`. |
 | `mongodb`     | `secretRef`        | **Optional**. Reference of a Secret containing credentials for connecting a provided MongoDB instance. Mandatory if `install` is `false`. |
+| `mongodb`     | `pvcAnnotations`   | **Optional**. A map of annotations that will be added to the `pvc` for the MongoDB pod. |
 | `mongodb`     | `resources`        | **Optional**. Some resources constraints to apply on MongoDB pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container). |
 | `mongodb`     | `persistent`       | **Optional**. Flag for MongoDB persistence. Default is `true`. Set to `false` if you want an ephemeral MongoDB installation. |
 | `mongodb`     | `volumeSize`       | **Optional**. Size of persistent volume claim for MongoDB. Default is `2Gi`. Not used if not persistent install asked. |
@@ -237,7 +239,7 @@ You may want to launch custom installation with such a command:
     --set keycloak.url=keycloak-microcks.apps.example.com
  ```
 
- or - with included Kafka for async mocking turned on:
+or - with included Kafka for async mocking turned on:
 
  ```console
  $ helm install microcks ./microcks --namespace=microcks \
