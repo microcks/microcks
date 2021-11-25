@@ -1,5 +1,7 @@
 import { Component, OnInit, TemplateRef, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
+import { Router, NavigationStart } from '@angular/router';
 import { Observable } from 'rxjs';
+import { filter } from 'rxjs/operators';
 
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
@@ -29,7 +31,7 @@ export class VerticalNavComponent implements OnInit {
   modalRef: BsModalRef;
 
   constructor(protected authService: IAuthenticationService, private modalService: BsModalService,
-    private versionInfoSvc: VersionInfoService, private config: ConfigService) {
+    private versionInfoSvc: VersionInfoService, private config: ConfigService, private router: Router) {
   }
 
   ngOnInit() {
@@ -48,6 +50,17 @@ export class VerticalNavComponent implements OnInit {
             { name: 'User Name', value: currentUser.name } ]
         } as AboutModalConfig;
       });
+    });
+
+    this.router.events.pipe(filter(event => event instanceof NavigationStart)).subscribe((event: NavigationStart) => {
+      // Do something with the NavigationStart event object.
+      console.log("Navigation start event: " + JSON.stringify(event));
+      const navigationEvent = { type: 'navigationEvent', url: event.url };
+      try {
+        window.parent.postMessage(JSON.stringify(navigationEvent), '*');
+      } catch (error) {
+        console.warn("Error while posting navigationEvent to parent", error);
+      }
     });
   }
 
