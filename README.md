@@ -1,6 +1,6 @@
 <img src="./microcks-banner.png" width="600"> 
 
-[![Travis (.org)](https://img.shields.io/travis/microcks/microcks?logo=travis&style=for-the-badge)](https://travis-ci.org/microcks/microcks)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/microcks/microcks/Build,%20verify%20and%20package%20container%20images/1.5.x?logo=github&style=for-the-badge)
 [![Container](https://img.shields.io/badge/dynamic/json?color=blueviolet&logo=docker&style=for-the-badge&label=Quay.io&query=tags[0].name&url=https://quay.io/api/v1/repository/microcks/microcks/tag/?limit=10&page=1&onlyActiveTags=true)](https://quay.io/repository/microcks/microcks?tab=tags)
 [![Version](https://img.shields.io/maven-central/v/io.github.microcks/microcks?color=blue&style=for-the-badge)]((https://search.maven.org/artifact/io.github.microcks/microcks))
 [![License](https://img.shields.io/github/license/microcks/microcks?style=for-the-badge&logo=apache)](https://www.apache.org/licenses/LICENSE-2.0)
@@ -19,7 +19,7 @@ It also reuses these assets for running compliance and non-regression tests agai
 
 ## Build Status
 
-Current development version is `1.5.0-SNAPSHOT`. [![Travis (.com)](https://img.shields.io/travis/microcks/microcks?logo=travis&style=for-the-badge)](https://travis-ci.com/microcks/microcks?branch=master)
+Current development version is `1.5.0-SNAPSHOT`. [![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/microcks/microcks/Build,%20verify%20and%20package%20container%20images/1.5.x?logo=github&style=for-the-badge)
 
 ## How to build Microcks
 
