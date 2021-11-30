@@ -27,6 +27,8 @@ let DEFAULT_CONFIG: any = {
   }
 };
 
+let ANONYMOUS_AUTH_TYPE: string = 'anonymous';
+
 /**
  * A base service holding configuration of Microcks App.
  */
@@ -44,6 +46,14 @@ export class ConfigService {
     } else {
       console.info("[ConfigService] App config not found!");
       this.config = DEFAULT_CONFIG;
+
+      // Check Keycloak realm configuration.
+      let keycloak = w["keycloak"];
+      console.log("[ConfigService] w['keycloak']: " + JSON.stringify(w["keycloak"]));
+      if (!keycloak || !keycloak.realm) {
+        console.info("[ConfigService] No Keycloak realm found. Switching to anonymous auth type.");
+        this.config.auth.type = ANONYMOUS_AUTH_TYPE;
+      }
     }
   }
 

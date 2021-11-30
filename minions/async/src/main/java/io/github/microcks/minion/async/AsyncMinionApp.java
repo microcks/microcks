@@ -97,8 +97,16 @@ public class AsyncMinionApp {
 
       try {
          // First retrieve an authentication token before fetching async messages to publish.
-         String oauthToken = keycloakConnector.connectAndGetOAuthToken(keycloakEndpoint);
-         logger.info("Authentication to Keycloak server succeed!");
+         String oauthToken;
+         if (config.isEnabled()) {
+            // We've got a full Keycloak config, attempt an authent.
+            oauthToken = keycloakConnector.connectAndGetOAuthToken(keycloakEndpoint);
+            logger.info("Authentication to Keycloak server succeed!");
+         } else {
+            // No realm config, probably a dev mode - use a fake token.
+            oauthToken = "<anonymous-admin-token>";
+            logger.info("Keycloak protection is not enabled, using a fake token");
+         }
 
          int page = 0;
          boolean fetchServices = true;

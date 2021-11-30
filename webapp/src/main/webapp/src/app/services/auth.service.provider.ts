@@ -19,6 +19,7 @@
 import { IAuthenticationService } from "./auth.service";
 import { ConfigService } from "./config.service";
 import { KeycloakAuthenticationService } from "./auth-keycloak.service";
+import { AnonymousAuthenticationService } from "./auth-anonymous.service";
 import { HttpClient } from "@angular/common/http";
 
 
@@ -27,6 +28,9 @@ export function AuthenticationServiceFactory(http: HttpClient, config: ConfigSer
   if (config.authType() === "keycloakjs") {
     console.info("[AuthenticationServiceFactory] Creating keycloak.js auth service.");
     return new KeycloakAuthenticationService(http, config);
+  } else if (config.authType() === "anonymous") {
+    console.info("[AuthenticationServiceFactory] Creating Anonymous auth service.");
+    return new AnonymousAuthenticationService(http, config);
   } else {
     console.error("[AuthenticationServiceFactory] Unsupported auth type: %s", config.authType());
     return null;

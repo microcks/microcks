@@ -39,6 +39,8 @@ public class KeycloakConfigController {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(KeycloakConfigController.class);
 
+   @Value("${keycloak.enabled}")
+   private final Boolean keycloakEnabled = true;
 
    @Value("${sso.public-url}")
    private final String keycloakServerUrl = null;
@@ -48,7 +50,7 @@ public class KeycloakConfigController {
 
    @RequestMapping(value = "/config", method = RequestMethod.GET)
    public ResponseEntity<?> getConfig() {
-      final Config config = new Config(keycloakRealmName, keycloakServerUrl);
+      final Config config = new Config(keycloakEnabled, keycloakRealmName, keycloakServerUrl);
 
       log.debug("Returning '{}' realm config, for {}", keycloakRealmName, keycloakServerUrl);
 
@@ -57,6 +59,8 @@ public class KeycloakConfigController {
 
 
    private class Config{
+
+      private boolean enabled = true;
 
       private String realm = "microcks";
 
@@ -72,13 +76,18 @@ public class KeycloakConfigController {
       private final String resource = "microcks-app-js";
 
 
-      public Config(String realmName, String authServerUrl) {
+      public Config(boolean enabled, String realmName, String authServerUrl) {
+         this.enabled = enabled;
          if (realmName != null && !realm.isEmpty()) {
             this.realm = realmName;
          }
          if (authServerUrl != null && !authServerUrl.isEmpty()) {
             this.authServerUrl = authServerUrl;
          }
+      }
+
+      public boolean isEnabled() {
+         return enabled;
       }
 
       public String getRealm() {

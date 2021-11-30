@@ -26,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class KeycloakConfig {
 
+   private boolean enabled = true;
+
    private String realm;
 
    @JsonProperty("auth-server-url")
@@ -39,6 +41,14 @@ public class KeycloakConfig {
 
    private String resource;
 
+
+   public boolean isEnabled() {
+      return enabled;
+   }
+
+   public void setEnabled(boolean enabled) {
+      this.enabled = enabled;
+   }
 
    public String getRealm() {
       return realm;
