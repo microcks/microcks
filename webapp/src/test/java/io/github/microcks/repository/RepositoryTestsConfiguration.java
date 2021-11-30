@@ -22,8 +22,8 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import de.bwaldvogel.mongo.MongoServer;
 import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
@@ -34,7 +34,7 @@ import java.net.InetSocketAddress;
  * Spring configuration for repositories tests.
  * @author laurent
  */
-@Configuration
+@TestConfiguration
 @ComponentScan(basePackages = {"io.github.microcks.security", "io.github.microcks.service"})
 @EnableMongoRepositories(basePackages = {"io.github.microcks.repository"})
 public class RepositoryTestsConfiguration extends AbstractMongoClientConfiguration {
