@@ -496,4 +496,69 @@ public class PostmanCollectionImporterTest {
          }
       }
    }
+
+   @Test
+   public void testGraphQLCollectionImport() {
+      PostmanCollectionImporter importer = null;
+      try {
+         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/graphql/films-postman.json");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Movie Graph API", service.getName());
+      assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0", service.getVersion());
+
+      // Check that operations and and input/output have been found.
+      assertEquals(2, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("POST allFilms".equals(operation.getName())) {
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+
+            Exchange exchange = exchanges.get(0);
+            assertTrue(exchange instanceof RequestResponsePair);
+            RequestResponsePair pair = (RequestResponsePair) exchange;
+
+            assertNotNull(pair.getRequest().getContent());
+            assertNotNull(pair.getResponse().getContent());
+            assertEquals("200", pair.getResponse().getStatus());
+         } else if ("POST film".equals(operation.getName())) {
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+
+            Exchange exchange = exchanges.get(0);
+            assertTrue(exchange instanceof RequestResponsePair);
+            RequestResponsePair pair = (RequestResponsePair) exchange;
+
+            assertNotNull(pair.getRequest().getContent());
+            assertTrue(pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6MQ==\")"));
+            assertNotNull(pair.getResponse().getContent());
+            assertEquals("200", pair.getResponse().getStatus());
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
 }

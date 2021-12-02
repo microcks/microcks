@@ -20,6 +20,7 @@ package io.github.microcks.util.postman;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
@@ -249,6 +250,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          request.setHeaders(buildHeaders(requestNode.path("header")));
          if (requestNode.has("body") && requestNode.path("body").has("raw")) {
             request.setContent(requestNode.path("body").path("raw").asText());
+         } else if (requestNode.has("body") && requestNode.path("body").has("graphql")) {
+            String content = requestNode.path("body").path("graphql").path("query").asText();
+            String variables = requestNode.path("body").path("graphql").path("variables").asText();
+            content = replaceGraphQLVariables(content, variables);
+            request.setContent(content);
          }
          if (requestNode.path("url").has("variable")) {
             JsonNode variablesNode = requestNode.path("url").path("variable");
@@ -286,6 +292,31 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return parts;
    }
 
+   private String replaceGraphQLVariables(String content, String variables) {
+      if (variables != null && !variables.equals("{}")) {
+         ObjectMapper mapper = new ObjectMapper();
+         try {
+            JsonNode variablesNode = mapper.readTree(variables);
+            if (variablesNode.isObject()) {
+               ObjectNode varObject = (ObjectNode) variablesNode;
+               Iterator<String> fieldNames = varObject.fieldNames();
+               while (fieldNames.hasNext()) {
+                  String varName = fieldNames.next();
+                  String varValue = varObject.get(varName).asText();
+                  if (varObject.get(varName).isTextual()) {
+                     content = content.replaceAll("\\$" + varName + "([,)\\s])", "\"" + varValue + "\"$1");
+                  } else {
+                     content = content.replaceAll("\\$" + varName + "([,)\\s])", varValue + "$1");
+                  }
+               }
+            }
+         } catch (Exception e) {
+            e.printStackTrace();
+         }
+      }
+      // Return unchanged content.
+      return content;
+   }
    private Response buildResponse(JsonNode responseNode, String dispatchCriteria) {
       Response response = new Response();
       response.setName(responseNode.path("name").asText());
