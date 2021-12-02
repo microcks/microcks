@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4-205.1626828526
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4-212
 
 MAINTAINER Laurent Broudoux <laurent@microcks.io>
 
