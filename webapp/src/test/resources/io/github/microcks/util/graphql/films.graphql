@@ -1,0 +1,20 @@
+# microcksId: Movie Graph API : 1.0
+schema {
+    query: Query
+}
+type Film {
+    id: String!
+    title: String!
+    episodeID: Int!
+    director: String!
+}
+
+type FilmsConnection {
+    totalCount: Int!
+    films: [Film]
+}
+
+type Query {
+    allFilms: [FilmsConnection]
+    film(id: String): Film
+}
