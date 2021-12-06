@@ -283,6 +283,9 @@ export class ServiceDetailPageComponent implements OnInit {
       // Remove leading VERB in Postman import case.
       operationName = this.removeVerbInUrl(operationName);
       result += operationName;
+    } else if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
+      result += '/graphql/';
+      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
     } else if (this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP) {
       result += '/soap/';
       result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;

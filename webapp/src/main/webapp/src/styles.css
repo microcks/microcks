@@ -69,12 +69,18 @@ span.card-pf-footer-text {
 .grpc-icon-sm {
   border: 3px solid #379c9c !important;
 }
+.graph-icon-sm {
+  border: 3px solid #e10098 !important;
+}
 .generic-icon-sm {
   border: 3px solid #9c27b0 !important;
 }
 
 .label-grpc {
   background-color: #379c9c;
+}
+.label-graph {
+  background-color: #e10098;
 }
 .label-gene {
   background-color: #9c27b0;

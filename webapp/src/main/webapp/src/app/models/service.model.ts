@@ -39,7 +39,8 @@ export enum ServiceType {
   REST = "REST",
   EVENT = "EVENT",
   GRPC = "GRPC",
-  GENERIC_REST = "GENERIC_REST"
+  GENERIC_REST = "GENERIC_REST",
+  GRAPHQL = "GRAPHQL"
 }
 
 export class Operation {
@@ -110,7 +111,8 @@ export enum ContractType {
   ASYNC_API_SCHEMA,
   AVRO_SCHEMA,
   PROTOBUF_SCHEMA,
-  PROTOBUF_DESCRIPTOR
+  PROTOBUF_DESCRIPTOR,
+  GRAPHQL_SCHEMA
 }
 
 export class Header {

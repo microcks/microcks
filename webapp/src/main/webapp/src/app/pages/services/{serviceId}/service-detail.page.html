@@ -32,6 +32,7 @@
           <span class="label label-success" *ngIf="view.service.type === 'REST'">REST</span>
           <span class="label label-warning" *ngIf="view.service.type === 'EVENT'">EVENT</span>
           <span class="label label-grpc" *ngIf="view.service.type === 'GRPC'">GRPC</span>
+          <span class="label label-graph" *ngIf="view.service.type === 'GRAPHQL'">GRAPH</span>
           <span class="label label-gene" *ngIf="view.service.type === 'GENERIC_REST'">DYNAMIC</span>
         </dd>
         <span *ngIf="view.service.type === 'SOAP_HTTP'">
@@ -205,12 +206,12 @@
                 </span>
               </dl>
               <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
-              <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC'">
+              <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
                 <dt>Input / Output Name:</dt>
                 <dd><code>{{ item.inputName }} / {{ item.outputName }}</code></dd>
               </span>
-              <dt>HTTP Verb:</dt>
-              <dd>
+              <dt *ngIf="view.service.type != 'GRAPHQL'">HTTP Verb:</dt>
+              <dd *ngIf="view.service.type != 'GRAPHQL'">
                 <div [ngSwitch]="item.method">
                   <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
                   <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
@@ -395,7 +396,7 @@
                 </div>
                 <div class="col-md-6">
                   <h5 class="subsection-label">Response</h5>
-                  <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST'">
+                  <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST' || view.service.type === 'GRAPHQL'">
                     <dt>Response Code and Type:</dt>
                     <dd>
                       <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
