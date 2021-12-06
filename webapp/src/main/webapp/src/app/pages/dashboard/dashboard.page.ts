@@ -34,76 +34,78 @@ import { DailyInvocations } from '../../models/metric.model';
 })
 export class DashboardPageComponent implements OnInit {
 
-	aDayLong: number =  (1000 * 60 * 60 * 24);
-	today = new Date();
-	todayStr: string = this.invocationsSvc.formatDayDate(new Date());
+  aDayLong: number = (1000 * 60 * 60 * 24);
+  today = new Date();
+  todayStr: string = this.invocationsSvc.formatDayDate(new Date());
 
-	chartCardConfig: CardConfig;
-	topCardConfig: CardConfig;
-	repositoryCardConfig: CardConfig;
+  chartCardConfig: CardConfig;
+  topCardConfig: CardConfig;
+  repositoryCardConfig: CardConfig;
 
-	actionsText: string = '';
-	chartDates: any[] = ['dates'];
-	chartConfig: SparklineChartConfig = {
-		chartId: 'invocationsSparkline',
-		chartHeight: 150,
-		tooltipType: 'default'
+  actionsText: string = '';
+  chartDates: any[] = ['dates'];
+  chartConfig: SparklineChartConfig = {
+    chartId: 'invocationsSparkline',
+    chartHeight: 150,
+    tooltipType: 'default'
   };
   chartData: SparklineChartData = {
     dataAvailable: false,
     total: 100,
     xData: this.chartDates,
-		yData: ['used']
-	};
+    yData: ['used']
+  };
 
-	donutChartData: any[] = [
+  donutChartData: any[] = [
     ['REST', 0],
     ['DYNAMIC', 0],
-		['SOAP', 0],
-		['EVENT', 0],
-		['GRPC', 0]
+    ['SOAP', 0],
+    ['EVENT', 0],
+    ['GRAPH', 0],
+    ['GRPC', 0]
   ];
-	largeConfig: DonutChartConfig = {
-		chartId: 'repositoryDonut',
-		chartHeight: 220,
+  largeConfig: DonutChartConfig = {
+    chartId: 'repositoryDonut',
+    chartHeight: 220,
     colors: {
-      REST: '#89bf04',     
-      DYNAMIC: '#9c27b0', 
-			SOAP: '#39a5dc',
-			EVENT: '#ec7a08',
-			GRPC: '#379c9c'
-		},
-		/*
+      REST: '#89bf04',
+      DYNAMIC: '#9c27b0',
+      SOAP: '#39a5dc',
+      EVENT: '#ec7a08',
+      GRAPH: "#e10098",
+      GRPC: '#379c9c'
+    },
+    /*
     data: {
       onclick: (data: any, element: any) => {
         alert('You clicked on donut arc: ' + data.id);
       }
-		},
-		*/
+    },
+    */
     donut: { title: 'APIs & Services' },
     legend: { show: true }
-	};
-	
-	topInvocations: DailyInvocations[];
+  };
+
+  topInvocations: DailyInvocations[];
 
 
-  constructor(private servicesSvc: ServicesService, private invocationsSvc: InvocationsService) {}
+  constructor(private servicesSvc: ServicesService, private invocationsSvc: InvocationsService) { }
 
   ngOnInit() {
-		this.getServicesMap();
-		this.getTopInvocations();
-		this.getInvocationsTrend();
+    this.getServicesMap();
+    this.getTopInvocations();
+    this.getInvocationsTrend();
 
-		this.chartCardConfig = {
+    this.chartCardConfig = {
       action: {
         hypertext: 'View All Events',
         iconStyleClass: 'fa fa-flag'
       },
       filters: [{
-				title: 'Last 50 Days',
+        title: 'Last 50 Days',
         value: '50'
       }, {
-				default: true,
+        default: true,
         title: 'Last 20 Days',
         value: '20'
       }, {
@@ -111,86 +113,89 @@ export class DashboardPageComponent implements OnInit {
         value: '10'
       }],
       title: 'APIs | Services Mocks Invocations',
-		} as CardConfig;
+    } as CardConfig;
 
-		this.topCardConfig = {
+    this.topCardConfig = {
       filters: [{
-				default: true,
-				title: 'Today',
+        default: true,
+        title: 'Today',
         value: 'today'
       }, {
         title: 'Yesterday',
         value: 'yesterday'
       }],
       title: 'Most Used APIs | Services',
-		} as CardConfig;
+    } as CardConfig;
 
-		this.repositoryCardConfig = {
+    this.repositoryCardConfig = {
       title: 'APIs | Services Repository',
-		} as CardConfig;
-	}
-	
-	getServicesMap(): void {
-		this.servicesSvc.getServicesMap().subscribe(
-			results => {
-				this.donutChartData = [
-					['REST', 0],
-					['DYNAMIC', 0],
-					['SOAP', 0],
-					['EVENT', 0],
-					['GRPC', 0]
-				];
-				for (let key in results) {
-					if (key === 'GENERIC_REST') {
-						this.donutChartData.push(['DYNAMIC', results[key]]);
-					} else if (key === 'SOAP_HTTP') {
-						this.donutChartData.push(['SOAP', results[key]]);
-					} else {
-						this.donutChartData.push([key, results[key]]);
-					}
-				}
-			}
-		);
-	}
+    } as CardConfig;
+  }
 
-	getTopInvocations(day: Date = this.today): void {
-		this.invocationsSvc.getTopInvocations(day).subscribe(results => {
-			this.topInvocations = results.slice(0, 3);
-		});
-	}
+  getServicesMap(): void {
+    this.servicesSvc.getServicesMap().subscribe(
+      results => {
+        this.donutChartData = [
+          ['REST', 0],
+          ['DYNAMIC', 0],
+          ['SOAP', 0],
+          ['EVENT', 0],
+          ['GRPC', 0],
+          ['GRAPH', 0]
+        ];
+        for (let key in results) {
+          if (key === 'GENERIC_REST') {
+            this.donutChartData.push(['DYNAMIC', results[key]]);
+          } else if (key === 'SOAP_HTTP') {
+            this.donutChartData.push(['SOAP', results[key]]);
+          } else if (key === 'GRAPHQL') {
+            this.donutChartData.push(['GRAPH', results[key]]);
+          } else {
+            this.donutChartData.push([key, results[key]]);
+          }
+        }
+      }
+    );
+  }
 
-	getInvocationsTrend(limit: number = 20): void {
+  getTopInvocations(day: Date = this.today): void {
+    this.invocationsSvc.getTopInvocations(day).subscribe(results => {
+      this.topInvocations = results.slice(0, 3);
+    });
+  }
+
+  getInvocationsTrend(limit: number = 20): void {
     this.invocationsSvc.getInvocationsStatsTrend(limit).subscribe(
-			results => {
-				this.chartData.dataAvailable = false;
-				this.chartData.xData = ['dates'];
-				this.chartData.yData = ['hits'];
-				for (let i = limit - 1; i >= 0; i--) {
-					var pastDate: Date = new Date(this.today.getTime() - (i * this.aDayLong));
-					this.chartData.xData.push(pastDate);
-					var pastDateStr = this.invocationsSvc.formatDayDate(pastDate);
-					var result = results[pastDateStr];
-					if (result == null || result == undefined) {
-						this.chartData.yData.push(0);
-					} else {
-						this.chartData.yData.push(result);
-					}
-				}
-				//console.log('yData: ' + JSON.stringify(this.chartData.yData));
-				//console.log('xData: ' + JSON.stringify(this.chartData.xData));
-				this.chartData.dataAvailable = true;
-			});
+      results => {
+        this.chartData.dataAvailable = false;
+        this.chartData.xData = ['dates'];
+        this.chartData.yData = ['hits'];
+        for (let i = limit - 1; i >= 0; i--) {
+          var pastDate: Date = new Date(this.today.getTime() - (i * this.aDayLong));
+          this.chartData.xData.push(pastDate);
+          var pastDateStr = this.invocationsSvc.formatDayDate(pastDate);
+          var result = results[pastDateStr];
+          if (result == null || result == undefined) {
+            this.chartData.yData.push(0);
+          } else {
+            this.chartData.yData.push(result);
+          }
+        }
+        //console.log('yData: ' + JSON.stringify(this.chartData.yData));
+        //console.log('xData: ' + JSON.stringify(this.chartData.xData));
+        this.chartData.dataAvailable = true;
+      });
   }
 
   handleChartFilterSelect($event: CardFilter): void {
-		this.getInvocationsTrend(+$event.value)
-	}
+    this.getInvocationsTrend(+$event.value)
+  }
 
-	handleTopFilterSelect($event: CardFilter): void {
-		if ($event.value === 'yesterday') {
-			this.getTopInvocations(new Date(this.today.getTime() - this.aDayLong));
-		} else {
-			this.getTopInvocations();
-		}
-	}
+  handleTopFilterSelect($event: CardFilter): void {
+    if ($event.value === 'yesterday') {
+      this.getTopInvocations(new Date(this.today.getTime() - this.aDayLong));
+    } else {
+      this.getTopInvocations();
+    }
+  }
 }
