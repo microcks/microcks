@@ -22,20 +22,23 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.event.MockInvocationEvent;
-
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
-
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class holds commons, utility handlers for different mock controller implements
@@ -78,6 +81,38 @@ public class MockControllerCommons {
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
+
+         // Register the request variable and evaluate the response.
+         engine.getContext().setVariable("request", evaluableRequest);
+         try {
+            return engine.getValue(response.getContent());
+         } catch (Throwable t) {
+            log.error("Failing at evaluating template " + response.getContent(), t);
+            return response.getContent();
+         }
+      }
+      return response.getContent();
+   }
+
+   /**
+    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
+    * If rendering template fails, we just produce a log error message and stick to templatized response.
+    * @param requestBody The body payload of incoming request.
+    * @param evaluableParams A map of params for evaluation.
+    * @param evaluableHeaders A map of headers for evaluation.
+    * @param response The response that was found by dispatcher
+    * @return The rendered response body payload.
+    */
+   public static String renderResponseContent(String requestBody, Map<String, String> evaluableParams, Map<String, String> evaluableHeaders, Response response) {
+      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug("Response contains dynamic EL expression, rendering it...");
+         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+
+         // Create and fill an evaluable request object.
+         EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
+         // Adding query and header parameters...
+         evaluableRequest.setParams(evaluableParams);
+         evaluableRequest.setHeaders(evaluableHeaders);
 
          // Register the request variable and evaluate the response.
          engine.getContext().setVariable("request", evaluableRequest);
