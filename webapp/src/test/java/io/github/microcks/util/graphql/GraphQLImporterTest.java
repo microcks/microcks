@@ -23,14 +23,14 @@ import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * This is a test case for GraphQLImporter class.
@@ -75,15 +75,29 @@ public class GraphQLImporterTest {
       assertEquals("Movie Graph API-1.0.graphql", resource.getName());
 
       // Check that operations and input/output have been found.
-      assertEquals(2, service.getOperations().size());
+      assertEquals(4, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
          if ("allFilms".equals(operation.getName())) {
             assertEquals("QUERY", operation.getMethod());
             assertEquals("[FilmsConnection]", operation.getOutputName());
+            assertNull(operation.getDispatcher());
          } else if ("film".equals(operation.getName())) {
             assertEquals("QUERY", operation.getMethod());
             assertEquals("Film", operation.getOutputName());
-            assertEquals("id", operation.getInputName());
+            assertEquals("String", operation.getInputName());
+            assertEquals(DispatchStyles.QUERY_ARGS, operation.getDispatcher());
+            assertEquals("id", operation.getDispatcherRules());
+         } else if ("addStar".equals(operation.getName())) {
+            assertEquals("MUTATION", operation.getMethod());
+            assertEquals("Film", operation.getOutputName());
+            assertEquals("String", operation.getInputName());
+            assertEquals(DispatchStyles.QUERY_ARGS, operation.getDispatcher());
+            assertEquals("filmId", operation.getDispatcherRules());
+         } else if ("addReview".equals(operation.getName())) {
+            assertEquals("MUTATION", operation.getMethod());
+            assertEquals("Film", operation.getOutputName());
+            assertEquals("String, Review", operation.getInputName());
+            assertNull(operation.getDispatcher());
          } else {
             fail("Unknown operation");
          }

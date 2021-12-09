@@ -18,12 +18,16 @@
  */
 package io.github.microcks.util.graphql;
 
+import graphql.schema.idl.ScalarInfo;
+import graphql.schema.idl.TypeInfo;
+import graphql.schema.idl.TypeUtil;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 
@@ -170,6 +174,25 @@ public class GraphQLImporter implements MockRepositoryImporter {
          // Deal with input names if any.
          if (fieldDef.getInputValueDefinitions() != null && !fieldDef.getInputValueDefinitions().isEmpty()) {
             operation.setInputName(getInputNames(fieldDef.getInputValueDefinitions()));
+
+            boolean hasOnlyPrimitiveArgs = true;
+            for (InputValueDefinition inputValueDef : fieldDef.getInputValueDefinitions()) {
+               Type inputValueType = inputValueDef.getType();
+               if (TypeUtil.isNonNull(inputValueType)) {
+                  inputValueType = TypeUtil.unwrapOne(inputValueType);
+               }
+               if (TypeUtil.isList(inputValueType)) {
+                  hasOnlyPrimitiveArgs = false;
+               }
+               TypeInfo inputValueTypeInfo = TypeInfo.typeInfo(inputValueType);
+               if (!ScalarInfo.isGraphqlSpecifiedScalar(inputValueTypeInfo.getName())) {
+                  hasOnlyPrimitiveArgs = false;
+               }
+            }
+            if (hasOnlyPrimitiveArgs) {
+               operation.setDispatcher(DispatchStyles.QUERY_ARGS);
+               operation.setDispatcherRules(extractOperationParams(fieldDef.getInputValueDefinitions()));
+            }
          }
          // Deal with output names if any.
          if (fieldDef.getType() != null) {
@@ -181,15 +204,27 @@ public class GraphQLImporter implements MockRepositoryImporter {
       return results;
    }
 
+   /** Build a string representing comma separated inputs (eg. 'arg1, arg2'). */
    private String getInputNames(List<InputValueDefinition> inputsDef) {
       StringBuilder builder = new StringBuilder();
 
       for (InputValueDefinition inputDef : inputsDef) {
-         builder.append(inputDef.getName()).append(", ");
+         builder.append(getTypeName(inputDef.getType())).append(", ");
       }
       return builder.substring(0, builder.length() - 2);
    }
 
+   /** Build a string representing operation parameters as used in dispatcher rules (arg1 && arg2). */
+   private String extractOperationParams(List<InputValueDefinition> inputsDef) {
+      StringBuilder builder = new StringBuilder();
+
+      for (InputValueDefinition inputDef : inputsDef) {
+         builder.append(inputDef.getName()).append(" && ");
+      }
+      return builder.substring(0, builder.length() - 4);
+   }
+
+   /** Get the short string representation of a type. eg. 'Film' or '[Films]'. */
    private String getTypeName(Type type) {
       if (type instanceof ListType) {
          ListType listType = (ListType) type;

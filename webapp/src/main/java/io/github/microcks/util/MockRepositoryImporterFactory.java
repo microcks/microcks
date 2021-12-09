@@ -89,9 +89,11 @@ public class MockRepositoryImporterFactory {
          } else if (line.contains("kind: APIMetadata")) {
             log.info("Found a kind: APIMetadata pragma in file so assuming it's a Microcks APIMetadata to import");
             importer = new MetadataImporter(mockRepository.getPath());
+            break;
          } else if (line.contains("type Query {") || line.contains("type Mutation {") || line.contains("microcksId:")) {
             log.info("Found query, mutation or microcksId: pragmas in file so assuming it's a GraphQL schema to import");
             importer = new GraphQLImporter(mockRepository.getPath());
+            break;
          } else if (line.startsWith("\"swagger\":") || line.startsWith("swagger:")) {
             log.warn("Swagger v2 format is not supported as it does not allow full examples specification, raising an exception");
             throw new IOException("Swagger v2 format is not supported as it does not allow full examples specification");

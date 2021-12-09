@@ -20,11 +20,11 @@ package io.github.microcks.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
 /**
  * This is a helper for extracting and building dispatch criteria from many sources.
  * @author laurent
@@ -315,5 +315,18 @@ public class DispatchCriteriaHelper{
          return result.toString();
       }
       return "";
+   }
+
+   public static String extractFromParamMap(String paramsRule, Map<String, String> paramMap) {
+      Set<String> sortedKeys = paramMap.keySet().stream()
+            .sorted().collect(Collectors.toSet());
+
+      StringBuilder result = new StringBuilder();
+      for (String param : sortedKeys) {
+         if (paramsRule.contains(param)) {
+            result.append("?").append(param).append("=").append(paramMap.get(param));
+         }
+      }
+      return result.toString();
    }
 }

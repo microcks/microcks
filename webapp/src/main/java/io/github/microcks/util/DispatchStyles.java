@@ -26,6 +26,9 @@ public class DispatchStyles{
 
    /** Constant for QUERY_MATCH dispatch style. */
    public static final String QUERY_MATCH = "QUERY_MATCH";
+
+   /** Constant for QUERY_ARGS dispatch style. */
+   public static final String QUERY_ARGS = "QUERY_ARGS";
    
    /** Constant for SCRIPT dispatch style. */
    public static final String SCRIPT = "SCRIPT";

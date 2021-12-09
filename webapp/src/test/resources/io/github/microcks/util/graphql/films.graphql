@@ -7,6 +7,8 @@ type Film {
     title: String!
     episodeID: Int!
     director: String!
+    starCount: Int!
+    rating: Float!
 }
 
 type FilmsConnection {
@@ -14,7 +16,18 @@ type FilmsConnection {
     films: [Film]
 }
 
+input Review {
+    comment: String
+    rating: Int
+}
+
 type Query {
     allFilms: [FilmsConnection]
     film(id: String): Film
 }
+
+type Mutation {
+    addStar(filmId: String): Film
+    addReview(filmId: String, review: Review): Film
+}
+
