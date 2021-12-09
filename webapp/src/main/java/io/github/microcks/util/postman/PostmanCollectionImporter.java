@@ -21,6 +21,7 @@ package io.github.microcks.util.postman;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
@@ -42,13 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -219,6 +214,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
                   operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
+               } else if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
+                  // This dispatcher is used for GraphQL
+                  if (requestNode.path("body").has("graphql")) {
+                     // We must transform JSON representing variables into a Map<String, String>
+                     // before building a dispatchCriteria matching the rules.
+                     String variables = requestNode.path("body").path("graphql").path("variables").asText();
+                     dispatchCriteria = extractGraphQLCriteria(operation.getDispatcherRules(), variables);
+                  }
                }
 
                Request request = buildRequest(requestNode, responseNode.path("name").asText());
@@ -302,21 +305,40 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                Iterator<String> fieldNames = varObject.fieldNames();
                while (fieldNames.hasNext()) {
                   String varName = fieldNames.next();
-                  String varValue = varObject.get(varName).asText();
-                  if (varObject.get(varName).isTextual()) {
+                  JsonNode varValueNode = varObject.get(varName);
+                  String varValue = null;
+                  if (varValueNode.isTextual()) {
+                     varValue = varValueNode.asText();
                      content = content.replaceAll("\\$" + varName + "([,)\\s])", "\"" + varValue + "\"$1");
-                  } else {
+                  } else if (varValueNode.isNumber() || varValueNode.isBoolean()) {
+                     varValue = varValueNode.asText();
+                     content = content.replaceAll("\\$" + varName + "([,)\\s])", varValue + "$1");
+                  } else if (varValueNode.isObject()) {
+                     varValue = mapper.writeValueAsString(varValueNode);
                      content = content.replaceAll("\\$" + varName + "([,)\\s])", varValue + "$1");
                   }
                }
             }
          } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Exception while replacing GraphQL variables name in query content");
          }
       }
       // Return unchanged content.
       return content;
    }
+
+   private String extractGraphQLCriteria(String dispatcherRules, String variables) {
+      String dispatchCriteria = "";
+      try {
+         ObjectMapper mapper = new ObjectMapper();
+         Map<String, String> paramsMap = mapper.readValue(variables, TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
+         dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
+      } catch (Exception e) {
+         log.error("Exception while extracting dispatch criteria from GraphQL variables: " + e.getMessage());
+      }
+      return dispatchCriteria;
+   }
+
    private Response buildResponse(JsonNode responseNode, String dispatchCriteria) {
       Response response = new Response();
       response.setName(responseNode.path("name").asText());
