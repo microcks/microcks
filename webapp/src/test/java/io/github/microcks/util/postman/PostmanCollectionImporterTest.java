@@ -519,7 +519,7 @@ public class PostmanCollectionImporterTest {
       assertEquals("1.0", service.getVersion());
 
       // Check that operations and and input/output have been found.
-      assertEquals(2, service.getOperations().size());
+      assertEquals(4, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
          if ("POST allFilms".equals(operation.getName())) {
             // Check that messages have been correctly found.
@@ -538,7 +538,28 @@ public class PostmanCollectionImporterTest {
             assertNotNull(pair.getRequest().getContent());
             assertNotNull(pair.getResponse().getContent());
             assertEquals("200", pair.getResponse().getStatus());
+            assertNull(pair.getResponse().getDispatchCriteria());
          } else if ("POST film".equals(operation.getName())) {
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(2, exchanges.size());
+
+            for (Exchange exchange : exchanges) {
+               assertTrue(exchange instanceof RequestResponsePair);
+               RequestResponsePair pair = (RequestResponsePair) exchange;
+
+               assertNotNull(pair.getRequest().getContent());
+               assertTrue(pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6MQ==\")")
+                  || pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6Mg==\")"));
+               assertNotNull(pair.getResponse().getContent());
+               assertEquals("200", pair.getResponse().getStatus());
+            }
+         } else if ("POST addStar".equals(operation.getName())) {
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
             try {
@@ -553,10 +574,27 @@ public class PostmanCollectionImporterTest {
             RequestResponsePair pair = (RequestResponsePair) exchange;
 
             assertNotNull(pair.getRequest().getContent());
-            assertTrue(pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6MQ==\")"));
             assertNotNull(pair.getResponse().getContent());
             assertEquals("200", pair.getResponse().getStatus());
-         } else {
+         } else if ("POST addReview".equals(operation.getName())) {
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+
+            Exchange exchange = exchanges.get(0);
+            assertTrue(exchange instanceof RequestResponsePair);
+            RequestResponsePair pair = (RequestResponsePair) exchange;
+
+            assertNotNull(pair.getRequest().getContent());
+            assertNotNull(pair.getResponse().getContent());
+            assertEquals("200", pair.getResponse().getStatus());
+         }
+         else {
             fail("Unknown operation name: " + operation.getName());
          }
       }
