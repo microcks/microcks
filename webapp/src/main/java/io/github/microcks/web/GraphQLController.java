@@ -227,13 +227,15 @@ public class GraphQLController {
    }
 
    /**
-    *
-    * @param service
-    * @param operationType
-    * @param graphqlField
-    * @param body
-    * @param graphqlHttpReq
-    * @param request
+    * Process a GraphQL field selection query (an Http query may contain many field selection queries).
+    * @param service The Service this query is targeting
+    * @param operationType The type of GraphQL operation (QUERY or MUTATION)
+    * @param graphqlField The Field selection we should apply
+    * @param body The Http request body
+    * @param graphqlHttpReq The Http GraphQL request wrapper
+    * @param request The bare Http Servlet request
+    * @return A GraphQL query response wrapper with some elements from the Microcks domain matching Response
+    * @throws GraphQLQueryProcessingException if incoming field selection query cannot be processed
     */
    protected GraphQLQueryResponse processGraphQLQuery(Service service, String operationType, Field graphqlField,
                                       String body, GraphQLHttpRequest graphqlHttpReq, HttpServletRequest request)
@@ -409,9 +411,9 @@ public class GraphQLController {
    }
 
    /**
-    *
-    * @param selectionSet
-    * @param node
+    * Apply a FieldSelection filter on Json node.
+    * @param selectionSet The set of selections to apply
+    * @param node The Json node to apply on
     */
    protected void filterFieldSelection(SelectionSet selectionSet, JsonNode node) {
       // Stop condition: no more selection to apply.
@@ -442,6 +444,7 @@ public class GraphQLController {
       }
    }
 
+   /** Simple wrapper around a GraphQL query response. */
    protected class GraphQLQueryResponse {
       Long operationDelay;
       Response response;
