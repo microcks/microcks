@@ -43,3 +43,4 @@ services:
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_URL=http://keycloak:8080/auth
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
+      #- MAX_UPLOAD_FILE_SIZE=3MB
