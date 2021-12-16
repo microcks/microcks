@@ -73,6 +73,18 @@ public class DispatchCriteriaHelperTest {
 
       String dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIPattern(operationName);
       assertEquals("component && version", dispatchCriteria);
+
+      // Check with swagger/postman syntax.
+      operationName = "/deployment/byComponent/:component/:version?{{param}}";
+
+      dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIPattern(operationName);
+      assertEquals("component && version", dispatchCriteria);
+
+      // Check with extra path containing special character.
+      operationName = "/deployment/byComponent/{component}/{version}/$count";
+
+      dispatchCriteria = DispatchCriteriaHelper.extractPartsFromURIPattern(operationName);
+      assertEquals("component && version", dispatchCriteria);
    }
 
    @Test
@@ -80,7 +92,7 @@ public class DispatchCriteriaHelperTest {
       // Check with parts sorted in natural order.
       String requestPath = "/deployment/byComponent/myComp/1.2";
       String operationName = "/deployment/byComponent/{component}/{version}";
-      
+
       // Dispatch string parts are sorted.
       String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
       assertEquals("/component=myComp/version=1.2", dispatchCriteria);
@@ -88,6 +100,14 @@ public class DispatchCriteriaHelperTest {
       // Check with parts expressed using swagger/postman syntax.
       requestPath = "/deployment/byComponent/myComp/1.2";
       operationName = "/deployment/byComponent/:component/:version";
+
+      // Dispatch string parts are sorted.
+      dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
+      assertEquals("/component=myComp/version=1.2", dispatchCriteria);
+
+      // Check with parts expressed using swagger/postman syntax.
+      requestPath = "/deployment/byComponent/myComp/1.2/$count";
+      operationName = "/deployment/byComponent/:component/:version/$count";
 
       // Dispatch string parts are sorted.
       dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);

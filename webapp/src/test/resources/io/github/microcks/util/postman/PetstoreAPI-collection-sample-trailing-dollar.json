@@ -1,0 +1,485 @@
+{
+  "variables": [],
+  "info": {
+    "name": "Petstore API",
+    "_postman_id": "c0bc3513-c83a-8b5d-bbff-1a4a0dc001d7",
+    "description": "version=12.0 - This is a PetStore API description",
+    "schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "pet",
+      "description": "",
+      "item": [
+        {
+          "name": "Find pet by ID",
+          "request": {
+            "url": {
+              "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/:petId/$access",
+              "protocol": "https",
+              "host": [
+                "petstore-api-2445581593402",
+                "apicast",
+                "io"
+              ],
+              "port": "443",
+              "path": [
+                "v2",
+                "pet",
+                ":petId"
+              ],
+              "query": [
+              ],
+              "variable": [
+                {
+                  "key": "petId",
+                  "value": ""
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {},
+            "description": ""
+          },
+          "response": [
+            {
+              "id": "05486047-439f-408d-97e7-a9925107a2a1",
+              "name": "get-2",
+              "originalRequest": {
+                "url": {
+                  "raw": "https://petstore-api-2445581593402.staging.apicast.io:443/v2/pet/:petId/$access",
+                  "protocol": "https",
+                  "host": [
+                    "petstore-api-2445581593402",
+                    "staging",
+                    "apicast",
+                    "io"
+                  ],
+                  "port": "443",
+                  "path": [
+                    "v2",
+                    "pet",
+                    ":petId",
+                    ""
+                  ],
+                  "query": [
+                  ],
+                  "variable": [
+                    {
+                      "key": "petId",
+                      "value": "2"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "_postman_previewtype": "text",
+              "header": [
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "key": "Access-Control-Allow-Headers",
+                  "value": "Content-Type, api_key, Authorization",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Methods",
+                  "key": "Access-Control-Allow-Methods",
+                  "value": "GET, POST, DELETE, PUT",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*",
+                  "description": ""
+                },
+                {
+                  "name": "Connection",
+                  "key": "Connection",
+                  "value": "keep-alive",
+                  "description": ""
+                },
+                {
+                  "name": "Content-Length",
+                  "key": "Content-Length",
+                  "value": "137",
+                  "description": ""
+                },
+                {
+                  "name": "Content-Type",
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": ""
+                },
+                {
+                  "name": "Date",
+                  "key": "Date",
+                  "value": "Wed, 07 Dec 2016 15:27:18 GMT",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "key": "Server",
+                  "value": "openresty/1.9.7.4",
+                  "description": ""
+                },
+                {
+                  "name": "X-Powered-By",
+                  "key": "X-Powered-By",
+                  "value": "3scale API Management - http://www.3scale.net",
+                  "description": ""
+                }
+              ],
+              "cookie": [],
+              "responseTime": 233,
+              "body": "{\"id\":2,\"category\":{\"id\":1,\"name\":\"Animal\"},\"name\":\"cat\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":1,\"name\":\"domestic\"}],\"status\":\"available\"}"
+            },
+            {
+              "id": "187fb73f-edbb-47d4-89ae-7e3e4a8cfcbd",
+              "name": "get-1",
+              "originalRequest": {
+                "url": {
+                  "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/:petId/$access",
+                  "protocol": "https",
+                  "host": [
+                    "petstore-api-2445581593402",
+                    "apicast",
+                    "io"
+                  ],
+                  "port": "443",
+                  "path": [
+                    "v2",
+                    "pet",
+                    ":petId"
+                  ],
+                  "query": [
+                  ],
+                  "variable": [
+                    {
+                      "key": "petId",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "",
+              "_postman_previewtype": "parsed",
+              "header": [
+                {
+                  "key": "Access-Control-Allow-Headers",
+                  "value": "Content-Type, api_key, Authorization",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Headers"
+                },
+                {
+                  "key": "Access-Control-Allow-Methods",
+                  "value": "GET, POST, DELETE, PUT",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Methods"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Origin"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "name": "Content-Type",
+                  "description": ""
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "0",
+                  "description": "",
+                  "type": "text",
+                  "name": "Content-Length"
+                },
+                {
+                  "key": "Server",
+                  "value": "openresty/1.9.7.4",
+                  "description": "",
+                  "type": "text",
+                  "name": "Server"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Dec 2016 15:27:22 GMT",
+                  "description": "",
+                  "type": "text",
+                  "name": "Date"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "3scale API Management - http://www.3scale.net",
+                  "description": "",
+                  "type": "text",
+                  "name": "X-Powered-By"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive",
+                  "description": "",
+                  "type": "text",
+                  "name": "Connection"
+                }
+              ],
+              "cookie": [],
+              "responseTime": 0,
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Count pet by ID",
+          "request": {
+            "url": {
+              "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/:petId/$count",
+              "protocol": "https",
+              "host": [
+                "petstore-api-2445581593402",
+                "apicast",
+                "io"
+              ],
+              "port": "443",
+              "path": [
+                "v2",
+                "pet",
+                ":petId"
+              ],
+              "query": [
+              ],
+              "variable": [
+                {
+                  "key": "petId",
+                  "value": ""
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "body": {},
+            "description": ""
+          },
+          "response": [
+            {
+              "id": "05486047-439f-408d-97e7-a9925107a2a1",
+              "name": "get-2",
+              "originalRequest": {
+                "url": {
+                  "raw": "https://petstore-api-2445581593402.staging.apicast.io:443/v2/pet/:petId/$count",
+                  "protocol": "https",
+                  "host": [
+                    "petstore-api-2445581593402",
+                    "staging",
+                    "apicast",
+                    "io"
+                  ],
+                  "port": "443",
+                  "path": [
+                    "v2",
+                    "pet",
+                    ":petId",
+                    ""
+                  ],
+                  "query": [
+                  ],
+                  "variable": [
+                    {
+                      "key": "petId",
+                      "value": "2"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "_postman_previewtype": "text",
+              "header": [
+                {
+                  "name": "Access-Control-Allow-Headers",
+                  "key": "Access-Control-Allow-Headers",
+                  "value": "Content-Type, api_key, Authorization",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Methods",
+                  "key": "Access-Control-Allow-Methods",
+                  "value": "GET, POST, DELETE, PUT",
+                  "description": ""
+                },
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*",
+                  "description": ""
+                },
+                {
+                  "name": "Connection",
+                  "key": "Connection",
+                  "value": "keep-alive",
+                  "description": ""
+                },
+                {
+                  "name": "Content-Length",
+                  "key": "Content-Length",
+                  "value": "137",
+                  "description": ""
+                },
+                {
+                  "name": "Content-Type",
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "description": ""
+                },
+                {
+                  "name": "Date",
+                  "key": "Date",
+                  "value": "Wed, 07 Dec 2016 15:27:18 GMT",
+                  "description": ""
+                },
+                {
+                  "name": "Server",
+                  "key": "Server",
+                  "value": "openresty/1.9.7.4",
+                  "description": ""
+                },
+                {
+                  "name": "X-Powered-By",
+                  "key": "X-Powered-By",
+                  "value": "3scale API Management - http://www.3scale.net",
+                  "description": ""
+                }
+              ],
+              "cookie": [],
+              "responseTime": 233,
+              "body": "{\"id\":2,\"category\":{\"id\":1,\"name\":\"Animal\"},\"name\":\"cat\",\"photoUrls\":[\"string\"],\"tags\":[{\"id\":1,\"name\":\"domestic\"}],\"status\":\"available\"}"
+            },
+            {
+              "id": "187fb73f-edbb-47d4-89ae-7e3e4a8cfcbd",
+              "name": "get-1",
+              "originalRequest": {
+                "url": {
+                  "raw": "https://petstore-api-2445581593402.apicast.io:443/v2/pet/:petId/$count",
+                  "protocol": "https",
+                  "host": [
+                    "petstore-api-2445581593402",
+                    "apicast",
+                    "io"
+                  ],
+                  "port": "443",
+                  "path": [
+                    "v2",
+                    "pet",
+                    ":petId"
+                  ],
+                  "query": [
+                  ],
+                  "variable": [
+                    {
+                      "key": "petId",
+                      "value": "1"
+                    }
+                  ]
+                },
+                "method": "GET",
+                "header": [],
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "",
+              "_postman_previewtype": "parsed",
+              "header": [
+                {
+                  "key": "Access-Control-Allow-Headers",
+                  "value": "Content-Type, api_key, Authorization",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Headers"
+                },
+                {
+                  "key": "Access-Control-Allow-Methods",
+                  "value": "GET, POST, DELETE, PUT",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Methods"
+                },
+                {
+                  "key": "Access-Control-Allow-Origin",
+                  "value": "*",
+                  "description": "",
+                  "type": "text",
+                  "name": "Access-Control-Allow-Origin"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "name": "Content-Type",
+                  "description": ""
+                },
+                {
+                  "key": "Content-Length",
+                  "value": "0",
+                  "description": "",
+                  "type": "text",
+                  "name": "Content-Length"
+                },
+                {
+                  "key": "Server",
+                  "value": "openresty/1.9.7.4",
+                  "description": "",
+                  "type": "text",
+                  "name": "Server"
+                },
+                {
+                  "key": "Date",
+                  "value": "Wed, 07 Dec 2016 15:27:22 GMT",
+                  "description": "",
+                  "type": "text",
+                  "name": "Date"
+                },
+                {
+                  "key": "X-Powered-By",
+                  "value": "3scale API Management - http://www.3scale.net",
+                  "description": "",
+                  "type": "text",
+                  "name": "X-Powered-By"
+                },
+                {
+                  "key": "Connection",
+                  "value": "keep-alive",
+                  "description": "",
+                  "type": "text",
+                  "name": "Connection"
+                }
+              ],
+              "cookie": [],
+              "responseTime": 0,
+              "body": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

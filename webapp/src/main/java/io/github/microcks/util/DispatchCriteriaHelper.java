@@ -168,6 +168,10 @@ public class DispatchCriteriaHelper{
          pattern = pattern.replaceAll("\\{\\{", "");
          pattern = pattern.replaceAll("\\}\\}", "");
       }
+      // ad as it may contains $ signs with forms like '/items/$count'.
+      if (pattern.contains("$")) {
+         pattern = pattern.replaceAll("\\$", "");
+      }
 
       // Build a pattern for extracting parts from pattern.
       String partsPattern = null;
@@ -216,7 +220,10 @@ public class DispatchCriteriaHelper{
          partsPattern = pattern.replaceAll("(:[^:^/]+)", "\\:(.+)");
          valuesPattern = pattern.replaceAll("(:[^:^/]+)", "(.+)");
       }
-
+      if (pattern.contains("$")) {
+         partsPattern = partsPattern.replaceAll("\\$", "\\\\\\$");
+         valuesPattern = valuesPattern.replaceAll("\\$", "\\\\\\$");
+      }
       Pattern partsP = Pattern.compile(partsPattern);
       Matcher partsM = partsP.matcher(pattern);
 
