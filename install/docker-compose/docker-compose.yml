@@ -21,7 +21,7 @@ services:
       - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:latest
+    image: quay.io/microcks/microcks-postman-runtime:nightly
     container_name: microcks-postman-runtime
 
   app:
@@ -29,7 +29,7 @@ services:
       - mongo
       - keycloak
       - postman
-    image: quay.io/microcks/microcks:latest
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     ports:
       - "8080:8080"
