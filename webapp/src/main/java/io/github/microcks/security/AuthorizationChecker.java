@@ -35,7 +35,8 @@ import java.util.Arrays;
 @Component
 @PropertySources({
       @PropertySource("features.properties"),
-      @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true)
+      @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true),
+      @PropertySource("application.properties"),
 })
 public class AuthorizationChecker {
 
@@ -48,6 +49,9 @@ public class AuthorizationChecker {
 
    /** The prefix used for Microcks groups name. */
    private static final String MICROCKS_GROUPS_PREFIX = "/microcks/";
+
+   @Value("${keycloak.enabled}")
+   private final Boolean authenticationEnabled = true;
 
    @Value("${features.feature.repository-tenancy.enabled}")
    private final Boolean authorizationEnabled = false;
@@ -62,7 +66,10 @@ public class AuthorizationChecker {
     * @return True if authorized, false otherwise.
     */
    public boolean hasRole(UserInfo userInfo, String role) {
-      return Arrays.stream(userInfo.getRoles()).anyMatch(role::equals);
+      if (authenticationEnabled) {
+         return Arrays.stream(userInfo.getRoles()).anyMatch(role::equals);
+      }
+      return true;
    }
 
    /**
