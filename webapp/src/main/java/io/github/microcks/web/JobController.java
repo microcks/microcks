@@ -132,6 +132,7 @@ public class JobController {
       log.debug("Saving existing job: {}", job);
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
+         initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
          return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
       }
@@ -145,6 +146,7 @@ public class JobController {
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(true);
+         initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
          return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
       }
@@ -158,6 +160,8 @@ public class JobController {
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(true);
+         initMetadataIfMissing(job);
+         job.getMetadata().objectUpdated();
          jobService.doImportJob(job);
          return new ResponseEntity<>(job, HttpStatus.OK);
       }
@@ -171,6 +175,7 @@ public class JobController {
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForImportJob(userInfo, AuthorizationChecker.ROLE_MANAGER, job)) {
          job.setActive(false);
+         initMetadataIfMissing(job);
          job.getMetadata().objectUpdated();
          return new ResponseEntity<>(jobRepository.save(job), HttpStatus.OK);
       }
@@ -187,5 +192,11 @@ public class JobController {
          return new ResponseEntity<>(HttpStatus.OK);
       }
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+   }
+
+   private void initMetadataIfMissing(ImportJob job) {
+      if (job.getMetadata() == null) {
+         job.setMetadata(new Metadata());
+      }
    }
 }
