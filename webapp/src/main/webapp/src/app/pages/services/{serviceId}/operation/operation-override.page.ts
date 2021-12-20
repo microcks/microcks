@@ -67,6 +67,10 @@ export class OperationOverridePageComponent implements OnInit {
     'GRPC': [
       {"value": "JSON_BODY", "label": "JSON BODY"},
       {"value": "FALLBACK", "label": "FALLBACK"}
+    ],
+    'GRAPHQL': [
+      {"value": "JSON_BODY", "label": "JSON BODY"},
+      {"value": "FALLBACK", "label": "FALLBACK"}
     ]
   }
 

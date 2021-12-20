@@ -211,6 +211,73 @@ public class ServiceServiceTest {
    }
 
    @Test
+   public void testImportServiceDefinitionMainGraphQLAndSecondaryPostman() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("films.graphql", true));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("Movie Graph API", importedSvc.getName());
+      assertEquals("1.0", importedSvc.getVersion());
+      assertEquals("films.graphql", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(4, importedSvc.getOperations().size());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, requests.size());
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, responses.size());
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films-postman.json");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("films-postman.json", false));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      importedSvc = services.get(0);
+      assertEquals("Movie Graph API", importedSvc.getName());
+      assertEquals("1.0", importedSvc.getVersion());
+      assertEquals("films.graphql", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(4, importedSvc.getOperations().size());
+
+      // Inspect and check requests.
+      requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(1, requests.size());
+      for (Request request : requests) {
+         assertEquals("films-postman.json", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(1, requests.size());
+      for (Response response : responses) {
+         assertEquals("films-postman.json", response.getSourceArtifact());
+      }
+   }
+
+   @Test
    public void testImportServiceDefinitionMainAndSecondariesWithAPIMetadata() {
       List<Service> services = null;
       try {

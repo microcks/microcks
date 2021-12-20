@@ -18,7 +18,6 @@
  */
 package io.github.microcks.web;
 
-
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
@@ -82,6 +81,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A controller for mocking GraphQL responses.
@@ -178,21 +178,36 @@ public class GraphQLController {
 
       // Then deal with one or many regular GraphQL selection queries.
       List<GraphQLQueryResponse> graphqlResponses = new ArrayList<>();
-      Long maxDelay = null;
+      final Long[] maxDelay = {(delay == null ? 0L : delay)};
 
       for (Selection selection : graphqlOperation.getSelectionSet().getSelections()) {
          GraphQLQueryResponse graphqlResponse = null;
          try {
             graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection, body, graphqlHttpReq, request);
             graphqlResponses.add(graphqlResponse);
-            if (delay == null && graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay) {
-               delay = graphqlResponse.getOperationDelay();
+            if (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
+               maxDelay[0] = graphqlResponse.getOperationDelay();
             }
          } catch (GraphQLQueryProcessingException e) {
             log.error("Caught a GraphQL processing exception", e);
             return new ResponseEntity<Object>(e.getMessage(), e.getStatus());
          }
       }
+
+      /* Optimized parallel version but need to better handle exception.
+      graphqlResponses = graphqlOperation.getSelectionSet().getSelections().stream().parallel().map(selection -> {
+         try {
+            GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection, body, graphqlHttpReq, request);
+            if (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
+               maxDelay[0] = graphqlResponse.getOperationDelay();
+            }
+            return graphqlResponse;
+         } catch (GraphQLQueryProcessingException e) {
+            log.error("Caught a GraphQL processing exception", e);
+            return null;
+         }
+      }).collect(Collectors.toList());
+      */
 
       // Deal with response headers.
       HttpHeaders responseHeaders = new HttpHeaders();
@@ -209,16 +224,28 @@ public class GraphQLController {
          responseHeaders.put("Content-Type", List.of("application/json"));
       }
 
-      // Setting delay to default one if not set.
-      MockControllerCommons.waitForDelay(startTime, delay);
+      // Waiting for delay if any.
+      MockControllerCommons.waitForDelay(startTime, maxDelay[0]);
 
       // Publish an invocation event before returning.
       MockControllerCommons.publishMockInvocation(applicationContext, this, service,
             graphqlResponses.get(0).getResponse(), startTime);
 
       String responseContent = null;
+      JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
+
+      // If multi-queries and aliases were used, recompose an aggregated result.
+      if (graphqlResponses.size() > 1) {
+         ObjectNode aggregated = mapper.createObjectNode();
+         ObjectNode dataNode = aggregated.putObject("data");
+         for (GraphQLQueryResponse response : graphqlResponses) {
+            dataNode.set(response.getAlias(), response.getJsonResponse().path("data")
+                  .path(response.getOperationName()).deepCopy());
+         }
+         responseNode = aggregated;
+      }
       try {
-         responseContent = mapper.writeValueAsString(graphqlResponses.get(0).getJsonResponse());
+         responseContent = mapper.writeValueAsString(responseNode);
       } catch (JsonProcessingException e) {
          log.error("Unknown Json processing exception", e);
          return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
@@ -243,6 +270,9 @@ public class GraphQLController {
 
       GraphQLQueryResponse result = new GraphQLQueryResponse();
       String operationName = graphqlField.getName();
+
+      result.setAlias(graphqlField.getAlias());
+      result.setOperationName(operationName);
 
       log.debug("Processing a '{}' operation with name '{}'", operationType, operationName);
 
@@ -446,9 +476,27 @@ public class GraphQLController {
 
    /** Simple wrapper around a GraphQL query response. */
    protected class GraphQLQueryResponse {
+      String operationName;
+      String alias;
       Long operationDelay;
       Response response;
       JsonNode jsonResponse;
+
+      public String getOperationName() {
+         return operationName;
+      }
+
+      public void setOperationName(String operationName) {
+         this.operationName = operationName;
+      }
+
+      public String getAlias() {
+         return alias;
+      }
+
+      public void setAlias(String alias) {
+         this.alias = alias;
+      }
 
       public Long getOperationDelay() {
          return operationDelay;
