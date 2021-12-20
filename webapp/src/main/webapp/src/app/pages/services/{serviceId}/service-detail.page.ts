@@ -420,6 +420,7 @@ export class ServiceDetailPageComponent implements OnInit {
     return (this.hasRoleForService('manager') || this.hasRole('admin'))
         && (this.resolvedServiceView.service.type === 'REST' 
             || this.resolvedServiceView.service.type === 'GRPC'
+            || this.resolvedServiceView.service.type === 'GRAPHQL'
             || (this.resolvedServiceView.service.type === 'EVENT' && this.hasAsyncAPIFeatureEnabled()));
   }
 

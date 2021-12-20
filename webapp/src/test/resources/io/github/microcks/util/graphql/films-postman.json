@@ -227,7 +227,7 @@
 							"_postman_previewlanguage": "json",
 							"header": null,
 							"cookie": [],
-							"body": "{\n    \"data\": {\n        \"addStar\": {\n            \"id\": \"ZmlsbXM6Mg==\",\n            \"title\": \"The Empire Strikes Back\",\n            \"episodeID\": 5,\n            \"director\": \"Irvin Kershner\",\n            \"starCount\": 433,\n            \"rating\": 4.4\n        }\n    }\n}"
+							"body": "{\n    \"data\": {\n        \"addReview\": {\n            \"id\": \"ZmlsbXM6Mg==\",\n            \"title\": \"The Empire Strikes Back\",\n            \"episodeID\": 5,\n            \"director\": \"Irvin Kershner\",\n            \"starCount\": 433,\n            \"rating\": 4.4\n        }\n    }\n}"
 						}
 					]
 				}

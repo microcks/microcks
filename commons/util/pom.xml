@@ -53,6 +53,12 @@
       <version>${avro.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.graphql-java</groupId>
+      <artifactId>graphql-java</artifactId>
+      <version>17.3</version>
+    </dependency>
+
     <!-- Test related dependencies -->
     <dependency>
       <groupId>junit</groupId>
@@ -71,6 +77,12 @@
       <artifactId>commons-io</artifactId>
       <version>2.4</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.graphql-java</groupId>
+      <artifactId>graphql-java</artifactId>
+      <version>17.3</version>
+      <scope>compile</scope>
     </dependency>
   </dependencies>
 

@@ -29,5 +29,6 @@ public enum TestRunnerType {
    POSTMAN,
    OPEN_API_SCHEMA,
    ASYNC_API_SCHEMA,
-   GRPC_PROTOBUF
+   GRPC_PROTOBUF,
+   GRAPHQL_SCHEMA
 }

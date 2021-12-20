@@ -63,6 +63,7 @@
             <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST'">OPEN API SCHEMA</option>
             <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT'">ASYNC API SCHEMA</option>
             <option value="GRPC_PROTOBUF" *ngIf="service.type === 'GRPC'">GRPC PROTOBUF</option>
+            <option value="GRAPHQL_SCHEMA" *ngIf="service.type === 'GRAPHQL'">GRAPHQL SCHEMA</option>
           </select>
           <p class="help-block">
             <span *ngIf="service.type != 'EVENT'">The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).</span>
@@ -111,7 +112,7 @@
                 </label>
               </li>
             </ul>
-            <p class="help-block">Remove the operations would don't want to include within this test.</p>
+            <p class="help-block">Remove the operations you don't want to include in this test.</p>
           </div>
         </div>
 

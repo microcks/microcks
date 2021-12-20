@@ -145,6 +145,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             addAuthorizationHeadersFromSecret(httpRequest, request, secret);
          }
 
+         prepareRequest(request);
+
          // If there's input content, add it to request.
          if (request.getContent() != null) {
             // Update request content with rendered body if necessary.
@@ -247,6 +249,14 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          code = TestReturn.FAILURE_CODE;
       }
       return code;
+   }
+
+   /**
+    *
+    * @param request
+    */
+   protected void prepareRequest(Request request) {
+      //
    }
 
    /**

@@ -79,7 +79,7 @@ public class GraphQLImporterTest {
       for (Operation operation : service.getOperations()) {
          if ("allFilms".equals(operation.getName())) {
             assertEquals("QUERY", operation.getMethod());
-            assertEquals("[FilmsConnection]", operation.getOutputName());
+            assertEquals("FilmsConnection", operation.getOutputName());
             assertNull(operation.getDispatcher());
          } else if ("film".equals(operation.getName())) {
             assertEquals("QUERY", operation.getMethod());
