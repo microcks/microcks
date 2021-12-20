@@ -662,6 +662,10 @@ public class PostmanCollectionImporterTest {
 
             assertNotNull(pair.getRequest().getContent());
             assertNotNull(pair.getResponse().getContent());
+            // Add this check to ensure that "comment" found in Postman variables is correctly
+            // parsed and then serialized in request parameters without the enclosing double-quotes.
+            // This is a particularity of GraphQL query that is not real JSON.
+            assertTrue(pair.getRequest().getContent().contains("comment:"));
             assertEquals("200", pair.getResponse().getStatus());
          }
          else {

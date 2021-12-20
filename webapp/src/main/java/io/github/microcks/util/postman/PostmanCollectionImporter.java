@@ -18,6 +18,8 @@
  */
 package io.github.microcks.util.postman;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.json.JsonWriteFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -298,6 +300,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    private String replaceGraphQLVariables(String content, String variables) {
       if (variables != null && !variables.equals("{}")) {
          ObjectMapper mapper = new ObjectMapper();
+         mapper.configure(JsonWriteFeature.QUOTE_FIELD_NAMES.mappedFeature(), false);
          try {
             JsonNode variablesNode = mapper.readTree(variables);
             if (variablesNode.isObject()) {
