@@ -145,6 +145,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             addAuthorizationHeadersFromSecret(httpRequest, request, secret);
          }
 
+         // Allow extensions to realize some pre-processing of request.
          prepareRequest(request);
 
          // If there's input content, add it to request.
@@ -252,11 +253,12 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
    }
 
    /**
-    *
-    * @param request
+    * This is a hook for allowing sub-classes to realize some pre-processing on request before it is
+    * actually issued to test endpoint.
+    * @param request The request that will be sent to endpoint
     */
    protected void prepareRequest(Request request) {
-      //
+      // Nothing to do in this base implementation, use raw request.
    }
 
    /**
