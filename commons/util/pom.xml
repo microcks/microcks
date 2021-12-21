@@ -15,8 +15,9 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>11</java.version>
     <junit.version>4.13.1</junit.version>
-    <jackson.version>2.10.2</jackson.version>
+    <jackson.version>2.13.0</jackson.version>
     <avro.version>1.10.0</avro.version>
+    <graphql-java.version>17.3</graphql-java.version>
   </properties>
 
   <dependencies>
@@ -56,7 +57,7 @@
     <dependency>
       <groupId>com.graphql-java</groupId>
       <artifactId>graphql-java</artifactId>
-      <version>17.3</version>
+      <version>${graphql-java.version}</version>
     </dependency>
 
     <!-- Test related dependencies -->
@@ -77,12 +78,6 @@
       <artifactId>commons-io</artifactId>
       <version>2.4</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.graphql-java</groupId>
-      <artifactId>graphql-java</artifactId>
-      <version>17.3</version>
-      <scope>compile</scope>
     </dependency>
   </dependencies>
 
