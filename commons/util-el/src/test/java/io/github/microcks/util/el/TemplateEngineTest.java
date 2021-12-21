@@ -86,4 +86,17 @@ public class TemplateEngineTest {
       assertTrue(content.startsWith("{\"signedAt\": \"1"));
       assertTrue(postmanContent.startsWith("{\"signedAt\": \"1"));
    }
+
+   @Test
+   public void testXMLWithAttributeTemplate() {
+      // Execute simple template calling now() and request.body function.
+      EvaluableRequest request = new EvaluableRequest("<request><name firstname=\"Laurent\"/></request>", null);
+
+      TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+      engine.getContext().setVariable("request", request);
+
+      String result = engine.getValue("<greeting>Hello {{request.body/request/name/@firstname}}</greeting>");
+
+      assertEquals("<greeting>Hello Laurent</greeting>", result);
+   }
 }

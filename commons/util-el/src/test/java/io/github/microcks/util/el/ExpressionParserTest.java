@@ -71,4 +71,24 @@ public class ExpressionParserTest {
 
       assertEquals("Laurent", ((VariableReferenceExpression)expressions[1]).getValue(context));
    }
+
+   @Test
+   public void testXpathAttributeExpressionWithNestedFunction() {
+      String template = "Hello {{ request.body/request/name/@firstname }} it's {{ now() }}";
+
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.registerFunction("now", NowELFunction.class);
+      context.setVariable("request", new EvaluableRequest("<request><name firstname=\"Laurent\"/></request>", null));
+
+      Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
+
+      assertEquals(4, expressions.length);
+      assertTrue(expressions[0] instanceof LiteralExpression);
+      assertTrue(expressions[1] instanceof VariableReferenceExpression);
+      assertTrue(expressions[2] instanceof LiteralExpression);
+      assertTrue(expressions[3] instanceof FunctionExpression);
+
+      assertEquals("Laurent", ((VariableReferenceExpression)expressions[1]).getValue(context));
+   }
 }
