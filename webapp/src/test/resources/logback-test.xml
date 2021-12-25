@@ -10,5 +10,5 @@
   </root>
 
   <logger name="org.springframework.test" level="ERROR"/>
-  <logger name="io.github.microcks.web.RestControllerIT" level="INFO"/>
+  <logger name="io.github.microcks.web.AbstractBaseIT" level="INFO"/>
 </configuration>
