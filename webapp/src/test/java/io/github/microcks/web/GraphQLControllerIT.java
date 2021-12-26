@@ -21,7 +21,6 @@ package io.github.microcks.web;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.assertEquals;
@@ -38,6 +37,8 @@ public class GraphQLControllerIT extends AbstractBaseIT {
       // Upload the 2 required reference artifacts.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+      // Adding some more metadata for mutation dispatching.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-metadata.yml", false);
 
       // Check its different mocked operations.
       String query = "{\"query\": \"query allFilms {\\n" +
@@ -80,6 +81,61 @@ public class GraphQLControllerIT extends AbstractBaseIT {
                      "          \"title\": \"Revenge of the Sith\"\n" +
                      "        }\n" +
                      "      ]\n" +
+                     "    }\n" +
+                     "  }\n" +
+                     "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // Check query with inlined argument.
+      query = "{\"query\": \"query film($id: String) {\\n" +
+            "  film(id: \\\"ZmlsbXM6MQ==\\\") {\\n" +
+            "    id\\n" +
+            "    title\\n" +
+            "    episodeID\\n" +
+            "    starCount\\n" +
+            "  }\\n" +
+            "}\"}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\n" +
+                     "  \"data\": {\n" +
+                     "    \"film\": {\n" +
+                     "      \"id\": \"ZmlsbXM6MQ==\",\n" +
+                     "      \"title\": \"A New Hope\",\n" +
+                     "      \"episodeID\": 4,\n" +
+                     "      \"starCount\": 432\n" +
+                     "    }\n" +
+                     "  }\n" +
+                     "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // Check query with variable argument.
+      query = "{\"query\": \"query film($id: String) {\\n" +
+            "  film(id: $id) {\\n" +
+            "    id\\n" +
+            "    title\\n" +
+            "    episodeID\\n" +
+            "    starCount\\n" +
+            "  }\\n" +
+            "}\", \"variables\": {\"id\": \"ZmlsbXM6MQ==\"}" +
+            "}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\n" +
+                     "  \"data\": {\n" +
+                     "    \"film\": {\n" +
+                     "      \"id\": \"ZmlsbXM6MQ==\",\n" +
+                     "      \"title\": \"A New Hope\",\n" +
+                     "      \"episodeID\": 4,\n" +
+                     "      \"starCount\": 432\n" +
                      "    }\n" +
                      "  }\n" +
                      "}",
