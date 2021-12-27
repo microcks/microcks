@@ -38,10 +38,11 @@ public class SoapControllerIT  extends AbstractBaseIT {
       // Upload Hello Service SoapUI project.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml", true);
 
-      // Create headers for sayHello operation.
+      // Create SOAP 1.2 headers for sayHello operation.
       HttpHeaders headers = new HttpHeaders();
       headers.put("Content-type", Collections.singletonList("application/soap+xml;action=sayHello"));
 
+      // Build the request.
       String request = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
             "   <soapenv:Header/>\n" +
             "   <soapenv:Body>\n" +
@@ -50,19 +51,75 @@ public class SoapControllerIT  extends AbstractBaseIT {
             "      </hel:sayHello>\n" +
             "   </soapenv:Body>\n" +
             "</soapenv:Envelope>";
-
-      // Build the request
       HttpEntity<String> entity = new HttpEntity<>(request, headers);
 
+      // Execute and assert.
       ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
       assertEquals(200, response.getStatusCode().value());
-
       assertEquals("<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
             "   <soapenv:Header/>\n" +
             "   <soapenv:Body>\n" +
             "      <hel:sayHelloResponse>\n" +
             "         <sayHello>Hello Karla !</sayHello>\n" +
             "      </hel:sayHelloResponse>\n" +
+            "   </soapenv:Body>\n" +
+            "</soapenv:Envelope>", response.getBody());
+      assertEquals("application/soap+xml;charset=UTF-8", response.getHeaders().getContentType().toString());
+
+      // Create SOAP 1.1 headers for sayHello operation.
+      headers = new HttpHeaders();
+      headers.put("SOAPAction", Collections.singletonList("\"sayHello\""));
+
+      // Build the request.
+      request = "<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
+            "   <soap-env:Header/>\n" +
+            "   <soap-env:Body>\n" +
+            "      <hel:sayHello>\n" +
+            "         <name>Andrew</name>\n" +
+            "      </hel:sayHello>\n" +
+            "   </soap-env:Body>\n" +
+            "</soap-env:Envelope>";
+      entity = new HttpEntity<>(request, headers);
+
+      // Execute and assert, content-type is different for SOAP 1.1.
+      response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals("<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
+            "   <soapenv:Header/>\n" +
+            "   <soapenv:Body>\n" +
+            "      <hel:sayHelloResponse>\n" +
+            "         <sayHello>Hello Andrew !</sayHello>\n" +
+            "      </hel:sayHelloResponse>\n" +
+            "   </soapenv:Body>\n" +
+            "</soapenv:Envelope>", response.getBody());
+      assertEquals("text/xml;charset=UTF-8", response.getHeaders().getContentType().toString());
+
+      // Test exception case.
+      request = "<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
+            "   <soap-env:Header/>\n" +
+            "   <soap-env:Body>\n" +
+            "      <hel:sayHello>\n" +
+            "         <name>World</name>\n" +
+            "      </hel:sayHello>\n" +
+            "   </soap-env:Body>\n" +
+            "</soap-env:Envelope>";
+      entity = new HttpEntity<>(request, headers);
+
+      // Execute and assert.
+      response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      assertEquals(500, response.getStatusCode().value());
+      assertEquals("<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
+            "   <soapenv:Header/>\n" +
+            "   <soapenv:Body>\n" +
+            "      <soapenv:Fault>\n" +
+            "         <faultcode>soapenv:Sender</faultcode>\n" +
+            "         <faultstring>Unknown name</faultstring>\n" +
+            "         <detail>\n" +
+            "            <hel:HelloException>\n" +
+            "               <code>999</code>\n" +
+            "            </hel:HelloException>\n" +
+            "         </detail>\n" +
+            "      </soapenv:Fault>\n" +
             "   </soapenv:Body>\n" +
             "</soapenv:Envelope>", response.getBody());
    }

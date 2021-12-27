@@ -153,6 +153,7 @@ public class SoapController {
                }
             } catch (Exception e) {
                log.error("Error during Soap validation", e);
+               return new ResponseEntity<Object>("Error during Soap validation: " + e.getMessage(), HttpStatus.BAD_REQUEST);
             }
          }
 
