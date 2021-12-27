@@ -9,14 +9,14 @@ microcks:
     #kubernetes.io/tls-acme: "true"
     #kubernetes.io/ingress.class: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:1.4.1
+  image: quay.io/microcks/microcks:nightly
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
 
   resources:
-    #requests:
-      #cpu: 250m
+    requests:
+      cpu: 200m
       #memory: 400Mi
     limits:
       #cpu: 500m
@@ -26,7 +26,7 @@ microcks:
   logLevel: INFO
 
 postman:
-  image: quay.io/microcks/microcks-postman-runtime:latest
+  image: quay.io/microcks/microcks-postman-runtime:nightly
   replicas: 1
 
 keycloak:
@@ -113,7 +113,7 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
     
-    image: quay.io/microcks/microcks-async-minion:1.4.1
+    image: quay.io/microcks/microcks-async-minion:nightly
 
     kafka:
       install: true
