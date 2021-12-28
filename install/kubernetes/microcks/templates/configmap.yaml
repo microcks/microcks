@@ -78,17 +78,21 @@ data:
     {{- if eq .Values.features.async.kafka.install false }}
       {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
     spring.kafka.producer.properties.security.protocol=SSL
+      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     spring.kafka.producer.properties.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
     spring.kafka.producer.properties.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
     spring.kafka.producer.properties.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
+      {{- end }}
     spring.kafka.producer.properties.ssl.keystore.location=/deployments/config/kafka/keystore/{{ .Values.features.async.kafka.authentication.keystoreSecretRef.storeKey }}
     spring.kafka.producer.properties.ssl.keystore.password=${KAFKA_KEYSTORE_PASSWORD}
     spring.kafka.producer.properties.ssl.keystore.type={{ .Values.features.async.kafka.authentication.keystoreType }}
       {{- else if eq .Values.features.async.kafka.authentication.type "SASL_SSL" }}
     spring.kafka.producer.properties.security.protocol=SASL_SSL
+      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     spring.kafka.producer.properties.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
     spring.kafka.producer.properties.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
     spring.kafka.producer.properties.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
+      {{- end }}
     spring.kafka.producer.properties.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
     spring.kafka.producer.properties.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
       {{- end }}
@@ -412,24 +416,30 @@ data:
     %kube.kafka.ssl.keystore.type={{ .Values.features.async.kafka.authentication.keystoreType }}
 
     %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SSL
+      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
+      {{- end }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.keystore.location=/deployments/config/kafka/keystore/{{ .Values.features.async.kafka.authentication.keystoreSecretRef.storeKey }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.keystore.password=${KAFKA_KEYSTORE_PASSWORD}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.keystore.type={{ .Values.features.async.kafka.authentication.keystoreType }}
       {{- else if eq .Values.features.async.kafka.authentication.type "SASL_SSL" }}
     %kube.kafka.security.protocol=SASL_SSL
+      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     %kube.kafka.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
     %kube.kafka.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
     %kube.kafka.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
+      {{- end }}
     %kube.kafka.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
     %kube.kafka.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
 
     %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SASL_SSL
+      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
+      {{- end }}
     %kube.mp.messaging.incoming.microcks-services-updates.sasl-mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
     %kube.mp.messaging.incoming.microcks-services-updates.sasl-jaas-config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
       {{- end }}
