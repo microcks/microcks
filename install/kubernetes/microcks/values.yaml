@@ -148,11 +148,11 @@ features:
         type: none #SSL #SASL_SSL
         # For TLS transport, you'll always need a truststore to hold your cluster certificate.
         # You have to setup a truststore type and a secret reference for retrieving content and password.
-        truststoreType: PKCS12
-        truststoreSecretRef:
-          secret: kafka-cluster-ca-cert
-          storeKey: ca.p12
-          passwordKey: ca.password
+        #truststoreType: PKCS12
+        #truststoreSecretRef:
+          #secret: kafka-cluster-ca-cert
+          #storeKey: ca.p12
+          #passwordKey: ca.password
         # For mutual TLS authentication, you'll also need a keystore to hold your user private key.
         # You have to setup a keystore type and a secret reference for retrieving content and password.
         keystoreType: PKCS12

@@ -408,9 +408,11 @@ data:
     
       {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
     %kube.kafka.security.protocol=SSL
+      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     %kube.kafka.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
     %kube.kafka.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
     %kube.kafka.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
+      {{- end }}
     %kube.kafka.ssl.keystore.location=/deployments/config/kafka/keystore/{{ .Values.features.async.kafka.authentication.keystoreSecretRef.storeKey }}
     %kube.kafka.ssl.keystore.password=${KAFKA_KEYSTORE_PASSWORD}
     %kube.kafka.ssl.keystore.type={{ .Values.features.async.kafka.authentication.keystoreType }}
