@@ -33,7 +33,7 @@ spec:
           - name: JAVA_OPTIONS
             value: "-XX:+TieredCompilation -XX:TieredStopAtLevel=2"
           - name: JAVA_MAJOR_VERSION
-            value: 11
+            value: "11"
           - name: SPRING_PROFILES_ACTIVE
             value: prod
           - name: SPRING_DATA_MONGODB_URI
