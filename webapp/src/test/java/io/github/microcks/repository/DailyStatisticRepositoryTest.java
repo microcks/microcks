@@ -63,14 +63,14 @@ public class DailyStatisticRepositoryTest {
    @Test
    public void testFindByDayAndServiceNameAndServiceVersion(){
       // Retrieve a stat using theses 3 criteria.
-      DailyStatistic stat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.0");
+      DailyStatistic stat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.0").get(0);
       assertNotNull(stat);
       assertNotNull(stat.getId());
       assertEquals("20140319", stat.getDay());
       assertEquals("TestService1", stat.getServiceName());
       assertEquals("1.0", stat.getServiceVersion());
       // Retrieve another stat object.
-      DailyStatistic otherStat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.2");
+      DailyStatistic otherStat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.2").get(0);
       assertNotNull(otherStat);
       assertNotNull(otherStat.getId());
       assertNotEquals(stat.getId(), otherStat.getId());

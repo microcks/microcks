@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 /**
  * Application event listener that updates daily statistics on incoming event.
@@ -68,8 +69,12 @@ public class DailyStatisticsFeeder implements ApplicationListener<MockInvocation
       }
       
       // First check if there's a statistic document for invocation day.
-      DailyStatistic statistic = statisticsRepository.findByDayAndServiceNameAndServiceVersion(day, 
+      DailyStatistic statistic = null;
+      List<DailyStatistic> statistics = statisticsRepository.findByDayAndServiceNameAndServiceVersion(day,
             event.getServiceName(), event.getServiceVersion());
+      if (!statistics.isEmpty()) {
+         statistic = statistics.get(0);
+      }
       
       if (statistic == null){
          // No statistic's yet...

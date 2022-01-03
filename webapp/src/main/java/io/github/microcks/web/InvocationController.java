@@ -79,7 +79,11 @@ public class InvocationController {
       if (day == null) {
          day = getTodaysDate();
       }
-      return repository.findByDayAndServiceNameAndServiceVersion(day, serviceName, serviceVersion);
+      List<DailyStatistic> statistics = repository.findByDayAndServiceNameAndServiceVersion(day, serviceName, serviceVersion);
+      if (!statistics.isEmpty()) {
+         return statistics.get(0);
+      }
+      return null;
    }
 
    @RequestMapping(value = "/invocations/global/last", method = RequestMethod.GET)

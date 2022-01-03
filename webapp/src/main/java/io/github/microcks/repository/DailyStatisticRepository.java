@@ -21,6 +21,8 @@ package io.github.microcks.repository;
 import io.github.microcks.domain.DailyStatistic;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
+
 /**
  * Repository interface for DailyStatistic domain objects.
  * @author laurent
@@ -28,5 +30,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 public interface DailyStatisticRepository extends MongoRepository<DailyStatistic, String>,
       CustomDailyStatisticRepository {
 
-   DailyStatistic findByDayAndServiceNameAndServiceVersion(String day, String serviceName, String serviceVersion);
+   List<DailyStatistic> findByDayAndServiceNameAndServiceVersion(String day, String serviceName, String serviceVersion);
 }
