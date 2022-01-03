@@ -99,4 +99,17 @@ public class TemplateEngineTest {
 
       assertEquals("<greeting>Hello Laurent</greeting>", result);
    }
+
+   @Test
+   public void testXMLWithNSAndAttributeTemplate() {
+      // Execute simple template calling now() and request.body function.
+      EvaluableRequest request = new EvaluableRequest("<ns:request xmlns:ns=\"http://example.com/ns\"><ns:name><firstname value=\"Laurent\"/></ns:name></ns:request>", null);
+
+      TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+      engine.getContext().setVariable("request", request);
+
+      String result = engine.getValue("<greeting>Hello {{request.body//*[local-name() = 'name']/firstname/@value}}</greeting>");
+
+      assertEquals("<greeting>Hello Laurent</greeting>", result);
+   }
 }
