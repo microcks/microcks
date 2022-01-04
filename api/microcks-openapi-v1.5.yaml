@@ -1,10 +1,10 @@
 ---
 openapi: 3.0.2
 info:
-  title: Microcks API v1.4
-  version: 1.4.0
+  title: Microcks API v1.5
+  version: 1.5.0
   description: "API offered by Microcks, the mock and testing platform for API and\
-    \ microservices (microcks.github.io)"
+    \ microservices (microcks.io)"
   contact:
     name: Laurent Broudoux
     url: https://github.com/lbroudoux
@@ -1427,20 +1427,6 @@ components:
         secretName:
           description: The name of Secret to use for connecting the test endpoint
           type: string
-    TestRunnerType:
-      description: Type of test strategy (different strategies are implemented by
-        different runners)
-      type: array
-      items:
-        enum:
-        - HTTP
-        - SOAP_HTTP
-        - SOAP_UI
-        - POSTMAN
-        - OPEN_API_SCHEMA
-        - ASYNC_API_SCHEMA
-        - GRPC_PROTOBUF
-        type: string
     Resource:
       description: "Resource represents a Service or API artifacts such as specification,\
         \ contract"
@@ -1474,22 +1460,6 @@ components:
         sourceArtifact:
           description: Short name of the artifact this resource was extracted from
           type: string
-    ResourceType:
-      description: Types of managed resources for Services or APIs
-      type: array
-      items:
-        enum:
-        - WSDL
-        - XSD
-        - JSON_SCHEMA
-        - OPEN_API_SPEC
-        - OPEN_API_SCHEMA
-        - ASYNC_API_SPEC
-        - ASYNC_API_SCHEMA
-        - AVRO_SCHEMA
-        - PROTOBUF_SCHEMA
-        - PROTOBUF_DESCRIPTION
-        type: string
     Binding:
       description: Protocol binding details for asynchronous operations
       required:
@@ -1616,6 +1586,38 @@ components:
           description: Flag telling if considered as primary or secondary artifact.
             Default to `true`
           type: boolean
+    TestRunnerType:
+      description: Type of test strategy (different strategies are implemented by
+        different runners)
+      type: array
+      items:
+        enum:
+        - HTTP
+        - SOAP_HTTP
+        - SOAP_UI
+        - POSTMAN
+        - OPEN_API_SCHEMA
+        - ASYNC_API_SCHEMA
+        - GRPC_PROTOBUF
+        - GRAPHQL_SCHEMA
+        type: string
+    ResourceType:
+      description: Types of managed resources for Services or APIs
+      type: array
+      items:
+        enum:
+        - WSDL
+        - XSD
+        - JSON_SCHEMA
+        - OPEN_API_SPEC
+        - OPEN_API_SCHEMA
+        - ASYNC_API_SPEC
+        - ASYNC_API_SCHEMA
+        - AVRO_SCHEMA
+        - PROTOBUF_SCHEMA
+        - PROTOBUF_DESCRIPTION
+        - GRAPHQL_SCHEMA
+        type: string
   responses:
     ServiceResponse:
       content:
