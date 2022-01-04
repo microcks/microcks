@@ -18,6 +18,7 @@
  */
 package io.github.microcks.web;
 
+import graphql.language.*;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
@@ -50,15 +51,6 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import graphql.language.Argument;
-import graphql.language.Definition;
-import graphql.language.Document;
-import graphql.language.Field;
-import graphql.language.OperationDefinition;
-import graphql.language.Selection;
-import graphql.language.SelectionSet;
-import graphql.language.StringValue;
-import graphql.language.VariableReference;
 import graphql.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,7 +175,8 @@ public class GraphQLController {
       for (Selection selection : graphqlOperation.getSelectionSet().getSelections()) {
          GraphQLQueryResponse graphqlResponse = null;
          try {
-            graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection, body, graphqlHttpReq, request);
+            graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
+                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request);
             graphqlResponses.add(graphqlResponse);
             if (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
                maxDelay[0] = graphqlResponse.getOperationDelay();
@@ -197,7 +190,8 @@ public class GraphQLController {
       /* Optimized parallel version but need to better handle exception.
       graphqlResponses = graphqlOperation.getSelectionSet().getSelections().stream().parallel().map(selection -> {
          try {
-            GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection, body, graphqlHttpReq, request);
+            GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
+                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request);
             if (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
                maxDelay[0] = graphqlResponse.getOperationDelay();
             }
@@ -258,6 +252,7 @@ public class GraphQLController {
     * @param service The Service this query is targeting
     * @param operationType The type of GraphQL operation (QUERY or MUTATION)
     * @param graphqlField The Field selection we should apply
+    * @param fragmentDefinitions A list of fragment field selection
     * @param body The Http request body
     * @param graphqlHttpReq The Http GraphQL request wrapper
     * @param request The bare Http Servlet request
@@ -265,7 +260,8 @@ public class GraphQLController {
     * @throws GraphQLQueryProcessingException if incoming field selection query cannot be processed
     */
    protected GraphQLQueryResponse processGraphQLQuery(Service service, String operationType, Field graphqlField,
-                                      String body, GraphQLHttpRequest graphqlHttpReq, HttpServletRequest request)
+                                                      List<FragmentDefinition> fragmentDefinitions, String body,
+                                                      GraphQLHttpRequest graphqlHttpReq, HttpServletRequest request)
          throws GraphQLQueryProcessingException{
 
       GraphQLQueryResponse result = new GraphQLQueryResponse();
@@ -363,7 +359,7 @@ public class GraphQLController {
 
             try {
                JsonNode responseJson = mapper.readTree(responseContent);
-               filterFieldSelection(graphqlField.getSelectionSet(), responseJson.get("data").get(operationName));
+               filterFieldSelection(graphqlField.getSelectionSet(), fragmentDefinitions, responseJson.get("data").get(operationName));
                result.setJsonResponse(responseJson);
             } catch (JsonProcessingException pe) {
                log.error("JsonProcessingException while filtering response according GraphQL field selection", pe);
@@ -443,9 +439,10 @@ public class GraphQLController {
    /**
     * Apply a FieldSelection filter on Json node.
     * @param selectionSet The set of selections to apply
+    * @param fragmentDefinitions A list of fragment field selection
     * @param node The Json node to apply on
     */
-   protected void filterFieldSelection(SelectionSet selectionSet, JsonNode node) {
+   protected void filterFieldSelection(SelectionSet selectionSet, List<FragmentDefinition> fragmentDefinitions, JsonNode node) {
       // Stop condition: no more selection to apply.
       if (selectionSet == null || selectionSet.getSelections() == null || selectionSet.getSelections().isEmpty()) {
          return;
@@ -458,17 +455,28 @@ public class GraphQLController {
             for (Selection selection : selectionSet.getSelections()) {
                if (selection instanceof Field) {
                   Field fieldSelection = (Field) selection;
-                  filterFieldSelection(fieldSelection.getSelectionSet(), node.get(fieldSelection.getName()));
+                  filterFieldSelection(fieldSelection.getSelectionSet(), fragmentDefinitions, node.get(fieldSelection.getName()));
                   properties.add(fieldSelection.getName());
+               } else if (selection instanceof FragmentSpread) {
+                  // FragmentSpread is an indirection to selection find in definitions.
+                  FragmentSpread fragmentSpread = (FragmentSpread) selection;
+                  FragmentDefinition fragmentDef = fragmentDefinitions.stream()
+                        .filter(def -> def.getName().equals(fragmentSpread.getName())).findFirst().orElse(null);
+                  if (fragmentDef != null) {
+                     filterFieldSelection(fragmentDef.getSelectionSet(), fragmentDefinitions, node);
+                  }
                }
             }
-            ((ObjectNode) node).retain(properties);
+            // Only filter if properties to retain.
+            if (!properties.isEmpty()) {
+               ((ObjectNode) node).retain(properties);
+            }
             break;
          case ARRAY:
             // We must apply selection on each element of the array.
             Iterator<JsonNode> children = node.elements();
             while (children.hasNext()) {
-               filterFieldSelection(selectionSet, children.next());
+               filterFieldSelection(selectionSet, fragmentDefinitions, children.next());
             }
             break;
       }
