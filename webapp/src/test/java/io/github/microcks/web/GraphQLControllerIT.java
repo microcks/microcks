@@ -143,5 +143,77 @@ public class GraphQLControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+
+      // Check query with fragment definition.
+      query = "{\"query\": \"query film($id: String) {\\n" +
+            "  film(id: \\\"ZmlsbXM6MQ==\\\") {\\n" +
+            "    ...filmFields\\n" +
+            "  }\\n" +
+            "  }\\n" +
+            "  fragment filmFields on Film {\\n" +
+            "    id\\n" +
+            "    title\\n" +
+            "    episodeID\\n" +
+            "    starCount\\n" +
+            "  }\\n" +
+            "\"}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\n" +
+                     "  \"data\": {\n" +
+                     "    \"film\": {\n" +
+                     "      \"id\": \"ZmlsbXM6MQ==\",\n" +
+                     "      \"title\": \"A New Hope\",\n" +
+                     "      \"episodeID\": 4,\n" +
+                     "      \"starCount\": 432\n" +
+                     "    }\n" +
+                     "  }\n" +
+                     "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // Check query with multiple selection and aliases
+      query = "{\"query\": \"{\\n" +
+            "  film_one: film(id: \\\"ZmlsbXM6MQ==\\\") {\\n" +
+            "    id\\n" +
+            "    title\\n" +
+            "    episodeID\\n" +
+            "    rating\\n" +
+            "  }\\n" +
+            "  film_two: film(id: \\\"ZmlsbXM6Mg==\\\") {\\n" +
+            "    id\\n" +
+            "    title\\n" +
+            "    episodeID\\n" +
+            "    director\\n" +
+            "    starCount\\n" +
+            "  }\\n" +
+            "}\"}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\n" +
+                     "  \"data\": {\n" +
+                     "    \"film_one\": {\n" +
+                     "      \"id\": \"ZmlsbXM6MQ==\",\n" +
+                     "      \"title\": \"A New Hope\",\n" +
+                     "      \"episodeID\": 4,\n" +
+                     "      \"rating\": 4.3\n" +
+                     "    },\n" +
+                     "    \"film_two\": {\n" +
+                     "      \"id\": \"ZmlsbXM6Mg==\",\n" +
+                     "      \"title\": \"The Empire Strikes Back\",\n" +
+                     "      \"episodeID\": 5,\n" +
+                     "      \"director\": \"Irvin Kershner\",\n" +
+                     "      \"starCount\": 433\n" +
+                     "    }\n" +
+                     "  }\n" +
+                     "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
    }
 }
