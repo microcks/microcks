@@ -43,6 +43,9 @@ data:
     validation.resourceUrl=https://{{ .Values.microcks.url }}/api/resources/
     services.update.interval=${SERVICES_UPDATE_INTERVAL:0 0 0/2 * * *}
     mocks.rest.enable-cors-policy=${ENABLE_CORS_POLICY:true}
+    {{- if eq .Values.microcks.mockInvocationStats false }}
+    mocks.enable-invocation-stats=false
+    {{- end }}
 
     # Logging configuration properties
     logging.config=/deployments/config/logback.xml

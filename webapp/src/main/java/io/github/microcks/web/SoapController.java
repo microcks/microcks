@@ -78,6 +78,9 @@ public class SoapController {
    @Autowired
    private ApplicationContext applicationContext;
 
+   @Value("${mocks.enable-invocation-stats}")
+   private final Boolean enableInvocationStats = null;
+
    @Value("${validation.resourceUrl}")
    private final String resourceUrl = null;
 
@@ -212,8 +215,10 @@ public class SoapController {
          }
          MockControllerCommons.waitForDelay(startTime, delay);
 
-         // Publish an invocation event before returning.
-         MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+         // Publish an invocation event before returning if enabled.
+         if (enableInvocationStats) {
+            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+         }
 
          if (response.isFault()) {
             return new ResponseEntity<Object>(responseContent, responseHeaders, HttpStatus.INTERNAL_SERVER_ERROR);

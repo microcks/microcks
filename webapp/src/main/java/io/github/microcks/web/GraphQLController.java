@@ -55,6 +55,7 @@ import graphql.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -99,6 +100,9 @@ public class GraphQLController {
 
    @Autowired
    private ApplicationContext applicationContext;
+
+   @Value("${mocks.enable-invocation-stats}")
+   private final Boolean enableInvocationStats = null;
 
    private Parser requestParser = new Parser();
    private SchemaParser schemaParser = new SchemaParser();
@@ -221,9 +225,11 @@ public class GraphQLController {
       // Waiting for delay if any.
       MockControllerCommons.waitForDelay(startTime, maxDelay[0]);
 
-      // Publish an invocation event before returning.
-      MockControllerCommons.publishMockInvocation(applicationContext, this, service,
-            graphqlResponses.get(0).getResponse(), startTime);
+      // Publish an invocation event before returning if enabled.
+      if (enableInvocationStats) {
+         MockControllerCommons.publishMockInvocation(applicationContext, this, service,
+               graphqlResponses.get(0).getResponse(), startTime);
+      }
 
       String responseContent = null;
       JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();

@@ -25,6 +25,9 @@ microcks:
   #logLevel: TRACE | DEBUG | INFO | WARN
   logLevel: INFO
 
+  # Enabling/disabling mock invocation stats.
+  mockInvocationStats: true
+
 postman:
   image: quay.io/microcks/microcks-postman-runtime:nightly
   replicas: 1

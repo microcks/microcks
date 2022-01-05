@@ -45,6 +45,7 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -72,6 +73,10 @@ public class GrpcServerCallHandler {
 
    @Autowired
    private ApplicationContext applicationContext;
+
+   @Value("${mocks.enable-invocation-stats}")
+   private final Boolean enableInvocationStats = null;
+
 
    /**
     * Create an ServerCallHandler that uses Microcks mocks for unary calls.
@@ -189,8 +194,10 @@ public class GrpcServerCallHandler {
                      MockControllerCommons.waitForDelay(startTime, grpcOperation.getDefaultDelay());
                   }
 
-                  // Publish an invocation event before returning.
-                  MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+                  // Publish an invocation event before returning if enabled.
+                  if (enableInvocationStats) {
+                     MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+                  }
 
                   // Send the output message and complete the stream.
                   streamObserver.onNext(outMsg.toByteArray());

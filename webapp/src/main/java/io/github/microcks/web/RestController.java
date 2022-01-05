@@ -78,6 +78,9 @@ public class RestController {
    @Autowired
    private ApplicationContext applicationContext;
 
+   @Value("${mocks.enable-invocation-stats}")
+   private final Boolean enableInvocationStats = null;
+
    @Value("${mocks.rest.enable-cors-policy}")
    private final Boolean enableCorsPolicy = null;
 
@@ -240,8 +243,10 @@ public class RestController {
             }
             MockControllerCommons.waitForDelay(startTime, delay);
 
-            // Publish an invocation event before returning.
-            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+            // Publish an invocation event before returning if enabled.
+            if (enableInvocationStats) {
+               MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+            }
 
             return new ResponseEntity<Object>(responseContent, responseHeaders, status);
          }
