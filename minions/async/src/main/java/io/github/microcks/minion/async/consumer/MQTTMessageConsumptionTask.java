@@ -92,7 +92,7 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
          messages.add(message);
       });
 
-      Thread.sleep(specification.getTimeoutMS() - 1000L);
+      Thread.sleep(specification.getTimeoutMS());
 
       // Disconnect the subscriber before returning results.
       subscriber.disconnect();
