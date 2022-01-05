@@ -101,7 +101,7 @@ public class WebSocketMessageConsumptionTask implements MessageConsumptionTask {
          throw e;
       }
 
-      Thread.sleep(specification.getTimeoutMS() - 1000L);
+      Thread.sleep(specification.getTimeoutMS());
       if (session != null) {
          try {
             session.close();

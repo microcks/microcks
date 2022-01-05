@@ -67,13 +67,13 @@ public class MQTTProducerManager {
          client = createClient();
       } catch (Exception e) {
          logger.errorf("Cannot connect to MQTT broker %s", mqttServer);
+         logger.errorf("Connection exception: %s", e.getMessage());
          throw e;
       }
    }
 
    /**
     * Create a IMqttClient and connect it to the server.
-    * 
     * @return A new IMqttClient implementation initialized with configuration properties.
     * @throws Exception in case of connection failure
     */
@@ -81,6 +81,7 @@ public class MQTTProducerManager {
       MqttConnectOptions options = new MqttConnectOptions();
       if (mqttUsername != null && mqttUsername.length() > 0 
             && mqttPassword != null && mqttPassword.length() > 0) {
+         logger.infof("Connecting to MQTT broker with user '%s'", mqttUsername);
          options.setUserName(mqttUsername);
          options.setPassword(mqttPassword.toCharArray());
       }
@@ -119,7 +120,7 @@ public class MQTTProducerManager {
     * @return The topic name for definition and event
     */
    public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.infof("AsyncAPI Operation  {} %s", definition.getOperation().getName());
+      logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");

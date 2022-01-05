@@ -225,29 +225,39 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
 
    /** Consume simple byte[] on default consumer. Fill messages array. */
    private void consumeByteArray(List<ConsumedMessage> messages){
-      ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(specification.getTimeoutMS()));
+      long startTime = System.currentTimeMillis();
+      long timeoutTime = startTime + specification.getTimeoutMS();
 
-      for (ConsumerRecord<String, byte[]> record : records) {
-         // Build a ConsumedMessage from Kafka record.
-         ConsumedMessage message = new ConsumedMessage();
-         message.setReceivedAt(System.currentTimeMillis());
-         message.setHeaders(buildHeaders(record.headers()));
-         message.setPayload(record.value());
-         messages.add(message);
+      while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
+         ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
+
+         for (ConsumerRecord<String, byte[]> record : records) {
+            // Build a ConsumedMessage from Kafka record.
+            ConsumedMessage message = new ConsumedMessage();
+            message.setReceivedAt(System.currentTimeMillis());
+            message.setHeaders(buildHeaders(record.headers()));
+            message.setPayload(record.value());
+            messages.add(message);
+         }
       }
    }
 
    /** Consumer avro records when connected to registry. Fill messages array. */
    private void consumeAvro(List<ConsumedMessage> messages) {
-      ConsumerRecords<String, GenericRecord> records = avroConsumer.poll(Duration.ofMillis(specification.getTimeoutMS()));
+      long startTime = System.currentTimeMillis();
+      long timeoutTime = startTime + specification.getTimeoutMS();
 
-      for (ConsumerRecord<String, GenericRecord> record : records) {
-         // Build a ConsumedMessage from Kafka record.
-         ConsumedMessage message = new ConsumedMessage();
-         message.setReceivedAt(System.currentTimeMillis());
-         message.setHeaders(buildHeaders(record.headers()));
-         message.setPayloadRecord(record.value());
-         messages.add(message);
+      while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
+         ConsumerRecords<String, GenericRecord> records = avroConsumer.poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
+
+         for (ConsumerRecord<String, GenericRecord> record : records) {
+            // Build a ConsumedMessage from Kafka record.
+            ConsumedMessage message = new ConsumedMessage();
+            message.setReceivedAt(System.currentTimeMillis());
+            message.setHeaders(buildHeaders(record.headers()));
+            message.setPayloadRecord(record.value());
+            messages.add(message);
+         }
       }
    }
 

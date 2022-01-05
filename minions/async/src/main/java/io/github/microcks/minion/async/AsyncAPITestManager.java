@@ -111,8 +111,9 @@ public class AsyncAPITestManager {
          if (messageConsumptionTask != null) {
             try {
                logger.debugf("Starting consuming messages for {%d} ms", specification.getTimeoutMS());
+               // Adding an extra seconds to allow to close and clean all the machinery ;-)
                outputs = executorService.invokeAny(Collections.singletonList(messageConsumptionTask),
-                     specification.getTimeoutMS(), TimeUnit.MILLISECONDS);
+                     specification.getTimeoutMS() + 1000L, TimeUnit.MILLISECONDS);
                logger.debugf("Consumption ends and we got {%d} messages to validate", outputs.size());
             } catch (InterruptedException e) {
                logger.infof("AsyncAPITestThread for {%s} was interrupted", specification.getTestResultId());
