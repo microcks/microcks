@@ -1,0 +1,21 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIMetadata
+metadata:
+  name: Movie Graph API
+  version: 1.0
+  labels:
+    domain: movie
+    status: stable
+    team: Team A
+operations:
+  'addReview':
+    dispatcher: JSON_BODY
+    dispatcherRules: |-
+      {
+        "exp": "/filmId",
+        "operator": "equals",
+        "cases": {
+          "ZmlsbXM6Mg==": "addReview to ZmlsbXM6Mg==",
+          "default": "ZmlsbXM6Mg=="
+        }
+      }

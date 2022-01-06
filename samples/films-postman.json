@@ -1,0 +1,245 @@
+{
+	"info": {
+		"_postman_id": "7c00b563-d454-421a-a3b0-17c4e3254cb9",
+		"name": "Movie Graph API",
+		"description": "version=1.0 - A Graph API for querying movies",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "queries",
+			"item": [
+				{
+					"name": "allFilms",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query allFilms {\n    allFilms {\n        totalCount\n        films {\n            id\n            title\n            episodeID\n            director\n            starCount\n            rating\n        }\n    }\n}",
+								"variables": "{}"
+							}
+						},
+						"url": {
+							"raw": "http://allFilms",
+							"protocol": "http",
+							"host": [
+								"allFilms"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "allFilms",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query allFilms {\n    allFilms {\n        films {\n            id\n            title\n            episodeID\n            director\n            starCount\n            rating\n        }\n    }\n}",
+										"variables": "{}"
+									}
+								},
+								"url": {
+									"raw": "{{url}}",
+									"host": [
+										"{{url}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"allFilms\": {\n      \"films\": [\n        {\n          \"id\": \"ZmlsbXM6MQ==\",\n          \"title\": \"A New Hope\",\n          \"episodeID\": 4,\n          \"director\": \"George Lucas\",\n          \"starCount\": 432,\n          \"rating\": 4.3\n        },\n        {\n          \"id\": \"ZmlsbXM6Mg==\",\n          \"title\": \"The Empire Strikes Back\",\n          \"episodeID\": 5,\n          \"director\": \"Irvin Kershner\",\n          \"starCount\": 433,\n          \"rating\": 4.3\n        },\n        {\n          \"id\": \"ZmlsbXM6Mw==\",\n          \"title\": \"Return of the Jedi\",\n          \"episodeID\": 6,\n          \"director\": \"Richard Marquand\",\n          \"starCount\": 434,\n          \"rating\": 4.3\n        },\n        {\n          \"id\": \"ZmlsbXM6NA==\",\n          \"title\": \"The Phantom Menace\",\n          \"episodeID\": 1,\n          \"director\": \"George Lucas\",\n          \"starCount\": 252,\n          \"rating\": 3.2\n        },\n        {\n          \"id\": \"ZmlsbXM6NQ==\",\n          \"title\": \"Attack of the Clones\",\n          \"episodeID\": 2,\n          \"director\": \"George Lucas\",\n          \"starCount\": 320,\n          \"rating\": 3.9\n        },\n        {\n          \"id\": \"ZmlsbXM6Ng==\",\n          \"title\": \"Revenge of the Sith\",\n          \"episodeID\": 3,\n          \"director\": \"George Lucas\",\n          \"starCount\": 410,\n          \"rating\": 4.1\n        }\n      ]\n    }\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "film",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "query film ($id: String) {\n    film (id: $id) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n    }\n}",
+								"variables": "{\n  \"id\": \"\"\n}"
+							}
+						},
+						"url": {
+							"raw": "http://film",
+							"protocol": "http",
+							"host": [
+								"film"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "film ZmlsbXM6MQ==",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query film ($id: String) {\n    film (id: $id) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n    }\n}",
+										"variables": "{\n  \"id\": \"ZmlsbXM6MQ==\"\n}"
+									}
+								},
+								"url": {
+									"raw": "{{url}}",
+									"host": [
+										"{{url}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n  \"data\": {\n    \"film\": {\n        \"id\": \"ZmlsbXM6MQ==\",\n        \"title\": \"A New Hope\",\n        \"episodeID\": 4,\n        \"director\": \"George Lucas\",\n        \"starCount\": 432,\n        \"rating\": 4.3\n    }\n  }\n}"
+						},
+						{
+							"name": "film ZmlsbXM6Mg==",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "query film ($id: String) {\n    film (id: $id) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n    }\n}",
+										"variables": "{\n  \"id\": \"ZmlsbXM6Mg==\"\n}"
+									}
+								},
+								"url": {
+									"raw": "{{url}}",
+									"host": [
+										"{{url}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"film\": {\n            \"id\": \"ZmlsbXM6Mg==\",\n            \"title\": \"The Empire Strikes Back\",\n            \"episodeID\": 5,\n            \"director\": \"Irvin Kershner\",\n            \"starCount\": 433,\n            \"rating\": 4.3\n        }\n    }\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "mutations",
+			"item": [
+				{
+					"name": "addStar",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "graphql",
+							"graphql": {
+								"query": "mutation AddStar($filmId: String) {\n    addStar(filmId: $filmId) {\n        id\n        starCount\n        rating\n    }\n}",
+								"variables": "{\n    \"filmId\": \"\"\n}"
+							}
+						},
+						"url": {
+							"raw": "http://addStar",
+							"protocol": "http",
+							"host": [
+								"addStar"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "addStar to ZmlsbXM6Mg==",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "mutation AddStar($filmId: String) {\n    addStar(filmId: $filmId) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n    }\n}",
+										"variables": "{\n    \"filmId\": \"ZmlsbXM6Mg==\"\n}"
+									}
+								},
+								"url": {
+									"raw": "http://addStar",
+									"protocol": "http",
+									"host": [
+										"addStar"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"addStar\": {\n            \"id\": \"ZmlsbXM6Mg==\",\n            \"title\": \"The Empire Strikes Back\",\n            \"episodeID\": 5,\n            \"director\": \"Irvin Kershner\",\n            \"starCount\": 434,\n            \"rating\": 4.3\n        }\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "addReview",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://addReview",
+							"protocol": "http",
+							"host": [
+								"addReview"
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "addReview to ZmlsbXM6Mg==",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "graphql",
+									"graphql": {
+										"query": "mutation AddReview($filmId: String, $review: Review) {\n    addReview(filmId: $filmId, review: $review) {\n        id\n        title\n        episodeID\n        director\n        starCount\n        rating\n    }\n}\n",
+										"variables": "{\n    \"filmId\": \"ZmlsbXM6Mg==\",\n    \"review\": {\n        \"comment\": \"Awesome!\",\n        \"rating\": 5\n    }\n}\n"
+									}
+								},
+								"url": {
+									"raw": "http://addReview",
+									"protocol": "http",
+									"host": [
+										"addReview"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"data\": {\n        \"addReview\": {\n            \"id\": \"ZmlsbXM6Mg==\",\n            \"title\": \"The Empire Strikes Back\",\n            \"episodeID\": 5,\n            \"director\": \"Irvin Kershner\",\n            \"starCount\": 433,\n            \"rating\": 4.4\n        }\n    }\n}"
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "",
+			"type": "any",
+			"description": "URL for the request."
+		}
+	]
+}
