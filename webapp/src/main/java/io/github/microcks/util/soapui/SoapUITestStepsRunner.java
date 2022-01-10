@@ -25,12 +25,9 @@ import com.eviware.soapui.impl.wsdl.testcase.WsdlTestCase;
 import com.eviware.soapui.impl.wsdl.testcase.WsdlTestCaseRunner;
 import com.eviware.soapui.impl.wsdl.teststeps.RestRequestStepResult;
 import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestRequestStepResult;
-import com.eviware.soapui.model.testsuite.TestCase;
-import com.eviware.soapui.model.testsuite.TestCaseRunner;
-import com.eviware.soapui.model.testsuite.TestStep;
+import com.eviware.soapui.model.testsuite.*;
 import com.eviware.soapui.model.testsuite.TestStepResult;
 import com.eviware.soapui.model.testsuite.TestStepResult.TestStepStatus;
-import com.eviware.soapui.model.testsuite.TestSuite;
 import com.eviware.soapui.support.types.StringToObjectMap;
 import com.eviware.soapui.support.types.StringToStringsMap;
 import io.github.microcks.util.test.AbstractTestRunner;
@@ -78,7 +75,7 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
    @Override
    public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
                                    List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
-      return runAllTestSteps(endpointUrl);
+      return runOperationTestSteps(operation, testResult, endpointUrl, null);
    }
 
    @Override
@@ -87,27 +84,20 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    /**
-    * Run all the test steps defined into the SoapUI project.
-    * @param endpointUrl The URL of the endpoint to use for request test steps.
-    * @return A list of TestReturn wrapper objects (one by executed test step)
-    */
-   public List<TestReturn> runAllTestSteps(String endpointUrl){
-      return runTestSteps(endpointUrl, null);
-   }
-   
-   /**
-    * Run the test step defined into the SoapUI project and having the name 
-    * contained into testStepNames.
+    * Run all the Operation test steps defined into the SoapUI project and having the name
+    * contained into testStepNames (if not null nor empty).
+    * @param testResult TestResults that aggregate results within.
     * @param endpointUrl The URL of the endpoint to use for request test steps.
     * @param testStepNames A list of test step names to execute
     * @return A list of TestReturn wrapper objects (one by executed test step)
     */
-   public List<TestReturn> runTestSteps(String endpointUrl, List<String> testStepNames){
+   public List<TestReturn> runOperationTestSteps(Operation operation, TestResult testResult, String endpointUrl, List<String> testStepNames){
       // Remember to force no proxy otherwise SoapUI will use system settings and will 
       // make them generally applied to everything going out through Apache Http Client
       // (and maybe also JDK HttpURLConnection ?).
       ProxyUtils.setProxyEnabled(false);
-      
+
+      String operationName = operation.getName();
       List<TestReturn> results = new ArrayList<TestReturn>();
       
       for (TestSuite testSuite : project.getTestSuiteList()){
@@ -117,18 +107,42 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
             
             if (testCaseRunner != null){
                for (TestStep testStep : testCase.getTestStepList()){
-                  if (testStep instanceof HttpRequestTestStep && 
-                        (testStepNames == null || testStepNames.contains(testStep.getName()))){
-                     
-                     log.debug("Picking up step " + testStep.getName() + " for running SoapUI test");
-                     // Set the endpointUrl using this common interface for Soap and Rest requests.
-                     ((HttpRequestTestStep)testStep).getHttpRequest().setEndpoint(endpointUrl);
-                     
-                     // Running tests also checks linked assertions.
-                     TestStepResult result = testStep.run(testCaseRunner, testCaseRunner.getRunContext());
-                     log.debug("SoapUI test result is " + result.getStatus());
-                     
-                     results.add(extractTestReturn(testStep.getName(), result));
+                  if (testStep instanceof HttpRequestTestStep
+                        && testStep instanceof OperationTestStep
+                        && (testStepNames == null || testStepNames.contains(testStep.getName()))){
+
+                     log.debug("Looking up for testStep for operation '{}'", operationName);
+
+                     if (operationName.equals( ((OperationTestStep)testStep).getOperation().getName() )) {
+                        log.debug("Picking up step '{}' for running SoapUI test", testStep.getName());
+
+                        // Set the endpointUrl using this common interface for Soap and Rest requests.
+                        ((HttpRequestTestStep) testStep).getHttpRequest().setEndpoint(endpointUrl);
+
+                        // Add or override existing headers with test specific ones for operation and globals.
+                        if (testResult.getOperationsHeaders() != null) {
+                           Set<Header> headers = new HashSet<>();
+                           if (testResult.getOperationsHeaders().getGlobals() != null) {
+                              headers.addAll(testResult.getOperationsHeaders().getGlobals());
+                           }
+                           if (testResult.getOperationsHeaders().get(operationName) != null) {
+                              headers.addAll(testResult.getOperationsHeaders().get(operationName));
+                           }
+                           if (headers.size() > 0) {
+                              StringToStringsMap headersMap = new StringToStringsMap();
+                              for (Header header : headers) {
+                                 headersMap.put(header.getName(), new ArrayList<>(header.getValues()));
+                              }
+                              ((HttpRequestTestStep) testStep).getHttpRequest().setRequestHeaders(headersMap);
+                           }
+                        }
+
+                        // Running tests also checks linked assertions.
+                        TestStepResult result = testStep.run(testCaseRunner, testCaseRunner.getRunContext());
+                        log.debug("SoapUI test result is " + result.getStatus());
+
+                        results.add(extractTestReturn(testStep.getName(), result));
+                     }
                   }
                }
             }

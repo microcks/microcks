@@ -127,7 +127,7 @@ public class TestRunnerService {
    private final String validationResourceUrl = null;
 
    /**
-    *
+    * Launch tests using asynchronous/completable future pattern.
     * @param testResult TestResults to aggregate results within
     * @param service Service to test
     * @param runnerType Type of runner for launching the tests
