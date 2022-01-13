@@ -8,7 +8,7 @@ services:
       - "~/tmp/microcks-data:/data/db"
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:nightly
+    image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
 
   kafka:
@@ -28,7 +28,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:nightly
+    image: quay.io/microcks/microcks:latest
     container_name: microcks
     platform: linux/amd64
     volumes:
@@ -53,7 +53,7 @@ services:
     ports:
       - "8081:8081"
     platform: linux/amd64
-    image: quay.io/microcks/microcks-async-minion:nightly
+    image: quay.io/microcks/microcks-async-minion:latest
     container_name: microcks-async-minion
     restart: on-failure
     volumes:
