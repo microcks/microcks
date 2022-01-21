@@ -25,3 +25,7 @@ Current development version is `1.5.0-SNAPSHOT`. [![GitHub Workflow Status](http
 
 The build instructions are available in the [contribution guide](CONTRIBUTING.md).
 
+## Thanks to community!
+
+[![Stargazers repo roster for @microcks/microcks](https://reporoster.com/stars/microcks/microcks)](https://github.com/microcks/microcks/stargazers)
+[![Forkers repo roster for @microcks/microcks](https://reporoster.com/forks/microcks/microcks)](https://github.com/microcks/microcks/network/members)
