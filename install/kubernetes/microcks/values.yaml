@@ -174,6 +174,12 @@ features:
       username: microcks
       password: microcks
 
+    # Uncomment the amqp.url and put a valid endpoint address below to enable MQTT support.
+    amqp:
+      #url: rabbitmq:5672
+      username: microcks
+      password: microcks
+
     ws:
       #ingressSecretRef: my-secret-for-microcks-ws-ingress
       #ingressAnnotations:

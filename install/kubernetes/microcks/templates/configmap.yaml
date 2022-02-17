@@ -31,6 +31,9 @@ data:
     {{- if .Values.features.async.mqtt.url }}
     features.feature.async-api.endpoint-MQTT={{ .Values.features.async.mqtt.url }}
     {{- end }}
+    {{- if .Values.features.async.amqp.url }}
+    features.feature.async-api.endpoint-AMQP={{ .Values.features.async.amqp.url }}
+    {{- end }}
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
@@ -465,8 +468,15 @@ data:
     %kube.mqtt.password={{ .Values.features.async.mqtt.password }}
     {{- end }}
 
+    {{- if .Values.features.async.amqp.url }}
+    # Access to AMQP broker.
+    %kube.amqp.server={{ .Values.features.async.amqp.url }}
+    %kube.amqp.username={{ .Values.features.async.amqp.username }}
+    %kube.amqp.password={{ .Values.features.async.amqp.password }}
+    {{- end }}
+
     # Configure the minion own behavioral properties.
-    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}
+    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}
     %kube.minion.restricted-frequencies=3,10,30
     %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
 {{- end -}}
