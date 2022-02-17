@@ -27,6 +27,8 @@ import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This is a utility class holding commons routines for MessageConsumptionTask implementations.
@@ -72,5 +74,22 @@ public class ConsumptionTaskCommons {
       }
 
       return trustStore;
+   }
+
+   /**
+    * Initialize options map from options string found in Endpoint URL.
+    * @param options A string of options having the form: option1=value1&amp;option2=value2
+    * @return A Map of options supplied in endpoint url.
+    */
+   public static Map<String, String> initializeOptionsMap(String options) {
+      Map<String, String> optionsMap = new HashMap<>();
+      String[] keyValuePairs = options.split("&");
+      for (String keyValuePair : keyValuePairs) {
+         String[] keyValue = keyValuePair.split("=");
+         if (keyValue.length > 1) {
+            optionsMap.put(keyValue[0], keyValue[1]);
+         }
+      }
+      return optionsMap;
    }
 }

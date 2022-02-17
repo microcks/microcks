@@ -141,7 +141,7 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
 
       // Parse options if specified.
       if (options != null && !options.isBlank()) {
-         initializeOptionsMap(options);
+         optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
       }
 
       Properties props = new Properties();
@@ -193,21 +193,6 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       } else {
          consumer = new KafkaConsumer<>(props);
          consumer.subscribe(Arrays.asList(endpointTopic));
-      }
-   }
-
-   /**
-    * Initialize options map from options string found in Endpoint URL.
-    * @param options A string of options having the form: option1=value1&amp;option2=value2
-    */
-   protected void initializeOptionsMap(String options) {
-      optionsMap = new HashMap<>();
-      String[] keyValuePairs = options.split("&");
-      for (String keyValuePair : keyValuePairs) {
-         String[] keyValue = keyValuePair.split("=");
-         if (keyValue.length > 1) {
-            optionsMap.put(keyValue[0], keyValue[1]);
-         }
       }
    }
 
@@ -266,13 +251,14 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       if (headers == null || !headers.iterator().hasNext()) {
          return null;
       }
-      Set<Header> results = new TreeSet<>();
+      Set<Header> results = new HashSet<>();
       Iterator<org.apache.kafka.common.header.Header> headersIterator = headers.iterator();
       while (headersIterator.hasNext()) {
          org.apache.kafka.common.header.Header header = headersIterator.next();
          Header result = new Header();
          result.setName(header.key());
-         result.setValues(Stream.of(new String(header.value())).collect(Collectors.toSet()));
+         result.setValues(Set.of(new String(header.value())));
+         results.add(result);
       }
       return results;
    }
