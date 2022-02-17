@@ -174,6 +174,7 @@ The table below describes all the fields of the `values.yaml`, providing informa
 | `keycloak`    | `serviceAccountCredentials`    | **Optional**. The credentials of Keycloak realm service account for Microcks. Default is `ab54d329-e435-41ae-a900-ec6b3fe15c54`. |
 | `mongodb`     | `install`          | **Optional**. Flag for MongoDB installation. Default is `true`. Set to `false` if you want to reuse an existing MongoDB instance. |
 | `mongodb`     | `uri`              | **Optional**. MongoDB URI in case you're reusing existing MongoDB instance. Mandatory if `install` is `false`. |
+| `mongodb`     | `uriParameters`    | **Optional**. Allows you to add parameters to the mongodb uri connection string. |
 | `mongodb`     | `database`         | **Optional**. MongoDB database name in case you're reusing existing MongoDB instance. Used if `install` is `false`. Default to `appName`. |
 | `mongodb`     | `secretRef`        | **Optional**. Reference of a Secret containing credentials for connecting a provided MongoDB instance. Mandatory if `install` is `false`. |
 | `mongodb`     | `pvcAnnotations`   | **Optional**. A map of annotations that will be added to the `pvc` for the MongoDB pod. |
