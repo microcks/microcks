@@ -26,5 +26,6 @@ public enum BindingType {
    KAFKA,
    MQTT,
    WS,
+   AMQP,
    AMQP1
 }

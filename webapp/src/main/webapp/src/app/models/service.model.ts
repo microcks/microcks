@@ -76,6 +76,7 @@ export enum BindingType {
   KAFKA,
   MQTT,
   WS,
+  AMQP,
   AMQP1
 }
 export class ParameterConstraint {

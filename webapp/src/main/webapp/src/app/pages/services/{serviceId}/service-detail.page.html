@@ -204,6 +204,10 @@
                   <dt>WebSocket endpoint:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('WS') }}</a></dd>
                 </span>
+                <span *ngIf="hasBinding(item, 'AMQP')">
+                  <dt>AMQP endpoint:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('AMQP') }}</a></dd>
+                </span>
               </dl>
               <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
               <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
@@ -345,6 +349,22 @@
                       </dd>
                       <dt>WS method:</dt>
                       <dd>{{ getBindingProperty(item, 'WS', 'method') }}</dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'AMQP')">
+                    <dl class="dl-horizontal left">
+                      <dt>AMQP exchange:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'AMQP') }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
+                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'AMQP'))"></i>
+                          </span>
+                        </div>
+                      </dd>
+                      <dt>AMQP exchange type:</dt>
+                      <dd>{{ getBindingProperty(item, 'AMQP', 'destinationType') }}</dd>
                     </dl>
                   </span>
                   <span *ngIf="hasBinding(item, 'AMQP1')">
