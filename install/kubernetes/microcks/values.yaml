@@ -79,6 +79,7 @@ keycloak:
 mongodb:
   install: true
   #uri: mongodb:27017
+  #uriParameters: "?ssl=true"
   #database: sampledb
   image: centos/mongodb-34-centos7:latest
   persistent: true
