@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -40,7 +41,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of MockReopsitoryImporter that deals with OpenAPI v3.0.x specification
+ * An implementation of MockRepositoryImporter that deals with OpenAPI v3.x.x specification
  * file ; whether encoding into JSON or YAML documents.
  * @author laurent
  */
@@ -52,15 +53,18 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    private boolean isYaml = true;
    private JsonNode spec;
    private String specContent;
+   private ReferenceResolver referenceResolver;
 
    private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head", "patch", "trace");
 
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local OpenAPI spec file
+    * @param referenceResolver An optional resolver for references present into the OpenAPI file
     * @throws IOException if project file cannot be found or read.
     */
-   public OpenAPIImporter(String specificationFilePath) throws IOException {
+   public OpenAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
+      this.referenceResolver = referenceResolver;
       try {
          // Analyse first lines of file content to guess repository type.
          String line = null;
@@ -137,8 +141,44 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       Resource resource = new Resource();
       resource.setName(name);
       resource.setType(ResourceType.OPEN_API_SPEC);
-      resource.setContent(specContent);
       results.add(resource);
+
+      // Browse all document references references for external JSON schemas
+      // only if we have a resolver available.
+      if (referenceResolver != null) {
+
+         Set<String> references = new HashSet<>();
+         findAllExternalRefs(spec, references);
+
+         for (String ref : references) {
+            try {
+               // Extract content using resolver.
+               String content = referenceResolver.getHttpReferenceContent(ref, "UTF-8");
+               String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
+
+               // Build a new resource from content. Use the escaped operation path.
+               Resource schemaResource = new Resource();
+               schemaResource.setName(IdBuilder.buildResourceFullName(service, resourceName));
+               schemaResource.setPath(ref);
+               schemaResource.setContent(content);
+               schemaResource.setType(ResourceType.JSON_SCHEMA);
+
+               if (!ref.startsWith("http")) {
+                  // If a relative resource, replace with new name.
+                  specContent = specContent.replace(ref, "./" + URLEncoder.encode(schemaResource.getName(), "UTF-8"));
+               }
+
+               results.add(schemaResource);
+            } catch (IOException ioe) {
+               log.error("IOException while trying to resolve reference " + ref, ioe);
+               log.info("Ignoring the reference {} cause it could not be resolved", ref);
+            }
+         }
+         // Finally try to clean up resolved references and associated resources (files)
+         referenceResolver.cleanResolvedReferences();
+      }
+      // Set the content of main OpenAPI that may have been updated with dereferenced dependencies.
+      resource.setContent(specContent);
 
       return results;
    }
@@ -364,6 +404,25 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    }
 
    /**
+    * Browser Json node to extract references and store them into externalRefs.
+    */
+   private void findAllExternalRefs(JsonNode node, Set<String> externalRefs) {
+      // If node as a $ref child, it's a stop condition.
+      if (node.has("$ref")) {
+         String ref = node.path("$ref").asText();
+         if (!ref.startsWith("#")) {
+            externalRefs.add(ref);
+         }
+      } else {
+         // Iterate on all other children.
+         Iterator<JsonNode> children = node.elements();
+         while (children.hasNext()) {
+            findAllExternalRefs(children.next(), externalRefs);
+         }
+      }
+   }
+
+   /**
     * Extract parameters within a specification node and organize them by example. Parameter can be of type 'path',
     * 'query', 'header' or 'cookie'. Allow to filter them using parameterType. Key of returned map is example name.
     * Key of value map is param name. Value of value map is param value ;-)
@@ -373,15 +432,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
       Iterator<JsonNode> parameters = node.path("parameters").elements();
       while (parameters.hasNext()) {
-         JsonNode parameter = parameters.next();
-
-         // If parameter is a $ref, navigate to it first.
-         if (parameter.has("$ref")) {
-            // $ref: '#/components/parameters/accountId'
-            String ref = parameter.path("$ref").asText();
-            parameter = spec.at(ref.substring(1));
-         }
-
+         JsonNode parameter = followRefIfAny(parameters.next());
          String parameterName = parameter.path("name").asText();
 
          if (parameter.has("in") && parameter.path("in").asText().equals(parameterType)
@@ -486,9 +537,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          }
       }
       if (responseNode.has("$ref")) {
-         // $ref: '#/components/responses/unknown'
-         String ref = responseNode.path("$ref").asText();
-         JsonNode component = spec.at(ref.substring(1));
+         JsonNode component = followRefIfAny(responseNode);
          return extractHeadersByExample(component);
       }
       return results;
@@ -504,9 +553,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          return example.path("value").asText();
       }
       if (example.has("$ref")) {
-         // $ref: '#/components/examples/param_laurent'
-         String ref = example.path("$ref").asText();
-         JsonNode component = spec.at(ref.substring(1));
+         JsonNode component = followRefIfAny(example);
          return getExampleValue(component);
       }
       return null;
@@ -515,9 +562,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    /** Get the content of a response. This can be direct content field or those of followed $ref */
    private JsonNode getResponseContent(JsonNode response) {
       if (response.has("$ref")) {
-         // $ref: '#/components/responses/unknown'
-         String ref = response.path("$ref").asText();
-         JsonNode component = spec.at(ref.substring(1));
+         JsonNode component = followRefIfAny(response);
          return getResponseContent(component);
       }
       return response.path("content");
@@ -528,13 +573,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       StringBuilder params = new StringBuilder();
       Iterator<JsonNode> parameters = operation.path("parameters").elements();
       while (parameters.hasNext()) {
-         JsonNode parameter = parameters.next();
-         // If parameter is a $ref, navigate to it first.
-         if (parameter.has("$ref")) {
-            // $ref: '#/components/parameters/accountId'
-            String ref = parameter.path("$ref").asText();
-            parameter = spec.at(ref.substring(1));
-         }
+         JsonNode parameter = followRefIfAny(parameters.next());
 
          String parameterIn = parameter.path("in").asText();
          if (!"path".equals(parameterIn)) {
@@ -554,19 +593,28 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       }
       Iterator<JsonNode> parameters = operation.path("parameters").elements();
       while (parameters.hasNext()) {
-         JsonNode parameter = parameters.next();
-         // If parameter is a $ref, navigate to it first.
-         if (parameter.has("$ref")) {
-            // $ref: '#/components/parameters/accountId'
-            String ref = parameter.path("$ref").asText();
-            parameter = spec.at(ref.substring(1));
-         }
+         JsonNode parameter = followRefIfAny(parameters.next());
+
          String parameterIn = parameter.path("in").asText();
          if (parameterIn.equals(parameterType)) {
             return true;
          }
       }
       return false;
+   }
+
+   /** Follow the $ref if we have one. Otherwise return given node. */
+   private JsonNode followRefIfAny(JsonNode referencableNode) {
+      if (referencableNode.has("$ref")) {
+         String ref = referencableNode.path("$ref").asText();
+         return getNodeForRef(ref);
+      }
+      return referencableNode;
+   }
+
+   /** */
+   private JsonNode getNodeForRef(String reference) {
+      return spec.at(reference.substring(1));
    }
 
    /** Check variables parts presence into given url. */

@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
+import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
+import com.github.fge.jsonschema.core.load.uri.URITranslatorConfiguration;
 import com.github.fge.jsonschema.core.report.ProcessingMessage;
 import com.github.fge.jsonschema.core.report.ProcessingReport;
 import com.github.fge.jsonschema.main.JsonSchema;
@@ -56,6 +58,18 @@ public class JsonSchemaValidator {
     * @throws IOException if json string representations cannot be parsed
     */
    public static boolean isJsonValid(String schemaText, String jsonText) throws IOException {
+      return isJsonValid(schemaText, jsonText, null);
+   }
+
+   /**
+    * Check if a Json object is valid against the given Json schema specification.
+    * @param schemaText The Json schema specification as a string
+    * @param jsonText The Json object as a string
+    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @return True if Json object is valid, false otherwise
+    * @throws IOException if json string representations cannot be parsed
+    */
+   public static boolean isJsonValid(String schemaText, String jsonText, String namespace) throws IOException {
       try {
          List<String> errors = validateJson(schemaText, jsonText);
          if (!errors.isEmpty()) {
@@ -82,7 +96,24 @@ public class JsonSchemaValidator {
     * @throws ProcessingException if json node does not represent valid Schema
     */
    public static List<String> validateJson(String schemaText, String jsonText) throws IOException, ProcessingException {
-      return validateJson(getJsonNode(schemaText), getJsonNode(jsonText));
+      return validateJson(getJsonNode(schemaText), getJsonNode(jsonText), null);
+   }
+
+   /**
+    * Validate a Json object representing by its text against a schema object representing byt its
+    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
+    * is respectful of Json schema spec semantics regarding additional or unknown attributes: schema must
+    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
+    * as validation errors. It returns a list of validation error messages.
+    * @param schemaText The Json schema specification as a string
+    * @param jsonText The Json object as a string
+    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @return The list of validation failures. If empty, json object is valid !
+    * @throws IOException if json string representations cannot be parsed
+    * @throws ProcessingException if json node does not represent valid Schema
+    */
+   public static List<String> validateJson(String schemaText, String jsonText, String namespace) throws IOException, ProcessingException {
+      return validateJson(getJsonNode(schemaText), getJsonNode(jsonText), namespace);
    }
 
    /**
@@ -97,9 +128,25 @@ public class JsonSchemaValidator {
     * @throws ProcessingException if json node does not represent valid Schema
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode) throws ProcessingException {
+      return validateJson(schemaNode, jsonNode, null);
+   }
+
+   /**
+    * Validate a Json object representing by its text against a schema object representing byt its
+    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
+    * is respectful of Json schema spec semantics regarding additional or unknown attributes: schema must
+    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
+    * as validation errors. It returns a list of validation error messages.
+    * @param schemaNode The Json schema specification as a Jackson node
+    * @param jsonNode The Json object as a Jackson node
+    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @return The list of validation failures. If empty, json object is valid !
+    * @throws ProcessingException if json node does not represent valid Schema
+    */
+   public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) throws ProcessingException {
       List<String> errors = new ArrayList<>();
 
-      final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode);
+      final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode, namespace);
 
       // Ask for a deep check to get a full error report.
       ProcessingReport report = jsonSchemaNode.validate(jsonNode, true);
@@ -131,17 +178,33 @@ public class JsonSchemaValidator {
     */
    public static JsonSchema getSchemaNode(String schemaText) throws IOException, ProcessingException {
       final JsonNode schemaNode = getJsonNode(schemaText);
-      return extractJsonSchemaNode(schemaNode);
+      return extractJsonSchemaNode(schemaNode, null);
    }
 
-   /** */
-   private static JsonSchema extractJsonSchemaNode(JsonNode jsonNode) throws ProcessingException {
+   /**
+    * Extract a Json SchemaNode from Jackson representation. Dependencies can be loaded using a namespace definition.
+    * See https://github.com/java-json-tools/json-schema-validator/blob/master/src/main/java/com/github/fge/jsonschema/examples/Example5.java
+    * for example on how to use namespaces. Just provide null if no namespace.
+    */
+   private static JsonSchema extractJsonSchemaNode(JsonNode jsonNode, String namespace) throws ProcessingException {
       final JsonNode schemaIdentifier = jsonNode.get(JSON_SCHEMA_IDENTIFIER_ELEMENT);
       if (schemaIdentifier == null){
          ((ObjectNode) jsonNode).put(JSON_SCHEMA_IDENTIFIER_ELEMENT, JSON_V7_SCHEMA_IDENTIFIER);
       }
 
-      final JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+      final JsonSchemaFactory factory;
+      if (namespace != null) {
+         log.debug("Setting namespace to " + namespace + " in Json schema loading configuration");
+         // Setup a loading configuration for provided namespace.
+         final LoadingConfiguration cfg = LoadingConfiguration.newBuilder()
+               .setURITranslatorConfiguration(
+                     URITranslatorConfiguration.newBuilder().setNamespace(namespace).freeze()
+               ).freeze();
+         factory = JsonSchemaFactory.newBuilder().setLoadingConfiguration(cfg).freeze();
+      } else {
+         factory = JsonSchemaFactory.byDefault();
+      }
+
       return factory.getJsonSchema(jsonNode);
    }
 }

@@ -18,12 +18,18 @@
  */
 package io.github.microcks.util.openapi;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.github.microcks.domain.*;
+
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestReturn;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.util.test.HttpTestRunner;
-import io.github.microcks.domain.TestReturn;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -44,6 +50,9 @@ public class OpenAPITestRunner extends HttpTestRunner {
    /** Content-type for JSON that is the sole valid response type. */
    private static final String APPLICATION_JSON_TYPE = "application/json";
 
+   /** The URL of resources used for validation. */
+   private String resourceUrl = null;
+
    private ResourceRepository resourceRepository;
    private ResponseRepository responseRepository;
    private boolean validateResponseCode = false;
@@ -60,6 +69,22 @@ public class OpenAPITestRunner extends HttpTestRunner {
       this.resourceRepository = resourceRepository;
       this.responseRepository = responseRepository;
       this.validateResponseCode = validateResponseCode;
+   }
+
+   /**
+    * The URL of resources used for validation.
+    * @return The URL of resources used for validation
+    */
+   public String getResourceUrl(){
+      return resourceUrl;
+   }
+
+   /**
+    * The URL of resources used for validation.
+    * @param resourceUrl The URL of resources used for validation.
+    */
+   public void setResourceUrl(String resourceUrl){
+      this.resourceUrl = resourceUrl;
    }
 
    /**
@@ -149,7 +174,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
          }
          String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb
                + "/responses/" + responseCode;
-         lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, contentType);
+         lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, contentType, resourceUrl);
          if (!lastValidationErrors.isEmpty()) {
             log.debug("OpenAPI schema validation errors found " + lastValidationErrors.size() + ", marking test as failed.");
             return TestReturn.FAILURE_CODE;

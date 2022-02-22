@@ -74,7 +74,7 @@ public class MockRepositoryImporterFactory {
                || line.startsWith("openapi: \"3") || line.startsWith("\"openapi\": \"3")
                || line.startsWith("'openapi': '3") || line.startsWith("{\"openapi\":\"3")) {
             log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
-            importer = new OpenAPIImporter(mockRepository.getPath());
+            importer = new OpenAPIImporter(mockRepository.getPath(), referenceResolver);
             break;
          } else if (line.startsWith("asyncapi: 2") || line.startsWith("asyncapi: '2")
                || line.startsWith("asyncapi: \"2") || line.startsWith("\"asyncapi\": \"2")

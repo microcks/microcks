@@ -71,4 +71,15 @@ public class IdBuilder {
       return service.getName() + "-" + service.getVersion() + "-"
             + operationElements[1].replaceAll("/", "~1");
    }
+
+   /**
+    * Build the full name of a Resource dedicated to no particular operations of a Service. Such Resource is typically
+    * a global Schema dependency that defines shared data types, so that you'll be able to easily retrieve it later.
+    * @param service The domain service owning this resource
+    * @param resourceName The name of resource
+    * @return A full name for this globally attached resource.
+    */
+   public static String buildResourceFullName(Service service, String resourceName) {
+      return service.getName() + "-" + service.getVersion() + "-" + resourceName;
+   }
 }

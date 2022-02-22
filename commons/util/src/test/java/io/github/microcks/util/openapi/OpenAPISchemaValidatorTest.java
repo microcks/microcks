@@ -237,6 +237,79 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
+   public void testFullProcedureFromOpenAPIResourceWithRef() {
+      String openAPIText = null;
+      String jsonText = "{\n" +
+            "  \"region\": \"north\",\n" +
+            "  \"temp\": -1.5,\n" +
+            "  \"weather\": \"snowy\",\n" +
+            "  \"visibility\": 25\n" +
+            "}";
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText =  FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-local-ref.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /forecast/{region} response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1forecast~1{region}/get/responses/200", "application/json");
+      assertTrue(errors.isEmpty());
+
+      // Now try with an external absolute ref.
+      try {
+         // Load full specification from file.
+         openAPIText =  FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /forecast/{region} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1forecast~1{region}/get/responses/200", "application/json");
+      assertTrue(errors.isEmpty());
+
+      // Now try with an external relative ref.
+      try {
+         // Load full specification from file.
+         openAPIText =  FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /forecast/{region} response message but without specifying a namespace.
+      // This should fail as type cannot be resolved.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1forecast~1{region}/get/responses/200", "application/json");
+      assertFalse(errors.isEmpty());
+      assertEquals(2, errors.size());
+      assertTrue(errors.get(1).contains("URI \"weather-forecast-schema.json#\" is not absolute"));
+
+      // Validate the content for Get /forecast/{region} response message. Now specifying a namespace.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1forecast~1{region}/get/responses/200", "application/json",
+            "https://raw.githubusercontent.com/microcks/microcks/1.5.x/commons/util/src/test/resources/io/github/microcks/util/openapi/");
+
+      assertTrue(errors.isEmpty());
+   }
+
+   @Test
    public void testFullProcedureFromOpenAPIResourceFailure() {
       String openAPIText = null;
       String jsonText = "[\n" +

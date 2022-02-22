@@ -39,11 +39,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
+import java.io.*;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -79,6 +77,11 @@ public class ResourceController {
    ) {
       String extension = request.getRequestURI().substring(request.getRequestURI().lastIndexOf('.'));
 
+      try {
+         name = URLDecoder.decode(name, StandardCharsets.UTF_8.toString());
+      } catch (UnsupportedEncodingException e) {
+         log.error("Exception while decoding resource name: {}", e.getMessage());
+      }
       log.info("Requesting resource named " + name);
 
       Resource resource = resourceRepository.findByName(name);
