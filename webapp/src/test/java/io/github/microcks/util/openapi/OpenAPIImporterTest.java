@@ -1166,7 +1166,7 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertTrue(openAPISpec.getContent().contains("./WeatherForecast API-1.0.0-weather-forecast-schema.yaml"));
+      assertTrue(openAPISpec.getContent().contains("./WeatherForecast+API-1.0.0-weather-forecast-schema.yaml"));
 
       Resource refSchema = resources.get(1);
       assertEquals("WeatherForecast API-1.0.0-weather-forecast-schema.yaml", refSchema.getName());
