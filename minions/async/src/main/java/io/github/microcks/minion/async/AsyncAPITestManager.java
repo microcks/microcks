@@ -158,6 +158,8 @@ public class AsyncAPITestManager {
          // Validate all the received outputs if any.
          if (outputs != null && !outputs.isEmpty()) {
             validateConsumedMessage(testCaseReturn, outputs);
+         } else {
+            logger.infof("No consumed message to validate, test {%s} will be marked as timed-out", specification.getTestResultId());
          }
 
          // Finally, report the testCase results using Microcks API.

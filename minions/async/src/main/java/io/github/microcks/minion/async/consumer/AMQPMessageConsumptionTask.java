@@ -123,7 +123,7 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
          if (optionsMap != null && optionsMap.containsKey(DURABLE_OPTION)) {
             durable = Boolean.parseBoolean(optionsMap.get(DURABLE_OPTION));
          }
-         String routingKey = "*";
+         String routingKey = "#";
          if (optionsMap != null && optionsMap.containsKey(ROUTING_KEY_OPTION)) {
             routingKey = optionsMap.get(ROUTING_KEY_OPTION);
          }
