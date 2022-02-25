@@ -168,6 +168,30 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
+   public void testFullProcedureFromAsyncAPIResourceWithNumberFormatsWithRef() {
+      String asyncAPIText = null;
+      String jsonText = "{\"displayName\": \"Laurent Broudoux\", \"age\": 43, \"size\": \"1.8\", \"exp\": { \"level\": 1234567891011 }, \"rewards\": 12345.67}";
+      JsonNode asyncAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-ref-asyncapi.yaml"));
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+         contentNode = AsyncAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content of user/signedup subscribe chanel.
+      List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
+            "/channels/user~1signedup/subscribe/message");
+      assertTrue(errors.isEmpty());
+   }
+
+   @Test
    public void testFullProcedureFromAsyncAPIResourceFailure() {
       String asyncAPIText = null;
       String jsonText = "{\"id\": \"123456\", \"name\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
