@@ -170,7 +170,7 @@ public class AsyncAPISchemaValidatorTest {
    @Test
    public void testFullProcedureFromAsyncAPIResourceWithNumberFormatsWithRef() {
       String asyncAPIText = null;
-      String jsonText = "{\"displayName\": \"Laurent Broudoux\", \"age\": 43, \"size\": \"1.8\", \"exp\": { \"level\": 1234567891011 }, \"rewards\": 12345.67}";
+      String jsonText = "{\"displayName\": \"Laurent Broudoux\", \"age\": 43, \"size\": 1.8, \"exp\": { \"level\": 1234567891011 }, \"rewards\": 12345.67}";
       JsonNode asyncAPISpec = null;
       JsonNode contentNode = null;
 
