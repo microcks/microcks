@@ -17,8 +17,7 @@ services:
     ports:
       - "3000:3000"
   keycloak:
-    image: jboss/keycloak:10.0.1
-    command: "-b 0.0.0.0 -Dkeycloak.import=/microcks-keycloak-config/microcks-realm-sample.json"
+    image: jboss/keycloak:14.0.0
     container_name: microcks-keycloak
     ports:
       - "8180:8080"
@@ -28,6 +27,8 @@ services:
     environment:
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "123"
+      KEYCLOAK_IMPORT: "/microcks-keycloak-config/microcks-realm-sample.json"
+      KEYCLOAK_FRONTEND_URL: "http://__HOST__:8180/auth"
   app:
     depends_on:
       - mongo
