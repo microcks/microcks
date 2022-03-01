@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Microcks API v1.5
-  version: 1.5.0
+  version: 1.5.1
   description: "API offered by Microcks, the mock and testing platform for API and\
     \ microservices (microcks.io)"
   contact:
@@ -313,8 +313,7 @@ paths:
         in: path
         required: true
   /artifact/upload:
-    summary: "Deals with artifacts (SOAP UI project, Postman collection or OpenAPI\
-      \ Specification) to be imported by Microcks."
+    summary: Deals with artifacts to be imported by Microcks.
     post:
       requestBody:
         content:
@@ -363,8 +362,7 @@ paths:
             - user
       operationId: uploadArtifact
       summary: Upload an artifact
-      description: "Uploads an artifact (SOAP UI project, Postman collection or OpenAPI\
-        \ Specification) to be imported by Microcks."
+      description: Uploads an artifact to be imported by Microcks.
   /jobs/count:
     summary: Count ImportJobs
     get:
@@ -838,6 +836,61 @@ paths:
           description: Get features configuration
       operationId: GetFeaturesConfiguration
       summary: Get features configuration
+  /import:
+    summary: Deals with repository snapshot to import in Microcks
+    post:
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SnapshotUpload'
+        required: true
+      tags:
+        - mock
+      responses:
+        "201":
+          description: Snasphot has been correctly imported
+      security:
+        - jwt-bearer:
+            - admin
+      operationId: importSnapshot
+      summary: Import a snapshot
+      description: Import a repository snapshot previsouly exported into Microcks
+  /export:
+    summary: Deals with repository snapshot to import from Microcks
+    get:
+      tags:
+        - mock
+      parameters:
+        - name: serviceIds
+          description: List of service identifiers to export
+          schema:
+            type: array
+            items:
+              type: string
+          in: query
+          required: true
+      responses:
+        "200":
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+              examples:
+                filename:
+                  value: attachment; filename=microcks-repository.json
+          content:
+            application/json:
+              schema:
+                format: binary
+                type: string
+          description: Snapshot file representing the export of requested services
+      security:
+        - jwt-bearer:
+            - admin
+      operationId: exportSnapshot
+      summary: Export a snapshot
+      description: Export a repostiory snapshot with requested services
 components:
   schemas:
     TestCaseResult:
@@ -1412,6 +1465,7 @@ components:
             - KAFKA
             - MQTT
             - WS
+            - AMQP
           type: string
         keyType:
           description: Type of key for Kafka messages
@@ -1701,6 +1755,16 @@ components:
           endpoint-KAFKA: my-cluster-kafka-bootstrap.apps.try.microcks.io
           enabled: "false"
           frequencies: "3,10,30"
+    SnapshotUpload:
+      description: Upload of a repository snapshot file
+      required:
+        - file
+      type: object
+      properties:
+        file:
+          format: binary
+          description: The repository snapshot file
+          type: string
   responses:
     ServiceResponse:
       content:
