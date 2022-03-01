@@ -28,12 +28,12 @@ sed "s/__HOST__/$host_ip/" "$template" > microcks.yml || exit 1
 echo
 echo "Starting Microcks using podman-compose ..."
 echo "------------------------------------------"
-echo "Stop it with: $cmd_prefix podman-compose -f microcks.yml --transform_policy=identity stop"
-echo "Re-launch it with: $cmd_prefix podman-compose -f microcks.yml --transform_policy=identity start"
-echo "Clean everything with: $cmd_prefix podman-compose -f microcks.yml --transform_policy=identity down"
+echo "Stop it with: $cmd_prefix podman-compose -f microcks.yml stop"
+echo "Re-launch it with: $cmd_prefix podman-compose -f microcks.yml start"
+echo "Clean everything with: $cmd_prefix podman-compose -f microcks.yml down"
 echo "------------------------------------------"
 echo "Go to https://localhost:8080 - first login with admin/123"
 echo "Having issues? Check you have changed microcks.yml to your platform"
 echo
 
-podman-compose -f microcks.yml --transform_policy=identity up -d
+podman-compose -f microcks.yml up -d
