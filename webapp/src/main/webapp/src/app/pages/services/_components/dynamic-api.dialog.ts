@@ -42,6 +42,9 @@ export class DynamicAPIDialogComponent implements OnInit {
 
   createDynamicApi(api: Api) {
     console.log("[DynamicAPIDialogComponent createDynamicApi]");
+    if (this.api.resource.startsWith("/")) {
+      this.api.resource = this.api.resource.substring(1, this.api.resource.length);
+    }
     this.createAction.emit(this.api);
     this.bsModalRef.hide();
   }
