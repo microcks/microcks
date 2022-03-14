@@ -280,7 +280,11 @@ public class AsyncAPISchemaValidator {
       // Convert schema for all structures.
       for (String structure : STRUCTURES) {
          if (jsonNode.has(structure) && jsonNode.path(structure).isArray()) {
-            jsonNode = convertAsyncAPISchemaToJsonSchema(jsonNode);
+            ArrayNode arrayNode = (ArrayNode) jsonNode.path(structure);
+            for (int i=0; i<arrayNode.size(); i++) {
+               JsonNode structureNode = arrayNode.get(i);
+               structureNode = convertAsyncAPISchemaToJsonSchema(structureNode);
+            }
          }
       }
 
