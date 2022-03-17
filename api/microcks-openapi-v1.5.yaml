@@ -1321,15 +1321,6 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/MessageArray'
-    OperationHeaders:
-      description: "Specification of additional headers for a Service/API operations.\
-        \ Keys are operation name or \"globals\" (if header applies to all), values\
-        \ are Header objects."
-      type: object
-      additionalProperties:
-        type: array
-        items:
-          $ref: '#/components/schemas/Header'
     TestResult:
       description: "Represents the result of a Service or API test run by Microcks.\
         \ Tests are related to a service and made of multiple test cases corresponding\
@@ -1765,6 +1756,28 @@ components:
           format: binary
           description: The repository snapshot file
           type: string
+    HeaderDTO:
+      description: Data Transfert Object for headers of both Requests and Responses
+      required:
+        - name
+        - values
+      type: object
+      properties:
+        name:
+          description: Unique distinct name of this Header
+          type: string
+        values:
+          description: Values for this header (comma separated strings)
+          type: string
+    OperationHeaders:
+      description: "Specification of additional headers for a Service/API operations.\
+        \ Keys are operation name or \"globals\" (if header applies to all), values\
+        \ are Header objects DTO."
+      type: object
+      additionalProperties:
+        type: array
+        items:
+          $ref: '#/components/schemas/HeaderDTO'
   responses:
     ServiceResponse:
       content:
