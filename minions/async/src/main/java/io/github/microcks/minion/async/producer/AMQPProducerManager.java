@@ -150,10 +150,10 @@ public class AMQPProducerManager {
    }
 
    /**
-    *
-    * @param engine
-    * @param headers
-    * @return
+    * Render Microcks headers using the template engine.
+    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the KafkaProducerManager level.)
+    * @param headers The Microcks event message headers definition.
+    * @return A set of rendered Microcks headers.
     */
    public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
       if (headers != null && !headers.isEmpty()) {

@@ -176,8 +176,8 @@ export class TestCreatePageComponent implements OnInit {
 
   public checkForm(): void {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
-      && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined && this.filteredOperation.startsWith('SUBSCRIBE ')));
-    console.log("submitEnabled: " + this.submitEnabled);
+      && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined));
+    console.log("[createTest] submitEnabled: " + this.submitEnabled);
   }
 
   public cancel(): void {
