@@ -18,7 +18,6 @@
  */
 package io.github.microcks.util.openapi;
 
-
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Resource;
@@ -40,6 +39,7 @@ import java.util.List;
 
 /**
  * This is an implementation of HttpTestRunner that deals with OpenAPI schema validation.
+ * This implementation now manages the 2 flavors of OpenAPI: OpenAPI v3.x and Swagger v2.x.
  * @author laurent
  */
 public class OpenAPITestRunner extends HttpTestRunner {
@@ -138,12 +138,18 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Also do not try to schema validate something that is not application/json for now...
       // Alternatives schemes are on their way for OpenAPI but not yet ready (see https://github.com/OAI/OpenAPI-Specification/pull/1736)
       if (responseCode != 204 && APPLICATION_JSON_TYPE.equals(contentType)) {
+         boolean isOpenAPIv3 = true;
+
          // Retrieve the resource corresponding to OpenAPI specification if any.
          Resource openapiSpecResource = null;
          List<Resource> resources = resourceRepository.findByServiceId(service.getId());
          for (Resource resource : resources) {
             if (ResourceType.OPEN_API_SPEC.equals(resource.getType())) {
                openapiSpecResource = resource;
+               break;
+            } else if (ResourceType.SWAGGER.equals(resource.getType())) {
+               openapiSpecResource = resource;
+               isOpenAPIv3 = false;
                break;
             }
          }
@@ -174,7 +180,13 @@ public class OpenAPITestRunner extends HttpTestRunner {
          }
          String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb
                + "/responses/" + responseCode;
-         lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, contentType, resourceUrl);
+
+         if (isOpenAPIv3) {
+            lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, contentType, resourceUrl);
+         } else {
+            lastValidationErrors = SwaggerSchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, resourceUrl);
+         }
+
          if (!lastValidationErrors.isEmpty()) {
             log.debug("OpenAPI schema validation errors found " + lastValidationErrors.size() + ", marking test as failed.");
             return TestReturn.FAILURE_CODE;

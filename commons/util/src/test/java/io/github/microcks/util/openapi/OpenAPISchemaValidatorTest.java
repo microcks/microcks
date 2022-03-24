@@ -19,14 +19,16 @@
 package io.github.microcks.util.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 /**
  * This is a test case for OpenAPISchemaValidator utility.
  * @author laurent
@@ -218,7 +220,6 @@ public class OpenAPISchemaValidatorTest {
       List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
             "/paths/~1accounts/get/responses/200", "application/json");
       assertTrue(errors.isEmpty());
-
 
       // Now try with another message.
       jsonText = "{ \"account\": {\"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";

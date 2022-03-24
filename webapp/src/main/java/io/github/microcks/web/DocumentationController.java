@@ -66,7 +66,8 @@ public class DocumentationController {
       org.springframework.core.io.Resource template = null;
 
       // Get the correct template depending on resource type.
-      if (ResourceType.OPEN_API_SPEC.toString().equals(resourceType)) {
+      if (ResourceType.OPEN_API_SPEC.toString().equals(resourceType) ||
+            ResourceType.SWAGGER.toString().equals(resourceType)) {
          template = new ClassPathResource("templates/redoc.html");
          headers.setContentType(MediaType.TEXT_HTML);
       }  else if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {

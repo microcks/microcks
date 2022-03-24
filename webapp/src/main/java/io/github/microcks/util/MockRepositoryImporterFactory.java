@@ -25,6 +25,7 @@ import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
+import io.github.microcks.util.openapi.SwaggerImporter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,9 +95,11 @@ public class MockRepositoryImporterFactory {
             log.info("Found query, mutation or microcksId: pragmas in file so assuming it's a GraphQL schema to import");
             importer = new GraphQLImporter(mockRepository.getPath());
             break;
-         } else if (line.startsWith("\"swagger\":") || line.startsWith("swagger:")) {
-            log.warn("Swagger v2 format is not supported as it does not allow full examples specification, raising an exception");
-            throw new IOException("Swagger v2 format is not supported as it does not allow full examples specification");
+         } else if (line.startsWith("\"swagger\":") || line.startsWith("swagger:")
+               || line.startsWith("'swagger':") || line.startsWith("{\"swagger\":")) {
+            log.info("Found an swagger: pragma in file so assuming it's a Swagger spec to import");
+            importer = new SwaggerImporter(mockRepository.getPath(), referenceResolver);
+            break;
          }
       }
       reader.close();
