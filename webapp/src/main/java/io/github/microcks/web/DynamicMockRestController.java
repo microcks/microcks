@@ -25,6 +25,7 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.repository.GenericResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
+
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 import org.slf4j.Logger;
@@ -34,7 +35,11 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
@@ -42,6 +47,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * This is the controller for Dynamic mocks in Microcks.
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
@@ -62,7 +68,7 @@ public class DynamicMockRestController {
    @Autowired
    private ApplicationContext applicationContext;
 
-   @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.POST)
+   @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.POST, produces = "application/json")
    public ResponseEntity<String> createResource(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
@@ -104,7 +110,7 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.GET)
+   @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.GET, produces = "application/json")
    public ResponseEntity<String> findResources(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
@@ -142,7 +148,8 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.GET)
+   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.GET,
+         produces = "application/json")
    public ResponseEntity<String> getResource(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
@@ -176,7 +183,8 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.PUT)
+   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.PUT,
+         produces = "application/json")
    public ResponseEntity<String> updateResource(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
