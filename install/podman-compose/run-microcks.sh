@@ -32,7 +32,7 @@ echo "Stop it with: $cmd_prefix podman-compose -f microcks.yml stop"
 echo "Re-launch it with: $cmd_prefix podman-compose -f microcks.yml start"
 echo "Clean everything with: $cmd_prefix podman-compose -f microcks.yml down"
 echo "------------------------------------------"
-echo "Go to https://localhost:8080 - first login with admin/123"
+echo "Go to https://localhost:8080 - first login with admin/microcks123"
 echo "Having issues? Check you have changed microcks.yml to your platform"
 echo
 
