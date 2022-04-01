@@ -1,0 +1,27 @@
+{
+  "title": "Root Type for Forecast",
+  "description": "A weather forecast for a requested region",
+  "type": "object",
+  "properties": {
+    "region": {
+      "type": "string"
+    },
+    "temp": {
+      "format": "double",
+      "type": "number"
+    },
+    "weather": {
+      "type": "string"
+    },
+    "visibility": {
+      "format": "int32",
+      "type": "integer"
+    }
+  },
+  "example": {
+    "region": "west",
+    "temp": 25.2,
+    "weather": "cloudy",
+    "visibility": 1000
+  }
+}

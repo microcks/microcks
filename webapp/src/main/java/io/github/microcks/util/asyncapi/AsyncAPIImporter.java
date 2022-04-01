@@ -197,7 +197,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                         && !payloadNode.path("$ref").asText().startsWith("#")) {
                      String ref = payloadNode.path("$ref").asText();
 
-                     // Remove trailing anchor marker.
+                     // Remove trailing anchor marker (we may have this in Avro schema
+                     // to indicate exact Resource)
                      if (ref.contains("#")) {
                         ref = ref.substring(0, ref.indexOf("#"));
                      }
@@ -372,6 +373,20 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                            Binding b = retrieveOrInitOperationBinding(operation, BindingType.WS);
                            if (binding.has("method")) {
                               b.setMethod(binding.path("method").asText());
+                           }
+                           break;
+                        case "amqp":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.AMQP);
+                           if (binding.has("is")) {
+                              String is = binding.path("is").asText();
+                              if ("queue".equals(is)) {
+                                 b.setDestinationType("queue");
+                                 JsonNode queue = binding.get("queue");
+                                 b.setDestinationName(queue.get("name").asText());
+                              } else if ("routingKey".equals(is)) {
+                                 JsonNode exchange = binding.get("exchange");
+                                 b.setDestinationType(exchange.get("type").asText());
+                              }
                            }
                            break;
                      }

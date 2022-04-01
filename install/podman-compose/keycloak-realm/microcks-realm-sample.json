@@ -2,53 +2,22 @@
   "id": "microcks",
   "realm": "microcks",
   "displayName": "Microcks",
-  "notBefore": 0,
-  "revokeRefreshToken": false,
-  "refreshTokenMaxReuse": 0,
-  "accessTokenLifespan": 300,
-  "accessTokenLifespanForImplicitFlow": 900,
-  "ssoSessionIdleTimeout": 1800,
-  "ssoSessionMaxLifespan": 36000,
-  "offlineSessionIdleTimeout": 2592000,
-  "accessCodeLifespan": 60,
-  "accessCodeLifespanUserAction": 300,
-  "accessCodeLifespanLogin": 1800,
-  "actionTokenGeneratedByAdminLifespan": 43200,
-  "actionTokenGeneratedByUserLifespan": 300,
   "enabled": true,
-  "sslRequired": "external",
+  "sslRequired": "none",
   "registrationAllowed": false,
-  "registrationEmailAsUsername": false,
-  "rememberMe": false,
-  "verifyEmail": false,
-  "loginWithEmailAllowed": true,
-  "duplicateEmailsAllowed": false,
-  "resetPasswordAllowed": false,
-  "editUsernameAllowed": false,
-  "bruteForceProtected": false,
-  "permanentLockout": false,
-  "maxFailureWaitSeconds": 900,
-  "minimumQuickLoginWaitSeconds": 60,
-  "waitIncrementSeconds": 60,
-  "quickLoginCheckMilliSeconds": 1000,
-  "maxDeltaTimeSeconds": 43200,
-  "failureFactor": 30,
   "users" : [
     {
       "username" : "admin",
       "enabled": true,
       "credentials" : [
         { "type" : "password",
-          "value" : "123" }
-      ],
-      "requiredActions": [
-        "UPDATE_PASSWORD"
+          "value" : "microcks123" }
       ],
       "realmRoles": [],
       "applicationRoles": {
         "realm-management": [ "manage-users", "manage-clients" ],
         "account": [ "manage-account" ],
-        "microcks-app": [ "admin "]
+        "microcks-app": [ "user", "manager", "admin"]
       }
     }
   ],
@@ -77,6 +46,25 @@
       ]
     }
   },
+  "groups": [
+    {
+      "name": "microcks",
+      "path": "/microcks",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {},
+      "subGroups": [
+        {
+          "name": "manager",
+          "path": "/microcks/manager",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": []
+        }
+      ]
+    }
+  ],
   "defaultRoles": [],
   "requiredCredentials": [ "password" ],
   "scopeMappings": [],
@@ -101,6 +89,35 @@
       }
     ]
   },
+  "clients": [
+    {
+      "clientId": "microcks-app-js",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "fullScopeAllowed": false,
+      "protocolMappers": [
+        {
+          "name": "microcks-group-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "microcks-groups",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
   "applications": [
     {
       "name": "microcks-app",
@@ -111,19 +128,8 @@
       ]
     },
     {
-      "name": "microcks-app-js",
-      "enabled": true,
-      "publicClient": true,
-      "webOrigins": [
-        "+"
-      ],
-      "redirectUris": [
-        "http://localhost:8080/*"
-      ],
-      "fullScopeAllowed": false
-    },
-    {
       "name": "microcks-serviceaccount",
+      "secret": "ab54d329-e435-41ae-a900-ec6b3fe15c54",
       "enabled": true,
       "bearerOnly": false,
       "publicClient": false,

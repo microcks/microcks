@@ -1,0 +1,1 @@
+docker-compose -f rabbitmq-docker-compose.yml up

@@ -241,7 +241,7 @@ public class KafkaProducerManager {
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
       // Produce operation name part of topic name.
       String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ")) {
+      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
          operationName = operationName.substring(operationName.indexOf(" ") + 1);
       }
       operationName = operationName.replace('/', '-');

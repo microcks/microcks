@@ -347,6 +347,7 @@ public class TestRunnerService {
          case OPEN_API_SCHEMA:
             OpenAPITestRunner openApiRunner = new OpenAPITestRunner(resourceRepository, responseRepository, true);
             openApiRunner.setClientHttpRequestFactory(factory);
+            openApiRunner.setResourceUrl(validationResourceUrl);
             openApiRunner.setSecret(secret);
             return openApiRunner;
          case ASYNC_API_SCHEMA:

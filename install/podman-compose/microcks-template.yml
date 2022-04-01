@@ -22,7 +22,7 @@ services:
       - ./keycloak-realm:/microcks-keycloak-config:z
     environment:
       KEYCLOAK_USER: "admin"
-      KEYCLOAK_PASSWORD: "123"
+      KEYCLOAK_PASSWORD: "admin"
       KEYCLOAK_IMPORT: "/microcks-keycloak-config/microcks-realm-sample.json"
       KEYCLOAK_FRONTEND_URL: "http://__HOST__:8180/auth"
   app:

@@ -1,0 +1,331 @@
+asyncapi: 2.1.0
+info:
+  title: spring-cloud-stream-request-reply API
+  version: 1.0.2
+  description: spring-cloud-stream-request-reply
+  x-view: client
+  x-java-package: org.acme.asyncapi.client.api
+  contact:
+    name: API Support, Team 33
+  x-microcks:
+    labels:
+      domain: domaineA
+      status: GA
+      team: Team 33
+servers:
+  local:
+    url: '{host}:{port}'
+    protocol: amqp
+    description: Local broker
+    security:
+      - localRabbitMQ: []
+    variables:
+      host:
+        description: rabbit local.
+        default: localhost
+      port:
+        default: '5672'
+        enum:
+          - '5672'
+  dev:
+    url: '{host}:{port}'
+    protocol: amqp
+    description: DEV broker
+    security:
+      - devRabbitMQ: []
+    variables:
+      host:
+        description: rabbit dev.
+        default: rabbit.dev.be
+      port:
+        default: '5672'
+        enum:
+          - '5672'
+defaultContentType: application/json
+channels:
+  domaineA.service1.getPerson.v1.0.0:
+    description: The topic on which measured values may be produced and consumed.
+    bindings:
+      amqp:
+        is: routingKey
+        queue:
+          name: domaineA.service1.getPerson.v1.0.0
+          durable: true
+          autoDelete: false
+        exchange:
+          name: domaineA.service1.getPerson.v1.0.0
+          type: topic
+          durable: true
+          autoDelete: false
+    publish:
+      description: PUBLISH, qui définit les messages consommés par l'application à  partir du canal.
+      operationId: getPersonByQuery-in
+      x-scs-function-name: getPersonByQuery
+      x-scs-group: getPersonByQuery
+      traits:
+        - $ref: '#/components/operationTraits/rabbit'
+      message:
+        $ref: '#/components/messages/personQueryMessage'
+  domaineA.service1.replier.v1.0.0:
+    bindings:
+      amqp:
+        is: routingKey
+        queue:
+          name: domaineA.service1.replier.v1.0.0
+          durable: true
+          autoDelete: false
+        exchange:
+          name: domaineA.service1.replier.v1.0.0
+          type: topic
+          durable: true
+          autoDelete: false
+    subscribe:
+      operationId: getPersonByQuery-out
+      summary: Receive information
+      description: subscribe signifie que l'application permet aux consommateurs de s'abonner au canal pour recevoir les messages produits par l'application.
+      x-scs-function-name: getPersonByQuery
+      x-scs-group: respond
+      traits:
+        - $ref: '#/components/operationTraits/rabbit'
+      x-microcks-operation:
+        frequency: 30
+      #        https://microcks.io/documentation/using/asyncapi/#using-asyncapi-extensions
+      message:
+        $ref: '#/components/messages/messagePayload'
+    publish:
+      operationId: respond
+      summary: cette méthode nécessite le header amqp_replyTo
+      description: cette méthode nécessite le header amqp_replyTo
+      x-scs-group: respond
+      traits:
+        - $ref: '#/components/operationTraits/rabbit'
+      message:
+        $ref: '#/components/messages/responseMessage'
+components:
+  messages:
+    responseMessage:
+      payload:
+        $ref: '#/components/schemas/responseMessage'
+      examples:
+        - name: Résponse Random OK
+          summary: Exemple De réponse Random OK vers l'appellant
+          headers:
+            correlationId: my-correlation-id
+            responseCode: 200
+            amqp_replyTo: jeSaisOuTuEs:P
+          payload:
+            {
+              "throwable": null,
+              "person": {
+                "taille": 180,
+                "nom": "{{randomLastName()}}",
+                "prenom": "{{randomFirstName()}}",
+                "dateNaissance": "{{now(yyyy-MM-dd'T'HH:mm:ssZ)}}"
+              }
+            }
+        - name: Résponse OK
+          summary: Exemple De réponse OK vers l'appellant
+          headers:
+            correlationId: my-correlation-id
+            responseCode: 200
+            amqp_replyTo: jeSaisOuTuEs:P
+          payload:
+            {
+              "throwable": null,
+              "person": {
+                "taille": 110,
+                "nom": "Bennour",
+                "prenom": "Hassen",
+                "dateNaissance": "2000-08-24T14:15:22Z"
+              }
+            }
+        - name: Résponse NullPointerException
+          summary: Exemple De réponse NOK vers l'appellant
+          headers:
+            correlationId: my-correlation-id
+            responseCode: 500
+            amqp_replyTo: jeSaisOuTuEs:P
+          payload:
+            {
+              "throwable": {
+                "detailMessage": "un petit coucou si tu oublie le prenom par exemple",
+                "clazz": "java.lang.NullPointerException"
+              },
+              "person": {
+                "taille": 110,
+                "nom": "Bennour",
+                "prenom": null,
+                "dateNaissance": "2000-08-24T14:15:22Z"
+              }
+            }
+    personQueryMessage:
+      payload:
+        $ref: '#/components/schemas/personQueryMessage'
+      headers:
+        $ref: '#/components/schemas/amqp_replyTo'
+      examples:
+        - name: inputNomOK
+          summary: Exemple D'envois acceptés
+          payload:
+            {
+              "nom": "Bennour"
+            }
+        - name: inputNomNOK
+          summary: Exemple D'envois non acceptés
+          payload:
+            {
+              "nom": null
+            }
+        - name: inputPrenomOK
+          summary: Exemple D'envois acceptés
+          payload:
+            {
+              "prenom": "Hassen"
+            }
+        - name: inputPrenomNOK
+          summary: Exemple D'envois non acceptés
+          payload:
+            {
+              "prenom": null
+            }
+    messagePayload:
+      payload:
+        $ref: '#/components/schemas/messagePayload'
+      examples:
+        - name: Résponse Random OK
+          summary: Exemple De réponse Random OK vers l'appellant
+          headers:
+            correlationId: my-correlation-id
+            responseCode: 200
+            amqp_replyTo: jeSaisOuTuEs:P
+          payload:
+            {
+              "throwable": null,
+              "person": {
+                "taille": 180,
+                "nom": "{{randomLastName()}}",
+                "prenom": "{{randomFirstName()}}",
+                "dateNaissance": "{{now(yyyy-MM-dd'T'HH:mm:ssZ)}}"
+              }
+            }
+        - name: Résponse OK
+          summary: Exemple De réponse OK vers l'appellant
+          headers:
+            correlationId: my-correlation-id
+            responseCode: 200
+            amqp_replyTo: jeSaisOuTuEs:P
+          payload:
+            {
+              "throwable": null,
+              "person": {
+                "taille": 110,
+                "nom": "Bennour",
+                "prenom": "Hassen",
+                "dateNaissance": "2000-08-24T14:15:22Z"
+              }
+            }
+        - name: Résponse NullPointerException
+          summary: Exemple De réponse NOK vers l'appellant
+          headers:
+            correlationId: my-correlation-id
+            responseCode: 500
+            amqp_replyTo: jeSaisOuTuEs:P
+          payload:
+            {
+              "throwable": {
+                "detailMessage": "un petit coucou si tu oublie le prenom par exemple",
+                "clazz": "java.lang.NullPointerException"
+              },
+              "person": {
+                "taille": 110,
+                "nom": "Bennour",
+                "prenom": null,
+                "dateNaissance": "2000-08-24T14:15:22Z"
+              }
+            }
+  schemas:
+    messagePayload:
+      type: object
+      properties:
+        throwable:
+          $ref: '#/components/schemas/nullableThrowable'
+        person:
+          $ref: '#/components/schemas/person'
+      required: [
+          person
+      ]
+    nullableThrowable:
+      oneOf:
+        - $ref: '#/components/schemas/throwable'
+        - type: 'null'
+    throwable:
+      type: object
+      properties:
+        detailMessage:
+          type: string
+        clazz:
+          type: string
+    person:
+      type: [object, 'null']
+      properties:
+        taille:
+          type: number
+          format: integer
+          description: size
+        formatFloat:
+          type: number
+          format: float
+        nom:
+          type: string
+          description: nom
+        prenom:
+          type: string
+          description: prenom
+        dateNaissance:
+          type: string
+          format: date-time
+      required: [
+          nom,prenom
+      ]
+    amqp_replyTo:
+      type: object
+      location: $message.header#/amqp_replyTo
+      properties:
+        amqp_replyTo:
+          description: adresse de réponse de forme org.springframework.amqp.support.AmqpHeaders#REPLY_TO
+          type: string
+      required: [
+          amqp_replyTo
+      ]
+    personQueryMessage:
+      type: object
+      properties:
+        prenom:
+          type: string
+          description: prenom
+        nom:
+          type: string
+          description: nom
+      minProperties: 1
+    responseMessage:
+      type: object
+      properties:
+        throwable:
+          $ref: '#/components/schemas/throwable'
+        data:
+          oneOf:
+            - $ref: '#/components/schemas/person'
+      required: [
+          person
+      ]
+  securitySchemes:
+    localRabbitMQ:
+      description: local user/pwd, defaults guest/guest
+      type: userPassword
+    devRabbitMQ:
+      description: dev user/pwd, defaults test/test
+      type: userPassword
+  operationTraits:
+    rabbit:
+      bindings:
+        rabbit: null

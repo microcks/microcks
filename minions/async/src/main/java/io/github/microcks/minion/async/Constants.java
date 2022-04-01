@@ -32,4 +32,10 @@ public class Constants {
 
    /** Supported content-types representing Avro binary encoded content. */
    public static final List<String> AVRO_BINARY_CONTENT_TYPES = Arrays.asList("avro/binary", "application/octet-stream", "application/avro");
+
+   /** Constant identifying that AMQP destination is a queue. */
+   public static final String AMQP_QUEUE_TYPE = "queue";
+
+   /** Constants identifying that AMQP destination is an exchange. */
+   public static final List<String> AMQP_EXCHANGE_TYPES = Arrays.asList("direct", "topic", "fanout", "headers");
 }

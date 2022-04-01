@@ -210,6 +210,9 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'WS':
             result += 'WebSocket';
             break;
+          case 'AMQP':
+            result += 'AMQP';
+            break;
           case 'AMQP1':
             result += 'AMQP 1.0';
             break;

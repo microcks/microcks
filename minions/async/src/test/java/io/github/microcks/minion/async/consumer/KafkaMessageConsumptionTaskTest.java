@@ -42,6 +42,7 @@ import java.io.File;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -117,12 +118,12 @@ public class KafkaMessageConsumptionTaskTest {
       String options = "registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO";
 
       KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
-      task.initializeOptionsMap(options);
+      Map<String, String> optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
 
-      assertNotNull(task.optionsMap);
-      assertEquals("http://localhost:8888", task.optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_URL_OPTION));
-      assertEquals("reg-user", task.optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_USERNAME_OPTION));
-      assertEquals("USER_INFO", task.optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_AUTH_CREDENTIALS_SOURCE));
+      assertNotNull(optionsMap);
+      assertEquals("http://localhost:8888", optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_URL_OPTION));
+      assertEquals("reg-user", optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_USERNAME_OPTION));
+      assertEquals("USER_INFO", optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_AUTH_CREDENTIALS_SOURCE));
    }
 
    /*

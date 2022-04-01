@@ -1,0 +1,41 @@
+asyncapi: '2.1.0'
+info:
+  title: Account Service
+  version: 1.2.0
+  description: This service is in charge of processing user signups
+channels:
+  user/signedup:
+    subscribe:
+      message:
+        $ref: '#/components/messages/UserSignedUp'
+components:
+  messages:
+    UserSignedUp:
+      payload:
+        type: object
+        properties:
+          displayName:
+            type: string
+          age:
+            type: integer
+            format: int32
+          size:
+            type: number
+            format: float
+          exp:
+            type: integer
+            format: int64
+          rewards:
+            type: number
+            format: double
+        required:
+          - displayName
+        additionalProperties: false
+      examples:
+        - name: Laurent
+          payload:
+            displayName: Laurent Broudoux
+            age: 43
+            size: 1.8
+            exp: 1234567891011
+            rewards: 12345.67

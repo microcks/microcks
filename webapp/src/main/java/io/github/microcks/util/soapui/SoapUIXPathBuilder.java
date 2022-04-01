@@ -53,7 +53,7 @@ public class SoapUIXPathBuilder {
             String namespace = line.substring(line.indexOf("=") + 2, line.lastIndexOf("'"));
             nsContext.addNamespaceURI(prefix, namespace);
          }
-         else if (line.startsWith("/")){
+         else {
             xpathExpression = line;
          }
       }

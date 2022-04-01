@@ -18,6 +18,7 @@
  */
 package io.github.microcks.minion.async.producer;
 
+import io.github.microcks.domain.Binding;
 import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
@@ -36,7 +37,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.inject.Qualifier;
 
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
@@ -69,6 +69,9 @@ public class ProducerManager {
    MQTTProducerManager mqttProducerManager;
 
    @Inject
+   AMQPProducerManager amqpProducerManager;
+
+   @Inject
    @RootWebSocketProducerManager
    WebSocketProducerManager wsProducerManager;
 
@@ -92,6 +95,8 @@ public class ProducerManager {
          for (String binding : definition.getOperation().getBindings().keySet()) {
             // Ensure this minion supports this binding.
             if (Arrays.asList(supportedBindings).contains(binding)) {
+               Binding bindingDef = definition.getOperation().getBindings().get(binding);
+
                switch (BindingType.valueOf(binding)) {
                   case KAFKA:
                      for (EventMessage eventMessage : definition.getEventMessages()) {
@@ -139,6 +144,16 @@ public class ProducerManager {
                         String message = renderEventMessageContent(eventMessage);
                         wsProducerManager.publishMessage(channel, message, eventMessage.getHeaders());
                      }
+                     break;
+                  case AMQP:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String destinationName = amqpProducerManager.getDestinationName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        amqpProducerManager.publishMessage(bindingDef.getDestinationType(),
+                              destinationName, message,
+                              amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
+                     break;
                   default:
                      break;
                 }

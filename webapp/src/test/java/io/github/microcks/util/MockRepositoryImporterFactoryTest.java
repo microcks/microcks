@@ -23,6 +23,7 @@ import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
+import io.github.microcks.util.openapi.SwaggerImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
 import org.junit.Test;
@@ -46,7 +47,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(soapUIProject, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for SoapUI should not fail!");
       }
       assertTrue(importer instanceof SoapUIProjectImporter);
 
@@ -56,7 +57,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(postmanCollection, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for Postman should not fail!");
       }
       assertTrue(importer instanceof PostmanCollectionImporter);
 
@@ -66,7 +67,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for OpenAPI YAML should not fail!");
       }
       assertTrue(importer instanceof OpenAPIImporter);
 
@@ -76,7 +77,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for OpenAPI JSON should not fail!");
       }
       assertTrue(importer instanceof OpenAPIImporter);
 
@@ -86,7 +87,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(openAPISpec, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for OpenAPI JSON oneliner should not fail!");
       }
       assertTrue(importer instanceof OpenAPIImporter);
 
@@ -96,7 +97,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for AsyncAPI JSON should not fail!");
       }
       assertTrue(importer instanceof AsyncAPIImporter);
 
@@ -106,7 +107,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for AsyncAPI JSON oneliner should not fail!");
       }
       assertTrue(importer instanceof AsyncAPIImporter);
 
@@ -116,7 +117,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for AsyncAPI YAML should not fail!");
       }
       assertTrue(importer instanceof AsyncAPIImporter);
 
@@ -126,7 +127,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(protobufSchema, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for Protobuf should not fail!");
       }
       assertTrue(importer instanceof ProtobufImporter);
 
@@ -136,7 +137,7 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(apiMetadata, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for APIMetadata should not fail!");
       }
       assertTrue(importer instanceof MetadataImporter);
 
@@ -146,8 +147,28 @@ public class MockRepositoryImporterFactoryTest {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(graphQLSchema, null);
       } catch (Throwable t) {
-         fail("Getting importer should not fail !");
+         fail("Getting importer for GraphQL should not fail!");
       }
       assertTrue(importer instanceof GraphQLImporter);
+
+      // Load a Swagger v2 YAML file.
+      File swaggerSpec = new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(swaggerSpec, null);
+      } catch (Throwable t) {
+         fail("Getting importer for Swagger v2 YAML should not fail!");
+      }
+      assertTrue(importer instanceof SwaggerImporter);
+
+      // Load a Swagger v2 JSON file.
+      swaggerSpec = new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(swaggerSpec, null);
+      } catch (Throwable t) {
+         fail("Getting importer for Swagger v2 JSON should not fail!");
+      }
+      assertTrue(importer instanceof SwaggerImporter);
    }
 }

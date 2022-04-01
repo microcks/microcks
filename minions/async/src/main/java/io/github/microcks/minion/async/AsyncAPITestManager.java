@@ -22,6 +22,7 @@ import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
+import io.github.microcks.minion.async.consumer.AMQPMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.ConsumedMessage;
 import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MQTTMessageConsumptionTask;
@@ -157,6 +158,8 @@ public class AsyncAPITestManager {
          // Validate all the received outputs if any.
          if (outputs != null && !outputs.isEmpty()) {
             validateConsumedMessage(testCaseReturn, outputs);
+         } else {
+            logger.infof("No consumed message to validate, test {%s} will be marked as timed-out", specification.getTestResultId());
          }
 
          // Finally, report the testCase results using Microcks API.
@@ -294,6 +297,9 @@ public class AsyncAPITestManager {
          }
          if (WebSocketMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new WebSocketMessageConsumptionTask(testSpecification);
+         }
+         if (AMQPMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
+            return new AMQPMessageConsumptionTask(testSpecification);
          }
          return null;
       }

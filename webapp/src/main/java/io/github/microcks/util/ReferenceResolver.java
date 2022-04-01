@@ -76,20 +76,23 @@ public class ReferenceResolver {
       // Check the file first.
       File referenceFile = resolvedReferences.get(relativePath);
       if (referenceFile == null) {
-         // Rebuild a downloadable URL to retrieve file.
-         String remoteUrl = baseRepositoryUrl;
-         String pathToAppend = relativePath;
-         while (pathToAppend.startsWith("../")) {
-            remoteUrl = remoteUrl.substring(0, remoteUrl.lastIndexOf("/"));
-            pathToAppend = pathToAppend.substring(3);
+         String remoteUrl = relativePath;
+         if (!relativePath.startsWith("http")) {
+            // Rebuild a downloadable URL to retrieve file.
+            remoteUrl = baseRepositoryUrl;
+            String pathToAppend = relativePath;
+            while (pathToAppend.startsWith("../")) {
+               remoteUrl = remoteUrl.substring(0, remoteUrl.lastIndexOf("/"));
+               pathToAppend = pathToAppend.substring(3);
+            }
+            if (pathToAppend.startsWith("./")) {
+               pathToAppend = pathToAppend.substring(2);
+            }
+            if (pathToAppend.startsWith("/")) {
+               pathToAppend = pathToAppend.substring(1);
+            }
+            remoteUrl += "/" + pathToAppend;
          }
-         if (pathToAppend.startsWith("./")) {
-            pathToAppend = pathToAppend.substring(2);
-         }
-         if (pathToAppend.startsWith("/")) {
-            pathToAppend = pathToAppend.substring(1);
-         }
-         remoteUrl += "/" + pathToAppend;
          log.info("Downloading a reference file at {}", remoteUrl);
          // Now download this relative file and store its reference into the cache.
          referenceFile = HTTPDownloader.handleHTTPDownloadToFile(remoteUrl, repositorySecret, disableSSLValidation);
