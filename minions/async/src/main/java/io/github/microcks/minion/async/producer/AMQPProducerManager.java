@@ -80,8 +80,7 @@ public class AMQPProducerManager {
    }
 
    /**
-    *
-    * @return
+    * @return A newly created connection to configured broker
     * @throws Exception in case of connection failure
     */
    protected Connection createConnection() throws Exception {
@@ -100,8 +99,8 @@ public class AMQPProducerManager {
 
    /**
     * Publish a message on specified destination.
-    * @param destinationType The destination topic for message
-    * @param destinationName
+    * @param destinationType The type of destination (queue, topic, fanout, ...)
+    * @param destinationName The name of destination
     * @param value The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
