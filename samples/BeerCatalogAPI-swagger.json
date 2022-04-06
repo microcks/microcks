@@ -1,0 +1,171 @@
+{
+    "swagger": "2.0",
+    "info": {
+      "title": "Beer Catalog API",
+      "version": "0.99",
+      "description": "An API for querying beer catalog of Acme Inc.",
+      "contact": {
+        "name": "Laurent Broudoux",
+        "url": "http://github.com/lbroudoux",
+        "email": "laurent.broudoux@gmail.com"
+      },
+      "license": {
+        "name": "MIT License",
+        "url": "https://opensource.org/licenses/MIT"
+      },
+      "x-microcks": {
+        "labels": {
+          "domain": "beers",
+          "status": "beta",
+          "team": "Team A"
+        }
+      }
+    },
+    "paths": {
+      "/beer/{name}": {
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "beer"
+          ],
+          "responses": {
+            "200": {
+              "description": "Beer having requested name",
+              "schema": {
+                "$ref": "#/definitions/Beer"
+              },
+              "examples": {
+                "application/json": "{\n    \"name\": \"Rodenbach\",\n    \"country\": \"Belgium\",\n    \"type\": \"Fruit\",\n    \"rating\": 4.3,\n    \"status\": \"available\"\n}"
+              }
+            }
+          },
+          "operationId": "GetBeer",
+          "summary": "Get beer having name",
+          "description": "Get beer having name"
+        },
+        "parameters": [
+          {
+            "name": "name",
+            "description": "Name of beer to retrieve",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ]
+      },
+      "/beer/findByStatus/{status}": {
+        "get": {
+          "produces": [
+            "application/json"
+          ],
+          "tags": [
+            "beer"
+          ],
+          "responses": {
+            "200": {
+              "description": "List of beers having requested status",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Beer"
+                }
+              },
+              "examples": {
+                "application/json": "[\n    {\n        \"name\": \"Rodenbach,\n        \"country\": \"Belgium\",\n        \"type\": \"Fruit\",\n        \"rating\": 4.2,\n        \"status\": \"available\"\n    },\n    {\n        \"name\": \"Weissbier\",\n        \"country\": \"Germany\",\n        \"type\": \"Wheat\",\n        \"rating\": 4.1,\n        \"status\": \"available\"\n    }\n]"
+              }
+            }
+          },
+          "operationId": "FindBeersByStatus",
+          "summary": "Get beers having status",
+          "description": "Get beers having status"
+        },
+        "parameters": [
+          {
+            "name": "status",
+            "description": "Status of beers to retrieve",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "description": "Number of page to retrieve",
+            "in": "query",
+            "type": "number"
+          }
+        ]
+      },
+      "/beer": {
+        "get": {
+          "tags": [
+            "beer"
+          ],
+          "parameters": [
+            {
+              "name": "myparam",
+              "description": "Description",
+              "in": "query",
+              "required": true,
+              "type": "string"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Array of beers",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/Beer"
+                }
+              }
+            }
+          },
+          "operationId": "ListBeers",
+          "summary": "List beers within catalog",
+          "description": "List beers within catalog"
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "description": "Number of page to retrieve",
+            "in": "query",
+            "type": "number"
+          }
+        ]
+      }
+    },
+    "definitions": {
+      "Beer": {
+        "properties": {
+          "name": {
+            "description": "Name of Beer",
+            "type": "string"
+          },
+          "country": {
+            "description": "Origin country of Beer",
+            "type": "string"
+          },
+          "type": {
+            "description": "Type of Beer",
+            "type": "string"
+          },
+          "rating": {
+            "description": "Rating from customers",
+            "type": "number"
+          },
+          "status": {
+            "description": "Stock status",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tags": [
+      {
+        "name": "beer",
+        "description": "Beer resource"
+      }
+    ]
+  }
