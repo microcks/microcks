@@ -203,6 +203,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
                if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
+                  // We only need the pattern here.
+                  operation.addResourcePath(extractResourcePath(requestUrl, null));
                } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
                   Map<String, String> parts = buildRequestParts(requestNode);
                   dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
@@ -236,9 +238,18 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    private boolean areOperationsEquivalent(String operationNameRef, String operationNameCandidate) {
-      if (operationNameRef.equals(operationNameCandidate)) {
+      // First check equals ignoring case.
+      if (operationNameRef.equalsIgnoreCase(operationNameCandidate)) {
          return true;
       }
+      // Then we may have an OpenAPI template we should convert to Postman and check again.
+      if (operationNameRef.contains("/{")) {
+         String transformedName = operationNameRef.replaceAll("/\\{", "/:").replaceAll("}", "");
+         if (transformedName.equalsIgnoreCase(operationNameCandidate)) {
+            return true;
+         }
+      }
+
       try {
          return operationNameCandidate.matches(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef);
       } catch (PatternSyntaxException pse) {

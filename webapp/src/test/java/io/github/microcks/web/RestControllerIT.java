@@ -57,4 +57,35 @@ public class RestControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
    }
+
+   @Test
+   public void testSwaggerMocking() {
+      // Upload Beer Catalog API swagger and then Postman collection artifacts.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-collection.json", false);
+
+      // Check its different mocked operations.
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("[3]", response.getBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer/Weissbier", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\n" +
+                     "    \"name\": \"Weissbier\",\n" +
+                     "    \"country\": \"Germany\",\n" +
+                     "    \"type\": \"Wheat\",\n" +
+                     "    \"rating\": 4.1,\n" +
+                     "    \"status\": \"out_of_stock\"\n" +
+                     "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+   }
 }

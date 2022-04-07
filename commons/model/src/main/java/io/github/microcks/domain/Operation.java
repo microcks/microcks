@@ -144,7 +144,9 @@ public class Operation {
       if (this.resourcePaths == null) {
          this.resourcePaths = new ArrayList<>();
       }
-      resourcePaths.add(resourcePath);
+      if (!this.resourcePaths.contains(resourcePath)) {
+         this.resourcePaths.add(resourcePath);
+      }
    }
 
    public List<ParameterConstraint> getParameterConstraints() {
