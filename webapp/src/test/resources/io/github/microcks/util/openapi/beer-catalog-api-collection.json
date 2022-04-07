@@ -1,0 +1,369 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Beer Catalog API",
+		"_postman_id": "7194f912-d5f5-3ca0-cf75-8a0b912abc4e",
+		"description": "version=0.9 - An API for querying beer catalog of Acme Inc.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "beer",
+			"description": "Folder for beer",
+			"item": [
+				{
+					"name": "Get beer having name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var expectedName = globals[\"name\"];",
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"var schema = {",
+									" \"type\": \"object\",",
+									" \"properties\": {",
+									"    \"name\": { \"type\": \"string\", \"enum\": [expectedName] },",
+									"    \"country\": { \"type\": \"string\" },",
+									"    \"type\": { \"type\": \"string\" },",
+									"    \"rating\": { \"type\": \"number\" },",
+									"    \"status\": { \"type\": \"string\" }",
+									"  }",
+									"};",
+									"",
+									"tests[\"Valid name in response\"] = tv4.validate(jsonData, schema);"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "http:///beer/:name",
+							"host": [
+								"http:"
+							],
+							"port": "",
+							"path": [
+								"",
+								"",
+								"beer",
+								":name"
+							],
+							"query": [],
+							"variable": [
+								{
+									"description": "",
+									"key": "name",
+									"value": ""
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Get beer having name"
+					},
+					"response": [
+						{
+							"id": "809e4ade-2462-454b-b8de-880f520e8c79",
+							"name": "Rodenbach",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///beer/:name",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"beer",
+										":name"
+									],
+									"query": [],
+									"variable": [
+										{
+											"description": "",
+											"key": "name",
+											"value": "Rodenbach"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "{\"name\": \"Rodenbach\", \"country\": \"Belgium\", \"type\": \"Brown ale\", \"rating\": 4.2, \"status\": \"available\"}"
+						},
+						{
+							"id": "b205add4-5386-4c79-a38c-61cd75a94435",
+							"name": "Weissbier",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///beer/:name",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"beer",
+										":name"
+									],
+									"query": [],
+									"variable": [
+										{
+											"description": "",
+											"key": "name",
+											"value": "Weissbier"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "{\n    \"name\": \"Weissbier\",\n    \"country\": \"Germany\",\n    \"type\": \"Wheat\",\n    \"rating\": 4.1,\n    \"status\": \"out_of_stock\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get beers having status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var expectedStatus = globals[\"status\"];",
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"var schema = {",
+									" \"type\": \"array\",",
+									" \"items\": {",
+									"   \"type\": \"object\",",
+									"   \"properties\": {",
+									"      \"name\": { \"type\": \"string\" },",
+									"      \"country\": { \"type\": \"string\" },",
+									"      \"type\": { \"type\": \"string\" },",
+									"      \"rating\": { \"type\": \"number\" },",
+									"      \"status\": { \"type\": \"string\", \"enum\": [expectedStatus] }",
+									"   }",
+									" }",
+									"};",
+									"",
+									"tests[\"Valid response\"] = tv4.validate(jsonData, schema);"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "http:///beer/findByStatus/:status",
+							"host": [
+								"http:"
+							],
+							"port": "",
+							"path": [
+								"",
+								"",
+								"beer",
+								"findByStatus",
+								":status"
+							],
+							"query": [],
+							"variable": [
+								{
+									"key": "status",
+									"value": ""
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Get beers having status"
+					},
+					"response": [
+						{
+							"id": "2cef0eba-abe8-468e-8dc9-0731f5758b52",
+							"name": "Get available beers",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///beer/findByStatus/:status",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"beer",
+										"findByStatus",
+										":status"
+									],
+									"query": [],
+									"variable": [
+										{
+											"description": "",
+											"key": "status",
+											"value": "available"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "[{\"name\": \"Rodenbach\", \"country\": \"Belgium\", \"type\": \"Brown ale\", \"rating\": 4.2, \"status\": \"available\"},\n{\"name\": \"Westmalle Triple\", \"country\": \"Belgium\", \"type\": \"Trappist\", \"rating\": 3.8, \"status\": \"available\"}]"
+						},
+						{
+							"id": "5b0ccc56-539d-428c-8334-d641a900b60e",
+							"name": "Get out_of_stock beers",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///beer/findByStatus/:status",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"beer",
+										"findByStatus",
+										":status"
+									],
+									"query": [],
+									"variable": [
+										{
+											"description": "",
+											"key": "status",
+											"value": "out_of_stock"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "[{\"name\": \"Weissbier\", \"country\": \"Germany\", \"type\": \"Wheat\", \"rating\": 4.1, \"status\": \"out_of_stock\"}]"
+						}
+					]
+				},
+				{
+					"name": "List beers within catalog",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"tests[\"Status code is OK\"] = (responseCode.code === 200 || responseCode.code === 404);"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "http:///beer?page={{page}}",
+							"host": [
+								"http:"
+							],
+							"port": "",
+							"path": [
+								"",
+								"",
+								"beer"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "{{page}}",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "List beers within catalog"
+					},
+					"response": [
+						{
+							"id": "6941bfe0-0e27-4ee6-a244-f03dfca6fe25",
+							"name": "List page 0",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///beer?page=0",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"beer"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0",
+											"equals": true,
+											"description": ""
+										}
+									],
+									"variable": []
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "[\n    {\n        \"name\": \"Rodenbach\",\n        \"country\": \"Belgium\",\n        \"type\": \"Brown ale\",\n        \"rating\": 4.2,\n        \"status\": \"available\"\n    },\n    {\n        \"name\": \"Westmalle Triple\",\n        \"country\": \"Belgium\",\n        \"type\": \"Trappist\",\n        \"rating\": 3.8,\n        \"status\": \"available\"\n    },\n    {\n        \"name\": \"Weissbier\",\n        \"country\": \"Germany\",\n        \"type\": \"Wheat\",\n        \"rating\": 4.1,\n        \"status\": \"out_of_stock\"\n    }\n]"
+						}
+					]
+				}
+			]
+		}
+	]
+}
