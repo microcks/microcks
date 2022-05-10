@@ -156,7 +156,7 @@ public class ProtobufImporterTest {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/remote/goodbye-v1.proto",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/master/webapp/src/test/resources/io/github/microcks/util/grpc", null, true));
+               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/master/webapp/src/test/resources/io/github/microcks/util/grpc/remote/goodbye-v1.proto", null, true));
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

@@ -673,7 +673,7 @@ public class AsyncAPIImporterTest {
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/master/webapp/src/test/resources/io/github/microcks/util/asyncapi", null, true));
+               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/master/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml", null, true));
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");

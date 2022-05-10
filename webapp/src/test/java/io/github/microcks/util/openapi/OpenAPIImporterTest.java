@@ -1138,7 +1138,7 @@ public class OpenAPIImporterTest {
    public void testExternalRelativeReferenceOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
-            "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/",
+            "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml",
             null, true);
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml", resolver);

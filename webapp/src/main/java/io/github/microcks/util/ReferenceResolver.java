@@ -66,6 +66,7 @@ public class ReferenceResolver {
       } else {
          this.baseRepositoryUrl = baseRepositoryUrl;
       }
+      this.urlBuilder = new SimpleReferenceURLBuilder();
    }
 
    /**
@@ -84,6 +85,7 @@ public class ReferenceResolver {
       } else {
          this.baseRepositoryUrl = baseRepositoryUrl;
       }
+      this.urlBuilder = urlBuilder;
    }
 
    /**
@@ -99,24 +101,6 @@ public class ReferenceResolver {
       if (referenceFile == null) {
          String remoteUrl = relativePath;
          if (!relativePath.startsWith("http")) {
-
-            // Rebuild a downloadable URL to retrieve file.
-            /*
-            remoteUrl = baseRepositoryUrl;
-            String pathToAppend = relativePath;
-            while (pathToAppend.startsWith("../")) {
-               remoteUrl = remoteUrl.substring(0, remoteUrl.lastIndexOf("/"));
-               pathToAppend = pathToAppend.substring(3);
-            }
-            if (pathToAppend.startsWith("./")) {
-               pathToAppend = pathToAppend.substring(2);
-            }
-            if (pathToAppend.startsWith("/")) {
-               pathToAppend = pathToAppend.substring(1);
-            }
-            remoteUrl += "/" + pathToAppend;
-            */
-
             remoteUrl = urlBuilder.buildRemoteURL(this.baseRepositoryUrl, relativePath);
          }
          log.info("Downloading a reference file at {}", remoteUrl);
