@@ -24,6 +24,7 @@ import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
+import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,10 +65,13 @@ public class UploadArtifactController {
 
          try {
             // Download remote to local file before import.
-            File localFile = HTTPDownloader.handleHTTPDownloadToFile(url, null, true);
+            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(url, null, true);
+            File localFile = fileAndHeaders.getLocalFile();
 
             // Now try importing services.
-            services = serviceService.importServiceDefinition(localFile, new ReferenceResolver(url, null, true),
+            services = serviceService.importServiceDefinition(localFile,
+                  new ReferenceResolver(url, null, true,
+                        RelativeReferenceURLBuilderFactory.getRelativeReferenceURLBuilder(fileAndHeaders.getResponseHeaders())),
                   new ArtifactInfo(url, mainArtifact));
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item " + url, ioe);

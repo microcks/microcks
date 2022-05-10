@@ -44,6 +44,8 @@ import java.security.KeyStore;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Base64;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This is a utility class for accessing HTTP content using diverse security authentication
@@ -132,6 +134,44 @@ public class HTTPDownloader {
             rbc.close();
       }
       return localFile;
+   }
+
+   /**
+    * Handle the HTTP/HTTPS download of remote url as a local temporary file. Depending on secret content, HTTP
+    * connection is prepared for handling proxy username/password, target service authentication (through basic and
+    * bearer authorization or customer request header), remote SSL connection through installation of CA certificate
+    * or disabling SSL validation (ie. accepting all certificate and hostname verifications).
+    * @param remoteUrl The remote URL to download and transfer into resulting file
+    * @param secret The secret associated with this remote URL (if any. Can be null)
+    * @param disableSSLValidation Whether to disable SSL validation. If true, all SSL related information from
+    *                             secret will be ignored.
+    * @return A temporary file containing downloaded content as well as Http download headers.
+    * @throws IOException if anything goes wrong (request preparation or execution).
+    */
+   public static FileAndHeaders handleHTTPDownloadToFileAndHeaders(String remoteUrl, Secret secret, boolean disableSSLValidation) throws IOException {
+
+      // Build remote URLConnection and local target file.
+      HttpURLConnection connection = prepareURLConnection(remoteUrl, secret, disableSSLValidation);
+      File localFile = File.createTempFile("microcks-" + System.currentTimeMillis(), ".download");
+
+      ReadableByteChannel rbc = null;
+      FileOutputStream fos = null;
+      Map<String, List<String>> responseHeaders = null;
+      try {
+         rbc = Channels.newChannel(connection.getInputStream());
+
+         // Transfer file to local.
+         fos = new FileOutputStream(localFile);
+         fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+         responseHeaders = connection.getHeaderFields();
+      }
+      finally {
+         if (fos != null)
+            fos.close();
+         if (rbc != null)
+            rbc.close();
+      }
+      return new FileAndHeaders(localFile, responseHeaders);
    }
 
    /**
@@ -296,5 +336,25 @@ public class HTTPDownloader {
       SSLContext sslContext = SSLContext.getInstance("TLS");
       sslContext.init(null, tmf.getTrustManagers(), null);
       ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
+   }
+
+   /**
+    *
+    */
+   public static class FileAndHeaders {
+      private File localFile;
+      private Map<String, List<String>> responseHeaders;
+
+      public FileAndHeaders(File localFile, Map<String, List<String>> responseHeaders) {
+         this.localFile = localFile;
+         this.responseHeaders = responseHeaders;
+      }
+
+      public File getLocalFile() {
+         return localFile;
+      }
+      public Map<String, List<String>> getResponseHeaders() {
+         return responseHeaders;
+      }
    }
 }

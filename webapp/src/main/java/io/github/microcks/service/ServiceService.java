@@ -18,7 +18,18 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.Binding;
+import io.github.microcks.domain.BindingType;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Metadata;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Secret;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceChangeEvent;
 import io.github.microcks.repository.EventMessageRepository;
@@ -29,7 +40,16 @@ import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.security.AuthorizationChecker;
 import io.github.microcks.security.UserInfo;
-import io.github.microcks.util.*;
+import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.EntityAlreadyExistsException;
+import io.github.microcks.util.HTTPDownloader;
+import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.MockRepositoryImportException;
+import io.github.microcks.util.MockRepositoryImporter;
+import io.github.microcks.util.MockRepositoryImporterFactory;
+import io.github.microcks.util.ReferenceResolver;
+import io.github.microcks.util.RelativeReferenceURLBuilder;
+import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +59,7 @@ import org.springframework.context.ApplicationContext;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 /**
  * Bean defining service operations around Service domain objects.
@@ -94,10 +114,13 @@ public class ServiceService {
    public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret, boolean disableSSLValidation, boolean mainArtifact) throws MockRepositoryImportException {
       log.info("Importing service definitions from " + repositoryUrl);
       File localFile = null;
+      Map<String, List<String>> fileProperties = null;
 
       if (repositoryUrl.startsWith("http")) {
          try {
-            localFile = HTTPDownloader.handleHTTPDownloadToFile(repositoryUrl, repositorySecret, disableSSLValidation);
+            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(repositoryUrl, repositorySecret, disableSSLValidation);
+            localFile = fileAndHeaders.getLocalFile();
+            fileProperties = fileAndHeaders.getResponseHeaders();
          } catch (IOException ioe) {
             log.error("Exception while downloading " + repositoryUrl, ioe);
             throw new MockRepositoryImportException(repositoryUrl + " cannot be downloaded", ioe);
@@ -107,13 +130,14 @@ public class ServiceService {
          localFile = new File(repositoryUrl);
       }
 
+      RelativeReferenceURLBuilder referenceURLBuilder = RelativeReferenceURLBuilderFactory.getRelativeReferenceURLBuilder(fileProperties);
+      String artifactName = referenceURLBuilder.getFileName(repositoryUrl, fileProperties);
+
       // Initialize a reference resolver to the folder of this repositoryUrl.
-      ReferenceResolver referenceResolver = new ReferenceResolver(
-            repositoryUrl.substring(0, repositoryUrl.lastIndexOf("/")),
-            repositorySecret,
-            disableSSLValidation);
+      ReferenceResolver referenceResolver = new ReferenceResolver(repositoryUrl,
+            repositorySecret, disableSSLValidation, referenceURLBuilder);
       return importServiceDefinition(localFile, referenceResolver,
-            new ArtifactInfo(repositoryUrl.substring(repositoryUrl.lastIndexOf("/") + 1), mainArtifact));
+            new ArtifactInfo(artifactName, mainArtifact));
    }
 
 

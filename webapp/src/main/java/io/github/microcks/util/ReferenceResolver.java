@@ -46,6 +46,9 @@ public class ReferenceResolver {
    private String baseRepositoryUrl;
    private Secret repositorySecret;
    private boolean disableSSLValidation;
+
+   private RelativeReferenceURLBuilder urlBuilder;
+
    private Map<String, File> resolvedReferences = new HashMap<>();
 
    /**
@@ -55,6 +58,24 @@ public class ReferenceResolver {
     * @param disableSSLValidation Whether to disable or enable the SSL trusting of certificates
     */
    public ReferenceResolver(String baseRepositoryUrl, Secret repositorySecret, boolean disableSSLValidation) {
+      this.repositorySecret = repositorySecret;
+      this.disableSSLValidation = disableSSLValidation;
+      // Remove trailing / to ease things later.
+      if (baseRepositoryUrl.endsWith("/")) {
+         this.baseRepositoryUrl = baseRepositoryUrl.substring(0, baseRepositoryUrl.length() - 1);
+      } else {
+         this.baseRepositoryUrl = baseRepositoryUrl;
+      }
+   }
+
+   /**
+    * Build a new reference resolver.
+    * @param baseRepositoryUrl The root folder representing a remote repository we want to resolved references to
+    * @param repositorySecret An optional Secret containing connection credentials to the repository
+    * @param disableSSLValidation Whether to disable or enable the SSL trusting of certificates
+    */
+   public ReferenceResolver(String baseRepositoryUrl, Secret repositorySecret, boolean disableSSLValidation,
+                            RelativeReferenceURLBuilder urlBuilder) {
       this.repositorySecret = repositorySecret;
       this.disableSSLValidation = disableSSLValidation;
       // Remove trailing / to ease things later.
@@ -78,7 +99,9 @@ public class ReferenceResolver {
       if (referenceFile == null) {
          String remoteUrl = relativePath;
          if (!relativePath.startsWith("http")) {
+
             // Rebuild a downloadable URL to retrieve file.
+            /*
             remoteUrl = baseRepositoryUrl;
             String pathToAppend = relativePath;
             while (pathToAppend.startsWith("../")) {
@@ -92,6 +115,9 @@ public class ReferenceResolver {
                pathToAppend = pathToAppend.substring(1);
             }
             remoteUrl += "/" + pathToAppend;
+            */
+
+            remoteUrl = urlBuilder.buildRemoteURL(this.baseRepositoryUrl, relativePath);
          }
          log.info("Downloading a reference file at {}", remoteUrl);
          // Now download this relative file and store its reference into the cache.
