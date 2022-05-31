@@ -15,7 +15,7 @@ $ helm repo add microcks https://microcks.io/helm
 
 $ kubectl create namespace microcks
 
-$ helm install microcks microcks/microcks —-version 1.5.1 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
+$ helm install microcks microcks/microcks —-version 1.5.2 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
   
 NAME: microcks
 LAST DEPLOYED: Thu Apr 07 18:13:32 2022
