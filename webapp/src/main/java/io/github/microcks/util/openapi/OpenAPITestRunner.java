@@ -154,7 +154,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
             }
          }
          if (openapiSpecResource == null) {
-            log.debug("Found no OpenAPI specification resource for service {0}, so failing validating", service.getId());
+            log.debug("Found no OpenAPI specification resource for service {} - {}, so failing validating", service.getId(), service.getName());
             return TestReturn.FAILURE_CODE;
          }
 

@@ -95,11 +95,6 @@
     </dependency>
     <!-- Required since Spring 1.5 to 2.3 migration -->
     <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
-      <version>1.4.01</version>
-    </dependency>
-    <dependency>
       <groupId>com.smartbear.soapui</groupId>
       <artifactId>soapui</artifactId>
       <version>${soapui.version}</version>
@@ -180,6 +175,30 @@
         <exclusion>
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
+        </exclusion>
+        <exclusion>
+	      <groupId>xml-apis</groupId>
+	      <artifactId>xml-apis</artifactId>        
+        </exclusion>
+        <exclusion>
+		  <groupId>org.apache.xerces</groupId>
+		  <artifactId>xml-apis</artifactId>        
+        </exclusion>
+        <exclusion>
+		  <groupId>javax.xml.bind</groupId>
+		  <artifactId>jsr173_api</artifactId>        
+        </exclusion>
+        <exclusion>
+          <groupId>stax</groupId>
+  		  <artifactId>stax-api</artifactId>
+        </exclusion>
+        <exclusion>
+		  <groupId>xerces</groupId>
+		  <artifactId>xmlParserAPIs</artifactId>        
+        </exclusion>
+        <exclusion>
+		  <groupId>xom</groupId>
+		  <artifactId>xom</artifactId>        
         </exclusion>
       </exclusions>
     </dependency>

@@ -122,7 +122,7 @@ public class GraphQLTestRunner extends HttpTestRunner {
             graphqlSchemaResource = resources.get(0);
          }
          if (graphqlSchemaResource == null) {
-            log.debug("Found no GraphQL specification resource for service {0}, so failing validating", service.getId());
+            log.debug("Found no GraphQL specification resource for service {}, so failing validating", service.getId());
             return TestReturn.FAILURE_CODE;
          }
 
