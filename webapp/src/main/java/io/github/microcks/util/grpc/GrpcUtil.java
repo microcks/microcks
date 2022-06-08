@@ -22,7 +22,7 @@ import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.MethodDescriptor;
-import io.grpc.services.BinaryLogProvider;
+import io.grpc.protobuf.services.BinaryLogProvider;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;

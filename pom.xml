@@ -59,7 +59,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>2.6.0</spring-boot.version>
+    <spring-boot.version>2.7.0</spring-boot.version>
   </properties>
 
   <dependencyManagement>

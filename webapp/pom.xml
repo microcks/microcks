@@ -20,7 +20,7 @@
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.6.0</soapui.version>
     <soapui.jayway.version>0.9.1</soapui.jayway.version>
-    <grpc.version>1.37.0</grpc.version>
+    <grpc.version>1.47.0</grpc.version>
   </properties>
 
   <dependencyManagement>
@@ -200,7 +200,18 @@
 		  <groupId>xom</groupId>
 		  <artifactId>xom</artifactId>        
         </exclusion>
+        <!-- Remove included Xstream that holds a lot of vulnerabilities -->
+        <exclusion>
+          <groupId>thoughtworks</groupId>
+          <artifactId>xstream</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+    <!-- Replace Xstream from SoapUI with more recent version -->
+    <dependency>
+      <groupId>com.thoughtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <version>1.4.14</version>
     </dependency>
 
     <dependency>
@@ -233,11 +244,10 @@
       <version>3.15.3</version>
     </dependency>
     -->
-
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java-util</artifactId>
-      <version>3.15.3</version>
+      <version>3.19.2</version>
     </dependency>
     <dependency>
       <groupId>com.github.os72</groupId>

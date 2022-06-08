@@ -31,7 +31,6 @@ import io.github.microcks.domain.TestReturn;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.util.test.AbstractTestRunner;
 
-import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.util.JsonFormat;
@@ -39,9 +38,7 @@ import io.grpc.CallOptions;
 import io.grpc.Deadline;
 import io.grpc.Grpc;
 import io.grpc.ManagedChannel;
-import io.grpc.MethodDescriptor;
 import io.grpc.TlsChannelCredentials;
-import io.grpc.services.BinaryLogProvider;
 import io.grpc.stub.ClientCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +53,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
