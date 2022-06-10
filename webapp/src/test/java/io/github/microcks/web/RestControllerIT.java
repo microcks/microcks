@@ -88,4 +88,46 @@ public class RestControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
    }
+   
+   @Test
+   public void testFallbackMatchingWithRegex() {
+      // Upload modified pastry spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
+
+      // Check operation with a defined mock (name: 'Millefeuille')
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Millefeuille/details", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{"
+         		+ "		\"name\":\"Millefeuille\","
+         		+ "		\"description\":\"Detail - Delicieux Millefeuille pas calorique du tout\","
+         		+ "		\"size\":\"L\","
+         		+ "		\"price\":4.4,"
+         		+ "		\"status\":\"available\","
+         		+ "		\"street\":\"freestreet 3\","
+         		+ "		\"city\":\"Paris\""
+         		+ "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+      
+      // Check operation with an undefined defined mock (name: 'Dummy'), should use fallback dispatching based on regular expression matching
+      response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{"
+         		+ "		\"name\":\"Millefeuille\","
+         		+ "		\"description\":\"Detail - Delicieux Millefeuille pas calorique du tout\","
+         		+ "		\"size\":\"L\","
+         		+ "		\"price\":4.4,"
+         		+ "		\"status\":\"available\","
+         		+ "		\"street\":\"freestreet 3\","
+         		+ "		\"city\":\"Paris\""
+         		+ "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }      
+   }
 }
