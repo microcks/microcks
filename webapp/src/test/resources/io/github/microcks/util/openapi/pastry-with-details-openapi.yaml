@@ -1,0 +1,281 @@
+---
+openapi: 3.0.2
+info:
+  title: pastry-details
+  version: 1.0.0
+  description: API definition of API Pastry sample app
+  contact:
+    name: Laurent Broudoux
+    url: http://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+paths:
+  /pastry:
+    summary: Global operations on pastries
+    get:
+      tags:
+      - pastry
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pastry'
+              examples:
+                pastries_json:
+                  value:
+                  - name: Baba Rhum
+                    description: Delicieux Baba au Rhum pas calorique du tout
+                    size: L
+                    price: 3.2
+                    status: available
+                  - name: Divorces
+                    description: Delicieux Divorces pas calorique du tout
+                    size: M
+                    price: 2.8
+                    status: available
+                  - name: Tartelette Fraise
+                    description: Delicieuse Tartelette aux Fraises fraiches
+                    size: S
+                    price: 2
+                    status: available
+          description: Get list of pastries
+      operationId: GetPastries
+      summary: Get list of pastries
+  /pastry/{name}:
+    summary: Specific operation on pastry
+    get:
+      parameters:
+      - examples:
+          Eclair Cafe:
+            value: Eclair Cafe
+          Eclair Cafe Xml:
+            value: Eclair Cafe
+          Millefeuille:
+            value: Millefeuille
+        name: name
+        description: pastry name
+        schema:
+          type: string
+        in: path
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                Eclair Cafe:
+                  value:
+                    name: Eclair Cafe
+                    description: Delicieux Eclair au Cafe pas calorique du tout
+                    size: M
+                    price: 2.5
+                    status: available
+                Millefeuille:
+                  value:
+                    name: Millefeuille
+                    description: Delicieux Millefeuille pas calorique du tout
+                    size: L
+                    price: 4.4
+                    status: available
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                Eclair Cafe Xml:
+                  value: |-
+                    <pastry>
+                        <name>Eclair Cafe</name>
+                        <description>Delicieux Eclair au Cafe pas calorique du tout</description>
+                        <size>M</size>
+                        <price>2.5</price>
+                        <status>available</status>
+                    </pastry>
+          description: Pastry with specified name
+      operationId: GetPastryByName
+      summary: Get Pastry by name
+      description: Get Pastry by name
+    patch:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pastry'
+            examples:
+              Eclair Cafe:
+                value:
+                  price: 2.6
+          text/xml:
+            schema:
+              $ref: '#/components/schemas/Pastry'
+            examples:
+              Eclair Cafe Xml:
+                value: "<pastry>\n\t<price>2.6</price>\n</pastry>"
+        required: true
+      parameters:
+      - examples:
+          Eclair Cafe:
+            value: Eclair Cafe
+          Eclair Cafe Xml:
+            value: Eclair Cafe
+        name: name
+        description: pastry name
+        schema:
+          type: string
+        in: path
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                Eclair Cafe:
+                  value:
+                    name: Eclair Cafe
+                    description: Delicieux Eclair au Cafe pas calorique du tout
+                    size: M
+                    price: 2.6
+                    status: available
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                Eclair Cafe Xml:
+                  value: |-
+                    <pastry>
+                        <name>Eclair Cafe</name>
+                        <description>Delicieux Eclair au Cafe pas calorique du tout</description>
+                        <size>M</size>
+                        <price>2.6</price>
+                        <status>available</status>
+                    </pastry>
+          description: Changed pastry
+      operationId: PatchPastry
+      summary: Patch existing pastry
+    parameters:
+    - name: name
+      description: pastry name
+      schema:
+        type: string
+      in: path
+      required: true
+  /pastry/{name}/details:
+    summary: Specific operation on pastry
+    get:
+      parameters:
+      - examples:
+          Eclair Cafe:
+            value: Eclair Cafe
+          Eclair Cafe Xml:
+            value: Eclair Cafe
+          Millefeuille:
+            value: Millefeuille
+        name: name
+        description: pastry name
+        schema:
+          type: string
+        in: path
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PastryDetails'
+              examples:
+                Eclair Cafe:
+                  value:
+                    name: Eclair Cafe
+                    description: Detail - Delicieux Eclair au Cafe pas calorique du tout
+                    size: M
+                    price: 2.5
+                    status: available
+                    street: somewhere
+                    city: Earth
+                Millefeuille:
+                  value:
+                    name: Millefeuille
+                    description: Detail - Delicieux Millefeuille pas calorique du tout
+                    size: L
+                    price: 4.4
+                    status: available
+                    street: freestreet 3
+                    city: Paris
+          description: Pastry details with specified name
+      operationId: GetPastryDetailsByName
+      summary: Get Pastry Details by name
+      description: Get Pastry Details by name
+    parameters:
+    - name: name
+      description: pastry name
+      schema:
+        type: string
+      in: path
+      required: true
+components:
+  schemas:
+    Pastry:
+      title: Root Type for Pastry
+      description: The root of the Pastry type's schema.
+      type: object
+      properties:
+        name:
+          description: Name of this pastry
+          type: string
+        description:
+          description: A short description of this pastry
+          type: string
+        size:
+          description: Size of pastry (S, M, L)
+          type: string
+        price:
+          format: double
+          description: Price (in USD) of this pastry
+          type: number
+        status:
+          description: Status in stock (available, out_of_stock)
+          type: string
+      example:
+        name: My Pastry
+        description: A short description os my pastry
+        size: M
+        price: 4.5
+        status: available
+    PastryDetails:
+      title: Root Type for Pastry
+      description: The root of the Pastry type's schema.
+      type: object
+      properties:
+        name:
+          description: Name of this pastry
+          type: string
+        description:
+          description: A short description of this pastry
+          type: string
+        size:
+          description: Size of pastry (S, M, L)
+          type: string
+        price:
+          format: double
+          description: Price (in USD) of this pastry
+          type: number
+        status:
+          description: Status in stock (available, out_of_stock)
+          type: string
+        street:
+          description: the street
+          type: string
+        city:
+          description: the city
+          type: string
+tags:
+- name: pastry
+  description: Pastry resource
