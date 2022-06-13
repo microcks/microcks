@@ -101,7 +101,7 @@ public class RestControllerIT extends AbstractBaseIT {
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Millefeuille/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-    	  JSONObject details = new JSONObject(response.getBody());
+          JSONObject details = new JSONObject(response.getBody());
           String description = details.getString("description");
           assertTrue(description.startsWith("Detail -"));   
       } catch (Exception e) {
@@ -112,7 +112,7 @@ public class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-    	  JSONObject details = new JSONObject(response.getBody());
+          JSONObject details = new JSONObject(response.getBody());
           String description = details.getString("description");
           assertTrue(description.startsWith("Detail -"));          
       } catch (Exception e) {
