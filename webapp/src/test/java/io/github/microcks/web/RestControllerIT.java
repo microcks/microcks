@@ -25,7 +25,10 @@ import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import org.codehaus.jettison.json.JSONObject;
 /**
  * Test case for all the Rest mock controller.
  * @author laurent
@@ -116,16 +119,9 @@ public class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{"
-         		+ "		\"name\":\"Millefeuille\","
-         		+ "		\"description\":\"Detail - Delicieux Millefeuille pas calorique du tout\","
-         		+ "		\"size\":\"L\","
-         		+ "		\"price\":4.4,"
-         		+ "		\"status\":\"available\","
-         		+ "		\"street\":\"freestreet 3\","
-         		+ "		\"city\":\"Paris\""
-         		+ "}",
-               response.getBody(), JSONCompareMode.LENIENT);
+    	  JSONObject details = new JSONObject(response.getBody());
+          String description = details.getString("description");
+          assertTrue(description.startsWith("Detail -"));          
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }      
