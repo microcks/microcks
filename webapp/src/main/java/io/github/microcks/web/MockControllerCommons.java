@@ -82,14 +82,8 @@ public class MockControllerCommons {
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
 
-         // Register the request variable and evaluate the response.
-         engine.getContext().setVariable("request", evaluableRequest);
-         try {
-            return engine.getValue(response.getContent());
-         } catch (Throwable t) {
-            log.error("Failing at evaluating template " + response.getContent(), t);
-            return response.getContent();
-         }
+         // Evaluate the response.
+         return unguardedRenderResponseContent(evaluableRequest, TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
@@ -114,14 +108,8 @@ public class MockControllerCommons {
          evaluableRequest.setParams(evaluableParams);
          evaluableRequest.setHeaders(evaluableHeaders);
 
-         // Register the request variable and evaluate the response.
-         engine.getContext().setVariable("request", evaluableRequest);
-         try {
-            return engine.getValue(response.getContent());
-         } catch (Throwable t) {
-            log.error("Failing at evaluating template " + response.getContent(), t);
-            return response.getContent();
-         }
+         // Evaluate the response.
+         return unguardedRenderResponseContent(evaluableRequest, TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
@@ -138,36 +126,66 @@ public class MockControllerCommons {
    public static String renderResponseContent(String requestBody, String requestResourcePath, HttpServletRequest request, Response response) {
       if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          log.debug("Response contains dynamic EL expression, rendering it...");
-         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
          // Create and fill an evaluable request object.
-         EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody,
-               requestResourcePath != null ? requestResourcePath.split("/") : null);
-         // Adding query parameters...
-         Map<String, String> evaluableParams = new HashMap<>();
-         List<String> parameterNames = Collections.list(request.getParameterNames());
-         for (String parameter : parameterNames) {
-            evaluableParams.put(parameter, request.getParameter(parameter));
-         }
-         evaluableRequest.setParams(evaluableParams);
-         // Adding headers...
-         Map<String, String> evaluableHeaders = new HashMap<>();
-         List<String> headerNames = Collections.list(request.getHeaderNames());
-         for (String header : headerNames) {
-            evaluableHeaders.put(header, request.getHeader(header));
-         }
-         evaluableRequest.setHeaders(evaluableHeaders);
-
-         // Register the request variable and evaluate the response.
-         engine.getContext().setVariable("request", evaluableRequest);
-         try {
-            return engine.getValue(response.getContent());
-         } catch (Throwable t) {
-            log.error("Failing at evaluating template " + response.getContent(), t);
-            return response.getContent();
-         }
+         EvaluableRequest evaluableRequest = buildEvaluableRequest(requestBody, requestResourcePath, request);
+         return unguardedRenderResponseContent(evaluableRequest, TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
+   }
+
+   /**
+    *
+    * @param evaluableRequest
+    * @param engine
+    * @param responseContent
+    * @return
+    */
+   public static String renderResponseContent(EvaluableRequest evaluableRequest, TemplateEngine engine, String responseContent) {
+      if (responseContent.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         return unguardedRenderResponseContent(evaluableRequest, engine, responseContent);
+      }
+      return responseContent;
+   }
+
+   private static String unguardedRenderResponseContent(EvaluableRequest evaluableRequest, TemplateEngine engine, String responseContent) {
+      // Register the request variable and evaluate the response.
+      engine.getContext().setVariable("request", evaluableRequest);
+      try {
+         return engine.getValue(responseContent);
+      } catch (Throwable t) {
+         log.error("Failing at evaluating template " + responseContent, t);
+      }
+      return responseContent;
+   }
+
+   /**
+    *
+    * @param requestBody
+    * @param requestResourcePath
+    * @param request
+    * @return
+    */
+   public static EvaluableRequest buildEvaluableRequest(String requestBody, String requestResourcePath, HttpServletRequest request) {
+      // Create and fill an evaluable request object.
+      EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody,
+            requestResourcePath != null ? requestResourcePath.split("/") : null);
+      // Adding query parameters...
+      Map<String, String> evaluableParams = new HashMap<>();
+      List<String> parameterNames = Collections.list(request.getParameterNames());
+      for (String parameter : parameterNames) {
+         evaluableParams.put(parameter, request.getParameter(parameter));
+      }
+      evaluableRequest.setParams(evaluableParams);
+      // Adding headers...
+      Map<String, String> evaluableHeaders = new HashMap<>();
+      List<String> headerNames = Collections.list(request.getHeaderNames());
+      for (String header : headerNames) {
+         evaluableHeaders.put(header, request.getHeader(header));
+      }
+      evaluableRequest.setHeaders(evaluableHeaders);
+
+      return evaluableRequest;
    }
 
    /**
