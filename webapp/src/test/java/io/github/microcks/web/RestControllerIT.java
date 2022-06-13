@@ -105,7 +105,7 @@ public class RestControllerIT extends AbstractBaseIT {
          String description = details.getString("description");
          assertTrue(description.startsWith("Detail -"));   
       } catch (Exception e) {
-    	 fail("No Exception should be thrown here");
+         fail("No Exception should be thrown here");
       }
       
       // Check operation with an undefined defined mock (name: 'Dummy'), should use fallback dispatching based on regular expression matching
@@ -116,7 +116,7 @@ public class RestControllerIT extends AbstractBaseIT {
          String description = details.getString("description");
          assertTrue(description.startsWith("Detail -"));          
       } catch (Exception e) {
-    	 fail("No Exception should be thrown here");
+         fail("No Exception should be thrown here");
       }      
    }
 }
