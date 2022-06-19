@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * A controller that expose APIs for browsing Generic resources.
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController

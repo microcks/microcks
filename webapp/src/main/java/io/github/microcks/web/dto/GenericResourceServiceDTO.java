@@ -27,6 +27,7 @@ public class GenericResourceServiceDTO {
    private String name;
    private String version;
    private String resource;
+   private String referencePayload;
 
    public GenericResourceServiceDTO() {
    }
@@ -50,5 +51,13 @@ public class GenericResourceServiceDTO {
    }
    public void setResource(String resource) {
       this.resource = resource;
+   }
+
+   public String getReferencePayload() {
+      return referencePayload;
+   }
+
+   public void setReferencePayload(String referencePayload) {
+      this.referencePayload = referencePayload;
    }
 }

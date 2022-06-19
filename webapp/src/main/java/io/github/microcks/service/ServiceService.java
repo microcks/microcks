@@ -21,6 +21,7 @@ package io.github.microcks.service;
 import io.github.microcks.domain.Binding;
 import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.GenericResource;
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
@@ -33,6 +34,7 @@ import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceChangeEvent;
 import io.github.microcks.repository.EventMessageRepository;
+import io.github.microcks.repository.GenericResourceRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
@@ -50,6 +52,8 @@ import io.github.microcks.util.MockRepositoryImporterFactory;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.RelativeReferenceURLBuilder;
 import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
+import org.bson.Document;
+import org.bson.json.JsonParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,6 +80,9 @@ public class ServiceService {
 
    @Autowired
    private ResourceRepository resourceRepository;
+
+   @Autowired
+   private GenericResourceRepository genericResourceRepository;
 
    @Autowired
    private RequestRepository requestRepository;
@@ -309,10 +316,11 @@ public class ServiceService {
     * @param name The name of the new Service to create
     * @param version The version of the new Service to create
     * @param resource The resource that will be exposed as CRUD operations for this service
+    * @param referencePayload An optional reference payload if provided
     * @return The newly created Service object
     * @throws EntityAlreadyExistsException if a Service with same name and version is already present in store
     */
-   public Service createGenericResourceService(String name, String version, String resource)
+   public Service createGenericResourceService(String name, String version, String resource, String referencePayload)
          throws EntityAlreadyExistsException {
       log.info("Creating a new Service '{}-{}' for generic resource {}", name, version, resource);
 
@@ -363,6 +371,22 @@ public class ServiceService {
 
       serviceRepository.save(service);
       log.info("Having create Service '{}' for generic resource {}", service.getId(), resource);
+
+      // If reference payload is provided, record a first resource.
+      if (referencePayload != null) {
+         GenericResource genericResource = new GenericResource();
+         genericResource.setServiceId(service.getId());
+         genericResource.setReference(true);
+
+         try {
+            Document document = Document.parse(referencePayload);
+            genericResource.setPayload(document);
+            genericResourceRepository.save(genericResource);
+         } catch (JsonParseException jpe) {
+            log.error("Cannot parse the provided reference payload as JSON: {}", referencePayload);
+            log.error("Reference is ignored, please provide JSON the next time");
+         }
+      }
 
       return service;
    }

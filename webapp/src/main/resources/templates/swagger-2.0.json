@@ -9,7 +9,7 @@
     "/{resource}": {
       "get": {
         "summary": "Retrieve {resource} resources",
-        "description": "Retrieve a bunch of {resource} resources. Specifiy exemple resource as body payload.",
+        "description": "Retrieve a bunch of {resource} resources. Specify example resource as body payload.",
         "responses": {
           "200": {
             "description": "Get an array of {resource} resources"
@@ -24,7 +24,7 @@
             "name": "body",
             "in": "body",
             "schema": {
-              "$ref": "#/definitions/AnyType"
+              "$ref": "#/definitions/{resource}Type"
             }
           }
         ],
@@ -43,7 +43,7 @@
           "200": {
             "description": "{resource} resource having specified id.",
             "schema": {
-              "$ref": "#/definitions/AnyType"
+              "$ref": "#/definitions/{resource}Type"
             }
           },
           "404": {
@@ -60,7 +60,7 @@
             "in": "body",
             "description": "The payload of resource {resource} to update.",
             "schema": {
-              "$ref": "#/definitions/AnyType"
+              "$ref": "#/definitions/{resource}Type"
             }
           }
         ],
@@ -68,7 +68,7 @@
           "200": {
             "description": "Updated resource {resource} having the specified id.",
             "schema": {
-              "$ref": "#/definitions/AnyType"
+              "$ref": "#/definitions/{resource}Type"
             }
           }
         }
@@ -85,7 +85,7 @@
       "parameters": [
         {
           "name": "id",
-          "in": "query",
+          "in": "path",
           "description": "Resource {resource} unique identifier.",
           "type": "string"
         }
@@ -93,6 +93,6 @@
     }
   },
   "definitions": {
-    "AnyType": {}
+    "{resource}Type": {}
   }
 }

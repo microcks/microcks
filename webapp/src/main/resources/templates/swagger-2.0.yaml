@@ -1,0 +1,69 @@
+---
+swagger: '2.0'
+info:
+  title: {service}
+  description: This is a generic API definition for manipulation of {resource} resources.
+    It contains basic CRUD operations for {resource} resources.
+  version: {version}
+paths:
+  /{resource}:
+    get:
+      summary: Retrieve {resource} resources
+      description: Retrieve a bunch of {resource} resources. Specify example resource
+        as body payload.
+      responses:
+        '200':
+          description: Get an array of {resource} resources
+    post:
+      summary: Create new {resource} resource
+      description: Create a new {resource} resource. Specify payload within request
+        body.
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/{resource}Type"
+      responses:
+        '201':
+          description: Get the newly created {resource} resource.
+  /{resource}/:id:
+    get:
+      summary: Retrieve a {resource} resource.
+      description: Retrieve an already existing {resource} resource having the specified
+        id.
+      responses:
+        '200':
+          description: "{resource} resource having specified id."
+          schema:
+            "$ref": "#/definitions/{resource}Type"
+        '404':
+          description: No {resource} resource have the specified id.
+    put:
+      summary: Update a {resource} resource.
+      description: Update an already existing {resource} resource having the specified
+        id.
+      parameters:
+        - name: body
+          in: body
+          description: The payload of resource {resource} to update.
+          schema:
+            "$ref": "#/definitions/{resource}Type"
+      responses:
+        '200':
+          description: Updated resource {resource} having the specified id.
+          schema:
+            "$ref": "#/definitions/{resource}Type"
+    delete:
+      summary: Delete a {resource} resource.
+      description: Remove an existing {resource} resource having the specified id.
+      responses:
+        '204':
+          description: Resource {resource} with specified id has been removed.
+    parameters:
+      - name: id
+        in: path
+        description: Resource {resource} unique identifier.
+        type: string
+definitions:
+  {resource}Type:
+    {resourceSchema}

@@ -189,7 +189,8 @@ public class ServiceController {
       log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(), serviceDTO.getVersion(), serviceDTO.getResource());
 
       try{
-         Service service = serviceService.createGenericResourceService(serviceDTO.getName(), serviceDTO.getVersion(), serviceDTO.getResource());
+         Service service = serviceService.createGenericResourceService(serviceDTO.getName(), serviceDTO.getVersion(),
+               serviceDTO.getResource(), serviceDTO.getReferencePayload());
          return new ResponseEntity<>(service, HttpStatus.CREATED);
       } catch (EntityAlreadyExistsException eaee) {
          log.error("Service '{}-{} already exists'", serviceDTO.getName(), serviceDTO.getVersion());

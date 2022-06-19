@@ -13,6 +13,7 @@ public class GenericResource {
    private String id;
    private String serviceId;
    private Document payload;
+   private boolean reference = false;
 
    public String getId() {
       return id;
@@ -36,5 +37,13 @@ public class GenericResource {
 
    public void setPayload(Document payload) {
       this.payload = payload;
+   }
+
+   public boolean isReference() {
+      return reference;
+   }
+
+   public void setReference(boolean reference) {
+      this.reference = reference;
    }
 }

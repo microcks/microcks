@@ -22,6 +22,7 @@ export class Api {
   name: string;
   version: string;
   resource: string;
+  referencePayload: string;
 }
 
 export class Service {

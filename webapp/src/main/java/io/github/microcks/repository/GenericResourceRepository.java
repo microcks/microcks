@@ -34,6 +34,9 @@ public interface GenericResourceRepository extends MongoRepository<GenericResour
 
    List<GenericResource> findByServiceId(String serviceId, Pageable pageable);
 
+   @Query(value = "{ 'reference' : true, 'serviceId' : ?0 }")
+   List<GenericResource> findReferencesByServiceId(String serviceId);
+
    @Query(value = "{ 'serviceId' : ?0 }", count = true)
    long countByServiceId(String serviceId);
 }

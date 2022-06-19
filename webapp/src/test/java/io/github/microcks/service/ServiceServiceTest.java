@@ -18,12 +18,8 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Request;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.Response;
-import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.*;
+import io.github.microcks.repository.GenericResourceRepository;
 import io.github.microcks.repository.RepositoryTestsConfiguration;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResourceRepository;
@@ -33,6 +29,7 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
+import net.sf.json.test.JSONAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,10 +41,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.io.File;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * Test case for ServiceService class.
@@ -67,6 +61,9 @@ public class ServiceServiceTest {
 
    @Autowired
    private ResourceRepository resourceRepository;
+
+   @Autowired
+   private GenericResourceRepository genericResourceRepository;
 
    @Autowired
    private RequestRepository requestRepository;
@@ -331,7 +328,7 @@ public class ServiceServiceTest {
    public void testCreateGenericResourceService() {
       Service created = null;
       try {
-         created = service.createGenericResourceService("Order Service", "1.0", "order");
+         created = service.createGenericResourceService("Order Service", "1.0", "order", null);
       } catch (Exception e) {
          fail("No exception should be thrown");
       }
@@ -373,10 +370,34 @@ public class ServiceServiceTest {
    @Test(expected = EntityAlreadyExistsException.class)
    public void testCreateGenericResourceServiceFailure() throws EntityAlreadyExistsException {
       try {
-         Service first = service.createGenericResourceService("Order Service", "1.0", "order");
+         Service first = service.createGenericResourceService("Order Service", "1.0", "order", null);
       } catch (Exception e) {
          fail("No exception should be raised on first save()!");
       }
-      Service second = service.createGenericResourceService("Order Service", "1.0", "order");
+      Service second = service.createGenericResourceService("Order Service", "1.0", "order", null);
+   }
+
+   @Test
+   public void testCreateGenericResourceServiceWithReference() {
+      Service created = null;
+      try {
+         created = service.createGenericResourceService("Order Service", "1.0", "order",
+               "{\"customerId\": \"123456789\", \"amount\": 12.5}");
+      } catch (Exception e) {
+         fail("No exception should be thrown");
+      }
+
+      // Check created object.
+      assertNotNull(created.getId());
+
+      // Check that service has created a reference generic resource.
+      List<GenericResource> resources = genericResourceRepository.findReferencesByServiceId(created.getId());
+      assertNotNull(resources);
+      assertEquals(1, resources.size());
+
+      GenericResource resource = resources.get(0);
+      assertTrue(resource.isReference());
+      assertEquals("123456789", resource.getPayload().get("customerId"));
+      assertEquals(12.5, resource.getPayload().get("amount"));
    }
 }

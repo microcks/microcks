@@ -8,7 +8,7 @@ paths:
   /{resource}:
     get:
       summary: Retrieve {resource} resources.
-      description: Retrieve a bunch of {resource} resources. Specifiy example resource as body payload.
+      description: Retrieve a bunch of {resource} resources. Specify example resource as body payload.
       operationId:
       responses:
         200:
@@ -22,7 +22,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schema/AnyType'
+              $ref: '#/components/schema/{resource}Type'
       responses:
         201:
           description: Get the newly created {resource} resource.
@@ -37,7 +37,7 @@ paths:
           content:
             application/json:
               schema:
-                 $ref: '#/components/schema/AnyType'
+                 $ref: '#/components/schema/{resource}Type'
     put:
       summary: Update a {resource} resource.
       description: Update an already existing {resource} resource having the specified id.
@@ -47,7 +47,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schema/AnyType'
+              $ref: '#/components/schema/{resource}Type'
       responses:
         200:
           description:
@@ -70,4 +70,5 @@ paths:
           type: string
 components:
   schemas:
-    AnyType:
+    {resource}Type:
+      {resourceSchema}

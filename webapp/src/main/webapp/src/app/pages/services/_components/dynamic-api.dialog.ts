@@ -19,6 +19,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
+import { format } from 'url';
 
 import { Api } from '../../../models/service.model';
 
@@ -33,6 +34,7 @@ export class DynamicAPIDialogComponent implements OnInit {
   
   title: string;
   closeBtnName: string;
+  formInvalid: boolean = true;
   api: Api = new Api();
   
   constructor(public bsModalRef: BsModalRef) {}
@@ -47,5 +49,21 @@ export class DynamicAPIDialogComponent implements OnInit {
     }
     this.createAction.emit(this.api);
     this.bsModalRef.hide();
+  }
+
+  updateApiProperties() {
+    if (this.api.name == null || this.api.version == null || this.api.resource == null) {
+      this.formInvalid = true;
+      return;
+    }
+    if (this.api.referencePayload != null && this.api.referencePayload.trim() != "") {
+      try {
+        JSON.parse(this.api.referencePayload)
+      } catch (e) {
+        this.formInvalid = true;
+        return;
+      }
+    }
+    this.formInvalid = false;
   }
 }
