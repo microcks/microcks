@@ -286,7 +286,7 @@ public class RestController {
       if (dispatcher != null) {
          switch (dispatcher) {
             case DispatchStyles.SEQUENCE:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern, resourcePath);
                break;
             case DispatchStyles.SCRIPT:
                ScriptEngineManager sem = new ScriptEngineManager();
@@ -304,10 +304,11 @@ public class RestController {
                dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
                break;
             case DispatchStyles.URI_PARTS:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+              // /tenantId?t1/userId=x
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern, resourcePath);
                break;
             case DispatchStyles.URI_ELEMENTS:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(uriPattern, resourcePath);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern, resourcePath);
                fullURI = request.getRequestURL() + "?" + request.getQueryString();
                dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
                break;
