@@ -452,7 +452,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
             // eg. /deployment/byComponent/{component}/{version}.json  => /deployment/byComponent/testREST/1.2.json
             // for producing /component=testREST/version=1.2
             RESTMockActionConfig actionConfig = mockRestActionConfigsForResponses.get(mr.getName());
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getName(), actionConfig.getResourcePath());
+            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), operation.getName(), actionConfig.getResourcePath());
          }
          else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())){
             // Build a dispatch criteria that is equal to response name (that script evaluation should return...)
