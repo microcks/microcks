@@ -31,16 +31,20 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
 import org.apache.kafka.common.serialization.ByteArraySerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 
+import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -62,6 +66,9 @@ public class KafkaProducerManager {
    private Producer<String, byte[]> bytesProducer;
 
    private Producer<String, GenericRecord> registryProducer;
+
+   @Inject
+   private Config config;
 
    @ConfigProperty(name = "kafka.bootstrap.servers")
    String bootstrapServers;
@@ -99,6 +106,8 @@ public class KafkaProducerManager {
       props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-str-producer");
       props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
       props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+      // Add security related properties.
+      completePropertiesWithSecurityConfig(props, config);
       return new KafkaProducer<>(props);
    }
 
@@ -108,11 +117,13 @@ public class KafkaProducerManager {
       props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-bytes-producer");
       props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
       props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, ByteArraySerializer.class.getName());
+      // Add security related properties.
+      completePropertiesWithSecurityConfig(props, config);
       return new KafkaProducer<>(props);
    }
 
    protected Producer<String, GenericRecord> createRegistryProducer() {
-      if (schemaRegistryUrl.isPresent() && !schemaRegistryUrl.isEmpty()) {
+      if (schemaRegistryUrl.isPresent()) {
          Properties props = new Properties();
          props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
          props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-registry-producer");
@@ -125,7 +136,7 @@ public class KafkaProducerManager {
 
             props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl.get());
             // If authentication turned on (see https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
-            if (schemaRegistryUsername.isPresent() && !schemaRegistryUsername.isEmpty()) {
+            if (schemaRegistryUsername.isPresent()) {
                props.put(AbstractKafkaAvroSerDeConfig.USER_INFO_CONFIG, schemaRegistryUsername.get());
                props.put(AbstractKafkaAvroSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, schemaRegistryCredentialsSource);
             }
@@ -147,6 +158,8 @@ public class KafkaProducerManager {
                   io.apicurio.registry.utils.serde.strategy.TopicIdStrategy.class.getName());
          }
 
+         // Add security related properties.
+         completePropertiesWithSecurityConfig(props, config);
          return new KafkaProducer<>(props);
       }
       return null;
@@ -259,6 +272,30 @@ public class KafkaProducerManager {
       if (headers != null) {
          for (Header header : headers) {
             record.headers().add(header);
+         }
+      }
+   }
+
+   private void completePropertiesWithSecurityConfig(Properties props, Config config) {
+      Optional<String> securityProtocol = config.getOptionalValue("kafka.security.protocol", String.class);
+      if (securityProtocol.isPresent()) {
+         String securityProtocolValue = securityProtocol.get();
+         props.put("security.protocol", securityProtocolValue);
+
+         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.truststore.location", String.class));
+         props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.truststore.password", String.class));
+         props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.truststore.type", String.class));
+
+         switch (securityProtocolValue) {
+            case "SASL_SSL":
+               props.put(SaslConfigs.SASL_MECHANISM, config.getValue("kafka.sasl-mechanism", String.class));
+               props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getValue("kafka.sasl-jaas-config", String.class));
+               break;
+            case "SSL":
+               props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.keystore.location", String.class));
+               props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.keystore.password", String.class));
+               props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.keystore.type", String.class));
+               break;
          }
       }
    }
