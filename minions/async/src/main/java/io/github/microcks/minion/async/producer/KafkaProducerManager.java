@@ -282,9 +282,15 @@ public class KafkaProducerManager {
          String securityProtocolValue = securityProtocol.get();
          props.put("security.protocol", securityProtocolValue);
 
-         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.truststore.location", String.class));
-         props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.truststore.password", String.class));
-         props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.truststore.type", String.class));
+         if (config.getOptionalValue("kafka.ssl.truststore.location", String.class).isPresent()) {
+            props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.truststore.location", String.class));
+         }
+         if (config.getOptionalValue("kafka.ssl.truststore.password", String.class).isPresent()) {
+            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.truststore.password", String.class));
+         }
+         if (config.getOptionalValue("kafka.ssl.truststore.type", String.class).isPresent()) {
+            props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.truststore.type", String.class));
+         }
 
          switch (securityProtocolValue) {
             case "SASL_SSL":
