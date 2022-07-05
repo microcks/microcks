@@ -448,8 +448,8 @@ data:
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
       {{- end }}
-    %kube.mp.messaging.incoming.microcks-services-updates.sasl-mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
-    %kube.mp.messaging.incoming.microcks-services-updates.sasl-jaas-config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
+    %kube.mp.messaging.incoming.microcks-services-updates.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
+    %kube.mp.messaging.incoming.microcks-services-updates.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
       {{- end }}
     {{ end }}
 

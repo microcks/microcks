@@ -46,10 +46,7 @@ import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Kafka implementation of producer for async event messages.
@@ -294,10 +291,12 @@ public class KafkaProducerManager {
 
          switch (securityProtocolValue) {
             case "SASL_SSL":
-               props.put(SaslConfigs.SASL_MECHANISM, config.getValue("kafka.sasl-mechanism", String.class));
-               props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getValue("kafka.sasl-jaas-config", String.class));
+               logger.debug("Adding SASL_SSL specific connection properties");
+               props.put(SaslConfigs.SASL_MECHANISM, config.getValue("kafka.sasl.mechanism", String.class));
+               props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getValue("kafka.sasl.jaas.config", String.class));
                break;
             case "SSL":
+               logger.debug("Adding SSL specific connection properties");
                props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.keystore.location", String.class));
                props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.keystore.password", String.class));
                props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.keystore.type", String.class));
