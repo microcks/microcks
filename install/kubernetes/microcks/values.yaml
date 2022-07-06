@@ -14,6 +14,11 @@ microcks:
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
 
+  #grpcIngressAnnotations:
+    #kubernetes.io/ingress.class: myclass
+    #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
+    #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
+
   resources:
     requests:
       cpu: 200m

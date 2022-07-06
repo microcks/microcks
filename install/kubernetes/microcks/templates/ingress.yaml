@@ -35,6 +35,9 @@ metadata:
     ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  {{- with .Values.microcks.grpcIngressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   labels:
     app: "{{ .Values.appName }}"
     group: microcks
