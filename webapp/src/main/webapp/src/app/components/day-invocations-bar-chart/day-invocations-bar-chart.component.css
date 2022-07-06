@@ -1,0 +1,19 @@
+.domain {
+  display: none;
+}
+.axis line {
+  stroke-width: 1px;
+  stroke: #eee;
+  shape-rendering: crispedges;
+}
+.axis text {
+  fill: #888;
+}
+rect {
+  color: #339cff;
+  fill: #339cff;
+  fill-opacity: 0.7;
+}
+rect:hover {
+  fill-opacity: 1;
+}

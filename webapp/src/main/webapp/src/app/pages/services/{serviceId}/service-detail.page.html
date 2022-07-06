@@ -67,7 +67,7 @@
         </dd>
         <dt>Statistics:</dt>
         <dd>
-          <a href="#/admin/invocations/{{ view.service.name }}/{{ view.service.version }}">Mocks invocations <i class="glyphicon glyphicon-signal"></i></a>
+          <a [routerLink]="['/metrics/invocations', view.service.name, view.service.version]">Mocks invocations <i class="glyphicon glyphicon-signal"></i></a>
         </dd>
       </dl>
     </div>

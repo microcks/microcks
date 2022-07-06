@@ -27,6 +27,7 @@
               "./node_modules/patternfly/dist/css/patternfly.min.css",
               "./node_modules/patternfly/dist/css/patternfly-additions.min.css",
               "./node_modules/patternfly-ng/dist/css/patternfly-ng.min.css",
+              "./node_modules/ngx-bootstrap/datepicker/bs-datepicker.css",
               "./node_modules/highlight.js/styles/github.css",
               "src/styles.css"
             ],

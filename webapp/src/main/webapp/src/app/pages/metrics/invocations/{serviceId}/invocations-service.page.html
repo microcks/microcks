@@ -1,0 +1,52 @@
+<div>
+  <div class="container-fluid breadcrumb-bar">
+    <div class="row">
+      <ol class="breadcrumb">
+        <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
+        <li><a [routerLink]="['/services', serviceNameAndVersion]">{{ serviceName }} - {{ serviceVersion }}</a></li>
+        <li>Invocations Metrics</li>
+      </ol>
+    </div>
+  </div>
+
+  <h1>Invocations for {{ serviceName }} - {{ serviceVersion }}</h1>
+
+  <div class="row control-group">
+    <div class="col-xs-2 col-md-2 controls">
+      <label class="control-label" for="day">Pick a day</label>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-2 col-md-2 controls">
+      <span class="input-group mb-3">
+        <input type="text" placeholder="dd/MM/yyyy" class="form-control" 
+            #datepickerInv="bsDatepicker" placement="bottom"
+            bsDatepicker [bsConfig]="{ dateInputFormat: 'DD/MM/YYYY', containerClass: 'theme-default' }" (bsValueChange)="changeDay($event)">
+        <span class="input-group-btn">
+          <button type="button" class="btn btn-default" (click)="datepickerInv.toggle()" [attr.aria-expanded]="datepickerInv.isOpen"><i class="glyphicon glyphicon-calendar"></i></button>
+        </span>
+      </span>
+    </div>
+    <div class="col-xs-2 col-md-2" style="vertical-align: bottom">
+      <a id="go" class="btn btn-warning" (click)="updateServiceInvocationStats()">Go</a>
+    </div>
+  </div>
+
+  <div class="row control-group" style="margin-top: 2em"  *ngIf="dailyInvocations | async">
+    <div class="col-sm-6">
+      <h2>Day invocations</h2>
+      <day-invocations-bar-chart [data]="dailyInvocations" (onHourChange)="changeHour($event)"></day-invocations-bar-chart>
+      <blockquote>
+        <p id="dayInfo" class="text-info" *ngIf="!day">Today</p>
+        <p id="dayInfo" class="text-info" *ngIf="day">{{ day | date : 'mediumDate' }}</p>
+      </blockquote>
+    </div>
+    <div class="col-sm-6 text-right">
+      <h2>Hour invocations</h2>
+      <hour-invocations-bar-chart [data]="dailyInvocations" [hour]="hour"></hour-invocations-bar-chart>
+      <blockquote class="pull-right">
+        <p id="hourInfo" class="text-info">From {{ hour }}h to {{ hour + 1 }}h</p>
+      </blockquote>
+    </div>
+  </div>
+</div>

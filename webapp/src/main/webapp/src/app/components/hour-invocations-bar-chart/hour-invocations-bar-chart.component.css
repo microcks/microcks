@@ -1,0 +1,18 @@
+#hourInvocationsBarChart >* .domain {
+    display: none;
+  }
+  #hourInvocationsBarChart >* .axis line {
+    stroke-width: 1px;
+    stroke: #eee;
+    shape-rendering: crispedges;
+  }
+  #hourInvocationsBarChart >* .axis text {
+    fill: #888;
+  }
+  .invocations-bar > rect {
+    fill: #0088ce;
+    fill-opacity: 0.7;
+  }
+  .invocations-bar > rect:hover {
+    fill-opacity: 1;
+  }

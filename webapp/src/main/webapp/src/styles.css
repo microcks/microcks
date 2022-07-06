@@ -129,6 +129,42 @@ span.card-pf-footer-text {
   background: #d41e24;
 }
 
+#dayInvocationsBarChart {
+  padding-left: 20px;
+}
+#dayInvocationsBarChart >* .domain {
+  display: none;
+}
+#dayInvocationsBarChart >* .axis line {
+  stroke-width: 1px;
+  stroke: #eee;
+  shape-rendering: crispedges;
+}
+#dayInvocationsBarChart >* .axis text {
+  fill: #888;
+}
+#hourInvocationsBarChart {
+  padding-right: 20px;
+}
+#hourInvocationsBarChart >* .domain {
+  display: none;
+}
+#hourInvocationsBarChart >* .axis line {
+  stroke-width: 1px;
+  stroke: #eee;
+  shape-rendering: crispedges;
+}
+#hourInvocationsBarChart >* .axis text {
+  fill: #888;
+}
+.invocations-bar > rect {
+  fill: #0088ce;
+  fill-opacity: 0.7;
+}
+.invocations-bar > rect:hover {
+  fill-opacity: 1;
+}
+
 .nav-tabs>li.second-tab:first-child>a {
   --padding-left: 0;
 }

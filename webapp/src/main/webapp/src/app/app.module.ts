@@ -17,6 +17,7 @@
  * under the License.
  */
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
@@ -25,6 +26,7 @@ import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 
+import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
 import { BsDropdownConfig, BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { ModalModule } from 'ngx-bootstrap/modal';
 import { TabsModule } from 'ngx-bootstrap/tabs';
@@ -48,9 +50,11 @@ import { AuthenticationHttpInterceptor } from './services/auth.http-interceptor'
 import { ConfigService } from './services/config.service';
 
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
+import { DayInvocationsBarChartComponent } from './components/day-invocations-bar-chart/day-invocations-bar-chart-component';
 import { EditLabelsComponent } from './components/edit-labels/edit-labels.component'
 import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
+import { HourInvocationsBarChartComponent } from './components/hour-invocations-bar-chart/hour-invocations-bar-chart.component';
 import { LabelListComponent } from './components/label-list/label-list.component';
 import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
 import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
@@ -70,6 +74,7 @@ import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
 import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
+import { InvocationsServicePageComponent } from './pages/metrics/invocations/{serviceId}/invocations-service.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
 import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
@@ -98,18 +103,18 @@ export function configLoader(configService: ConfigService) {
 @NgModule({
   declarations: [
     AppComponent, TimeAgoPipe,
-    ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent,
-    TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
+    ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent, DayInvocationsBarChartComponent,
+    HourInvocationsBarChartComponent, TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
     DashboardPageComponent, ServicesPageComponent, DynamicAPIDialogComponent,
     ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
-    ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
-    AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent, GroupsManagementDialogComponent,
-    HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
+    InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
+    ArtifactUploaderDialogComponent, AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
+    GroupsManagementDialogComponent, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
   ],
   imports: [
-    BrowserModule, FormsModule, AppRoutingModule, HttpClientModule,
-    BsDropdownModule.forRoot(), ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(),
+    BrowserModule, BrowserAnimationsModule, FormsModule, AppRoutingModule, HttpClientModule,
+    BsDatepickerModule.forRoot(), BsDropdownModule.forRoot(), ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(),
     HighlightModule, FileUploadModule,
     AboutModalModule, 
     CardModule, DonutChartModule, SparklineChartModule,

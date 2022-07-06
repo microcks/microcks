@@ -27,6 +27,7 @@ import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
 import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
+import { InvocationsServicePageComponent } from './pages/metrics/invocations/{serviceId}/invocations-service.page';
 import { ImportersPageComponent } from './pages/importers/importers.page';
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { HubPageComponent } from './pages/hub/hub.page';
@@ -65,6 +66,10 @@ const routes: Routes = [
   {
     path: "tests/:testId",
     component: TestDetailPageComponent
+  },
+  {
+    path: "metrics/invocations/:serviceName/:serviceVersion",
+    component: InvocationsServicePageComponent
   },
   {
     path: "importers",
