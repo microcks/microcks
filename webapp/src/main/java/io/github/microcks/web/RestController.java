@@ -179,6 +179,7 @@ public class RestController {
          Response response = null;
 
          // Filter depending on requested media type.
+        // TODO: validate disptachCriteria with dispatcherRules
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
          response = getResponseByMediaType(responses, request);
 
