@@ -28,6 +28,9 @@ In your terminal issue the following commands:
 
 This will start the required containers and setup an simple environment for your usage.
 
+Note [arm64]:
+If you are using arm64 machine, then use supported docker image for the keycloak. (You could use wizzn/keycloak:14 instead of jboss/keycloak:14.0.0 inside docker-compose.yml)
+
 Open a new browser tab and point to the `http://localhost:8080` endpoint. This will redirect you to the [Keycloak](https://www.keycloak.org/) Single Sign On page for login. Use the following default credentials:
 
 * **Username:** admin
