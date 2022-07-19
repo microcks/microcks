@@ -143,7 +143,8 @@ public class RestController {
                if (operation.getResourcePaths() != null) {
                   // Produce a matching regexp removing {part} and :part from pattern.
                   String operationPattern = getURIPattern(operation.getName());
-                  operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
+                  //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
+                  operationPattern = operationPattern.replaceAll("\\{\\w+\\}", "([^/])+");
                   operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
                   if (resourcePath.matches(operationPattern)) {
                      rOperation = operation;

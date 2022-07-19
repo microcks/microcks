@@ -18,18 +18,16 @@
  */
 package io.github.microcks.util;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 /**
  * This is a test case for DispatchCriteriaHelper class.
  * @author laurent
