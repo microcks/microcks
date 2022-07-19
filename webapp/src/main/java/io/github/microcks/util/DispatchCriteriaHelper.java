@@ -88,8 +88,6 @@ public class DispatchCriteriaHelper{
     * @return A string representing the common suffix of given URIs
     */
    public static String extractCommonSuffix(List<String> uris){
-      String commonURIPath = null;
-
       // 1st pass on collection: find a common suffix.
       for (int suffixLen = 0;  suffixLen < uris.get(0).length(); suffixLen++) {
          char c = uris.get(0).charAt(uris.get(0).length() - suffixLen - 1);
@@ -106,7 +104,7 @@ public class DispatchCriteriaHelper{
             }
          }
       }
-      return commonURIPath;
+      return null;
    }
 
    /**
@@ -202,11 +200,12 @@ public class DispatchCriteriaHelper{
    /**
     * Extract and build a dispatch criteria string from URI pattern (containing variable parts within
     * {} or prefixed with :), projected onto a real instanciated URI.
+    * @param paramsRuleString The dispatch rules referencing parameters to consider
     * @param pattern The URI pattern containing variables parts ({})
     * @param realURI The real URI that should match pattern.
     * @return A string representing dispatch criteria for the corresponding incoming request.
     */
-   public static String extractFromURIPattern(String pattern, String realURI){
+   public static String extractFromURIPattern(String paramsRuleString, String pattern, String realURI){
       Map<String, String> criteriaMap = new TreeMap<String, String>();
 
       // Build a pattern for extracting parts from pattern and a pattern for extracting values
@@ -229,12 +228,17 @@ public class DispatchCriteriaHelper{
 
       Pattern valuesP = Pattern.compile(valuesPattern);
       Matcher valuesM = valuesP.matcher(realURI);
+      final var paramsRule = Arrays.stream(paramsRuleString.split("&&")).map(String::trim).distinct().collect(Collectors.toUnmodifiableSet());
 
       // Both should match and have the same group count.
       if (valuesM.matches() && partsM.matches()
             && valuesM.groupCount() == partsM.groupCount()){
          for (int i=1; i<partsM.groupCount()+1; i++){
-            criteriaMap.put(partsM.group(i), valuesM.group(i));
+           final String paramName = partsM.group(i);
+           final String paramValue = valuesM.group(i);
+           if (paramsRule.contains(paramName)) {
+             criteriaMap.put(paramName, paramValue);
+           }
          }
       }
 

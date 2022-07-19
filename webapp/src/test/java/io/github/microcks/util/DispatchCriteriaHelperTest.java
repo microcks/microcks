@@ -21,6 +21,9 @@ package io.github.microcks.util;
 import static org.junit.Assert.*;
 
 import org.junit.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,71 +90,82 @@ public class DispatchCriteriaHelperTest {
       assertEquals("component && version", dispatchCriteria);
    }
 
-   @Test
-   public void testExtractFromURIPattern(){
-      // Check with parts sorted in natural order.
-      String requestPath = "/deployment/byComponent/myComp/1.2";
-      String operationName = "/deployment/byComponent/{component}/{version}";
+  @ParameterizedTest
+  @CsvSource({
+    // Check with parts sorted in natural order.
+    "/deployment/byComponent/myComp/1.2, /deployment/byComponent/{component}/{version}",
+    // Check with parts expressed using swagger/postman syntax.
+    "/deployment/byComponent/myComp/1.2, /deployment/byComponent/:component/:version",
+    // Check with parts expressed using swagger/postman syntax.
+    "/deployment/byComponent/myComp/1.2/$count, /deployment/byComponent/:component/:version/$count"
+  })
+   public void testExtractFromURIPattern(String requestPath, String operationName){
+
+      final String dispatcherRule = "component && version";
+      final String expectedCriteria = "/component=myComp/version=1.2";
 
       // Dispatch string parts are sorted.
-      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
-      assertEquals("/component=myComp/version=1.2", dispatchCriteria);
-
-      // Check with parts expressed using swagger/postman syntax.
-      requestPath = "/deployment/byComponent/myComp/1.2";
-      operationName = "/deployment/byComponent/:component/:version";
-
-      // Dispatch string parts are sorted.
-      dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
-      assertEquals("/component=myComp/version=1.2", dispatchCriteria);
-
-      // Check with parts expressed using swagger/postman syntax.
-      requestPath = "/deployment/byComponent/myComp/1.2/$count";
-      operationName = "/deployment/byComponent/:component/:version/$count";
-
-      // Dispatch string parts are sorted.
-      dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
-      assertEquals("/component=myComp/version=1.2", dispatchCriteria);
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRule, operationName, requestPath);
+      assertEquals(expectedCriteria, dispatchCriteria);
    }
 
    @Test
    public void testExtractFromURIPattern2() {
       String resourcePath = "/pet/2";
       String operationName = "/pet/:petId";
+      String paramRule = "petId";
 
-      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, resourcePath);
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(paramRule, operationName, resourcePath);
       assertEquals("/petId=2", dispatchCriteria);
 
       resourcePath = "/order/123456";
       operationName = "/order/:id";
+      paramRule = "id";
 
-      dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, resourcePath);
+      dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(paramRule, operationName, resourcePath);
       assertEquals("/id=123456", dispatchCriteria);
    }
-   
+
    @Test
    public void testExtractFromURIPatternUnsorted(){
       // Check with parts not sorted in natural order.
       String requestPath = "/deployment/byComponent/1.2/myComp";
       String operationName = "/deployment/byComponent/{version}/{component}";
-      
+      String paramRule = "version && component";
+
       // Dispatch string parts are sorted.
-      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(paramRule, operationName, requestPath);
       assertEquals("/component=myComp/version=1.2", dispatchCriteria);
    }
-   
+
    @Test
    public void testExtractFromURIPatternWithExtension(){
       // Check with parts sorted in natural order.
       String requestPath = "/deployment/byComponent/myComp/1.2.json";
       String operationName = "/deployment/byComponent/{component}/{version}.json";
-      
+      String paramRule = "component && version";
+
       // Dispatch string parts are sorted.
-      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operationName, requestPath);
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(paramRule, operationName, requestPath);
       assertEquals("/component=myComp/version=1.2", dispatchCriteria);
    }
 
-   @Test
+    @ParameterizedTest
+    @CsvSource({
+      "component, /component=myComp",
+      "version, /version=1.2"
+    })
+    public void testExtractFromURIPatternWithCustomRule(String paramRule, String expectedCriteria) {
+      // Check with parts sorted in natural order.
+      String requestPath = "/deployment/byComponent/myComp/1.2";
+      String operationName = "/deployment/byComponent/{component}/{version}";
+
+      // Dispatch string parts are sorted.
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(paramRule, operationName, requestPath);
+      assertEquals(expectedCriteria, dispatchCriteria);
+    }
+
+    @Test
    public void testExtractFromURIParams(){
       // Check with parameters in no particular order.
       String requestPath = "/v2/pet/findByDate/2017/01/04?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available";
@@ -191,4 +205,11 @@ public class DispatchCriteriaHelperTest {
       dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && limit", paramsMap);
       assertEquals("?limit=20?page=1", dispatchCriteria);
    }
+
+  @Test
+  public void extractCommonSuffix() {
+    final var uris = List.of("/ab/def", "/cde/def");
+    final var result = DispatchCriteriaHelper.extractCommonSuffix(uris);
+    assertEquals("/def", result);
+  }
 }
