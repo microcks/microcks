@@ -116,8 +116,17 @@ public class JobController {
    @RequestMapping(value = "/jobs", method = RequestMethod.POST)
    public ResponseEntity<ImportJob> createJob(@RequestBody ImportJob job) {
       log.debug("Creating new job: {}", job);
+      // Store labels somewhere before reinitializing metadata to ensure createdOn is correct.
+      Map<String, String> labels = null;
+      if (job.getMetadata() != null && job.getMetadata().getLabels() != null) {
+         labels = job.getMetadata().getLabels();
+      }
       job.setMetadata(new Metadata());
       job.setCreatedDate(new Date());
+      // Restore labels.
+      if (labels != null) {
+         job.getMetadata().setLabels(labels);
+      }
       return new ResponseEntity<>(jobRepository.save(job), HttpStatus.CREATED);
    }
 
