@@ -427,6 +427,6 @@ public class ServiceServiceTest {
       assertEquals("order-asyncapi.yaml", resource.getName());
       assertEquals(ResourceType.ASYNC_API_SPEC, resource.getType());
       assertNotNull(resource.getContent());
-      assertTrue(resource.getContent().contains("payload: '{\"customerId\": \"123456789\", \"amount\": 12.5}'"));
+      assertTrue(resource.getContent().contains("payload: {\"customerId\": \"123456789\", \"amount\": 12.5}"));
    }
 }
