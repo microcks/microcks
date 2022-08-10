@@ -66,7 +66,7 @@ import { UsersTabComponent } from './pages/admin/_components/users.tab';
 import { GroupsManagementDialogComponent } from './pages/admin/_components/_components/groups-management.dialog';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { ServicesPageComponent } from './pages/services/services.page';
-import { DynamicAPIDialogComponent } from './pages/services/_components/dynamic-api.dialog';
+import { DirectAPIWizardComponent } from './pages/services/_components/direct-api.wizard'
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
 import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
@@ -105,7 +105,7 @@ export function configLoader(configService: ConfigService) {
     AppComponent, TimeAgoPipe,
     ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent, DayInvocationsBarChartComponent,
     HourInvocationsBarChartComponent, TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
-    DashboardPageComponent, ServicesPageComponent, DynamicAPIDialogComponent,
+    DashboardPageComponent, ServicesPageComponent, DirectAPIWizardComponent,
     ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
     InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
@@ -142,7 +142,7 @@ export function configLoader(configService: ConfigService) {
     }
   ],
   entryComponents: [
-    HelpDialogComponent, DynamicAPIDialogComponent, 
+    HelpDialogComponent, DirectAPIWizardComponent,
     EditLabelsDialogComponent, GenericResourcesDialogComponent,
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
     GroupsManagementDialogComponent
