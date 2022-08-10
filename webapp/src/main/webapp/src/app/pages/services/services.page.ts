@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, Params } from '@angular/router';
 
 import { BsModalService } from 'ngx-bootstrap/modal';
@@ -26,8 +26,7 @@ import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 import { ToolbarConfig } from 'patternfly-ng/toolbar';
 import { FilterConfig, FilterEvent, FilterField, FilterType, Filter } from 'patternfly-ng/filter';
 
-import { DynamicAPIDialogComponent } from './_components/dynamic-api.dialog';
-import { Service, Api } from '../../models/service.model';
+import { Api, Service, ServiceType } from '../../models/service.model';
 import { IAuthenticationService } from "../../services/auth.service";
 import { ServicesService } from '../../services/services.service';
 import { ConfigService } from '../../services/config.service';
@@ -38,6 +37,7 @@ import { ConfigService } from '../../services/config.service';
   styleUrls: ['./services.page.css']
 })
 export class ServicesPageComponent implements OnInit {
+  @ViewChild('wizardTemplate', {static: true}) wizardTemplate: TemplateRef<any>;
 
   modalRef: BsModalRef;
   services: Service[];
@@ -217,33 +217,53 @@ export class ServicesPageComponent implements OnInit {
     }
   }
 
-  openCreateDynamicAPI(): void {
-    const initialState = {};
-    this.modalRef = this.modalService.show(DynamicAPIDialogComponent, {initialState});
-    this.modalRef.content.closeBtnName = 'Cancel';
-    this.modalRef.content.createAction.subscribe((api) => {
-      this.createDynamicAPI(api);
-    });
-  }
-  
-  createDynamicAPI(api: Api): void {
-    this.servicesSvc.createDynamicAPI(api).subscribe(
-      {
-        next: res => {
-          this.notificationService.message(NotificationType.SUCCESS,
-              api.name, 'Dynamic API "' + api.name + '" has been created', false, null, null);
-          this.getServices();
-          this.countServices();
-        },
-        error: err => {
-          this.notificationService.message(NotificationType.DANGER,
-              api.name, 'Service or API "' + api.name + '"already exists with version ' + api.version, false, null, null);
-        },
-        complete: () => console.log('Observer got a complete notification'),
-      }
-    );
+  openCreateDirectAPI(template: TemplateRef<any>): void {
+    this.modalRef = this.modalService.show(template, { class: 'modal-lg' });
   }
 
+  createDirectAPI(apiType: ServiceType, api: Api): void {
+    switch (apiType) {
+      case ServiceType.GENERIC_REST:
+        this.servicesSvc.createDirectResourceAPI(api).subscribe(
+          {
+            next: res => {
+              this.notificationService.message(NotificationType.SUCCESS,
+                  api.name, 'Direct REST API "' + api.name + '" has been created', false, null, null);
+              this.getServices();
+              this.countServices();
+            },
+            error: err => {
+              this.notificationService.message(NotificationType.DANGER,
+                  api.name, 'Service or API "' + api.name + '"already exists with version ' + api.version, false, null, null);
+            },
+            complete: () => console.log('Observer got a complete notification'),
+          }
+        );
+        break;
+      case ServiceType.GENERIC_EVENT:
+        this.servicesSvc.createDirectEventAPI(api).subscribe(
+          {
+            next: res => {
+              this.notificationService.message(NotificationType.SUCCESS,
+                  api.name, 'Direct EVENT API "' + api.name + '" has been created', false, null, null);
+              this.getServices();
+              this.countServices();
+            },
+            error: err => {
+              this.notificationService.message(NotificationType.DANGER,
+                  api.name, 'Service or API "' + api.name + '"already exists with version ' + api.version, false, null, null);
+            },
+            complete: () => console.log('Observer got a complete notification'),
+          }
+        );
+        break;
+      default:
+    }
+  }
+
+  closeDirectAPIWizardModal($event: any): void {
+    this.modalRef.hide();
+  }
 
   handleCloseNotification($event: NotificationEvent): void {
     this.notificationService.remove($event.notification);

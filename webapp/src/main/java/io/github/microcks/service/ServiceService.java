@@ -20,6 +20,7 @@ package io.github.microcks.service;
 
 import io.github.microcks.domain.Binding;
 import io.github.microcks.domain.BindingType;
+import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.GenericResource;
 import io.github.microcks.domain.Metadata;
@@ -27,6 +28,7 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Secret;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
@@ -52,6 +54,9 @@ import io.github.microcks.util.MockRepositoryImporterFactory;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.RelativeReferenceURLBuilder;
 import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
+import io.github.microcks.util.ResourceUtil;
+import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 import org.slf4j.Logger;
@@ -62,6 +67,7 @@ import org.springframework.context.ApplicationContext;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -370,7 +376,7 @@ public class ServiceService {
       service.addOperation(delOp);
 
       serviceRepository.save(service);
-      log.info("Having create Service '{}' for generic resource {}", service.getId(), resource);
+      log.info("Having created Service '{}' for generic resource {}", service.getId(), resource);
 
       // If reference payload is provided, record a first resource.
       if (referencePayload != null) {
@@ -386,6 +392,73 @@ public class ServiceService {
             log.error("Cannot parse the provided reference payload as JSON: {}", referencePayload);
             log.error("Reference is ignored, please provide JSON the next time");
          }
+      }
+
+      return service;
+   }
+
+   /**
+    * Create a new Service concerning a Generic Event for dynamic mocking.
+    * @param name The name of the new Service to create
+    * @param version The version of the new Service to create
+    * @param event The event that will be exposed through a SUBSCRIBE operation
+    * @param referencePayload An optional reference payload if provided
+    * @return The newly created Service object
+    * @throws EntityAlreadyExistsException if a Service with same name and version is already present in store
+    */
+   public Service createGenericEventService(String name, String version, String event, String referencePayload)
+         throws EntityAlreadyExistsException {
+      log.info("Creating a new Service '{}-{}' for generic event {}", name, version, event);
+
+      long start = System.currentTimeMillis();
+      // Check if corresponding Service already exists.
+      Service existingService = serviceRepository.findByNameAndVersion(name, version);
+      if (existingService != null) {
+         log.warn("A Service '{}-{}' is already existing. Throwing an Exception", name, version);
+         throw new EntityAlreadyExistsException(String.format("Service '%s-%s' is already present in store", name, version));
+      }
+      // Create new service with GENERIC_EVENT type.
+      Service service = new Service();
+      service.setName(name);
+      service.setVersion(version);
+      service.setType(ServiceType.GENERIC_EVENT);
+      service.setMetadata(new Metadata());
+
+      // Now create basic crud operations for the resource.
+      Operation subscribeOp = new Operation();
+      subscribeOp.setName("SUBSCRIBE " + event);
+      subscribeOp.setMethod("SUBSCRIBE");
+
+      subscribeOp.setDefaultDelay(defaultAsyncFrequency);
+      // Create bindings for Kafka and Websockets.
+      Binding kafkaBinding = new Binding(BindingType.KAFKA);
+      kafkaBinding.setKeyType("string");
+      Binding wsBinding = new Binding(BindingType.WS);
+      wsBinding.setMethod("POST");
+      subscribeOp.addBinding(BindingType.KAFKA.name(), kafkaBinding);
+      subscribeOp.addBinding(BindingType.WS.name(), wsBinding);
+      service.addOperation(subscribeOp);
+
+      serviceRepository.save(service);
+      log.info("Having created Service '{}' for generic event {}", service.getId(), event);
+
+      // If reference payload is provided, record a first resource.
+      if (referencePayload != null) {
+         Resource artifact = new Resource();
+         artifact.setName(event + "-asyncapi.yaml");
+         artifact.setType(ResourceType.ASYNC_API_SPEC);
+         artifact.setServiceId(service.getId());
+         artifact.setSourceArtifact(event + "-asyncapi.yaml");
+         artifact.setContent(buildAsyncAPISpecContent(service, event, referencePayload));
+         resourceRepository.save(artifact);
+
+         EventMessage eventMessage = new EventMessage();
+         eventMessage.setName("Reference");
+         eventMessage.setContent(referencePayload);
+         eventMessage.setOperationId(IdBuilder.buildOperationId(service, subscribeOp));
+         eventMessage.setMediaType("application/json");
+         eventMessageRepository.save(eventMessage);
+         log.info("Having created resource '{}' for Service '{}'", artifact.getId(), service.getId());
       }
 
       return service;
@@ -512,6 +585,21 @@ public class ServiceService {
                operation.addBinding(defaultAsyncBinding, new Binding(BindingType.valueOf(defaultAsyncBinding)));
             }
          }
+      }
+   }
+
+   /** Build generic event service associated AsyncAPI spec content. */
+   private String buildAsyncAPISpecContent(Service service, String event, String referencePayload) {
+      InputStream stream = null;
+      JsonNode referenceSchema = null;
+
+      try {
+         stream = ResourceUtil.getClasspathResource("templates/asyncapi-2.4.yaml");
+         referenceSchema = OpenAPISchemaBuilder.buildTypeSchemaFromJson(referencePayload);
+         return ResourceUtil.replaceTemplatesInSpecStream(stream, service, event, referenceSchema, referencePayload);
+      } catch (IOException ioe) {
+         log.error("Exception while building ASyncAPISpec for Service '{}': {}", service.getId(), ioe.getMessage());
+         return "";
       }
    }
 

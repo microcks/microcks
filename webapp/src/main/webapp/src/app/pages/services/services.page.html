@@ -7,12 +7,16 @@
 <h1>
   APIs &amp; Services
   <div class="pull-right">
-    <button class="btn btn-primary" (click)="openCreateDynamicAPI()">
-      <span class="fa fa-plus"></span> Add Dynamic API
+    <button class="btn btn-primary" (click)="openCreateDirectAPI(wizardTemplate)">
+      <span class="fa fa-plus"></span> Add Direct API
     </button>
   </div>
 </h1>
 <small> These are the APIs | Services managed by Microcks. You can discover new ones adding Import Job or creating a new Dynamic API...</small>
+
+<ng-template #wizardTemplate>
+  <direct-api-wizard></direct-api-wizard>
+</ng-template>
 
 <div class="container-fluid">
   <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">
@@ -27,9 +31,9 @@
 
           <span class="fa list-view-pf-icon-sm" 
             [class.fa-code]="service.type === 'SOAP_HTTP'" [class.soap-icon-sm]="service.type === 'SOAP_HTTP'"
-            [class.pficon-plugged]="service.type === 'REST'" [class.rest-icon-sm]="service.type === 'REST'"
-            [class.fa-rocket]="service.type === 'GENERIC_REST'" [class.generic-icon-sm]="service.type === 'GENERIC_REST'"
-            [class.fa-bolt]="service.type === 'EVENT'" [class.event-icon-sm]="service.type === 'EVENT'"
+            [class.pficon-plugged]="service.type === 'REST' || service.type === 'GENERIC_REST'" [class.rest-icon-sm]="service.type === 'REST'"
+            [class.fa-bolt]="service.type === 'EVENT' || service.type === 'GENERIC_EVENT'" [class.event-icon-sm]="service.type === 'EVENT'"
+            [class.generic-icon-sm]="service.type === 'GENERIC_REST' || service.type === 'GENERIC_EVENT'"
             [class.pficon-connected]="service.type === 'GRPC'" [class.grpc-icon-sm]="service.type === 'GRPC'"
             [class.pficon-topology]="service.type === 'GRAPHQL'" [class.graph-icon-sm]="service.type === 'GRAPHQL'"></span>
         </div>
@@ -44,7 +48,8 @@
               <span class="label label-warning" *ngIf="service.type === 'EVENT'">EVENT</span>
               <span class="label label-grpc" *ngIf="service.type === 'GRPC'">GRPC</span>
               <span class="label label-graph" *ngIf="service.type === 'GRAPHQL'">GRAPH</span>
-              <span class="label label-gene" *ngIf="service.type === 'GENERIC_REST'">DYNA</span>
+              <span class="label label-gene" *ngIf="service.type === 'GENERIC_REST'">DIRECT</span>
+              <span class="label label-gene" *ngIf="service.type === 'GENERIC_EVENT'">DIRECT</span>
                   | Version <b>{{ service.version }}</b>
                   | <label-list [metadata]="service.metadata" [filter]="repositoryFilterFeatureLabelList()"></label-list>
               <br/>

@@ -29,7 +29,6 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
-import net.sf.json.test.JSONAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -399,5 +398,35 @@ public class ServiceServiceTest {
       assertTrue(resource.isReference());
       assertEquals("123456789", resource.getPayload().get("customerId"));
       assertEquals(12.5, resource.getPayload().get("amount"));
+   }
+
+   @Test
+   public void testCreateGenericEventServiceWithReference() {
+      Service created = null;
+      try {
+         created = service.createGenericEventService("Order Service", "2.0", "order",
+               "{\"customerId\": \"123456789\",\n \"amount\": 12.5}");
+      } catch (Exception e) {
+         fail("No exception should be thrown");
+      }
+
+      // Check created object.
+      assertNotNull(created.getId());
+
+      // Retrieve object by id and assert on what has been persisted.
+      Service retrieved = repository.findById(created.getId()).orElse(null);
+      assertEquals("Order Service", retrieved.getName());
+      assertEquals("2.0", retrieved.getVersion());
+      assertEquals(ServiceType.GENERIC_EVENT, retrieved.getType());
+      assertEquals(1, retrieved.getOperations().size());
+
+      List<Resource> resources = resourceRepository.findByServiceId(retrieved.getId());
+      assertEquals(1, resources.size());
+
+      Resource resource = resources.get(0);
+      assertEquals("order-asyncapi.yaml", resource.getName());
+      assertEquals(ResourceType.ASYNC_API_SPEC, resource.getType());
+      assertNotNull(resource.getContent());
+      assertTrue(resource.getContent().contains("payload: '{\"customerId\": \"123456789\", \"amount\": 12.5}'"));
    }
 }

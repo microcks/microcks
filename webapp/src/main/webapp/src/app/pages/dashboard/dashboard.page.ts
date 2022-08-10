@@ -58,7 +58,7 @@ export class DashboardPageComponent implements OnInit {
 
   donutChartData: any[] = [
     ['REST', 0],
-    ['DYNAMIC', 0],
+    ['DIRECT', 0],
     ['SOAP', 0],
     ['EVENT', 0],
     ['GRAPH', 0],
@@ -69,7 +69,7 @@ export class DashboardPageComponent implements OnInit {
     chartHeight: 220,
     colors: {
       REST: '#89bf04',
-      DYNAMIC: '#9c27b0',
+      DIRECT: '#9c27b0',
       SOAP: '#39a5dc',
       EVENT: '#ec7a08',
       GRAPH: "#e10098",
@@ -124,11 +124,11 @@ export class DashboardPageComponent implements OnInit {
         title: 'Yesterday',
         value: 'yesterday'
       }],
-      title: 'Most Used APIs | Services',
+      title: 'Most Used APIs | Services',
     } as CardConfig;
 
     this.repositoryCardConfig = {
-      title: 'APIs | Services Repository',
+      title: 'APIs | Services Repository',
     } as CardConfig;
   }
 
@@ -137,15 +137,15 @@ export class DashboardPageComponent implements OnInit {
       results => {
         this.donutChartData = [
           ['REST', 0],
-          ['DYNAMIC', 0],
+          ['DIRECT', 0],
           ['SOAP', 0],
           ['EVENT', 0],
           ['GRPC', 0],
           ['GRAPH', 0]
         ];
         for (let key in results) {
-          if (key === 'GENERIC_REST') {
-            this.donutChartData.push(['DYNAMIC', results[key]]);
+          if (key === 'GENERIC_REST' || key === 'GENERIC_EVENT') {
+            this.donutChartData.push(['DIRECT', results[key]]);
           } else if (key === 'SOAP_HTTP') {
             this.donutChartData.push(['SOAP', results[key]]);
           } else if (key === 'GRAPHQL') {

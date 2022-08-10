@@ -27,6 +27,7 @@ public enum ServiceType {
    REST,
    GENERIC_REST,
    EVENT,
+   GENERIC_EVENT,
    GRPC,
    GRAPHQL
 }

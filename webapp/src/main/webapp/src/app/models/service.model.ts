@@ -41,6 +41,7 @@ export enum ServiceType {
   EVENT = "EVENT",
   GRPC = "GRPC",
   GENERIC_REST = "GENERIC_REST",
+  GENERIC_EVENT = "GENERIC_EVENT",
   GRAPHQL = "GRAPHQL"
 }
 

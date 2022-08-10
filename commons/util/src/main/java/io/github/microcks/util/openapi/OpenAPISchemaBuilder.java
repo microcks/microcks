@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.github.microcks.util.JsonSchemaValidator;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -48,8 +49,7 @@ public class OpenAPISchemaBuilder {
     * @throws IOException Tf given Json string cannot be parsed as Json
     */
    public static JsonNode buildTypeSchemaFromJson(String jsonText) throws IOException {
-      ObjectMapper mapper = new ObjectMapper();
-      return buildTypeSchemaFromJson(mapper.readTree(jsonText));
+      return buildTypeSchemaFromJson(JsonSchemaValidator.getJsonNode(jsonText));
    }
 
    /**

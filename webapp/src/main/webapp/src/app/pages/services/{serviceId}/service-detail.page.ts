@@ -112,6 +112,10 @@ export class ServiceDetailPageComponent implements OnInit {
     return -1;
   }
 
+  public isEventTypeService(): boolean {
+    return this.resolvedServiceView.service.type === ServiceType.EVENT || this.resolvedServiceView.service.type === ServiceType.GENERIC_EVENT;
+  }
+
   public gotoCreateTest(): void {
     this.router.navigate(['/tests/create', { serviceId: this.serviceId }]);
   }
@@ -163,14 +167,14 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public getExchangeName(exchange: Exchange): string {
-    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
+    if (this.isEventTypeService()) {
       return (exchange as UnidirectionalEvent).eventMessage.name;
     } else {
       return (exchange as RequestResponsePair).request.name;
     }
   }
   public getExchangeSourceArtifact(exchange: Exchange): string {
-    if (this.resolvedServiceView.service.type === ServiceType.EVENT) {
+    if (this.isEventTypeService()) {
       return (exchange as UnidirectionalEvent).eventMessage.sourceArtifact;
     } else {
       return (exchange as RequestResponsePair).request.sourceArtifact;

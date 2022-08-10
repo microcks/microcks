@@ -1,0 +1,29 @@
+.api-type-title {
+  margin-bottom: 40px;
+}
+
+.api-card:hover {
+  background-color: #ededed;
+}
+.api-card-selected {
+  background-color: #ededed;
+}
+
+.card-pf-header {
+  padding: 10px;
+}
+
+.card-pf-header .fa {
+  border-radius: 50%;
+  font-size: 1em;
+  height: 30px;
+  width: 30px;
+  line-height: 26px;
+  margin-right: 5px;
+}
+
+.card-pf-body {
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-bottom: 20px !important;
+}

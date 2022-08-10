@@ -33,7 +33,8 @@
           <span class="label label-warning" *ngIf="view.service.type === 'EVENT'">EVENT</span>
           <span class="label label-grpc" *ngIf="view.service.type === 'GRPC'">GRPC</span>
           <span class="label label-graph" *ngIf="view.service.type === 'GRAPHQL'">GRAPH</span>
-          <span class="label label-gene" *ngIf="view.service.type === 'GENERIC_REST'">DYNAMIC</span>
+          <span class="label label-gene" *ngIf="view.service.type === 'GENERIC_REST'">DIRECT REST</span>
+          <span class="label label-gene" *ngIf="view.service.type === 'GENERIC_EVENT'">DIRECT EVENT</span>
         </dd>
         <span *ngIf="view.service.type === 'SOAP_HTTP'">
           <dt>Namespace:</dt>
@@ -160,7 +161,7 @@
                 <dt>SOAP Action:</dt>
                 <dd><code>{{ item.action }}</code></dd>
               </span>
-              <span *ngIf="view.service.type != 'EVENT'">
+              <span *ngIf="!isEventTypeService()">
                 <dt>Dispatcher:</dt>
                 <dd><code>{{ item.dispatcher }}</code> &nbsp; 
                   <span class="learn-more-inline">
@@ -172,7 +173,7 @@
                 <dt>Dispatching rules:</dt>
                 <dd><code class="code-block">{{ item.dispatcherRules }}</code></dd>
               </span>
-              <span *ngIf="view.service.type === 'EVENT'">
+              <span *ngIf="isEventTypeService()">
                 <dt>Frequency:</dt>
                 <dd>
                   {{ item.defaultDelay || 0 }} s
@@ -191,7 +192,7 @@
               </dl>
             </div>
             <div class="col-md-6">
-              <dl class="dl-horizontal left" *ngIf="view.service.type === 'EVENT'">
+              <dl class="dl-horizontal left" *ngIf="isEventTypeService()">
                 <span *ngIf="hasBinding(item, 'KAFKA')">
                   <dt>Kafka endpoint:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('KAFKA') }}</a></dd>
@@ -209,8 +210,8 @@
                   <dd><a>{{ asyncAPIFeatureEndpoint('AMQP') }}</a></dd>
                 </span>
               </dl>
-              <dl class="dl-horizontal left" *ngIf="view.service.type != 'EVENT'">
-              <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
+              <dl class="dl-horizontal left" *ngIf="!isEventTypeService()">
+              <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
                 <dt>Input / Output Name:</dt>
                 <dd><code>{{ item.inputName }} / {{ item.outputName }}</code></dd>
               </span>
@@ -276,7 +277,7 @@
                 </span>
               </ng-template>
 
-              <div class="row" *ngIf="view.service.type === 'EVENT'">
+              <div class="row" *ngIf="isEventTypeService()">
                 <div class="col-md-6">
                   <h5 class="subsection-label">Message</h5>
                   <dl class="dl-horizontal left">
@@ -383,7 +384,7 @@
                   </span>
                 </div>
               </div>
-              <div class="row" *ngIf="view.service.type != 'EVENT'">
+              <div class="row" *ngIf="!isEventTypeService()">
                 <div class="col-md-6">
                   <h5 class="subsection-label">Request</h5>
                   <dl>

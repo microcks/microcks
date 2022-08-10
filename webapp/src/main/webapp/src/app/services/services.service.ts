@@ -72,8 +72,12 @@ export class ServicesService {
     return this.http.get<Service>(this.rootUrl + '/services/' + serviceId, options);
   }
 
-  public createDynamicAPI(api: Api): Observable<Service> {
+  public createDirectResourceAPI(api: Api): Observable<Service> {
     return this.http.post<Service>(this.rootUrl + '/services/generic', api);
+  }
+
+  public createDirectEventAPI(api: Api): Observable<Service> {
+    return this.http.post<Service>(this.rootUrl + '/services/generic/event', api);
   }
 
   public deleteService(service: Service): Observable<Service> {

@@ -115,8 +115,7 @@ public class AsyncMinionApp {
             for (Service service : services) {
                logger.debug("Found service " + service.getName() + " - " + service.getVersion());
 
-               if (service.getType().equals(ServiceType.EVENT)) {
-
+               if (service.getType().equals(ServiceType.EVENT) || service.getType().equals(ServiceType.GENERIC_EVENT)) {
                   // Find the operations matching this minion constraints..
                   List<Operation> operations = service.getOperations().stream()
                         .filter(o -> Arrays.asList(restrictedFrequencies).contains(o.getDefaultDelay()))

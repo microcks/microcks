@@ -26,16 +26,13 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.repository.GenericResourceRepository;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.util.ResourceUtil;
 import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -47,11 +44,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static io.github.microcks.web.DynamicMockRestController.ID_FIELD;
 
@@ -68,11 +66,6 @@ public class ResourceController {
 
    private static final String SWAGGER_20 = "swagger_20";
    private static final String OPENAPI_30 = "openapi_30";
-
-   private static final String SERVICE_PATTERN = "\\{service\\}";
-   private static final String VERSION_PATTERN = "\\{version\\}";
-   private static final String RESOURCE_PATTERN = "\\{resource\\}";
-   private static final String SCHEMA_PATTERN = "\\{resourceSchema\\}";
 
    @Autowired
    private ResourceRepository resourceRepository;
@@ -160,25 +153,19 @@ public class ResourceController {
          }
 
          // Read the template and set headers.
-         org.springframework.core.io.Resource template = new ClassPathResource("templates/openapi-3.0.yaml");
          try {
-            stream = template.getInputStream();
+            stream = ResourceUtil.getClasspathResource(templatePath);
          } catch (IOException e) {
-            log.error("IOException while reading openapi-3.0.yaml template", e);
+            log.error("IOException while reading {} template: {}", templatePath, e.getMessage());
          }
          headers.set("Content-Type", "text/yaml");
 
          // Now process the stream, replacing patterns by value.
          if (stream != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-            StringWriter writer = new StringWriter();
+            String result = ResourceUtil.replaceTemplatesInSpecStream(stream, service,
+                  resource, referenceSchema, null);
 
-            try (Stream<String> lines = reader.lines()) {
-               JsonNode finalReferenceSchema = referenceSchema;
-               lines.map(line -> replaceInLine(line, service, resource, finalReferenceSchema))
-                     .forEach(line -> writer.write(line + "\n"));
-            }
-            return new ResponseEntity<>(writer.toString().getBytes(), headers, HttpStatus.OK);
+            return new ResponseEntity<>(result.getBytes(), headers, HttpStatus.OK);
          }
       }
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -191,30 +178,5 @@ public class ResourceController {
          }
       }
       return null;
-   }
-
-   private String replaceInLine(String line, Service service, String resource, JsonNode referenceSchema) {
-      line = line.replaceAll(SERVICE_PATTERN, service.getName());
-      line = line.replaceAll(VERSION_PATTERN, service.getVersion());
-      line = line.replaceAll(RESOURCE_PATTERN, resource);
-      if (line.matches(".*" + SCHEMA_PATTERN + ".*")) {
-         if (referenceSchema != null) {
-            // Serialize reference schema and replace it.
-            try {
-               ObjectMapper mapper = new ObjectMapper(
-                     new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-                           .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                           .disable(YAMLGenerator.Feature.INDENT_ARRAYS));
-               String schema = mapper.writeValueAsString(referenceSchema);
-               line = line.replaceAll(SCHEMA_PATTERN, schema.replaceAll("\\n", "\n      "));
-            } catch (Exception e) {
-               log.warn("Exception while replacing resource schema", e);
-            }
-         } else {
-            // Stick to the default: an empty type definition.
-            line = line.replaceAll(SCHEMA_PATTERN, "");
-         }
-      }
-      return line;
    }
 }

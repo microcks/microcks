@@ -1,0 +1,123 @@
+<pfng-wizard #wizard [config]="wizardConfig" 
+    (onCancel)="wizardHost.closeDirectAPIWizardModal($event)" (onNext)="nextClicked($event)" (onStepChange)="stepChanged($event)">
+  
+  <pfng-wizard-step [config]="step1Config" [reviewTemplate]="step1ReviewTemplate">
+    <div class="text-center">
+      <h2 class="api-type-title"><span class="fa fa-rocket"></span> Choose your API type</h2>
+    </div>
+    <form class="form-horizontal">
+      <fieldset>
+        <div class="row">
+          <div class="col-xs-2"></div>
+          <div class="col-xs-4">
+            <div class="pfng-card card-pf card-pf-accented card-pf-aggregate-status api-card"
+                (click)="changeApiType('GENERIC_REST')" [class.api-card-selected]="apiType === 'GENERIC_REST'">
+              <div class="card-pf-header">
+                <h3><span class="fa pficon-plugged generic-icon-sm"></span> REST API</h3>
+              </div>
+              <div class="card-pf-body">
+                A simple RESTful API with CRUD operations on JSON resources - represented with <b>OpenAPI</b> spec.
+              </div>
+            </div>
+          </div>
+          <div class="col-xs-4">
+            <div class="pfng-card card-pf card-pf-accented card-pf-aggregate-status api-card"
+                (click)="changeApiType('GENERIC_EVENT')" [class.api-card-selected]="apiType === 'GENERIC_EVENT'">
+              <div class="card-pf-header">
+                <h3><span class="fa fa-bolt generic-icon-sm"></span> Event Driven API</h3>
+              </div>
+              <div class="card-pf-body">
+                A simple asynchronous API that publishes JSON events - represented with <b>AsyncAPI</b> spec.
+              </div>
+            </div>
+          </div>
+          <div class="col-xs-2"></div>
+        </div>
+      </fieldset>
+    </form>
+  </pfng-wizard-step>
+
+  <pfng-wizard-step [config]="step2Config" [reviewTemplate]="step2ReviewTemplate">
+    <form class="form-horizontal">
+      <fieldset>
+        <legend><span class="fa fa-rocket"></span> API properties</legend>
+        <div class="control-group">
+          <label class="control-label required-pf" for="name">API Name &amp; Version</label>
+          <div class="controls row">
+            <div class="col-xs-6">
+              <input type="text" placeholder="eg. Order API" id="name" name="name" class="form-control" size="20" [(ngModel)]="api.name" (ngModelChange)="updateApiProperties()" required/>
+            </div>
+            <div class="input-group col-xs-2">
+              <span class="input-group-addon">v.</span>
+              <input type="text" placeholder="1.0" id="version" name="version" class="form-control" [(ngModel)]="api.version" (ngModelChange)="updateApiProperties()" required/>
+            </div>
+          </div>
+          <p class="help-block">The name and version of the API to create (should be unique).</p>
+        </div>
+        <div class="control-group">
+          <label class="control-label required-pf" for="resource">Resource</label>
+          <div class="controls">
+            <input type="text" placeholder="eg. order" id="resource" name="resource" class="form-control" [(ngModel)]="api.resource" (ngModelChange)="updateApiProperties()" required/>
+            <p class="help-block">The resource this API will expose (will be used for CRUD or Publish API operations).</p>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </pfng-wizard-step>
+
+  <pfng-wizard-step [config]="step3Config" [reviewTemplate]="step3ReviewTemplate">
+    <form class="form-horizontal">
+      <fieldset>
+        <legend><span class="fa fa-rocket"></span> API reference resource</legend>
+        <div class="control-group">
+          <label class="control-label" [class.required-pf]="apiType === 'GENERIC_EVENT'" for="referencePayload">JSON Reference Payload</label>
+          <div class="controls">
+            <textarea class="form-control" rows="10" id="referencePayload" name="referencePayload" [(ngModel)]="api.referencePayload" (ngModelChange)="updateApiReference()">
+            </textarea>
+            <p class="help-block">A JSON payload that will be used as first and reference resource of this API</p>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+  </pfng-wizard-step>
+
+  <pfng-wizard-step [config]="step4Config">
+    <pfng-wizard-review></pfng-wizard-review>
+  </pfng-wizard-step>
+</pfng-wizard>
+
+<!-- Step 1: Type -->
+<ng-template #step1ReviewTemplate>
+  <form class="form">
+    <div class="wizard-pf-review-item">
+      <span class="wizard-pf-review-item-label">API type:</span>
+      <span class="wizard-pf-review-item-value">{{ apiType }}</span>
+    </div>
+  </form>
+</ng-template>
+<!-- Step 2: Properties -->
+<ng-template #step2ReviewTemplate>
+  <form class="form">
+    <div class="wizard-pf-review-item">
+      <span class="wizard-pf-review-item-label">API name:</span>
+      <span class="wizard-pf-review-item-value">{{ api.name }}</span>
+    </div>
+    <div class="wizard-pf-review-item">
+      <span class="wizard-pf-review-item-label">API version:</span>
+      <span class="wizard-pf-review-item-value">{{ api.version }}</span>
+    </div>
+    <div class="wizard-pf-review-item">
+      <span class="wizard-pf-review-item-label">API resource:</span>
+      <span class="wizard-pf-review-item-value">{{ api.resource }}</span>
+    </div>
+  </form>
+</ng-template>
+<!-- Step 3: Reference -->
+<ng-template #step3ReviewTemplate>
+  <form class="form">
+    <div class="wizard-pf-review-item">
+      <span class="wizard-pf-review-item-label">JSON reference payload:</span>
+      <span class="wizard-pf-review-item-value"><code>{{ api.referencePayload }}</code></span>
+    </div>
+  </form>
+</ng-template>

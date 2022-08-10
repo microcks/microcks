@@ -167,7 +167,7 @@ public class ServiceController {
          // Put messages into a map where key is operation name.
          Map<String, List<? extends Exchange>> messagesMap = new HashMap<>();
          for (Operation operation : service.getOperations()) {
-            if (service.getType() == ServiceType.EVENT) {
+            if (service.getType() == ServiceType.EVENT || service.getType() == ServiceType.GENERIC_EVENT) {
                // If an event, we should explicitly retrieve event messages.
                List<UnidirectionalEvent> events = messageService.getEventByOperation(
                      IdBuilder.buildOperationId(service, operation));
@@ -190,6 +190,20 @@ public class ServiceController {
 
       try{
          Service service = serviceService.createGenericResourceService(serviceDTO.getName(), serviceDTO.getVersion(),
+               serviceDTO.getResource(), serviceDTO.getReferencePayload());
+         return new ResponseEntity<>(service, HttpStatus.CREATED);
+      } catch (EntityAlreadyExistsException eaee) {
+         log.error("Service '{}-{} already exists'", serviceDTO.getName(), serviceDTO.getVersion());
+         return new ResponseEntity<>(HttpStatus.CONFLICT);
+      }
+   }
+
+   @RequestMapping(value = "/services/generic/event", method = RequestMethod.POST)
+   public ResponseEntity<Service> createGenericEventService(@RequestBody GenericResourceServiceDTO serviceDTO) {
+      log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(), serviceDTO.getVersion(), serviceDTO.getResource());
+
+      try{
+         Service service = serviceService.createGenericEventService(serviceDTO.getName(), serviceDTO.getVersion(),
                serviceDTO.getResource(), serviceDTO.getReferencePayload());
          return new ResponseEntity<>(service, HttpStatus.CREATED);
       } catch (EntityAlreadyExistsException eaee) {
