@@ -1,0 +1,31 @@
+asyncapi: '2.4.0'
+id: 'urn:io.microcks.generic.{service}-{version}'
+info:
+  title: {service}
+  version: '{version}'
+  description: This is a generic Event Driven API definition that sends {resource} events.
+defaultContentType: application/json
+channels:
+  {resource}:
+    bindings:
+      ws:
+        method: POST
+    subscribe:
+      message:
+        bindings:
+          kafka:
+            key:
+              type: string
+              description: Timestamp of event as milliseconds since 1st Jan 1970
+        '$ref': '#/components/messages/{resource}Msg'
+components:
+  messages:
+    {resource}Msg:
+      payload:
+        '$ref': '#/components/schemas/{resource}Type'
+      examples:
+        - name: Reference
+          payload: {reference}
+  schemas:
+    {resource}Type:
+      {resourceSchema}
