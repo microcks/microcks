@@ -101,6 +101,7 @@ spec:
                 name: "{{ .Values.appName }}-kafka-keystore"
             {{- end }}
           {{- end }}
+          {{- toYaml .Values.microcks.env | nindent 10 }}
         resources:
           {{- toYaml .Values.microcks.resources | nindent 10 }}
         livenessProbe:

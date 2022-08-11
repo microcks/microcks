@@ -27,6 +27,12 @@ microcks:
       #cpu: 500m
       memory: 512Mi
 
+  env:
+    - name: SERVICES_UPDATE_INTERVAL
+      value: 0 0 0/2 * * *
+    #- name: MAX_UPLOAD_FILE_SIZE
+    #  value: 5MB
+
   #logLevel: TRACE | DEBUG | INFO | WARN
   logLevel: INFO
 
