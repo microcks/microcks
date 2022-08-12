@@ -156,7 +156,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/pets/1", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/pets/1"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -189,7 +189,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/pets", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/pets"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -298,7 +298,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/location/83", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/location/83"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -383,7 +383,7 @@ public class OpenAPIImporterTest {
       }
       assertEquals(1, exchanges.size());
       assertEquals(1, operation.getResourcePaths().size());
-      assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+      assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
       for (Exchange exchange : exchanges) {
          if (exchange instanceof RequestResponsePair) {
@@ -494,7 +494,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -529,7 +529,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -563,7 +563,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car/307/passenger", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car/307/passenger"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -649,7 +649,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -684,7 +684,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -718,7 +718,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car/307/passenger", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car/307/passenger"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -819,7 +819,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -981,7 +981,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -1066,7 +1066,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/accounts/396be545-e2d4-4497-a5b5-700e89ab99c0", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/accounts/396be545-e2d4-4497-a5b5-700e89ab99c0"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -1257,7 +1257,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -1291,7 +1291,7 @@ public class OpenAPIImporterTest {
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
-            assertEquals("/owner/laurent/car", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -1381,7 +1381,7 @@ public class OpenAPIImporterTest {
          }
          assertEquals(1, exchanges.size());
          assertEquals(1, postOp.getResourcePaths().size());
-         assertEquals("/owner/{owner}/car", postOp.getResourcePaths().get(0));
+         assertTrue(postOp.getResourcePaths().contains("/owner/{owner}/car"));
 
          for (Exchange exchange : exchanges) {
             if (exchange instanceof RequestResponsePair) {

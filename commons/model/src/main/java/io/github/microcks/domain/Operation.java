@@ -20,8 +20,10 @@ package io.github.microcks.domain;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An Operation / action of a micro service. Holds information on messages constitution
@@ -42,7 +44,7 @@ public class Operation {
    private String dispatcherRules;
    private Long defaultDelay;
 
-   private List<String> resourcePaths;
+   private Set<String> resourcePaths;
    private List<ParameterConstraint> parameterConstraints;
 
    public String getName() {
@@ -132,17 +134,17 @@ public class Operation {
       this.defaultDelay = defaultDelay;
    }
 
-   public List<String> getResourcePaths() {
+   public Set<String> getResourcePaths() {
       return resourcePaths;
    }
 
-   public void setResourcePaths(List<String> resourcePaths) {
+   public void setResourcePaths(Set<String> resourcePaths) {
       this.resourcePaths = resourcePaths;
    }
 
    public void addResourcePath(String resourcePath) {
       if (this.resourcePaths == null) {
-         this.resourcePaths = new ArrayList<>();
+         this.resourcePaths = new HashSet<>();
       }
       if (!this.resourcePaths.contains(resourcePath)) {
          this.resourcePaths.add(resourcePath);

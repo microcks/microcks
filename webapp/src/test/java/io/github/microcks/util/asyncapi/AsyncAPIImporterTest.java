@@ -791,8 +791,8 @@ public class AsyncAPIImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertEquals("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711", operation.getResourcePaths().get(0));
-            assertEquals("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815", operation.getResourcePaths().get(1));
+            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711"));
+            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
@@ -869,8 +869,8 @@ public class AsyncAPIImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertEquals("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711", operation.getResourcePaths().get(0));
-            assertEquals("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815", operation.getResourcePaths().get(1));
+            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711"));
+            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {

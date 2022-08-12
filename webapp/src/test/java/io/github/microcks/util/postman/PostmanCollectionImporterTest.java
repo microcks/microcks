@@ -69,7 +69,7 @@ public class PostmanCollectionImporterTest {
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
             Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
-            assertEquals("/v2/pet/findByStatus", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/findByStatus"));
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -112,10 +112,8 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/1"));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/2"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -180,7 +178,7 @@ public class PostmanCollectionImporterTest {
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
             Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
-            assertEquals("/v2/pet/findByStatus", operation.getResourcePaths().get(0));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/findByStatus"));
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -223,10 +221,8 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/1"));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/2"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -389,11 +385,8 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-
-            assertTrue("/order/123456".equals(operation.getResourcePaths().get(0))
-                  || "/order/7891011".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/order/123456".equals(operation.getResourcePaths().get(1))
-                  || "/order/7891011".equals(operation.getResourcePaths().get(1)));
+            assertTrue(operation.getResourcePaths().contains("/order/123456"));
+            assertTrue(operation.getResourcePaths().contains("/order/7891011"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
@@ -489,10 +482,9 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue("/v2/pet/1/$access".equals(operation.getResourcePaths().get(0))
-                  || "/v2/pet/2/$access".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/v2/pet/1/$access".equals(operation.getResourcePaths().get(1))
-                  || "/v2/pet/2/$access".equals(operation.getResourcePaths().get(1)));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/1/$access"));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/2/$access"));
+
          } else if ("GET /v2/pet/:petId/$count".equals(operation.getName())) {
             assertEquals("GET", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
@@ -507,10 +499,8 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue("/v2/pet/1/$count".equals(operation.getResourcePaths().get(0))
-                  || "/v2/pet/2/$count".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/v2/pet/1/$count".equals(operation.getResourcePaths().get(1))
-                  || "/v2/pet/2/$count".equals(operation.getResourcePaths().get(1)));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/1/$count"));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/2/$count"));
          } else {
             fail("Unknown operation");
          }
@@ -559,10 +549,8 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(0))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(0)));
-            assertTrue("/v2/pet/1".equals(operation.getResourcePaths().get(1))
-                  || "/v2/pet/2".equals(operation.getResourcePaths().get(1)));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/1"));
+            assertTrue(operation.getResourcePaths().contains("/v2/pet/2"));
          }
       }
    }
