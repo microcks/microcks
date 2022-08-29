@@ -14,8 +14,13 @@
 <small>These are the conformity tests that have bee run against this service implementations on different endpoints.</small>
 
 <div class="container-fluid">
+
+  <div class="test-bar-chart" *ngIf="resolvedTestResults">
+    <test-bar-chart [data]="resolvedTestResults"></test-bar-chart>
+  </div>
+
   <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">  
-    <div *ngFor="let test of testResults | async" class="list-group-item">
+    <div *ngFor="let test of resolvedTestResults" class="list-group-item">
       <div class="list-view-pf-main-info">
         <div class="list-view-pf-body">
           <div class="list-view-pf-description">

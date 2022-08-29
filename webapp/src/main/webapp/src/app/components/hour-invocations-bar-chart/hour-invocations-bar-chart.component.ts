@@ -85,7 +85,10 @@ export class HourInvocationsBarChartComponent implements OnInit {
       this.vis.selectAll('*').remove();
 
       var x = d3.scale.ordinal().rangeRoundBands([0, width - padl - padr], 0.1);
+      //var x = d3.scaleOrdinal().rangeRoundBands([0, width - padl - padr], 0.1);
+      //var x = d3.scaleOrdinal().domain([0, width - padl - padr]);
       var y = d3.scale.linear().range([height, 0]);
+      //var y = d3.scaleLinear().range([height, 0]);
       var yAxis = d3.svg.axis().scale(y).orient('left').tickSize(-width + padl + padr);
       var xAxis = d3.svg.axis().scale(x).orient('bottom');
 

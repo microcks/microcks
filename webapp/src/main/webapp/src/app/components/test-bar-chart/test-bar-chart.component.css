@@ -2,6 +2,7 @@
   display: inline-block;
   border: 1px;
   border-bottom: 1px solid #CCC;
+  margin: 5px;
 }
 .bar-success {
   background: #7BB33D;

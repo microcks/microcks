@@ -42,6 +42,7 @@ export class TestsPageComponent implements OnInit {
   testResultsCount: number;
   closeBtnName: string;
 
+  resolvedTestResults: TestResult[];
   paginationConfig: PaginationConfig;
 
   constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private route: ActivatedRoute) {
@@ -70,6 +71,10 @@ export class TestsPageComponent implements OnInit {
       this.paginationConfig.totalItems = this.testResultsCount;
     });
 
+    this.testResults.subscribe( results => {
+      this.resolvedTestResults = results
+    });
+
     this.paginationConfig = {
       pageNumber: 1,
       pageSize: 20,
@@ -80,6 +85,9 @@ export class TestsPageComponent implements OnInit {
 
   listByServiceId(page: number = 1): void {
     this.testResults = this.testsSvc.listByServiceId(this.service.id, page);
+    this.testResults.subscribe( results => {
+      this.resolvedTestResults = results
+    });
   }
 
   handlePageSize($event: PaginationEvent) {
