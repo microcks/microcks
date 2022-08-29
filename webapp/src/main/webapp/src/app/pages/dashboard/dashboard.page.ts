@@ -23,7 +23,6 @@ import { CardAction, CardConfig, CardFilter, CardFilterPosition } from 'patternf
 import { SparklineChartConfig, SparklineChartData } from 'patternfly-ng/chart/sparkline-chart';
 
 import { ConfigService } from '../../services/config.service';
-import { InvocationsService } from '../../services/invocations.service';
 import { MetricsService } from '../../services/metrics.service';
 import { ServicesService } from '../../services/services.service';
 import { DailyInvocations } from '../../models/metric.model';
@@ -38,7 +37,7 @@ export class DashboardPageComponent implements OnInit {
 
   aDayLong: number = (1000 * 60 * 60 * 24);
   today = new Date();
-  todayStr: string = this.invocationsSvc.formatDayDate(new Date());
+  todayStr: string = this.metricsSvc.formatDayDate(new Date());
 
   servicesCount: number = 0;
   aggregatesCount: number = 0;
@@ -112,8 +111,7 @@ export class DashboardPageComponent implements OnInit {
   conformanceScores: any;
 
 
-  constructor(private servicesSvc: ServicesService, private config: ConfigService, private invocationsSvc: InvocationsService, 
-      private metricsSvc: MetricsService, private ref: ChangeDetectorRef) { }
+  constructor(private servicesSvc: ServicesService, private config: ConfigService, private metricsSvc: MetricsService, private ref: ChangeDetectorRef) { }
 
   ngOnInit() {
     this.getServicesMap();
@@ -212,14 +210,14 @@ export class DashboardPageComponent implements OnInit {
   }
 
   getTopInvocations(day: Date = this.today): void {
-    this.invocationsSvc.getTopInvocations(day).subscribe(results => {
+    this.metricsSvc.getTopInvocations(day).subscribe(results => {
       this.topInvocations = results.slice(0, 3);
       this.ref.detectChanges();
     });
   }
 
   getInvocationsTrend(limit: number = 20): void {
-    this.invocationsSvc.getInvocationsStatsTrend(limit).subscribe(
+    this.metricsSvc.getInvocationsStatsTrend(limit).subscribe(
       results => {
         this.chartData.dataAvailable = false;
         this.chartData.xData = ['dates'];
@@ -227,7 +225,7 @@ export class DashboardPageComponent implements OnInit {
         for (let i = limit - 1; i >= 0; i--) {
           var pastDate: Date = new Date(this.today.getTime() - (i * this.aDayLong));
           this.chartData.xData.push(pastDate);
-          var pastDateStr = this.invocationsSvc.formatDayDate(pastDate);
+          var pastDateStr = this.metricsSvc.formatDayDate(pastDate);
           var result = results[pastDateStr];
           if (result == null || result == undefined) {
             this.chartData.yData.push(0);
@@ -279,6 +277,7 @@ export class DashboardPageComponent implements OnInit {
         ['SUCCESS', successCount],
         ['FAILURE', failureCount]
       ];
+      this.ref.detectChanges();
     })
   }
 
