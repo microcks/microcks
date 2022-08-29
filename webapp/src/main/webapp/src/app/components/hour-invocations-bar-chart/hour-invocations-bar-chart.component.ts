@@ -29,12 +29,11 @@ import * as d3 from 'd3';
 //import * as $ from 'jquery';
 declare let $: any;
 
-const width = 460;
-const height = 300;
+const height = 340;
 const padt = 20;
 const padr = 20;
 const padb = 60;
-const padl = 30;
+const padl = 40;
 
 @Component({
   selector: 'hour-invocations-bar-chart',
@@ -53,18 +52,20 @@ export class HourInvocationsBarChartComponent implements OnInit {
 
   resolvedData: DailyInvocations;
 
+  width: number;
   vis = null;
 
   constructor(private router: Router) {
   }
 
   ngOnInit() {
+    this.width = parseInt(d3.select('#hourInvocationsBarChart').style('width'));
+
     this.data.subscribe(invocationsData => {
       this.resolvedData = invocationsData;
-
       this.vis = d3.select('#hourInvocationsBarChart')
           .append('svg')
-            .attr('width', width)
+            .attr('width', this.width)
             .attr('height', height + padt + padb)
           .append('g')
             .attr('transform', 'translate(' + padl + ',' + padt + ')');
@@ -84,12 +85,9 @@ export class HourInvocationsBarChartComponent implements OnInit {
       // Clear the elements inside of the div.
       this.vis.selectAll('*').remove();
 
-      var x = d3.scale.ordinal().rangeRoundBands([0, width - padl - padr], 0.1);
-      //var x = d3.scaleOrdinal().rangeRoundBands([0, width - padl - padr], 0.1);
-      //var x = d3.scaleOrdinal().domain([0, width - padl - padr]);
+      var x = d3.scale.ordinal().rangeRoundBands([0, this.width - padl - padr], 0.1);
       var y = d3.scale.linear().range([height, 0]);
-      //var y = d3.scaleLinear().range([height, 0]);
-      var yAxis = d3.svg.axis().scale(y).orient('left').tickSize(-width + padl + padr);
+      var yAxis = d3.svg.axis().scale(y).orient('left').tickSize(-this.width + padl + padr);
       var xAxis = d3.svg.axis().scale(x).orient('bottom');
 
       // compute index for extracting stats

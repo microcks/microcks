@@ -48,8 +48,9 @@ export class DayInvocationsBarChartComponent implements OnInit {
   }
 
   ngOnInit() {
-    var width = 460, height = 300,
-        padt = 20, padr = 20, padb = 60, padl = 30,
+    var width = parseInt(d3.select('#dayInvocationsBarChart').style('width')),
+        height = 340,
+        padt = 20, padr = 40, padb = 60, padl = 30,
         x = d3.scale.ordinal().rangeRoundBands([0, width - padl - padr], 0.1),
         y = d3.scale.linear().range([height, 0]),
         yAxis = d3.svg.axis().scale(y).orient('left').tickSize(-width + padl + padr),

@@ -23,7 +23,7 @@ import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { DailyInvocations } from 'src/app/models/metric.model';
 
-import { InvocationsService } from '../../../../services/invocations.service';
+import { MetricsService } from '../../../../services/metrics.service';
 
 @Component({
   selector: 'invocations-service-page',
@@ -41,7 +41,7 @@ export class InvocationsServicePageComponent implements OnInit {
   hour: number = 0;
   serviceNameAndVersion: string;
   
-  constructor(private invocationSvc: InvocationsService, 
+  constructor(private metricsSvc: MetricsService, 
     private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
   }
 
@@ -51,14 +51,14 @@ export class InvocationsServicePageComponent implements OnInit {
         this.serviceName = params.get('serviceName');
         this.serviceVersion = params.get('serviceVersion');
         this.serviceNameAndVersion = this.serviceName + ':' + this.serviceVersion;
-        return this.invocationSvc.getServiceInvocationStats(params.get('serviceName'), params.get('serviceVersion'), new Date())
+        return this.metricsSvc.getServiceInvocationStats(params.get('serviceName'), params.get('serviceVersion'), new Date())
       })
     );
   }
 
   updateServiceInvocationStats(): void {
     if (this.day != null) {
-      this.dailyInvocations = this.invocationSvc.getServiceInvocationStats(this.serviceName, this.serviceVersion, this.day);
+      this.dailyInvocations = this.metricsSvc.getServiceInvocationStats(this.serviceName, this.serviceVersion, this.day);
     }
   }
 
