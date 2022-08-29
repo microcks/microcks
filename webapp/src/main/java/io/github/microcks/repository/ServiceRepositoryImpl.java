@@ -19,9 +19,8 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Service;
+
 import org.bson.types.ObjectId;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
@@ -41,9 +40,6 @@ import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
  * @author laurent
  */
 public class ServiceRepositoryImpl implements CustomServiceRepository {
-
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ServiceRepositoryImpl.class);
 
    @Autowired
    private MongoTemplate template;

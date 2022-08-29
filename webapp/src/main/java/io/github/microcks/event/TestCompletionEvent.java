@@ -18,36 +18,29 @@
  */
 package io.github.microcks.event;
 
-import org.springframework.context.ApplicationEvent;
+import io.github.microcks.domain.TestResult;
 
+import org.springframework.context.ApplicationEvent;
 /**
- * Event raised when a Service has been changed (CREATED, UPDATED or DELETED).
+ * Event raised when a Service Test is completed.
  * @author laurent
  */
-public class ServiceChangeEvent extends ApplicationEvent {
+public class TestCompletionEvent extends ApplicationEvent {
 
-   /** */
-   private final String serviceId;
-   /** */
-   private final ChangeType changeType;
+   /** The completed TestResult at the end of test. */
+   private final TestResult result;
 
    /**
-    * Creates a new {@code ServiceChangeEvent} with change type.
+    * Creates a new {@code TestCompletionEvent} with test result.
     * @param source Source object for event
-    * @param serviceId Identifier of the updated Service
-    * @param changeType Type of changes this event if representing
+    * @param result The TestResult after completion
     */
-   public ServiceChangeEvent(Object source, String serviceId, ChangeType changeType) {
+   public TestCompletionEvent(Object source, TestResult result) {
       super(source);
-      this.serviceId = serviceId;
-      this.changeType = changeType;
+      this.result = result;
    }
 
-   public String getServiceId() {
-      return serviceId;
-   }
-
-   public ChangeType getChangeType() {
-      return changeType;
+   public TestResult getResult() {
+      return result;
    }
 }

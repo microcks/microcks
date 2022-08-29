@@ -16,28 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.repository;
-
-import io.github.microcks.domain.TestResult;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-
-import java.util.Date;
-import java.util.List;
+package io.github.microcks.domain;
 
 /**
- * Repository interface for TestResult domain objects.
+ * A metric value that has a weight (typically an aggregation result).
  * @author laurent
  */
-public interface TestResultRepository extends MongoRepository<TestResult, String> {
+public class WeightedMetricValue {
 
-   List<TestResult> findByServiceId(String serviceId);
+   private String name;
+   private int weight;
+   private double value;
 
-   List<TestResult> findByServiceId(String serviceId, Pageable page);
-   @Query("{ 'testDate' : { $gt: ?0 } }")
-   List<TestResult> findAllWithTestDateAfter(Date date);
+   public String getName() {
+      return name;
+   }
 
-   @Query(value = "{ 'serviceId' : ?0}}", count = true)
-   long countByServiceId(String serviceId);
+   public void setName(String name) {
+      this.name = name;
+   }
+
+   public int getWeight() {
+      return weight;
+   }
+
+   public void setWeight(int weight) {
+      this.weight = weight;
+   }
+
+   public double getValue() {
+      return value;
+   }
+
+   public void setValue(double value) {
+      this.value = value;
+   }
 }

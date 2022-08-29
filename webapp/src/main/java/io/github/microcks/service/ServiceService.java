@@ -516,6 +516,9 @@ public class ServiceService {
          service.getMetadata().setAnnotations(metadata.getAnnotations());
          service.getMetadata().objectUpdated();
          serviceRepository.save(service);
+
+         // Publish a Service update event before returning.
+         publishServiceChangeEvent(service, ChangeType.UPDATED);
          return true;
       }
       return false;

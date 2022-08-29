@@ -29,6 +29,7 @@ import io.github.microcks.domain.TestResult;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.domain.TestRunnerType;
 import io.github.microcks.domain.TestStepResult;
+import io.github.microcks.event.TestCompletionEvent;
 import io.github.microcks.repository.ImportJobRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResourceRepository;
@@ -62,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpMethod;
@@ -113,6 +115,9 @@ public class TestRunnerService {
 
    @Autowired
    private SecretRepository secretRepository;
+
+   @Autowired
+   private ApplicationContext applicationContext;
 
    @Value("${tests-callback.url}")
    private final String testsCallbackUrl = null;
@@ -280,6 +285,11 @@ public class TestRunnerService {
       testResult.setElapsedTime(totalElapsedTime);
 
       testResultRepository.save(testResult);
+
+      // If test is completed, publish a completion event.
+      if (!testResult.isInProgress()) {
+         publishTestCompletionEvent(testResult);
+      }
    }
 
    /** Clone and prepare request for a test case usage. */
@@ -432,5 +442,12 @@ public class TestRunnerService {
       File localFile = HTTPDownloader.handleHTTPDownloadToFile(job.getRepositoryUrl(),
             jobSecret, job.isRepositoryDisableSSLValidation());
       return localFile.getAbsolutePath();
+   }
+
+   /** Publish a TestCompletionEvent towards asynchronous consumers. */
+   private void publishTestCompletionEvent(TestResult testResult) {
+      TestCompletionEvent event = new TestCompletionEvent(this, testResult);
+      applicationContext.publishEvent(event);
+      log.debug("Test completion event has been published");
    }
 }

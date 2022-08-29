@@ -19,6 +19,7 @@
 package io.github.microcks.service;
 
 import io.github.microcks.domain.*;
+import io.github.microcks.event.TestCompletionEvent;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
@@ -28,6 +29,7 @@ import io.github.microcks.util.IdBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -59,6 +61,8 @@ public class TestService {
    @Autowired
    private TestRunnerService testRunnerService;
 
+   @Autowired
+   private ApplicationContext applicationContext;
 
    /**
     * Launch tests for a Service on dedicated endpoint URI.
@@ -148,6 +152,10 @@ public class TestService {
             updateTestResult(testResult);
             saved = true;
             log.debug("testResult {} has been updated !", testResult.getId());
+            // If test is completed, publish a completion event.
+            if (!testResult.isInProgress()) {
+               publishTestCompletionEvent(testResult);
+            }
          } catch (org.springframework.dao.OptimisticLockingFailureException olfe) {
             // Update counter and refresh domain object.
             log.warn("Caught an OptimisticLockingFailureException, trying refreshing for {} times", times);
@@ -265,7 +273,7 @@ public class TestService {
          if (!testCaseResult.isSuccess()){
             globalSuccessFlag = false;
          }
-         // -1 is default elapsed time for testcase so its mean that still in
+         // -1 is default elapsed time for testcase so it means that still in
          // progress because not updated yet.
          if (testCaseResult.getElapsedTime() == -1) {
             log.debug("testCaseResult.elapsedTime is -1, set globalProgressFlag to true");
@@ -281,7 +289,6 @@ public class TestService {
       log.debug("Trying to update testResult {} with {} elapsedTime and success flag to {}",
             testResult.getId(), testResult.getElapsedTime(), testResult.isSuccess());
       testResultRepository.save(testResult);
-
    }
 
    private void waitSomeRandomMS(int min, int max) {
@@ -294,5 +301,12 @@ public class TestService {
             log.debug("waitSomeRandomMS semaphore was interrupted");
          }
       }
+   }
+
+   /** Publish a TestCompletionEvent towards asynchronous consumers. */
+   private void publishTestCompletionEvent(TestResult testResult) {
+      TestCompletionEvent event = new TestCompletionEvent(this, testResult);
+      applicationContext.publishEvent(event);
+      log.debug("Test completion event has been published");
    }
 }

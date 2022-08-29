@@ -18,26 +18,15 @@
  */
 package io.github.microcks.repository;
 
-import io.github.microcks.domain.TestResult;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
+import io.github.microcks.domain.WeightedMetricValue;
 
-import java.util.Date;
 import java.util.List;
 
 /**
- * Repository interface for TestResult domain objects.
+ * Custom repository interface for TestConformanceMetric domain objects.
  * @author laurent
  */
-public interface TestResultRepository extends MongoRepository<TestResult, String> {
+public interface CustomTestConformanceMetricRepository {
 
-   List<TestResult> findByServiceId(String serviceId);
-
-   List<TestResult> findByServiceId(String serviceId, Pageable page);
-   @Query("{ 'testDate' : { $gt: ?0 } }")
-   List<TestResult> findAllWithTestDateAfter(Date date);
-
-   @Query(value = "{ 'serviceId' : ?0}}", count = true)
-   long countByServiceId(String serviceId);
+   List<WeightedMetricValue> aggregateTestConformanceMetric();
 }

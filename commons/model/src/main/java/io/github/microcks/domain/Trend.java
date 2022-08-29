@@ -16,28 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.repository;
-
-import io.github.microcks.domain.TestResult;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
-
-import java.util.Date;
-import java.util.List;
+package io.github.microcks.domain;
 
 /**
- * Repository interface for TestResult domain objects.
+ * Enumeration type for evolution trend.
  * @author laurent
  */
-public interface TestResultRepository extends MongoRepository<TestResult, String> {
-
-   List<TestResult> findByServiceId(String serviceId);
-
-   List<TestResult> findByServiceId(String serviceId, Pageable page);
-   @Query("{ 'testDate' : { $gt: ?0 } }")
-   List<TestResult> findAllWithTestDateAfter(Date date);
-
-   @Query(value = "{ 'serviceId' : ?0}}", count = true)
-   long countByServiceId(String serviceId);
+public enum Trend {
+   DOWN,
+   LOW_DOWN,
+   STABLE,
+   LOW_UP,
+   UP
 }
