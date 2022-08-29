@@ -1,38 +1,44 @@
-<div class="jumbotron clearfix">
-  <div class="row">
-    <div class="col-xs-5">
-      <h1 class="arvo">The communication and runtime tool for your APIs &amp;
-        <span class="hl">Micro</span>-services Mo<span class="hl">cks</span>
-      </h1>
+<div class="getting-started-panel">
+  <div class="panel-heading" style="background-color: #f1f1f1;" role="button" data-toggle="collapse" data-target="#getting-started-content">
+    <a href="#"><i class="fa fa-rocket"></i> Getting Started with Microcks?</a>
+  </div>
+  <div class="collapse" [class.in]="!isTestsPanelDisplayed()" id="getting-started-content">
+    <div class="jumbotron clearfix">
+      <div class="row">
+        <div class="col-xs-5">
+          <h1 class="arvo">The communication and runtime tool for your APIs &amp;
+            <span class="hl">Micro</span>-services Mo<span class="hl">cks</span>
+          </h1>
+        </div>
+        <div class="col-xs-7" align="right">
+          <!-- <img alt="Microcks" src="./assets/microcks-big.png" style="width: 30%; height: 30%" /> -->
+          <img alt="Microcks" src="./assets/microcks-logo-blue-baseline-tweet.png" style="width: 80%; height: 80%" />
+        </div>
+      </div>
     </div>
-    <div class="col-xs-7" align="right">
-      <!-- <img alt="Microcks" src="./assets/microcks-big.png" style="width: 30%; height: 30%" /> -->
-      <img alt="Microcks" src="./assets/microcks-logo-blue-baseline-tweet.png" style="width: 80%; height: 80%" />
+    
+    <div class="row">
+      <div class="col-xs-2" align="right">
+        <a routerLink="/services" class="btn btn-lg btn-success" type="button">APIs | Services</a>
+      </div>
+      <div class="col-xs-4">
+        <blockquote>Browse, get informations and request/response mocks on Microcks managed APIs &amp; Services.</blockquote>
+      </div>
+      <div class="col-xs-2" align="right">
+        <a routerLink="/importers" class="btn btn-lg btn-primary" type="button">Importers</a>
+      </div>
+      <div class="col-xs-4">
+        <blockquote>Visualize, create or edit a new Importer Job for filling Microks with mocks and samples.</blockquote>
+      </div>
     </div>
   </div>
 </div>
 
-<div class="row">
-  <div class="col-xs-2" align="right">
-    <a routerLink="/services" class="btn btn-success" type="button">APIs | Services</a>
-  </div>
-  <div class="col-xs-4">
-    <blockquote>Browse, get informations and request/response mocks on Microcks managed APIs &amp; Services.</blockquote>
-  </div>
-  <div class="col-xs-2" align="right">
-    <a routerLink="/importers" class="btn btn-primary" type="button">Importers</a>
-  </div>
-  <div class="col-xs-4">
-    <blockquote>Visualize, create or edit a new Importer Job for filling Microks with mocks and samples.</blockquote>
-  </div>
-</div>
-
-<div class="jumbotron clearfix">
+<div class="megatron clearfix" *ngIf="isRepositoryPanelDisplayed()">
   <div class="row">
     <div class="col-md-4">
-      <pfng-card [config]="chartCardConfig"
-          (onFilterSelect)="handleChartFilterSelect($event)">
-        <pfng-sparkline-chart [config]="chartConfig" [chartData]="chartData" ></pfng-sparkline-chart>
+      <pfng-card [config]="repositoryCardConfig">
+        <pfng-donut-chart [chartData]="repositoryDonutChartData" [config]="repositoryDonutChargConfig"></pfng-donut-chart>
       </pfng-card>
     </div>
     <div class="col-md-4">
@@ -49,11 +55,26 @@
       </pfng-card>
     </div>
     <div class="col-md-4">
-      <pfng-card [config]="repositoryCardConfig">
-        <pfng-donut-chart [chartData]="donutChartData" [config]="largeConfig"></pfng-donut-chart>
+      <pfng-card [config]="chartCardConfig"
+          (onFilterSelect)="handleChartFilterSelect($event)">
+        <pfng-sparkline-chart [config]="chartConfig" [chartData]="chartData" ></pfng-sparkline-chart>
       </pfng-card>
     </div>
   </div>
 </div>
 
+<div class="megatron clearfix" *ngIf="isTestsPanelDisplayed()">
+  <div class="row">
+    <div class="col-md-8">
+      <pfng-card [config]="testConformanceCardConfig">
+        <score-treemap [data]="conformanceScores" scoreAttr="score" [block]="repositoryFilterFeatureLabelKey()" elements="API | Services" legend="The lower score the riskier in terms of non conformance"></score-treemap>
+      </pfng-card>
+    </div>
+    <div class="col-md-4">
+      <pfng-card [config]="testResultsCardConfig" (onFilterSelect)="handleTestsFilterSelect($event)">
+        <pfng-donut-chart [chartData]="testResultsDonutChartData" [config]="testResultsDonutChartConfig"></pfng-donut-chart>
+      </pfng-card>
+    </div>
+  </div>
+</div>
 <br/>

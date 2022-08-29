@@ -73,6 +73,49 @@
       </dl>
     </div>
     <div class="col-md-4">
+      <div class="pfng-card card-pf card-pf-accented conformance-card">
+        <div class="card-pf-heading">
+          <h2 class="card-pf-title">Tests</h2>
+        </div>
+        <div class="card-pf-body">
+          <div class="row" *ngIf="serviceTestConformanceMetric | async as conformanceMetric; else loadingt">
+            <div class="col-xs-7">
+              <div class="conformance-index">
+                <dt>Conformance index</dt>
+                <grade-index [score]="conformanceMetric.maxPossibleScore"></grade-index>
+              </div>
+              <div style="margin-top: 5px;">
+                <a href="https://microcks.io/documentation/using/asyncapi/#bindings">Learn More 
+                  <i class="fa fa-external-link" aria-hidden="true"></i>
+                </a>
+              </div>
+            </div>
+            <div class="col-xs-5">
+              <dt>Conformance score</dt>
+              <span class="conformance-score">{{conformanceMetric.currentScore || '0.0'}}</span>%
+              <i class="fa fa-arrow-up conformance-trend"
+                [class.fa-arrow-right]="conformanceMetric.latestTrend === 'STABLE' || conformanceMetric.latestTrend === null"
+                [class.fa-arrow-up]="conformanceMetric.latestTrend === 'UP' || conformanceMetric.latestTrend === 'LOW_UP'"
+                [class.fa-arrow-down]="conformanceMetric.latestTrend === 'DOWN' || conformanceMetric.latestTrend == 'LOW_DOWN'"
+                [class.fa-low-up]="conformanceMetric.latestTrend === 'LOW_UP'"
+                [class.fa-low-down]="conformanceMetric.latestTrend === 'LOW_DOWN'"></i>
+            </div>
+          </div>
+          <ng-template #loadingt>Loading test conformance metric... You may need to update your service first.</ng-template>
+          <div class="row" *ngIf="view.service.type != 'GENERIC_REST'" style="margin-top: 10px">
+            <div class="col-sm-6" style="padding-top: 8px;">
+              <a [routerLink]="['/tests/service', view.service.id]"><i class="glyphicon glyphicon-time"></i> View Tests Runs</a>
+            </div>
+            <div class="col-sm-6">
+              <button class="btn btn-primary pull-right" (click)="gotoCreateTest()">
+                <span class="fa fa-plus"></span> New Test
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!--
       <h3 class="section-label" [ngSwitch]="view.service.type">
         <span *ngSwitchCase="'GENERIC_REST'">Resources</span>
         <span *ngSwitchDefault>Tests</span>
@@ -88,6 +131,7 @@
           </button>
         </div>
       </div>
+      -->
 
       <span *ngIf="view.service.type == 'GENERIC_REST'">
         <p>

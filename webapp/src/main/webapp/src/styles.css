@@ -45,7 +45,7 @@ dd, dt {
 }
 
 span.card-pf-footer-text {
-  font-size: 0.7em !important;
+  font-size: 1em !important;
   vertical-align: text-top;
 }
 
@@ -111,10 +111,13 @@ span.card-pf-footer-text {
   margin-left: 5px;
 }
 
-.bar {
+.test-box-container {
   display: inline-block;
+}
+.bar {
   border: 1px;
   border-bottom: 1px solid #CCC;
+  margin: 5px;
 }
 .bar-success {
   background: #7BB33D;
@@ -206,4 +209,8 @@ span.card-pf-footer-text {
 ul.unstyled {
   list-style-type: none;
   padding-inline-start: 0px;
+}
+
+.rect-defocused {
+  opacity: 0.3 !important;
 }

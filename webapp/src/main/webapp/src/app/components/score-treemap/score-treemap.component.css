@@ -1,0 +1,12 @@
+.rect-defocused {
+  opacity: 0.3 !important;
+}
+.score-treemap-legend-container {
+  display: flex;
+}
+.score-treemap-legend {
+  margin: 5px; 
+  width: 100px; 
+  height: 10px; 
+  background-image: linear-gradient(to left, #def3ff, #39a5dc, #004368);
+}

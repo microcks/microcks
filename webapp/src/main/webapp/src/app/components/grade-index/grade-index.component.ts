@@ -16,45 +16,30 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-export class DailyInvocations {
-  id: string;
-  day: string;
-  serviceName: string;
-  serviceVersion: string;
-  dailyCount: number;
+import { Component, OnInit, Input } from '@angular/core';
 
-  hourlyCount: {string, number};
-  minuteCount: {string, number};
-}
+@Component({
+  selector: 'grade-index',
+  templateUrl: './grade-index.component.html',
+  styleUrls: ['./grade-index.component.css']
+})
+export class GradeIndexComponent implements OnInit {
 
-export class TestConformanceMetric {
-  id: string;
-  serviceId: string;
-  aggregationLabelValue: string;
-  maxPossibleScore: number;
-  currentScore: number;
-  lastUpdateDay: string;
-  latestTrend: Trend;
+  @Input('score') score: number;
 
-  latestScores: {string, number};
-}
-export enum Trend {
-  DOWN = "DOWN",
-  LOW_DOWN = "LOW_DOWN",
-  STABLE = "STABLE",
-  LOW_UP = "LOW_UP",
-  UP = "UP"
-}
+  activeGrade: string;
 
-export class WeightedMetricValue {
-  name: string;
-  weight: number;
-  value: number;
-}
-
-export class TestResultSummary {
-  id: string;
-  testDate: number;
-  serviceId: string;
-  success: boolean = false;
+  ngOnInit() {
+    if (this.score >= 80) {
+      this.activeGrade = 'A';
+    } else if (this.score >= 60 && this.score < 80) {
+      this.activeGrade = 'B';
+    } else if (this.score >= 40 && this.score < 60) {
+      this.activeGrade = 'C';
+    } else if (this.score >= 20 && this.score < 40) {
+      this.activeGrade = 'D';
+    } else {
+      this.activeGrade = 'E';
+    }
+  }
 }

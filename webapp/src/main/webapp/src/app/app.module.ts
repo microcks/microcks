@@ -53,9 +53,11 @@ import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confir
 import { DayInvocationsBarChartComponent } from './components/day-invocations-bar-chart/day-invocations-bar-chart-component';
 import { EditLabelsComponent } from './components/edit-labels/edit-labels.component'
 import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
+import { GradeIndexComponent } from './components/grade-index/grade-index.component';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { HourInvocationsBarChartComponent } from './components/hour-invocations-bar-chart/hour-invocations-bar-chart.component';
 import { LabelListComponent } from './components/label-list/label-list.component';
+import { ScoreTreemapComponent } from './components/score-treemap/score-treemap.component';
 import { TestBarChartComponent } from './components/test-bar-chart/test-bar-chart.component';
 import { VerticalNavComponent } from './components/vertical-nav/vertical-nav.component';
 
@@ -105,7 +107,7 @@ export function configLoader(configService: ConfigService) {
     AppComponent, TimeAgoPipe,
     ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent, DayInvocationsBarChartComponent,
     HourInvocationsBarChartComponent, TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
-    DashboardPageComponent, ServicesPageComponent, DirectAPIWizardComponent,
+    ScoreTreemapComponent, GradeIndexComponent, DashboardPageComponent, ServicesPageComponent, DirectAPIWizardComponent,
     ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
     InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,

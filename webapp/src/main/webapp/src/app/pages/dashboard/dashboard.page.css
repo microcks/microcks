@@ -7,6 +7,17 @@ h1.arvo {
   font-weight: 600;
 }
 
+.megatron {
+  padding: 40px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  color: inherit;
+  background-color: #f1f1f1;
+}
+.megatron p {
+  font-weight: 200;
+}
+
 blockquote.top-invocation {
   padding-top: 5px;
   padding-bottom: 5px;

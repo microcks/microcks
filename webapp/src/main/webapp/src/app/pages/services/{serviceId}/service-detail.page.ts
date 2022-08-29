@@ -30,10 +30,12 @@ import { ListConfig, ListEvent } from 'patternfly-ng/list';
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint, Exchange, UnidirectionalEvent, RequestResponsePair, EventMessage } from '../../../models/service.model';
+import { TestConformanceMetric } from 'src/app/models/metric.model';
 import { TestResult } from '../../../models/test.model';
 import { IAuthenticationService } from "../../../services/auth.service";
 import { ConfigService } from '../../../services/config.service';
 import { ContractsService } from '../../../services/contracts.service';
+import { MetricsService } from 'src/app/services/metrics.service';
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 
@@ -51,13 +53,14 @@ export class ServiceDetailPageComponent implements OnInit {
   resolvedServiceView: ServiceView;
   contracts: Observable<Contract[]>;
   serviceTests: Observable<TestResult[]>;
+  serviceTestConformanceMetric: Observable<TestConformanceMetric>;
   operations: Operation[];
   selectedOperation: Operation;
   operationsListConfig: ListConfig;
   notifications: Notification[];
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
-      private testsSvc: TestsService, protected authService: IAuthenticationService, private config: ConfigService,
+      private testsSvc: TestsService, private metricsSvc: MetricsService, private authService: IAuthenticationService, private config: ConfigService,
       private modalService: BsModalService, private notificationService: NotificationService,
       private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
   }
@@ -75,6 +78,10 @@ export class ServiceDetailPageComponent implements OnInit {
     this.serviceTests = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
         this.testsSvc.listByServiceId(params.get('serviceId')))
+    );
+    this.serviceTestConformanceMetric = this.route.paramMap.pipe(
+      switchMap((params: ParamMap) =>
+        this.metricsSvc.getServiceTestConformanceMetric(params.get('serviceId')))
     );
     this.serviceView.subscribe( view => {
       this.serviceId = view.service.id;

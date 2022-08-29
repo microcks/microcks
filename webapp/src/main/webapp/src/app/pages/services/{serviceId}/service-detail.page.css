@@ -10,3 +10,25 @@
 .async-mock-status-label {
   margin-left: 20px;
 }
+
+.conformance-card {
+  margin-right: 0px !important;
+}
+.conformance-score {
+  font-size: 38px;
+  font-weight: 300;
+}
+.conformance-trend {
+  margin-left: 10px;
+  font-size: 24px;
+}
+.conformance-trend.low-up {
+  transform: rotate(45deg);
+}
+.conformance-trend.low-down {
+  transform: rotate(-45deg);
+}
+
+.conformance-index > dt {
+  margin-bottom: 10px;
+}

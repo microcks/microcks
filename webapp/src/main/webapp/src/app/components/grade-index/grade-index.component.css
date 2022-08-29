@@ -1,0 +1,55 @@
+.grade-box-container {
+  display: flex;
+}
+
+.grade-box.active:first-child {
+  border-left: none;
+}
+.grade-box:first-child {
+  margin-left: 0;
+}
+.grade-box {
+  background-color: #fff;
+  color: #6a6e73;
+  border-top: calc(1px * 2) solid #f5f5f5;
+}
+.grade-box:last-child {
+  border-right: calc(1px * 2) solid #f5f5f5;
+}
+
+.grade-box.a {
+  --pfe-health-index--accent: #3f9c35;
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, #fff);
+}
+.grade-box.b {
+  --pfe-health-index--accent: #92d400;
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, #fff);
+}
+.grade-box.c {
+  --pfe-health-index--accent: #efaa00;
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, #fff);
+}
+.grade-box.d {
+  --pfe-health-index--accent: #ec7a08;
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, #fff);
+}
+.grade-box.e {
+  --pfe-health-index--accent: #cc0000;
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, #fff);
+}
+
+.grade-box .grade {
+  padding: 6px 10px;
+}
+.grade-box>.bottom {
+  height: 0.5em;
+  margin: 0 0.5px;
+}
+.grade-box.active .grade {
+  margin: calc(1px * -2) 0.5px 0 0.5px;
+  padding-top: 8px !important;
+}
+.grade-box.active .grade, .grade-box>.bottom {
+  background-color: var(--pfe-health-index--accent);
+  color: var(--pfe-health-index--accent--text);
+}
