@@ -96,8 +96,8 @@ public class MetricsController {
       return null;
    }
 
-   @RequestMapping(value = "/metrics/invocations/global/last", method = RequestMethod.GET)
-   public Map<String, Long> getLastInvocationStatGlobal(@RequestParam(value="limit", required=false, defaultValue="20") Integer limit){
+   @RequestMapping(value = "/metrics/invocations/global/latest", method = RequestMethod.GET)
+   public Map<String, Long> getLatestInvocationStatGlobal(@RequestParam(value="limit", required=false, defaultValue="20") Integer limit){
       log.debug("Getting invocations stats for last {} days", limit);
 
       String day = getTodaysDate();

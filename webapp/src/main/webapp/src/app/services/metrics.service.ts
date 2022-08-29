@@ -59,9 +59,9 @@ export class MetricsService {
   public getInvocationsStatsTrend(limit: number) : Observable<any> {
     if (limit != null) {
       const options = { params: new HttpParams().set('limit', limit.toString()) };
-      return this.http.get<any>(this.rootUrl + '/metrics/invocations/global/last', options);
+      return this.http.get<any>(this.rootUrl + '/metrics/invocations/global/latest', options);
     }
-    return this.http.get<any>(this.rootUrl + '/metrics/invocations/global/last');
+    return this.http.get<any>(this.rootUrl + '/metrics/invocations/global/latest');
   }
 
   public getServiceTestConformanceMetric(serviceId: String) : Observable<TestConformanceMetric> {
