@@ -21,6 +21,7 @@ package io.github.microcks.util.el;
 import org.junit.Test;
 
 import java.util.Calendar;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -111,5 +112,19 @@ public class TemplateEngineTest {
       String result = engine.getValue("<greeting>Hello {{request.body//*[local-name() = 'name']/firstname/@value}}</greeting>");
 
       assertEquals("<greeting>Hello Laurent</greeting>", result);
+   }
+
+   @Test
+   public void testRequestParams() {
+      EvaluableRequest request = new EvaluableRequest("", null);
+      Map<String, String> params = Map.of("id", "8", "account-name", "test");
+      request.setParams(params);
+
+      TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+      engine.getContext().setVariable("request", request);
+
+      String result = engine.getValue("{ \"id\": \"{{request.params[id]}}\", \"accountName\": \"{{request.params[account-name]}}\" }");
+
+      assertEquals("{ \"id\": \"8\", \"accountName\": \"test\" }", result);
    }
 }

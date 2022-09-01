@@ -117,12 +117,18 @@ public class VariableReferenceExpressionTest {
       Map<String, String> headers = new HashMap<>();
       headers.put("key", "value");
       headers.put("hello", "world");
+      headers.put("account_-name", "test");
       request.setHeaders(headers);
 
       // Create new expression evaluating map value.
       VariableReferenceExpression exp = new VariableReferenceExpression(request, "headers[hello]");
       String result = exp.getValue(new EvaluationContext());
       assertEquals("world", result);
+
+      // Test with key having special characters.
+      exp.setPathExpression("headers[account_-name]");
+      result = exp.getValue(new EvaluationContext());
+      assertEquals("test", result);
 
       // Test with incorrect key.
       exp.setPathExpression("headers[microcks]");

@@ -47,8 +47,10 @@ public class VariableReferenceExpression implements Expression {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(VariableReferenceExpression.class);
 
-   private static final Pattern ARRAY_INDEX_PATTERN = Pattern.compile("\\[(\\d+)\\]");
-   private static final Pattern MAP_INDEX_PATTERN = Pattern.compile("\\[(\\w+)\\]");
+   private static final String ARRAY_INDEX_REGEXP = "\\[(\\d+)\\]";
+   private static final String MAP_INDEX_REGEXP = "\\[([\\w-]+)\\]";
+   private static final Pattern ARRAY_INDEX_PATTERN = Pattern.compile(ARRAY_INDEX_REGEXP);
+   private static final Pattern MAP_INDEX_PATTERN = Pattern.compile(MAP_INDEX_REGEXP);
 
    private static final String[] PROPERTY_NAME_DELIMITERS = {"/", "["};
 
@@ -118,7 +120,7 @@ public class VariableReferenceExpression implements Expression {
                }
             }
          } else if (variableValue.getClass().isArray()) {
-            if (propertyPath.matches("\\[(\\d+)\\]")) {
+            if (propertyPath.matches(ARRAY_INDEX_REGEXP)) {
                Matcher m = ARRAY_INDEX_PATTERN.matcher(propertyPath);
                if (m.matches()) {
                   String arrayIndex = m.group(1);
@@ -132,7 +134,7 @@ public class VariableReferenceExpression implements Expression {
                }
             }
          } else if (Map.class.isAssignableFrom(variableValue.getClass())) {
-            if (propertyPath.matches("\\[(\\w+)\\]")) {
+            if (propertyPath.matches(MAP_INDEX_REGEXP)) {
                Matcher m = MAP_INDEX_PATTERN.matcher(propertyPath);
                if (m.matches()) {
                   String mapKey = m.group(1);
