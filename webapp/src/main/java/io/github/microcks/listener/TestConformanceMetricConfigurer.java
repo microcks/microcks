@@ -24,8 +24,8 @@ import io.github.microcks.event.ServiceChangeEvent;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.service.MetricsService;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component;
 public class TestConformanceMetricConfigurer implements ApplicationListener<ServiceChangeEvent> {
 
    /** A commons logger for diagnostic messages. */
-   private static Log log = LogFactory.getLog(TestConformanceMetricConfigurer.class);
+   private static Logger log = LoggerFactory.getLogger(TestConformanceMetricConfigurer.class);
 
    @Autowired
    private ServiceRepository serviceRepository;
@@ -53,12 +53,15 @@ public class TestConformanceMetricConfigurer implements ApplicationListener<Serv
    public void onApplicationEvent(ServiceChangeEvent event) {
       log.debug("Received a ServiceChangeEvent on " + event.getServiceId());
 
-      Service service = serviceRepository.findById(event.getServiceId()).orElse(null);
-
       if (event.getChangeType().equals(ChangeType.DELETED)) {
-         metricsService.removeTestConformanceMetric(service);
+         metricsService.removeTestConformanceMetric(event.getServiceId());
       } else {
-         metricsService.configureTestConformanceMetric(service);
+         Service service = serviceRepository.findById(event.getServiceId()).orElse(null);
+         if (service != null) {
+            metricsService.configureTestConformanceMetric(service);
+         } else {
+            log.warn("Service with id {} not found but not a DELETED event?!", event.getServiceId());
+         }
       }
       log.debug("Processing of ServiceChangeEvent done !");
    }

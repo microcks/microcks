@@ -87,17 +87,19 @@ public class MetricsService {
       // Update max possible score and aggregation label on crate or change.
       metric.setMaxPossibleScore(computeMaxPossibleConformanceScore(service));
       if (filterLabelKey != null) {
-         metric.setAggregationLabelValue(service.getMetadata().getLabels().get(filterLabelKey));
+         if (service.getMetadata().getLabels() != null) {
+            metric.setAggregationLabelValue(service.getMetadata().getLabels().get(filterLabelKey));
+         }
       }
       metricRepository.save(metric);
    }
 
    /**
     * Remove TestConformanceMetric associated to a given Service.
-    * @param service The Service to remove coverage metrics for.
+    * @param serviceId The identifier of Service to remove coverage metrics for.
     */
-   public void removeTestConformanceMetric(Service service) {
-      TestConformanceMetric metric = metricRepository.findByServiceId(service.getId());
+   public void removeTestConformanceMetric(String serviceId) {
+      TestConformanceMetric metric = metricRepository.findByServiceId(serviceId);
       if (metric != null) {
          metricRepository.delete(metric);
       }
