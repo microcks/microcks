@@ -435,7 +435,8 @@ export class ServiceDetailPageComponent implements OnInit {
         && (this.resolvedServiceView.service.type === 'REST' 
             || this.resolvedServiceView.service.type === 'GRPC'
             || this.resolvedServiceView.service.type === 'GRAPHQL'
-            || (this.resolvedServiceView.service.type === 'EVENT' && this.hasAsyncAPIFeatureEnabled()));
+            || ((this.resolvedServiceView.service.type === 'EVENT' || this.resolvedServiceView.service.type === 'GENERIC_EVENT') 
+                && this.hasAsyncAPIFeatureEnabled()));
   }
 
   public hasRepositoryTenancyFeatureEnabled(): boolean {

@@ -114,28 +114,9 @@
           </div>
         </div>
       </div>
-
-      <!--
-      <h3 class="section-label" [ngSwitch]="view.service.type">
-        <span *ngSwitchCase="'GENERIC_REST'">Resources</span>
-        <span *ngSwitchDefault>Tests</span>
-      </h3>
-      <test-bar-chart *ngIf="view.service.type != 'GENERIC_REST'" [data]="serviceTests"></test-bar-chart>
-      <div class="row" *ngIf="view.service.type != 'GENERIC_REST'">
-        <div class="col-sm-6">
-          <a [routerLink]="['/tests/service', view.service.id]"><i class="glyphicon glyphicon-time"></i> View Tests Runs</a>
-        </div>
-        <div class="col-sm-6">
-          <button class="btn btn-primary" (click)="gotoCreateTest()">
-            <span class="fa fa-plus"></span> New Test
-          </button>
-        </div>
-      </div>
-      -->
-
       <span *ngIf="view.service.type == 'GENERIC_REST'">
         <p>
-          You may have already used this Dynamic API to record resources.<br/>
+          You may have already used this Direct API to record resources.<br/>
           Check <a (click)="openResources()">what's in the repository <i class="glyphicon glyphicon-transfer"></i></a>.
         </p>
       </span>

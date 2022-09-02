@@ -135,7 +135,7 @@ export class ScoreTreemapComponent implements OnInit {
       .attr('y', function(d) { return d.dy / 2; })
       .attr('dy', '.35em')
       .attr('text-anchor', 'middle')
-      .attr('fill', d => d['value'] < 50 ? 'white':'black')
+      .attr('fill', d => d[scoreAttr] < 50 ? 'white':'black')
       .text(d => block + ':' + d['name'] );
 
     d3.select(window).on('resize', () => 
