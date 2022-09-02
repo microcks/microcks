@@ -68,7 +68,8 @@ public class AsyncMockDefinitionUpdater {
          schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
       } else {
          // Only deal with service of type EVENT...
-         if (serviceViewChangeEvent.getServiceView() != null && serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)) {
+         if (serviceViewChangeEvent.getServiceView() != null && (serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)
+               || serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.GENERIC_EVENT)) ) {
             // Browse and check operation regarding restricted frequencies and supported bindings.
             boolean scheduled = false;
             for (Operation operation : serviceViewChangeEvent.getServiceView().getService().getOperations()) {

@@ -4,21 +4,21 @@
   </pfng-toast-notification-list>
 </div>
   
-<div *ngIf="serviceView | async as view">
+<div *ngIf="serviceView | async as view">
   <div class="container-fluid breadcrumb-bar">
     <div class="row">
       <ol class="breadcrumb">
         <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
         <li><a [routerLink]="['/services', view.service.id]">{{ view.service.name }} - {{ view.service.version }}</a></li>
-        <li>Operation {{ operationName }}</li>
+        <li>Operation {{ operationName }}</li>
       </ol>
     </div>
   </div>
 
   <div class="row">
     <div class="col-md-8">
-      <h1>{{ view.service.name }} - {{ view.service.version }} - {{ operationName }}</h1>
-      <small>Review and adapt parameters constraints and dispatcher properties for mocks on operation {{ operationName }}. Be sure to know what you're doing: it may break your mocks!</small>
+      <h1>{{ view.service.name }} - {{ view.service.version }} - {{ operationName }}</h1>
+      <small>Review and adapt parameters constraints and dispatcher properties for mocks on operation {{ operationName }}. Be sure to know what you're doing: it may break your mocks!</small>
 
       <h3 class="section-label" *ngIf="view.service.type === 'REST'">Parameters Constraints</h3>
 
@@ -118,8 +118,8 @@
               <dt>Message Output Name:</dt>
               <dd><code>{{ operation.outputName }}</code></dd>
             </span>
-            <dt *ngIf="view.service.type != 'EVENT'">HTTP Verb:</dt>
-            <dt *ngIf="view.service.type === 'EVENT'">Type:</dt>
+            <dt *ngIf="!isEventTypeService()">HTTP Verb:</dt>
+            <dt *ngIf="isEventTypeService()">Type:</dt>
             <dd>
               <div [ngSwitch]="operation.method">
                 <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
@@ -129,11 +129,11 @@
                 <span class="label label-info" *ngSwitchDefault>{{ operation.method }}</span>
               </div>
             </dd>
-            <span *ngIf="view.service.type != 'EVENT'">
+            <span *ngIf="!isEventTypeService()">
               <dt>Default delay:</dt>
               <dd>{{ operation.defaultDelay || 0 }} ms</dd>
             </span>
-            <span *ngIf="view.service.type === 'EVENT'">
+            <span *ngIf="isEventTypeService()">
               <dt>Frequency:</dt>
               <dd>{{ operation.defaultDelay || 0 }} sec</dd>
             </span>
@@ -146,14 +146,14 @@
       <div class="row">
         <div class="col-md-7">
           <div class="control-group form-inline">
-            <span *ngIf="view.service.type != 'EVENT'">
+            <span *ngIf="!isEventTypeService()">
               <label class="control-label" for="defaultDelay">Default delay</label> 
               <div class="controls">
                 <input class="form-control" id="defaultDelay" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay"/> ms
                 <p class="help-block">The delay to wait before returning response.</p>
               </div>
             </span>
-            <span *ngIf="view.service.type === 'EVENT'">
+            <span *ngIf="isEventTypeService()">
               <label class="control-label" for="defaultDelay">Frequency</label>
               <div class="controls">
                 <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay" [disabled]="!isAsyncMockEnabled()">
@@ -186,14 +186,14 @@
           </div>
         </div>
         <div class="col-md-4">
-          <h4 class="section-label text-right" *ngIf="view.service.type != 'EVENT'">Available responses</h4>
-          <h4 class="section-label text-right" *ngIf="view.service.type === 'EVENT'">Available messages</h4>
+          <h4 class="section-label text-right" *ngIf="!isEventTypeService()">Available responses</h4>
+          <h4 class="section-label text-right" *ngIf="isEventTypeService()">Available messages</h4>
 
           <div class="text-right" *ngFor="let exchange of view.messagesMap[operationName]">
-            <span *ngIf="view.service.type != 'EVENT'">
+            <span *ngIf="!isEventTypeService()">
               <h2><span class="label label-primary">{{ exchange.response.name }} - {{ exchange.response.dispatchCriteria }}</span></h2>
             </span>
-            <span *ngIf="view.service.type === 'EVENT'">
+            <span *ngIf="isEventTypeService()">
               <h2><span class="label label-primary">{{ exchange.eventMessage.name }} </span></h2>
             </span>
           </div>

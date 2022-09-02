@@ -233,6 +233,10 @@ export class OperationOverridePageComponent implements OnInit {
     }
   }
 
+  public isEventTypeService(): boolean {
+    return this.resolvedServiceView.service.type === ServiceType.EVENT || this.resolvedServiceView.service.type === ServiceType.GENERIC_EVENT;
+  }
+
   public isAsyncMockEnabled(): boolean {
     return this.config.getFeatureProperty('async-api', 'enabled').toLowerCase() === 'true' && this.newOperation.defaultDelay != 0;
   }
@@ -245,5 +249,5 @@ export class OperationOverridePageComponent implements OnInit {
 
   handleCloseNotification($event: NotificationEvent): void {
     this.notificationService.remove($event.notification);
-  }
+  }  
 }

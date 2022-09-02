@@ -76,7 +76,7 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
             // Put messages into a map where key is operation name.
             Map<String, List<? extends Exchange>> messagesMap = new HashMap<>();
             for (Operation operation : service.getOperations()) {
-               if (service.getType() == ServiceType.EVENT) {
+               if (service.getType() == ServiceType.EVENT || service.getType() == ServiceType.GENERIC_EVENT) {
                   // If an event, we should explicitly retrieve event messages.
                   List<UnidirectionalEvent> events = messageService.getEventByOperation(
                         IdBuilder.buildOperationId(service, operation));

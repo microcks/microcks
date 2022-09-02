@@ -394,6 +394,9 @@ public class ServiceService {
          }
       }
 
+      // Publish a Service create event before returning.
+      publishServiceChangeEvent(service, ChangeType.CREATED);
+
       return service;
    }
 
@@ -460,6 +463,9 @@ public class ServiceService {
          eventMessageRepository.save(eventMessage);
          log.info("Having created resource '{}' for Service '{}'", artifact.getId(), service.getId());
       }
+
+      // Publish a Service create event before returning.
+      publishServiceChangeEvent(service, ChangeType.CREATED);
 
       return service;
    }
