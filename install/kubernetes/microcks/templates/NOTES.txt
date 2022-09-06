@@ -12,7 +12,7 @@ Microcks is available at https://{{ .Values.microcks.url }}.
 GRPC mock service is available at {{ ( include "microcks-grpc.url" . ) }}.
 It has been exposed using TLS passthrough on the Ingress controller, you should extract the certificate for your client using:
 
-  $ kubectl get secret {{ .Values.appName }}-microcks-grpc-secret -n {{ .Release.namespace }} -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
+  $ kubectl get secret {{ .Values.appName }}-microcks-grpc-secret -n {{ .Release.Namespace }} -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
 
 Keycloak has been deployed on https://{{ .Values.keycloak.url }}/auth to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
@@ -23,6 +23,6 @@ username and password found into '{{ .Values.appName }}-keycloak-admin' secret.
 Kafka broker has been deployed on {{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}.
 It has been exposed using TLS passthrough on the Ingress controller, you should extract the certificate for your client using:
 
-  $ kubectl get secret {{ .Values.appName }}-kafka-cluster-ca-cert -n {{ .Release.namespace }} -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
+  $ kubectl get secret {{ .Values.appName }}-kafka-cluster-ca-cert -n {{ .Release.Namespace }} -o jsonpath='{.data.ca\.crt}' | base64 -d > ca.crt
 
 {{- end }}
