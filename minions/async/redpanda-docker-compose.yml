@@ -2,7 +2,7 @@ version: '2'
 
 services:
   redpanda:
-    image: vectorized/redpanda:v21.10.2
+    image: vectorized/redpanda:v22.2.2
     command: [
       "redpanda", "start",
       "--overprovisioned --smp 1  --memory 1G --reserve-memory 0M --node-id 0 --check=false",

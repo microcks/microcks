@@ -12,7 +12,7 @@ services:
     container_name: microcks-postman-runtime
 
   kafka:
-    image: vectorized/redpanda:v21.10.2
+    image: vectorized/redpanda:v22.2.2
     container_name: microcks-kafka
     command: [
       "redpanda", "start",
