@@ -150,7 +150,7 @@
                   <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
                   <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
                   <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
-                  <span class="label label-info" *ngSwitchDefault>{{ item.method }}</span>
+                  <span class="label label-info" *ngSwitchDefault>{{ item.method || 'POST'}}</span>
                 </span>
                 <span *ngIf="item.dispatcher">
                   with <code>{{ item.dispatcher }}</code> dispatcher
