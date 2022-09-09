@@ -186,7 +186,7 @@ public class MetricsService {
 
       for (Operation operation : service.getOperations()) {
          List exchanges;
-         if (service.getType() == ServiceType.EVENT) {
+         if (ServiceType.EVENT.equals(service.getType()) || ServiceType.GENERIC_EVENT.equals(service.getType())) {
             // If an event, we should explicitly retrieve event messages.
             exchanges = messageService.getEventByOperation(
                   IdBuilder.buildOperationId(service, operation));
