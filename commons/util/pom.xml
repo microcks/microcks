@@ -17,7 +17,7 @@
     <junit.version>4.13.1</junit.version>
     <jackson.version>2.13.0</jackson.version>
     <avro.version>1.10.0</avro.version>
-    <graphql-java.version>17.3</graphql-java.version>
+    <graphql-java.version>17.4</graphql-java.version>
   </properties>
 
   <dependencies>
