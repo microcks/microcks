@@ -75,7 +75,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: './weather-forecast-schema.json'
+                $ref: 'weather-forecast-schema.json'
               examples:
                 north:
                   value:
