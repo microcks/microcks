@@ -160,6 +160,28 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
+   public void testValidateJsonWithExternalReferenceSuccess() {
+      boolean valid = false;
+      String schemaText = null;
+      String jsonText = "[{\"region\": \"north\", \"weather\": \"snowy\", \"temp\": -1.5, \"visibility\": 25}, " +
+            "{\"region\": \"west\", \"weather\": \"rainy\", \"temp\": 12.2, \"visibility\": 300}]";
+
+      try {
+         // Load schema from file.
+         schemaText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecasts.json"));
+         // Validate Json according schema.
+         valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText,
+               "https://raw.githubusercontent.com/microcks/microcks/1.6.x/commons/util/src/test/resources/io/github/microcks/util/openapi/");
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Assert Json object is valid.
+      assertTrue(valid);
+   }
+
+   @Test
    public void testValidateJsonSchemaWithReferenceFailure() {
       boolean valid = true;
       String schemaText = null;
@@ -305,6 +327,32 @@ public class OpenAPISchemaValidatorTest {
       // Validate the content for Get /forecast/{region} response message. Now specifying a namespace.
       errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
             "/paths/~1forecast~1{region}/get/responses/200", "application/json",
+            "https://raw.githubusercontent.com/microcks/microcks/1.5.x/commons/util/src/test/resources/io/github/microcks/util/openapi/");
+
+      assertTrue(errors.isEmpty());
+
+
+      // Now test with a $ref at the items level of an array.
+      // We cannot use relative notation here (eg. ./schema.json) but should use direct notation like schema.json
+      // Check the com.github.fge.jsonschema.core.keyword.syntax.checkers.helpers.URISyntaxChercker class.
+      jsonText = "[{\"region\": \"north\", \"weather\": \"snowy\", \"temp\": -1.5, \"visibility\": 25}, " +
+            "{\"region\": \"west\", \"weather\": \"rainy\", \"temp\": 12.2, \"visibility\": 300}]";
+
+      // Now try with an external relative ref.
+      try {
+         // Load full specification from file.
+         openAPIText =  FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /forecast response message but without specifying a namespace.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1forecast/get/responses/200", "application/json",
             "https://raw.githubusercontent.com/microcks/microcks/1.5.x/commons/util/src/test/resources/io/github/microcks/util/openapi/");
 
       assertTrue(errors.isEmpty());

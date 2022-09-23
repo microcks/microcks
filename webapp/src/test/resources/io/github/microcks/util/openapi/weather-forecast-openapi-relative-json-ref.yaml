@@ -21,7 +21,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: './weather-forecast-schema.json'
+                  $ref: 'weather-forecast-schema.json'
               examples:
                 all:
                   value:

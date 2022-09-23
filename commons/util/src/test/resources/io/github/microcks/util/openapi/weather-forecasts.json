@@ -1,0 +1,6 @@
+{
+  "type": "array",
+  "items": {
+    "$ref": "weather-forecast-schema.json"
+  }
+}
