@@ -24,22 +24,23 @@ paths:
                   $ref: './weather-forecast-schema.json'
               examples:
                 all:
-                  - region: north
-                    temp: -1.5
-                    weather: snowy
-                    visibility: 25
-                  - region: west
-                    temp: 12.2
-                    weather: rainy
-                    visibility: 300
-                  - region: east
-                    temp: -6.6
-                    weather: frosty
-                    visibility: 523
-                  - region: south
-                    temp: 28.3
-                    weather: sunny
-                    visibility: 1500
+                  value:
+                    - region: north
+                      temp: -1.5
+                      weather: snowy
+                      visibility: 25
+                    - region: west
+                      temp: 12.2
+                      weather: rainy
+                      visibility: 300
+                    - region: east
+                      temp: -6.6
+                      weather: frosty
+                      visibility: 523
+                    - region: south
+                      temp: 28.3
+                      weather: sunny
+                      visibility: 1500
   /forecast/{region}:
     get:
       operationId: GetForecast
