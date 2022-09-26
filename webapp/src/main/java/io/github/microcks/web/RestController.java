@@ -120,13 +120,19 @@ public class RestController {
       if (resourcePath.contains("+")) {
          resourcePath = resourcePath.replace("+", "%20");
       }
+      // Remove trailing '/' if any.
+      String trimmedResourcePath = resourcePath;
+      if (trimmedResourcePath.endsWith("/")) {
+         trimmedResourcePath = resourcePath.substring(0, resourcePath.length() - 1);
+      }
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
             // ... then check is we have a matching resource path.
-            if (operation.getResourcePaths() != null && operation.getResourcePaths().contains(resourcePath)) {
+            if (operation.getResourcePaths() != null && (operation.getResourcePaths().contains(resourcePath)
+                  || operation.getResourcePaths().contains(trimmedResourcePath)) ) {
                rOperation = operation;
                break;
             }
