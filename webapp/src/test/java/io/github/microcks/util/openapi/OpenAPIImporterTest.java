@@ -18,13 +18,22 @@
  */
 package io.github.microcks.util.openapi;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -1166,7 +1175,7 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertTrue(openAPISpec.getContent().contains("./WeatherForecast+API-1.0.0-weather-forecast-schema.yaml"));
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0-weather-forecast-schema.yaml"));
 
       Resource refSchema = resources.get(1);
       assertEquals("WeatherForecast API-1.0.0-weather-forecast-schema.yaml", refSchema.getName());
@@ -1208,7 +1217,7 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertFalse(openAPISpec.getContent().contains("./WeatherForecast API-1.0.0-weather-forecast-schema.yaml"));
+      assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0-weather-forecast-schema.yaml"));
 
       Resource refSchema = resources.get(1);
       assertEquals("WeatherForecast API-1.0.0-weather-forecast-schema.yaml", refSchema.getName());

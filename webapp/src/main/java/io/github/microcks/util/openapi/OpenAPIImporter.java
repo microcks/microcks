@@ -143,7 +143,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       resource.setType(ResourceType.OPEN_API_SPEC);
       results.add(resource);
 
-      // Browse all document references references for external JSON schemas
+      // Browse all document references for external JSON schemas
       // only if we have a resolver available.
       if (referenceResolver != null) {
 
@@ -165,7 +165,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
                if (!ref.startsWith("http")) {
                   // If a relative resource, replace with new name.
-                  specContent = specContent.replace(ref, "./" + URLEncoder.encode(schemaResource.getName(), "UTF-8"));
+                  specContent = specContent.replace(ref, URLEncoder.encode(schemaResource.getName(), "UTF-8"));
                }
 
                results.add(schemaResource);
