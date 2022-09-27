@@ -35,7 +35,7 @@ spec:
           - name: JAVA_MAJOR_VERSION
             value: "11"
           - name: SPRING_PROFILES_ACTIVE
-            value: prod
+            value: prod,extra
           - name: SPRING_DATA_MONGODB_URI
             value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.mongodb.uri | default (print .Values.appName "-mongodb:27017") }}/${SPRING_DATA_MONGODB_DATABASE}{{ .Values.mongodb.uriParameters }}
           - name: SPRING_DATA_MONGODB_USER
