@@ -165,6 +165,12 @@ data:
         <appender-ref ref="CONSOLE"/>
       </root>
     </configuration>
+{{- if .Values.microcks.extraProperties.enabled }}
+  application-extra.properties: |-
+  {{- with .Values.extraProperties }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
 {{- if .Values.keycloak.install }}
 ---
 kind: ConfigMap
