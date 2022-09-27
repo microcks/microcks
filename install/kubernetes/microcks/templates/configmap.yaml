@@ -166,7 +166,7 @@ data:
       </root>
     </configuration>
 {{- if .Values.microcks.extraProperties.enabled }}
-  application-extra.properties: |-
+  application-extra.yaml: |-
   {{- with .Values.extraProperties }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
