@@ -232,6 +232,12 @@ public class DispatchCriteriaHelper{
 
       Pattern valuesP = Pattern.compile(valuesPattern);
       Matcher valuesM = valuesP.matcher(realURI);
+
+      // Rule string can be a URI_ELEMENT rule and containers ?? elements.
+      // We must remove them before parsing the URI parts.
+      if (paramsRuleString.contains("??")) {
+         paramsRuleString = paramsRuleString.split("\\?\\?")[0];
+      }
       final var paramsRule = Arrays.stream(paramsRuleString.split("&&")).map(String::trim).distinct().collect(Collectors.toUnmodifiableSet());
 
       // Both should match and have the same group count.

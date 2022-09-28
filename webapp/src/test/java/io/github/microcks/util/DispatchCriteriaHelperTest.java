@@ -95,7 +95,7 @@ public class DispatchCriteriaHelperTest {
     // Check with parts expressed using swagger/postman syntax.
     "/deployment/byComponent/myComp/1.2, /deployment/byComponent/:component/:version",
     // Check with parts expressed using swagger/postman syntax.
-    "/deployment/byComponent/myComp/1.2/$count, /deployment/byComponent/:component/:version/$count"
+    "/deployment/byComponent/myComp/1.2/$count, /deployment/byComponent/:component/:version/$count",
   })
    public void testExtractFromURIPattern(String requestPath, String operationName){
 
@@ -151,7 +151,9 @@ public class DispatchCriteriaHelperTest {
     @ParameterizedTest
     @CsvSource({
       "component, /component=myComp",
-      "version, /version=1.2"
+      "version, /version=1.2",
+      "component && version, /component=myComp/version=1.2",
+      "component ?? apiKey, /component=myComp"
     })
     public void testExtractFromURIPatternWithCustomRule(String paramRule, String expectedCriteria) {
       // Check with parts sorted in natural order.
