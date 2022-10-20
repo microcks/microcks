@@ -19,7 +19,7 @@ It also reuses these assets for running compliance and non-regression tests agai
 
 ## Build Status
 
-Current development version is `1.5.1-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/microcks/microcks/build-verify-package?logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
+Current development version is `1.6.1-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/microcks/microcks/build-verify-package?logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
 ## How to build Microcks
 
