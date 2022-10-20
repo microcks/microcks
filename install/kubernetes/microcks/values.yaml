@@ -27,6 +27,10 @@ microcks:
       #cpu: 500m
       memory: 512Mi
 
+  # Enabling/disabling passing in a yaml file of extra application configurations under extraProperties
+  extraProperties:
+    enabled: false
+
   env:
     - name: SERVICES_UPDATE_INTERVAL
       value: 0 0 0/2 * * *
