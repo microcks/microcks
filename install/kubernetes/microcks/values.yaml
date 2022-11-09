@@ -1,5 +1,5 @@
 appName: microcks
-ingress: true
+ingresses: true
 
 microcks:
   url: microcks-microcks.192.168.99.100.nip.io

@@ -1,4 +1,4 @@
-{{- if .Values.ingress -}}
+{{- if .Values.ingresses -}}
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
