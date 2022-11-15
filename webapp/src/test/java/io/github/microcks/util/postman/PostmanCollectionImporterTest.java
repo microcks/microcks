@@ -441,6 +441,26 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
+   public void testTestAPIMalformedVersionImport() {
+      PostmanCollectionImporter importer = null;
+      try {
+         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/Test API bad version.postman_collection.json");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties import fail because of missing version.
+      boolean failure = false;
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      assertEquals("0.0.1-Description", services.get(0).getVersion());
+   }
+
+   @Test
    public void testPetstoreWithTrailingDollarImport() {
       PostmanCollectionImporter importer = null;
       try {

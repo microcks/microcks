@@ -128,7 +128,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          String description = collection.path("info").path("description").asText();
          if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
             description = description.substring(description.indexOf(SERVICE_VERSION_PROPERTY + "="));
-            description = description.substring(0, description.indexOf(' '));
+            if (description.indexOf(' ') > -1) {
+               description = description.substring(0, description.indexOf(' '));
+            }
             if (description.split("=").length > 1) {
                version = description.split("=")[1];
             }

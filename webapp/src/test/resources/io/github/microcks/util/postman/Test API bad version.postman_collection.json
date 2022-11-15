@@ -1,0 +1,397 @@
+{
+	"variables": [],
+	"info": {
+		"name": "Test API",
+		"_postman_id": "48430400-3a9b-28dc-4f16-c1c404eee237",
+		"description": "version=0.0.1-Description",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "order",
+			"description": "Folder for order",
+			"item": [
+				{
+					"name": "http:///order?status={{status}}&page={{page}}",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"",
+									"console.log(\"status: \" + environment.status);",
+									"console.log(\"page: \" + environment.page);",
+									"",
+									"var schema = {",
+									" \"type\": \"array\",",
+									" \"items\": {",
+									"   \"type\": \"object\",",
+									"   \"properties\": {",
+									"      \"id\": { \"type\": \"string\" },",
+									"      \"status\": { \"type\": \"string\", \"enum\": [\"pending_approval\"] }",
+									"   }",
+									" }",
+									"};",
+									"",
+									"tests[\"Valid response\"] = tv4.validate(jsonData, schema);",
+									"console.log(\"Validation failed: \", tv4.error);",
+									""
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"postman.setEnvironmentVariable(\"status\", \"pending_approval\");",
+									"postman.setEnvironmentVariable(\"page\", \"0\");"
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "http://localhost:8080/rest/Test%20API/0.0.1/order?status=pending_approval&page=0",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"Test%20API",
+								"0.0.1",
+								"order"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "pending_approval",
+									"equals": true,
+									"description": ""
+								},
+								{
+									"key": "page",
+									"value": "0",
+									"equals": true,
+									"description": ""
+								}
+							],
+							"variable": []
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Retrieve a list of orders"
+					},
+					"response": [
+						{
+							"id": "3f0597ff-975b-492e-927b-bcec40b491f0",
+							"name": "list-pending_approval",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///order?status=pending_approval&page=0",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"order"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "pending_approval",
+											"equals": true,
+											"description": ""
+										},
+										{
+											"key": "page",
+											"value": "0",
+											"equals": true,
+											"description": ""
+										}
+									],
+									"variable": []
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "[\n    {\n        \"id\": \"123456\",\n        \"status\": \"pending_approval\",\n        \"devise\": \"EUR\",\n        \"amount\": 50,\n        \"items\": [\n            {\n                \"price\": 40,\n                \"quantity\": 2,\n                \"item\": {\n                    \"id\": \"1\",\n                    \"label\": \"Foo\",\n                    \"price\": 20\n                }\n            },\n            {\n                \"price\": 10,\n                \"quantity\": 5,\n                \"item\": {\n                    \"id\": \"2\",\n                    \"label\": \"Bar\",\n                    \"price\": 2\n                }\n            }\n        ]\n    },\n    {\n        \"id\": \"7891011\",\n        \"status\": \"pending_approval\",\n        \"devise\": \"EUR\",\n        \"amount\": 20,\n        \"items\": [\n            {\n                \"price\": 20,\n                \"quantity\": 10,\n                \"item\": {\n                    \"id\": \"2\",\n                    \"label\": \"Bar\",\n                    \"price\": 2\n                }\n            }\n        ]\n    }\n]"
+						},
+						{
+							"id": "80668c70-e9cc-436e-bae1-056f018261cb",
+							"name": "list-approved",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///order?status=approved&page=0",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"order"
+									],
+									"query": [
+										{
+											"key": "status",
+											"value": "approved",
+											"equals": true,
+											"description": ""
+										},
+										{
+											"key": "page",
+											"value": "0",
+											"equals": true,
+											"description": ""
+										}
+									],
+									"variable": []
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "[\n\t{\n\t    \"id\": \"121314\",\n\t    \"status\": \"approved\",\n\t    \"price\": 4,\n\t    \"quantity\": 2,\n\t    \"item\": {\n\t        \"id\": \"2\",\n\t        \"label\": \"Bar\",\n\t        \"price\": 2\n\t    }\n\t}\n]"
+						}
+					]
+				},
+				{
+					"name": "http:///order",
+					"request": {
+						"url": "http:///order",
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "The order to create"
+						},
+						"description": "Create (place) a new order"
+					},
+					"response": [
+						{
+							"id": "709884b2-7fc9-400c-b632-3f99689ae788",
+							"name": "create-123456",
+							"originalRequest": {
+								"url": "http:///order",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n\t\"devise\": \"EUR\",\n\t\"amount\": 50.0,\n\t\"items\": [\n\t\t{\n\t\t\t\"price\": 40.0,\n\t\t\t\"quantity\": 2,\n\t\t\t\"item\": {\n\t\t\t\t\"id\": \"1\",\n\t\t\t\t\"label\": \"Foo\",\n\t\t\t\t\"price\": 20.0\n\t\t\t}\n\t\t},\n\t\t{\n\t\t\t\"price\": 10.0,\n\t\t\t\"quantity\": 5,\n\t\t\t\"item\": {\n\t\t\t\t\"id\": \"2\",\n\t\t\t\t\"label\": \"Bar\",\n\t\t\t\t\"price\": 2.0\n\t\t\t}\n\t\t}\n\t]\n}"
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "{\n    \"id\": \"123456\",\n    \"status\": \"pending_approval\",\n    \"devise\": \"EUR\",\n    \"amount\": 50.0,\n    \"items\": [\n        {\n            \"price\": 40.0,\n            \"quantity\": 2,\n            \"item\": {\n                \"id\": \"1\",\n                \"label\": \"Foo\",\n                \"price\": 20.0\n            }\n        },\n        {\n            \"price\": 10.0,\n            \"quantity\": 5,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2.0\n            }\n        }\n    ]\n}"
+						},
+						{
+							"id": "f36d1b1c-17a5-45e6-a575-db148ac26c17",
+							"name": "create-7891011",
+							"originalRequest": {
+								"url": "http:///order",
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": ""
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"devise\": \"EUR\",\n    \"amount\": 20.0,\n    \"items\": [\n        {\n            \"price\": 20.0,\n            \"quantity\": 10,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2.0\n            }\n        }\n    ]\n}"
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "{\n    \"id\": 7891011,\n    \"status\": \"pending_approval\",\n    \"devise\": \"EUR\",\n    \"amount\": 20.0,\n    \"items\": [\n        {\n            \"price\": 20.0,\n            \"quantity\": 10,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2.0\n            }\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "http:///order/:id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"var jsonData = JSON.parse(responseBody);",
+									"var expectedId = request.url.slice(request.url.lastIndexOf('/order/') + 7);",
+									"tests[\"Check id value\"] = jsonData.id === expectedId;"
+								]
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"url": {
+							"raw": "http://localhost:8080/rest/Test%20API/0.0.1/order/:id",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"rest",
+								"Test%20API",
+								"0.0.1",
+								"order",
+								":id"
+							],
+							"query": [],
+							"variable": [
+								{
+									"description": "",
+									"key": "id",
+									"value": "123456"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {},
+						"description": "Retrieve an existing order using its id"
+					},
+					"response": [
+						{
+							"id": "b06c6433-2409-4332-8b43-c2980fc609cd",
+							"name": "get-123456",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///order/:id",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"order",
+										":id"
+									],
+									"query": [],
+									"variable": [
+										{
+											"description": "",
+											"key": "id",
+											"value": "123456"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "{\n    \"id\": \"123456\",\n    \"status\": \"pending_approval\",\n    \"devise\": \"EUR\",\n    \"amount\": 50,\n    \"items\": [\n        {\n            \"price\": 40,\n            \"quantity\": 2,\n            \"item\": {\n                \"id\": \"1\",\n                \"label\": \"Foo\",\n                \"price\": 20\n            }\n        },\n        {\n            \"price\": 10,\n            \"quantity\": 5,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2\n            }\n        }\n    ]\n}"
+						},
+						{
+							"id": "297e7f99-8727-497c-a3ba-c735ff65b62a",
+							"name": "get-7891011",
+							"originalRequest": {
+								"url": {
+									"raw": "http:///order/:id",
+									"host": [
+										"http:"
+									],
+									"port": "",
+									"path": [
+										"",
+										"",
+										"order",
+										":id"
+									],
+									"query": [],
+									"variable": [
+										{
+											"description": "",
+											"key": "id",
+											"value": "7891011"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"_postman_previewtype": "parsed",
+							"header": [],
+							"cookie": [],
+							"responseTime": 0,
+							"body": "{\n    \"id\": 7891011,\n    \"status\": \"pending_approval\",\n    \"devise\": \"EUR\",\n    \"amount\": 20,\n    \"items\": [\n        {\n            \"price\": 20,\n            \"quantity\": 10,\n            \"item\": {\n                \"id\": \"2\",\n                \"label\": \"Bar\",\n                \"price\": 2\n            }\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "http:///order/:id",
+					"request": {
+						"url": "http:///order/:id",
+						"method": "DELETE",
+						"header": [],
+						"body": {},
+						"description": "Delete an existing order using its id"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
