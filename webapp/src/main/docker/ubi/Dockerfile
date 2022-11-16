@@ -41,7 +41,7 @@ RUN chown 1001 /deployments \
             -o /deployments/run-java.sh \
     && mkdir -p /deployments/data \
     && chown 1001 /deployments/run-java.sh \
-    && chmod 540 /deployments/run-java.sh \
+    && chmod 550 /deployments/run-java.sh \
     && echo "securerandom.source=file:/dev/urandom" >> /usr/lib/jvm/jre/lib/security/java.security
 
 # Gives uid
