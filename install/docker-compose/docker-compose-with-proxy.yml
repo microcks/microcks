@@ -1,0 +1,51 @@
+version: '2'
+
+services:
+  mongo:
+    image: mongo:3.4.23
+    container_name: microcks-db
+    volumes:
+      - "~/tmp/microcks-data:/data/db"
+
+  keycloak:
+    image: jboss/keycloak:14.0.0
+    container_name: microcks-sso
+    ports:
+      - "18080:8080"
+    environment:
+      KEYCLOAK_USER: "admin"
+      KEYCLOAK_PASSWORD: "admin"
+      KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
+      KEYCLOAK_FRONTEND_URL: "http://localhost:18080/auth"
+    volumes: 
+      - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
+
+  postman:
+    image: quay.io/microcks/microcks-postman-runtime:latest
+    container_name: microcks-postman-runtime
+
+  app:
+    depends_on:
+      - mongo
+      - keycloak
+      - postman
+    image: quay.io/microcks/microcks:latest
+    container_name: microcks
+    ports:
+      - "8080:8080"
+      - "9090:9090"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017
+      - SPRING_DATA_MONGODB_DATABASE=microcks
+      - POSTMAN_RUNNER_URL=http://postman:3000
+      - TEST_CALLBACK_URL=http://microcks:8080
+      - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
+      - KEYCLOAK_URL=http://keycloak:8080/auth
+      - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
+      #- MAX_UPLOAD_FILE_SIZE=3MB
+      - PROXY_HOST=squiqproxy.example.com
+      - PROXY_PORT=9876
+      - PROXY_USERNAME=proxy_user
+      - PROXY_PASSWORD=proxy_pass
+      - PROXY_EXCLUDE=localhost|keycloak|postman
