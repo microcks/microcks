@@ -342,6 +342,14 @@ paths:
         required: true
       tags:
       - job
+      parameters:
+      - name: mainArtifact
+        description: Flag telling if this should be considered as primary or secondary
+          artifact. Default to 'true'
+        schema:
+          type: boolean
+        in: query
+        required: true
       responses:
         "201":
           content:
@@ -1728,10 +1736,6 @@ components:
           format: binary
           description: The artifact to upload
           type: string
-        mainArtifact:
-          description: Flag telling if this should be considered as primary or secondary
-            artifact. Default to 'true'
-          type: boolean
     Counter:
       description: A simple Counter type.
       type: object
