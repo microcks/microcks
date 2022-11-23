@@ -165,9 +165,9 @@ data:
         <appender-ref ref="CONSOLE"/>
       </root>
     </configuration>
-{{- if .Values.microcks.extraProperties.enabled }}
+{{- if .Values.microcks.extraProperties }}
   application-extra.yaml: |-
-  {{- with .Values.extraProperties }}
+  {{- with .Values.microcks.extraProperties }}
   {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}

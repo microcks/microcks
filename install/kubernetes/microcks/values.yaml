@@ -28,9 +28,12 @@ microcks:
       #cpu: 500m
       memory: 512Mi
 
-  # Enabling/disabling passing in a yaml file of extra application configurations under extraProperties
+  # Enabling by adding yaml extra application configurations
   extraProperties:
-    enabled: false
+    #server:
+      #tomcat:
+        #remoteip:
+          #internal-proxies: 172.16.0.0/12
 
   env:
     - name: SERVICES_UPDATE_INTERVAL
