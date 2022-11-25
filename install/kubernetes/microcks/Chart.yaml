@@ -1,6 +1,6 @@
 apiVersion: v2
 name: microcks
-version: 1.6.1-SNAPSHOT
+version: 1.6.2-SNAPSHOT
 kubeVersion: '>=1.17.0-0'
 description: Microcks - API Mocking and Testing
 type: application
@@ -17,4 +17,4 @@ maintainers:
   - name: Laurent Broudoux
     email: laurent.broudoux@gmail.com
 icon: https://microcks.io/images/microcks-big.png
-appVersion: 1.6.1-SNAPSHOT
+appVersion: 1.6.2-SNAPSHOT
