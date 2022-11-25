@@ -18,10 +18,9 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import io.apicurio.registry.utils.serde.AbstractKafkaSerDe;
-import io.apicurio.registry.utils.serde.AbstractKafkaSerializer;
-import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
+import io.apicurio.registry.serde.SerdeConfig;
+import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
@@ -131,28 +130,28 @@ public class KafkaProducerManager {
             // Put Confluent Registry specific SerDes class and registry properties.
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
 
-            props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl.get());
+            props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl.get());
             // If authentication turned on (see https://docs.confluent.io/platform/current/security/basic-auth.html#basic-auth-sr)
             if (schemaRegistryUsername.isPresent()) {
-               props.put(AbstractKafkaAvroSerDeConfig.USER_INFO_CONFIG, schemaRegistryUsername.get());
-               props.put(AbstractKafkaAvroSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, schemaRegistryCredentialsSource);
+               props.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, schemaRegistryUsername.get());
+               props.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, schemaRegistryCredentialsSource);
             }
-            props.put(AbstractKafkaAvroSerDeConfig.AUTO_REGISTER_SCHEMAS, true);
+            props.put(AbstractKafkaSchemaSerDeConfig.AUTO_REGISTER_SCHEMAS, true);
             // Map the topic name to the artifactId in the registry
-            props.put(AbstractKafkaAvroSerDeConfig.VALUE_SUBJECT_NAME_STRATEGY,
+            props.put(AbstractKafkaSchemaSerDeConfig.VALUE_SUBJECT_NAME_STRATEGY,
                   io.confluent.kafka.serializers.subject.TopicRecordNameStrategy.class.getName());
          } else {
             // Put Apicurio Registry specific SerDes class and registry properties.
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, AvroKafkaSerializer.class.getName());
 
-            props.put(AbstractKafkaSerDe.REGISTRY_URL_CONFIG_PARAM, schemaRegistryUrl.get());
-            props.put(AbstractKafkaSerDe.REGISTRY_CONFLUENT_ID_HANDLER_CONFIG_PARAM, true);
+            props.put(SerdeConfig.REGISTRY_URL, schemaRegistryUrl.get());
+            props.put(SerdeConfig.ENABLE_CONFLUENT_ID_HANDLER, true);
             // Get an existing schema or auto-register if not found.
-            props.put(AbstractKafkaSerializer.REGISTRY_GLOBAL_ID_STRATEGY_CONFIG_PARAM,
-                  io.apicurio.registry.utils.serde.strategy.GetOrCreateIdStrategy.class.getName());
+            props.put(SerdeConfig.SCHEMA_RESOLVER,
+                  io.apicurio.registry.resolver.DefaultSchemaResolver.class.getName());
             // Set artifact strategy as the same as Confluent default subject strategy.
-            props.put(AbstractKafkaSerializer.REGISTRY_ARTIFACT_ID_STRATEGY_CONFIG_PARAM,
-                  io.apicurio.registry.utils.serde.strategy.TopicIdStrategy.class.getName());
+            props.put(SerdeConfig.ARTIFACT_RESOLVER_STRATEGY,
+                  io.apicurio.registry.serde.strategy.TopicIdStrategy.class.getName());
          }
 
          // Add security related properties.

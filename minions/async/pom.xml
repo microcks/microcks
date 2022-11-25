@@ -18,17 +18,17 @@
     <maven.compiler.target>17</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <!-- <quarkus-plugin.version>1.7.6.Final</quarkus-plugin.version> -->
-    <quarkus-plugin.version>1.11.7.Final</quarkus-plugin.version>
+
+    <quarkus-plugin.version>2.13.0.Final</quarkus-plugin.version>
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <!-- <quarkus.platform.version>1.7.6.Final</quarkus.platform.version> -->
-    <quarkus.platform.version>1.11.7.Final</quarkus.platform.version>
+    <quarkus.platform.version>2.13.0.Final</quarkus.platform.version>
+
     <eclipse-paho.version>1.2.1</eclipse-paho.version>
-    <rabbitmq.version>5.14.2</rabbitmq.version>
-    <apicurio-registry.version>1.3.2.Final</apicurio-registry.version>
-    <confluent-registry.version>5.4.3</confluent-registry.version>
-    <surefire-plugin.version>2.22.1</surefire-plugin.version>
+    <rabbitmq.version>5.16.0</rabbitmq.version>
+    <apicurio-registry.version>2.3.1.Final</apicurio-registry.version>
+    <confluent-registry.version>6.1.0</confluent-registry.version>
+    <surefire-plugin.version>3.0.0-M7</surefire-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -74,7 +74,7 @@
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-undertow-websockets</artifactId>
+      <artifactId>quarkus-websockets</artifactId>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -88,12 +88,10 @@
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-core</artifactId>
-      <version>1.7.7</version>
     </dependency>
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
-      <version>1.7.7</version>
     </dependency>
 
     <dependency>
@@ -105,6 +103,26 @@
       <groupId>com.rabbitmq</groupId>
       <artifactId>amqp-client</artifactId>
       <version>${rabbitmq.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-apicurio-registry-avro</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.apicurio</groupId>
+      <artifactId>apicurio-registry-serdes-avro-serde</artifactId>
+      <version>${apicurio-registry.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-confluent-registry-avro</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.confluent</groupId>
+      <artifactId>kafka-avro-serializer</artifactId>
+      <version>${confluent-registry.version}</version>
     </dependency>
 
     <dependency>
@@ -127,17 +145,6 @@
       <groupId>io.github.microcks</groupId>
       <artifactId>microcks-el</artifactId>
       <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>io.apicurio</groupId>
-      <artifactId>apicurio-registry-utils-serde</artifactId>
-      <version>${apicurio-registry.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>io.confluent</groupId>
-      <artifactId>kafka-avro-serializer</artifactId>
-      <version>${confluent-registry.version}</version>
     </dependency>
 
     <!-- Test related dependencies -->

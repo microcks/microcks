@@ -18,7 +18,7 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
+import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
 import io.github.microcks.domain.Header;
@@ -40,8 +40,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an Apache Kafka Broker.
@@ -156,11 +154,11 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       // Value deserializer depends on schema registry presence.
       if (hasOption(REGISTRY_URL_OPTION)) {
          props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class.getName());
-         props.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, optionsMap.get(REGISTRY_URL_OPTION));
+         props.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, optionsMap.get(REGISTRY_URL_OPTION));
          // Configure schema registry credentials if any.
          if (hasOption(REGISTRY_USERNAME_OPTION) || hasOption(REGISTRY_AUTH_CREDENTIALS_SOURCE)) {
-            props.put(AbstractKafkaAvroSerDeConfig.USER_INFO_CONFIG, optionsMap.get(REGISTRY_USERNAME_OPTION));
-            props.put(AbstractKafkaAvroSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, optionsMap.get(REGISTRY_AUTH_CREDENTIALS_SOURCE));
+            props.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, optionsMap.get(REGISTRY_USERNAME_OPTION));
+            props.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, optionsMap.get(REGISTRY_AUTH_CREDENTIALS_SOURCE));
          }
       } else {
          props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
