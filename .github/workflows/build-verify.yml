@@ -19,13 +19,13 @@ jobs:
     environment: Build
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Set up JDK 11 for x64
-        uses: actions/setup-java@v2
+      - name: Set up JDK 17 for x64
+        uses: actions/setup-java@v3
         with:
-          java-version: '11'
-          distribution: 'adopt'
+          java-version: '17'
+          distribution: 'temurin'
           architecture: x64
           cache: maven
 
@@ -53,6 +53,9 @@ jobs:
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
           elif [[ $GITHUB_REF == 'refs/heads/1.6.x' ]]; then
             echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == 'refs/heads/1.76.x' ]]; then
+            echo "IMAGE_TAG=next" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
           elif [[ $GITHUB_REF == "refs/tags/$GITHUB_REF_NAME" ]]; then
             echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"

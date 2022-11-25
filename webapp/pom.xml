@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.6.2-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -14,13 +14,14 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
-    <java.version>11</java.version>
+    <java.version>17</java.version>
     <junit.version>4.13.1</junit.version>
     <keycloak.version>14.0.0</keycloak.version>
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.6.0</soapui.version>
     <soapui.jayway.version>0.9.1</soapui.jayway.version>
     <grpc.version>1.47.0</grpc.version>
+    <protoc-jar.version>3.21.8</protoc-jar.version>
   </properties>
 
   <dependencyManagement>
@@ -250,9 +251,9 @@
       <version>3.19.2</version>
     </dependency>
     <dependency>
-      <groupId>com.github.os72</groupId>
+      <groupId>io.github.microcks</groupId>
       <artifactId>protoc-jar</artifactId>
-      <version>3.11.4</version>
+      <version>${protoc-jar.version}</version>
     </dependency>
 
     <dependency>
