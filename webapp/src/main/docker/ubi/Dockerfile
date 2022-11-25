@@ -8,7 +8,7 @@ LABEL io.k8s.description="Microcks is Open Source Kubernetes native tool for API
       maintainer="Laurent Broudoux <laurent@microcks.io>"
 
 # Install Java runtime
-RUN microdnf install java-17-openjdk-headless openssl curl-minimal ca-certificates \
+RUN microdnf install java-17-openjdk-headless openssl curl-minimal ca-certificates -y \
  && microdnf clean all \
  && mkdir -p /deployments
 
