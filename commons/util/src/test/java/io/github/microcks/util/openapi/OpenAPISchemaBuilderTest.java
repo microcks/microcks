@@ -42,42 +42,7 @@ public class OpenAPISchemaBuilderTest {
             "\"obj\": {\"fizz\": \"bar\"}, " +
             "\"objList\": [{\"number\": 1}, {\"number\": 2}]}";
 
-      String expectedSchema = "{\n" +
-            "  \"type\" : \"object\",\n" +
-            "  \"properties\" : {\n" +
-            "    \"foo\" : {\n" +
-            "      \"type\" : \"string\"\n" +
-            "    },\n" +
-            "    \"flag\" : {\n" +
-            "      \"type\" : \"boolean\"\n" +
-            "    },\n" +
-            "    \"list\" : {\n" +
-            "      \"type\" : \"array\",\n" +
-            "      \"items\" : {\n" +
-            "        \"type\" : \"number\"\n" +
-            "      }\n" +
-            "    },\n" +
-            "    \"obj\" : {\n" +
-            "      \"type\" : \"object\",\n" +
-            "      \"properties\" : {\n" +
-            "        \"fizz\" : {\n" +
-            "          \"type\" : \"string\"\n" +
-            "        }\n" +
-            "      }\n" +
-            "    },\n" +
-            "    \"objList\" : {\n" +
-            "      \"type\" : \"array\",\n" +
-            "      \"items\" : {\n" +
-            "        \"type\" : \"object\",\n" +
-            "        \"properties\" : {\n" +
-            "          \"number\" : {\n" +
-            "            \"type\" : \"number\"\n" +
-            "          }\n" +
-            "        }\n" +
-            "      }\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
+      String expectedSchema = "{\"type\":\"object\",\"properties\":{\"foo\":{\"type\":\"string\"},\"flag\":{\"type\":\"boolean\"},\"list\":{\"type\":\"array\",\"items\":{\"type\":\"number\"}},\"obj\":{\"type\":\"object\",\"properties\":{\"fizz\":{\"type\":\"string\"}}},\"objList\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"number\":{\"type\":\"number\"}}}}}}";
       try {
          jsonNode = mapper.readTree(jsonText);
       } catch (Exception e) {
@@ -86,7 +51,8 @@ public class OpenAPISchemaBuilderTest {
 
       JsonNode schemaNode = OpenAPISchemaBuilder.buildTypeSchemaFromJson(jsonNode);
       try {
-         assertEquals(expectedSchema, mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schemaNode));
+         String actual = mapper.writeValueAsString(schemaNode);
+         assertEquals(expectedSchema, actual);
       } catch (JsonProcessingException e) {
          fail("No exception should be thrown");
       }
