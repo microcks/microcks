@@ -67,6 +67,9 @@ public class ProducerManager {
 
    @Inject
    MQTTProducerManager mqttProducerManager;
+   
+   @Inject
+   NATSProducerManager natsProducerManager;
 
    @Inject
    AMQPProducerManager amqpProducerManager;
@@ -129,6 +132,13 @@ public class ProducerManager {
                            kafkaProducerManager.publishMessage(topic, key, message, kafkaProducerManager
                                  .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                         }
+                     }
+                     break;
+                  case NATS:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topic = natsProducerManager.getTopicName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        natsProducerManager.publishMessage(topic, message);
                      }
                      break;
                   case MQTT:

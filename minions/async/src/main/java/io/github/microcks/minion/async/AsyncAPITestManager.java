@@ -32,6 +32,7 @@ import io.github.microcks.util.SchemaMap;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.github.microcks.minion.async.consumer.NATSMessageConsumptionTask;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -294,6 +295,9 @@ public class AsyncAPITestManager {
          }
          if (MQTTMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new MQTTMessageConsumptionTask(testSpecification);
+         }
+         if (NATSMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
+            return new NATSMessageConsumptionTask(testSpecification);
          }
          if (WebSocketMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new WebSocketMessageConsumptionTask(testSpecification);

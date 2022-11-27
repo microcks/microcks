@@ -46,7 +46,7 @@ For now, there's still a problem with Frontend integration tests configuration s
 $ cd webapp
 $ mvn -Pprod package
 [...]
-$ java -jar target/microcks-0.9.0-SNAPSHOT.jar
+$ java -jar target/microcks-x.y.z-SNAPSHOT.jar
 ```
 
 ### Build and run webapp Docker image
@@ -56,8 +56,12 @@ $ cd webapp
 $ mvn -Pprod clean package docker:build
 [...]
 $ cd ../install/docker-compose
-$ docker-compose -f microcks-mongodb.yml up -d
+$ docker-compose -f docker-compose.yml up -d
 ```
+After spinning up the containers, you will now have access to Keycloak for account management, and microcks webapp to setup mocking, etc.
+
+You can login to keycloak on `http://localhost:18080/` with username and password `admin`.
+You can login to microcks webapp with the username `admin` and password `microcks123`.
 
 ## Before you contribute
 

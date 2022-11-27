@@ -235,6 +235,14 @@ Here are below the configuration properties of the MQTT support feature:
 | `features.async.mqtt` | `username` | **Optional**. The username to use for connecting to secured MQTT broker. Default to `microcks`.                                          |
 | `features.async.mqtt` | `password` | **Optional**. The password to use for connecting to secured MQTT broker. Default to `microcks`.                                          |
 
+#### NATS feature details
+
+Here are below the configuration properties of the NATS support feature:
+
+| Section               | Property   | Description                                                                                                                              |
+| --------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `features.async.nats` | `url`      | **Optional**. The URL of NATS broker (eg: `my-nats-broker.example.com:4222`). Default is undefined which means that feature is disabled. |
+
 #### WebSocket feature details
 
 Here are below the configuration properties of the WebSocket support feature:

@@ -215,6 +215,8 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'KAFKA':
             result += 'Kafka';
             break;
+          case 'NATS':
+            result += 'NATS';
           case 'MQTT':
             result += 'MQTT';
             break;

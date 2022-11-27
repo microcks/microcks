@@ -230,6 +230,10 @@
                   <dt>WebSocket endpoint:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('WS') }}</a></dd>
                 </span>
+                <span *ngIf="hasBinding(item, 'NATS')">
+                  <dt>NATS endpoint:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('NATS') }}</a></dd>
+                </span>
                 <span *ngIf="hasBinding(item, 'AMQP')">
                   <dt>AMQP endpoint:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('AMQP') }}</a></dd>
@@ -359,6 +363,20 @@
                       <dd>{{ getBindingProperty(item, 'MQTT', 'qoS') }}</dd>
                       <dt>MQTT retain:</dt>
                       <dd>{{ getBindingProperty(item, 'MQTT', 'persistent') }}</dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'NATS')">
+                    <dl class="dl-horizontal left">
+                      <dt>NATS topic:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'NATS') }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                              (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'NATS'))"></i>
+                          </span>
+                        </div>
+                      </dd>
                     </dl>
                   </span>
                   <span *ngIf="hasBinding(item, 'WS')">
