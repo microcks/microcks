@@ -138,7 +138,8 @@ public class ProducerManager {
                      for (EventMessage eventMessage : definition.getEventMessages()) {
                         String topic = natsProducerManager.getTopicName(definition, eventMessage);
                         String message = renderEventMessageContent(eventMessage);
-                        natsProducerManager.publishMessage(topic, message);
+                        natsProducerManager.publishMessage(topic, message, natsProducerManager
+                            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                      }
                      break;
                   case MQTT:

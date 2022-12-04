@@ -23,14 +23,25 @@ import org.jboss.logging.Logger;
 
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.github.microcks.util.el.TemplateEngine;
 import io.nats.client.Connection;
+import io.nats.client.Message;
 import io.nats.client.Options;
 import io.nats.client.Nats;
+import io.nats.client.impl.Headers;
+import io.nats.client.impl.NatsMessage;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.UnsupportedEncodingException;
 import java.time.Duration;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import org.apache.kafka.common.header.Header;
+import org.apache.kafka.common.header.internals.RecordHeader;
 
 /**
  * NATS implementation of producer for async event messages.
@@ -80,16 +91,51 @@ public class NATSProducerManager {
     * Publish a message on specified topic.
     * @param topic The destination topic for message
     * @param value The message payload
+    * @param headers A set of headers if any (maybe null or empty)
     */
-   public void publishMessage(String topic, String value) {
+   public void publishMessage(String topic, String value, Headers headers) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
       try {
-         client.publish(topic, value.getBytes("UTF-8"));
+         Message msg = NatsMessage.builder()
+            .subject(topic)
+            .data(value.getBytes("UTF-8"))
+            .headers(headers)
+            .build();
+         client.publish(msg);
       } catch (UnsupportedEncodingException uee) {
          logger.warnf("Message %s cannot be encoded as UTF-8 bytes, ignoring it", uee);
       }
    }
-
+   
+   /**
+    * Transform and render Microcks headers into NATS specific headers.
+    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the NATSProducerManager level.)
+    * @param headers The Microcks event message headers definition.
+    * @return A set of NATS headers.
+    */
+   public Headers renderEventMessageHeaders(TemplateEngine engine, Set<io.github.microcks.domain.Header> headers) {
+      if (headers != null && !headers.isEmpty()) {
+        Headers natsHeaders = new Headers();
+         for (io.github.microcks.domain.Header header : headers) {
+            String headerValue;
+            String firstValue = header.getValues().stream().findFirst().get();
+            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+               try {
+                  headerValue = Base64.getEncoder().encodeToString(engine.getValue(firstValue).getBytes());
+               } catch (Throwable t) {
+                  logger.error("Failing at evaluating template " + firstValue, t);
+                  headerValue = Base64.getEncoder().encodeToString(firstValue.getBytes());
+               }
+            } else {
+                headerValue = Base64.getEncoder().encodeToString(firstValue.getBytes());
+            }
+            natsHeaders.add(header.getName(), headerValue);
+        }
+         return natsHeaders;
+      }
+      return null;
+   }
+   
    /**
     * Get the NATS topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
     * @param definition The AsyncMockDefinition

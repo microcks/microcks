@@ -18,19 +18,23 @@
  */
 package io.github.microcks.minion.async.consumer;
 
+import io.github.microcks.domain.Header;
 import io.github.microcks.minion.async.AsyncTestSpecification;
 import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.Nats;
 import io.nats.client.Options;
+import io.nats.client.impl.Headers;
 import org.jboss.logging.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Properties;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,6 +109,7 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
             // Build a ConsumedMessage from NATS message.
             ConsumedMessage message = new ConsumedMessage();
             message.setReceivedAt(System.currentTimeMillis());
+            message.setHeaders(buildHeaders(msg.getHeaders()));
             message.setPayload(msg.getData());
             messages.add(message);
         });
@@ -117,7 +122,22 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
         subscriber.close();
         return messages;
     }
-
+    
+    /** Build set of Microcks headers from NATS headers. */
+    private Set<Header> buildHeaders(Headers headers) {
+        if (headers == null || headers.isEmpty()) {
+           return null;
+        }
+        Set<Header> results = new HashSet<>();
+        for (Map.Entry<String, List<String>> entry : headers.entrySet()) {
+          Header result = new Header();
+          result.setName(entry.getKey());
+          result.setValues(new HashSet<>(entry.getValue()));
+          results.add(result);
+        }
+        return results;
+    }
+    
     /**
      * Close the resources used by this task. 
      * Namely the NATS subscriber and the

@@ -28,11 +28,11 @@ import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MQTTMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.WebSocketMessageConsumptionTask;
+import io.github.microcks.minion.async.consumer.NATSMessageConsumptionTask;
 import io.github.microcks.util.SchemaMap;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.github.microcks.minion.async.consumer.NATSMessageConsumptionTask;
 
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
