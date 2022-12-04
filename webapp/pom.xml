@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.6.2-SNAPSHOT</version>
+    <version>1.7.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -14,13 +14,20 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
-    <java.version>11</java.version>
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
     <junit.version>4.13.1</junit.version>
     <keycloak.version>14.0.0</keycloak.version>
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.6.0</soapui.version>
     <soapui.jayway.version>0.9.1</soapui.jayway.version>
+    <xstream.version>1.4.19</xstream.version>
+    <grpc.version>1.49.1</grpc.version>
+    <apache-httpclient.version>4.5.13</apache-httpclient.version>
+    <protobuf.version>3.19.2</protobuf.version>
     <grpc.version>1.47.0</grpc.version>
+    <protoc-jar.version>3.21.8</protoc-jar.version>
   </properties>
 
   <dependencyManagement>
@@ -91,7 +98,7 @@
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.2</version>
+      <version>${apache-httpclient.version}</version>
     </dependency>
     <!-- Required since Spring 1.5 to 2.3 migration -->
     <dependency>
@@ -177,28 +184,28 @@
           <artifactId>guava</artifactId>
         </exclusion>
         <exclusion>
-	      <groupId>xml-apis</groupId>
-	      <artifactId>xml-apis</artifactId>        
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
         </exclusion>
         <exclusion>
-		  <groupId>org.apache.xerces</groupId>
-		  <artifactId>xml-apis</artifactId>        
+          <groupId>org.apache.xerces</groupId>
+          <artifactId>xml-apis</artifactId>
         </exclusion>
         <exclusion>
-		  <groupId>javax.xml.bind</groupId>
-		  <artifactId>jsr173_api</artifactId>        
+          <groupId>javax.xml.bind</groupId>
+          <artifactId>jsr173_api</artifactId>
         </exclusion>
         <exclusion>
           <groupId>stax</groupId>
-  		  <artifactId>stax-api</artifactId>
+  		    <artifactId>stax-api</artifactId>
         </exclusion>
         <exclusion>
-		  <groupId>xerces</groupId>
-		  <artifactId>xmlParserAPIs</artifactId>        
+          <groupId>xerces</groupId>
+          <artifactId>xmlParserAPIs</artifactId>
         </exclusion>
         <exclusion>
-		  <groupId>xom</groupId>
-		  <artifactId>xom</artifactId>        
+          <groupId>xom</groupId>
+          <artifactId>xom</artifactId>
         </exclusion>
         <!-- Remove included Xstream that holds a lot of vulnerabilities -->
         <exclusion>
@@ -211,7 +218,7 @@
     <dependency>
       <groupId>com.thoughtworks.xstream</groupId>
       <artifactId>xstream</artifactId>
-      <version>1.4.18</version>
+      <version>${xstream.version}</version>
     </dependency>
 
     <dependency>
@@ -237,22 +244,16 @@
       <version>6.0.53</version>
       <scope>provided</scope>
     </dependency>
-    <!--
-    <dependency>
-      <groupId>com.google.protobuf</groupId>
-      <artifactId>protobuf-java</artifactId>
-      <version>3.15.3</version>
-    </dependency>
-    -->
+
     <dependency>
       <groupId>com.google.protobuf</groupId>
       <artifactId>protobuf-java-util</artifactId>
-      <version>3.19.2</version>
+      <version>${protobuf.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.github.os72</groupId>
+      <groupId>io.github.microcks</groupId>
       <artifactId>protoc-jar</artifactId>
-      <version>3.11.4</version>
+      <version>${protoc-jar.version}</version>
     </dependency>
 
     <dependency>

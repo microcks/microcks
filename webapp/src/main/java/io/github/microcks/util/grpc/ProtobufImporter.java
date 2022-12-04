@@ -79,7 +79,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
       protoFileName = protoFile.getName();
 
       // Prepare protoc arguments.
-      String[] args = {"-v3.11.4",
+      String[] args = {"-v3.21.8",
             "--include_std_types",
             "--include_imports",
             "--proto_path=" + protoDirectory,

@@ -18,9 +18,8 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-import io.apicurio.registry.utils.serde.AbstractKafkaSerDe;
-import io.apicurio.registry.utils.serde.AvroKafkaDeserializer;
-import io.apicurio.registry.utils.serde.AvroKafkaSerializer;
+import io.apicurio.registry.serde.SerdeConfig;
+import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.github.microcks.minion.async.AsyncTestSpecification;
