@@ -79,7 +79,8 @@ export enum BindingType {
   MQTT,
   WS,
   AMQP,
-  AMQP1
+  AMQP1,
+  GOOGLEPUBSUB
 }
 export class ParameterConstraint {
   name: string;

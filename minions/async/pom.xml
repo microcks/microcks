@@ -104,6 +104,10 @@
       <artifactId>amqp-client</artifactId>
       <version>${rabbitmq.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkiverse.googlecloudservices</groupId>
+      <artifactId>quarkus-google-cloud-pubsub</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.quarkus</groupId>

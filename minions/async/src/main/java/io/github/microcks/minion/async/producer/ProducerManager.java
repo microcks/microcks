@@ -72,6 +72,9 @@ public class ProducerManager {
    AMQPProducerManager amqpProducerManager;
 
    @Inject
+   GooglePubSubProducerManager googlePubSubProducerManager;
+
+   @Inject
    @RootWebSocketProducerManager
    WebSocketProducerManager wsProducerManager;
 
@@ -154,6 +157,13 @@ public class ProducerManager {
                               amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                      }
                      break;
+                  case GOOGLEPUBSUB:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topicName = googlePubSubProducerManager.getTopicName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        googlePubSubProducerManager.publishMessage(topicName, message,
+                              googlePubSubProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
                   default:
                      break;
                 }
