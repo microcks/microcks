@@ -394,6 +394,9 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                            if (binding.has("topic")) {
                               b.setDestinationName(binding.get("topic").asText());
                            }
+                           if (binding.has("messageRetentionDuration")) {
+                              b.setPersistent(true);
+                           }
                            break;
                      }
                   }

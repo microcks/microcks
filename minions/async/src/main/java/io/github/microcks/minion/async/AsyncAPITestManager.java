@@ -24,6 +24,7 @@ import io.github.microcks.minion.async.client.MicrocksAPIConnector;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 import io.github.microcks.minion.async.consumer.AMQPMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.ConsumedMessage;
+import io.github.microcks.minion.async.consumer.GooglePubSubMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MQTTMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.MessageConsumptionTask;
@@ -120,6 +121,11 @@ public class AsyncAPITestManager {
                logger.infof("AsyncAPITestThread for {%s} was interrupted", specification.getTestResultId());
             } catch (ExecutionException e) {
                logger.errorf(e, "AsyncAPITestThread for {%s} raise an ExecutionException", specification.getTestResultId());
+               testCaseReturn.addTestReturn(
+                     new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
+                           "ExecutionException: no message received in " + specification.getTimeoutMS() + " ms",
+                           null, null)
+               );
             } catch (TimeoutException e) {
                // Message consumption has timed-out, add an empty test return with failure and message.
                logger.infof("AsyncAPITestThread for {%s} was timed-out", specification.getTestResultId());
@@ -300,6 +306,9 @@ public class AsyncAPITestManager {
          }
          if (AMQPMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new AMQPMessageConsumptionTask(testSpecification);
+         }
+         if (GooglePubSubMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
+            return new GooglePubSubMessageConsumptionTask(testSpecification);
          }
          return null;
       }
