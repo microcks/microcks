@@ -112,6 +112,11 @@
         <artifactId>jnats</artifactId>
         <version>${nats.version}</version>
     </dependency>
+    
+    <dependency>
+      <groupId>io.quarkiverse.googlecloudservices</groupId>
+      <artifactId>quarkus-google-cloud-pubsub</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>io.quarkus</groupId>

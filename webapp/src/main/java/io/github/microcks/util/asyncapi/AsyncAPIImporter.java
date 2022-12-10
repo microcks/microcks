@@ -391,6 +391,15 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               }
                            }
                            break;
+                        case "googlepubsub":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.GOOGLEPUBSUB);
+                           if (binding.has("topic")) {
+                              b.setDestinationName(binding.get("topic").asText());
+                           }
+                           if (binding.has("messageRetentionDuration")) {
+                              b.setPersistent(true);
+                           }
+                           break;
                      }
                   }
                }

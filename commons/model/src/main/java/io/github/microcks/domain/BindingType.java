@@ -28,5 +28,6 @@ public enum BindingType {
    WS,
    AMQP,
    AMQP1,
-   NATS
+   NATS,
+   GOOGLEPUBSUB
 }

@@ -229,6 +229,9 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'AMQP1':
             result += 'AMQP 1.0';
             break;
+          case 'GOOGLEPUBSUB':
+            result += 'Google PubSub';
+            break;
         }
         if (i+1 < bindings.length) {
           result += ", ";
@@ -374,8 +377,8 @@ export class ServiceDetailPageComponent implements OnInit {
         return (parts[p1] != null) ? parts[p1] : match;
       });
     }
-
-    if ('KAFKA' === binding) {
+    console.log(binding);
+    if ('KAFKA' === binding || 'GOOGLEPUBSUB' === binding) {
       operationName = operationName.replace(/\//g, '-');
     }
 

@@ -238,6 +238,10 @@
                   <dt>AMQP endpoint:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('AMQP') }}</a></dd>
                 </span>
+                <span *ngIf="hasBinding(item, 'GOOGLEPUBSUB')">
+                  <dt>Google PubSub project:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('GOOGLEPUBSUB') }}</a></dd>
+                </span>
               </dl>
               <dl class="dl-horizontal left" *ngIf="!isEventTypeService()">
               <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
@@ -409,6 +413,20 @@
                       </dd>
                       <dt>AMQP exchange type:</dt>
                       <dd>{{ getBindingProperty(item, 'AMQP', 'destinationType') }}</dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'GOOGLEPUBSUB')">
+                    <dl class="dl-horizontal left">
+                      <dt>Google PubSub topic:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'GOOGLEPUBSUB') }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
+                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'GOOGLEPUBSUB'))"></i>
+                          </span>
+                        </div>
+                      </dd>
                     </dl>
                   </span>
                   <span *ngIf="hasBinding(item, 'AMQP1')">
