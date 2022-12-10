@@ -57,7 +57,7 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
      * The string for Regular Expression that helps validating acceptable
      * endpoints.
      */
-    public static final String ENDPOINT_PATTERN_STRING = "nats://(?<brokerUrl>[^:]+(:\\d+)?)";
+    public static final String ENDPOINT_PATTERN_STRING = "(ws://|nats://|tcp://)?(?<brokerUrl>[^:]+(:\\d+)?)/(?<topic>.+)";
     /**
      * The Pattern for matching groups within the endpoint regular expression.
      */
@@ -114,7 +114,7 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
             messages.add(message);
         });
 
-        d.subscribe("subject");
+        d.subscribe(endpointTopic);
 
         Thread.sleep(specification.getTimeoutMS());
 
@@ -158,14 +158,12 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
         }
     }
 
-    /**
-     *      */
     private void intializeNATSClient() throws Exception {
         Matcher matcher = ENDPOINT_PATTERN.matcher(specification.getEndpointUrl().trim());
         // Call matcher.find() to be able to use named expressions.
         matcher.find();
         String endpointBrokerUrl = matcher.group("brokerUrl");
-
+        endpointTopic = matcher.group("topic");
        Options options = new Options.Builder()
         .server(endpointBrokerUrl)
         .maxReconnects(10)

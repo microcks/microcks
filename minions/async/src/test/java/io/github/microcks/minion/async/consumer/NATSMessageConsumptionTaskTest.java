@@ -37,16 +37,23 @@ public class NATSMessageConsumptionTaskTest {
         NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
 
         assertTrue(NATSMessageConsumptionTask
-                .acceptEndpoint("nats://localhost:4222"));
+                .acceptEndpoint("nats://localhost:4222/testTopic"));
+        
+        assertTrue(NATSMessageConsumptionTask
+                .acceptEndpoint("localhost:4222/testTopic"));
+        
+        assertTrue(NATSMessageConsumptionTask
+                .acceptEndpoint("ws://localhost:4222/testTopic"));
+        
+        assertTrue(NATSMessageConsumptionTask
+                .acceptEndpoint("tcp://localhost:4222/testTopic"));
+        
     }
 
     @Test
     public void testAcceptEndpointFailures() {
         AsyncTestSpecification specification = new AsyncTestSpecification();
         NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
-
-        assertFalse(NATSMessageConsumptionTask
-                .acceptEndpoint("localhost:1883/testTopic"));
 
         assertFalse(NATSMessageConsumptionTask
                 .acceptEndpoint("ssl://localhost:1883/testTopic"));
