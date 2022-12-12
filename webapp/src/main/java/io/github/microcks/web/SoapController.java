@@ -27,8 +27,9 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.SoapMessageValidator;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.soapui.SoapUIScriptEngineBinder;
+import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
+
 import org.apache.xmlbeans.XmlError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +53,9 @@ import javax.script.ScriptEngineManager;
 import javax.servlet.http.HttpServletRequest;
 import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -171,19 +174,19 @@ public class SoapController {
          }
 
          Response response = null;
-         String dispatchCriteria = null;
+         DispatchContext dispatchContext = null;
 
          // Depending on dispatcher, evaluate request with rules.
          if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
-            dispatchCriteria = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
+            dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
 
          } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-            dispatchCriteria = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
+            dispatchContext = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
          }
 
-         log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
+         log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
-               IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
+               IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
 
          if (responses.isEmpty() && fallback != null) {
             // If we've found nothing and got a fallback, that's the moment!
@@ -207,7 +210,8 @@ public class SoapController {
          }
 
          // Render response content before waiting and returning.
-         String responseContent = MockControllerCommons.renderResponseContent(body, null, request, response);
+         String responseContent = MockControllerCommons.renderResponseContent(body, null, request,
+               dispatchContext.requestContext(), response);
 
          // Setting delay to default one if not set.
          if (delay == null && rOperation.getDefaultDelay() != null) {
@@ -293,26 +297,27 @@ public class SoapController {
       return action;
    }
 
-   /** Build a dispatch criteria after a XPath evaluation coming from rules. */
-   private String getDispatchCriteriaFromXPathEval(String dispatcherRules, String body) {
+   /** Build a dispatch context after a XPath evaluation coming from rules. */
+   private DispatchContext getDispatchCriteriaFromXPathEval(String dispatcherRules, String body) {
       try {
          // Evaluating request regarding XPath build with operation dispatcher rules.
          XPathExpression xpath = SoapUIXPathBuilder.buildXPathMatcherFromRules(dispatcherRules);
-         return xpath.evaluate(new InputSource(new StringReader(body)));
+         return new DispatchContext(xpath.evaluate(new InputSource(new StringReader(body))), null);
       } catch (Exception e) {
          log.error("Error during Xpath evaluation", e);
       }
       return null;
    }
 
-   /** Build a dipatch criteria after a Groovy script evaluation coming from rules. */
-   private String getDispatchCriteriaFromScriptEval(String dispatcherRules, String body, HttpServletRequest request) {
+   /** Build a dispatch context after a Groovy script evaluation coming from rules. */
+   private DispatchContext getDispatchCriteriaFromScriptEval(String dispatcherRules, String body, HttpServletRequest request) {
       ScriptEngineManager sem = new ScriptEngineManager();
+      Map<String, Object> requestContext = new HashMap<>();
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
-         return (String) se.eval(dispatcherRules);
+         ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
+         return new DispatchContext((String) se.eval(dispatcherRules), requestContext);
       } catch (Exception e) {
          log.error("Error during Script evaluation", e);
       }

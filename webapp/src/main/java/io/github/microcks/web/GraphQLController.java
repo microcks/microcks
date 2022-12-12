@@ -18,7 +18,6 @@
  */
 package io.github.microcks.web;
 
-import graphql.language.*;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
@@ -38,7 +37,7 @@ import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.graphql.GraphQLHttpRequest;
-import io.github.microcks.util.soapui.SoapUIScriptEngineBinder;
+import io.github.microcks.util.script.ScriptEngineBinder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +45,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import graphql.language.Argument;
+import graphql.language.Definition;
+import graphql.language.Document;
+import graphql.language.Field;
+import graphql.language.FragmentDefinition;
+import graphql.language.FragmentSpread;
+import graphql.language.OperationDefinition;
+import graphql.language.Selection;
+import graphql.language.SelectionSet;
+import graphql.language.StringValue;
+import graphql.language.VariableReference;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
@@ -74,7 +84,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * A controller for mocking GraphQL responses.
@@ -308,14 +317,13 @@ public class GraphQLController {
          }
 
          //
-         String dispatchCriteria = computeDispatchCriteria(dispatcher, dispatcherRules,
-               graphqlField, graphqlHttpReq.getVariables(),
-               request, body);
-         log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
+         DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules,
+               graphqlField, graphqlHttpReq.getVariables(), request, body);
+         log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
          // First try: using computed dispatchCriteria on main dispatcher.
          Response response = null;
-         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
+         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
          if (!responses.isEmpty()) {
             response = responses.get(0);
          }
@@ -323,7 +331,7 @@ public class GraphQLController {
          if (response == null) {
             // When using the SCRIPT dispatcher, return of evaluation may be the name of response.
             log.debug("No responses with dispatch criteria, trying the name...");
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
             if (!responses.isEmpty()) {
                response = responses.get(0);
             }
@@ -361,7 +369,8 @@ public class GraphQLController {
             }
 
             // Render response content before waiting and returning.
-            String responseContent = MockControllerCommons.renderResponseContent(body, null, evaluableHeaders, response);
+            String responseContent = MockControllerCommons.renderResponseContent(body, null,
+                  evaluableHeaders, dispatchContext.requestContext(), response);
 
             try {
                JsonNode responseJson = mapper.readTree(responseContent);
@@ -394,22 +403,24 @@ public class GraphQLController {
       return null;
    }
 
-   /** Create a dispatchCriteria string from type, rules and request elements. */
-   private String computeDispatchCriteria(String dispatcher, String dispatcherRules,
+   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
+   private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules,
                                           Selection graphqlSelection, JsonNode requestVariables,
                                           HttpServletRequest request, String body) {
 
       String dispatchCriteria = null;
+      Map<String, Object> requestContext = null;
 
       // Depending on dispatcher, evaluate request with rules.
       if (dispatcher != null) {
          switch (dispatcher) {
             case DispatchStyles.SCRIPT:
                ScriptEngineManager sem = new ScriptEngineManager();
+               requestContext = new HashMap<>();
                try {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
-                  SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
+                  ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
                   dispatchCriteria = (String) se.eval(dispatcherRules);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
@@ -439,7 +450,7 @@ public class GraphQLController {
                break;
          }
       }
-      return dispatchCriteria;
+      return new DispatchContext(dispatchCriteria, requestContext);
    }
 
    /**
