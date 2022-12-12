@@ -61,6 +61,8 @@ public class TemplateEngineFactory {
 
       engine.getContext().registerFunction("randomEmail", RandomEmailELFunction.class);
 
+      engine.getContext().registerFunction("put", PutInContextELFunction.class);
+
       return engine;
    }
 }
