@@ -375,8 +375,6 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               b.setMethod(binding.path("method").asText());
                            }
                            break;
-                        case "nats":
-                           break;
                         case "amqp":
                            b = retrieveOrInitOperationBinding(operation, BindingType.AMQP);
                            if (binding.has("is")) {
@@ -414,8 +412,6 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                      switch (bindingName) {
                         case "kafka":
                            break;
-                        case "nats":
-                           break;
                         case "mqtt":
                            Binding b = retrieveOrInitOperationBinding(operation, BindingType.MQTT);
                            if (binding.has("qos")) {
@@ -432,6 +428,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                            }
                            if (binding.has("destinationType")) {
                               b.setDestinationType(binding.path("destinationType").asText());
+                           }
+                           break;
+                        case "nats":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.NATS);
+                           if (binding.has("queue")) {
+                              b.setDestinationName(binding.path("queue").asText());
                            }
                            break;
                      }

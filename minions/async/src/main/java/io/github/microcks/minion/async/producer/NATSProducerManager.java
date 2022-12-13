@@ -18,12 +18,13 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
-
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.util.el.TemplateEngine;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
 import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.Options;
@@ -34,14 +35,9 @@ import io.nats.client.impl.NatsMessage;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.UnsupportedEncodingException;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import org.apache.kafka.common.header.Header;
-import org.apache.kafka.common.header.internals.RecordHeader;
 
 /**
  * NATS implementation of producer for async event messages.
@@ -79,10 +75,10 @@ public class NATSProducerManager {
     * @throws Exception in case of connection failure
     */
    protected Connection createClient() throws Exception {
-       Options options = new Options.Builder()
-        .server(natsServer)
-        .maxReconnects(10)
-        .build();
+      Options options = new Options.Builder()
+            .server(natsServer)
+            .maxReconnects(10)
+            .build();
       client = Nats.connect(options);
       return client;
    }
@@ -95,16 +91,12 @@ public class NATSProducerManager {
     */
    public void publishMessage(String topic, String value, Headers headers) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
-      try {
-         Message msg = NatsMessage.builder()
+      Message msg = NatsMessage.builder()
             .subject(topic)
-            .data(value.getBytes("UTF-8"))
+            .data(value.getBytes(StandardCharsets.UTF_8))
             .headers(headers)
             .build();
-         client.publish(msg);
-      } catch (UnsupportedEncodingException uee) {
-         logger.warnf("Message %s cannot be encoded as UTF-8 bytes, ignoring it", uee);
-      }
+      client.publish(msg);
    }
    
    /**
@@ -161,5 +153,4 @@ public class NATSProducerManager {
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
    }
-
 }

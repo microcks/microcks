@@ -22,46 +22,39 @@ import io.github.microcks.minion.async.AsyncTestSpecification;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for NATSMessageConsumptionTask.
- *
  * @author laurent
  */
 public class NATSMessageConsumptionTaskTest {
 
-    @Test
-    public void testAcceptEndpoint() {
-        AsyncTestSpecification specification = new AsyncTestSpecification();
-        NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
+   @Test
+   public void testAcceptEndpoint() {
+      AsyncTestSpecification specification = new AsyncTestSpecification();
+      NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
 
-        assertTrue(NATSMessageConsumptionTask
-                .acceptEndpoint("nats://localhost:4222/testTopic"));
-        
-        assertTrue(NATSMessageConsumptionTask
-                .acceptEndpoint("localhost:4222/testTopic"));
-        
-        assertTrue(NATSMessageConsumptionTask
-                .acceptEndpoint("ws://localhost:4222/testTopic"));
-        
-        assertTrue(NATSMessageConsumptionTask
-                .acceptEndpoint("tcp://localhost:4222/testTopic"));
-        
-    }
+      assertTrue(NATSMessageConsumptionTask
+            .acceptEndpoint("nats://localhost:4222/testTopic"));
 
-    @Test
-    public void testAcceptEndpointFailures() {
-        AsyncTestSpecification specification = new AsyncTestSpecification();
-        NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
+      assertTrue(NATSMessageConsumptionTask
+            .acceptEndpoint("nats://mynats.acme.com/testTopic"));
+   }
 
-        assertFalse(NATSMessageConsumptionTask
-                .acceptEndpoint("ssl://localhost:1883/testTopic"));
+   @Test
+   public void testAcceptEndpointFailures() {
+      AsyncTestSpecification specification = new AsyncTestSpecification();
+      NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
 
-        assertFalse(NATSMessageConsumptionTask
-                .acceptEndpoint("mqtt://localhost:1883"));
+      assertFalse(NATSMessageConsumptionTask
+            .acceptEndpoint("ssl://localhost:1883/testTopic"));
 
-        assertFalse(NATSMessageConsumptionTask
-                .acceptEndpoint("nats://localhost:port/testTopic"));
-    }
+      assertFalse(NATSMessageConsumptionTask
+            .acceptEndpoint("mqtt://localhost:1883"));
+
+      assertFalse(NATSMessageConsumptionTask
+            .acceptEndpoint("nats://localhost:port/testTopic"));
+   }
 }
