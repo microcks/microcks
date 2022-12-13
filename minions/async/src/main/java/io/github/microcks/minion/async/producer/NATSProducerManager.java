@@ -54,6 +54,12 @@ public class NATSProducerManager {
    @ConfigProperty(name = "nats.server")
    String natsServer;
 
+   @ConfigProperty(name = "nats.username")
+   String natsUsername;
+
+   @ConfigProperty(name = "nats.password")
+   String natsPassword;
+
    /**
     * Initialize the NATS client post construction.
     * @throws Exception If connection to NATS Broker cannot be done.
@@ -75,11 +81,15 @@ public class NATSProducerManager {
     * @throws Exception in case of connection failure
     */
    protected Connection createClient() throws Exception {
-      Options options = new Options.Builder()
+      Options.Builder optionsBuilder = new Options.Builder()
             .server(natsServer)
-            .maxReconnects(10)
-            .build();
-      client = Nats.connect(options);
+            .maxReconnects(10);
+      // Add authentication option.
+      if (natsUsername != null && natsPassword != null) {
+         optionsBuilder.userInfo(natsUsername, natsPassword);
+      }
+
+      client = Nats.connect(optionsBuilder.build());
       return client;
    }
 

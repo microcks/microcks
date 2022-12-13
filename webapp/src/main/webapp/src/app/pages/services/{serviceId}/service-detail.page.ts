@@ -217,6 +217,7 @@ export class ServiceDetailPageComponent implements OnInit {
             break;
           case 'NATS':
             result += 'NATS';
+            break;
           case 'MQTT':
             result += 'MQTT';
             break;

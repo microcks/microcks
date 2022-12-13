@@ -71,18 +71,14 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
 
    /**
     * Create a new consumption task from an Async test specification.
-    *
-    * @param testSpecification The specification holding endpointURL and
-    * timeout.
+    * @param testSpecification The specification holding endpointURL and timeout.
     */
    public NATSMessageConsumptionTask(AsyncTestSpecification testSpecification) {
       this.specification = testSpecification;
    }
 
    /**
-    * Convenient static method for checking if this implementation will accept
-    * endpoint.
-    *
+    * Convenient static method for checking if this implementation will accept endpoint.
     * @param endpointUrl The endpoint URL to validate
     * @return True if endpointUrl can be used for connecting and consuming on
     * endpoint
@@ -156,10 +152,20 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
       String endpointBrokerUrl = matcher.group("brokerUrl");
       endpointTopic = matcher.group("topic");
 
-      Options connectOptions = new Options.Builder()
+      Options.Builder optionsBuilder = new Options.Builder()
             .server(endpointBrokerUrl)
-            .maxReconnects(10)
-            .build();
-      subscriber = Nats.connect(connectOptions);
+            .maxReconnects(10);
+
+      if (specification.getSecret() != null) {
+         if (specification.getSecret().getUsername() != null
+               && specification.getSecret().getPassword() != null) {
+            logger.debug("Adding username/password authentication from secret " + specification.getSecret().getName());
+            optionsBuilder.userInfo(specification.getSecret().getUsername(), specification.getSecret().getPassword());
+         } else if (specification.getSecret().getToken() != null) {
+            logger.debug("Adding token authentication from secret " + specification.getSecret().getName());
+            optionsBuilder.token(specification.getSecret().getToken().toCharArray());
+         }
+      }
+      subscriber = Nats.connect(optionsBuilder.build());
    }
 }
