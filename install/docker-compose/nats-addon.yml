@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  nats:
+    image: nats:2.9.8-alpine3.16
+    container_name: microcks-nats
+    ports:
+      - 4222:4222
+      - 8222:8222

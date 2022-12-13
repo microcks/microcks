@@ -77,6 +77,7 @@ export class Binding {
 export enum BindingType {
   KAFKA,
   MQTT,
+  NATS,
   WS,
   AMQP,
   AMQP1,

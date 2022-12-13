@@ -25,6 +25,7 @@
     <quarkus.platform.version>2.13.0.Final</quarkus.platform.version>
 
     <eclipse-paho.version>1.2.1</eclipse-paho.version>
+    <nats.version>2.16.4</nats.version>
     <rabbitmq.version>5.16.0</rabbitmq.version>
     <apicurio-registry.version>2.3.1.Final</apicurio-registry.version>
     <confluent-registry.version>6.1.0</confluent-registry.version>
@@ -104,6 +105,14 @@
       <artifactId>amqp-client</artifactId>
       <version>${rabbitmq.version}</version>
     </dependency>
+    
+    <!-- NATS related dependencies -->
+    <dependency>
+        <groupId>io.nats</groupId>
+        <artifactId>jnats</artifactId>
+        <version>${nats.version}</version>
+    </dependency>
+    
     <dependency>
       <groupId>io.quarkiverse.googlecloudservices</groupId>
       <artifactId>quarkus-google-cloud-pubsub</artifactId>
