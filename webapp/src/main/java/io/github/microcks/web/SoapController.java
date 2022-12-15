@@ -30,6 +30,7 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
 
+import org.apache.commons.lang3.RandomUtils;
 import org.apache.xmlbeans.XmlError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -181,7 +182,9 @@ public class SoapController {
             dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
 
          } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-            dispatchContext = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
+            dispatchCriteria = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
+         } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
+            dispatchCriteria = DispatchStyles.RANDOM;
          }
 
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
@@ -194,7 +197,8 @@ public class SoapController {
          }
 
          if (!responses.isEmpty()) {
-            response = responses.get(0);
+           int idx = DispatchStyles.RANDOM.equals(dispatcher) ? RandomUtils.nextInt(0, responses.size()) : 0;
+           response = responses.get(idx);
          }
 
          // Set Content-Type to "text/xml".
