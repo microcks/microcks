@@ -33,6 +33,7 @@ import com.eviware.soapui.impl.wsdl.mock.WsdlMockResponse;
 import com.eviware.soapui.impl.wsdl.mock.WsdlMockService;
 import com.eviware.soapui.impl.wsdl.mock.dispatch.MockOperationDispatcher;
 import com.eviware.soapui.impl.wsdl.mock.dispatch.QueryMatchMockOperationDispatcher;
+import com.eviware.soapui.impl.wsdl.mock.dispatch.RandomMockOperationDispatcher;
 import com.eviware.soapui.impl.wsdl.mock.dispatch.ScriptMockOperationDispatcher;
 import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequest;
 import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestStep;
@@ -282,7 +283,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
             operation.setDispatcherRules(script);
          }
 
-         result.add(operation);
+        result.add(operation);
       }
       return result;
    }
@@ -395,6 +396,23 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
             Request request = buildRequest(wtr);
             result.put(request, response);
          }
+      }
+      else if (DispatchStyles.RANDOM.equals(operation.getDispatcher())){
+
+        if (availableRequests.isEmpty()) {
+          log.warn("A request is mandatory even for a RANDOM dispatch. Operation " + operation.getName() + " into SoapUI project " + project.getName());
+        } else {
+          // use the first one for all the responses
+          WsdlTestRequest wtr = availableRequests.values().iterator().next();
+
+          for (MockResponse mockResponse : mockOperation.getMockResponses()){
+            // Build response from MockResponse and response from matching one.
+            Response response = buildResponse(mockResponse, DispatchStyles.RANDOM);
+            Request request = buildRequest(wtr);
+            request.setName(operation.getName());
+            result.put(request, response);
+          }
+        }
       }
 
       // Adapt map to list of Exchanges.

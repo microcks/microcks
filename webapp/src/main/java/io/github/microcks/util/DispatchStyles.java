@@ -29,10 +29,10 @@ public class DispatchStyles{
 
    /** Constant for QUERY_ARGS dispatch style. */
    public static final String QUERY_ARGS = "QUERY_ARGS";
-   
+
    /** Constant for SCRIPT dispatch style. */
    public static final String SCRIPT = "SCRIPT";
-   
+
    /** Constant for SEQUENCE dispatch style. */
    public static final String SEQUENCE = "SEQUENCE";
 
@@ -50,4 +50,7 @@ public class DispatchStyles{
 
    /** Constant for FALLBACK dispatch style. */
    public static final String FALLBACK = "FALLBACK";
+
+  /** Constant for RANDOM dispatch style. */
+  public static final String RANDOM = "RANDOM";
 }
