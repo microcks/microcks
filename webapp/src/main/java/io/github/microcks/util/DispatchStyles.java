@@ -51,6 +51,6 @@ public class DispatchStyles{
    /** Constant for FALLBACK dispatch style. */
    public static final String FALLBACK = "FALLBACK";
 
-  /** Constant for RANDOM dispatch style. */
-  public static final String RANDOM = "RANDOM";
+   /** Constant for RANDOM dispatch style. */
+   public static final String RANDOM = "RANDOM";
 }
