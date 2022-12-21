@@ -182,9 +182,9 @@ public class SoapController {
             dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
 
          } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-            dispatchCriteria = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
+            dispatchContext = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
          } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
-            dispatchCriteria = DispatchStyles.RANDOM;
+            dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
          }
 
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
@@ -197,8 +197,8 @@ public class SoapController {
          }
 
          if (!responses.isEmpty()) {
-           int idx = DispatchStyles.RANDOM.equals(dispatcher) ? RandomUtils.nextInt(0, responses.size()) : 0;
-           response = responses.get(idx);
+            int idx = DispatchStyles.RANDOM.equals(dispatcher) ? RandomUtils.nextInt(0, responses.size()) : 0;
+            response = responses.get(idx);
          }
 
          // Set Content-Type to "text/xml".
