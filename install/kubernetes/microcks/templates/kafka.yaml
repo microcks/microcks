@@ -64,6 +64,7 @@ spec:
         tls: true
         type: ingress
         configuration:
+          class: "{{ .Values.features.async.kafka.ingressClass }}"
           bootstrap:
             host: "{{ .Values.appName }}-kafka.{{ .Values.features.async.kafka.url }}"
           brokers:
