@@ -204,6 +204,12 @@ features:
       username: microcks
       password: microcks
 
+    # Uncomment the nats.url and put a valid endpoint address below to enable NATS support.
+    nats:
+      #url: nats:4222
+      username: microcks
+      password: microcks
+
     # Uncomment the googlepubsub.project and put a valid project id below to enable PubSub support.
     googlepubsub:
       #project: my-project

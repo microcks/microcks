@@ -261,8 +261,10 @@ Here are below the configuration properties of the AMQP support feature:
 Here are below the configuration properties of the NATS support feature:
 
 | Section               | Property   | Description                                                                                                                              |
-| --------------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+|-----------------------| ---------- |------------------------------------------------------------------------------------------------------------------------------------------|
 | `features.async.nats` | `url`      | **Optional**. The URL of NATS broker (eg: `my-nats-broker.example.com:4222`). Default is undefined which means that feature is disabled. |
+| `features.async.nats` | `username` | **Optional**. The username to use for connecting to secured NATS broker. Default to `microcks`.                                          |
+| `features.async.nats` | `password` | **Optional**. The password to use for connecting to secured NATS broker. Default to `microcks`.                                          |
 
 #### Google PubSub feature details
 
