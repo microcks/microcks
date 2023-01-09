@@ -84,12 +84,12 @@ jobs:
         run: |
           cd ${{github.workspace}}/webapp
           mvn -B -q -Pprod -DskipTests package
-          #docker build -f src/main/docker/ubi/Dockerfile -t quay.io/microcks/microcks:$IMAGE_TAG .
+          #docker build -f src/main/docker/Dockerfile -t quay.io/microcks/microcks:$IMAGE_TAG .
           docker buildx build --push \
             --platform=linux/amd64,linux/arm64 \
             --builder=buildx-multi-arch \
             --build-arg TAG=$IMAGE_TAG \
-            --file src/main/docker/ubi/Dockerfile \
+            --file src/main/docker/Dockerfile \
             --tag=quay.io/microcks/microcks:$IMAGE_TAG .
 
       - name: Build and push container for async minion
@@ -104,10 +104,3 @@ jobs:
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile.jvm \
             --tag=quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
-
-      - name: Login and push to Quay.io Registry
-        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
-        run: |
-          echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
-          docker push quay.io/microcks/microcks:$IMAGE_TAG
-          docker push quay.io/microcks/microcks-async-minion:$IMAGE_TAG
