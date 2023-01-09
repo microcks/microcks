@@ -2,7 +2,7 @@ name: build-verify-package
 on:
   push:
     paths-ignore:
-      - '.github/**'
+      #- '.github/**'
       - '.gitignore'
       - 'LICENSE'
       - 'README*'
@@ -64,19 +64,46 @@ jobs:
             echo "PACKAGE_IMAGE=false" >> "$GITHUB_ENV"
           fi
 
-      - name: Package container image for webapp
+      - name: Set up QEMU
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        uses: docker/setup-buildx-action@v2
+
+      - name: Login to Quay.io Registry and setup multi-arch builder
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+          BUILDER=buildx-multi-arch
+          docker buildx inspect $BUILDER || docker buildx create --name=$BUILDER --driver=docker-container --driver-opt=network=host
+
+      - name: Build and push container image for webapp
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/webapp
-          mvn -B -q -Pprod -DskipTests package docker:build;
-          docker tag microcks/microcks quay.io/microcks/microcks:$IMAGE_TAG
+          mvn -B -q -Pprod -DskipTests package
+          #docker build -f src/main/docker/ubi/Dockerfile -t quay.io/microcks/microcks:$IMAGE_TAG .
+          docker buildx build --push \
+            --platform=linux/amd64,linux/arm64 \
+            --builder=buildx-multi-arch \
+            --build-arg TAG=$IMAGE_TAG \
+            --file src/main/docker/ubi/Dockerfile
+            --tag=quay.io/microcks/microcks:$IMAGE_TAG .
 
-      - name: Package container image for async minion
+      - name: Build and push container for async minion
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/minions/async
           mvn -B -q -DskipTests package
-          docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
+          #docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
+          docker buildx build --push \
+            --platform=linux/amd64,linux/arm64 \
+            --builder=buildx-multi-arch \
+            --build-arg TAG=$IMAGE_TAG \
+            --file src/main/docker/Dockerfile.jvm
+            --tag=quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
 
       - name: Login and push to Quay.io Registry
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'

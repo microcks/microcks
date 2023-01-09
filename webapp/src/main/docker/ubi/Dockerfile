@@ -17,13 +17,13 @@ ENV JAVA_APP_DIR=/deployments \
     JAVA_MAJOR_VERSION=8
 
 # Agent bond including Jolokia and jmx_exporter
-ADD agent-bond-opts /opt/run-java-options
+ADD ./src/main/docker/ubi/agent-bond-opts /opt/run-java-options
 RUN mkdir -p /opt/agent-bond \
  && curl https://repo1.maven.org/maven2/io/fabric8/agent-bond-agent/1.2.0/agent-bond-agent-1.2.0.jar \
           -o /opt/agent-bond/agent-bond.jar \
  && chmod 444 /opt/agent-bond/agent-bond.jar \
  && chmod 755 /opt/run-java-options
-ADD jmx_exporter_config.yml /opt/agent-bond/
+ADD ./src/main/docker/ubi/jmx_exporter_config.yml /opt/agent-bond/
 EXPOSE 8778 9779
 
 # Set working directory at /deployments
@@ -48,7 +48,7 @@ RUN chown 1001 /deployments \
 USER 1001
 
 # Copy corresponding jar file
-COPY *.jar app.jar
+COPY target/*.jar app.jar
 EXPOSE 8080
 
 # Run it
