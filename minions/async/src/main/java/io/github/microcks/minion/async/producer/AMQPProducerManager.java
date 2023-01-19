@@ -180,6 +180,7 @@ public class AMQPProducerManager {
                renderedHeaders.add(renderedHeader);
             }
          }
+         return renderedHeaders;
       }
       return null;
    }
