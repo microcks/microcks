@@ -18,14 +18,34 @@
  */
 package io.github.microcks.util.openapi;
 
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Metadata;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Parameter;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.util.DispatchCriteriaHelper;
+import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.MockRepositoryImportException;
+import io.github.microcks.util.MockRepositoryImporter;
+import io.github.microcks.util.ReferenceResolver;
+import io.github.microcks.util.URIBuilder;
+import io.github.microcks.util.dispatcher.FallbackSpecification;
+import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.metadata.MetadataExtensions;
+import io.github.microcks.util.metadata.MetadataExtractor;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.github.microcks.domain.*;
-import io.github.microcks.util.*;
-import io.github.microcks.util.metadata.MetadataExtensions;
-import io.github.microcks.util.metadata.MetadataExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +56,15 @@ import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -214,6 +241,21 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                // No need to go further if no examples.
                if (verb.getValue().has("responses")) {
 
+                  // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
+                  String rootDispatcher = operation.getDispatcher();
+                  String rootDispatcherRules = operation.getDispatcherRules();
+
+                  if (DispatchStyles.FALLBACK.equals(operation.getDispatcher())) {
+                     FallbackSpecification fallbackSpec = null;
+                     try {
+                        fallbackSpec = FallbackSpecification.buildFromJsonString(operation.getDispatcherRules());
+                        rootDispatcher = fallbackSpec.getDispatcher();
+                        rootDispatcherRules = fallbackSpec.getDispatcherRules();
+                     } catch (JsonMappingException e) {
+                        log.warn("Operation '{}' has a malformed Fallback dispatcher rules", operation.getName());
+                     }
+                  }
+
                   Iterator<Entry<String, JsonNode>> responseCodes = verb.getValue().path("responses").fields();
                   while (responseCodes.hasNext()) {
                      Entry<String, JsonNode> responseCode = responseCodes.next();
@@ -303,25 +345,25 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                            String dispatchCriteria = null;
                            String resourcePathPattern = operation.getName().split(" ")[1];
 
-                           if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
+                           if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
                               Map<String, String> queryParams = queryParametersByExample.get(exampleName);
                               dispatchCriteria = DispatchCriteriaHelper
-                                    .buildFromParamsMap(operation.getDispatcherRules(), queryParams);
+                                    .buildFromParamsMap(rootDispatcherRules, queryParams);
                               // We only need the pattern here.
                               operation.addResourcePath(resourcePathPattern);
-                           } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+                           } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
                               Map<String, String> parts = pathParametersByExample.get(exampleName);
                               dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                               // We should complete resourcePath here.
                               String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
                               operation.addResourcePath(resourcePath);
 
-                           } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+                           } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
                               Map<String, String> parts = pathParametersByExample.get(exampleName);
                               Map<String, String> queryParams = queryParametersByExample.get(exampleName);
                               dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
                               dispatchCriteria += DispatchCriteriaHelper
-                                    .buildFromParamsMap(operation.getDispatcherRules(), queryParams);
+                                    .buildFromParamsMap(rootDispatcherRules, queryParams);
                               // We should complete resourcePath here.
                               String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
                               operation.addResourcePath(resourcePath);
