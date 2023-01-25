@@ -16,7 +16,7 @@ services:
     container_name: microcks-kafka
     command: [
       "redpanda", "start",
-      "--overprovisioned --smp 1  --memory 1G --reserve-memory 0M --node-id 0 --check=false",
+      "--overprovisioned --smp 1 --memory 1G --reserve-memory 0M --node-id 0 --check=false",
       "--kafka-addr PLAINTEXT://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092",
       "--advertise-kafka-addr PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092"
     ]
@@ -28,7 +28,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:latest
+    image: quay.io/microcks/microcks:next
     container_name: microcks
     volumes:
       - "./config:/deployments/config"

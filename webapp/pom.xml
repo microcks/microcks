@@ -18,7 +18,8 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <junit.version>4.13.1</junit.version>
-    <keycloak.version>14.0.0</keycloak.version>
+    <!-- <keycloak.version>14.0.0</keycloak.version> -->
+    <keycloak.version>20.0.2</keycloak.version>
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.6.0</soapui.version>
     <soapui.jayway.version>0.9.1</soapui.jayway.version>

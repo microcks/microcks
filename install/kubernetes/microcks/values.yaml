@@ -54,8 +54,10 @@ postman:
 keycloak:
   install: true
   realm: microcks
+  # Now that we switched to newer version of Keycloak-X, default url does not contain '/auth' path
+  # If you use an older external Keycloak instance, url must include the '/auth' path
   url: keycloak-microcks.192.168.99.100.nip.io
-  #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080/auth
+  #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080
   #ingressSecretRef: my-secret-for-keycloak-ingress
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
@@ -64,9 +66,7 @@ keycloak:
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
   generateCert: true
-  image: jboss/keycloak:14.0.0
-  # If you're running on arm64, you'll need to replace Keycloak with this image.
-  #image: wizzn/keycloak:14
+  image: quay.io/keycloak/keycloak:20.0.2
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and

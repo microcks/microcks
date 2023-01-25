@@ -8,29 +8,33 @@ services:
       - "~/tmp/microcks-data:/data/db"
 
   keycloak:
-    image: jboss/keycloak:14.0.0
+    #image: jboss/keycloak:14.0.0
+    image: quay.io/microcks/microcks-keycloak:20.0.2
     container_name: microcks-sso
     ports:
       - "18080:8080"
     environment:
-      DB_VENDOR: "h2"
-      KEYCLOAK_USER: "admin"
-      KEYCLOAK_PASSWORD: "admin"
+      KEYCLOAK_ADMIN: "admin"
+      KEYCLOAK_ADMIN_PASSWORD: "admin"
       KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
-      KEYCLOAK_FRONTEND_URL: "http://localhost:18080/auth"
-    volumes: 
+      KC_HOSTNAME_ADMIN_URL: "http://localhost:18080"
+      KC_HOSTNAME_URL: "http://localhost:18080"
+    volumes:
       - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
+    command:
+      - start-dev
 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
+    platform: linux/amd64
 
   app:
     depends_on:
       - mongo
       - keycloak
       - postman
-    image: quay.io/microcks/microcks:latest
+    image: quay.io/microcks/microcks:next
     container_name: microcks
     ports:
       - "8080:8080"
@@ -42,6 +46,6 @@ services:
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      - KEYCLOAK_URL=http://keycloak:8080/auth
-      - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_PUBLIC_URL=http://localhost:18080
       #- MAX_UPLOAD_FILE_SIZE=3MB
