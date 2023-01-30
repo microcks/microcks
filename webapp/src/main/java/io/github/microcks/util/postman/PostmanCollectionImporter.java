@@ -78,6 +78,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    /** Regular expression used to evaluate operation name matching. */
    private static final String OPERATION_NAME_EXPRESSION_PREFIX = "(GET|POST|PUT|PATH|DELETE|OPTION)?( *)(/)?";
 
+   /** Default constructor for package protected extensions. */
+   protected PostmanCollectionImporter() {
+   }
+
    /**
     * Build a new importer.
     * @param collectionFilePath The path to local Postman collection file
@@ -94,6 +98,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          log.error("Exception while parsing Postman collection file " + collectionFilePath, e);
          throw new IOException("Postman collection file parsing error");
       }
+   }
+
+   protected void setCollection(JsonNode collection) {
+      this.collection = collection;
    }
 
    @Override

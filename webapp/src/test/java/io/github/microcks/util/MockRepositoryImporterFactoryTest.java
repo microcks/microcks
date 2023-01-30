@@ -18,6 +18,7 @@
  */
 package io.github.microcks.util;
 
+import com.eviware.soapui.ui.desktop.standalone.MostRecentlyUsedOrderDesktopManager;
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
@@ -25,6 +26,7 @@ import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.openapi.SwaggerImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
+import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
 import org.junit.Test;
 
@@ -60,6 +62,16 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer for Postman should not fail!");
       }
       assertTrue(importer instanceof PostmanCollectionImporter);
+
+      // Load a Postman Workspace file.
+      File postmanWorkspaceCollection = new File("target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(postmanWorkspaceCollection, null);
+      } catch (Throwable t) {
+         fail("Getting importer for Postman Workspace should not fail!");
+      }
+      assertTrue(importer instanceof PostmanWorkspaceCollectionImporter);
 
       // Load an OpenAPI YAML file.
       importer = null;
