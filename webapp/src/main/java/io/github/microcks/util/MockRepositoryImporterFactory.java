@@ -68,7 +68,7 @@ public class MockRepositoryImporterFactory {
             log.info("Found a _postman_id in file so assuming it's a Postman Collection to import");
             importer = new PostmanCollectionImporter(mockRepository.getPath());
             break;
-         } else if (line.startsWith("\"collection\":")) {
+         } else if (line.startsWith("\"collection\":") || line.startsWith("{\"collection\":")) {
             log.info("Found a collection in file so assuming it's a Postman Workspace Collection to import");
             importer = new PostmanWorkspaceCollectionImporter(mockRepository.getPath());
             break;
