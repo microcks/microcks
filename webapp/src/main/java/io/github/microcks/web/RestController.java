@@ -150,7 +150,7 @@ public class RestController {
                   // Produce a matching regexp removing {part} and :part from pattern.
                   String operationPattern = getURIPattern(operation.getName());
                   //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
-                  operationPattern = operationPattern.replaceAll("\\{\\w+\\}", "([^/])+");
+                  operationPattern = operationPattern.replaceAll("\\{[\\w-]+\\}", "([^/])+");
                   operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
                   if (resourcePath.matches(operationPattern)) {
                      rOperation = operation;
@@ -186,7 +186,7 @@ public class RestController {
          Response response = null;
 
          // Filter depending on requested media type.
-        // TODO: validate disptachCriteria with dispatcherRules
+        // TODO: validate dispatchCriteria with dispatcherRules
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
          response = getResponseByMediaType(responses, request);
 
