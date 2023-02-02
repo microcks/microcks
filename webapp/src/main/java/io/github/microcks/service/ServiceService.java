@@ -491,6 +491,7 @@ public class ServiceService {
                String operationId = IdBuilder.buildOperationId(service, operation);
                requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
                responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
+               eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
             }
          }
 
