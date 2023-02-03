@@ -223,8 +223,7 @@ public class AsyncAPISchemaValidator {
             return Arrays.asList();
          }
       }
-      // Produce some insights on what's going wrong.
-      //
+      // Produce some insights on what's going wrong. We'll accumulate the errors on different schemas.
       List<String> errors = new ArrayList<>();
       for (Schema avroSchema : avroSchemas) {
          errors.addAll(AvroUtil.getValidationErrors(avroSchema, record));
