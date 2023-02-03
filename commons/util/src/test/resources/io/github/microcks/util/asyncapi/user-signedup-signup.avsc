@@ -1,0 +1,7 @@
+{"namespace": "microcks.avro",
+ "type": "record",
+ "name": "SignupUser",
+ "fields": [
+     {"name": "displayName", "type": "string"}
+ ]
+}

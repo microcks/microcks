@@ -23,12 +23,15 @@ import io.github.microcks.util.AvroUtil;
 import io.github.microcks.util.SchemaMap;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 import org.apache.avro.Schema;
+import org.apache.avro.SchemaBuilder;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import java.io.File;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.Assert.*;
@@ -215,7 +218,6 @@ public class AsyncAPISchemaValidatorTest {
       assertTrue(errors.isEmpty());
    }
 
-
    @Test
    public void testFullProcedureFromAsyncAPIResourceNulls() {
       String asyncAPIText = null;
@@ -337,9 +339,7 @@ public class AsyncAPISchemaValidatorTest {
       // Validate the content of smartylighting/streetlights/event/lighting/measured subscribe channel.
       List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
             "/channels/smartylighting~1streetlights~1event~1lighting~1measured/subscribe/message");
-      for (String error : errors) {
-         System.err.println(error);
-      }
+
       assertTrue(errors.isEmpty());
    }
 
@@ -372,6 +372,74 @@ public class AsyncAPISchemaValidatorTest {
       assertEquals("the following keywords are unknown and will be ignored: [components]", errors.get(0));
       assertEquals("object instance has properties which are not allowed by the schema: [\"location\"]", errors.get(1));
       assertEquals("object has missing required properties ([\"lumens\"])", errors.get(2));
+   }
+
+   @Test
+   public void testFullProcedureFromAsyncAPIWithOneOf21() {
+      String asyncAPIText = null;
+      String jsonTextAlt1 = "{\"displayName\":\"Alice\"}";
+      String jsonTextAlt2 = "{\"email\":\"bob@example.com\"}";
+      JsonNode asyncAPISpec = null;
+      JsonNode contentNode1 = null;
+      JsonNode contentNode2 = null;
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-oneof-2.1.yaml"),
+               StandardCharsets.UTF_8
+         );
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+         contentNode1 = AsyncAPISchemaValidator.getJsonNode(jsonTextAlt1);
+         contentNode2 = AsyncAPISchemaValidator.getJsonNode(jsonTextAlt2);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content of user/signedup subscribe channel with 1st content.
+      List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode1,
+            "/channels/user~1signedup/subscribe/message");
+      assertTrue(errors.isEmpty());
+
+      // Validate the content of user/signedup subscribe channel with 2nd content.
+      errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode2,
+            "/channels/user~1signedup/subscribe/message");
+      assertTrue(errors.isEmpty());
+   }
+
+   @Test
+   public void testFullProcedureFromAsyncAPIWithOneOf23() {
+      String asyncAPIText = null;
+      String jsonTextAlt1 = "{\"displayName\":\"Alice\"}";
+      String jsonTextAlt2 = "{\"email\":\"bob@example.com\"}";
+      JsonNode asyncAPISpec = null;
+      JsonNode contentNode1 = null;
+      JsonNode contentNode2 = null;
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi-oneof-2.3.yaml"),
+               StandardCharsets.UTF_8
+         );
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+         contentNode1 = AsyncAPISchemaValidator.getJsonNode(jsonTextAlt1);
+         contentNode2 = AsyncAPISchemaValidator.getJsonNode(jsonTextAlt2);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content of user/signedup subscribe channel with 1st content.
+      List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode1,
+            "/channels/user~1signedup/subscribe/message");
+      assertTrue(errors.isEmpty());
+
+      // Validate the content of user/signedup subscribe channel with 2nd content.
+      errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode2,
+            "/channels/user~1signedup/subscribe/message");
+      assertTrue(errors.isEmpty());
    }
 
    @Test
@@ -513,6 +581,110 @@ public class AsyncAPISchemaValidatorTest {
          assertFalse(errors.isEmpty());
          assertEquals(1, errors.size());
          assertEquals("Required field fullName cannot be found in record", errors.get(0));
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   public void testValidateAvroSuccessFromAsyncAPIWithOneOf23() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+
+      Schema signedupSchema =  SchemaBuilder.record("SignupUser").fields()
+            .requiredString("displayName")
+            .endRecord();
+      Schema loginSchema =  SchemaBuilder.record("LoginUser").fields()
+            .requiredString("email")
+            .endRecord();
+
+      SchemaMap schemaMap = new SchemaMap();
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi-oneof-2.3.yaml"),
+               StandardCharsets.UTF_8
+         );
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Check with first alternative among oneOfs.
+         GenericRecord signedupRecord = new GenericData.Record(signedupSchema);
+         signedupRecord.put("displayName", "Laurent Broudoux");
+
+         // Validate the content of user/signedup subscribe chanel.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, signedupRecord,
+               "/channels/user~1signedup/subscribe/message", schemaMap);
+         assertTrue(errors.isEmpty());
+
+         // Check with second alternative among oneOfs.
+         GenericRecord loginRecord = new GenericData.Record(loginSchema);
+         loginRecord.put("email", "laurent@microcks.io");
+
+         // Validate the content of user/signedup subscribe chanel.
+         errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, loginRecord,
+               "/channels/user~1signedup/subscribe/message", schemaMap);
+         assertTrue(errors.isEmpty());
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
+   public void testValidateAvroSuccessFromAsyncAPIWithOneOf23AndRefsResources() {
+      String asyncAPIText = null;
+      JsonNode asyncAPISpec = null;
+
+      Schema signedupSchema =  SchemaBuilder.record("SignupUser").fields()
+            .requiredString("displayName")
+            .endRecord();
+      Schema loginSchema =  SchemaBuilder.record("LoginUser").fields()
+            .requiredString("email")
+            .endRecord();
+
+      SchemaMap schemaMap = new SchemaMap();
+      schemaMap.putSchemaEntry("./user-signedup-signup.avsc", "{\"namespace\": \"microcks.avro\",\n" +
+            " \"type\": \"record\",\n" +
+            " \"name\": \"SignupUser\",\n" +
+            " \"fields\": [\n" +
+            "     {\"name\": \"displayName\", \"type\": \"string\"}\n" +
+            " ]\n" +
+            "}");
+      schemaMap.putSchemaEntry("./user-signedup-login.avsc", "{\"namespace\": \"microcks.avro\",\n" +
+            " \"type\": \"record\",\n" +
+            " \"name\": \"LoginUser\",\n" +
+            " \"fields\": [\n" +
+            "     {\"name\": \"email\", \"type\": \"string\"}\n" +
+            " ]\n" +
+            "}");
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi-oneof-2.3.yaml"),
+               StandardCharsets.UTF_8
+         );
+         // Extract JSON node using AsyncAPISchemaValidator method.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+
+         // Check with first alternative among oneOfs.
+         GenericRecord signedupRecord = new GenericData.Record(signedupSchema);
+         signedupRecord.put("displayName", "Laurent Broudoux");
+
+         // Validate the content of user/signedup subscribe chanel.
+         List<String> errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, signedupRecord,
+               "/channels/user~1signedup/subscribe/message", schemaMap);
+         assertTrue(errors.isEmpty());
+
+         // Check with second alternative among oneOfs.
+         GenericRecord loginRecord = new GenericData.Record(loginSchema);
+         loginRecord.put("email", "laurent@microcks.io");
+
+         // Validate the content of user/signedup subscribe chanel.
+         errors = AsyncAPISchemaValidator.validateAvroMessage(asyncAPISpec, loginRecord,
+               "/channels/user~1signedup/subscribe/message", schemaMap);
+         assertTrue(errors.isEmpty());
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }

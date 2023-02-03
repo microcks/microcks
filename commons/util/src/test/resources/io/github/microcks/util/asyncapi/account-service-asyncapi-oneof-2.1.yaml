@@ -1,0 +1,35 @@
+asyncapi: '2.1.0'
+info:
+  title: Account Service
+  version: 1.2.1
+  description: This service is in charge of processing user signups
+channels:
+  user/signedup:
+    subscribe:
+      message:
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/signup'
+            - $ref: '#/components/schemas/login'
+        examples:
+          - name: Alice
+            payload:
+              displayName: Alice
+          - name: Bob
+            payload:
+              email: bob@example.com
+components:
+  schemas:
+    signup:
+      type: object
+      properties:
+        displayName:
+          type: string
+      additionalProperties: false
+    login:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      additionalProperties: false

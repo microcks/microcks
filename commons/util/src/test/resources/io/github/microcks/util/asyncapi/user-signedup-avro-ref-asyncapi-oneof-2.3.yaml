@@ -1,0 +1,35 @@
+asyncapi: '2.0.0'
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User signed-up Avro API
+  version: 0.1.1
+  description: Sample AsyncAPI for user signedup/login events defined using Avro
+defaultContentType: application/json
+channels:
+  user/signedup:
+    subscribe:
+      message:
+        description: An event describing that a user just signed up.
+        oneOf:
+          - $ref: '#/components/messages/signup'
+          - $ref: '#/components/messages/login'
+components:
+  messages:
+    signup:
+      contentType: avro/binary
+      schemaFormat: application/vnd.apache.avro;version=1.9.0
+      payload:
+        $ref: './user-signedup-signup.avsc#/SignUser'
+      examples:
+        - name: Alice
+          payload:
+            displayName: Alice
+    login:
+      contentType: avro/binary
+      schemaFormat: application/vnd.apache.avro;version=1.9.0
+      payload:
+        $ref: './user-signedup-login.avsc#/LoginUser'
+      examples:
+        - name: Bob
+          payload:
+            email: bob@example.com
