@@ -58,6 +58,22 @@ public class VariableReferenceExpressionTest {
    }
 
    @Test
+   public void testJSONPointerValueInArray() {
+      String jsonString = "[{\"foo\":{\"bar\":111222},\"quantity\":1}]";
+      EvaluableRequest request = new EvaluableRequest(jsonString, null);
+
+      // Create new expression evaluating JSON Pointer path.
+      VariableReferenceExpression exp = new VariableReferenceExpression(request, "body/0/quantity");
+      String result = exp.getValue(new EvaluationContext());
+      assertEquals("1", result);
+
+      // Test with a nested expression
+      exp = new VariableReferenceExpression(request, "body/0/foo/bar");
+      result = exp.getValue(new EvaluationContext());
+      assertEquals("111222", result);
+   }
+
+   @Test
    public void testXPathValue() {
       String xmlString = "<library>\n" +
             "  <name>My Personal Library</name>\n" +

@@ -126,7 +126,7 @@ public class VariableReferenceExpression implements Expression {
                // This is a JSON Pointer or XPath expression to apply.
                String variableString = String.valueOf(variableValue);
 
-               if (variableString.trim().startsWith("{")) {
+               if (variableString.trim().startsWith("{") || variableString.trim().startsWith("[")) {
                   variableValue = getJsonPointerValue(variableString, propertyPath);
                } else if (variableString.trim().startsWith("<")) {
                   variableValue = getXPathValue(variableString, propertyPath);
