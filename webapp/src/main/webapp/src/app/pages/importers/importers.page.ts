@@ -364,7 +364,7 @@ export class ImportersPageComponent implements OnInit {
       return false;
     }
     // Default is manager to keep coherent behaviour with multi-tenant feature.
-    return this.hasRole('manager');
+    return this.hasRole('manager') || this.hasRole('admin');
   }
 
   public hasRole(role: string): boolean {
