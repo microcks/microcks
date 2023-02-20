@@ -363,8 +363,8 @@ export class ImportersPageComponent implements OnInit {
       }
       return false;
     }
-    // Default is true to keep behaviour of previous releases.
-    return true;
+    // Default is manager to keep coherent behaviour with multi-tenant feature.
+    return this.hasRole('manager');
   }
 
   public hasRole(role: string): boolean {
