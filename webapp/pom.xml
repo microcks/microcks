@@ -23,10 +23,10 @@
     <mongo-java-server.version>1.24.0</mongo-java-server.version>
     <soapui.version>5.6.0</soapui.version>
     <soapui.jayway.version>0.9.1</soapui.jayway.version>
-    <xstream.version>1.4.19</xstream.version>
+    <xstream.version>1.4.20</xstream.version>
     <grpc.version>1.49.1</grpc.version>
     <apache-httpclient.version>4.5.13</apache-httpclient.version>
-    <protobuf.version>3.19.2</protobuf.version>
+    <protobuf.version>3.19.6</protobuf.version>
     <grpc.version>1.47.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
   </properties>
