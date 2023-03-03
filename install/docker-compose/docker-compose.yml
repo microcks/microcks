@@ -8,12 +8,11 @@ services:
       - "~/tmp/microcks-data:/data/db"
 
   keycloak:
-    image: jboss/keycloak:14.0.0
+    image: jboss/keycloak:10.0.1
     container_name: microcks-sso
     ports:
       - "18080:8080"
     environment:
-      DB_VENDOR: "h2"
       KEYCLOAK_USER: "admin"
       KEYCLOAK_PASSWORD: "admin"
       KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
@@ -33,14 +32,13 @@ services:
     image: quay.io/microcks/microcks:latest
     container_name: microcks
     ports:
-      - "8080:8080"
-      - "9090:9090"
+      - "9080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
       - POSTMAN_RUNNER_URL=http://postman:3000
-      - TEST_CALLBACK_URL=http://microcks:8080
+      - TEST_CALLBACK_URL=http://microcks:9080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_URL=http://keycloak:8080/auth
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
