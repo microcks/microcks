@@ -59,7 +59,7 @@ public class ScriptEngineBinder {
     */
    public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext, HttpServletRequest request) {
       // Build a map of header values.
-      StringToStringsMap headers = new StringToStringsMap();
+      StringToStringsMap headers = new HttpHeadersStringToStringsMap();
       if (request != null) {
          for (String headerName : Collections.list(request.getHeaderNames())) {
             headers.put(headerName, Collections.list(request.getHeaders(headerName)));
