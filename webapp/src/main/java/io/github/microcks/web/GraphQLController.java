@@ -155,8 +155,7 @@ public class GraphQLController {
 
       log.debug("Got this graphqlOperation: {}", graphqlOperation);
 
-      // Operation type is direct but name depends on syntax...
-      String operationName = graphqlHttpReq.getOperationName();
+      // Operation type is direct but name depends on syntax (it can be a composite one). Better to use the names of selections...
       String operationType = graphqlOperation.getOperation().toString();
 
       // Check is it's an introspection query to handle first.
@@ -291,8 +290,8 @@ public class GraphQLController {
       for (Operation operation : service.getOperations()) {
          // Select operation based on type (QUERY or MUTATION)...
          if (operation.getMethod().equals(operationType)) {
-            // ... then chek the operation name itself.
-            if (operation.getName().startsWith(operationName)) {
+            // ... then check the operation name itself.
+            if (operation.getName().equals(operationName)) {
                rOperation = operation;
                break;
             }
