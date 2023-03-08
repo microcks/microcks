@@ -353,15 +353,14 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                               operation.addResourcePath(resourcePathPattern);
                            } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
                               Map<String, String> parts = pathParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
                               // We should complete resourcePath here.
                               String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
                               operation.addResourcePath(resourcePath);
-
                            } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
                               Map<String, String> parts = pathParametersByExample.get(exampleName);
                               Map<String, String> queryParams = queryParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
                               dispatchCriteria += DispatchCriteriaHelper
                                     .buildFromParamsMap(rootDispatcherRules, queryParams);
                               // We should complete resourcePath here.

@@ -308,7 +308,9 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               Map<String, String> parts = pathParametersByExample.get(eventMessage.getName());
                               String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
                               operation.addResourcePath(resourcePath);
-                              eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(parts));
+                              eventMessage.setDispatchCriteria(
+                                    DispatchCriteriaHelper.buildFromPartsMap(operation.getDispatcherRules(), parts)
+                              );
                            }
 
                            result.add(new UnidirectionalEvent(eventMessage));

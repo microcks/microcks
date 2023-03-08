@@ -184,10 +184,20 @@ public class DispatchCriteriaHelperTest {
       Map<String, String> partsMap = new HashMap<>();
       partsMap.put("year", "2018");
       partsMap.put("month", "05");
+      partsMap.put("year-summary", "true");
+      partsMap.put("half-year", "true");
 
       // Dispatch string parts are sorted.
-      String dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(partsMap);
+      String dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap("month && year", partsMap);
       assertEquals("/month=05/year=2018", dispatchCriteria);
+
+      // Only 1 parameter should be taken into account according to rules.
+      dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap("year", partsMap);
+      assertEquals("/year=2018", dispatchCriteria);
+
+      // 2 parameters should be taken into account according to rules with no inclusion of year.
+      dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap("month && year-summary", partsMap);
+      assertEquals("/month=05/year-summary=true", dispatchCriteria);
    }
 
    @Test
@@ -195,6 +205,7 @@ public class DispatchCriteriaHelperTest {
       Map<String, String> paramsMap = new HashMap<>();
       paramsMap.put("page", "1");
       paramsMap.put("limit", "20");
+      paramsMap.put("limitation", "20");
       paramsMap.put("status", "available");
 
       // Only 1 parameter should be taken into account according to rules.
@@ -204,6 +215,10 @@ public class DispatchCriteriaHelperTest {
       // 2 parameters should be considered and sorted according to rules.
       dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && limit", paramsMap);
       assertEquals("?limit=20?page=1", dispatchCriteria);
+
+      // 2 parameters should be considered and sorted according to rules with no inclusion of limit.
+      dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && limitation", paramsMap);
+      assertEquals("?limitation=20?page=1", dispatchCriteria);
    }
 
   @Test

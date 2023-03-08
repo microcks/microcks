@@ -241,13 +241,13 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   operation.addResourcePath(extractResourcePath(requestUrl, null));
                } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
                   Map<String, String> parts = buildRequestParts(requestNode);
-                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
                   operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
                } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
                   Map<String, String> parts = buildRequestParts(requestNode);
-                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
                   dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rootDispatcherRules, requestUrl);
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
