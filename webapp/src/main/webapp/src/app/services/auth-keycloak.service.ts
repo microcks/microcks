@@ -179,6 +179,12 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    * Return the Keycloak administration realm url.
    */
   public getAdminRealmUrl(): string {
-    return this.getRealmUrl().replace('/auth/', '/auth/admin/');
+    var realmUrl = this.getRealmUrl()
+    if (realmUrl.indexOf('/auth/') != -1) {
+      // Pre-Keycloak-X url scheme.
+      return realmUrl.replace('/auth/', '/auth/admin/');
+    }
+    // Keycloak-X url scheme.
+    return realmUrl.replace('/realms/', '/admin/realms/');
   }
 }

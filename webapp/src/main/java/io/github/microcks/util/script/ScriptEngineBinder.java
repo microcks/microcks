@@ -16,9 +16,8 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.util.soapui;
+package io.github.microcks.util.script;
 
-import com.eviware.soapui.support.types.StringToStringsMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,39 +26,55 @@ import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * Utility class that holds methods for creating binding environments for
  * a JSR 233 ScriptEngine.
  * @author laurent
  */
-public class SoapUIScriptEngineBinder{
+public class ScriptEngineBinder {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(SoapUIScriptEngineBinder.class);
+   private static Logger log = LoggerFactory.getLogger(ScriptEngineBinder.class);
 
 
    /**
     * Create and bind a SoapUI environment for a ScriptEngine.
     * @param engine The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
+    * @param requestContext The execution context of this request
+    */
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext) {
+      // Build a map of header values.
+      bindEnvironment(engine, requestContent, requestContext, null);
+   }
+
+   /**
+    * Create and bind an environment from Http request for a ScriptEngine.
+    * @param engine The engine to enrich with binding environment.
+    * @param requestContent The content of request to use as data
+    * @param requestContext The execution context of this request
     * @param request The wrapped incoming servlet request.
     */
-   public static void bindSoapUIEnvironment(ScriptEngine engine, String requestContent, HttpServletRequest request){
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext, HttpServletRequest request) {
       // Build a map of header values.
-      StringToStringsMap headers = new StringToStringsMap();
-      for (String headerName : Collections.list(request.getHeaderNames())) {
-         headers.put(headerName, Collections.list(request.getHeaders(headerName)));
+      StringToStringsMap headers = new HttpHeadersStringToStringsMap();
+      if (request != null) {
+         for (String headerName : Collections.list(request.getHeaderNames())) {
+            headers.put(headerName, Collections.list(request.getHeaders(headerName)));
+         }
       }
 
       // Build a fake request container.
-      FakeSoapUIMockRequest mockRequest = new FakeSoapUIMockRequest(requestContent, headers);
+      FakeScriptMockRequest mockRequest = new FakeScriptMockRequest(requestContent, headers);
       mockRequest.setRequest(request);
 
       // Create bindings and put content according to SoapUI binding environment.
       Bindings bindings = engine.createBindings();
       bindings.put("mockRequest", mockRequest);
       bindings.put("log", log);
+      bindings.put("requestContext", requestContext);
       engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
    }
 }

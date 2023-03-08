@@ -308,7 +308,9 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               Map<String, String> parts = pathParametersByExample.get(eventMessage.getName());
                               String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
                               operation.addResourcePath(resourcePath);
-                              eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(parts));
+                              eventMessage.setDispatchCriteria(
+                                    DispatchCriteriaHelper.buildFromPartsMap(operation.getDispatcherRules(), parts)
+                              );
                            }
 
                            result.add(new UnidirectionalEvent(eventMessage));
@@ -389,6 +391,15 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               }
                            }
                            break;
+                        case "googlepubsub":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.GOOGLEPUBSUB);
+                           if (binding.has("topic")) {
+                              b.setDestinationName(binding.get("topic").asText());
+                           }
+                           if (binding.has("messageRetentionDuration")) {
+                              b.setPersistent(true);
+                           }
+                           break;
                      }
                   }
                }
@@ -421,6 +432,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               b.setDestinationType(binding.path("destinationType").asText());
                            }
                            break;
+                        case "nats":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.NATS);
+                           if (binding.has("queue")) {
+                              b.setDestinationName(binding.path("queue").asText());
+                           }
+                           break;
                      }
                   }
                }
@@ -440,6 +457,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                            if (binding.has("key")) {
                               b.setKeyType(binding.path("key").path("type").asText());
                            }
+                           break;
+                        case "nats":
                            break;
                         case "mqtt":
                         case "amqp1":

@@ -262,10 +262,11 @@ public class DispatchCriteriaHelper{
 
    /**
     * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
+    * @param partsRule The dispatch rules referencing parts to consider
     * @param partsMap The Map containing parts (not necessarily sorted)
     * @return A string representing dispatch criteria for the corresponding incoming request.
     */
-   public static String buildFromPartsMap(Map<String, String> partsMap) {
+   public static String buildFromPartsMap(String partsRule, Map<String, String> partsMap) {
       if (partsMap != null && !partsMap.isEmpty()) {
          Map<String, String> criteriaMap = new TreeMap<String, String>();
          criteriaMap.putAll(partsMap);
@@ -273,7 +274,14 @@ public class DispatchCriteriaHelper{
          // Just appends sorted entries, separating them with /.
          StringBuilder result = new StringBuilder();
          for (String criteria : criteriaMap.keySet()) {
-            result.append("/").append(criteria).append("=").append(criteriaMap.get(criteria));
+            // Check that criteria is embedded into the rule.
+            // Simply check word boundary with \b is not enough as - are valid in params (according RFC 3986)
+            // but not included into word boundary - so "word-ext" string is matching ".*\\bword\\b.*"
+            // We need to tweak it a bit to prevent matching when there's a - before or after the criteria we're
+            // looking for (see https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
+            if (partsRule.matches(".*(^|[^-])\\b" + criteria + "\\b([^-]|$).*")) {
+               result.append("/").append(criteria).append("=").append(criteriaMap.get(criteria));
+            }
          }
          return result.toString();
       }
@@ -294,7 +302,12 @@ public class DispatchCriteriaHelper{
          // Just appends sorted entries, separating them with ?.
          StringBuilder result = new StringBuilder();
          for (String criteria : criteriaMap.keySet()) {
-            if (paramsRule.contains(criteria)) {
+            // Check that criteria is embedded into the rule.
+            // Simply check word boundary with \b is not enough as - are valid in params (according RFC 3986)
+            // but not included into word boundary - so "word-ext" string is matching ".*\\bword\\b.*"
+            // We need to tweak it a bit to prevent matching when there's a - before or after the criteria we're
+            // looking for (see https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
+            if (paramsRule.matches(".*(^|[^-])\\b" + criteria + "\\b([^-]|$).*")) {
                result.append("?").append(criteria).append("=").append(criteriaMap.get(criteria));
             }
          }

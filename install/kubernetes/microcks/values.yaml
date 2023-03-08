@@ -10,7 +10,7 @@ microcks:
     #kubernetes.io/tls-acme: "true"
     #kubernetes.io/ingress.class: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:nightly
+  image: quay.io/microcks/microcks:next
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
@@ -54,8 +54,10 @@ postman:
 keycloak:
   install: true
   realm: microcks
+  # Now that we switched to newer version of Keycloak-X, default url does not contain '/auth' path
+  # If you use an older external Keycloak instance, url must include the '/auth' path
   url: keycloak-microcks.192.168.99.100.nip.io
-  #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080/auth
+  #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080
   #ingressSecretRef: my-secret-for-keycloak-ingress
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
@@ -64,7 +66,7 @@ keycloak:
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
   generateCert: true
-  image: jboss/keycloak:14.0.0
+  image: quay.io/keycloak/keycloak:20.0.2
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
@@ -136,12 +138,14 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
     
-    image: quay.io/microcks/microcks-async-minion:nightly
+    image: quay.io/microcks/microcks-async-minion:next
 
     kafka:
       install: true
       url: 192.168.99.100.nip.io
       #url: kafka-bootstrap:9092
+      # Set this to your own class name if not using bare nginx
+      ingressClassName: nginx
       persistent: false
       volumeSize: 2Gi
       resources:
@@ -194,11 +198,26 @@ features:
       username: microcks
       password: microcks
 
-    # Uncomment the amqp.url and put a valid endpoint address below to enable MQTT support.
+    # Uncomment the amqp.url and put a valid endpoint address below to enable AMQP support.
     amqp:
       #url: rabbitmq:5672
       username: microcks
       password: microcks
+
+    # Uncomment the nats.url and put a valid endpoint address below to enable NATS support.
+    nats:
+      #url: nats:4222
+      username: microcks
+      password: microcks
+
+    # Uncomment the googlepubsub.project and put a valid project id below to enable PubSub support.
+    googlepubsub:
+      #project: my-project
+      # For authentication, we rely on a Google Service Account JSON file.
+      # You have to setup a secret reference for retrieving this file from secret.
+      serviceAccountSecretRef:
+        secret: googlecloud-service-account
+        fileKey: googlecloud-service-account.json
 
     ws:
       #ingressSecretRef: my-secret-for-microcks-ws-ingress

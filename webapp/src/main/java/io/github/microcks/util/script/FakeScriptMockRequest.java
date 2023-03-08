@@ -16,13 +16,12 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package io.github.microcks.util.soapui;
+package io.github.microcks.util.script;
 
 import javax.servlet.http.HttpServletRequest;
 
-import com.eviware.soapui.support.types.StringToStringsMap;
 /**
- * This is a fake, lightweight implementation of mockRequest objects that are available
+ * This is a fake, lightweight implementation of mockRequest objects that are typically available
  * within SoapUI script context (see http://www.soapui.org/Service-Mocking/creating-dynamic-mockservices.html
  * for explanations on how they are used).
  * Such object should follow contract exposed by http://www.soapui.org/apidocs/com/eviware/soapui/impl/wsdl/mock/WsdlMockRequest.html,
@@ -30,7 +29,7 @@ import com.eviware.soapui.support.types.StringToStringsMap;
  * Groovy !! isn't it ??
  * @author laurent
  */
-public class FakeSoapUIMockRequest{
+public class FakeScriptMockRequest {
 
    /** The HttpSverletRequest wrapped object. */
    private HttpServletRequest request;
@@ -44,7 +43,7 @@ public class FakeSoapUIMockRequest{
     * @param requestContent The request content
     * @param requestHeaders The request headers
     */
-   public FakeSoapUIMockRequest(String requestContent, StringToStringsMap requestHeaders){
+   public FakeScriptMockRequest(String requestContent, StringToStringsMap requestHeaders){
       this.requestContent = requestContent;
       this.requestHeaders = requestHeaders;
    }

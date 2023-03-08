@@ -168,7 +168,7 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
                                           byte[] body)
                      throws IOException {
                   logger.info("Received a new AMQP Message: " + new String(body));
-                  // Build a ConsumedMessage from MQTT message.
+                  // Build a ConsumedMessage from AMQP message.
                   ConsumedMessage message = new ConsumedMessage();
                   message.setReceivedAt(System.currentTimeMillis());
                   message.setHeaders(buildHeaders(properties.getHeaders()));

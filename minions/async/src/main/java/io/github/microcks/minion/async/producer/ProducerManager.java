@@ -67,9 +67,15 @@ public class ProducerManager {
 
    @Inject
    MQTTProducerManager mqttProducerManager;
+   
+   @Inject
+   NATSProducerManager natsProducerManager;
 
    @Inject
    AMQPProducerManager amqpProducerManager;
+
+   @Inject
+   GooglePubSubProducerManager googlePubSubProducerManager;
 
    @Inject
    @RootWebSocketProducerManager
@@ -131,6 +137,14 @@ public class ProducerManager {
                         }
                      }
                      break;
+                  case NATS:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topic = natsProducerManager.getTopicName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        natsProducerManager.publishMessage(topic, message, natsProducerManager
+                            .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
+                     break;
                   case MQTT:
                      for (EventMessage eventMessage : definition.getEventMessages()) {
                         String topic = mqttProducerManager.getTopicName(definition, eventMessage);
@@ -154,6 +168,13 @@ public class ProducerManager {
                               amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                      }
                      break;
+                  case GOOGLEPUBSUB:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topicName = googlePubSubProducerManager.getTopicName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        googlePubSubProducerManager.publishMessage(topicName, message,
+                              googlePubSubProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
                   default:
                      break;
                 }

@@ -34,6 +34,12 @@ data:
     {{- if .Values.features.async.amqp.url }}
     features.feature.async-api.endpoint-AMQP={{ .Values.features.async.amqp.url }}
     {{- end }}
+    {{- if .Values.features.async.nats.url }}
+    features.feature.async-api.endpoint-NATS={{ .Values.features.async.nats.url }}
+    {{- end }}
+    {{- if .Values.features.async.googlepubsub.project }}
+    features.feature.async-api.endpoint-GOOGLEPUBSUB={{ .Values.features.async.googlepubsub.project }}
+    {{- end }}
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
@@ -480,9 +486,24 @@ data:
     %kube.amqp.username={{ .Values.features.async.amqp.username }}
     %kube.amqp.password={{ .Values.features.async.amqp.password }}
     {{- end }}
+    
+    {{- if .Values.features.async.nats.url }}
+    # Access to NATS broker.
+    %kube.nats.server={{ .Values.features.async.nats.url }}
+    %kube.nats.username={{ .Values.features.async.nats.username }}
+    %kube.nats.password={{ .Values.features.async.nats.password }}
+    {{- end }}
+    
+    {{- if .Values.features.async.googlepubsub.project }}
+    # Access to Google PubSub.
+    %kube.googlepubsub.project={{ .Values.features.async.googlepubsub.project }}
+      {{- if .Values.features.async.googlepubsub.serviceAccountSecretRef.fileKey }}
+    %kube.googlepubsub.service-account-location=/deployments/config/googlepubsub/sa/{{ .Values.features.async.googlepubsub.serviceAccountSecretRef.fileKey }}
+      {{- end }}
+    {{- end }}
 
     # Configure the minion own behavioral properties.
-    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}
+    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}{{ if .Values.features.async.nats.url }},NATS{{ end }}{{ if .Values.features.async.googlepubsub.project }},GOOGLEPUBSUB{{ end }}
     %kube.minion.restricted-frequencies=3,10,30
     %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
 {{- end -}}

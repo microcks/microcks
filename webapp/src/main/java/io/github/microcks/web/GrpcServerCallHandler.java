@@ -38,6 +38,7 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.util.JsonFormat;
 import io.github.microcks.util.grpc.GrpcUtil;
+import io.github.microcks.util.script.ScriptEngineBinder;
 import io.grpc.ServerCallHandler;
 import io.grpc.Status;
 import io.grpc.stub.ServerCalls;
@@ -49,8 +50,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A Handler for GRPC Server calls invocation that is using Microcks dispatching and mock definitions.
@@ -167,11 +172,11 @@ public class GrpcServerCallHandler {
                log.debug("Request body: {}", jsonBody);
 
                //
-               String dispatchCriteria = computeDispatchCriteria(dispatcher, dispatcherRules, jsonBody);
-               log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
+               DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules, jsonBody);
+               log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
                // For now - regarding the available dispatchers - we only dealing with response names.
-               List<Response> responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), dispatchCriteria);
+               List<Response> responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), dispatchContext.dispatchCriteria());
                if (responses.isEmpty() && fallback != null) {
                   // If we've found nothing and got a fallback, that's the moment!
                   responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), fallback.getFallback());
@@ -184,7 +189,7 @@ public class GrpcServerCallHandler {
                   DynamicMessage.Builder outBuilder = DynamicMessage.newBuilder(md.getOutputType());
 
                   // Render response content before.
-                  String responseContent = MockControllerCommons.renderResponseContent(jsonBody, response);
+                  String responseContent = MockControllerCommons.renderResponseContent(jsonBody, dispatchContext.requestContext(), response);
 
                   JsonFormat.parser().merge(responseContent, outBuilder);
                   outMsg = outBuilder.build();
@@ -220,9 +225,10 @@ public class GrpcServerCallHandler {
       }
    }
 
-   /** Create a dispatchCriteria string from type, rules and request elements. */
-   private String computeDispatchCriteria(String dispatcher, String dispatcherRules, String jsonBody) {
+   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
+   private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules, String jsonBody) {
       String dispatchCriteria = null;
+      Map<String, Object> requestContext = null;
 
       // Depending on dispatcher, evaluate request with rules.
       if (dispatcher != null) {
@@ -235,8 +241,20 @@ public class GrpcServerCallHandler {
                   log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
                }
                break;
+            case DispatchStyles.SCRIPT:
+               ScriptEngineManager sem = new ScriptEngineManager();
+               requestContext = new HashMap<>();
+               try {
+                  // Evaluating request with script coming from operation dispatcher rules.
+                  ScriptEngine se = sem.getEngineByExtension("groovy");
+                  ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext);
+                  dispatchCriteria = (String) se.eval(dispatcherRules);
+               } catch (Exception e) {
+                  log.error("Error during Script evaluation", e);
+               }
+               break;
          }
       }
-      return dispatchCriteria;
+      return new DispatchContext(dispatchCriteria, requestContext);
    }
 }

@@ -112,9 +112,26 @@ public class ExpressionParser {
       return nextSuffix;
    }
 
-   /** Depending on expression string, try to guess if it's a Literal, a Function or a VariableReference expression. */
+   /** Depending on expression string, try to guess if it's a Redirect, a Literal, a Function or a VariableReference expression. */
    private static Expression doParseExpression(String expressionString, EvaluationContext context) {
 
+      boolean hasRedirect = expressionString.indexOf('>') != -1;
+      log.debug("hasRedirect:{}", hasRedirect);
+
+      if (hasRedirect) {
+         String[] parts = expressionString.split("\\>");
+         Expression[] expressions = new Expression[parts.length];
+         for (int i=0; i < parts.length; i++) {
+            expressions[i] = doParseSimpleExpression(parts[i].trim(), context);
+         }
+         return new RedirectExpression(expressions);
+      }
+      // Else pare simple expression.
+      return doParseSimpleExpression(expressionString, context);
+   }
+
+   /** Depending on expression string, try to guess if it's a Literal, a Function or a VariableReference expression. */
+   private static Expression doParseSimpleExpression(String expressionString, EvaluationContext context) {
       int argsStart = expressionString.indexOf('(');
       int argsEnd = expressionString.indexOf(')');
       int variableStart = expressionString.indexOf('.');
@@ -126,7 +143,7 @@ public class ExpressionParser {
 
       log.debug("hasVariable:{} hasArgs:{} isPostmanFunction:{} varBeforeArgs:{}", hasVariable, hasArgs, isPostmanFunction, varBeforeArgs);
 
-      // check if it's a VariableReferenceExpression.
+      // Check if it's a VariableReferenceExpression.
       if (hasVariable && (!hasArgs || varBeforeArgs)) {
          log.debug("Found a variable reference expression " + expressionString);
          String variableName = expressionString.substring(0, expressionString.indexOf('.'));
@@ -140,9 +157,9 @@ public class ExpressionParser {
                "Returning empty literal expression");
          return new LiteralExpression("");
       }
-      
+
       // Check if it's a ELFunctionExpression
-      if ( hasArgs || isPostmanFunction) {
+      if (hasArgs || isPostmanFunction) {
          log.debug("Found a function expression " + expressionString);
 
          String functionName = null;
@@ -170,8 +187,8 @@ public class ExpressionParser {
          }
          return new FunctionExpression(function, args);
       }
-      
-      log.info("No ELFunction or VariableReference expressions found... Returning empty literal expression");
-      return new LiteralExpression("");
+
+      log.info("No ELFunction or complex VariableReference expressions found... Returning simple VariableReference");
+      return new VariableReferenceExpression(expressionString);
    }
 }

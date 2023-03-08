@@ -19,7 +19,15 @@
 package io.github.microcks.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.event.ChangeType;
+import io.github.microcks.event.ServiceChangeEvent;
+import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
@@ -28,6 +36,7 @@ import io.github.microcks.util.IdBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +61,13 @@ public class ImportExportService {
    private ResponseRepository responseRepository;
 
    @Autowired
+   private EventMessageRepository eventMessageRepository;
+
+   @Autowired
    private ServiceRepository serviceRepository;
+
+   @Autowired
+   private ApplicationContext applicationContext;
 
    /**
     * Import a repository from JSON definitions.
@@ -73,16 +88,35 @@ public class ImportExportService {
          log.info("Retrieve " + model.getResources().size() + " resources to import into repository");
          log.info("Retrieve " + model.getResponses().size() + " responses to import into repository");
          log.info("Retrieve " + model.getRequests().size() + " requests to import into repository");
+         // Make it optional to allow importing an old snapshot.
+         if (model.getEventMessages() != null) {
+            log.info("Retrieve " + model.getEventMessages().size() + " event messages to import into repository");
+         }
       }
       if (model != null){
          serviceRepository.saveAll(model.getServices());
          resourceRepository.saveAll(model.getResources());
          responseRepository.saveAll(model.getResponses());
          requestRepository.saveAll(model.getRequests());
+         // Make it optional to allow importing an old snapshot.
+         if (model.getEventMessages() != null) {
+            eventMessageRepository.saveAll(model.getEventMessages());
+         }
+
+         // Once everything is saved, be sure to fire a change event to allow propagation.
+         for (Service service : model.getServices()) {
+            publishServiceChangeEvent(service);
+         }
          return true;
       }
-
       return false;
+   }
+
+   /** Publish a ServiceChangeEvent towards minions or some other consumers. */
+   private void publishServiceChangeEvent(Service service) {
+      ServiceChangeEvent event = new ServiceChangeEvent(this, service.getId(), ChangeType.UPDATED);
+      applicationContext.publishEvent(event);
+      log.debug("Service change event has been published");
    }
 
    /**
@@ -113,20 +147,24 @@ public class ImportExportService {
          log.error("Exception while serializing resources for export", e);
       }
 
-      // Finally, get requests and responses associated to services.
+      // Finally, get requests and responses associated to the services.
       List<String> operationIds = new ArrayList<>();
       for (Service service : services){
          for (Operation operation : service.getOperations()){
             operationIds.add(IdBuilder.buildOperationId(service, operation));
          }
       }
+
       List<Request> requests = requestRepository.findByOperationIdIn(operationIds);
       List<Response> responses = responseRepository.findByOperationIdIn(operationIds);
+      List<EventMessage> eventMessages = eventMessageRepository.findByOperationIdIn(operationIds);
       try{
          String jsonArray = mapper.writeValueAsString(requests);
          result.append("\"requests\":").append(jsonArray).append(", ");
          jsonArray = mapper.writeValueAsString(responses);
-         result.append("\"responses\":").append(jsonArray);
+         result.append("\"responses\":").append(jsonArray).append(", ");
+         jsonArray = mapper.writeValueAsString(eventMessages);
+         result.append("\"eventMessages\":").append(jsonArray);
       } catch (Exception e){
          log.error("Exception while serializing messages for export", e);
       }
@@ -139,6 +177,7 @@ public class ImportExportService {
       private List<Resource> resources;
       private List<Request> requests;
       private List<Response> responses;
+      private List<EventMessage> eventMessages;
 
       public ImportExportModel() {
       }
@@ -173,6 +212,14 @@ public class ImportExportService {
 
       public void setResponses(List<Response> responses) {
          this.responses = responses;
+      }
+
+      public List<EventMessage> getEventMessages() {
+         return eventMessages;
+      }
+
+      public void setEventMessages(List<EventMessage> eventMessages) {
+         this.eventMessages = eventMessages;
       }
    }
 }

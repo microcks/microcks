@@ -42,4 +42,11 @@ public class FunctionExpression implements Expression {
    public String getValue(EvaluationContext context) {
       return function.evaluate(context, functionArgs);
    }
+
+   public ELFunction getFunction() {
+      return function;
+   }
+   public String[] getFunctionArgs() {
+      return functionArgs;
+   }
 }

@@ -1,0 +1,1 @@
+docker-compose -f nats-docker-compose.yml up

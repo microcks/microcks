@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="8b621379-87b4-46ce-a38b-85a9030b1315" activeEnvironment="Default" name="HelloService Random" resourceRoot="" soapui-version="5.6.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="66ed35cf-875e-473a-8ee5-9926ba32f4a8" wsaVersion="NONE" name="HelloService" type="wsdl" bindingName="{http://www.example.com/hello}HelloServiceSoapBinding" soapVersion="1_1" anonymous="optional" definition="file:/Users/lbroudou/Development/github/microcks/samples/HelloService.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:/Users/lbroudou/Development/github/microcks/samples/HelloService.wsdl"><con:part><con:url>file:/Users/lbroudou/Development/github/microcks/samples/HelloService.wsdl</con:url><con:content><![CDATA[<wsdl:definitions name="HelloService" targetNamespace="http://www.example.com/hello" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://www.example.com/hello" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http">
+  <wsdl:types>
+    <xs:schema attributeFormDefault="unqualified" elementFormDefault="unqualified" targetNamespace="http://www.example.com/hello" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+      <xs:element name="sayHello" type="tns:sayHello"/>
+      <xs:element name="sayHelloResponse" type="tns:sayHelloResponse"/>
+      <xs:complexType name="sayHello">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="name" type="xs:string"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:complexType name="sayHelloResponse">
+        <xs:sequence>
+          <xs:element minOccurs="0" name="sayHello" type="xs:string"/>
+        </xs:sequence>
+      </xs:complexType>
+      <xs:element name="HelloException" type="tns:HelloException"/>
+      <xs:complexType name="HelloException">
+        <xs:sequence>
+          <xs:element name="code" nillable="true" type="xs:string"/>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="HelloException">
+    <wsdl:part element="tns:HelloException" name="HelloException"/>
+  </wsdl:message>
+  <wsdl:message name="sayHelloResponse">
+    <wsdl:part element="tns:sayHelloResponse" name="parameters"/>
+  </wsdl:message>
+  <wsdl:message name="sayHello">
+    <wsdl:part element="tns:sayHello" name="parameters"/>
+  </wsdl:message>
+  <wsdl:portType name="HelloService">
+    <wsdl:operation name="sayHello">
+      <wsdl:input message="tns:sayHello" name="sayHello"/>
+      <wsdl:output message="tns:sayHelloResponse" name="sayHelloResponse"/>
+      <wsdl:fault message="tns:HelloException" name="HelloException"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="HelloServiceSoapBinding" type="tns:HelloService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="sayHello">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="sayHello">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="sayHelloResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="HelloException">
+        <soap:fault name="HelloException" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="HelloService">
+    <wsdl:port binding="tns:HelloServiceSoapBinding" name="HelloServiceEndpointPort">
+      <soap:address location="http://localhost:8080/services/HelloService"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints><con:endpoint>http://lbroudoux-OSX.local:8088/mockHelloService</con:endpoint><con:endpoint>http://localhost:8080/services/HelloService</con:endpoint></con:endpoints><con:operation id="5261f947-dc07-401e-9f1c-5735a1094b5b" isOneWay="false" action="" name="sayHello" bindingOperationName="sayHello" type="Request-Response" outputName="sayHelloResponse" inputName="sayHello" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call id="2376da51-82e3-4342-afd1-ddd6ae10bfa5" name="Request 1"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8080/soap/HelloService Mock/0.9/</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <hel:sayHello xmlns:hel="http://www.example.com/hello">
+         <name>Karla</name>
+      </hel:sayHello>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.example.com/hello/HelloService/sayHello"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:testSuite id="cce17640-84fc-44ca-8311-b21aaa2c5715" name="HelloService TestSuite"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="80b5adeb-45c5-4115-8397-2a0e58e15dcc" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="sayHello TestCase" searchProperties="true"><con:settings/><con:testStep type="request" id="7854e471-5f59-4d15-8b25-aee8ee98026d" name="Whatever Request"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>HelloService</con:interface><con:operation>sayHello</con:operation><con:request name="Whatever Request" id="91daee60-448e-4915-a8b7-50d4c3043a63"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://:8088/mockHelloService</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <hel:sayHello>
+         <name>whathever</name>
+      </hel:sayHello>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="Valid HTTP Status Codes" id="6a698b60-e993-455c-abf9-30d8e810bee8" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="SOAP Response" id="0e971849-c83c-4d98-b1da-aeef557a8afc" name="SOAP Response"/><con:assertion type="Schema Compliance" id="237fcf4f-bf1a-4e6c-979a-2d814a7ea5f1" name="Schema Compliance"><con:configuration><definition/></con:configuration></con:assertion><con:assertion type="SOAP Fault Assertion" id="0a5316f0-b53d-40e9-9843-855648d4c13e" name="Not SOAP Fault"/><con:assertion type="XQuery Match" id="ddc3e9a8-ad3b-40cc-8254-aa098588e125" name="XQuery Match"><con:configuration><path>declare namespace ser='http://www.example.com/hello';
+//ser:sayHelloResponse/sayHello</path><content>&lt;sayHello>Hello Andrew !&lt;/sayHello></content><allowWildcards>false</allowWildcards></con:configuration></con:assertion><con:assertion type="Response SLA Assertion" id="5df893bf-ea53-4eb2-9ebc-05df8dd63d5c" name="Response SLA"><con:configuration><SLA>500</SLA></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig action="http://www.example.com/hello/HelloService/sayHello" mustUnderstand="NONE" version="200508"/><con:wsrmConfig version="1.2"/></con:request></con:config></con:testStep><con:properties/></con:testCase><con:properties/></con:testSuite><con:mockService id="27e7bea3-8772-4217-b76b-d5ae399f65fb" port="8088" path="/mockHelloService" host="lbroudoux-OSX.local" name="HelloService Mock"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.mock.WsdlMockService@require-soap-action">false</con:setting></con:settings><con:properties><con:property><con:name>version</con:name><con:value>0.9</con:value></con:property></con:properties><con:mockOperation name="sayHello" id="7fa17517-a6da-4e27-8715-fe9f948e1d84" interface="HelloService" operation="sayHello"><con:settings/><con:defaultResponse>Response 1</con:defaultResponse><con:dispatchStyle>RANDOM</con:dispatchStyle><con:dispatchPath/><con:response name="Andrew Response" id="2fe6dceb-221b-48c1-bc66-4f27907b4683" httpResponseStatus="200" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <hel:sayHelloResponse>
+         <sayHello>Hello Andrew !</sayHello>
+      </hel:sayHelloResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.example.com/hello/HelloService/sayHelloResponse"/></con:response><con:response name="Karla Response" id="f15f3bef-759a-414c-938c-161764ec2ade" httpResponseStatus="200" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <hel:sayHelloResponse>
+         <sayHello>Hello Karla !</sayHello>
+      </hel:sayHelloResponse>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.example.com/hello/HelloService/sayHelloResponse"/></con:response><con:response name="World Response" id="7c8fa68b-9331-4d76-83d4-e521a10ccf81" httpResponseStatus="500" encoding="UTF-8"><con:settings/><con:responseContent><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <soapenv:Fault>
+         <faultcode>soapenv:Sender</faultcode>
+         <faultstring>Unknown name</faultstring>
+         <detail>
+            <hel:HelloException>
+               <code>999</code>
+            </hel:HelloException>
+         </detail>
+      </soapenv:Fault>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:responseContent><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://www.example.com/hello/HelloService/sayHelloResponse"/></con:response><con:dispatchConfig xsi:type="con:MockOperationQueryMatchDispatch" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:query><con:name>Andrew</con:name><con:query>declare namespace ser='http://www.example.com/hello';
+//ser:sayHello/name</con:query><con:match>Andrew</con:match><con:response>Andrew Response</con:response></con:query><con:query><con:name>Karla</con:name><con:query>declare namespace ser='http://www.example.com/hello';
+//ser:sayHello/name</con:query><con:match>Karla</con:match><con:response>Karla Response</con:response></con:query></con:dispatchConfig></con:mockOperation></con:mockService><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:oAuth1ProfileContainer/><con:sensitiveInformation/></con:soapui-project>

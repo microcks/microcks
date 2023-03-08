@@ -1,0 +1,275 @@
+{
+	"collection": {
+		"info": {
+			"name": "Swagger Petstore",
+			"_postman_id": "6173c1b4-0edb-4bd1-871b-7797258716d3",
+			"description": "This is a PetStore API description",
+			"version": "1.1",
+			"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		},
+		"item": [
+			{
+				"name": "pet",
+				"description": "Folder for pet",
+				"item": [
+					{
+						"name": "Finds Pets by status",
+						"request": {
+							"method": "GET",
+							"header": [
+								{
+									"key": "Accept",
+									"value": "application/xml, application/json"
+								}
+							],
+							"body": {
+								"mode": "raw",
+								"raw": ""
+							},
+							"url": {
+								"raw": "http://petstore.swagger.io/v2/pet/findByStatus?status={{status}}&user_key={{user_key}}",
+								"protocol": "http",
+								"host": [
+									"petstore",
+									"swagger",
+									"io"
+								],
+								"path": [
+									"v2",
+									"pet",
+									"findByStatus"
+								],
+								"query": [
+									{
+										"key": "status",
+										"value": "{{status}}",
+										"equals": true
+									},
+									{
+										"key": "user_key",
+										"value": "{{user_key}}",
+										"equals": true
+									}
+								]
+							},
+							"description": "Multiple status values can be provided with comma separated strings"
+						},
+						"response": [
+							{
+								"id": "5764f6e1-3fec-40b8-9a0d-8e4f4fc66e5b",
+								"name": "findbystatus-available",
+								"originalRequest": {
+									"method": "GET",
+									"header": [
+										{
+											"key": "Accept",
+											"value": "application/xml, application/json"
+										}
+									],
+									"body": {
+										"mode": "raw",
+										"raw": ""
+									},
+									"url": {
+										"raw": "http://petstore.swagger.io/v2/pet/findByStatus?status=available&user_key=998bac0775b1d5f588e0a6ca7c11b852",
+										"protocol": "http",
+										"host": [
+											"petstore",
+											"swagger",
+											"io"
+										],
+										"path": [
+											"v2",
+											"pet",
+											"findByStatus"
+										],
+										"query": [
+											{
+												"key": "status",
+												"value": "available",
+												"equals": true
+											},
+											{
+												"key": "user_key",
+												"value": "998bac0775b1d5f588e0a6ca7c11b852",
+												"equals": true
+											}
+										]
+									}
+								},
+								"status": "OK",
+								"code": 200,
+								"_postman_previewlanguage": "json",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": "",
+										"type": "text",
+										"name": "Content-Type"
+									}
+								],
+								"cookie": [],
+								"body": "[\n    {\n        \"id\": 190192062,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192063,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192285,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192654,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192671,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192727,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192736,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192768,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192878,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190192907,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": 190193000,\n        \"category\": {\n            \"id\": 0,\n            \"name\": \"string\"\n        },\n        \"name\": \"doggie\",\n        \"photoUrls\": [\n            \"string\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 0,\n                \"name\": \"string\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": -98125093,\n        \"category\": {\n            \"id\": -517488397,\n            \"name\": \"EJvNbK\"\n        },\n        \"name\": \"LuEfMZATrHz\",\n        \"photoUrls\": [\n            \"XCXOVVkaxa\",\n            \"gNwYqHEmC\",\n            \"nvCvphDeuqztysUBNed\",\n            \"W\",\n            \"vmrxRIViyXqumolLIeoB\",\n            \"JRqHVxk\",\n            \"tCUGbegVHoXajm\",\n            \"UiHppQn\"\n        ],\n        \"tags\": [\n            {\n                \"id\": 727599428,\n                \"name\": \"RemggEDzxPljbrlktdWf\"\n            },\n            {\n                \"id\": 1987753751,\n                \"name\": \"zWqdKAGHMmhPPlomljaNtuvm\"\n            },\n            {\n                \"id\": 1251632392,\n                \"name\": \"BAgtgtKOxZGdsS\"\n            },\n            {\n                \"id\": -1813025208,\n                \"name\": \"OkKxtfAkCMEICbbQDVPi\"\n            },\n            {\n                \"id\": -730110346,\n                \"name\": \"WshDF\"\n            },\n            {\n                \"id\": 2100951153,\n                \"name\": \"yxUFSknQEleIAQCoocl\"\n            },\n            {\n                \"id\": -2135188117,\n                \"name\": \"M\"\n            },\n            {\n                \"id\": 1352243140,\n                \"name\": \"koKHsjysHXW\"\n            },\n            {\n                \"id\": 1696778814,\n                \"name\": \"KaihiyarcZkIzkkquWPZ\"\n            },\n            {\n                \"id\": 659492963,\n                \"name\": \"xqIzulcBPzWMyUpQwQK\"\n            },\n            {\n                \"id\": -2118372841,\n                \"name\": \"naYFGuHmqDqOpfHH\"\n            }\n        ],\n        \"status\": \"available\"\n    },\n    {\n        \"id\": -68132066,\n        \"category\": {\n            \"id\": -91395365,\n            \"name\": \"FmMkqZRSCOaAThTjTIcolI\"\n        },\n        \"name\": \"bpUDswwAfGEyuZYAyCqaSZS\",\n        \"photoUrls\": [\n            \"EDwpbUPQtkQTvN\",\n            \"pISYlIfScAw\",\n            \"okQ\",\n            \"guIVyggGwnGe\",\n            \"mgvbRLAtzqLwaxOCdOtK\",\n            \"JIYGRxq\",\n            \"cVcdQVCnELszLNIfNwAQUUL\",\n            \"cyPU\",\n            \"VCqurkja\"\n        ],\n        \"tags\": [\n            {\n                \"id\": -1860308527,\n                \"name\": \"Ypyvo\"\n            },\n            {\n                \"id\": 740966829,\n                \"name\": \"EoUdEnBRKaYnrAwemm\"\n            },\n            {\n                \"id\": 2118690298,\n                \"name\": \"GNN\"\n            },\n            {\n                \"id\": -66381237,\n                \"name\": \"LRM\"\n            },\n            {\n                \"id\": 839909562,\n                \"name\": \"NbwCTvnFCtQkfh\"\n            },\n            {\n                \"id\": 216887794,\n                \"name\": \"s\"\n            },\n            {\n                \"id\": 193060448,\n                \"name\": \"eferBLgSJmhevsc\"\n            },\n            {\n                \"id\": -266174447,\n                \"name\": \"IKqwZHPvgCEhMlCuW\"\n            },\n            {\n                \"id\": -887416107,\n                \"name\": \"ZQH\"\n            },\n            {\n                \"id\": -588775660,\n                \"name\": \"LGHzdgipDktfQ\"\n            }\n        ],\n        \"status\": \"available\"\n    }\n]"
+							}
+						]
+					},
+					{
+						"name": "Find pet by ID",
+						"request": {
+							"method": "GET",
+							"header": [
+								{
+									"key": "Accept",
+									"value": "application/xml, application/json"
+								}
+							],
+							"body": {
+								"mode": "raw",
+								"raw": ""
+							},
+							"url": {
+								"raw": "http://petstore.swagger.io/v2/pet/:petId?user_key={{user_key}}",
+								"protocol": "http",
+								"host": [
+									"petstore",
+									"swagger",
+									"io"
+								],
+								"path": [
+									"v2",
+									"pet",
+									":petId"
+								],
+								"query": [
+									{
+										"key": "user_key",
+										"value": "{{user_key}}",
+										"equals": true
+									}
+								],
+								"variable": [
+									{
+										"key": "petId",
+										"value": "{{petId}}"
+									}
+								]
+							},
+							"description": "Returns a single pet"
+						},
+						"response": [
+							{
+								"id": "40f56c46-2d3c-48d1-a19f-6c62b382710c",
+								"name": "findbyid-2",
+								"originalRequest": {
+									"method": "GET",
+									"header": [
+										{
+											"key": "Accept",
+											"value": "application/xml, application/json"
+										}
+									],
+									"body": {
+										"mode": "raw",
+										"raw": ""
+									},
+									"url": {
+										"raw": "http://petstore.swagger.io/v2/pet/:petId?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+										"protocol": "http",
+										"host": [
+											"petstore",
+											"swagger",
+											"io"
+										],
+										"path": [
+											"v2",
+											"pet",
+											":petId"
+										],
+										"query": [
+											{
+												"key": "user_key",
+												"value": "998bac0775b1d5f588e0a6ca7c11b852",
+												"equals": true
+											}
+										],
+										"variable": [
+											{
+												"key": "petId",
+												"value": "2"
+											}
+										]
+									}
+								},
+								"status": "OK",
+								"code": 200,
+								"_postman_previewlanguage": "json",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"description": "",
+										"type": "text",
+										"name": "Content-Type"
+									}
+								],
+								"cookie": [],
+								"body": "{\n    \"id\": 2,\n    \"category\": {\n        \"id\": 1,\n        \"name\": \"Animal\"\n    },\n    \"name\": \"cat\",\n    \"photoUrls\": [\n        \"string\"\n    ],\n    \"tags\": [\n        {\n            \"id\": 1,\n            \"name\": \"domestic\"\n        }\n    ],\n    \"status\": \"available\"\n}"
+							},
+							{
+								"id": "f63759af-1ea4-41bf-91b6-c3bdb1c584d1",
+								"name": "findbyid-1",
+								"originalRequest": {
+									"method": "GET",
+									"header": [
+										{
+											"key": "Accept",
+											"value": "application/xml, application/json"
+										}
+									],
+									"body": {
+										"mode": "raw",
+										"raw": ""
+									},
+									"url": {
+										"raw": "http://petstore.swagger.io/v2/pet/:petId?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+										"protocol": "http",
+										"host": [
+											"petstore",
+											"swagger",
+											"io"
+										],
+										"path": [
+											"v2",
+											"pet",
+											":petId"
+										],
+										"query": [
+											{
+												"key": "user_key",
+												"value": "998bac0775b1d5f588e0a6ca7c11b852",
+												"equals": true
+											}
+										],
+										"variable": [
+											{
+												"key": "petId",
+												"value": "1"
+											}
+										]
+									}
+								},
+								"status": "Not Found",
+								"code": 404,
+								"_postman_previewlanguage": "Text",
+								"header": [],
+								"cookie": [],
+								"body": ""
+							}
+						]
+					}
+				]
+			}
+		]
+	}
+}

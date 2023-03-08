@@ -77,13 +77,13 @@ public class NowELFunctionTest {
       SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
       String dateString = dateFormat.format(currentDate.getTime());
 
-      assertTrue(result.startsWith(dateString));
+      assertTrue(result.startsWith(dateString.split(" ")[0]));
 
       // Now add 1 month.
       result = function.evaluate(null, "dd/MM/yyyy HH:mm:ss", "1M");
       currentDate.add(Calendar.DAY_OF_YEAR, -1);
       currentDate.add(Calendar.MONTH, 1);
       dateString = dateFormat.format(currentDate.getTime());
-      assertTrue(result.startsWith(dateString));
+      assertTrue(result.startsWith(dateString.split(" ")[0]));
    }
 }

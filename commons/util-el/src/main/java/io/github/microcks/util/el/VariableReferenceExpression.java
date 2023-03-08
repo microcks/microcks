@@ -57,6 +57,8 @@ public class VariableReferenceExpression implements Expression {
    private Object variable;
    private String pathExpression;
 
+   private String variableName;
+
    /**
     * Create a new expression with a variable and a path (property + sub-query expression).
     * @param variable Bean from whom to extract value
@@ -65,6 +67,14 @@ public class VariableReferenceExpression implements Expression {
    public VariableReferenceExpression(Object variable, String pathExpression) {
       this.variable = variable;
       this.pathExpression = pathExpression;
+   }
+
+   /**
+    * Create a new expression with a variable name (to be searched later into EvaluationContext)
+    * @param variableName Name of a variable to get from Evaluation context.
+    */
+   public VariableReferenceExpression(String variableName) {
+      this.variableName = variableName;
    }
 
    public Object getVariable() {
@@ -83,6 +93,12 @@ public class VariableReferenceExpression implements Expression {
 
    @Override
    public String getValue(EvaluationContext context) {
+      // Use variable name if we just provide this.
+      if (variableName != null && variable == null) {
+         variable = context.lookupVariable(variableName);
+         return (variable != null ? variable.toString() : "");
+      }
+
       String propertyName = pathExpression;
       String propertyPath = null;
       int delimiterIndex = -1;
@@ -110,7 +126,7 @@ public class VariableReferenceExpression implements Expression {
                // This is a JSON Pointer or XPath expression to apply.
                String variableString = String.valueOf(variableValue);
 
-               if (variableString.trim().startsWith("{")) {
+               if (variableString.trim().startsWith("{") || variableString.trim().startsWith("[")) {
                   variableValue = getJsonPointerValue(variableString, propertyPath);
                } else if (variableString.trim().startsWith("<")) {
                   variableValue = getXPathValue(variableString, propertyPath);
@@ -159,7 +175,7 @@ public class VariableReferenceExpression implements Expression {
       Object result = null;
 
       try {
-         String methodName = "get" + property.substring(0, 1).toUpperCase() + property.substring(1, property.length());
+         String methodName = "get" + property.substring(0, 1).toUpperCase() + property.substring(1);
          Class<?> clazz = obj.getClass();
          Method method = clazz.getMethod(methodName);
          result = method.invoke(obj);

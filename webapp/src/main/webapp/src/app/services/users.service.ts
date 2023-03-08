@@ -67,7 +67,10 @@ export class UsersService {
   }
 
   getGroups(): Observable<any[]> {
-    const options = { params: new HttpParams().set('search', 'microcks') };
+    // 'search' for Pre-Keycloak-X, 'q' for 'Keycloak-X'
+    const options = {
+      params: new HttpParams().set('search', 'microcks').set('q', 'microcks')
+    };
     return this.http.get<any[]>(this.rootUrl + '/groups', options);
   }
   createGroup(parentGroupId: string, name: string): Observable<any> {

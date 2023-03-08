@@ -34,7 +34,7 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.soapui.SoapUIScriptEngineBinder;
+import io.github.microcks.util.script.ScriptEngineBinder;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -150,7 +150,7 @@ public class RestController {
                   // Produce a matching regexp removing {part} and :part from pattern.
                   String operationPattern = getURIPattern(operation.getName());
                   //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
-                  operationPattern = operationPattern.replaceAll("\\{\\w+\\}", "([^/])+");
+                  operationPattern = operationPattern.replaceAll("\\{[\\w-]+\\}", "([^/])+");
                   operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
                   if (resourcePath.matches(operationPattern)) {
                      rOperation = operation;
@@ -179,20 +179,20 @@ public class RestController {
          }
 
          //
-         String dispatchCriteria = computeDispatchCriteria(dispatcher, dispatcherRules,
+         DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules,
                getURIPattern(rOperation.getName()), UriUtils.decode(resourcePath, "UTF-8"), request, body);
-         log.debug("Dispatch criteria for finding response is {}", dispatchCriteria);
+         log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
          Response response = null;
 
          // Filter depending on requested media type.
-        // TODO: validate disptachCriteria with dispatcherRules
-         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
+        // TODO: validate dispatchCriteria with dispatcherRules
+         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
          response = getResponseByMediaType(responses, request);
 
          if (response == null) {
             // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), dispatchCriteria);
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
             response = getResponseByMediaType(responses, request);
          }
 
@@ -243,7 +243,8 @@ public class RestController {
             }
 
             // Render response content before waiting and returning.
-            String responseContent = MockControllerCommons.renderResponseContent(body, resourcePath, request, response);
+            String responseContent = MockControllerCommons.renderResponseContent(body, resourcePath, request,
+                  dispatchContext.requestContext(), response);
 
             // Setting delay to default one if not set.
             if (delay == null && rOperation.getDefaultDelay() != null) {
@@ -285,10 +286,11 @@ public class RestController {
       return null;
    }
 
-   /** Create a dispatchCriteria string from type, rules and request elements. */
-   private String computeDispatchCriteria(String dispatcher, String dispatcherRules, String uriPattern,
+   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
+   private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules, String uriPattern,
                                           String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
+      Map<String, Object> requestContext = null;
 
       // Depending on dispatcher, evaluate request with rules.
       if (dispatcher != null) {
@@ -298,10 +300,11 @@ public class RestController {
                break;
             case DispatchStyles.SCRIPT:
                ScriptEngineManager sem = new ScriptEngineManager();
+               requestContext = new HashMap<>();
                try {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
-                  SoapUIScriptEngineBinder.bindSoapUIEnvironment(se, body, request);
+                  ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
                   dispatchCriteria = (String) se.eval(dispatcherRules);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
@@ -331,7 +334,7 @@ public class RestController {
          }
       }
 
-      return dispatchCriteria;
+      return new DispatchContext(dispatchCriteria, requestContext);
    }
 
    /** Recopy headers defined with parameter constraints. */

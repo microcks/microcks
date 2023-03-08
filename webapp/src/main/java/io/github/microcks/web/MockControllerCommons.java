@@ -71,10 +71,11 @@ public class MockControllerCommons {
     * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
     * If rendering template fails, we just produce a log error message and stick to templatized response.
     * @param requestBody The body payload of incoming request.
+    * @param requestContext The invocation context of the request
     * @param response The response that was found by dispatcher
     * @return The rendered response body payload.
     */
-   public static String renderResponseContent(String requestBody, Response response) {
+   public static String renderResponseContent(String requestBody, Map<String, Object> requestContext, Response response) {
       if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          log.debug("Response contains dynamic EL expression, rendering it...");
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
@@ -83,7 +84,7 @@ public class MockControllerCommons {
          EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
 
          // Evaluate the response.
-         return unguardedRenderResponseContent(evaluableRequest, TemplateEngineFactory.getTemplateEngine(), response.getContent());
+         return unguardedRenderResponseContent(evaluableRequest, requestContext, TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
@@ -94,10 +95,12 @@ public class MockControllerCommons {
     * @param requestBody The body payload of incoming request.
     * @param evaluableParams A map of params for evaluation.
     * @param evaluableHeaders A map of headers for evaluation.
+    * @param requestContext The invocation context of the request
     * @param response The response that was found by dispatcher
     * @return The rendered response body payload.
     */
-   public static String renderResponseContent(String requestBody, Map<String, String> evaluableParams, Map<String, String> evaluableHeaders, Response response) {
+   public static String renderResponseContent(String requestBody, Map<String, String> evaluableParams, Map<String, String> evaluableHeaders,
+                                              Map<String, Object> requestContext, Response response) {
       if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          log.debug("Response contains dynamic EL expression, rendering it...");
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
@@ -109,7 +112,7 @@ public class MockControllerCommons {
          evaluableRequest.setHeaders(evaluableHeaders);
 
          // Evaluate the response.
-         return unguardedRenderResponseContent(evaluableRequest, TemplateEngineFactory.getTemplateEngine(), response.getContent());
+         return unguardedRenderResponseContent(evaluableRequest, requestContext, TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
@@ -120,37 +123,43 @@ public class MockControllerCommons {
     * @param requestBody The body payload of incoming request.
     * @param requestResourcePath The resource path of mock request (if any, may be null)
     * @param request The incoming servlet request
+    * @param requestContext The invocation context of the request
     * @param response The response that was found by dispatcher
     * @return The rendered response body payload.
     */
-   public static String renderResponseContent(String requestBody, String requestResourcePath, HttpServletRequest request, Response response) {
+   public static String renderResponseContent(String requestBody, String requestResourcePath, HttpServletRequest request,
+                                              Map<String, Object> requestContext, Response response) {
       if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          log.debug("Response contains dynamic EL expression, rendering it...");
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = buildEvaluableRequest(requestBody, requestResourcePath, request);
-         return unguardedRenderResponseContent(evaluableRequest, TemplateEngineFactory.getTemplateEngine(), response.getContent());
+         return unguardedRenderResponseContent(evaluableRequest, requestContext, TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
 
    /**
-    *
-    * @param evaluableRequest
-    * @param engine
-    * @param responseContent
-    * @return
+    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
+    * If rendering template fails, we just produce a log error message and stick to templatized response.
+    * @param evaluableRequest The request that can be evaluated in templating.
+    * @param engine The template engine to use for this rendering
+    * @param responseContent The response content found by dispatcher
+    * @return The rendered response body payload.
     */
    public static String renderResponseContent(EvaluableRequest evaluableRequest, TemplateEngine engine, String responseContent) {
       if (responseContent.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         return unguardedRenderResponseContent(evaluableRequest, engine, responseContent);
+         return unguardedRenderResponseContent(evaluableRequest, null, engine, responseContent);
       }
       return responseContent;
    }
 
-   private static String unguardedRenderResponseContent(EvaluableRequest evaluableRequest, TemplateEngine engine, String responseContent) {
+   private static String unguardedRenderResponseContent(EvaluableRequest evaluableRequest, Map<String, Object> requestContext, TemplateEngine engine, String responseContent) {
       // Register the request variable and evaluate the response.
       engine.getContext().setVariable("request", evaluableRequest);
+      if (requestContext != null) {
+         engine.getContext().setVariables(requestContext);
+      }
       try {
          return engine.getValue(responseContent);
       } catch (Throwable t) {
@@ -160,11 +169,11 @@ public class MockControllerCommons {
    }
 
    /**
-    *
-    * @param requestBody
-    * @param requestResourcePath
-    * @param request
-    * @return
+    * Build an Evaluable request from various request elements.
+    * @param requestBody The body of request to evaluate
+    * @param requestResourcePath The resource path this request is bound to
+    * @param request The underlying Http request
+    * @return The Evaluable request for later templating rendering
     */
    public static EvaluableRequest buildEvaluableRequest(String requestBody, String requestResourcePath, HttpServletRequest request) {
       // Create and fill an evaluable request object.

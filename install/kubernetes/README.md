@@ -208,9 +208,10 @@ The table below describes all the fields of the `values.yaml`, providing informa
 Here are below the configuration properties of the Kafka support feature:
 
 | Section                               | Property              | Description                                                                                                                                                                                                    |
-| ------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ------------------------------------- | --------------------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `features.async.kafka`                | `install`             | **Optional**. Flag for Kafka installation. Default is `true` and require Strimzi Operator to be setup. Set to `false` if you want to reuse an existing Kafka instance.                                         |
 | `features.async.kafka`                | `url`                 | **Optional**. The URL of Kafka broker if it already exists or the one used for exposing Kafka `Ingress` when we install it. In this later case, it should only be the subdomain part (eg: `apps.example.com`). |
+| `features.async.kafka`                | `ingressClassName`    | **Optional**. The ingress class to use for exposing broker to the outer world when installing it. Default is `nginx`.                                                                                          |
 | `features.async.kafka`                | `persistent`          | **Optional**. Flag for Kafka persistence. Default is `false`. Set to `true` if you want a persistent Kafka installation.                                                                                       |
 | `features.async.kafka`                | `volumeSize`          | **Optional**. Size of persistent volume claim for Kafka. Default is `2Gi`. Not used if not persistent install asked.                                                                                           |
 | `features.async.kafka.schemaRegistry` | `url`                 | **Optional**. The API URL of a Kafka Schema Registry. Used for Avro based serialization                                                                                                                        |
@@ -254,6 +255,25 @@ Here are below the configuration properties of the AMQP support feature:
 | `features.async.amqp` | `url`      | **Optional**. The URL of AMQP broker (eg: `my-amqp-broker.example.com:5672`). Default is undefined which means that feature is disabled. |
 | `features.async.amqp` | `username` | **Optional**. The username to use for connecting to secured AMQP broker. Default to `microcks`.                                          |
 | `features.async.amqp` | `password` | **Optional**. The password to use for connecting to secured AMQP broker. Default to `microcks`.                                          |
+
+#### NATS feature details
+
+Here are below the configuration properties of the NATS support feature:
+
+| Section               | Property   | Description                                                                                                                              |
+|-----------------------| ---------- |------------------------------------------------------------------------------------------------------------------------------------------|
+| `features.async.nats` | `url`      | **Optional**. The URL of NATS broker (eg: `my-nats-broker.example.com:4222`). Default is undefined which means that feature is disabled. |
+| `features.async.nats` | `username` | **Optional**. The username to use for connecting to secured NATS broker. Default to `microcks`.                                          |
+| `features.async.nats` | `password` | **Optional**. The password to use for connecting to secured NATS broker. Default to `microcks`.                                          |
+
+#### Google PubSub feature details
+
+Here are below the configuration properties of the Google PubSub support feature:
+
+| Section                       | Property  | Description                                                                                                                          |
+|-------------------------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------|
+| `features.async.googlepubsub` | `project` | **Optional**. The GCP project id of PubSub (eg: `my-gcp-project-347219`). Default is undefined which means that feature is disabled. |
+| `features.async.googlepubsub` | `serviceAccountSecretRef` | **Optional**. The name of a Generic Secret holding Service Account JSON credentiels. Set `secret` and `fileKey` properties.          |
 
 ### Examples
 

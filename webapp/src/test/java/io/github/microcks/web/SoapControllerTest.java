@@ -162,4 +162,26 @@ public class SoapControllerTest {
       assertEquals("sayHelloWorld", soapController.extractOperationName(noArgOperationPayloadWithNamespace));
       assertEquals("sayHelloWorld", soapController.extractOperationName(noArgFullOperationPayloadWithNamespace));
    }
+
+   @Test
+   public void testConvertSoapUITemplate() {
+      String soapUITemplate = "<something>${myParam}</something>";
+      String microcksTemplate = SoapController.convertSoapUITemplate(soapUITemplate);
+      assertEquals("<something>{{ myParam }}</something>", microcksTemplate);
+
+      soapUITemplate = "<bean><something>${ myParam}</something><else>${myOtherParam }</else></bean>";
+      microcksTemplate = SoapController.convertSoapUITemplate(soapUITemplate);
+      assertEquals("<bean><something>{{ myParam }}</something><else>{{ myOtherParam }}</else></bean>", microcksTemplate);
+
+      soapUITemplate = "<bean>\n" +
+            "  <something>${myParam}</something>\n" +
+            "  <else>${myOtherParam}</else>\n" +
+            "</bean>";
+      String expectedResult = "<bean>\n" +
+            "  <something>{{ myParam }}</something>\n" +
+            "  <else>{{ myOtherParam }}</else>\n" +
+            "</bean>";
+      microcksTemplate = SoapController.convertSoapUITemplate(soapUITemplate);
+      assertEquals(expectedResult, microcksTemplate);
+   }
 }

@@ -18,12 +18,6 @@
  */
 package io.github.microcks.util.postman;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.json.JsonWriteFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
@@ -39,13 +33,28 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.URIBuilder;
+import io.github.microcks.util.dispatcher.FallbackSpecification;
+import io.github.microcks.util.dispatcher.JsonMappingException;
+
+import com.fasterxml.jackson.core.json.JsonWriteFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
@@ -69,6 +78,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    /** Regular expression used to evaluate operation name matching. */
    private static final String OPERATION_NAME_EXPRESSION_PREFIX = "(GET|POST|PUT|PATH|DELETE|OPTION)?( *)(/)?";
 
+   /** Default constructor for package protected extensions. */
+   protected PostmanCollectionImporter() {
+   }
+
    /**
     * Build a new importer.
     * @param collectionFilePath The path to local Postman collection file
@@ -85,6 +98,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          log.error("Exception while parsing Postman collection file " + collectionFilePath, e);
          throw new IOException("Postman collection file parsing error");
       }
+   }
+
+   protected void setCollection(JsonNode collection) {
+      this.collection = collection;
    }
 
    @Override
@@ -194,6 +211,21 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
          // Select item based onto operation name.
          if (areOperationsEquivalent(operation.getName(), operationName)) {
+            // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
+            String rootDispatcher = operation.getDispatcher();
+            String rootDispatcherRules = operation.getDispatcherRules();
+
+            if (DispatchStyles.FALLBACK.equals(operation.getDispatcher())) {
+               FallbackSpecification fallbackSpec = null;
+               try {
+                  fallbackSpec = FallbackSpecification.buildFromJsonString(operation.getDispatcherRules());
+                  rootDispatcher = fallbackSpec.getDispatcher();
+                  rootDispatcherRules = fallbackSpec.getDispatcherRules();
+               } catch (JsonMappingException e) {
+                  log.warn("Operation '{}' has a malformed Fallback dispatcher rules", operation.getName());
+               }
+            }
+
             Iterator<JsonNode> responses = itemNode.path("response").elements();
             while (responses.hasNext()) {
                JsonNode responseNode = responses.next();
@@ -203,30 +235,30 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                String dispatchCriteria = null;
                String requestUrl = requestNode.path("url").path("raw").asText();
 
-               if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
+               if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
                   // We only need the pattern here.
                   operation.addResourcePath(extractResourcePath(requestUrl, null));
-               } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+               } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
                   Map<String, String> parts = buildRequestParts(requestNode);
-                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
+                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
                   operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
-               } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+               } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
                   Map<String, String> parts = buildRequestParts(requestNode);
-                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(parts);
-                  dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
+                  dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
+                  dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rootDispatcherRules, requestUrl);
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
                   operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
-               } else if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
+               } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
                   // This dispatcher is used for GraphQL
                   if (requestNode.path("body").has("graphql")) {
                      // We must transform JSON representing variables into a Map<String, String>
                      // before building a dispatchCriteria matching the rules.
                      String variables = requestNode.path("body").path("graphql").path("variables").asText();
-                     dispatchCriteria = extractGraphQLCriteria(operation.getDispatcherRules(), variables);
+                     dispatchCriteria = extractGraphQLCriteria(rootDispatcherRules, variables);
                   }
                }
 

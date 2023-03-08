@@ -36,7 +36,7 @@ services:
       - mongo
       - keycloak
       - postman
-    image: quay.io/microcks/microcks:latest
+    image: quay.io/microcks/microcks:next
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
@@ -50,8 +50,8 @@ services:
       - POSTMAN_RUNNER_URL=http://postman:3000
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
-      - KEYCLOAK_URL=http://keycloak:8080/auth
-      - KEYCLOAK_PUBLIC_URL=http://localhost:18080/auth
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KEYCLOAK_PUBLIC_URL=http://localhost:18080
       - ASYNC_MINION_URL=http://microcks-async-minion:8081
       - KAFKA_BOOTSTRAP_SERVER=kafka:19092
 
@@ -60,7 +60,7 @@ services:
       - app
     ports:
       - "8081:8081"
-    image: quay.io/microcks/microcks-async-minion:latest
+    image: quay.io/microcks/microcks-async-minion:next
     container_name: microcks-async-minion
     restart: on-failure
     volumes:
