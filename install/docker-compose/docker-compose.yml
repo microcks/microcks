@@ -34,7 +34,7 @@ services:
       - mongo
       - keycloak
       - postman
-    image: quay.io/microcks/microcks:next
+    image: quay.io/microcks/microcks:latest
     container_name: microcks
     ports:
       - "8080:8080"
