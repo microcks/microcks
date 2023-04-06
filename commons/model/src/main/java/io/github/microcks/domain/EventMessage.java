@@ -26,18 +26,9 @@ import org.springframework.data.annotation.Id;
  */
 public class EventMessage extends Message {
 
-   @Id
-   private String id;
+   
    private String mediaType;
    private String dispatchCriteria;
-
-   public String getId() {
-      return id;
-   }
-
-   public void setId(String id) {
-      this.id = id;
-   }
 
    public String getMediaType() {
       return mediaType;

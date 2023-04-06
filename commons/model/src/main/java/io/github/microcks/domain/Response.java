@@ -30,20 +30,11 @@ import org.springframework.data.annotation.Id;
  */
 public class Response extends Message {
 
-   @Id
-   private String id;
+   
    private String status;
    private String mediaType;
    private String dispatchCriteria;
    private boolean isFault = false;
-
-   public String getId() {
-      return id;
-   }
-
-   public void setId(String id) {
-      this.id = id;
-   }
 
    public String getStatus() {
       return status;

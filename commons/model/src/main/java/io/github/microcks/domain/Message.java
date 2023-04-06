@@ -21,6 +21,8 @@ package io.github.microcks.domain;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.data.annotation.Id;
+
 /**
  * Base class holding common attributes for Request, Response and EventMessage
  * domain objects.
@@ -28,6 +30,8 @@ import java.util.Set;
  */
 public abstract class Message {
 
+   @Id
+   private String id;
    private String name;
    private String content;
    private String operationId;
@@ -35,6 +39,14 @@ public abstract class Message {
    private String sourceArtifact;
 
    private Set<Header> headers;
+
+   public String getId() {
+      return id;
+   }
+
+   public void setId(String id) {
+      this.id = id;
+   }
 
    public String getName() {
       return name;
