@@ -127,16 +127,11 @@ public class RestController {
       }
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       Operation rOperation = null;
-      for (Operation operation : service.getOperations()) {
-         // Select operation based onto Http verb (GET, POST, PUT, etc ...)
-         if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
-            // ... then check is we have a matching resource path.
-            if (operation.getResourcePaths() != null && (operation.getResourcePaths().contains(resourcePath)
-                  || operation.getResourcePaths().contains(trimmedResourcePath)) ) {
-               rOperation = operation;
-               break;
-            }
-         }
+
+
+      rOperation = findOperationByResourcePath(service.getOperations(), request.getMethod(), trimmedResourcePath);
+      if(rOperation == null){
+         rOperation = findOperationByResourcePath(service.getOperations(), request.getMethod(), resourcePath);
       }
 
       // We may not have found an Operation because of not exact resource path matching with an operation
@@ -270,6 +265,24 @@ public class RestController {
 
       log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
       return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+   }
+
+   /**
+    * This method extracts the operation from list of operations for a specific method with given resource path
+    * @param operations
+    * @param methodName
+    * @param resourcePath
+    * @return operation if found else null
+    */
+   private static Operation findOperationByResourcePath(List<Operation> operations, String methodName, String resourcePath){
+      Operation rOperation = null;
+      if(operations != null && !operations.isEmpty() && resourcePath != null && methodName != null){
+         rOperation = operations.stream()
+                        .filter(operation -> operation.getMethod().equals(methodName.toUpperCase()))
+                        .filter(operation -> operation.getResourcePaths() != null && operation.getResourcePaths().contains(resourcePath))
+                        .findFirst().orElse(null);
+      }
+      return rOperation;
    }
 
 
