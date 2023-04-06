@@ -22,6 +22,8 @@ import io.github.microcks.domain.*;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
+import io.github.microcks.util.IdBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +49,19 @@ public class MessageService {
 
    @Autowired
    private EventMessageRepository eventMessageRepository;
+
+
+   public List<? extends Exchange> computeMaxPossibleConformanceScore(Service service, Operation operation){
+      if (ServiceType.EVENT.equals(service.getType()) || ServiceType.GENERIC_EVENT.equals(service.getType())) {
+         // If an event, we should explicitly retrieve event messages.
+         return this.getEventByOperation(
+               IdBuilder.buildOperationId(service, operation));
+      } else {
+         // Otherwise we have traditional request / response pairs.
+         return this.getRequestResponseByOperation(
+               IdBuilder.buildOperationId(service, operation));
+      }
+   }
 
 
    /**

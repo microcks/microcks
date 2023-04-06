@@ -18,6 +18,7 @@
  */
 package io.github.microcks.service;
 
+import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
@@ -185,16 +186,8 @@ public class MetricsService {
       double operationContrib = 100 / service.getOperations().size();
 
       for (Operation operation : service.getOperations()) {
-         List exchanges;
-         if (ServiceType.EVENT.equals(service.getType()) || ServiceType.GENERIC_EVENT.equals(service.getType())) {
-            // If an event, we should explicitly retrieve event messages.
-            exchanges = messageService.getEventByOperation(
-                  IdBuilder.buildOperationId(service, operation));
-         } else {
-            // Otherwise we have traditional request / response pairs.
-            exchanges = messageService.getRequestResponseByOperation(
-                  IdBuilder.buildOperationId(service, operation));
-         }
+         List<? extends Exchange> exchanges = messageService.computeMaxPossibleConformanceScore(service, operation);
+
          if (exchanges != null) {
             if (exchanges.size() >= 2) {
                maxScore += operationContrib;
