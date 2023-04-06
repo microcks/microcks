@@ -42,7 +42,7 @@ import java.util.List;
  * of OpenAPI schema is https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md.
  * @author laurent
  */
-public class OpenAPISchemaValidator {
+public class OpenAPISchemaValidator extends SchemaValidator {
 
    /** A commons logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(OpenAPISchemaValidator.class);
@@ -320,5 +320,11 @@ public class OpenAPISchemaValidator {
             typeArray.add(type).add("null");
          }
       }
+   }
+
+
+   @Override
+   public List<String> validate(JsonNode schemaNode, JsonNode jsonNode) {
+      return validateJson(schemaNode, jsonNode);
    }
 }

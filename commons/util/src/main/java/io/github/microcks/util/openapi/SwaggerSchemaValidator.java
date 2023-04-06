@@ -31,7 +31,7 @@ import java.util.List;
  * of Swagger schema is https://swagger.io/specification/v2/.
  * @author laurent
  */
-public class SwaggerSchemaValidator {
+public class SwaggerSchemaValidator extends SchemaValidator {
 
    /** A commons logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(SwaggerSchemaValidator.class);
@@ -88,5 +88,10 @@ public class SwaggerSchemaValidator {
       ((ObjectNode) schemaNode).set("definitions", specificationNode.path("definitions").deepCopy());
 
       return OpenAPISchemaValidator.validateJson(schemaNode, jsonNode, namespace);
+   }
+
+   @Override
+   public List<String> validate(JsonNode schemaNode, JsonNode jsonNode) {
+      return validateJsonMessage(schemaNode, jsonNode, null);
    }
 }
