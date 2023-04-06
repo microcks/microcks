@@ -157,7 +157,7 @@ public class DynamicMockRestController {
          List<String> resources = genericResources.stream()
                .map(genericResource -> MockControllerCommons.renderResponseContent(
                      evaluableRequest, engine,
-                     transformToResourceJSON(genericResource)
+                     JsonUtils.transformToResourceJSON(genericResource)
                ))
                .collect(Collectors.toList());
 
@@ -165,7 +165,7 @@ public class DynamicMockRestController {
          waitForDelay(startTime, delay, mockContext);
          MockControllerCommons.waitForDelay(startTime, delay);
 
-         return new ResponseEntity<>(formatToJSONArray(resources), HttpStatus.OK);
+         return new ResponseEntity<>(JsonUtils.formatToJSONArray(resources), HttpStatus.OK);
       }
       // Return a 400 code : bad request.
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -206,7 +206,7 @@ public class DynamicMockRestController {
 
             // Return the resource as well as a 200 code.
             return new ResponseEntity<>(MockControllerCommons.renderResponseContent(
-                  evaluableRequest, engine, transformToResourceJSON(genericResource)), HttpStatus.OK);
+                  evaluableRequest, engine, JsonUtils.transformToResourceJSON(genericResource)), HttpStatus.OK);
          } else {
             // Return a 404 code : not found.
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -257,7 +257,7 @@ public class DynamicMockRestController {
             waitForDelay(startTime, delay, mockContext);
 
             // Return the updated resource as well as a 200 code.
-            return new ResponseEntity<>(transformToResourceJSON(genericResource), HttpStatus.OK);
+            return new ResponseEntity<>(JsonUtils.transformToResourceJSON(genericResource), HttpStatus.OK);
 
          } else {
             // Wait if specified before returning.
@@ -322,22 +322,6 @@ public class DynamicMockRestController {
       return null;
    }
 
-   private String transformToResourceJSON(GenericResource genericResource) {
-      Document document = genericResource.getPayload();
-      document.append(ID_FIELD, genericResource.getId());
-      return document.toJson();
-   }
-
-   private String formatToJSONArray(List<String> resources) {
-      StringBuilder builder = new StringBuilder("[");
-      for (int i=0; i<resources.size(); i++) {
-         builder.append(resources.get(i));
-         if (i < resources.size() - 1) {
-            builder.append(", ");
-         }
-      }
-      return builder.append("]").toString();
-   }
 
    private void waitForDelay(Long since, Long delay, MockContext mockContext) {
       // Setting delay to default one if not set.
@@ -354,6 +338,25 @@ public class DynamicMockRestController {
                new Date(since), since - System.currentTimeMillis());
          applicationContext.publishEvent(event);
          log.debug("Mock invocation event has been published");
+      }
+   }
+
+   private static class JsonUtils{
+      public static String transformToResourceJSON(GenericResource genericResource) {
+         Document document = genericResource.getPayload();
+         document.append(ID_FIELD, genericResource.getId());
+         return document.toJson();
+      }
+   
+      public static String formatToJSONArray(List<String> resources) {
+         StringBuilder builder = new StringBuilder("[");
+         for (int i=0; i<resources.size(); i++) {
+            builder.append(resources.get(i));
+            if (i < resources.size() - 1) {
+               builder.append(", ");
+            }
+         }
+         return builder.append("]").toString();
       }
    }
 
