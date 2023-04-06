@@ -241,8 +241,7 @@ public class DispatchCriteriaHelper{
       final var paramsRule = Arrays.stream(paramsRuleString.split("&&")).map(String::trim).distinct().collect(Collectors.toUnmodifiableSet());
 
       // Both should match and have the same group count.
-      if (valuesM.matches() && partsM.matches()
-            && valuesM.groupCount() == partsM.groupCount()){
+      if (patternMatches(valuesM, partsM)){
          for (int i=1; i<partsM.groupCount()+1; i++){
            final String paramName = partsM.group(i);
            final String paramValue = valuesM.group(i);
@@ -362,5 +361,18 @@ public class DispatchCriteriaHelper{
          }
       }
       return result.toString();
+   }
+
+   
+
+   /**
+    * This method checks if the value provided matches the part of the URL exactly
+    * @param value
+    * @param part
+    * @return Boolean: Whether the value matches part or not
+    */
+    private static Boolean patternMatches(Matcher value, Matcher part){
+      return value != null && part != null && value.matches() && part.matches()
+      && value.groupCount() == part.groupCount();
    }
 }
