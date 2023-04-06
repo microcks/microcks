@@ -53,7 +53,7 @@ public class DocumentationController {
    private static final String RESOURCE_URL = "\\{RESOURCE_URL\\}";
 
    @RequestMapping(value = "/documentation/{name}/{resourceType}", method = RequestMethod.GET)
-   public ResponseEntity<?> execute(
+   public ResponseEntity<?> generateDocumentation(
          @PathVariable("name") String name,
          @PathVariable("resourceType") String resourceType,
          HttpServletRequest request
