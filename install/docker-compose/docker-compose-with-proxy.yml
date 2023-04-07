@@ -18,7 +18,7 @@ services:
       KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
       KC_HOSTNAME_ADMIN_URL: "http://localhost:18080"
       KC_HOSTNAME_URL: "http://localhost:18080"
-    volumes: 
+    volumes:
       - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
 
   postman:

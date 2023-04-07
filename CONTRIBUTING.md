@@ -1,7 +1,8 @@
 # Contributing guide
 
-**Want to contribute? Great!** We try to make it easy, and all contributions, even the smaller ones, are more than welcome. This includes bug reports, fixes, documentation, examples... 
-But first, read this page.
+**Want to contribute? Great!** ✨ We try to make it easy, and all contributions, even the smaller ones, are more than welcome. This includes bug reports, fixes, documentation, examples... 
+
+First, you may need to read our [global contribution guide](https://github.com/microcks/.github/blob/master/CONTRIBUTING.md) and then to read this page.
 
 ## Reporting an issue
 
@@ -15,6 +16,8 @@ Don't forget to indicate your Java, Maven and/or Docker version.
 ## Build
 
 ### Build the whole project
+
+You need to have [Apache Maven](https://maven.apache.org) (version >= 3.5) up and running as well as a valid Java Development Kit (version >= 17) install to build the project.
 
 ```
 $ git clone https://github.com/microcks/microcks.git
