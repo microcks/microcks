@@ -57,7 +57,7 @@ components:
     UserSignedupEvent:
       type: object
       allOf:
-        - $ref: "./user-signedup.json"
+        - $ref: "user-signedup.json"
   messageTraits:
     commonHeaders:
       headers:
