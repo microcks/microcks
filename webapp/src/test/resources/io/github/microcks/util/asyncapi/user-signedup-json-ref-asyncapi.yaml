@@ -13,6 +13,11 @@ info:
     url: https://opensource.org/licenses/MIT
 defaultContentType: application/json
 channels:
+  user/signedout:
+    subscribe:
+      message:
+        payload:
+          $ref: '#/components/schemas/UserSignedupEvent'
   user/signedup:
     description: The topic on which user signed up events may be consumed
     subscribe:

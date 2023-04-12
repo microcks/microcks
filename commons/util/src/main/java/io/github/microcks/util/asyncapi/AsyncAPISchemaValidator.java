@@ -18,15 +18,16 @@
  */
 package io.github.microcks.util.asyncapi;
 
+import io.github.microcks.util.AvroUtil;
+import io.github.microcks.util.JsonSchemaValidator;
+import io.github.microcks.util.SchemaMap;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import io.github.microcks.util.AvroUtil;
-import io.github.microcks.util.JsonSchemaValidator;
-import io.github.microcks.util.SchemaMap;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -100,14 +101,30 @@ public class AsyncAPISchemaValidator {
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode) {
+      return validateJson(schemaNode, jsonNode, null);
+   }
+
+   /**
+    * Validate a Json object representing by its text against a schema object representing byt its
+    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
+    * is respectful of AsyncAPI schema spec semantics regarding additional or unknown attributes: schema must
+    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
+    * as validation errors. It returns a list of validation error messages.
+    * @param schemaNode The AsyncAPI schema specification as a Jackson node
+    * @param jsonNode The Json object as a Jackson node
+    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @return The list of validation failures. If empty, json object is valid !
+    */
+   public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
       schemaNode = convertAsyncAPISchemaToJsonSchema(schemaNode);
 
       try {
-         return JsonSchemaValidator.validateJson(schemaNode, jsonNode);
+         return JsonSchemaValidator.validateJson(schemaNode, jsonNode, namespace);
       } catch (ProcessingException e) {
          log.debug("Got a ProcessingException while trying to interpret schemaNode as a real schema");
          List<String> errors = new ArrayList<>();
          errors.add("schemaNode does not seem to represent a valid AsyncAPI schema");
+         errors.add("root cause: " + e.getMessage());
          return errors;
       }
    }
@@ -125,6 +142,23 @@ public class AsyncAPISchemaValidator {
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode, String messagePathPointer) {
+      return validateJsonMessage(specificationNode, jsonNode, messagePathPointer, null);
+   }
+
+   /**
+    * Validate a Json object representing an AsyncAPI message against a node representing
+    * a full AsyncAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
+    * for {@code messagePathPointer} to allow finding the correct schema information. Validation is a deep one: its
+    * pursue checking children nodes on a failed parent. Validation is respectful of AsyncAPI schema spec semantics
+    * regarding additional or unknown attributes: schema must explicitly set {@code additionalProperties} to false if
+    * you want to consider unknown attributes as validation errors. It returns a list of validation error messages.
+    * @param specificationNode The AsyncAPI full specification as a Jackson node
+    * @param jsonNode The Json object representing actual message as a Jackson node
+    * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
+    * @param namespace Namespace definition to resolve relative dependencies in OpenAPI schema
+    * @return The list of validation failures. If empty, json object is valid !
+    */
+   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode, String messagePathPointer, String namespace) {
       // Extract specific content type node for message node.
       JsonNode messageNode = specificationNode.at(messagePathPointer);
       if (messageNode == null || messageNode.isMissingNode()) {
@@ -150,7 +184,7 @@ public class AsyncAPISchemaValidator {
       // Import all the common parts that may be referenced by references.
       ((ObjectNode) schemaNode).set("components", specificationNode.path("components").deepCopy());
 
-      return validateJson(schemaNode, jsonNode);
+      return validateJson(schemaNode, jsonNode, namespace);
    }
 
    /**

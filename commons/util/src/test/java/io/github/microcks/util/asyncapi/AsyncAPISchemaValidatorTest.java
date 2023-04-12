@@ -442,6 +442,30 @@ public class AsyncAPISchemaValidatorTest {
       assertTrue(errors.isEmpty());
    }
 
+
+   @Test
+   public void testFullProcedureFromAsyncAPIWithExternalRelativeReference() {
+      String asyncAPIText = null;
+      String jsonText = "{\"fullName\":\"Laurent Broudoux\", \"email\":\"laurent@acme.com\", \"age\": 44}";
+      JsonNode asyncAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         asyncAPIText = FileUtils.readFileToString(new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-json-ref-asyncapi.yaml"));
+         // Extract JSON nodes using AsyncAPISchemaValidator methods.
+         asyncAPISpec = AsyncAPISchemaValidator.getJsonNodeForSchema(asyncAPIText);
+         contentNode = AsyncAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content of user/signedup subscribe chanel.
+      List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
+            "/channels/user~1signedup/subscribe/message", "https://raw.githubusercontent.com/microcks/microcks/1.7.x/commons/util/src/test/resources/io/github/microcks/util/asyncapi/");
+      assertTrue(errors.isEmpty());
+  }
+
    @Test
    public void testValidateAvroSuccessFromAsyncAPIResource() {
       String asyncAPIText = null;

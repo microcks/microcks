@@ -35,6 +35,7 @@ import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
@@ -64,6 +65,9 @@ public class AsyncAPITestManager {
 
    @Inject
    SchemaRegistry schemaRegistry;
+
+   @ConfigProperty(name = "io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url")
+   String microcksUrl;
 
    /**
     * Launch a new test using this specification. This is a fire and forget operation.
@@ -252,7 +256,7 @@ public class AsyncAPITestManager {
                      // Now parse the payloadNode and validate it according the operation message
                      // found in specificationNode.
                      JsonNode payloadNode = AsyncAPISchemaValidator.getJsonNode(responseContent);
-                     errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode, messagePathPointer);
+                     errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode, messagePathPointer, microcksUrl + "/api/resources/");
                   }
 
                   if (errors == null || errors.isEmpty()) {

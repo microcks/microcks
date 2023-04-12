@@ -51,12 +51,14 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -159,6 +161,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
    @Override
    public List<Resource> getResourceDefinitions(Service service) {
       List<Resource> results = new ArrayList<>();
+      Set<String> resolvedExternalRefNames = new HashSet<>();
 
       // Build a suitable name.
       String name = service.getName() + "-" + service.getVersion();
@@ -172,7 +175,6 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       Resource resource = new Resource();
       resource.setName(name);
       resource.setType(ResourceType.ASYNC_API_SPEC);
-      resource.setContent(specContent);
       results.add(resource);
 
       // Browser operations messages and message traits to see if we have
@@ -193,56 +195,74 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                   JsonNode payloadNode = messageNode.path("payload");
 
                   // Check we have a reference that is not a local one.
-                  if (payloadNode.has("$ref")
-                        && !payloadNode.path("$ref").asText().startsWith("#")) {
-                     String ref = payloadNode.path("$ref").asText();
+                  if (payloadNode.has("$ref")) {
 
-                     // Remove trailing anchor marker (we may have this in Avro schema
-                     // to indicate exact Resource)
-                     if (ref.contains("#")) {
-                        ref = ref.substring(0, ref.indexOf("#"));
-                     }
+                     Set<String> references = new HashSet<>();
+                     findAllExternalRefs(payloadNode, references);
 
-                     try {
-                        // Extract content using resolver.
-                        String content = referenceResolver.getHttpReferenceContent(ref, "UTF-8");
+                     for (String ref : references) {
+                        // We may have already resolved it if referenced more than once.
+                        if (!resolvedExternalRefNames.contains(ref)) {
+                           try {
+                              // Remove trailing anchor marker (we may have this in Avro schema to point exact Resource)
+                              if (ref.contains("#")) {
+                                 ref = ref.substring(0, ref.indexOf("#"));
+                              }
 
-                        // Build a new resource from content. Use the escaped operation path.
-                        Resource schemaResource = new Resource();
-                        schemaResource.setName(IdBuilder.buildResourceFullName(service, operation));
-                        schemaResource.setPath(ref);
-                        schemaResource.setContent(content);
+                              // Extract content using resolver.
+                              String content = referenceResolver.getHttpReferenceContent(ref, "UTF-8");
+                              String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
 
-                        // We have to look at schema format to know the type.
-                        // Default value is set at first.
-                        String schemaFormat = "application/vnd.aai.asyncapi";
-                        if (messageNode.has("schemaFormat")) {
-                           schemaFormat = messageNode.path("schemaFormat").asText();
+                              // Build a new resource from content. Use the escaped operation path.
+                              Resource schemaResource = new Resource();
+                              schemaResource.setName(IdBuilder.buildResourceFullName(service, resourceName));
+                              schemaResource.setPath(ref);
+                              schemaResource.setContent(content);
+
+                              // We have to look at schema format to know the type.
+                              if (messageNode.has("schemaFormat")) {
+                                 String schemaFormat = messageNode.path("schemaFormat").asText();
+
+                                 if (schemaFormat.startsWith("application/vnd.aai.asyncapi")) {
+                                    schemaResource.setType(ResourceType.ASYNC_API_SCHEMA);
+                                 } else if (schemaFormat.startsWith("application/vnd.oai.openapi")) {
+                                    schemaResource.setType(ResourceType.OPEN_API_SCHEMA);
+                                 } else if (schemaFormat.startsWith("application/schema+json")
+                                       || schemaFormat.startsWith("application/schema+yaml")) {
+                                    schemaResource.setType(ResourceType.JSON_SCHEMA);
+                                 } else if (schemaFormat.startsWith("application/vnd.apache.avro")) {
+                                    schemaResource.setType(ResourceType.AVRO_SCHEMA);
+                                 }
+                              } else {
+                                 // We should probably go deeper here and inspect the content of resolved resource
+                                 // to actually get the real schema type...
+                                 schemaResource.setType(ResourceType.JSON_SCHEMA);
+                              }
+
+                              if (!ref.startsWith("http")) {
+                                 // If a relative resource, replace with new name.
+                                 specContent = specContent.replace(ref, URLEncoder.encode(schemaResource.getName(), "UTF-8"));
+                              }
+
+                              results.add(schemaResource);
+                           } catch (IOException ioe) {
+                              log.error("IOException while trying to resolve reference " + ref, ioe);
+                              log.info("Ignoring the reference {} cause it could not be resolved", ref);
+                           }
+                           // Mark it as resolved.
+                           resolvedExternalRefNames.add(ref);
                         }
-
-                        if (schemaFormat.startsWith("application/vnd.aai.asyncapi")) {
-                           schemaResource.setType(ResourceType.ASYNC_API_SCHEMA);
-                        } else if (schemaFormat.startsWith("application/vnd.oai.openapi")) {
-                           schemaResource.setType(ResourceType.OPEN_API_SCHEMA);
-                        } else if (schemaFormat.startsWith("application/schema+json")
-                              || schemaFormat.startsWith("application/schema+yaml")) {
-                           schemaResource.setType(ResourceType.JSON_SCHEMA);
-                        } else if (schemaFormat.startsWith("application/vnd.apache.avro")) {
-                           schemaResource.setType(ResourceType.AVRO_SCHEMA);
-                        }
-                        results.add(schemaResource);
-                     } catch (IOException ioe) {
-                        log.error("IOException while trying to resolve reference " + ref, ioe);
-                        log.info("Ignoring the reference {} cause it could not be resolved", ref);
                      }
                   }
                }
             }
          }
-
          // Finally try to clean up resolved references and associated resources (files)
          referenceResolver.cleanResolvedReferences();
       }
+      // Set the content of main AsyncAPI that may have been updated with dereferenced dependencies.
+      resource.setContent(specContent);
+
       return results;
    }
 
@@ -473,6 +493,27 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       }
 
       return results;
+   }
+
+   /**
+    * Browse Json node to extract references and store them into externalRefs.
+    */
+   private void findAllExternalRefs(JsonNode node, Set<String> externalRefs) {
+      // If node as a $ref child, it's a stop condition.
+      if (node.has("$ref")) {
+         String ref = node.path("$ref").asText();
+         if (!ref.startsWith("#")) {
+            externalRefs.add(ref);
+         } else {
+            findAllExternalRefs(followRefIfAny(node), externalRefs);
+         }
+      } else {
+         // Iterate on all other children.
+         Iterator<JsonNode> children = node.elements();
+         while (children.hasNext()) {
+            findAllExternalRefs(children.next(), externalRefs);
+         }
+      }
    }
 
    /** Extract example using the AsyncAPI 2.1 new 'name' property. */
