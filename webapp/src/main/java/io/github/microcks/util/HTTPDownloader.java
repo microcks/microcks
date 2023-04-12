@@ -184,18 +184,20 @@ public class HTTPDownloader {
 
       HttpURLConnection connection = (HttpURLConnection) website.openConnection();
 
-      // If SSL validation is disabled, trust everything.
-      try {
-         if (disableSSLValidation) {
-            log.debug("SSL Validation is disabled for {}, installing accept everything TrustManager", remoteUrl);
-            installAcceptEverythingTrustManager(connection);
-         } else if (secret != null && secret.getCaCertPem() != null) {
-            log.debug("Secret for {} contains a CA Cert, installing certificate into TrustManager", remoteUrl);
-            installCustomCaCertTrustManager(secret.getCaCertPem(), connection);
+      // If HTTPS and SSL validation is disabled, trust everything.
+      if ("https".equals(website.getProtocol())) {
+         try {
+            if (disableSSLValidation) {
+               log.debug("SSL Validation is disabled for {}, installing accept everything TrustManager", remoteUrl);
+               installAcceptEverythingTrustManager(connection);
+            } else if (secret != null && secret.getCaCertPem() != null) {
+               log.debug("Secret for {} contains a CA Cert, installing certificate into TrustManager", remoteUrl);
+               installCustomCaCertTrustManager(secret.getCaCertPem(), connection);
+            }
+         } catch (Exception e) {
+            log.error("Caught exception while preparing TrustManager for connecting {}: {}", remoteUrl, e.getMessage());
+            throw new IOException("SSL Connection with " + remoteUrl + " failed during preparation", e);
          }
-      } catch (Exception e) {
-         log.error("Caught exception while preparing TrustManager for connecting {}: {}", remoteUrl, e.getMessage());
-         throw new IOException("SSL Connection with " + remoteUrl + " failed during preparation", e);
       }
 
       if (secret != null) {
