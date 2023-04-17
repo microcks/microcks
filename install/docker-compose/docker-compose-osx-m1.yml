@@ -10,20 +10,19 @@ services:
     user: "1024631:1000"
 
   keycloak:
-    image: quay.io/microcks/microcks-keycloak:20.0.2
+    image: quay.io/keycloak/keycloak:20.0.2
     container_name: microcks-sso
     ports:
       - "18080:8080"
     environment:
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
-      KEYCLOAK_IMPORT: "/tmp/microcks-realm.json"
       KC_HOSTNAME_ADMIN_URL: "http://localhost:18080"
       KC_HOSTNAME_URL: "http://localhost:18080"
     volumes:
-      - "./keycloak-realm/microcks-realm-sample.json:/tmp/microcks-realm.json"
+      - "./keycloak-realm/microcks-realm-sample.json:/opt/keycloak/data/import/microcks-realm.json"
     command:
-      - start-dev
+      - start-dev --import-realm
 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest

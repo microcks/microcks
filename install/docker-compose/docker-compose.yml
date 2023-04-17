@@ -9,7 +9,7 @@ services:
 
   keycloak:
     #image: jboss/keycloak:14.0.0
-    image: quay.io/keycloak/keycloak:21.0.2
+    image: quay.io/keycloak/keycloak:20.0.2
     container_name: microcks-sso
     ports:
       - "18080:8080"
