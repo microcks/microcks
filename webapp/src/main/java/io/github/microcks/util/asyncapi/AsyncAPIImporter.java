@@ -458,6 +458,17 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               b.setDestinationName(binding.path("queue").asText());
                            }
                            break;
+                        case "sqs":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.SQS);
+                           if (binding.has("queue")) {
+                              if (binding.get("queue").has("name")) {
+                                 b.setDestinationName(binding.get("queue").get("name").asText());
+                              }
+                              if (binding.has("messageRetentionPeriod")) {
+                                 b.setPersistent(true);
+                              }
+                           }
+                           break;
                      }
                   }
                }

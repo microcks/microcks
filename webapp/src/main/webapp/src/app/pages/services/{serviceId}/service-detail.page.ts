@@ -326,6 +326,7 @@ export class ServiceDetailPageComponent implements OnInit {
   }
   public formatAsyncDestination(operation: Operation, eventMessage: EventMessage, binding: string): string {
     var serviceName = this.resolvedServiceView.service.name;
+    var versionName = this.resolvedServiceView.service.version;
     var operationName = operation.name;
 
     if (binding === "WS") {
@@ -378,12 +379,15 @@ export class ServiceDetailPageComponent implements OnInit {
         return (parts[p1] != null) ? parts[p1] : match;
       });
     }
-    console.log(binding);
-    if ('KAFKA' === binding || 'GOOGLEPUBSUB' === binding) {
+
+    if ('KAFKA' === binding || 'GOOGLEPUBSUB' === binding || 'SQS' === binding) {
       operationName = operationName.replace(/\//g, '-');
     }
+    if ('SQS' === binding) {
+      versionName = versionName.replace(/\./g, '');
+    }
 
-    return serviceName + "-" + this.resolvedServiceView.service.version + "-" + operationName;
+    return serviceName + "-" + versionName + "-" + operationName;
   }
 
 

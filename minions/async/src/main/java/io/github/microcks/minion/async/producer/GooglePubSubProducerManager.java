@@ -158,7 +158,7 @@ public class GooglePubSubProducerManager {
 
    /**
     * Render Microcks headers using the template engine.
-    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the KafkaProducerManager level.)
+    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the GooglePubSubProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A map of rendered headers for GCP Publisher.
     */
