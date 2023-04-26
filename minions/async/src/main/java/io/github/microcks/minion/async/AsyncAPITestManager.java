@@ -23,6 +23,7 @@ import io.github.microcks.domain.TestReturn;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
 import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 import io.github.microcks.minion.async.consumer.AMQPMessageConsumptionTask;
+import io.github.microcks.minion.async.consumer.AmazonSQSMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.ConsumedMessage;
 import io.github.microcks.minion.async.consumer.GooglePubSubMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.KafkaMessageConsumptionTask;
@@ -317,6 +318,9 @@ public class AsyncAPITestManager {
          }
          if (GooglePubSubMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new GooglePubSubMessageConsumptionTask(testSpecification);
+         }
+         if (AmazonSQSMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
+            return new AmazonSQSMessageConsumptionTask(testSpecification);
          }
          return null;
       }
