@@ -40,6 +40,9 @@ data:
     {{- if .Values.features.async.googlepubsub.project }}
     features.feature.async-api.endpoint-GOOGLEPUBSUB={{ .Values.features.async.googlepubsub.project }}
     {{- end }}
+    {{- if .Values.features.async.sqs.region }}
+    features.feature.async-api.endpoint-SQS={{ .Values.features.async.sqs.region }}
+    {{- end }}
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
@@ -501,9 +504,18 @@ data:
     %kube.googlepubsub.service-account-location=/deployments/config/googlepubsub/sa/{{ .Values.features.async.googlepubsub.serviceAccountSecretRef.fileKey }}
       {{- end }}
     {{- end }}
+    
+    {{- if .Values.features.async.sqs.region }}
+    # Access to Amazon SQS.
+    %kube.amazonsqs.region={{ .Values.features.async.sqs.region }}
+    %kube.amazonsqs.credentials-profile-name={{ .Values.features.async.sqs.credentialsProfile }}
+      {{- if .Values.features.async.sqs.serviceAccountSecretRef.fileKey }}
+    %kube.amazonsqs.credentials-profile-location=/deployments/config/amazon-sqs/{{ .Values.features.async.sqs.credentialsSecretRef.fileKey }}
+      {{- end }}
+    {{- end }}
 
     # Configure the minion own behavioral properties.
-    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}{{ if .Values.features.async.nats.url }},NATS{{ end }}{{ if .Values.features.async.googlepubsub.project }},GOOGLEPUBSUB{{ end }}
+    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}{{ if .Values.features.async.nats.url }},NATS{{ end }}{{ if .Values.features.async.googlepubsub.project }},GOOGLEPUBSUB{{ end }}{{ if .Values.features.async.sqs.region }},SQS{{ end }}
     %kube.minion.restricted-frequencies=3,10,30
     %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
 {{- end -}}

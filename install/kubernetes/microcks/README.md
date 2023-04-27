@@ -273,7 +273,17 @@ Here are below the configuration properties of the Google PubSub support feature
 | Section                       | Property  | Description                                                                                                                          |
 |-------------------------------|-----------|--------------------------------------------------------------------------------------------------------------------------------------|
 | `features.async.googlepubsub` | `project` | **Optional**. The GCP project id of PubSub (eg: `my-gcp-project-347219`). Default is undefined which means that feature is disabled. |
-| `features.async.googlepubsub` | `serviceAccountSecretRef` | **Optional**. The name of a Generic Secret holding Service Account JSON credentiels. Set `secret` and `fileKey` properties.          |
+| `features.async.googlepubsub` | `serviceAccountSecretRef` | **Optional**. The name of a Generic Secret holding Service Account JSON credentials. Set `secret` and `fileKey` properties.          |
+
+#### Amazon SQS feature details
+
+Here are below the configuration properties of the Amazon SQS support feature:
+
+| Section              | Property               | Description                                                                                                                                                                                |
+|----------------------|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `features.async.sqs` | `region`               | **Optional**. The AWS region for connecting SQS service (eg: `eu-west-3`). Default is undefined which means that feature is disabled.                                                      |
+| `features.async.sqs` | `credentialsProfile`   | **Optional**. The AWS profile to use for authenticating to SQS. This profile should be present into a credentials file mounted from a Secret (see below). Default to `microcks-sqs-admin`. |
+| `features.async.sqs` | `credentialsSecretRef` | **Optional**. The name of a Generic Secret holding an AWS credentials file with referenced profile. Set `secret` and `fileKey` properties.                                                 |
 
 ### Examples
 
