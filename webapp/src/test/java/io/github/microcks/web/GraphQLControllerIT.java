@@ -215,5 +215,66 @@ public class GraphQLControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+
+      // Check query with multiple selection no aliases
+      query = "{\"query\": \"{\\n" +
+          "  film(id: \\\"ZmlsbXM6MQ==\\\") {\\n" +
+          "    id\\n" +
+          "    title\\n" +
+          "    episodeID\\n" +
+          "    rating\\n" +
+          "  }\\n" +
+          "  allFilms {\\n" +
+          "    films {\\n" +
+          "      id\\n" +
+          "      title\\n" +
+          "    }\\n" +
+          "  }\\n" +
+          "}\"}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+        JSONAssert.assertEquals("{\n" +
+                  "  \"data\": {\n" +
+                  "    \"film\": {\n" +
+                  "      \"id\": \"ZmlsbXM6MQ==\",\n" +
+                  "      \"title\": \"A New Hope\",\n" +
+                  "      \"episodeID\": 4,\n" +
+                  "      \"rating\": 4.3\n" +
+                  "    },\n" +
+                  "    \"allFilms\": {\n" +
+                  "      \"films\": [\n" +
+                  "        {\n" +
+                  "          \"id\": \"ZmlsbXM6MQ==\",\n" +
+                  "          \"title\": \"A New Hope\"\n" +
+                  "        },\n" +
+                  "        {\n" +
+                  "          \"id\": \"ZmlsbXM6Mg==\",\n" +
+                  "          \"title\": \"The Empire Strikes Back\"\n" +
+                  "        },\n" +
+                  "        {\n" +
+                  "          \"id\": \"ZmlsbXM6Mw==\",\n" +
+                  "          \"title\": \"Return of the Jedi\"\n" +
+                  "        },\n" +
+                  "        {\n" +
+                  "          \"id\": \"ZmlsbXM6NA==\",\n" +
+                  "          \"title\": \"The Phantom Menace\"\n" +
+                  "        },\n" +
+                  "        {\n" +
+                  "          \"id\": \"ZmlsbXM6NQ==\",\n" +
+                  "          \"title\": \"Attack of the Clones\"\n" +
+                  "        },\n" +
+                  "        {\n" +
+                  "          \"id\": \"ZmlsbXM6Ng==\",\n" +
+                  "          \"title\": \"Revenge of the Sith\"\n" +
+                  "        }\n" +
+                  "      ]\n" +
+                  "    }\n" +
+                  "  }\n" +
+                  "}",
+          response.getBody(), JSONCompareMode.LENIENT);
+        } catch (Exception e) {
+          fail("No Exception should be thrown here");
+        }
    }
 }
