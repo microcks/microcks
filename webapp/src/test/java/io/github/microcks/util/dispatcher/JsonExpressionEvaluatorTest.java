@@ -38,6 +38,10 @@ public class JsonExpressionEvaluatorTest {
          "\"country\": \"Germany\", \"type\": \"Wheat\"," +
          "\"rating\": 3.5, \"status\": \"out_of_stock\", \"extra\": \"Extra Information\"}";
 
+   private static final String EXTRA_GERMAN_BEER = "{\"name\": \"Weissbier\"," +
+         "\"country\": \"Germany\", \"type\": \"Wheat\"," +
+         "\"rating\": 3.5, \"status\": \"out_of_stock\", \"extra\": {\"value\": \"Extra Information\"}}";
+
    private static final String ENGLISH_BEER = "{\"name\": \"Guinness\"," +
          "\"country\": \"UK\", \"type\": \"Black\"," +
          "\"rating\": 4.1, \"status\": \"available\"}";
@@ -178,5 +182,8 @@ public class JsonExpressionEvaluatorTest {
 
       result = JsonExpressionEvaluator.evaluate(ENGLISH_BEER, specifications);
       assertEquals("Normal", result);
+
+      result = JsonExpressionEvaluator.evaluate(EXTRA_GERMAN_BEER, specifications);
+      assertEquals("Extra", result);
    }
 }
