@@ -26,8 +26,11 @@ import io.github.microcks.util.el.TemplateEngine;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.profiles.ProfileFile;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -44,6 +47,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import static io.github.microcks.minion.async.producer.AmazonCredentialsProviderType.ENV_VARIABLE;
 
 /**
  * Amazon WS SQS implementation of producer for async event messages.
@@ -64,6 +69,9 @@ public class AmazonSQSProducerManager {
    @ConfigProperty(name = "amazonsqs.region")
    String region;
 
+   @ConfigProperty(name = "amazonsqs.credentials-type")
+   AmazonCredentialsProviderType credentialsType;
+
    @ConfigProperty(name = "amazonsqs.credentials-profile-name")
    String credentialsProfileName;
 
@@ -77,19 +85,30 @@ public class AmazonSQSProducerManager {
    @PostConstruct
    public void create() throws Exception {
       try {
-         if (credentialsProfileLocation != null && credentialsProfileLocation.length() > 0) {
-            ProfileFile profileFile = ProfileFile.builder()
-                  .type(ProfileFile.Type.CREDENTIALS)
-                  .content(Paths.get(credentialsProfileLocation))
-                  .build();
+         switch (credentialsType) {
+            case ENV_VARIABLE:
+               credentialsProvider = EnvironmentVariableCredentialsProvider.create();
+               break;
+            case PROFILE:
+               if (credentialsProfileLocation != null && credentialsProfileLocation.length() > 0) {
+                  ProfileFile profileFile = ProfileFile.builder()
+                        .type(ProfileFile.Type.CREDENTIALS)
+                        .content(Paths.get(credentialsProfileLocation))
+                        .build();
 
-            credentialsProvider = ProfileCredentialsProvider.builder()
-                  .profileFile(profileFile)
-                  .profileName(credentialsProfileName)
-                  .build();
-         } else {
+                  credentialsProvider = ProfileCredentialsProvider.builder()
+                        .profileFile(profileFile)
+                        .profileName(credentialsProfileName)
+                        .build();
+               }
+               break;
+         }
+
+         // Default if not set.
+         if (credentialsProvider == null) {
             credentialsProvider = DefaultCredentialsProvider.create();
          }
+
          // Now create the SQS client with credential provider.
          sqsClient = SqsClient.builder()
                .region(Region.of(region))
