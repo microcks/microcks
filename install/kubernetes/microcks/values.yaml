@@ -222,12 +222,21 @@ features:
     # Uncomment the sqs.region and put a valid region below to enable Amazon SQS support.
     sqs:
       #region: eu-west-3
-      # For authentication, we rely on an AWS Profile of type credentials (see https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html).
-      # You have to provide the profile name and setup a secret reference for retrieving this file from secret.
+      # For authentication, we rely on either Environment Variables or an AWS Profile of type credentials (see https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html).
+      # You can choose between 'env-variable' and 'profile'
+      credentialsType: env-variable
+      #credentialsType: profile
+      # For 'env-variable', you may want to specify a Secret to get environment variables from.
+      #credentialsSecretRef:
+        #secret: aws-credentials
+        #accessKeyIdKey: access_key_id
+        #secretAccessKeyKey: secret_access_key
+        #sessionTokenKey: session_token
+      # For 'profile', you have to provide the profile name and setup a secret reference for retrieving this file from secret.
       credentialsProfile: microcks-sqs-admin
-      credentialsSecretRef:
-        secret: aws-credentials
-        filekey: aws.profile
+      #credentialsSecretRef:
+        #secret: aws-credentials
+        #fileKey: aws.profile
 
     ws:
       #ingressSecretRef: my-secret-for-microcks-ws-ingress

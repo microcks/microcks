@@ -279,11 +279,12 @@ Here are below the configuration properties of the Google PubSub support feature
 
 Here are below the configuration properties of the Amazon SQS support feature:
 
-| Section              | Property               | Description                                                                                                                                                                                |
-|----------------------|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `features.async.sqs` | `region`               | **Optional**. The AWS region for connecting SQS service (eg: `eu-west-3`). Default is undefined which means that feature is disabled.                                                      |
-| `features.async.sqs` | `credentialsProfile`   | **Optional**. The AWS profile to use for authenticating to SQS. This profile should be present into a credentials file mounted from a Secret (see below). Default to `microcks-sqs-admin`. |
-| `features.async.sqs` | `credentialsSecretRef` | **Optional**. The name of a Generic Secret holding an AWS credentials file with referenced profile. Set `secret` and `fileKey` properties.                                                 |
+| Section              | Property               | Description                                                                                                                                                                                                                                                                   |
+|----------------------|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `features.async.sqs` | `region`               | **Optional**. The AWS region for connecting SQS service (eg: `eu-west-3`). Default is undefined which means that feature is disabled.                                                                                                                                         |
+| `features.async.sqs` | `credentialsType`      | **Optional**. The type of credentials we use for authentication. 2 options here `env-variable` or `profile`. Default to `env-variable`.                                                                                                                                       |
+| `features.async.sqs` | `credentialsProfile`   | **Optional**. When using `profile` authent, name of profile to use for authenticating to SQS. This profile should be present into a credentials file mounted from a Secret (see below). Default to `microcks-sqs-admin`.                                                      |
+| `features.async.sqs` | `credentialsSecretRef` | **Optional**. The name of a Generic Secret holding either environment variables (set `secret` and `accessKeyIdKey`, `secretAccessKeyKey` and optional `sessionTokenKey` properties) or an AWS credentials file with referenced profile (set `secret` and `fileKey` properties). |
 
 ### Examples
 

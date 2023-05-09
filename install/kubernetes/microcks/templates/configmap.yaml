@@ -508,9 +508,12 @@ data:
     {{- if .Values.features.async.sqs.region }}
     # Access to Amazon SQS.
     %kube.amazonsqs.region={{ .Values.features.async.sqs.region }}
+    %kube.amazonsqs.credentials-type={{ .Values.features.async.sqs.credentialsType }}
+      {{- if eq .Values.features.async.sqs.credentialsType "profile" }}
     %kube.amazonsqs.credentials-profile-name={{ .Values.features.async.sqs.credentialsProfile }}
-      {{- if .Values.features.async.sqs.serviceAccountSecretRef.fileKey }}
+        {{- if .Values.features.async.sqs.credentialsSecretRef.fileKey }}
     %kube.amazonsqs.credentials-profile-location=/deployments/config/amazon-sqs/{{ .Values.features.async.sqs.credentialsSecretRef.fileKey }}
+        {{- end }}
       {{- end }}
     {{- end }}
 
