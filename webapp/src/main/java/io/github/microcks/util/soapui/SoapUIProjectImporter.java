@@ -114,6 +114,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
          // Find the name of the definition we must look for within all interfaces.
          String definitionName = wi.getConfig().getDefinition();
+         System.err.println("definitionName: " + definitionName);
 
          List<Interface> pis = project.getInterfaceList();
 
@@ -151,6 +152,10 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                      wsdlResource.setType(ResourceType.WSDL);
                      wsdlResource.setContent(wsdlContent);
                      results.add(wsdlResource);
+
+                     // Exit the for loop to avoid adding multiple times the same WSDL
+                     // if WSDL is present in definitionCaches attached to different interfaces.
+                     break;
                   }
                }
             }
