@@ -114,7 +114,6 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
          // Find the name of the definition we must look for within all interfaces.
          String definitionName = wi.getConfig().getDefinition();
-         System.err.println("definitionName: " + definitionName);
 
          List<Interface> pis = project.getInterfaceList();
 
