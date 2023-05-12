@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<con:soapui-project id="56571e1d-006e-4360-9cf1-dccb7e6a32db" activeEnvironment="Default" name="GetDrivers" resourceRoot="" soapui-version="5.5.0" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" id="d744c809-507c-41ae-9a9f-820a245502de" wsaVersion="NONE" name="DriverSoap" type="wsdl" bindingName="{http://www.itra.com}DriverSoap" soapVersion="1_1" anonymous="optional" definition="file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache/><con:endpoints><con:endpoint>http://MacBook-Pro:8088/mockDriverSoap</con:endpoint><con:endpoint>https://localhost:8080/ws/GetDrivers</con:endpoint></con:endpoints><con:operation id="2ffa5d2c-0712-45c5-a759-275616550d62" isOneWay="false" action="http://www.itra.com/GetDrivers" name="GetDrivers" bindingOperationName="GetDrivers" type="Request-Response" outputName="GetDriversResponse" inputName="GetDrivers" receivesAttachments="false" sendsAttachments="false"><con:settings/></con:operation></con:interface><con:interface xsi:type="con:WsdlInterface" id="a0770475-c470-469f-8951-51c49a717669" wsaVersion="NONE" name="DriverSoap12" type="wsdl" bindingName="{http://www.itra.com}DriverSoap12" soapVersion="1_2" anonymous="optional" definition="file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl"><con:part><con:url>file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl</con:url><con:content><![CDATA[<wsdl:definitions targetNamespace="http://www.itra.com" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.itra.com" xmlns:s1="http://microsoft.com/wsdl/types/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+<con:soapui-project id="56571e1d-006e-4360-9cf1-dccb7e6a32db" activeEnvironment="Default" name="GetDrivers" resourceRoot="" soapui-version="5.5.0" xmlns:con="http://eviware.com/soapui/config"><con:settings/>
+
+    <con:interface xsi:type="con:WsdlInterface" id="d744c809-507c-41ae-9a9f-820a245502de" wsaVersion="NONE" name="DriverSoap" type="wsdl" bindingName="{http://www.itra.com}DriverSoap" soapVersion="1_1" anonymous="optional" definition="file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <con:settings/>
+        <con:definitionCache type="TEXT" rootPart="file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl">
+            <con:part>
+            <con:url>file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl</con:url>
+            <con:content><![CDATA[<wsdl:definitions targetNamespace="http://www.itra.com" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.itra.com" xmlns:s1="http://microsoft.com/wsdl/types/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
   <wsdl:documentation>Hours of Service (HOS) web service for Driverdata</wsdl:documentation>
   <wsdl:types>
     <s:schema elementFormDefault="qualified" targetNamespace="http://www.itra.com">
@@ -74,7 +81,102 @@
       <soap:address location="https://localhost:8080/ws/GetDrivers"/>
     </wsdl:port>
     <wsdl:port name="DriverSoap12" binding="tns:DriverSoap12">
-      <soap12:adress location="https://localhost:8080/ws/GetDrivers"/>
+      <soap12:address location="https://localhost:8080/ws/GetDrivers"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content>
+                <con:type>http://schemas.xmlsoap.org/wsdl/</con:type>
+            </con:part>
+        </con:definitionCache>
+        <con:endpoints>
+            <con:endpoint>http://MacBook-Pro:8088/mockDriverSoap</con:endpoint>
+            <con:endpoint>https://localhost:8080/ws/GetDrivers</con:endpoint>
+        </con:endpoints>
+        <con:operation id="2ffa5d2c-0712-45c5-a759-275616550d62" isOneWay="false" action="http://www.itra.com/GetDrivers" name="GetDrivers" bindingOperationName="GetDrivers" type="Request-Response" outputName="GetDriversResponse" inputName="GetDrivers" receivesAttachments="false" sendsAttachments="false">
+            <con:settings/>
+        </con:operation>
+    </con:interface>
+    <con:interface xsi:type="con:WsdlInterface" id="a0770475-c470-469f-8951-51c49a717669" wsaVersion="NONE" name="DriverSoap12" type="wsdl" bindingName="{http://www.itra.com}DriverSoap12" soapVersion="1_2" anonymous="optional" definition="file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <con:settings/>
+        <con:definitionCache type="TEXT" rootPart="file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl">
+            <con:part>
+                <con:url>file:/Users/lbroudou/Development/github/microcks/GetDrivers.wsdl</con:url>
+                <con:content><![CDATA[<wsdl:definitions targetNamespace="http://www.itra.com" xmlns:s="http://www.w3.org/2001/XMLSchema" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:tns="http://www.itra.com" xmlns:s1="http://microsoft.com/wsdl/types/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/">
+  <wsdl:documentation>Hours of Service (HOS) web service for Driverdata</wsdl:documentation>
+  <wsdl:types>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://www.itra.com">
+      <s:import namespace="http://microsoft.com/wsdl/types/"/>
+      <s:element name="GetDrivers">
+        <s:complexType/>
+      </s:element>
+      <s:element name="GetDriversResponse">
+        <s:complexType>
+          <s:sequence>
+            <s:element minOccurs="0" maxOccurs="1" name="GetDriversResult" type="tns:DriversResponse"/>
+          </s:sequence>
+        </s:complexType>
+      </s:element>
+      <s:complexType name="DriversResponse">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="1" name="DriverList" type="tns:ArrayOfString1"/>
+        </s:sequence>
+      </s:complexType>
+      <s:complexType name="ArrayOfString1">
+        <s:sequence>
+          <s:element minOccurs="0" maxOccurs="unbounded" name="DriverId" nillable="true" type="s:string"/>
+        </s:sequence>
+      </s:complexType>
+    </s:schema>
+    <s:schema elementFormDefault="qualified" targetNamespace="http://microsoft.com/wsdl/types/">
+      <s:simpleType name="char">
+        <s:restriction base="s:unsignedShort"/>
+      </s:simpleType>
+    </s:schema>
+  </wsdl:types>
+  <wsdl:message name="GetDriversSoapIn">
+    <wsdl:part name="parameters" element="tns:GetDrivers"/>
+  </wsdl:message>
+  <wsdl:message name="GetDriversSoapOut">
+    <wsdl:part name="parameters" element="tns:GetDriversResponse"/>
+  </wsdl:message>
+  <wsdl:portType name="DriverSoap">
+    <wsdl:operation name="GetDrivers">
+      <wsdl:documentation>Returns the driver IDs of the drivers in thecompany.</wsdl:documentation>
+      <wsdl:input message="tns:GetDriversSoapIn" name="GetDrivers"/>
+      <wsdl:output message="tns:GetDriversSoapOut" name="GetDriversResponse"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="DriverSoap" type="tns:DriverSoap">
+    <soap:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetDrivers">
+      <soap:operation soapAction="http://www.itra.com/GetDrivers" style="document"/>
+      <wsdl:input name="GetDrivers">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="GetDriversResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:binding name="DriverSoap12" type="tns:DriverSoap">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="GetDrivers">
+      <soap12:operation soapAction="http://www.itra.com/GetDrivers" style="document"/>
+      <wsdl:input name="GetDrivers">
+        <soap12:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="GetDriversResponse">
+        <soap12:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="Driver">
+    <wsdl:documentation>Hours of Service (HOS) web service for Driverdata.</wsdl:documentation>
+    <wsdl:port name="DriverSoap" binding="tns:DriverSoap">
+      <soap:address location="https://localhost:8080/ws/GetDrivers"/>
+    </wsdl:port>
+    <wsdl:port name="DriverSoap12" binding="tns:DriverSoap12">
+      <soap12:address location="https://localhost:8080/ws/GetDrivers"/>
     </wsdl:port>
   </wsdl:service>
 </wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints/><con:operation id="87a98703-2044-4dce-9f5b-cd84d2621dec" isOneWay="false" action="http://www.itra.com/GetDrivers" name="GetDrivers" bindingOperationName="GetDrivers" type="Request-Response" outputName="GetDriversResponse" inputName="GetDrivers" receivesAttachments="false" sendsAttachments="false"><con:settings/></con:operation></con:interface><con:testSuite id="7a61dc0f-f418-4f14-8dde-8adec559971c" name="DriverSoap"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="0be4f0f1-87f1-4d32-ba01-93aaf2154091" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="GetDrivers TestCase" searchProperties="true"><con:settings/><con:testStep type="request" id="5e2e94bf-78b8-4ff7-8a85-06f67ec2e27f" name="Sample Request"><con:settings/><con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:interface>DriverSoap</con:interface><con:operation>GetDrivers</con:operation><con:request name="Sample Request" id="73a819a9-b231-49d1-959b-bec6ebdd0e02"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://MacBook-Pro:8088/mockDriverSoap</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:itra="http://www.itra.com">

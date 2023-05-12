@@ -18,7 +18,6 @@
  */
 package io.github.microcks.util;
 
-import com.eviware.soapui.ui.desktop.standalone.MostRecentlyUsedOrderDesktopManager;
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
