@@ -469,6 +469,14 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               }
                            }
                            break;
+                        case "sns":
+                           b = retrieveOrInitOperationBinding(operation, BindingType.SNS);
+                           if (binding.has("topic")) {
+                              if (binding.get("topic").has("name")) {
+                                 b.setDestinationName(binding.get("topic").get("name").asText());
+                              }
+                           }
+                           break;
                      }
                   }
                }

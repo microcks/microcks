@@ -31,12 +31,13 @@ import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsPro
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.profiles.ProfileFile;
 import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
-import software.amazon.awssdk.services.sqs.model.ListQueuesRequest;
-import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
+import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
+import software.amazon.awssdk.services.sns.model.ListTopicsRequest;
+import software.amazon.awssdk.services.sns.model.ListTopicsResponse;
+import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sns.model.PublishResponse;
+import software.amazon.awssdk.services.sns.model.Topic;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
@@ -47,35 +48,35 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Amazon WS SQS implementation of producer for async event messages.
+ * Amazon WS SNS implementation of producer for async event messages.
  * @author laurent
  */
 @ApplicationScoped
-public class AmazonSQSProducerManager {
+public class AmazonSNSProducerManager {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   private SqsClient sqsClient;
+   private SnsClient snsClient;
 
-   private final ConcurrentHashMap<String, String> queueUrls = new ConcurrentHashMap<>();
+   private final ConcurrentHashMap<String, String> topicArns = new ConcurrentHashMap<>();
 
    AwsCredentialsProvider credentialsProvider;
 
-   @ConfigProperty(name = "amazonsqs.region")
+   @ConfigProperty(name = "amazonsns.region")
    String region;
 
-   @ConfigProperty(name = "amazonsqs.credentials-type")
+   @ConfigProperty(name = "amazonsns.credentials-type")
    AmazonCredentialsProviderType credentialsType;
 
-   @ConfigProperty(name = "amazonsqs.credentials-profile-name")
+   @ConfigProperty(name = "amazonsns.credentials-profile-name")
    String credentialsProfileName;
 
-   @ConfigProperty(name = "amazonsqs.credentials-profile-location")
+   @ConfigProperty(name = "amazonsns.credentials-profile-location")
    String credentialsProfileLocation;
 
    /**
-    * Initialize the AWS SQS connection post construction.
+    * Initialize the AWS SNS connection post construction.
     * @throws Exception If connection to SQS cannot be done.
     */
    @PostConstruct
@@ -105,53 +106,54 @@ public class AmazonSQSProducerManager {
             credentialsProvider = DefaultCredentialsProvider.create();
          }
 
-         // Now create the SQS client with credential provider.
-         sqsClient = SqsClient.builder()
+         // Now create the SNS client with credential provider.
+         snsClient = SnsClient.builder()
                .region(Region.of(region))
                .credentialsProvider(credentialsProvider)
                .build();
       } catch (Exception e) {
-         logger.errorf("Cannot connect to AWS SQS region %s", region);
+         logger.errorf("Cannot connect to AWS SNS region %s", region);
          logger.errorf("Connection exception: %s", e.getMessage());
          throw e;
       }
    }
 
    /**
-    * Publish a message on specified AWS SQS queue.
-    * @param queue The short name of queue within the configured region
+    * Publish a message on specified AWS SNS topic.
+    * @param topic The short name of topic within the configured region
     * @param value The message payload
     * @param headers The headers if any (as rendered by renderEventMessageHeaders() method)
     */
-   public void publishMessage(String queue, String value, Map<String, MessageAttributeValue> headers) {
-      logger.infof("Publishing on queue {%s}, message: %s ", queue, value);
-
+   public void publishMessage(String topic, String value, Map<String, MessageAttributeValue> headers) {
+      logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
       try {
-         if (queueUrls.get(queue) == null) {
-            // Ensure queue exists on AWS by trying to get it in the list.
-            ListQueuesRequest listRequest = ListQueuesRequest.builder()
-                  .queueNamePrefix(queue).maxResults(1).build();
-            ListQueuesResponse listResponse = sqsClient.listQueues(listRequest);
+         if (topicArns.get(topic) == null) {
+            // Ensure topic exists on AWS by trying to get it in the list.
+            ListTopicsRequest listRequest = ListTopicsRequest.builder().build();
+            ListTopicsResponse listResponse = snsClient.listTopics(listRequest);
 
-            if (listResponse.hasQueueUrls()) {
-               logger.infof("Found AWS SQS queue: %s", listResponse.queueUrls().get(0));
-               queueUrls.put(queue, listResponse.queueUrls().get(0));
+            if (listResponse.hasTopics() && listResponse.topics().size() > 0) {
+               logger.infof("listResponse.hasTopics(): %d", listResponse.topics().size());
+               for (Topic topicTopic : listResponse.topics()) {
+                  logger.infof("Found AWS SNS topic: %s", topicTopic.toString());
+               }
+               topicArns.put(topic, listResponse.topics().get(0).topicArn());
             } else {
-               queueUrls.put(queue, createQueueAndGetURL(queue));
+               topicArns.put(topic, createTopicAndGetArn(topic));
             }
          }
 
-         // Retrieve queue URL from local defs and publish message.
-         String queueUrl = queueUrls.get(queue);
-         SendMessageResponse response = sqsClient.sendMessage(mr -> mr.queueUrl(queueUrl)
-               .messageBody(value)
+         // Retrieve topic ARN from local defs and publish message.
+         String topicArn = topicArns.get(topic);
+         PublishResponse response = snsClient.publish(pr -> pr.topicArn(topicArn)
+               .message(value)
                .messageAttributes(headers)
                .build());
       } catch (Throwable t) {
          logger.warnf("Message sending has thrown an exception", t);
          // As it may be relative to queue being deleted and recreated so having different id
          // than previous and thus url, we should clean our cache.
-         queueUrls.remove(queue);
+         topicArns.remove(topic);
          t.printStackTrace();
       }
    }
@@ -186,12 +188,12 @@ public class AmazonSQSProducerManager {
    }
 
    /**
-    * Compute a queue name from async mock definition.
+    * Compute a topic name from async mock definition.
     * @param definition The mock definition
     * @param eventMessage The event message to get dynamic part from
-    * @return The short name of a SQS queue
+    * @return The short name of a SNS topic
     */
-   public String getQueueName(AsyncMockDefinition definition, EventMessage eventMessage) {
+   public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
       logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
 
       // Produce service name part of topic name.
@@ -214,10 +216,10 @@ public class AmazonSQSProducerManager {
       return serviceName + "-" + versionName + "-" + operationName;
    }
 
-   private String createQueueAndGetURL(String queueName) {
-      CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-            .queueName(queueName)
+   private String createTopicAndGetArn(String topicName) {
+      CreateTopicRequest createTopicRequest = CreateTopicRequest.builder()
+            .name(topicName)
             .build();
-      return sqsClient.createQueue(createQueueRequest).queueUrl();
+      return snsClient.createTopic(createTopicRequest).topicArn();
    }
 }

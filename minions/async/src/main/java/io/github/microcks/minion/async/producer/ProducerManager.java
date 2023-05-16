@@ -81,6 +81,9 @@ public class ProducerManager {
    AmazonSQSProducerManager amazonSQSProducerManager;
 
    @Inject
+   AmazonSNSProducerManager amazonSNSProducerManager;
+
+   @Inject
    @RootWebSocketProducerManager
    WebSocketProducerManager wsProducerManager;
 
@@ -185,6 +188,14 @@ public class ProducerManager {
                         String message = renderEventMessageContent(eventMessage);
                         amazonSQSProducerManager.publishMessage(queueName, message,
                               amazonSQSProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
+                     break;
+                  case SNS:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topicName = amazonSNSProducerManager.getTopicName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        amazonSNSProducerManager.publishMessage(topicName, message,
+                              amazonSNSProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                      }
                      break;
                   default:

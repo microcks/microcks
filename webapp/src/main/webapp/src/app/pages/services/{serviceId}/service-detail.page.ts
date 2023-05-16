@@ -380,10 +380,10 @@ export class ServiceDetailPageComponent implements OnInit {
       });
     }
 
-    if ('KAFKA' === binding || 'GOOGLEPUBSUB' === binding || 'SQS' === binding) {
+    if ('KAFKA' === binding || 'GOOGLEPUBSUB' === binding || 'SQS' === binding || 'SNS' === binding) {
       operationName = operationName.replace(/\//g, '-');
     }
-    if ('SQS' === binding) {
+    if ('SQS' === binding || 'SNS' === binding) {
       versionName = versionName.replace(/\./g, '');
     }
 
