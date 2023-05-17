@@ -45,8 +45,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Google Cloud PubSub.
- * Endpoint URL should be specified using the following form: <code>googlepubsub://{projectId}/{topic}[?option1=value1&amp;option2=value2]</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Amazon Simple Queue Service (SQS).
+ * Endpoint URL should be specified using the following form: <code>sqs://{region}/{queue}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {

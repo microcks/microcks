@@ -136,8 +136,11 @@ public class AmazonSNSProducerManager {
                logger.infof("listResponse.hasTopics(): %d", listResponse.topics().size());
                for (Topic topicTopic : listResponse.topics()) {
                   logger.infof("Found AWS SNS topic: %s", topicTopic.toString());
+                  if (topicTopic.topicArn().endsWith(":" + topic)) {
+                     topicArns.put(topic, topicTopic.topicArn());
+                     break;
+                  }
                }
-               topicArns.put(topic, listResponse.topics().get(0).topicArn());
             } else {
                topicArns.put(topic, createTopicAndGetArn(topic));
             }
