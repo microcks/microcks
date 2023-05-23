@@ -22,7 +22,7 @@ spec:
   storageClassName: {{ .Values.mongodb.storageClassName }}
   {{- end }}
 {{- end }}
-{{- if and .Values.keycloak.install .Values.keycloak.persistent }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.install .Values.keycloak.persistent }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1

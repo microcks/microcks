@@ -84,7 +84,7 @@ spec:
   type: ClusterIP
   sessionAffinity: None
 {{- end }}
-{{- if and .Values.keycloak.install }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
 kind: Service
 apiVersion: v1

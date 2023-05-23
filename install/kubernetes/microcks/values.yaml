@@ -56,6 +56,9 @@ postman:
   replicas: 1
 
 keycloak:
+  # Use keycloack in this release
+  enabled: true
+  # Install keycloack in this release
   install: true
   realm: microcks
   # Now that we switched to newer version of Keycloak-X, default url does not contain '/auth' path
@@ -112,7 +115,7 @@ mongodb:
   # Unless you uncomment following line and set class, persistent volume claim is created
   # with no storage class and relies on cluster default one.
   #storageClassName: my-awesome-class
-  
+
   username: userM
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.
@@ -141,7 +144,7 @@ features:
     defaultBinding: KAFKA
     defaultFrequency: 10
     defaultAvroEncoding: RAW
-    
+
     image: quay.io/microcks/microcks-async-minion:nightly
 
     env:
