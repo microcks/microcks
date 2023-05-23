@@ -48,7 +48,7 @@ public class VariableReferenceExpression implements Expression {
    private static Logger log = LoggerFactory.getLogger(VariableReferenceExpression.class);
 
    private static final String ARRAY_INDEX_REGEXP = "\\[(\\d+)\\]";
-   private static final String MAP_INDEX_REGEXP = "\\[([\\w-]+)\\]";
+   private static final String MAP_INDEX_REGEXP = "\\[([\\.\\w-]+)\\]";
    private static final Pattern ARRAY_INDEX_PATTERN = Pattern.compile(ARRAY_INDEX_REGEXP);
    private static final Pattern MAP_INDEX_PATTERN = Pattern.compile(MAP_INDEX_REGEXP);
 
@@ -167,7 +167,7 @@ public class VariableReferenceExpression implements Expression {
    /**
     * Fetch a property from an object. For example of you wanted to get the foo property on a bar
     * object you would normally call {@code bar.getFoo()}.
-    * @param obj The object who's property you want to fetch
+    * @param obj The object whose property you want to fetch
     * @param property The property name
     * @return The value of the property or null if it does not exist.
     */

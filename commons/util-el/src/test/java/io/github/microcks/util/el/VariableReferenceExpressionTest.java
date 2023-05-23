@@ -134,6 +134,7 @@ public class VariableReferenceExpressionTest {
       headers.put("key", "value");
       headers.put("hello", "world");
       headers.put("account_-name", "test");
+      headers.put("account.name", "test");
       request.setHeaders(headers);
 
       // Create new expression evaluating map value.
@@ -150,5 +151,10 @@ public class VariableReferenceExpressionTest {
       exp.setPathExpression("headers[microcks]");
       result = exp.getValue(new EvaluationContext());
       assertEquals("null", result);
+
+      // Test with key having dot character.
+      exp.setPathExpression("headers[account.name]");
+      result = exp.getValue(new EvaluationContext());
+      assertEquals("test", result);
    }
 }
