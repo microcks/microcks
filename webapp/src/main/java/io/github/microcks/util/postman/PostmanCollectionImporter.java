@@ -25,6 +25,7 @@ import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
@@ -45,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -55,7 +57,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
 /**
@@ -72,11 +73,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    public static final String SERVICE_VERSION_PROPERTY = "version";
 
    private JsonNode collection;
+   private String collectionContent;
    // Flag telling if V2 format is used.
    private boolean isV2Collection = false;
-
-   /** Regular expression used to evaluate operation name matching. */
-   private static final String OPERATION_NAME_EXPRESSION_PREFIX = "(GET|POST|PUT|PATH|DELETE|OPTION)?( *)(/)?";
 
    /** Default constructor for package protected extensions. */
    protected PostmanCollectionImporter() {
@@ -91,6 +90,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       try {
          // Read Json bytes.
          byte[] jsonBytes = Files.readAllBytes(Paths.get(collectionFilePath));
+         collectionContent = new String(jsonBytes, StandardCharsets.UTF_8);
          // Convert them to Node using Jackson object mapper.
          ObjectMapper mapper = new ObjectMapper();
          collection = mapper.readTree(jsonBytes);
@@ -102,6 +102,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
    protected void setCollection(JsonNode collection) {
       this.collection = collection;
+   }
+   protected void setCollectionContent(String collectionContent) {
+      this.collectionContent = collectionContent;
    }
 
    @Override
@@ -164,7 +167,16 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    @Override
    public List<Resource> getResourceDefinitions(Service service) {
       List<Resource> results = new ArrayList<>();
-      // Non-sense on Postman collection. Just return empty result.
+
+      // Build a suitable name.
+      String name = service.getName() + "-" + service.getVersion() + ".json";
+
+      Resource resource = new Resource();
+      resource.setName(name);
+      resource.setType(ResourceType.POSTMAN_COLLECTION);
+      resource.setContent(collectionContent);
+      results.add(resource);
+
       return results;
    }
 

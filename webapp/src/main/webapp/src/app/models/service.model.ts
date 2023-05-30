@@ -118,7 +118,8 @@ export enum ContractType {
   AVRO_SCHEMA,
   PROTOBUF_SCHEMA,
   PROTOBUF_DESCRIPTOR,
-  GRAPHQL_SCHEMA
+  GRAPHQL_SCHEMA,
+  POSTMAN_COLLECTION
 }
 
 export class Header {
