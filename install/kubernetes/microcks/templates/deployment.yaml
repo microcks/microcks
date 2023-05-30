@@ -21,6 +21,8 @@ spec:
         deploymentconfig: "{{ .Values.appName }}"
         container: spring
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: spring
@@ -197,6 +199,8 @@ spec:
         deploymentconfig: "{{ .Values.appName }}-postman-runtime"
         container: postman-runtime
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: postman-runtime
@@ -358,6 +362,8 @@ spec:
         deploymentconfig: keycloak
         container: keycloak
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: keycloak-server
@@ -565,6 +571,8 @@ spec:
         deploymentconfig: async-minion
         container: async-minion
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: async-minion
