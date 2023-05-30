@@ -226,7 +226,8 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          // Item is here an operation description.
          String operationName = PostmanCollectionImporter.buildOperationName(itemNode, operationNameRadix);
          log.debug("Found operation '{}', comparing with '{}'", operationName, operation.getName());
-         if (operationName.equals(operation.getName())) {
+         if (PostmanUtil.areOperationsEquivalent(operation.getName(), operationName)) {
+         //if (operationName.equals(operation.getName())) {
             // We've got the correct operation.
             JsonNode events = itemNode.path("event");
             for (JsonNode event : events) {

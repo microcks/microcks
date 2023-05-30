@@ -210,7 +210,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          String operationName = buildOperationName(itemNode, folderName);
 
          // Select item based onto operation name.
-         if (areOperationsEquivalent(operation.getName(), operationName)) {
+         if (PostmanUtil.areOperationsEquivalent(operation.getName(), operationName)) {
             // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
             String rootDispatcher = operation.getDispatcher();
             String rootDispatcherRules = operation.getDispatcherRules();
@@ -269,27 +269,6 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          }
       }
       return result;
-   }
-
-   private boolean areOperationsEquivalent(String operationNameRef, String operationNameCandidate) {
-      // First check equals ignoring case.
-      if (operationNameRef.equalsIgnoreCase(operationNameCandidate)) {
-         return true;
-      }
-      // Then we may have an OpenAPI template we should convert to Postman and check again.
-      if (operationNameRef.contains("/{")) {
-         String transformedName = operationNameRef.replaceAll("/\\{", "/:").replaceAll("}", "");
-         if (transformedName.equalsIgnoreCase(operationNameCandidate)) {
-            return true;
-         }
-      }
-
-      try {
-         return operationNameCandidate.matches(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef);
-      } catch (PatternSyntaxException pse) {
-         log.warn(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef + " throws a PatternSyntaxException");
-      }
-      return false;
    }
 
    private Request buildRequest(JsonNode requestNode, String name) {
