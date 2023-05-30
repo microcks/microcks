@@ -32,3 +32,7 @@
 .conformance-index > dt {
   margin-bottom: 10px;
 }
+
+.tooltip-break {
+  word-break: break-word;
+}
