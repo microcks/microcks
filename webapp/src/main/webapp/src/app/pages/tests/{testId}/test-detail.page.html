@@ -1,5 +1,5 @@
-<div *ngIf="test | async as test">
-  <div *ngIf="service | async as service">
+<div *ngIf="test | async as test">
+  <div *ngIf="service | async as service">
     <div class="container-fluid breadcrumb-bar">
       <div class="row">
         <ol class="breadcrumb">
@@ -12,7 +12,7 @@
     </div>
 
     <h1>Test {{ test.id }}</h1>
-    <small>Created {{ test.testDate | timeAgo }}, run on {{ test.testDate | date:'medium' }}</small>
+    <small>Created {{ test.testDate | timeAgo }}, ran on {{ test.testDate | date:'medium' }}</small>
 
     <h3 class="section-label">Properties</h3>
 
@@ -83,7 +83,7 @@
 
         <ng-template #resultDetailTemplate let-item="item" let-index="index">
           <tabset>
-            <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName || testStep.eventMessageName }}" (select)="onTestStepSelect(testStep, $event)">
+            <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName || testStep.eventMessageName }}" (select)="onTestStepSelect(testStep, $event)">
               <ng-template tabHeading>
                 <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
                 <i *ngIf="!test.inProgress && testStep.success" class="fa fa-fw fa-check-circle"></i> 
