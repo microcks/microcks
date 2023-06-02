@@ -31,13 +31,11 @@ import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialo
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint, Exchange, UnidirectionalEvent, RequestResponsePair, EventMessage } from '../../../models/service.model';
 import { TestConformanceMetric } from 'src/app/models/metric.model';
-import { TestResult } from '../../../models/test.model';
 import { IAuthenticationService } from "../../../services/auth.service";
 import { ConfigService } from '../../../services/config.service';
 import { ContractsService } from '../../../services/contracts.service';
 import { MetricsService } from 'src/app/services/metrics.service';
 import { ServicesService } from '../../../services/services.service';
-import { TestsService } from '../../../services/tests.service';
 
 @Component({
   selector: 'service-detail-page',
@@ -52,7 +50,6 @@ export class ServiceDetailPageComponent implements OnInit {
   serviceView: Observable<ServiceView>;
   resolvedServiceView: ServiceView;
   contracts: Observable<Contract[]>;
-  serviceTests: Observable<TestResult[]>;
   serviceTestConformanceMetric: Observable<TestConformanceMetric>;
   operations: Operation[];
   selectedOperation: Operation;
@@ -60,7 +57,7 @@ export class ServiceDetailPageComponent implements OnInit {
   notifications: Notification[];
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
-      private testsSvc: TestsService, private metricsSvc: MetricsService, private authService: IAuthenticationService, private config: ConfigService,
+      private metricsSvc: MetricsService, private authService: IAuthenticationService, private config: ConfigService,
       private modalService: BsModalService, private notificationService: NotificationService,
       private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
   }
@@ -75,10 +72,6 @@ export class ServiceDetailPageComponent implements OnInit {
       switchMap((params: ParamMap) =>
         this.contractsSvc.listByServiceId(params.get('serviceId')))
     );
-    this.serviceTests = this.route.paramMap.pipe(
-      switchMap((params: ParamMap) =>
-        this.testsSvc.listByServiceId(params.get('serviceId')))
-    );
     this.serviceTestConformanceMetric = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
         this.metricsSvc.getServiceTestConformanceMetric(params.get('serviceId')))
@@ -90,6 +83,21 @@ export class ServiceDetailPageComponent implements OnInit {
       this.operations.sort((o1, o2) => {
         return this.sortOperations(o1, o2);
       });
+    });
+
+    // Fallback
+    this.route.paramMap.subscribe((params) => {
+      // In case the <service_name>:<service_version> was used, contracts, tests and
+      // conformance metrics fail because they can just resolve the technical identifier
+      // of service. Relaunch everything here.
+      const idParam = params.get('serviceId');
+      if (idParam.includes(':')) {
+        this.serviceView.subscribe( view => {
+          console.log('Got serviceId for ' + idParam + ': ' + view.service.id);
+          this.contracts = this.contractsSvc.listByServiceId(view.service.id);
+          this.serviceTestConformanceMetric = this.metricsSvc.getServiceTestConformanceMetric(view.service.id);
+        })
+      }
     });
 
     this.operationsListConfig = {
