@@ -32,6 +32,7 @@ import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.profiles.ProfileFile;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.SnsClientBuilder;
 import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
 import software.amazon.awssdk.services.sns.model.ListTopicsRequest;
 import software.amazon.awssdk.services.sns.model.ListTopicsResponse;
@@ -41,8 +42,10 @@ import software.amazon.awssdk.services.sns.model.Topic;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -74,6 +77,9 @@ public class AmazonSNSProducerManager {
 
    @ConfigProperty(name = "amazonsns.credentials-profile-location")
    String credentialsProfileLocation;
+
+   @ConfigProperty(name = "amazonsns.endpoint-override")
+   Optional<URI> endpointOverride;
 
    /**
     * Initialize the AWS SNS connection post construction.
@@ -107,10 +113,15 @@ public class AmazonSNSProducerManager {
          }
 
          // Now create the SNS client with credential provider.
-         snsClient = SnsClient.builder()
+         SnsClientBuilder snsClientBuilder = SnsClient.builder()
                .region(Region.of(region))
-               .credentialsProvider(credentialsProvider)
-               .build();
+               .credentialsProvider(credentialsProvider);
+
+         if (endpointOverride.filter(URI::isAbsolute).isPresent()) {
+            snsClientBuilder.endpointOverride(endpointOverride.get());
+         }
+
+         snsClient = snsClientBuilder.build();
       } catch (Exception e) {
          logger.errorf("Cannot connect to AWS SNS region %s", region);
          logger.errorf("Connection exception: %s", e.getMessage());

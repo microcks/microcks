@@ -32,6 +32,7 @@ import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
 import software.amazon.awssdk.profiles.ProfileFile;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
@@ -40,8 +41,11 @@ import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -73,6 +77,9 @@ public class AmazonSQSProducerManager {
 
    @ConfigProperty(name = "amazonsqs.credentials-profile-location")
    String credentialsProfileLocation;
+
+   @ConfigProperty(name = "amazonsqs.endpoint-override")
+   Optional<URI> endpointOverride;
 
    /**
     * Initialize the AWS SQS connection post construction.
@@ -106,10 +113,14 @@ public class AmazonSQSProducerManager {
          }
 
          // Now create the SQS client with credential provider.
-         sqsClient = SqsClient.builder()
+         SqsClientBuilder sqsClientBuilder = SqsClient.builder()
                .region(Region.of(region))
-               .credentialsProvider(credentialsProvider)
-               .build();
+               .credentialsProvider(credentialsProvider);
+
+         if (endpointOverride.filter(URI::isAbsolute).isPresent()) {
+            sqsClientBuilder.endpointOverride(endpointOverride.get());
+         }
+         sqsClient = sqsClientBuilder.build();
       } catch (Exception e) {
          logger.errorf("Cannot connect to AWS SQS region %s", region);
          logger.errorf("Connection exception: %s", e.getMessage());

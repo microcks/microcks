@@ -28,12 +28,14 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
+import software.amazon.awssdk.services.sns.SnsClientBuilder;
 import software.amazon.awssdk.services.sns.model.ListTopicsRequest;
 import software.amazon.awssdk.services.sns.model.ListTopicsResponse;
 import software.amazon.awssdk.services.sns.model.SubscribeRequest;
 import software.amazon.awssdk.services.sns.model.Topic;
 import software.amazon.awssdk.services.sns.model.UnsubscribeRequest;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.DeleteQueueRequest;
 import software.amazon.awssdk.services.sqs.model.GetQueueAttributesRequest;
@@ -45,6 +47,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.SetQueueAttributesRequest;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -68,6 +71,9 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
    public static final String ENDPOINT_PATTERN_STRING = "sns://(?<region>[a-zA-Z0-9-]+)/(?<topic>[a-zA-Z0-9-_]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
+
+   /** The endpoint URL option representing AWS endpoint override URL. */
+   public static final String OVERRIDE_URL_OPTION = "overrideUrl";
 
    private static final String SUBSCRIPTION_PREFIX = "-microcks-test";
 
@@ -182,16 +188,27 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
       }
 
       // Build the SNS client with provided region and credentials.
-      snsClient = SnsClient.builder()
+      SnsClientBuilder snsClientBuilder = SnsClient.builder()
             .region(Region.of(region))
-            .credentialsProvider(credentialsProvider)
-            .build();
+            .credentialsProvider(credentialsProvider);
 
       // Build the SQS client with provided region and credentials.
-      sqsClient = SqsClient.builder()
+      SqsClientBuilder sqsClientBuilder = SqsClient.builder()
             .region(Region.of(region))
-            .credentialsProvider(credentialsProvider)
-            .build();
+            .credentialsProvider(credentialsProvider);
+
+      // Override endpoint urls if provided.
+      if (hasOption(OVERRIDE_URL_OPTION)) {
+         String endpointOverride = optionsMap.get(OVERRIDE_URL_OPTION);
+         if (endpointOverride.startsWith("http")) {
+            URI endpointOverrideURI = new URI(endpointOverride);
+            snsClientBuilder.endpointOverride(endpointOverrideURI);
+            sqsClientBuilder.endpointOverride(endpointOverrideURI);
+         }
+      }
+
+      snsClient = snsClientBuilder.build();
+      sqsClient = sqsClientBuilder.build();
 
       // Ensure connection is possible and subscription of SQS endpoint exists.
       String topicArn = retrieveTopicArn();
@@ -209,6 +226,18 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
             .build();
 
       subscriptionArn = snsClient.subscribe(subscribeRequest).subscriptionArn();
+   }
+
+   /**
+    * Safe method for checking if an option has been set.
+    * @param optionKey Check if that option is available in options map.
+    * @return true if option is present, false if undefined.
+    */
+   protected boolean hasOption(String optionKey) {
+      if (optionsMap != null) {
+         return optionsMap.containsKey(optionKey);
+      }
+      return false;
    }
 
    /**

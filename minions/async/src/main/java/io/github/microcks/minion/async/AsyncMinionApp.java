@@ -154,7 +154,7 @@ public class AsyncMinionApp {
 
       } catch (ConnectorException ce) {
          logger.error("Cannot authenticate to Keycloak server and thus enable to call Microcks API" +
-               "to get Async APIs to mocks...", ce);
+               " to get Async APIs to mocks...", ce);
          throw new RuntimeException("Unable to start the Minion due to connection exception");
       } catch (IOException ioe) {
          logger.error("IOException while communicating with Keycloak or Microcks API", ioe);

@@ -28,6 +28,7 @@ import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.ListQueuesRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
 import software.amazon.awssdk.services.sqs.model.Message;
@@ -35,6 +36,7 @@ import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -58,6 +60,9 @@ public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
    public static final String ENDPOINT_PATTERN_STRING = "sqs://(?<region>[a-zA-Z0-9-]+)/(?<queue>[a-zA-Z0-9-_]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
+
+   /** The endpoint URL option representing AWS endpoint override URL. */
+   public static final String OVERRIDE_URL_OPTION = "overrideUrl";
 
    private AsyncTestSpecification specification;
 
@@ -161,10 +166,30 @@ public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
       }
 
       // Build the SQS client with provided region and credentials.
-      client = SqsClient.builder()
+      SqsClientBuilder builder = SqsClient.builder()
             .region(Region.of(region))
-            .credentialsProvider(credentialsProvider)
-            .build();
+            .credentialsProvider(credentialsProvider);
+
+      if (hasOption(OVERRIDE_URL_OPTION)) {
+         String endpointOverride = optionsMap.get(OVERRIDE_URL_OPTION);
+         if (endpointOverride.startsWith("http")) {
+            builder.endpointOverride(new URI(endpointOverride));
+         }
+      }
+
+      client = builder.build();
+   }
+
+   /**
+    * Safe method for checking if an option has been set.
+    * @param optionKey Check if that option is available in options map.
+    * @return true if option is present, false if undefined.
+    */
+   protected boolean hasOption(String optionKey) {
+      if (optionsMap != null) {
+         return optionsMap.containsKey(optionKey);
+      }
+      return false;
    }
 
    /**
