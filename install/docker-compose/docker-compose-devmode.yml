@@ -10,6 +10,7 @@ services:
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
+    platform: linux/amd64
 
   kafka:
     image: vectorized/redpanda:v22.2.2
@@ -28,7 +29,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:latest
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
@@ -52,7 +53,7 @@ services:
       - app
     ports:
       - "8081:8081"
-    image: quay.io/microcks/microcks-async-minion:latest
+    image: quay.io/microcks/microcks-async-minion:nightly
     container_name: microcks-async-minion
     restart: on-failure
     volumes:
