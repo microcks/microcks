@@ -6,8 +6,9 @@ services:
     container_name: microcks-db
     volumes:
       # Podman does not create missing folders, so we need to use an existing one
-      # Adding the "z" flag to get SELinux configured automatically
-      - "./microcks-data:/data/db:z"
+      # Add the ":z" flag to get SELinux configured automatically
+      - "./microcks-data:/data/db"
+    #user: "501:1000"
 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
@@ -20,12 +21,10 @@ services:
     ports:
       - "18080:8080"
     volumes:
-      # Adding the "z" flag to get SELinux configured automatically
-      - "./keycloak-realm:/opt/keycloak/data/import:z"
+      - "./keycloak-realm/microcks-realm-sample.json:/opt/keycloak/data/import/microcks-realm.json"
     environment:
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
-      KEYCLOAK_IMPORT: "/microcks-keycloak-config/microcks-realm-sample.json"
       KC_HOSTNAME_ADMIN_URL: "http://localhost:18080"
       KC_HOSTNAME_URL: "http://localhost:18080"
     command:
@@ -40,13 +39,14 @@ services:
     container_name: microcks
     ports:
       - "8080:8080"
+      - "9090:9090"
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_MONGODB_URI=mongodb://microcks-db:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
-      - POSTMAN_RUNNER_URL=http://__HOST__:3000
-      - TEST_CALLBACK_URL=http://__HOST__:8080
-      - KEYCLOAK_URL=http://microcks-keycloak:8080
+      - POSTMAN_RUNNER_URL=http://postman:3000
+      - TEST_CALLBACK_URL=http://microcks:8080
+      - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       #- MAX_UPLOAD_FILE_SIZE=3MB

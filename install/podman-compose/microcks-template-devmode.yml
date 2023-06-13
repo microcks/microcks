@@ -6,8 +6,9 @@ services:
     container_name: microcks-db
     volumes:
       # Podman does not create missing folders, so we need to use an existing one
-      # Adding the "z" flag to get SELinux configured automatically
-      - "./microcks-data:/data/db:z"
+      # Add the ":z" flag to get SELinux configured automatically
+      - "./microcks-data:/data/db"
+    #user: "501:1000"
 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
@@ -29,8 +30,8 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_MONGODB_URI=mongodb://microcks-db:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
-      - POSTMAN_RUNNER_URL=http://__HOST__:3000
-      - TEST_CALLBACK_URL=http://__HOST__:8080
+      - POSTMAN_RUNNER_URL=http://postman:3000
+      - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_ENABLED=false
       #- MAX_UPLOAD_FILE_SIZE=3MB
