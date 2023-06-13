@@ -2,7 +2,7 @@ version: '2'
 
 services:
   mongo:
-    image: mongo:3.4.23
+    image: docker.io/library/mongo:3.4.23
     container_name: microcks-db
     volumes:
       # Podman does not create missing folders, so we need to use an existing one
@@ -12,6 +12,7 @@ services:
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
+    platform: linux/amd64
 
   keycloak:
     image: quay.io/keycloak/keycloak:20.0.2
@@ -35,7 +36,7 @@ services:
       - mongo
       - postman
       - keycloak
-    image: quay.io/microcks/microcks:latest
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     ports:
       - "8080:8080"
@@ -43,7 +44,7 @@ services:
       - SPRING_PROFILES_ACTIVE=prod
       - SPRING_DATA_MONGODB_URI=mongodb://microcks-db:27017
       - SPRING_DATA_MONGODB_DATABASE=microcks
-      - POSTMAN_RUNNER_URL=http:/__HOST__:3000
+      - POSTMAN_RUNNER_URL=http://__HOST__:3000
       - TEST_CALLBACK_URL=http://__HOST__:8080
       - KEYCLOAK_URL=http://microcks-keycloak:8080
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080

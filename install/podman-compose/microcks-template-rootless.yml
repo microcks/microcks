@@ -3,7 +3,7 @@ networks:
   main:
 services:
   mongo:
-    image: mongo:3.4.23
+    image: docker.io/library/mongo:3.4.23
     container_name: microcks-db
     volumes:
       # Podman does not create missing folders, so we need to use an existing one
@@ -11,15 +11,16 @@ services:
       - "./microcks-data:/data/db:z"
     ports:
       - "27017:27017"
-      -
+
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
+    platform: linux/amd64
     ports:
       - "3000:3000"
 
   keycloak:
-    image: jboss/keycloak:14.0.0
+    image: quay.io/keycloak/keycloak:20.0.2
     container_name: microcks-keycloak
     ports:
       - "18080:8080"
@@ -40,7 +41,7 @@ services:
       - mongo
       - postman
       - keycloak
-    image: quay.io/microcks/microcks:latest
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     ports:
       - "8080:8080"
