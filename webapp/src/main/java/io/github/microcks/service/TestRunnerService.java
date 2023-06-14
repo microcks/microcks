@@ -375,6 +375,12 @@ public class TestRunnerService {
             graphqlRunner.setClientHttpRequestFactory(factory);
             graphqlRunner.setSecret(secret);
             return graphqlRunner;
+         case POSTMAN:
+            PostmanTestStepsRunner postmanRunner = new PostmanTestStepsRunner(resourceRepository);
+            postmanRunner.setClientHttpRequestFactory(factory);
+            postmanRunner.setTestsCallbackUrl(testsCallbackUrl);
+            postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
+            return postmanRunner;
          case SOAP_UI:
             // Handle local download of correct project file.
             List<ImportJob> jobs = jobRepository.findByServiceRefId(serviceId);
@@ -383,22 +389,6 @@ public class TestRunnerService {
                   String projectFile = handleJobRepositoryDownloadToFile(jobs.get(0));
                   SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(projectFile);
                   return soapUIRunner;
-               } catch (IOException ioe) {
-                  log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
-                  return null;
-               }
-            }
-         case POSTMAN:
-            // Handle local download of correct project file.
-            jobs = jobRepository.findByServiceRefId(serviceId);
-            if (jobs != null && !jobs.isEmpty()) {
-               try {
-                  String collectionFile = handleJobRepositoryDownloadToFile(jobs.get(0));
-                  PostmanTestStepsRunner postmanRunner = new PostmanTestStepsRunner(collectionFile);
-                  postmanRunner.setClientHttpRequestFactory(factory);
-                  postmanRunner.setTestsCallbackUrl(testsCallbackUrl);
-                  postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
-                  return postmanRunner;
                } catch (IOException ioe) {
                   log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
                   return null;

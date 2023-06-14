@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Microcks API v1.7
-  version: 1.7.0
+  version: 1.7.1
   description: "API offered by Microcks, the Kubernetes native tools for API and microservices\
     \ mocking and testing (microcks.io)"
   contact:
@@ -1649,6 +1649,7 @@ components:
       - PROTOBUF_SCHEMA
       - PROTOBUF_DESCRIPTION
       - GRAPHQL_SCHEMA
+      - POSTMAN_COLLECTION
       type: string
     Operation:
       description: An Operation of a Service or API

@@ -214,3 +214,7 @@ ul.unstyled {
 .rect-defocused {
   opacity: 0.3 !important;
 }
+
+.tooltip-break {
+  word-break: break-word;
+}

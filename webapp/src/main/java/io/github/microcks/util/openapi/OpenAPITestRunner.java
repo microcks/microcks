@@ -201,7 +201,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
       StringBuilder builder = new StringBuilder();
       if (lastValidationErrors != null && !lastValidationErrors.isEmpty()) {
          for (String error : lastValidationErrors) {
-            builder.append(error).append("/n");
+            builder.append(error).append('\n');
          }
       }
       // Reset just after consumption so avoid side-effects.

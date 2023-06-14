@@ -78,6 +78,12 @@ public class ProducerManager {
    GooglePubSubProducerManager googlePubSubProducerManager;
 
    @Inject
+   AmazonSQSProducerManager amazonSQSProducerManager;
+
+   @Inject
+   AmazonSNSProducerManager amazonSNSProducerManager;
+
+   @Inject
    @RootWebSocketProducerManager
    WebSocketProducerManager wsProducerManager;
 
@@ -175,6 +181,23 @@ public class ProducerManager {
                         googlePubSubProducerManager.publishMessage(topicName, message,
                               googlePubSubProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
                      }
+                     break;
+                  case SQS:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String queueName = amazonSQSProducerManager.getQueueName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        amazonSQSProducerManager.publishMessage(queueName, message,
+                              amazonSQSProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
+                     break;
+                  case SNS:
+                     for (EventMessage eventMessage : definition.getEventMessages()) {
+                        String topicName = amazonSNSProducerManager.getTopicName(definition, eventMessage);
+                        String message = renderEventMessageContent(eventMessage);
+                        amazonSNSProducerManager.publishMessage(topicName, message,
+                              amazonSNSProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     }
+                     break;
                   default:
                      break;
                 }

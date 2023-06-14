@@ -106,8 +106,8 @@ public class JsonExpressionEvaluator {
             break;
 
          case presence:
-            // Consider presence evaluation.
-            if (caseKey != null && caseKey.length() > 0) {
+            // Consider presence evaluation of evaluatedNode directly.
+            if (evaluatedNode != null && evaluatedNode.toString().length() > 0) {
                if (specification.getCases().containsKey("found")) {
                   return specification.getCases().get("found");
                }

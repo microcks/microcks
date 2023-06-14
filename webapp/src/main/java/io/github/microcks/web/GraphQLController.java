@@ -62,6 +62,7 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.parser.Parser;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -247,8 +248,10 @@ public class GraphQLController {
          ObjectNode aggregated = mapper.createObjectNode();
          ObjectNode dataNode = aggregated.putObject("data");
          for (GraphQLQueryResponse response : graphqlResponses) {
-            dataNode.set(response.getAlias(), response.getJsonResponse().path("data")
-                  .path(response.getOperationName()).deepCopy());
+            dataNode.set(
+               StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
+               response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy()
+            );
          }
          responseNode = aggregated;
       }

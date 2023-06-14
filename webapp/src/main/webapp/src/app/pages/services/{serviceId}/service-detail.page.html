@@ -242,6 +242,14 @@
                   <dt>Google PubSub project:</dt>
                   <dd><a>{{ asyncAPIFeatureEndpoint('GOOGLEPUBSUB') }}</a></dd>
                 </span>
+                <span *ngIf="hasBinding(item, 'SQS')">
+                  <dt>Amazon SQS region:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('SQS') }}</a></dd>
+                </span>
+                <span *ngIf="hasBinding(item, 'SNS')">
+                  <dt>Amazon SNS region:</dt>
+                  <dd><a>{{ asyncAPIFeatureEndpoint('SNS') }}</a></dd>
+                </span>
               </dl>
               <dl class="dl-horizontal left" *ngIf="!isEventTypeService()">
               <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
@@ -306,7 +314,7 @@
               <ng-template tabHeading>
                 {{ getExchangeName(exchange) }}
                 <span class="learn-more-inline">
-                  <i tooltip="Source artifact: {{ getExchangeSourceArtifact(exchange) }}" class="pficon pficon-resources-almost-empty" aria-hidden="true"></i>
+                  <i tooltip="Source artifact: {{ getExchangeSourceArtifact(exchange) }}" containerClass="tooltip-break" class="pficon pficon-resources-almost-empty" aria-hidden="true"></i>
                 </span>
               </ng-template>
 
@@ -424,6 +432,36 @@
                           <span class="input-group-addon">
                             <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
                                (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'GOOGLEPUBSUB'))"></i>
+                          </span>
+                        </div>
+                      </dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'SQS')">
+                    <dl>
+                      <dt>AWS SQS Queue:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'SQS') }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
+                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'SQS'))"></i>
+                          </span>
+                        </div>
+                      </dd>
+                      <dt>AWS SQS persistent:</dt>
+                      <dd>{{ getBindingProperty(item, 'SQS', 'persistent') }}</dd>
+                    </dl>
+                  </span>
+                  <span *ngIf="hasBinding(item, 'SNS')">
+                    <dl>
+                      <dt>AWS SNS Topic:</dt>
+                      <dd>
+                        <div class="input-group">
+                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'SNS') }}" disabled/>
+                          <span class="input-group-addon">
+                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
+                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'SNS'))"></i>
                           </span>
                         </div>
                       </dd>

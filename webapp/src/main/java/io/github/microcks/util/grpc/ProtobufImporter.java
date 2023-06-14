@@ -65,6 +65,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
    private static final String BINARY_DESCRIPTOR_EXT = ".pbb";
 
+   private static final String BUILTIN_LIBRARY_PREFIX = "google/protobuf";
+
    /**
     * Build a new importer.
     * @param protoFilePath The path to local proto spec file
@@ -216,19 +218,22 @@ public class ProtobufImporter implements MockRepositoryImporter {
                }
                log.debug("Found an import to resolve in protobuf: {}", importStr);
 
-               // Check if import path is locally there.
-               Path importPath = protoFilePath.getParent().resolve(importStr);
-               if (!Files.exists(importPath)) {
-                  // Not there, so resolve it remotely and write to local file for protoc.
-                  String importContent = referenceResolver.getHttpReferenceContent(importStr, "UTF-8");
-                  try {
-                     Files.createDirectories(importPath.getParent());
-                     Files.createFile(importPath);
-                  } catch (FileAlreadyExistsException faee) {
-                     log.warn("Exception while writing protobuf dependency", faee);
+               // Check that this lib is not in built-in ones.
+               if (!importStr.startsWith(BUILTIN_LIBRARY_PREFIX)) {
+                  // Check if import path is locally there.
+                  Path importPath = protoFilePath.getParent().resolve(importStr);
+                  if (!Files.exists(importPath)) {
+                     // Not there, so resolve it remotely and write to local file for protoc.
+                     String importContent = referenceResolver.getHttpReferenceContent(importStr, "UTF-8");
+                     try {
+                        Files.createDirectories(importPath.getParent());
+                        Files.createFile(importPath);
+                     } catch (FileAlreadyExistsException faee) {
+                        log.warn("Exception while writing protobuf dependency", faee);
+                     }
+                     Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
+                     resolvedImportsLocalFiles.add(importPath.toFile());
                   }
-                  Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
-                  resolvedImportsLocalFiles.add(importPath.toFile());
                }
             }
          }

@@ -7,7 +7,7 @@ metadata:
     container: spring
     group: microcks
 spec:
-  replicas: 1
+  replicas: {{ .Values.microcks.replicas }}
   selector:
     matchLabels:
       app: "{{ .Values.appName }}"
@@ -21,6 +21,8 @@ spec:
         deploymentconfig: "{{ .Values.appName }}"
         container: spring
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: spring
@@ -197,6 +199,8 @@ spec:
         deploymentconfig: "{{ .Values.appName }}-postman-runtime"
         container: postman-runtime
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: postman-runtime
@@ -358,6 +362,8 @@ spec:
         deploymentconfig: keycloak
         container: keycloak
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: keycloak-server
@@ -565,6 +571,8 @@ spec:
         deploymentconfig: async-minion
         container: async-minion
         group: microcks
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
     spec:
       containers:
       - name: async-minion
@@ -589,6 +597,52 @@ spec:
               secretKeyRef:
                 key: {{ .Values.features.async.kafka.authentication.keystoreSecretRef.passwordKey }}
                 name: "{{ .Values.appName }}-kafka-keystore"
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.sqs.region }}
+            {{- if eq .Values.features.async.sqs.credentialsType "env-variable" }}
+            {{- if .Values.features.async.sqs.credentialsSecretRef }}
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sqs.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sqs.credentialsSecretRef.accessKeyIdKey }}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sqs.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sqs.credentialsSecretRef.secretAccessKeyKey }}
+              {{- if .Values.features.async.sqs.credentialsSecretRef.sessionTokenKey }}
+          - name: AWS_SESSION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sqs.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sqs.credentialsSecretRef.sessionTokenKey }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.sns.region }}
+            {{- if eq .Values.features.async.sns.credentialsType "env-variable" }}
+            {{- if .Values.features.async.sns.credentialsSecretRef }}
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sns.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sns.credentialsSecretRef.accessKeyIdKey }}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sns.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sns.credentialsSecretRef.secretAccessKeyKey }}
+              {{- if .Values.features.async.sns.credentialsSecretRef.sessionTokenKey }}
+          - name: AWS_SESSION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sns.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sns.credentialsSecretRef.sessionTokenKey }}
+              {{- end }}
+            {{- end }}
             {{- end }}
           {{- end }}
         ports:
@@ -635,6 +689,22 @@ spec:
             mountPath: "/deployments/config/googlepubsub/sa"
             {{- end }}
           {{- end }}
+          {{- if .Values.features.async.sqs.region }}
+            {{- if .Values.features.async.sqs.credentialsSecretRef }}
+            {{- if eq .Values.features.async.sqs.credentialsType "profile" }}
+          - name: "{{ .Values.appName }}-amazonsqs-creds"
+            mountPath: "/deployments/config/amazon-sqs"
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.sns.region }}
+            {{- if .Values.features.async.sns.credentialsSecretRef }}
+            {{- if eq .Values.features.async.sns.credentialsType "profile" }}
+          - name: "{{ .Values.appName }}-amazonsns-creds"
+            mountPath: "/deployments/config/amazon-sns"
+            {{- end }}
+            {{- end }}
+          {{- end }}
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-async-minion-config"
@@ -659,6 +729,24 @@ spec:
         - name: "{{ .Values.appName }}-googlepubsub-sa"
           secret:
             secretName: "{{ .Values.features.async.googlepubsub.serviceAccountSecretRef.secret }}"
+          {{- end }}
+        {{- end }}
+        {{- if .Values.features.async.sqs.region }}
+          {{- if .Values.features.async.sqs.credentialsSecretRef }}
+          {{- if eq .Values.features.async.sqs.credentialsType "profile" }}
+        - name: "{{ .Values.appName }}-amazonsqs-creds"
+          secret:
+            secretName: "{{ .Values.features.async.sqs.credentialsSecretRef.secret }}"
+          {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.features.async.sns.region }}
+          {{- if .Values.features.async.sns.credentialsSecretRef }}
+          {{- if eq .Values.features.async.sns.credentialsType "profile" }}
+        - name: "{{ .Values.appName }}-amazonsns-creds"
+          secret:
+            secretName: "{{ .Values.features.async.sns.credentialsSecretRef.secret }}"
+          {{- end }}
           {{- end }}
         {{- end }}
 {{- end }}

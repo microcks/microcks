@@ -61,6 +61,20 @@ export class VerticalNavComponent implements OnInit {
       } catch (error) {
         console.warn("Error while posting navigationEvent to parent", error);
       }
+
+      // Navigation between sections may happen outside vertical navigation (ex: when we move from Hub to
+      // freshly installed API or Service). We then have to refresh the active class on the correct section.
+      var section = '/';
+      if (event.url != '/') {
+        if (event.url.substring(1).indexOf('/') > 0) {
+          section += event.url.substring(1, event.url.substring(1).indexOf('/') + 1);
+        } else {
+          // Default to short section name.
+          section = event.url;
+        }
+      }
+      $('div.nav-pf-vertical-with-sub-menus li.list-group-item a[routerLink="' + section + '"]').parent().addClass('active');
+      $('div.nav-pf-vertical-with-sub-menus li.list-group-item a[routerLink!="' + section + '"]').parent().removeClass('active');
     });
   }
 

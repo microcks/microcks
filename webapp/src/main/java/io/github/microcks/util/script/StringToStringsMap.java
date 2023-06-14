@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A mimimalist implementation of com.eviware.soapui.support.types.StringToStringsMap to ensure a
+ * A minimalist implementation of com.eviware.soapui.support.types.StringToStringsMap to ensure a
  * compatibility layer withe SoapUI scripting.
  * @author laurent
  */
@@ -43,7 +43,7 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
    }
 
    public List<String> get(String key, List<String> defaultValue) {
-      List<String> value = (List) this.get(key);
+      List<String> value = this.get(key);
       return value == null ? defaultValue : value;
    }
 
@@ -57,10 +57,10 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
 
    public void add(String key, String string) {
       if (!this.containsKey(key)) {
-         this.put(key, new ArrayList());
+         this.put(key, new ArrayList<String>());
       }
 
-      ((List) this.get(key)).add(string);
+      this.get(key).add(string);
    }
 
    public static StringToStringsMap fromHttpHeader(String value) {
@@ -123,8 +123,8 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
    }
 
    public String get(String key, String defaultValue) {
-      List<String> value = (List)this.get(key);
-      return value != null && value.size() != 0 ? (String)value.get(0) : defaultValue;
+      List<String> value = this.get(key);
+      return value != null && value.size() != 0 ? value.get(0) : defaultValue;
    }
 
    public String getCaseInsensitive(String key, String defaultValue) {
@@ -143,7 +143,7 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
    }
 
    public void replace(String key, String oldValue, String value) {
-      List<String> values = (List)this.get(key);
+      List<String> values = this.get(key);
       if (values != null) {
          int ix = values.indexOf(oldValue);
          if (ix >= 0) {
@@ -154,7 +154,7 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
    }
 
    public void remove(String key, String data) {
-      List<String> values = (List)this.get(key);
+      List<String> values = this.get(key);
       if (values != null) {
          values.remove(data);
       }

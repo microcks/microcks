@@ -81,7 +81,8 @@ export enum BindingType {
   WS,
   AMQP,
   AMQP1,
-  GOOGLEPUBSUB
+  GOOGLEPUBSUB,
+  SQS
 }
 export class ParameterConstraint {
   name: string;
@@ -117,7 +118,8 @@ export enum ContractType {
   AVRO_SCHEMA,
   PROTOBUF_SCHEMA,
   PROTOBUF_DESCRIPTOR,
-  GRAPHQL_SCHEMA
+  GRAPHQL_SCHEMA,
+  POSTMAN_COLLECTION
 }
 
 export class Header {

@@ -183,11 +183,22 @@ public class ServiceServiceTest {
 
       // Inspect and check resources.
       resources = resourceRepository.findByServiceId(importedSvc.getId());
-      assertEquals(1, resources.size());
+      assertEquals(2, resources.size());
 
-      resource = resources.get(0);
-      assertEquals("WeatherForecast API-1.1.0.yaml", resource.getName());
-      assertEquals("weather-forecast-raw-openapi.yaml", resource.getSourceArtifact());
+      for (Resource resourceItem : resources) {
+         switch (resourceItem.getType()) {
+            case OPEN_API_SPEC:
+               assertEquals("WeatherForecast API-1.1.0.yaml", resourceItem.getName());
+               assertEquals("weather-forecast-raw-openapi.yaml", resourceItem.getSourceArtifact());
+               break;
+            case POSTMAN_COLLECTION:
+               assertEquals("WeatherForecast API-1.1.0.json", resourceItem.getName());
+               assertEquals("weather-forecast-postman.json", resourceItem.getSourceArtifact());
+               break;
+            default:
+               fail("Unexpected resource type: " + resourceItem.getType());
+         }
+      }
 
       // Inspect and check requests.
       requests = requestRepository.findByOperationId(

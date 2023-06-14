@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * An implementation of com.eviware.soapui.support.types.StringToStringsMap that implements the RFC 7230
- * regarding header name case-insensitivencess and to ensure a compatibility layer withe SoapUI scripting.
+ * regarding header name case-insensitiveness and to ensure a compatibility layer withe SoapUI scripting.
  * @author laurent
  */
 public class HttpHeadersStringToStringsMap extends StringToStringsMap {
@@ -40,18 +40,18 @@ public class HttpHeadersStringToStringsMap extends StringToStringsMap {
     */
    @Override
    public List<String> get(Object key) {
-      Iterator var3 = this.entrySet().iterator();
+      Iterator<Map.Entry<String, List<String>>> var3 = this.entrySet().iterator();
 
-      Map.Entry stringListEntry;
+      Map.Entry<String, List<String>> stringListEntry;
       do {
          if (!var3.hasNext()) {
             return null;
          }
 
-         stringListEntry = (Map.Entry)var3.next();
-      } while (!key.toString().equalsIgnoreCase((String)stringListEntry.getKey()) || ((List)stringListEntry.getValue()).isEmpty());
+         stringListEntry = var3.next();
+      } while (!key.toString().equalsIgnoreCase(stringListEntry.getKey()) || (stringListEntry.getValue()).isEmpty());
 
-      return (List)stringListEntry.getValue();
+      return stringListEntry.getValue();
    }
 
    public boolean hasValues(String key) {
@@ -60,10 +60,10 @@ public class HttpHeadersStringToStringsMap extends StringToStringsMap {
 
    public void add(String key, String string) {
       if (!this.containsKeyIgnoreCase(key)) {
-         this.put(key, new ArrayList());
+         this.put(key, new ArrayList<String>());
       }
 
-      ((List) this.get(key)).add(string);
+      this.get(key).add(string);
    }
 
    public String get(String key, String defaultValue) {

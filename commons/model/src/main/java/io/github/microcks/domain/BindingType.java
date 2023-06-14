@@ -29,5 +29,7 @@ public enum BindingType {
    AMQP,
    AMQP1,
    NATS,
-   GOOGLEPUBSUB
+   GOOGLEPUBSUB,
+   SQS,
+   SNS
 }

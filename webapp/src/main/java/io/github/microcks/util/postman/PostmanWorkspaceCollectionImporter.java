@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -50,6 +51,7 @@ public class PostmanWorkspaceCollectionImporter extends PostmanCollectionImporte
       try {
          // Read Json bytes.
          byte[] jsonBytes = Files.readAllBytes(Paths.get(collectionFilePath));
+         setCollectionContent(new String(jsonBytes, StandardCharsets.UTF_8));
          // Convert them to Node using Jackson object mapper.
          ObjectMapper mapper = new ObjectMapper();
          JsonNode collectionWrapper = mapper.readTree(jsonBytes);

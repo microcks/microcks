@@ -22,9 +22,12 @@ import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.TestResult;
 import io.github.microcks.domain.TestReturn;
+import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.test.AbstractTestRunner;
 
@@ -43,8 +46,6 @@ import org.springframework.http.client.ClientHttpResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -66,6 +67,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    private JsonNode collection;
 
+   private ResourceRepository resourceRepository;
    private ClientHttpRequestFactory clientHttpRequestFactory;
 
    private String testsCallbackUrl = null;
@@ -74,19 +76,10 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    /**
     * Build a new PostmanTestStepsRunner for a collection.
-    * @param collectionFilePath The path to SoapUI project file
-    * @throws java.io.IOException if file cannot be found or accessed.
+    * @param resourceRepository The repository that contains Postman Collection to test
     */
-   public PostmanTestStepsRunner(String collectionFilePath) throws IOException {
-      try {
-         // Read Json bytes.
-         byte[] jsonBytes = Files.readAllBytes(Paths.get(collectionFilePath));
-         // Convert them to Node using Jackson object mapper.
-         ObjectMapper mapper = new ObjectMapper();
-         collection = mapper.readTree(jsonBytes);
-      } catch (Exception e) {
-         throw new IOException("Postman collection file");
-      }
+   public PostmanTestStepsRunner(ResourceRepository resourceRepository){
+      this.resourceRepository = resourceRepository;
    }
 
    /**
@@ -112,6 +105,25 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
       }
 
+      // Retrieve the resource corresponding to OpenAPI specification if any.
+      Resource collectionResource = null;
+      List<Resource> resources = resourceRepository.findByServiceId(service.getId());
+      for (Resource resource : resources) {
+         if (ResourceType.POSTMAN_COLLECTION.equals(resource.getType())) {
+            collectionResource = resource;
+            break;
+         }
+      }
+
+      // Convert them to Node using Jackson object mapper.
+      try {
+         ObjectMapper mapper = new ObjectMapper();
+         collection = mapper.readTree(collectionResource.getContent());
+      } catch (Exception e) {
+         throw new IOException("Postman collection file cannot be found or parsed", e);
+      }
+
+      // Sanitize endpoint url.
       if (endpointUrl.endsWith("/")) {
          endpointUrl = endpointUrl.substring(0, endpointUrl.length() - 1);
       }
@@ -226,7 +238,8 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          // Item is here an operation description.
          String operationName = PostmanCollectionImporter.buildOperationName(itemNode, operationNameRadix);
          log.debug("Found operation '{}', comparing with '{}'", operationName, operation.getName());
-         if (operationName.equals(operation.getName())) {
+         if (PostmanUtil.areOperationsEquivalent(operation.getName(), operationName)) {
+         //if (operationName.equals(operation.getName())) {
             // We've got the correct operation.
             JsonNode events = itemNode.path("event");
             for (JsonNode event : events) {
