@@ -16,7 +16,7 @@
 #
 
 # Update container image version in docker-compose, podman-compose and helm chart files.
-if [ -n "$1" ]; then
+if [[ $# -eq 1 ]]; then
   if [ "$(uname)" == "Darwin" ]; then
     sed -i '' 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/docker-compose/docker-compose*.yml
     sed -i '' 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/docker-compose/docker-compose*.yml

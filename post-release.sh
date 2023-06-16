@@ -18,7 +18,7 @@
 root_dir=$(pwd)
 
 # Need 2 arguments: first is version we just release, second is issue id for release.
-if (( $# < 2 ));; then
+if [[ $# -eq 2 ]]; then
   # Package Helm chart.
   cd install/kubernetes
   helm package microcks
@@ -47,23 +47,6 @@ if (( $# < 2 ));; then
   # Get back to root.
   cd $root_dir
   rm -rf $root_dir/tmp
-
-  # Update container image version in docker-compose, podman-compose and helm chart files.
-  if [ "$(uname)" == "Darwin" ]; then
-    sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:nightly=g' install/docker-compose/docker-compose*.yml
-    sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:nightly=g' install/docker-compose/docker-compose*.yml
-    sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:nightly=g' install/kubernetes/microcks/values.yaml
-    sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:nightly=g' install/kubernetes/microcks/values.yaml
-    sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$1"'=g' install/podman-compose/microcks-*.yml
-    sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:nightly=g' install/podman-compose/microcks-*.yml
-  elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:nightly=g' install/docker-compose/docker-compose.yml
-    sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:nightly=g' install/docker-compose/docker-compose*.yml
-    sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:nightly=g' install/kubernetes/microcks/values.yaml
-    sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:nightly=g' install/kubernetes/microcks/values.yaml
-    sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:nightly=g' install/podman-compose/microcks-*.yml
-    sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:nightly=g' install/podman-compose/microcks-*.yml
-  fi
 else
   echo "post-release.sh must be called with <version> <release-issue> as 1st argument. Example:"
   echo "$ ./post-release.sh 1.7.1 837"
