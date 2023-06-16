@@ -51,7 +51,7 @@ jobs:
           if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
             echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
-          elif [[ $GITHUB_REF == 'refs/heads/1.7.x' ]]; then
+          elif [[ $GITHUB_REF == 'refs/heads/1.8.x' ]]; then
             echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
           elif [[ $GITHUB_REF == "refs/tags/$GITHUB_REF_NAME" ]]; then
