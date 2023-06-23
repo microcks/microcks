@@ -59,20 +59,6 @@ public class IdBuilder {
    }
 
    /**
-    * Build the full name of a Resource dedicated to a Service operation. Such a Resource is typically
-    * a Schema associated to operation expected input or output, so that you'll be able to easily retrieve it later.
-    * @param service The domain service owning this resource
-    * @param operation The operation with resource it related to.
-    * @return A full name for this operation attached resource.
-    */
-   public static String buildResourceFullName(Service service, Operation operation) {
-      // Split operation name to remove starting verb (GET, POST, PUT, DELETE, SUBSCRIBE, PRODUCE).
-      String[] operationElements = operation.getName().split(" ");
-      return service.getName() + "-" + service.getVersion() + "-"
-            + operationElements[1].replaceAll("/", "~1");
-   }
-
-   /**
     * Build the full name of a Resource dedicated to no particular operations of a Service. Such Resource is typically
     * a global Schema dependency that defines shared data types, so that you'll be able to easily retrieve it later.
     * @param service The domain service owning this resource

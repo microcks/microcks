@@ -31,6 +31,7 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -158,6 +159,7 @@ public class SchemaRegistry {
       private String path;
       private ResourceType type;
       private String content;
+      private Set<String> operations;
 
       public SchemaEntry(Resource resource) {
          this.name = resource.getName();
@@ -165,6 +167,7 @@ public class SchemaRegistry {
          this.path = resource.getPath();
          this.type = resource.getType();
          this.content = resource.getContent();
+         this.operations = resource.getOperations();
       }
 
       public String getName() {
@@ -181,6 +184,9 @@ public class SchemaRegistry {
       }
       public String getContent() {
          return content;
+      }
+      public Set<String> getOperations() {
+         return operations;
       }
    }
 }

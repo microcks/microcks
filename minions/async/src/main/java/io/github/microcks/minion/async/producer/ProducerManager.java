@@ -26,7 +26,6 @@ import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.Constants;
 import io.github.microcks.minion.async.SchemaRegistry;
 import io.github.microcks.util.AvroUtil;
-import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
@@ -41,6 +40,7 @@ import javax.inject.Inject;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 @Unremovable
@@ -119,23 +119,33 @@ public class ProducerManager {
                         // Check it Avro binary is expected, we should convert to bytes.
                         if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
                            // Build the name of expected schema.
-                           String schemaName = IdBuilder.buildResourceFullName(definition.getOwnerService(), definition.getOperation());
-                           String schemaContent = schemaRegistry.getSchemaEntryContent(definition.getOwnerService(), schemaName);
+                           List<SchemaRegistry.SchemaEntry> entries = schemaRegistry.getSchemaEntries(definition.getOwnerService()).stream()
+                                 .filter(entry -> entry.getOperations() != null
+                                       && entry.getOperations().contains(definition.getOperation().getName()))
+                                 .toList();
 
-                           try {
-                              if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
-                                 logger.debug("Using a registry and converting message to Avro record");
-                                 GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
-                                 kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
-                                       .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
-                              } else {
-                                 logger.debug("Converting message to Avro bytes array");
-                                 byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
-                                 kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
-                                       .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                           if (!entries.isEmpty()) {
+                              logger.debugf("Found an Avro schema '%s' for operation '%s'", entries.get(0).getName(), definition.getOperation().getName());
+                              String schemaContent = entries.get(0).getContent();
+
+                              try {
+                                 if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
+                                    logger.debug("Using a registry and converting message to Avro record");
+                                    GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
+                                    kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
+                                          .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                                 } else {
+                                    logger.debug("Converting message to Avro bytes array");
+                                    byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
+                                    kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
+                                          .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                                 }
+                              } catch (Exception e) {
+                                 logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
                               }
-                           } catch (Exception e) {
-                              logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
+                           } else {
+                              logger.warnf("Failed finding a suitable Avro schema for the '%s' operation. No publication done.",
+                                    definition.getOperation().getName());
                            }
                         } else {
                            kafkaProducerManager.publishMessage(topic, key, message, kafkaProducerManager
