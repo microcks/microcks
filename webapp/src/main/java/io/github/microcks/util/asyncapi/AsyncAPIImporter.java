@@ -161,7 +161,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
    @Override
    public List<Resource> getResourceDefinitions(Service service) {
       List<Resource> results = new ArrayList<>();
-      Set<String> resolvedExternalRefNames = new HashSet<>();
+      Map<String, Resource> resolvedExternalRefResources = new HashMap<>();
 
       // Build a suitable name.
       String name = service.getName() + "-" + service.getVersion();
@@ -202,7 +202,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
                      for (String ref : references) {
                         // We may have already resolved it if referenced more than once.
-                        if (!resolvedExternalRefNames.contains(ref)) {
+                        Resource schemaResource = resolvedExternalRefResources.get(ref);
+                        if (schemaResource == null) {
                            try {
                               // Remove trailing anchor marker (we may have this in Avro schema to point exact Resource)
                               if (ref.contains("#")) {
@@ -214,7 +215,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
 
                               // Build a new resource from content. Use the escaped operation path.
-                              Resource schemaResource = new Resource();
+                              schemaResource = new Resource();
                               schemaResource.setName(IdBuilder.buildResourceFullName(service, resourceName));
                               schemaResource.setPath(ref);
                               schemaResource.setContent(content);
@@ -250,8 +251,9 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               log.info("Ignoring the reference {} cause it could not be resolved", ref);
                            }
                            // Mark it as resolved.
-                           resolvedExternalRefNames.add(ref);
+                           resolvedExternalRefResources.put(ref, schemaResource);
                         }
+                        schemaResource.addOperation(operation.getName());
                      }
                   }
                }

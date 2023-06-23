@@ -20,6 +20,9 @@ package io.github.microcks.domain;
 
 import org.springframework.data.annotation.Id;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * Domain object representing a Resource : a contractualization companion
  * to microservices Service managed with this application.
@@ -36,6 +39,7 @@ public class Resource {
    private ResourceType type;
    private String serviceId;
    private String sourceArtifact;
+   private Set<String> operations;
 
    public String getId() {
       return id;
@@ -91,5 +95,20 @@ public class Resource {
 
    public void setSourceArtifact(String sourceArtifact) {
       this.sourceArtifact = sourceArtifact;
+   }
+
+   public Set<String> getOperations() {
+      return operations;
+   }
+
+   public void setOperations(Set<String> operations) {
+      this.operations = operations;
+   }
+
+   public void addOperation(String operation) {
+      if (operations == null) {
+         operations = new HashSet<>();
+      }
+      operations.add(operation);
    }
 }
