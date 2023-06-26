@@ -19,7 +19,18 @@ It also reuses these assets for running compliance and non-regression tests agai
 
 ## Build Status
 
-Current development version is `1.7.1-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.7.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
+The current development version is `1.8.0-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.8.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
+
+## Versions
+
+Here are the naming conventions we're using for current releases, ongoing development maintenance activities.
+
+| Status      | Version          | Branch   | Container images tags |
+| ----------- | ---------------- | -------- | --------------------- |
+| Stable      | `1.7.1`          | `master` | `1.7.1`, `latest`     |
+| Dev         | `1.8.0-SNAPSHOT` | `1.8.x`  | `nightly`             |
+| Maintenance | `1.7.2-SNAPSHOT` | `1.7.x`  | `maintenance`         |
+
 
 ## How to build Microcks
 
