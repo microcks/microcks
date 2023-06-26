@@ -13,7 +13,6 @@ services:
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
-    platform: linux/amd64
 
   keycloak:
     image: quay.io/keycloak/keycloak:20.0.2
