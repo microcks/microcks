@@ -13,13 +13,12 @@ services:
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
-    platform: linux/amd64
 
   app:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:1.7.1
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - "./config:/deployments/config"

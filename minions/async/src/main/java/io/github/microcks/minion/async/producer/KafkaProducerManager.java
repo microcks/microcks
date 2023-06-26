@@ -149,6 +149,7 @@ public class KafkaProducerManager {
             // Get an existing schema or auto-register if not found.
             props.put(SerdeConfig.SCHEMA_RESOLVER,
                   io.apicurio.registry.resolver.DefaultSchemaResolver.class.getName());
+            props.put(SerdeConfig.AUTO_REGISTER_ARTIFACT, true);
             // Set artifact strategy as the same as Confluent default subject strategy.
             props.put(SerdeConfig.ARTIFACT_RESOLVER_STRATEGY,
                   io.apicurio.registry.serde.strategy.TopicIdStrategy.class.getName());

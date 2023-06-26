@@ -13,7 +13,6 @@ services:
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
-    platform: linux/amd64
 
   keycloak:
     image: quay.io/keycloak/keycloak:20.0.2
@@ -35,7 +34,7 @@ services:
       - mongo
       - postman
       - keycloak
-    image: quay.io/microcks/microcks:1.7.1
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     ports:
       - "8080:8080"
