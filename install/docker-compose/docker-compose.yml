@@ -25,7 +25,6 @@ services:
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
     container_name: microcks-postman-runtime
-    platform: linux/amd64
 
   app:
     depends_on:
