@@ -17,6 +17,8 @@ It also reuses these assets for running compliance and non-regression tests agai
 
 * [Documentation](https://microcks.io/documentation/getting-started/)
 
+To get involved with our community, please make sure you are familiar with the project's [Code of Conduct](./CODE_OF_CONDUCT.md).
+
 ## Build Status
 
 The current development version is `1.8.0-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.8.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
