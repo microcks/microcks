@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -42,8 +42,6 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -69,7 +67,7 @@ public abstract class AbstractBaseIT {
    private static final MongoDBContainer mongoDBContainer;
 
    static {
-      mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:3.4.23"))
+      mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.4"))
             .withReuse(true);
       mongoDBContainer.start();
    }

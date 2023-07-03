@@ -21,10 +21,10 @@ package io.github.microcks.util.script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import jakarta.servlet.http.HttpServletRequest;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.Map;
 

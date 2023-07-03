@@ -21,7 +21,7 @@ package io.github.microcks.util;
 import io.github.microcks.domain.ParameterConstraint;
 import io.github.microcks.domain.ParameterLocation;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
 
 /**

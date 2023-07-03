@@ -21,7 +21,7 @@ package io.github.microcks.util.graphql;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * A wrapper for parsing GraphQL requests over Http.

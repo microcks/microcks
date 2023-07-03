@@ -18,7 +18,7 @@
  */
 package io.github.microcks.util.script;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * This is a fake, lightweight implementation of mockRequest objects that are typically available

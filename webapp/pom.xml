@@ -20,12 +20,14 @@
     <junit.version>4.13.1</junit.version>
     <!-- <keycloak.version>14.0.0</keycloak.version> -->
     <keycloak.version>20.0.2</keycloak.version>
-    <mongo-java-server.version>1.24.0</mongo-java-server.version>
+    <!-- <mongo-java-server.version>1.24.0</mongo-java-server.version> -->
+    <mongo-java-server.version>1.43.0</mongo-java-server.version>
     <soapui.version>5.6.0</soapui.version>
     <soapui.jayway.version>0.9.1</soapui.jayway.version>
     <xstream.version>1.4.20</xstream.version>
     <grpc.version>1.49.1</grpc.version>
-    <apache-httpclient.version>4.5.13</apache-httpclient.version>
+    <!-- <apache-httpclient.version>4.5.13</apache-httpclient.version> -->
+    <apache-httpclient.version>5.2.1</apache-httpclient.version>
     <protobuf.version>3.19.6</protobuf.version>
     <grpc.version>1.47.1</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
@@ -96,12 +98,23 @@
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-spring-boot-starter</artifactId>
     </dependency>
+
+
+    <!-- Required since Spring 1.5 to 2.3 migration -->
+    <!--
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
       <version>${apache-httpclient.version}</version>
     </dependency>
-    <!-- Required since Spring 1.5 to 2.3 migration -->
+    -->
+    <dependency>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <version>${apache-httpclient.version}</version>
+    </dependency>
+
+
     <dependency>
       <groupId>com.smartbear.soapui</groupId>
       <artifactId>soapui</artifactId>
@@ -315,6 +328,7 @@
           <encoding>${project.build.sourceEncoding}</encoding>
           <compilerArgument>-Xlint:deprecation</compilerArgument>
           <compilerArgument>-Xlint:unchecked</compilerArgument>
+          <compilerArgument>-parameters</compilerArgument>
         </configuration>
       </plugin>
       <plugin>
