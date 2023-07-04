@@ -18,18 +18,14 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <junit.version>4.13.1</junit.version>
-    <!-- <keycloak.version>14.0.0</keycloak.version> -->
     <keycloak.version>20.0.2</keycloak.version>
-    <!-- <mongo-java-server.version>1.24.0</mongo-java-server.version> -->
     <mongo-java-server.version>1.43.0</mongo-java-server.version>
     <soapui.version>5.6.0</soapui.version>
     <soapui.jayway.version>0.9.1</soapui.jayway.version>
     <xstream.version>1.4.20</xstream.version>
-    <grpc.version>1.49.1</grpc.version>
-    <!-- <apache-httpclient.version>4.5.13</apache-httpclient.version> -->
     <apache-httpclient.version>5.2.1</apache-httpclient.version>
-    <protobuf.version>3.19.6</protobuf.version>
-    <grpc.version>1.47.1</grpc.version>
+    <protobuf.version>3.23.3</protobuf.version>
+    <grpc.version>1.56.1</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
   </properties>
 
@@ -98,22 +94,12 @@
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-spring-boot-starter</artifactId>
     </dependency>
-
-
     <!-- Required since Spring 1.5 to 2.3 migration -->
-    <!--
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>${apache-httpclient.version}</version>
-    </dependency>
-    -->
     <dependency>
       <groupId>org.apache.httpcomponents.client5</groupId>
       <artifactId>httpclient5</artifactId>
       <version>${apache-httpclient.version}</version>
     </dependency>
-
 
     <dependency>
       <groupId>com.smartbear.soapui</groupId>
@@ -295,13 +281,13 @@
     <dependency>
       <groupId>org.skyscreamer</groupId>
       <artifactId>jsonassert</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>mongodb</artifactId>
-      <version>1.16.0</version>
+      <version>1.17.6</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -458,8 +444,8 @@
               </execution>
             </executions>
             <configuration>
-              <nodeVersion>v12.6.0</nodeVersion>
-              <npmVersion>6.9.0</npmVersion>
+              <nodeVersion>v16.0.0</nodeVersion>
+              <npmVersion>8.0.0</npmVersion>
               <workingDirectory>${basedir}/src/main/webapp</workingDirectory>
               <installDirectory>target</installDirectory>
             </configuration>
