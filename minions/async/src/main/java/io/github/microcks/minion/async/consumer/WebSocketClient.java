@@ -18,13 +18,13 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-import javax.websocket.ClientEndpoint;
-import javax.websocket.Endpoint;
-import javax.websocket.EndpointConfig;
-import javax.websocket.MessageHandler;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
+import jakarta.websocket.ClientEndpoint;
+import jakarta.websocket.Endpoint;
+import jakarta.websocket.EndpointConfig;
+import jakarta.websocket.MessageHandler;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.Session;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +32,7 @@ import java.util.List;
 @ClientEndpoint
 /**
  * A simple WebSocket client that stores messages as <code>ConsumedMessage</code>s. It supports
- * both the {@class javax.websocket.ClientEndpoint} annotation and the generic {@class javax.websocket.Endpoint}
+ * both the {@class jakarta.websocket.ClientEndpoint} annotation and the generic {@class jakarta.websocket.Endpoint}
  * interface, registering itself as a new message handler.
  * @author laurent
  */

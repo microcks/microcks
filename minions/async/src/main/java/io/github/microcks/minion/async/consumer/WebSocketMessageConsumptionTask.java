@@ -23,10 +23,10 @@ import org.apache.http.ssl.SSLContexts;
 import org.jboss.logging.Logger;
 
 import javax.net.ssl.SSLContext;
-import javax.websocket.ClientEndpointConfig;
-import javax.websocket.ContainerProvider;
-import javax.websocket.Session;
-import javax.websocket.WebSocketContainer;
+import jakarta.websocket.ClientEndpointConfig;
+import jakarta.websocket.ContainerProvider;
+import jakarta.websocket.Session;
+import jakarta.websocket.WebSocketContainer;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;

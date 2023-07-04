@@ -32,9 +32,8 @@ import io.nats.client.Nats;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-import java.io.UnsupportedEncodingException;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Set;

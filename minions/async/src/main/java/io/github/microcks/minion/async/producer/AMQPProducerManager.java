@@ -30,8 +30,8 @@ import com.rabbitmq.client.ConnectionFactory;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;

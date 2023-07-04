@@ -18,18 +18,15 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import io.quarkus.arc.Unremovable;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.server.ServerEndpoint;
 
-@Unremovable
 @ApplicationScoped
-@ServerEndpoint("/api/ws/{service}/{version}/{path}")
+@RootWebSocketProducerManager
+@ServerEndpoint("/api/ws/{service}/{version}/")
 /**
- * WebSocket endpoint with 1 sub part in channel name.
+ * WebSocket endpoint with no sub part in channel name.
  * @author laurent
  */
-public class WebSocketProducerManagerSub extends WebSocketProducerManager {
-
+public class WebSocketProducerManagerRoot extends WebSocketProducerManager {
 }

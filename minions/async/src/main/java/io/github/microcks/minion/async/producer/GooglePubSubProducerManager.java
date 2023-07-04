@@ -44,8 +44,8 @@ import com.google.pubsub.v1.TopicName;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Map;

@@ -20,8 +20,8 @@ package io.github.microcks.minion.async.consumer;
 
 import org.junit.jupiter.api.Test;
 
-import javax.websocket.ContainerProvider;
-import javax.websocket.Session;
+import jakarta.websocket.ContainerProvider;
+import jakarta.websocket.Session;
 import java.net.URI;
 import java.util.List;
 

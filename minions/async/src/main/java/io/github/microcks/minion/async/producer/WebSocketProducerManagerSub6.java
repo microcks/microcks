@@ -20,8 +20,8 @@ package io.github.microcks.minion.async.producer;
 
 import io.quarkus.arc.Unremovable;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.websocket.server.ServerEndpoint;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.websocket.server.ServerEndpoint;
 
 /**
  * WebSocket endpoint with 6 sub parts in channel name.

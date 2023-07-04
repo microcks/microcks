@@ -18,7 +18,7 @@
  */
 package io.github.microcks.minion.async;
 
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.HashSet;
 import java.util.Set;

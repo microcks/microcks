@@ -29,8 +29,8 @@ import org.jboss.logging.Logger;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.io.UnsupportedEncodingException;
 
 /**
