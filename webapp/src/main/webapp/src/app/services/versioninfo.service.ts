@@ -28,6 +28,6 @@ export class VersionInfoService {
   constructor(private http: HttpClient) { }
 
   public getVersionInfo(): Observable<any> {
-    return this.http.get<any>(this.rootUrl + '/version/info/');
+    return this.http.get<any>(this.rootUrl + '/version/info');
   }
 }
