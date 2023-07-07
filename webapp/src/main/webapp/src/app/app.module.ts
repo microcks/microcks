@@ -71,6 +71,7 @@ import { ServicesPageComponent } from './pages/services/services.page';
 import { DirectAPIWizardComponent } from './pages/services/_components/direct-api.wizard'
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
+import { GenerateSamplesDialogComponent } from './pages/services/{serviceId}/_components/generate-samples.dialog';
 import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
 import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
@@ -108,7 +109,7 @@ export function configLoader(configService: ConfigService) {
     ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent, DayInvocationsBarChartComponent,
     HourInvocationsBarChartComponent, TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
     ScoreTreemapComponent, GradeIndexComponent, DashboardPageComponent, ServicesPageComponent, DirectAPIWizardComponent,
-    ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
+    ServiceDetailPageComponent, OperationOverridePageComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
     InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
     ArtifactUploaderDialogComponent, AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
@@ -145,7 +146,7 @@ export function configLoader(configService: ConfigService) {
   ],
   entryComponents: [
     HelpDialogComponent, DirectAPIWizardComponent,
-    EditLabelsDialogComponent, GenericResourcesDialogComponent,
+    EditLabelsDialogComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
     GroupsManagementDialogComponent
   ],
