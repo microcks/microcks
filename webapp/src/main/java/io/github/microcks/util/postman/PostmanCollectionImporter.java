@@ -272,6 +272,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                      String variables = requestNode.path("body").path("graphql").path("variables").asText();
                      dispatchCriteria = extractGraphQLCriteria(rootDispatcherRules, variables);
                   }
+               } else {
+                  // If dispatcher has been overriden (to SCRIPT for example), we should still put a generic resourcePath
+                  // (maybe containing : parts) to later force operation matching at the mock controller level. Only do that
+                  // when request url is not empty (means not the root url like POST /order).
+                  if (requestUrl != null && requestUrl.length() > 0) {
+                     operation.addResourcePath(extractResourcePath(requestUrl, null));
+                     log.debug("Added operation generic resource path: {}", operation.getResourcePaths());
+                  }
                }
 
                Request request = buildRequest(requestNode, responseNode.path("name").asText());
@@ -511,6 +519,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                operation.setDispatcher(DispatchStyles.URI_PARTS);
             } else {
                operation.addResourcePath(extractResourcePath(url, null));
+               log.debug("Added operation generic resource path: {}", operation.getResourcePaths());
             }
          }
 

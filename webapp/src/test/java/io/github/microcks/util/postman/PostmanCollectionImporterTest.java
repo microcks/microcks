@@ -18,9 +18,17 @@
  */
 package io.github.microcks.util.postman;
 
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.domain.*;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +36,11 @@ import java.io.IOException;
 import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * This is a test case for class PostmanCollectionImporter.
@@ -54,7 +66,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Swagger Petstore", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -68,7 +80,7 @@ public class PostmanCollectionImporterTest {
             // assertions for findByStatus.
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
-            Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
             assertTrue(operation.getResourcePaths().contains("/v2/pet/findByStatus"));
 
             // Check that messages have been correctly found.
@@ -81,8 +93,7 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(1, exchanges.size());
             Exchange exchange = exchanges.get(0);
-            if (exchange instanceof RequestResponsePair) {
-               RequestResponsePair entry = (RequestResponsePair) exchange;
+            if (exchange instanceof RequestResponsePair entry) {
                Request request = entry.getRequest();
                Response response = entry.getResponse();
                assertNotNull(request);
@@ -116,8 +127,7 @@ public class PostmanCollectionImporterTest {
             assertTrue(operation.getResourcePaths().contains("/v2/pet/2"));
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -163,7 +173,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Swagger Petstore", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.1", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -177,7 +187,7 @@ public class PostmanCollectionImporterTest {
             // assertions for findByStatus.
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
-            Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
             assertTrue(operation.getResourcePaths().contains("/v2/pet/findByStatus"));
 
             // Check that messages have been correctly found.
@@ -185,13 +195,11 @@ public class PostmanCollectionImporterTest {
             try{
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
-               e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(1, exchanges.size());
             Exchange exchange = exchanges.get(0);
-            if (exchange instanceof RequestResponsePair) {
-               RequestResponsePair entry = (RequestResponsePair) exchange;
+            if (exchange instanceof RequestResponsePair entry) {
                Request request = entry.getRequest();
                Response response = entry.getResponse();
                assertNotNull(request);
@@ -225,8 +233,7 @@ public class PostmanCollectionImporterTest {
             assertTrue(operation.getResourcePaths().contains("/v2/pet/2"));
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -292,15 +299,13 @@ public class PostmanCollectionImporterTest {
             try{
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
-               e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(2, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -342,8 +347,7 @@ public class PostmanCollectionImporterTest {
             assertEquals(1, operation.getResourcePaths().size());
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -389,8 +393,7 @@ public class PostmanCollectionImporterTest {
             assertTrue(operation.getResourcePaths().contains("/order/7891011"));
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -478,7 +481,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Petstore API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("12.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -545,7 +548,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Petstore API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
