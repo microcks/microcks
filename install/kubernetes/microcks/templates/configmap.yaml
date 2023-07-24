@@ -126,7 +126,7 @@ data:
     ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
     ai-copilot.implementation={{ .Values.features.aiCopilot.implementation }}
     {{- if eq .Values.features.aiCopilot.implementation "openai" }}
-    ai-copilot.openai.api-key={{ .Values.features.aiCopilot.openai.api-key }}
+    ai-copilot.openai.api-key={{ .Values.features.aiCopilot.openai.apiKey }}
       {{- if .Values.features.aiCopilot.openai.timeout }}
     ai-copilot.openai.timeout={{ .Values.features.aiCopilot.openai.timeout }}
       {{- end }}
