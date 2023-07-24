@@ -566,6 +566,41 @@ public class ServiceService {
    }
 
 
+   public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,  UserInfo userInfo) {
+      Service service = serviceRepository.findById(id).orElse(null);
+      log.debug("Is user allowed? " + authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+         for (Operation operation : service.getOperations()) {
+            if (operation.getName().equals(operationName)) {
+               String operationId = IdBuilder.buildOperationId(service, operation);
+
+               for (Exchange exchange : exchanges) {
+                  if (exchange instanceof RequestResponsePair pair) {
+                     // Associate request and response with operation and artifact.
+                     pair.getRequest().setOperationId(operationId);
+                     pair.getResponse().setOperationId(operationId);
+                     pair.getRequest().setSourceArtifact("AI Copilot");
+                     pair.getResponse().setSourceArtifact("AI Copilot");
+
+                     // Save response and associate request with response before saving it.
+                     responseRepository.save(pair.getResponse());
+                     pair.getRequest().setResponseId(pair.getResponse().getId());
+                     requestRepository.save(pair.getRequest());
+
+                  } else if (exchange instanceof UnidirectionalEvent event) {
+                     // Associate event message with operation and artifact before saving it.
+                     event.getEventMessage().setOperationId(operationId);
+                     event.getEventMessage().setSourceArtifact("AI Copilot");
+                     eventMessageRepository.save(event.getEventMessage());
+                  }
+               }
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+
    /** Recopy overriden operation mutable properties into newService. */
    private void copyOverridenOperations(Service existingService, Service newService) {
       for (Operation existingOperation : existingService.getOperations()) {

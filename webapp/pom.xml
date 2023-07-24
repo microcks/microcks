@@ -27,6 +27,7 @@
     <protobuf.version>3.23.3</protobuf.version>
     <grpc.version>1.56.1</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
+    <openai-gpt3-java.version>0.14.0</openai-gpt3-java.version>
   </properties>
 
   <dependencyManagement>
@@ -254,6 +255,12 @@
       <groupId>io.github.microcks</groupId>
       <artifactId>protoc-jar</artifactId>
       <version>${protoc-jar.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.theokanning.openai-gpt3-java</groupId>
+      <artifactId>api</artifactId>
+      <version>${openai-gpt3-java.version}</version>
     </dependency>
 
     <dependency>

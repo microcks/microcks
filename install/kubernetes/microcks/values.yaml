@@ -278,3 +278,12 @@ features:
   microcksHub:
     enabled: true
     allowedRoles: admin,manager,manager-any
+
+  aiCopilot:
+    enabled: false
+    implementation: openai
+    openai:
+      apiKey: sk-my-openai-api-token
+      timeout: 20
+      #model: gpt-3.5-turbo
+      #maxTokens: 2000
