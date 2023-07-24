@@ -140,7 +140,7 @@ public class AICopilotHelper {
    protected static List<RequestResponsePair> parseRequestResponseTemplatizedOutput(Operation operation, String content) throws Exception {
       List<RequestResponsePair> results = new ArrayList<>();
 
-      JsonNode root = YAML_MAPPER.readTree(content);
+      JsonNode root = YAML_MAPPER.readTree(sanitizeYamlContent(content));
       if (root.getNodeType() == JsonNodeType.ARRAY) {
          Iterator<JsonNode> examples = root.elements();
          while (examples.hasNext()) {
@@ -189,10 +189,33 @@ public class AICopilotHelper {
       }
       return results;
    }
+
    protected static List<UnidirectionalEvent> parseUnidirectionalEventTemplatizedOutput(String content) throws Exception {
       List<UnidirectionalEvent> results = new ArrayList<>();
 
       return results;
+   }
+
+   /** Sanitize the pseudo Yaml sometimes returned into plain valid Yaml. */
+   private static String sanitizeYamlContent(String pseudoYaml) {
+      pseudoYaml = pseudoYaml.trim();
+      if (!pseudoYaml.startsWith("-")) {
+         boolean inYaml = false;
+         StringBuilder yaml = new StringBuilder();
+         String[] lines = pseudoYaml.split("\\r?\\n|\\r");
+         for (String line: lines) {
+            if (line.startsWith("-")) {
+               inYaml = true;
+            } else if (line.startsWith("```") || line.length() == 0) {
+               inYaml = false;
+            }
+            if (inYaml) {
+               yaml.append(line).append("\n");
+            }
+         }
+         return yaml.toString();
+      }
+      return pseudoYaml;
    }
 
    private static Set<Header> buildHeaders(JsonNode headersNode) {
