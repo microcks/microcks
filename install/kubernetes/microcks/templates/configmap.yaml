@@ -46,6 +46,8 @@ data:
     {{- if .Values.features.async.sns.region }}
     features.feature.async-api.endpoint-SNS={{ .Values.features.async.sns.region }}{{ if .Values.features.async.sns.endpointOverride }} at {{ .Values.features.async.sns.endpointOverride }}{{ end }}
     {{- end }}
+    
+    features.feature.ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
   application.properties: |-
     # Application configuration properties
     tests-callback.url=${TEST_CALLBACK_URL}
@@ -119,6 +121,22 @@ data:
     # Grpc server properties
     grpc.server.certChainFilePath=/deployments/config/grpc/tls.crt
     grpc.server.privateKeyFilePath=/deployments/config/grpc/tls.key
+    
+    # AI Copilot configuration properties
+    ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
+    ai-copilot.implementation={{ .Values.features.aiCopilot.implementation }}
+    {{- if eq .Values.features.aiCopilot.implementation "openai" }}
+    ai-copilot.openai.api-key={{ .Values.features.aiCopilot.openai.api-key }}
+      {{- if .Values.features.aiCopilot.openai.timeout }}
+    ai-copilot.openai.timeout={{ .Values.features.aiCopilot.openai.timeout }}
+      {{- end }}
+      {{- if .Values.features.aiCopilot.openai.model }}
+    ai-copilot.openai.model={{ .Values.features.aiCopilot.openai.model }}
+      {{- end }}
+      {{- if .Values.features.aiCopilot.openai.maxTokens }}
+    ai-copilot.openai.maxTokens={{ .Values.features.aiCopilot.openai.maxTokens }}
+      {{- end }}
+    {{- end }}
   logback.xml: |-
     <?xml version="1.0" encoding="UTF-8"?>
 
