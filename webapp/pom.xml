@@ -375,7 +375,7 @@
 
   <profiles>
     <profile>
-      <id>uber</id>
+      <id>single</id>
       <build>
         <plugins>
           <plugin>
@@ -517,6 +517,7 @@
               <arguments>
                 <argument>--spring.profiles.active=prod</argument>
               </arguments>
+              <classifier>exec</classifier>
             </configuration>
             <executions>
               <execution>

@@ -12,6 +12,7 @@
     <module>commons/util-el</module>
     <module>webapp</module>
     <module>minions/async</module>
+    <module>distro</module>
   </modules>
 
   <name>Microcks</name>

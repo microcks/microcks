@@ -4,7 +4,7 @@ MAINTAINER Laurent Broudoux <laurent@microcks.io>
 
 # Some version information
 LABEL io.k8s.description="Microcks is Open Source Kubernetes native tool for API Mocking and Testing" \
-      io.k8s.display-name="Microcks Application" \
+      io.k8s.display-name="Microcks Application Uber" \
       maintainer="Laurent Broudoux <laurent@microcks.io>"
 
 # Install Java runtime
