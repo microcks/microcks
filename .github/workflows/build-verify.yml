@@ -83,7 +83,7 @@ jobs:
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/webapp
-          mvn -B -q -Pprod -DskipTests package
+          mvn -B -q -Pprod -DskipTests install
           #docker build -f src/main/docker/Dockerfile -t quay.io/microcks/microcks:$IMAGE_TAG .
           docker buildx build --push \
             --platform=linux/amd64,linux/arm64 \

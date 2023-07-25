@@ -51,5 +51,6 @@ USER 1001
 COPY target/*-exec.jar app.jar
 EXPOSE 8080
 
-# Run it
+# Run it in uber mode
+ENV SPRING_PROFILES_ACTIVE=uber
 ENTRYPOINT [ "/deployments/run-java.sh" ]
