@@ -92,7 +92,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
     */
    @Override
    public HttpMethod buildMethod(String method){
-      return HttpMethod.resolve(method.toUpperCase());
+      return HttpMethod.valueOf(method.toUpperCase());
    }
 
    @Override
@@ -126,11 +126,20 @@ public class OpenAPITestRunner extends HttpTestRunner {
          log.debug("Response expected status code : " + expectedResponse.getStatus());
          if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
             log.debug("Response HttpStatus does not match expected one, returning failure");
+            lastValidationErrors = List.of(
+                  String.format("Response HttpStatus does not match expected one. Expecting %s but got %d",
+                        expectedResponse.getStatus(), responseCode)
+            );
             return TestReturn.FAILURE_CODE;
          }
 
          if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
             log.debug("Response Content-Type does not match expected one, returning failure");
+            lastValidationErrors = List.of(
+                  String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
+                        expectedResponse.getMediaType(), contentType)
+            );
+            return TestReturn.FAILURE_CODE;
          }
       }
 
