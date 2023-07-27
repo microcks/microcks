@@ -2,7 +2,7 @@ version: '2'
 
 services:
   mongo:
-    image: mongo:3.4.23
+    image: mongo:3.6.23
     container_name: microcks-db
     volumes:
       - "~/tmp/microcks-data:/data/db"

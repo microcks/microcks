@@ -102,7 +102,7 @@ mongodb:
   #uri: mongodb:27017
   #uriParameters: "?ssl=true"
   #database: sampledb
-  image: centos/mongodb-34-centos7:latest
+  image: centos/mongodb-36-centos7:latest
   persistent: true
   volumeSize: 2Gi
   # Unless you uncomment following line and set class, persistent volume claim is created
