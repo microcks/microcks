@@ -1304,7 +1304,7 @@ components:
         public-client:
           description: Name of public-client that can be used for requesting OAuth
             token
-          type: string
+          type: boolean
         ssl-required:
           description: SSL certificates requirements
           enum:
@@ -1975,7 +1975,6 @@ components:
       description: A generic map of counter
       type: object
       additionalProperties:
-        format: integer
         type: number
     TestResultSummary:
       description: 'Represents the summary result of a Service or API test run by
