@@ -81,8 +81,14 @@ public class SoapUIProjectImporterTest {
       
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);
-      assertEquals(1, resources.size());
+      assertEquals(2, resources.size());
+
       Resource resource = resources.get(0);
+      Assert.assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
+      assertEquals("HelloServiceSoapBinding-1.2.xml", resource.getName());
+      assertNotNull(resource.getContent());
+
+      resource = resources.get(1);
       Assert.assertEquals(ResourceType.WSDL, resource.getType());
       assertEquals("HelloServiceSoapBinding-1.2.wsdl", resource.getName());
       assertNotNull(resource.getContent());
@@ -150,8 +156,14 @@ public class SoapUIProjectImporterTest {
       
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);
-      assertEquals(1, resources.size());
+      assertEquals(2, resources.size());
+
       Resource resource = resources.get(0);
+      assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
+      assertEquals("HelloService Mock-0.9.xml", resource.getName());
+      assertNotNull(resource.getContent());
+
+      resource = resources.get(1);
       assertEquals(ResourceType.WSDL, resource.getType());
       assertEquals("HelloService Mock-0.9.wsdl", resource.getName());
       assertNotNull(resource.getContent());
@@ -222,8 +234,13 @@ public class SoapUIProjectImporterTest {
 
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);
-      assertEquals(1, resources.size());
+      assertEquals(2, resources.size());
       Resource resource = resources.get(0);
+      assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
+      assertEquals("HelloServiceScriptBinding-1.0.xml", resource.getName());
+      assertNotNull(resource.getContent());
+
+      resource = resources.get(1);
       assertEquals(ResourceType.WSDL, resource.getType());
       assertEquals("HelloServiceScriptBinding-1.0.wsdl", resource.getName());
       assertNotNull(resource.getContent());
@@ -276,13 +293,19 @@ public class SoapUIProjectImporterTest {
       assertEquals("1.0.0", service.getVersion());
       
       List<Resource> resources = importer.getResourceDefinitions(service);
-      assertEquals(2, resources.size());
+      assertEquals(3, resources.size());
+
       Resource resource = resources.get(0);
+      assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
+      assertNotNull(resource.getContent());
+      assertEquals("execute_pttBinding_GetProductElements MockService-1.0.0.xml", resource.getName());
+
+      resource = resources.get(1);
       assertEquals(ResourceType.XSD, resource.getType());
       assertNotNull(resource.getContent());
       assertEquals("Product_Anomalie_v1.0.xsd", resource.getName());
       
-      resource = resources.get(1);
+      resource = resources.get(2);
       assertEquals(ResourceType.WSDL, resource.getType());
       assertNotNull(resource.getContent());
       assertEquals("execute_pttBinding_GetProductElements MockService-1.0.0.wsdl", resource.getName());
@@ -312,7 +335,7 @@ public class SoapUIProjectImporterTest {
       
       // Check that resources import does not throw exceptions of failures.
       List<Resource> resources = importer.getResourceDefinitions(service);
-      assertEquals(0, resources.size());
+      assertEquals(1, resources.size());
       
       // Check that operations and methods/resourcePaths have been found.
       assertEquals(3, service.getOperations().size());
@@ -479,8 +502,13 @@ public class SoapUIProjectImporterTest {
 
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(services.get(0));
-      assertEquals(1, resources.size());
+      assertEquals(2, resources.size());
       Resource resource = resources.get(0);
+      Assert.assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
+      assertEquals("DriverSoap-1.0.xml", resource.getName());
+      assertNotNull(resource.getContent());
+
+      resource = resources.get(1);
       Assert.assertEquals(ResourceType.WSDL, resource.getType());
       assertEquals("DriverSoap-1.0.wsdl", resource.getName());
       assertNotNull(resource.getContent());

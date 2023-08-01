@@ -60,6 +60,9 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -78,6 +81,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
    private WsdlProject project;
 
+   private String projectContent;
+
    /**
     * Build a new importer.
     * @param projectFilePath The path to local SoapUI project file
@@ -85,6 +90,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
     */
    public SoapUIProjectImporter(String projectFilePath) throws IOException{
       try{
+         byte[] projectBytes = Files.readAllBytes(Paths.get(projectFilePath));
+         projectContent = new String(projectBytes, StandardCharsets.UTF_8);
          project = new WsdlProject(projectFilePath);
       } catch (Exception e) {
          log.error("Exception while parsing SoapUI file " + projectFilePath, e);
@@ -104,6 +111,13 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    @Override
    public List<Resource> getResourceDefinitions(Service service) {
       List<Resource> results = new ArrayList<>();
+
+      // First record the project itself as an artifact.
+      Resource projectResource = new Resource();
+      projectResource.setName(service.getName() + "-" + service.getVersion() + ".xml");
+      projectResource.setType(ResourceType.SOAP_UI_PROJECT);
+      projectResource.setContent(projectContent);
+      results.add(projectResource);
 
       // For now, only available for Wsdl based projects having mocked interfaces.
       WsdlMockService wsdlMockService = project.getMockServiceByName(service.getName());

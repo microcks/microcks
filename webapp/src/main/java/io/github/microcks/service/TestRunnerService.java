@@ -18,7 +18,6 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.ImportJob;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Response;
@@ -36,7 +35,6 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.repository.TestResultRepository;
-import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.asyncapi.AsyncAPITestRunner;
 import io.github.microcks.util.graphql.GraphQLTestRunner;
@@ -59,7 +57,6 @@ import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
 import org.apache.hc.core5.http.URIScheme;
 import org.apache.hc.core5.http.config.Registry;
 import org.apache.hc.core5.http.config.RegistryBuilder;
-import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
@@ -75,8 +72,6 @@ import org.springframework.scheduling.annotation.Async;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.security.KeyStore;
@@ -112,9 +107,6 @@ public class TestRunnerService {
 
    @Autowired
    private TestResultRepository testResultRepository;
-
-   @Autowired
-   private ImportJobRepository jobRepository;
 
    @Autowired
    private SecretRepository secretRepository;
@@ -386,18 +378,8 @@ public class TestRunnerService {
             postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
             return postmanRunner;
          case SOAP_UI:
-            // Handle local download of correct project file.
-            List<ImportJob> jobs = jobRepository.findByServiceRefId(serviceId);
-            if (jobs != null && !jobs.isEmpty()) {
-               try {
-                  String projectFile = handleJobRepositoryDownloadToFile(jobs.get(0));
-                  SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(projectFile);
-                  return soapUIRunner;
-               } catch (IOException ioe) {
-                  log.error("IOException while downloading {}", jobs.get(0).getRepositoryUrl());
-                  return null;
-               }
-            }
+            SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(resourceRepository);
+            return soapUIRunner;
          default:
             HttpTestRunner httpRunner = new HttpTestRunner();
             httpRunner.setClientHttpRequestFactory(factory);
@@ -422,20 +404,6 @@ public class TestRunnerService {
       ks.setCertificateEntry("caCert", caCert);
 
       return ks;
-   }
-
-   /** Download a remote HTTP URL repository into a temporary local file. */
-   private String handleJobRepositoryDownloadToFile(ImportJob job) throws IOException {
-      // Check if job has an associated secret to retrieve.
-      Secret jobSecret = null;
-      if (job.getSecretRef() != null) {
-         log.debug("Retrieving secret {} for job {}", job.getSecretRef().getName(), job.getName());
-         jobSecret = secretRepository.findById(job.getSecretRef().getSecretId()).orElse(null);
-      }
-
-      File localFile = HTTPDownloader.handleHTTPDownloadToFile(job.getRepositoryUrl(),
-            jobSecret, job.isRepositoryDisableSSLValidation());
-      return localFile.getAbsolutePath();
    }
 
    /** Publish a TestCompletionEvent towards asynchronous consumers. */

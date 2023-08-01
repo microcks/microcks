@@ -30,6 +30,8 @@ import com.eviware.soapui.model.testsuite.TestStepResult;
 import com.eviware.soapui.model.testsuite.TestStepResult.TestStepStatus;
 import com.eviware.soapui.support.types.StringToObjectMap;
 import com.eviware.soapui.support.types.StringToStringsMap;
+
+import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.util.test.AbstractTestRunner;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.domain.*;
@@ -37,8 +39,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -56,7 +61,8 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(SoapUITestStepsRunner.class);
-   
+
+   private ResourceRepository resourceRepository;
    private WsdlProject project;
    
    /**
@@ -64,17 +70,35 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
     * @param projectFilePath The path to SoapUI project file
     * @throws java.io.IOException if file cannot be found or accessed.
     */
-   public SoapUITestStepsRunner(String projectFilePath) throws IOException{
-      try{
-         project = new WsdlProject(projectFilePath);
-      } catch (Exception e) {
-         throw new IOException("SoapUI project file cannot be found or accessed");
-      }
+   public SoapUITestStepsRunner(ResourceRepository resourceRepository) {
+      this.resourceRepository = resourceRepository;
    }
 
    @Override
    public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
                                    List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
+
+      if (log.isDebugEnabled()){
+         log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
+      }
+
+      // Retrieve the resource corresponding to OpenAPI specification if any.
+      Resource projectResource = null;
+      List<Resource> resources = resourceRepository.findByServiceId(service.getId());
+      for (Resource resource : resources) {
+         if (ResourceType.SOAP_UI_PROJECT.equals(resource.getType())) {
+            projectResource = resource;
+            break;
+         }
+      }
+
+      try{
+         project = new WsdlProject(new ByteArrayInputStream(projectResource.getContent().getBytes(StandardCharsets.UTF_8)), null);
+      } catch (Exception e) {
+         e.printStackTrace();
+         log.error("SoapUI project file cannot be found or accessed");
+      }
+
       return runOperationTestSteps(operation, testResult, endpointUrl, null);
    }
 
