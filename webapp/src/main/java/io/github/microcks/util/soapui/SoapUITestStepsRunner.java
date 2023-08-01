@@ -18,6 +18,18 @@
  */
 package io.github.microcks.util.soapui;
 
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestReturn;
+import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.util.test.AbstractTestRunner;
+
 import com.eviware.soapui.impl.support.http.HttpRequestTestStep;
 import com.eviware.soapui.impl.wsdl.WsdlProject;
 import com.eviware.soapui.impl.wsdl.support.http.ProxyUtils;
@@ -25,23 +37,22 @@ import com.eviware.soapui.impl.wsdl.testcase.WsdlTestCase;
 import com.eviware.soapui.impl.wsdl.testcase.WsdlTestCaseRunner;
 import com.eviware.soapui.impl.wsdl.teststeps.RestRequestStepResult;
 import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestRequestStepResult;
-import com.eviware.soapui.model.testsuite.*;
+import com.eviware.soapui.model.testsuite.OperationTestStep;
+import com.eviware.soapui.model.testsuite.TestCase;
+import com.eviware.soapui.model.testsuite.TestCaseRunner;
+import com.eviware.soapui.model.testsuite.TestStep;
 import com.eviware.soapui.model.testsuite.TestStepResult;
 import com.eviware.soapui.model.testsuite.TestStepResult.TestStepStatus;
+import com.eviware.soapui.model.testsuite.TestSuite;
 import com.eviware.soapui.support.types.StringToObjectMap;
 import com.eviware.soapui.support.types.StringToStringsMap;
 
-import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.test.AbstractTestRunner;
-import io.github.microcks.domain.TestReturn;
-import io.github.microcks.domain.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -67,8 +78,7 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
    
    /**
     * Build a new SoapUITestStepsRunner for a project.
-    * @param projectFilePath The path to SoapUI project file
-    * @throws java.io.IOException if file cannot be found or accessed.
+    * @param resourceRepository The repository that contains SoapUI Project to test
     */
    public SoapUITestStepsRunner(ResourceRepository resourceRepository) {
       this.resourceRepository = resourceRepository;
@@ -205,6 +215,15 @@ public class SoapUITestStepsRunner extends AbstractTestRunner<HttpMethod> {
          response.setContent(wtrsr.getResponseContent());
          response.setHeaders(buildHeaders(wtrsr.getResponseHeaders()));
          message = buildConsolidatedMessage(wtrsr.getMessages());
+         // Status may also be unknown if no assertion is present within a request
+         // or if endpoint is not reached. Consider 404 as a failure in our case.
+         if (result.getStatus() == TestStepStatus.UNKNOWN){
+            if (wtrsr.getResponse().getStatusCode() == 404){
+               code = TestReturn.FAILURE_CODE;
+            } else {
+               code = TestReturn.SUCCESS_CODE;
+            }
+         }
       }
       if (result instanceof RestRequestStepResult){
          RestRequestStepResult rrsr = (RestRequestStepResult)result;
