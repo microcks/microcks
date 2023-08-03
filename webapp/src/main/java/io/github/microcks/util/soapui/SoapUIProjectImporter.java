@@ -431,7 +431,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                            }
 
                            if (mockResponse == null){
-                              log.warn("No response found for request {} into SoapUI project {}", candidateRequest.getAttribute("name"), projectElement.getAttribute("name"));
+                              log.warn("No response found for request {} into SoapUI project {}",
+                                    candidateRequest.getAttribute("name"), projectElement.getAttribute("name"));
                               continue;
                            }
 
@@ -441,7 +442,21 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                            result.put(request, response);
                         }
                      } else if (DispatchStyles.RANDOM.equals(operation.getDispatcher())){ {
+                        if (availableRequests.isEmpty()) {
+                           log.warn("A request is mandatory even for a RANDOM dispatch. Operation {} into SoapUI project  {}",
+                                 operation.getName(), projectElement.getAttribute("name"));
+                        } else {
+                           // Use the first one for all the responses
+                           Element mockRequest = availableRequests.values().iterator().next();
 
+                           for (Element mockResponse : mockResponses){
+                              // Build response from MockResponse and response from matching one.
+                              Response response = buildResponse(mockResponse, DispatchStyles.RANDOM);
+                              Request request = buildRequest(mockRequest);
+                              request.setName(operation.getName());
+                              result.put(request, response);
+                           }
+                        }
                      }}
                      break;
                   }
