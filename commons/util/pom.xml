@@ -16,6 +16,7 @@
     <java.version>17</java.version>
     <junit.version>4.13.1</junit.version>
     <jackson.version>2.15.2</jackson.version>
+    <snakeyaml.version>2.0</snakeyaml.version>
     <avro.version>1.11.1</avro.version>
     <graphql-java.version>20.4</graphql-java.version>
   </properties>
@@ -26,10 +27,24 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
 
+    <!-- Force Snakeyaml here as Jackson still pulls 1.33 version full of CVEs -->
+    <dependency>
+      <groupId>org.yaml</groupId>
+      <artifactId>snakeyaml</artifactId>
+      <version>${snakeyaml.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
       <version>${jackson.version}</version>
+      <!-- Avoid pull Snakeyaml here as it resolves 1.33, full of CVEs -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.yaml</groupId>
+          <artifactId>snakeyaml</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <dependency>

@@ -19,6 +19,7 @@
     <maven.compiler.target>17</maven.compiler.target>
     <junit.version>4.13.1</junit.version>
     <keycloak.version>20.0.2</keycloak.version>
+    <snakeyaml.version>2.0</snakeyaml.version>
     <mongo-java-server.version>1.43.0</mongo-java-server.version>
     <xstream.version>1.4.20</xstream.version>
     <apache-httpclient.version>5.2.1</apache-httpclient.version>
@@ -46,6 +47,12 @@
         <version>${grpc.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- Force Snakeyaml here as libs still pulls 1.33 version full of CVEs -->
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
