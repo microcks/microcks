@@ -65,6 +65,12 @@ public class AICopilotController {
    @Autowired
    private ServiceService serviceService;
 
+   /**
+    *
+    * @param serviceId
+    * @param operationName
+    * @return
+    */
    @RequestMapping(value = "/samples/{id:.+}", method = RequestMethod.GET)
    public ResponseEntity<?> getSamplesSuggestions(
          @PathVariable("id") String serviceId,

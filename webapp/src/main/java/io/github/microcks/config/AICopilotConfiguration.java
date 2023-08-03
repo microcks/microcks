@@ -47,18 +47,35 @@ public class AICopilotConfiguration {
 
    private Map<String, String> openai;
 
+   /**
+    * Enable the usage of AICopilot feature. Default is false. In that case, a null implementation
+    * will be provided.
+    * @param enabled Flag telling if AICopilot is activated.
+    */
    public void setEnabled(boolean enabled) {
       this.enabled = enabled;
    }
 
+   /**
+    * Set the name of AICopilot implementation to later build.
+    * @param implementation THe name of implementation to build.
+    */
    public void setImplementation(String implementation) {
       this.implementation = implementation;
    }
 
+   /**
+    * Set OpenAI implementation configuration properties.
+    * @param openai OpenAI configuration properties.
+    */
    public void setOpenai(Map<String, String> openai) {
       this.openai = openai;
    }
 
+   /**
+    * Build and configure a suitable AICopilot based on application properties.
+    * @return An AICopilot implementation configured as specified.
+    */
    @Bean
    public AICopilot aiCopilotImplementation() {
       if (enabled && implementation != null) {
