@@ -18,6 +18,8 @@
  */
 package io.github.microcks.web;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -27,8 +29,6 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-
-import org.codehaus.jettison.json.JSONObject;
 /**
  * Test case for all the Rest mock controller.
  * @author laurent
@@ -97,12 +97,14 @@ public class RestControllerIT extends AbstractBaseIT {
       // Upload modified pastry spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
 
+      ObjectMapper mapper = new ObjectMapper();
+
       // Check operation with a defined mock (name: 'Millefeuille')
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Millefeuille/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-         JSONObject details = new JSONObject(response.getBody());
-         String description = details.getString("description");
+         JsonNode details = mapper.readTree(response.getBody());
+         String description = details.get("description").asText();
          assertTrue(description.startsWith("Detail -"));   
       } catch (Exception e) {
          fail("No Exception should be thrown here");
@@ -112,8 +114,8 @@ public class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-         JSONObject details = new JSONObject(response.getBody());
-         String description = details.getString("description");
+         JsonNode details = mapper.readTree(response.getBody());
+         String description = details.get("description").asText();
          assertTrue(description.startsWith("Detail -"));          
       } catch (Exception e) {
          fail("No Exception should be thrown here");

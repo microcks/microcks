@@ -18,44 +18,30 @@
  */
 package io.github.microcks.util.soapui;
 
-import com.eviware.soapui.config.DefintionPartConfig;
-import com.eviware.soapui.config.RESTMockActionConfig;
-import com.eviware.soapui.config.RESTMockResponseConfig;
-import com.eviware.soapui.impl.rest.mock.RestMockResponse;
-import com.eviware.soapui.impl.rest.mock.RestMockService;
-import com.eviware.soapui.impl.rest.support.RestParamsPropertyHolder;
-import com.eviware.soapui.impl.support.AbstractInterface;
-import com.eviware.soapui.impl.wsdl.WsdlInterface;
-import com.eviware.soapui.impl.wsdl.WsdlOperation;
-import com.eviware.soapui.impl.wsdl.WsdlProject;
-import com.eviware.soapui.impl.wsdl.mock.WsdlMockOperation;
-import com.eviware.soapui.impl.wsdl.mock.WsdlMockResponse;
-import com.eviware.soapui.impl.wsdl.mock.WsdlMockService;
-import com.eviware.soapui.impl.wsdl.mock.dispatch.MockOperationDispatcher;
-import com.eviware.soapui.impl.wsdl.mock.dispatch.QueryMatchMockOperationDispatcher;
-import com.eviware.soapui.impl.wsdl.mock.dispatch.RandomMockOperationDispatcher;
-import com.eviware.soapui.impl.wsdl.mock.dispatch.ScriptMockOperationDispatcher;
-import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequest;
-import com.eviware.soapui.impl.wsdl.teststeps.RestTestRequestStep;
-import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestRequest;
-import com.eviware.soapui.impl.wsdl.teststeps.WsdlTestRequestStep;
-import com.eviware.soapui.model.iface.Interface;
-import com.eviware.soapui.model.mock.MockOperation;
-import com.eviware.soapui.model.mock.MockResponse;
-import com.eviware.soapui.model.mock.MockService;
-import com.eviware.soapui.model.testsuite.TestCase;
-import com.eviware.soapui.model.testsuite.TestStep;
-import com.eviware.soapui.model.testsuite.TestSuite;
-import com.eviware.soapui.support.types.StringToStringsMap;
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Parameter;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.MalformedXmlException;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.domain.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.w3c.dom.Element;
 import org.xml.sax.InputSource;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.IOException;
@@ -63,8 +49,21 @@ import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static io.github.microcks.util.XmlUtil.WSDL_NS;
+import static io.github.microcks.util.XmlUtil.getDirectChildren;
+import static io.github.microcks.util.XmlUtil.getUniqueDirectChild;
+import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.getConfigDirectChildren;
+import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.getConfigUniqueDirectChild;
+import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.hasConfigDirectChild;
 
 /**
  * Implement of MockRepositoryImporter that uses a SoapUI project for building
@@ -79,20 +78,31 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    /** SoapUI project property that references service version property. */
    public static final String SERVICE_VERSION_PROPERTY = "version";
 
-   private WsdlProject project;
-
    private String projectContent;
+
+   private DocumentBuilder documentBuilder;
+
+   private Element projectElement;
+
+   private Element serviceInterface;
+
+   private Map<String, Element> interfaces = new HashMap<>();
 
    /**
     * Build a new importer.
     * @param projectFilePath The path to local SoapUI project file
     * @throws IOException if project file cannot be found
     */
-   public SoapUIProjectImporter(String projectFilePath) throws IOException{
-      try{
+   public SoapUIProjectImporter(String projectFilePath) throws IOException {
+      try {
+         // Read project content as string.
          byte[] projectBytes = Files.readAllBytes(Paths.get(projectFilePath));
          projectContent = new String(projectBytes, StandardCharsets.UTF_8);
-         project = new WsdlProject(projectFilePath);
+         // Then parse it to get DOM root Element.
+         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+         factory.setNamespaceAware(true);
+         documentBuilder = factory.newDocumentBuilder();
+         projectElement = documentBuilder.parse(new InputSource(new StringReader(projectContent))).getDocumentElement();
       } catch (Exception e) {
          log.error("Exception while parsing SoapUI file " + projectFilePath, e);
          throw new IOException("SoapUI project file parsing error");
@@ -102,9 +112,187 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    @Override
    public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
       List<Service> result = new ArrayList<>();
-      // Add Soap and then Rest services definitions.
-      result.addAll(getSoapServiceDefinitions(project.getMockServiceList()));
-      result.addAll(getRestServiceDefinitions(project.getRestMockServiceList()));
+
+      List<Element> interfaceNodes = getConfigDirectChildren(projectElement, "interface");
+      for (Element interfaceNode : interfaceNodes) {
+         // Filter complete interface definition with name as attribute.
+         if (interfaceNode.getAttribute("name") != null) {
+            log.info("Found a service interface named: {}", interfaceNode.getAttribute("name"));
+            interfaces.put(interfaceNode.getAttribute("name"), interfaceNode);
+            serviceInterface = interfaceNode;
+         }
+      }
+
+      // Try loading definitions from Soap mock services.
+      List<Element> mockServices = getConfigDirectChildren(projectElement, "mockService");
+      if (!mockServices.isEmpty()) {
+         result.addAll(getSoapServicesDefinitions(mockServices));
+      }
+      // Then try loading from Rest mock services.
+      List<Element> restMockServices = getConfigDirectChildren(projectElement, "restMockService");
+      if (!restMockServices.isEmpty()) {
+         result.addAll(getRestServicesDefinitions(restMockServices));
+      }
+
+      return result;
+   }
+
+   private List<Service> getSoapServicesDefinitions(List<Element> mockServices) throws MockRepositoryImportException {
+      List<Service> result = new ArrayList<>();
+
+      try {
+         for (Element mockService : mockServices) {
+            // Build a new Service.
+            Service service = new Service();
+            service.setName(mockService.getAttribute("name"));
+            service.setType(ServiceType.SOAP_HTTP);
+
+            // Check version property that is mandatory.
+            Element properties = getConfigUniqueDirectChild(mockService, "properties");
+            service.setVersion(extractVersion(properties));
+
+            List<Element> mockOperations = getConfigDirectChildren(mockService, "mockOperation");
+            for (Element mockOperation : mockOperations) {
+
+               Element interfaceElement = interfaces.get(mockOperation.getAttribute("interface"));
+               if (interfaceElement != null) {
+                  log.info("Got matching service interface");
+                  String bindingQName = interfaceElement.getAttribute("bindingName");
+                  service.setXmlNS(extractNSFromQName(bindingQName));
+               }
+
+               // Build a new operation from mockOperation.
+               Operation operation = new Operation();
+               operation.setName(mockOperation.getAttribute("name"));
+
+               Element interfaceOperation = getInterfaceOperation(interfaceElement, operation.getName());
+               operation.setAction(interfaceOperation.getAttribute("action"));
+
+               try {
+                  completeOperationPartsFromWsdl(interfaceElement, operation);
+               } catch (Exception e) {
+                  // Fallback to input name as a (mostly?) safe default.
+                  log.warn("Was not able to extract element names for input/output payload from WSDL. Defaulting to input and output names.");
+               } finally {
+                  if (operation.getInputName() == null) {
+                     operation.setInputName(interfaceOperation.getAttribute("inputName"));
+                  }
+                  if (operation.getOutputName() == null) {
+                     operation.setOutputName(interfaceOperation.getAttribute("outputName"));
+                  }
+               }
+
+               Element dispatchStyle = getConfigUniqueDirectChild(mockOperation, "dispatchStyle");
+               operation.setDispatcher(dispatchStyle.getTextContent());
+
+               if (DispatchStyles.QUERY_MATCH.equals(operation.getDispatcher())) {
+                  // XPath matching rules are under dispatchConfig.query, consider 1st item only.
+                  Element dispatchConfig = getConfigUniqueDirectChild(mockOperation, "dispatchConfig");
+                  Element firstQuery = getConfigDirectChildren(dispatchConfig, "query").get(0);
+                  operation.setDispatcherRules(getConfigUniqueDirectChild(firstQuery, "query").getTextContent());
+               } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
+                  // Groovy script is located into dispatchPath element.
+                  operation.setDispatcherRules(getConfigUniqueDirectChild(mockOperation, "dispatchPath").getTextContent());
+               }
+
+               service.addOperation(operation);
+            }
+            result.add(service);
+         }
+      } catch (MalformedXmlException mspe) {
+         log.error("Your SoapUI Project seems to be malformed: {}", mspe.getMessage(), mspe);
+         throw new MockRepositoryImportException("Your SoapUI Project seems to be malformed: " + mspe.getMessage(), mspe);
+      }
+      return result;
+   }
+
+   private void completeOperationPartsFromWsdl(Element interfaceElement, Operation operation) throws Exception {
+      Element definitionCache = getConfigUniqueDirectChild(interfaceElement, "definitionCache");
+      List<Element> parts = getConfigDirectChildren(definitionCache, "part");
+
+      Element wsdlPart = parts.get(0);
+      Element wsdlContent = getConfigUniqueDirectChild(wsdlPart, "content");
+      String wsdlTextContent = wsdlContent.getTextContent();
+
+      Element wsdlDoc = documentBuilder.parse(new InputSource(new StringReader(wsdlTextContent))).getDocumentElement();
+      Element binding = getUniqueDirectChild(wsdlDoc, WSDL_NS, "binding");
+      List<Element> wsdlOperations = getDirectChildren(binding, WSDL_NS, "operation");
+      for (Element wsdlOperation : wsdlOperations) {
+
+         if (operation.getName().equals(wsdlOperation.getAttribute("name"))) {
+            Element input = getUniqueDirectChild(wsdlOperation, WSDL_NS, "input");
+            Element output = getUniqueDirectChild(wsdlOperation, WSDL_NS, "output");
+            String inputName = input.getAttribute("name");
+            String outputName = output.getAttribute("name");
+
+            List<Element> messages = getDirectChildren(wsdlDoc, WSDL_NS, "message");
+            Optional<Element> inputMsg = messages.stream().filter(m -> inputName.equals(m.getAttribute("name"))).findFirst();
+            Optional<Element> outputMsg = messages.stream().filter(m -> outputName.equals(m.getAttribute("name"))).findFirst();
+            if (inputMsg.isPresent()) {
+               Element firstPart = getDirectChildren(inputMsg.get(), WSDL_NS, "part").get(0);
+               String localTag = firstPart.getAttribute("element").substring(firstPart.getAttribute("element").indexOf(":") + 1);
+               operation.setInputName(localTag);
+            }
+            if (outputMsg.isPresent()) {
+               Element firstPart = getDirectChildren(outputMsg.get(), WSDL_NS, "part").get(0);
+               String localTag = firstPart.getAttribute("element").substring(firstPart.getAttribute("element").indexOf(":") + 1);
+               operation.setOutputName(localTag);
+            }
+         }
+      }
+   }
+
+   private List<Service> getRestServicesDefinitions(List<Element> restMockServices) throws MockRepositoryImportException {
+      List<Service> result = new ArrayList<>();
+
+      try {
+         for (Element mockService : restMockServices) {
+            // Build a new Service.
+            Service service = new Service();
+            service.setName(mockService.getAttribute("name"));
+            service.setType(ServiceType.REST);
+
+            // Check version property that is mandatory.
+            Element properties = getConfigUniqueDirectChild(mockService, "properties");
+            service.setVersion(extractVersion(properties));
+
+            // Actions corresponding to same operations may be defined multiple times in SoapUI
+            // with different resourcePaths. We have to track them to complete them in second step.
+            Map<String, Operation> collectedOperations = new HashMap<>();
+
+            List<Element> mockOperations = getConfigDirectChildren(mockService, "restMockAction");
+            for (Element mockOperation : mockOperations) {
+               // Check already found operation.
+               Operation operation = collectedOperations.get(mockOperation.getAttribute("name"));
+
+               if (operation == null) {
+                  // Build a new operation from mockRestAction.
+                  operation = new Operation();
+                  operation.setName(mockOperation.getAttribute("name"));
+                  operation.setMethod(mockOperation.getAttribute("method"));
+
+                  Element dispatchStyle = getConfigUniqueDirectChild(mockOperation, "dispatchStyle");
+                  operation.setDispatcher(dispatchStyle.getTextContent());
+
+                  if (DispatchStyles.SEQUENCE.equals(operation.getDispatcher())) {
+                     // Extract simple dispatcher rules from operation name.
+                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(operation.getName()));
+                  } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
+                     // Groovy script is located into dispatchPath element.
+                     operation.setDispatcherRules(getConfigUniqueDirectChild(mockOperation, "dispatchPath").getTextContent());
+                  }
+                  service.addOperation(operation);
+               }
+               // Add this configuration resource path.
+               operation.addResourcePath(mockOperation.getAttribute("resourcePath"));
+               collectedOperations.put(mockOperation.getAttribute("name"), operation);
+            }
+            result.add(service);
+         }
+      } catch (MalformedXmlException mspe) {
+         log.error("Your SoapUI Project seems to be malformed: {}", mspe.getMessage(), mspe);
+         throw new MockRepositoryImportException("Your SoapUI Project seems to be malformed: " + mspe.getMessage(), mspe);
+      }
       return result;
    }
 
@@ -119,57 +307,280 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       projectResource.setContent(projectContent);
       results.add(projectResource);
 
-      // For now, only available for Wsdl based projects having mocked interfaces.
-      WsdlMockService wsdlMockService = project.getMockServiceByName(service.getName());
+      try {
+         Element definitionCache = getConfigUniqueDirectChild(serviceInterface, "definitionCache");
+         List<Element> parts = getConfigDirectChildren(definitionCache, "part");
 
-      if (wsdlMockService != null){
-         // Use only the first interface of the mock service corresponding to service.
-         WsdlInterface wi = project.getMockServiceByName(service.getName()).getMockedInterfaces()[0];
+         if (!parts.isEmpty()) {
+            Element wsdlPart = parts.get(0);
+            Element wsdlContent = getConfigUniqueDirectChild(wsdlPart, "content");
+            String wsdlTextContent = wsdlContent.getTextContent();
 
-         // Find the name of the definition we must look for within all interfaces.
-         String definitionName = wi.getConfig().getDefinition();
+            for (int i = 1; i < parts.size(); i++) {
+               Element xsdPart = parts.get(i);
+               String xsdUrl = getConfigUniqueDirectChild(xsdPart, "url").getTextContent().trim();
+               String xsdName = xsdUrl.substring(xsdUrl.lastIndexOf('/') + 1);
+               // Try also Windows style path separators.
+               if (xsdUrl.contains("\\")) {
+                  xsdName = xsdUrl.substring(xsdUrl.lastIndexOf("\\") + 1);
+               }
 
-         List<Interface> pis = project.getInterfaceList();
+               String xsdContent = getConfigUniqueDirectChild(xsdPart, "content").getTextContent();
 
-         for (Interface pi : pis) {
-            if (pi instanceof WsdlInterface) {
-               WsdlInterface candidateWI = (WsdlInterface)pi;
+               Resource xsdResource = new Resource();
+               xsdResource.setName(xsdName);
+               xsdResource.setType(ResourceType.XSD);
+               xsdResource.setContent(xsdContent);
+               results.add(xsdResource);
 
-               if (candidateWI.getDefinition().equals(definitionName)) {
-                  List<DefintionPartConfig> parts = candidateWI.getConfig().getDefinitionCache().getPartList();
-                  if (parts != null && parts.size() > 0) {
-                     // First part is always the wsdl definition, get its content as string.
-                     String wsdlContent = parts.get(0).getContent().newCursor().getTextValue();
+               // URL references within WSDL must be replaced by their local counterpart.
+               wsdlTextContent = wsdlTextContent.replace(xsdUrl, "./" + xsdName);
+               // TODO: have a in-depth review on how xsd are actually resolved (and should probably be fixed)
+               // wsdlTextContent = wsdlTextContent.replaceAll("schemaLocation=\"(.*)\\/(" + xsdName + ")", "schemaLocation=\"./" + xsdName + "\"");
+            }
 
-                     // Then browse the following one (XSD) and change relative path in imports.
-                     for (int i = 1; i < parts.size(); i++) {
-                        DefintionPartConfig xsdConfig = parts.get(i);
-                        String xsdUrl = xsdConfig.getUrl();
-                        String xsdName = xsdUrl.substring(xsdUrl.lastIndexOf('/') + 1);
-                        String xsdContent = xsdConfig.getContent().newCursor().getTextValue();
+            Resource wsdlResource = new Resource();
+            wsdlResource.setName(service.getName() + "-" + service.getVersion() + ".wsdl");
+            wsdlResource.setType(ResourceType.WSDL);
+            wsdlResource.setContent(wsdlTextContent);
+            results.add(wsdlResource);
+         }
+      } catch (MalformedXmlException mxe) {
+         log.warn("Got a MalformedXmlException while trying to extract WSDL and XSD: {}", mxe.getMessage());
+         log.warn("Just failing silently as it's not a critical stuff in SoapUI implementation");
+      }
 
-                        // Build a new xsd resource for this part.
-                        Resource xsdResource = new Resource();
-                        xsdResource.setName(xsdName);
-                        xsdResource.setType(ResourceType.XSD);
-                        xsdResource.setContent(xsdContent);
-                        results.add(xsdResource);
+      return results;
+   }
 
-                        // URL references within WSDL must be replaced by their local counterpart.
-                        wsdlContent = wsdlContent.replace(xsdUrl, "./" + xsdName);
+   @Override
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+      List<Exchange> results = new ArrayList<>();
+
+      if (ServiceType.SOAP_HTTP == service.getType()) {
+         results.addAll(getSoapMessageDefinitions(service, operation));
+      } else if (ServiceType.REST == service.getType()) {
+         results.addAll(getRestMessageDefinitions(service, operation));
+      }
+      return results;
+   }
+
+   private List<Exchange> getSoapMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+      Map<Request, Response> result = new HashMap<>();
+      try {
+         List<Element> mockServices = getConfigDirectChildren(projectElement, "mockService");
+         for (Element mockService : mockServices) {
+            // Find the appropriate mock service.
+            if (service.getName().equals(mockService.getAttribute("name"))) {
+
+               List<Element> mockOperations = getConfigDirectChildren(mockService, "mockOperation");
+               for (Element mockOperation : mockOperations) {
+                  // Find the appropriate mock service operation.
+                  if (operation.getName().equals(mockOperation.getAttribute("operation"))) {
+                     // Collect available test requests for this operation.
+                     Map<String, Element> availableRequests = collectTestStepsRequests(operation);
+                     // Then filter only those that are candidates to mock response matching.
+                     List<Element> candidateRequests = new ArrayList<>();
+
+                     List<Element> mockResponses = getConfigDirectChildren(mockOperation, "response");
+                     for (Element mockResponse : mockResponses) {
+                        String responseName = mockResponse.getAttribute("name");
+                        Element matchingRequest = availableRequests.get(responseName);
+                        if (matchingRequest == null) {
+                           matchingRequest = availableRequests.get(responseName + " Request");
+                        }
+                        if (matchingRequest == null && responseName.contains("Response")) {
+                           matchingRequest = availableRequests.get(responseName.replace("Response", "Request"));
+                        }
+
+                        if (matchingRequest == null) {
+                           log.warn("No request found for response " + responseName + " into SoapUI project " + projectElement.getAttribute("name"));
+                           continue;
+                        }
+                        candidateRequests.add(matchingRequest);
                      }
 
-                     // Finally, declare englobing wsdl resource.
-                     Resource wsdlResource = new Resource();
-                     wsdlResource.setName(service.getName() + "-" + service.getVersion() + ".wsdl");
-                     wsdlResource.setType(ResourceType.WSDL);
-                     wsdlResource.setContent(wsdlContent);
-                     results.add(wsdlResource);
+                     if (DispatchStyles.QUERY_MATCH.equals(operation.getDispatcher())) {
+                        // Browse candidates and apply query dispatcher criterion to find corresponding response.
+                        try {
+                           XPathExpression xpath = initializeXPathMatcher(operation);
 
-                     // Exit the for loop to avoid adding multiple times the same WSDL
-                     // if WSDL is present in definitionCaches attached to different interfaces.
+                           Map<String, String> matchToResponseMap = buildQueryMatchDispatchCriteriaToResponseMap(mockOperation);
+                           for (Element candidateRequest : candidateRequests) {
+                              // Evaluate matcher against request and get name of corresponding response.
+                              String requestContent = getConfigUniqueDirectChild(candidateRequest, "request").getTextContent();
+                              String dispatchCriteria = xpath.evaluate(new InputSource(new StringReader(requestContent)));
+                              String correspondingResponse = matchToResponseMap.get(dispatchCriteria);
+
+                              Element matchingResponse = getMockResponseByName(mockOperation, correspondingResponse);
+                              if (matchingResponse != null) {
+                                 // Build response from MockResponse and response from matching one.
+                                 Response response = buildResponse(matchingResponse, dispatchCriteria);
+                                 Request request = buildRequest(candidateRequest);
+                                 result.put(request, response);
+                              }
+                           }
+                        } catch (XPathExpressionException e) {
+                           throw new RuntimeException(e);
+                        }
+                     } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
+                        for (Element candidateRequest : candidateRequests) {
+                           Element mockResponse = getMockResponseByName(mockOperation, candidateRequest.getAttribute("name"));
+                           if (mockResponse == null && candidateRequest.getAttribute("name").contains("Request")){
+                              mockResponse = getMockResponseByName(mockOperation, candidateRequest.getAttribute("name").replace(" Request", " Response"));
+                           }
+
+                           if (mockResponse == null){
+                              log.warn("No response found for request {} into SoapUI project {}", candidateRequest.getAttribute("name"), projectElement.getAttribute("name"));
+                              continue;
+                           }
+
+                           // Build response from MockResponse and response from matching one.
+                           Response response = buildResponse(mockResponse, mockResponse.getAttribute("name"));
+                           Request request = buildRequest(candidateRequest);
+                           result.put(request, response);
+                        }
+                     } else if (DispatchStyles.RANDOM.equals(operation.getDispatcher())){ {
+
+                     }}
                      break;
                   }
+               }
+               break;
+            }
+         }
+      } catch (Throwable t) {
+         throw new MockRepositoryImportException(t.getMessage());
+      }
+
+      // Adapt map to list of Exchanges.
+      return result.entrySet().stream()
+            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
+   }
+
+   private List<Exchange> getRestMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+      Map<Request, Response> result = new HashMap<>();
+      try {
+         List<Element> mockServices = getConfigDirectChildren(projectElement, "restMockService");
+         for (Element mockService : mockServices) {
+            // Find the appropriate mock service.
+            if (service.getName().equals(mockService.getAttribute("name"))) {
+
+               List<Element> mockOperations = getConfigDirectChildren(mockService, "restMockAction");
+               for (Element mockOperation : mockOperations) {
+                  // Find the appropriate mock service operation.
+                  if (operation.getName().equals(mockOperation.getAttribute("name"))) {
+
+                     // Collect available test requests for this operation.
+                     Map<String, Element> availableRequests = collectTestStepsRestRequests(operation);
+                     // Collection also mock responses that are sparsly dispatched under mockRestActions having the name same.
+                     List<Element> mockResponses = getMockRestResponses(mockService, operation);
+
+                     // Then filter only those that are matching with a mock response.
+                     Map<Element, Element> requestToResponses = new HashMap<>();
+
+                     for (Element mockResponse : mockResponses) {
+                        String responseName = mockResponse.getAttribute("name");
+                        Element matchingRequest = availableRequests.get(responseName);
+                        if (matchingRequest == null) {
+                           matchingRequest = availableRequests.get(responseName + " Request");
+                        }
+                        if (matchingRequest == null && responseName.contains("Response")) {
+                           matchingRequest = availableRequests.get(responseName.replace("Response", "Request"));
+                        }
+
+                        if (matchingRequest == null) {
+                           log.warn("No request found for response " + responseName + " into SoapUI project " + projectElement.getAttribute("name"));
+                           continue;
+                        }
+                        requestToResponses.put(matchingRequest, mockResponse);
+                     }
+
+                     for (Map.Entry<Element, Element> entry : requestToResponses.entrySet()) {
+                        String dispatchCriteria = null;
+
+                        if (DispatchStyles.SEQUENCE.equals(operation.getDispatcher())){
+                           // Build a dispatch criteria from operation name projected onto resourcePath pattern
+                           // eg. /deployment/byComponent/{component}/{version}.json  => /deployment/byComponent/testREST/1.2.json
+                           // for producing /component=testREST/version=1.2
+                           // resourcePath is actually available in restMockAction wrapping response. Navigate to parent.
+                           String resourcePath = ((Element) entry.getValue().getParentNode()).getAttribute("resourcePath");
+                           dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), operation.getName(), resourcePath);
+                        }
+                        else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())){
+                           // Build a dispatch criteria that is equal to response name (that script evaluation should return...)
+                           dispatchCriteria = entry.getValue().getAttribute("name");
+                        }
+
+                        Response response = buildResponse(entry.getValue(), dispatchCriteria);
+                        Request request = buildRequest(entry.getKey());
+                        result.put(request, response);
+                     }
+                     break;
+                  }
+               }
+            }
+         }
+      } catch (Throwable t) {
+         throw new MockRepositoryImportException(t.getMessage());
+      }
+
+      // Adapt map to list of Exchanges.
+      return result.entrySet().stream()
+            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+            .collect(Collectors.toList());
+   }
+
+   private String extractNSFromQName(String qName) {
+      if (qName.startsWith("{") && qName.indexOf("}") > 1) {
+         return qName.substring(1, qName.indexOf("}"));
+      }
+      return qName;
+   }
+
+   /** Extract version from mockService properties. */
+   private String extractVersion(Element properties) throws MockRepositoryImportException, MalformedXmlException {
+      List<Element> propertyList = getConfigDirectChildren(properties, "property");
+      for (Element property : propertyList) {
+         Element propertyName = getConfigUniqueDirectChild(property, "name");
+         Element propertyValue = getConfigUniqueDirectChild(property, "value");
+         if (SERVICE_VERSION_PROPERTY.equals(propertyName.getTextContent())) {
+            return propertyValue.getTextContent();
+         }
+      }
+      log.error("Version property is missing in Project properties");
+      throw new MockRepositoryImportException("Version property is missing in Project properties");
+   }
+
+   private Element getInterfaceOperation(Element serviceInterface, String operationName) throws MockRepositoryImportException {
+      List<Element> operations = getConfigDirectChildren(serviceInterface, "operation");
+      for (Element operation : operations) {
+         if (operationName.equals(operation.getAttribute("name"))) {
+            return operation;
+         }
+      }
+      log.error("Operation {} is missing into Service interface", operationName);
+      throw new MockRepositoryImportException("Operation " + operationName + " is missing into Service interface");
+   }
+
+   private Map<String, Element> collectTestStepsRequests(Operation operation) throws MalformedXmlException {
+      Map<String, Element> results = new HashMap<>();
+
+      List<Element> testSuites = getConfigDirectChildren(projectElement, "testSuite");
+      for (Element testSuite : testSuites) {
+         List<Element> testCases = getConfigDirectChildren(testSuite, "testCase");
+         for (Element testCase : testCases) {
+            List<Element> testSteps = getConfigDirectChildren(testCase, "testStep");
+            for (Element testStep : testSteps) {
+
+               Element config = getConfigUniqueDirectChild(testStep, "config");
+               String interfaceName = getConfigUniqueDirectChild(config, "interface").getTextContent();
+               String operationName = getConfigUniqueDirectChild(config, "operation").getTextContent();
+
+               if (operation.getName().equals(operationName)) {
+                  results.put(testStep.getAttribute("name"),
+                        getConfigUniqueDirectChild(config, "request"));
                }
             }
          }
@@ -177,490 +588,140 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       return results;
    }
 
-   @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
-      // First try with a Soap Service mock...
-      MockService mockService = project.getMockServiceByName(service.getName());
-      if (mockService != null){
-         try {
-            return getSoapMessageDefinitions(mockService, operation);
-         } catch (XPathExpressionException xpe) {
-            log.error("Got a XPathExpressionException while retrieving soap messages", xpe);
-            throw new MockRepositoryImportException("XPathExpressionExceotion while retrieving soap messages", xpe);
-         }
-      }
-      // ... then with a Rest Service mock.
-      RestMockService restMockService = project.getRestMockServiceByName(service.getName());
-      if (restMockService != null){
-         return getRestMessageDefinitions(restMockService, operation);
-      }
-      return new ArrayList<Exchange>();
-   }
+   private Map<String, Element> collectTestStepsRestRequests(Operation operation) throws MalformedXmlException {
+      Map<String, Element> results = new HashMap<>();
 
+      List<Element> testSuites = getConfigDirectChildren(projectElement, "testSuite");
+      for (Element testSuite : testSuites) {
+         List<Element> testCases = getConfigDirectChildren(testSuite, "testCase");
+         for (Element testCase : testCases) {
+            List<Element> testSteps = getConfigDirectChildren(testCase, "testStep");
+            for (Element testStep : testSteps) {
 
-   /**
-    * Get the definitions of Soap Services from mock services.
-    */
-   private List<Service> getSoapServiceDefinitions(List<WsdlMockService> mockServices) throws MockRepositoryImportException {
-      List<Service> result = new ArrayList<>();
+               Element config = getConfigUniqueDirectChild(testStep, "config");
+               String operationName = config.getAttribute("resourcePath");
 
-      for (WsdlMockService wms : mockServices){
-         // First assume it's a Soap one.
-         Service service = new Service();
-         service.setName(wms.getName());
-         service.setType(ServiceType.SOAP_HTTP);
-
-         // Ensure we've got only one interface and extract its namespace.
-         WsdlInterface[] wi = wms.getMockedInterfaces();
-         if (wi == null || wi.length > 1){
-            // TODO Throw a typed exception here...
-         }
-         service.setXmlNS(wi[0].getBindingName().getNamespaceURI());
-
-         // Extract version from custom properties.
-         String version = wms.getPropertyValue(SERVICE_VERSION_PROPERTY);
-         if (version == null){
-            log.error("Version property is missing in Project properties");
-            throw new MockRepositoryImportException("Version property is missing in Project properties");
-         }
-         service.setVersion(version);
-
-         // Then build its operations.
-         service.setOperations(extractOperations(wms, wi[0]));
-         result.add(service);
-      }
-      return result;
-   }
-
-   /**
-    * Get the definitions of Rest Services from mock services.
-    */
-   private List<Service> getRestServiceDefinitions(List<RestMockService> mockServices){
-      List<Service> result = new ArrayList<>();
-
-      for (RestMockService rms : mockServices) {
-         // First assume it's a Rest one for now.
-         Service service = new Service();
-         service.setName(rms.getName());
-         service.setType(ServiceType.REST);
-
-         // Extract version from custom properties.
-         String version = rms.getPropertyValue(SERVICE_VERSION_PROPERTY);
-         if (version == null){
-            // TODO Throw a typed exception here...
-         }
-         service.setVersion(version);
-
-         // Then build its operations.
-         service.setOperations(extractOperations(rms));
-         result.add(service);
-      }
-      return result;
-   }
-
-   /**
-    * Extract the list of operations from MockService according WsdlInterface.
-    */
-   private List<Operation> extractOperations(MockService mockService, WsdlInterface wi){
-      List<Operation> result = new ArrayList<Operation>();
-
-      List<MockOperation> operations = mockService.getMockOperationList();
-      for (MockOperation mockOperation : operations){
-         // Build a new operation.
-         Operation operation = new Operation();
-         operation.setName(mockOperation.getName());
-
-         // Retrieve part name from Wsdl operation coming from interface.
-         WsdlOperation wo = wi.getOperationByName(mockOperation.getName());
-         operation.setAction(wo.getAction());
-
-         try {
-            // Extract
-            operation.setInputName(wo.getRequestBodyElementQName().getLocalPart());
-            operation.setOutputName(wo.getResponseBodyElementQName().getLocalPart());
-         } catch (Exception e) {
-            // Fallback to input name as a (mostly?) safe default.
-            log.warn("Was not able to extract element names for input/output payload from WSDL. Defaulting to input and output names.");
-            operation.setInputName(wo.getInputName());
-            operation.setOutputName(wo.getOutputName());
-         }
-
-         WsdlMockOperation wmo = (WsdlMockOperation)mockOperation;
-         operation.setDispatcher(wmo.getDispatchStyle());
-
-         // Check dispatcher configuration.
-         MockOperationDispatcher dispatcher = wmo.getDispatcher();
-         if (dispatcher instanceof QueryMatchMockOperationDispatcher){
-            QueryMatchMockOperationDispatcher qmDispatcher = (QueryMatchMockOperationDispatcher) dispatcher;
-            String query = qmDispatcher.getQueryAt(0).getQuery();
-            operation.setDispatcherRules(query);
-         }
-         else if (dispatcher instanceof ScriptMockOperationDispatcher){
-            ScriptMockOperationDispatcher sDispatcher = (ScriptMockOperationDispatcher) dispatcher;
-            String script = sDispatcher.getMockOperation().getScript();
-            operation.setDispatcherRules(script);
-         }
-
-         result.add(operation);
-      }
-      return result;
-   }
-
-   /**
-    * Extract the list of operations from RestMockService.
-    */
-   private List<Operation> extractOperations(RestMockService mockService){
-      // Actions corresponding to same operations may be defined multiple times in SoapUI
-      // with different resourcePaths. We have to track them to complete them in second step.
-      Map<String, Operation> collectedOperations = new HashMap<String, Operation>();
-
-      List<RESTMockActionConfig> actions = mockService.getConfig().getRestMockActionList();
-      for (RESTMockActionConfig action : actions){
-         // Check already found operation.
-         Operation operation = collectedOperations.get(action.getName());
-
-         if (operation == null){
-            // Build a new operation.
-            operation = new Operation();
-            operation.setName(action.getName());
-
-            // Complete with REST specific fields.
-            operation.setMethod(action.getMethod());
-
-            // Deal with dispatcher stuffs.
-            operation.setDispatcher(action.getDispatchStyle().toString());
-
-            if (DispatchStyles.SEQUENCE.equals(action.getDispatchStyle().toString())){
-               operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(operation.getName()));
-            }
-            else if (DispatchStyles.SCRIPT.equals(action.getDispatchStyle().toString())){
-               String script = action.getDispatchPath();
-               operation.setDispatcherRules(script);
-            }
-         }
-         // Add this configuration resource path.
-         operation.addResourcePath(action.getResourcePath());
-         collectedOperations.put(action.getName(), operation);
-      }
-      return new ArrayList<>(collectedOperations.values());
-   }
-
-   /**
-    * Get message definition for an operation of a Soap mock service.
-    */
-   private List<Exchange> getSoapMessageDefinitions(MockService mockService, Operation operation) throws XPathExpressionException{
-      Map<Request, Response> result = new HashMap<Request, Response>();
-
-      // Get MockOperation corresponding to operation.
-      MockOperation mockOperation = mockService.getMockOperationByName(operation.getName());
-
-      // Collect available test requests for this operation.
-      Map<String, WsdlTestRequest> availableRequests = collectWsdlTestRequests(operation);
-
-      // Then filter only those that are candidates to mock response matching.
-      List<WsdlTestRequest> requests = new ArrayList<WsdlTestRequest>();
-      for (MockResponse mockResponse : mockOperation.getMockResponses()){
-
-         // Check if there's a corresponding request in test cases.
-         WsdlTestRequest matchingRequest = availableRequests.get(mockResponse.getName());
-         if (matchingRequest == null){
-            matchingRequest = availableRequests.get(mockResponse.getName() + " Request");
-         }
-         if (matchingRequest == null && mockResponse.getName().contains("Response")){
-            matchingRequest = availableRequests.get(mockResponse.getName().replace("Response", "Request"));
-         }
-
-         if (matchingRequest == null){
-            log.warn("No request found for response " + mockResponse.getName() + " into SoapUI project " + project.getName());
-            continue;
-         }
-         requests.add(matchingRequest);
-      }
-
-      if (DispatchStyles.QUERY_MATCH.equals(operation.getDispatcher())){
-         // Browse candidates and apply query dispatcher criterion to find corresponding response.
-         XPathExpression xpath = initializeXPathMatcher(operation);
-         Map<String, String> matchToResponseMap = buildQueryMatchDispatchCriteriaToResponseMap((WsdlMockOperation)mockOperation);
-
-         for (WsdlTestRequest wtr : requests){
-            // Evaluate matcher against request and get name of corresponding response.
-            String dispatchCriteria = xpath.evaluate(new InputSource(new StringReader(wtr.getRequestContent())));
-            String correspondingResponse = matchToResponseMap.get(dispatchCriteria);
-
-            MockResponse mockResponse = mockOperation.getMockResponseByName(correspondingResponse);
-
-            if (mockResponse != null){
-               // Build response from MockResponse and response from matching one
-               Response response = buildResponse(mockResponse, dispatchCriteria);
-               Request request = buildRequest(wtr);
-               result.put(request, response);
-            }
-         }
-      }
-      else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())){
-         for (WsdlTestRequest wtr : requests){
-            MockResponse mockResponse = mockOperation.getMockResponseByName(wtr.getName().replace(" Request", ""));
-            if (mockResponse == null && wtr.getName().contains("Request")){
-               mockResponse = mockOperation.getMockResponseByName(wtr.getName().replace(" Request", " Response"));
-            }
-
-            if (mockResponse == null){
-               log.warn("No response found for request " + wtr.getName() + " into SoapUI project " + project.getName());
-               continue;
-            }
-
-            // Build response from MockResponse and response from matching one.
-            Response response = buildResponse(mockResponse, mockResponse.getName());
-            Request request = buildRequest(wtr);
-            result.put(request, response);
-         }
-      }
-      else if (DispatchStyles.RANDOM.equals(operation.getDispatcher())){
-
-         if (availableRequests.isEmpty()) {
-            log.warn("A request is mandatory even for a RANDOM dispatch. Operation " + operation.getName() + " into SoapUI project " + project.getName());
-         } else {
-            // use the first one for all the responses
-            WsdlTestRequest wtr = availableRequests.values().iterator().next();
-
-            for (MockResponse mockResponse : mockOperation.getMockResponses()){
-               // Build response from MockResponse and response from matching one.
-               Response response = buildResponse(mockResponse, DispatchStyles.RANDOM);
-               Request request = buildRequest(wtr);
-               request.setName(operation.getName());
-               result.put(request, response);
-            }
-         }
-      }
-
-      // Adapt map to list of Exchanges.
-      return result.entrySet().stream()
-            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
-            .collect(Collectors.toList());
-   }
-
-   /**
-    * Get message definition for an operation of a Rest mock service.
-    */
-   private List<Exchange> getRestMessageDefinitions(RestMockService mockService, Operation operation){
-      Map<Request, Response> result = new HashMap<Request, Response>();
-
-      // Collect mock responses for MockOperation corresponding to operation (it may be many).
-      List<MockResponse> mockResponses = new ArrayList<MockResponse>();
-      for (MockOperation mockOperation : mockService.getMockOperationList()){
-         if (mockOperation.getName().equals(operation.getName())){
-            mockResponses.addAll(mockOperation.getMockResponses());
-         }
-      }
-
-      // Collect also mock action configs, organizing them within a map with response name as key.
-      Map<String, RESTMockActionConfig> mockRestActionConfigsForResponses = new HashMap<String, RESTMockActionConfig>();
-      for (RESTMockActionConfig mockActionConfig : mockService.getConfig().getRestMockActionList()){
-         if (mockActionConfig.getName().equals(operation.getName())){
-            for (RESTMockResponseConfig mockRestResponse : mockActionConfig.getResponseList()){
-               mockRestActionConfigsForResponses.put(mockRestResponse.getName(), mockActionConfig);
-            }
-         }
-      }
-
-      // Collect available test requests for this operation.
-      Map<String, RestTestRequest> availableRequests = collectRestTestRequests(operation);
-
-      // Then find only those that are candidates to mock response matching.
-      Map<RestTestRequest, MockResponse> requestToResponse = new HashMap<RestTestRequest, MockResponse>();
-      for (MockResponse mockResponse : mockResponses){
-
-         // Check if there's a corresponding request in test cases.
-         RestTestRequest matchingRequest = availableRequests.get(mockResponse.getName());
-         if (matchingRequest == null){
-            matchingRequest = availableRequests.get(mockResponse.getName() + " Request");
-         }
-         if (matchingRequest == null && mockResponse.getName().contains("Response")){
-            matchingRequest = availableRequests.get(mockResponse.getName().replace("Response", "Request"));
-         }
-
-         if (matchingRequest == null){
-            log.warn("No request found for response " + mockResponse.getName() + " into SoapUI project " + project.getName());
-            continue;
-         }
-         requestToResponse.put(matchingRequest, mockResponse);
-      }
-
-      for (Map.Entry<RestTestRequest, MockResponse> entry : requestToResponse.entrySet()){
-         RestTestRequest rtr = entry.getKey();
-         MockResponse mr = entry.getValue();
-
-         String dispatchCriteria = null;
-
-         if (DispatchStyles.SEQUENCE.equals(operation.getDispatcher())){
-            // Build a dispatch criteria from operation name projected onto resourcePath pattern
-            // eg. /deployment/byComponent/{component}/{version}.json  => /deployment/byComponent/testREST/1.2.json
-            // for producing /component=testREST/version=1.2
-            RESTMockActionConfig actionConfig = mockRestActionConfigsForResponses.get(mr.getName());
-            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), operation.getName(), actionConfig.getResourcePath());
-         }
-         else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())){
-            // Build a dispatch criteria that is equal to response name (that script evaluation should return...)
-            dispatchCriteria = mr.getName();
-         }
-
-         Response response = buildResponse((RestMockResponse)mr, dispatchCriteria);
-         Request request = buildRequest(rtr);
-         result.put(request, response);
-      }
-
-      // Adapt map to list of Exchanges.
-      return result.entrySet().stream()
-            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
-            .collect(Collectors.toList());
-   }
-
-   /**
-    * Collect and filter by operation all the WsldTestrequest from the current project.
-    */
-   private Map<String, WsdlTestRequest> collectWsdlTestRequests(Operation operation){
-      Map<String, WsdlTestRequest> result = new HashMap<>();
-
-      for (TestSuite testsuite : project.getTestSuiteList()){
-         for (TestCase testcase : testsuite.getTestCaseList()){
-            for (TestStep teststep : testcase.getTestStepList()){
-               if (teststep instanceof WsdlTestRequestStep){
-                  WsdlTestRequestStep ws = (WsdlTestRequestStep)teststep;
-                  WsdlTestRequest wr = ws.getHttpRequest();
-                  if (wr.getOperationName().equals(operation.getName())){
-                     result.put(wr.getName(), wr);
-                  }
+               if (operation.getName().equals(operationName)) {
+                  results.put(testStep.getAttribute("name"),
+                        getConfigUniqueDirectChild(config, "restRequest"));
                }
             }
          }
       }
-      return result;
+      return results;
    }
 
-   /**
-    * Collect and filter by operation all the WsldTestrequest from the current project.
-    */
-   private Map<String, RestTestRequest> collectRestTestRequests(Operation operation){
-      Map<String, RestTestRequest> result = new HashMap<String, RestTestRequest>();
-
-      for (TestSuite testsuite : project.getTestSuiteList()){
-         for (TestCase testcase : testsuite.getTestCaseList()){
-            for (TestStep teststep : testcase.getTestStepList()){
-               if (teststep instanceof RestTestRequestStep){
-                  RestTestRequestStep rs = (RestTestRequestStep)teststep;
-                  RestTestRequest rr = rs.getTestRequest();
-                  if (rs.getResourcePath().equals(operation.getName())){
-                     result.put(rr.getName(), rr);
-                  }
-               }
-            }
+   private List<Element> getMockRestResponses(Element restMockService, Operation operation) {
+      List<Element> responses = new ArrayList<>();
+      List<Element> mockActions = getConfigDirectChildren(restMockService, "restMockAction");
+      for (Element mockAction : mockActions) {
+         if (operation.getName().equals(mockAction.getAttribute("name"))) {
+            responses.addAll(getConfigDirectChildren(mockAction, "response"));
          }
       }
-      return result;
+      return responses;
    }
 
-   /**
-    * Build a XPathMatcher based on operation dispatcher rules.
-    */
+   /** Build a XPathMatcher based on operation dispatcher rules. */
    private XPathExpression initializeXPathMatcher(Operation operation) throws XPathExpressionException {
       return SoapUIXPathBuilder.buildXPathMatcherFromRules(operation.getDispatcherRules());
    }
 
-   /**
-    * Build a map where keys are dispatch criteria and values response name.
-    */
-   private Map<String, String> buildQueryMatchDispatchCriteriaToResponseMap(WsdlMockOperation wmo){
-      Map<String, String> matchResponseMap = new HashMap<String, String>();
+   private Map<String, String> buildQueryMatchDispatchCriteriaToResponseMap(Element mockOperation) throws MalformedXmlException {
+      Map<String, String> matchResponseMap = new HashMap<>();
 
-      //MockOperationDispatcher dispatcher = wmo.getMockOperationDispatcher();
-      MockOperationDispatcher dispatcher = wmo.getDispatcher();
-      if (dispatcher instanceof QueryMatchMockOperationDispatcher){
-         QueryMatchMockOperationDispatcher qmDispatcher = (QueryMatchMockOperationDispatcher) dispatcher;
-         for (int i=0; i<qmDispatcher.getQueryCount(); i++){
-            QueryMatchMockOperationDispatcher.Query query = qmDispatcher.getQueryAt(i);
-            matchResponseMap.put(query.getMatch(), query.getResponse());
+      String dispatcher = getConfigUniqueDirectChild(mockOperation, "dispatchStyle").getTextContent();
+      if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
+         Element dispatchConfig = getConfigUniqueDirectChild(mockOperation, "dispatchConfig");
+
+         List<Element> queries = SoapUIProjectParserUtils.getConfigDirectChildren(dispatchConfig, "query");
+         for (Element query : queries) {
+            String match = getConfigUniqueDirectChild(query, "match").getTextContent();
+            String response = getConfigUniqueDirectChild(query, "response").getTextContent();
+            matchResponseMap.put(match, response);
          }
       }
       return matchResponseMap;
    }
 
-   /**
-    * Build a domain Response from SoapUI MockResponse using this dispatchCriteria.
-    */
-   private Response buildResponse(MockResponse mockResponse, String dispatchCriteria){
+   private Element getMockResponseByName(Element mockOperation, String responseName) {
+      List<Element> responses = getConfigDirectChildren(mockOperation, "response");
+      for (Element response : responses) {
+         if (responseName.equals(response.getAttribute("name"))) {
+            return response;
+         }
+      }
+      return null;
+   }
+
+   private Response buildResponse(Element mockResponse, String dispatchCriteria) throws MockRepositoryImportException, Exception {
       Response response = new Response();
-      response.setName(mockResponse.getName());
-      response.setContent(((WsdlMockResponse)mockResponse).getResponseContent());
-      response.setHeaders(buildHeaders(((WsdlMockResponse)mockResponse).getResponseHeaders()));
+      response.setName(mockResponse.getAttribute("name"));
+      response.setContent(getConfigUniqueDirectChild(mockResponse, "responseContent").getTextContent());
+      response.setHeaders(buildHeaders(mockResponse));
       response.setDispatchCriteria(dispatchCriteria);
-      if ("500".equals(((WsdlMockResponse)mockResponse).getConfig().getHttpResponseStatus())) {
+      response.setStatus(mockResponse.getAttribute("httpResponseStatus"));
+      if ("500".equals(response.getStatus())) {
          response.setFault(true);
       }
+      response.setMediaType(mockResponse.getAttribute("mediaType"));
       return response;
    }
 
-   /**
-    * Build a domain Response from SoapUI RestMockResponse using this dispatchCriteria.
-    */
-   private Response buildResponse(RestMockResponse mockResponse, String dispatchCriteria){
-      Response response = new Response();
-      response.setName(mockResponse.getName());
-      response.setContent(mockResponse.getResponseContent());
-      response.setHeaders(buildHeaders(mockResponse.getResponseHeaders()));
-      response.setStatus(String.valueOf(mockResponse.getResponseHttpStatus()));
-      response.setMediaType(mockResponse.getMediaType());
-      response.setDispatchCriteria(dispatchCriteria);
-      return response;
-   }
-
-   /**
-    * Build a domain Request from SoapUI WsdlTestRequest.
-    */
-   private Request buildRequest(WsdlTestRequest wtr){
+   private Request buildRequest(Element testRequest) throws MockRepositoryImportException, Exception {
       Request request = new Request();
-      request.setName(wtr.getName());
-      request.setContent(wtr.getRequestContent());
-      request.setHeaders(buildHeaders(wtr.getRequestHeaders()));
-      return request;
-   }
+      request.setName(testRequest.getAttribute("name"));
+      request.setContent(getConfigUniqueDirectChild(testRequest, "request").getTextContent());
+      request.setHeaders(buildHeaders(testRequest));
 
-   /**
-    * Build a domain Request from SoapUI RestTestRequest.
-    */
-   private Request buildRequest(RestTestRequest rtr){
-      Request request = new Request();
-      request.setName(rtr.getName());
-      request.setContent(rtr.getRequestContent());
-      request.setHeaders(buildHeaders(rtr.getRequestHeaders()));
-      // Add query parameters only (template are holded by the operation itself.)
-      RestParamsPropertyHolder paramsHolder = rtr.getParams();
-      for (int i=0; i<paramsHolder.getPropertyCount(); i++){
-         //if (paramsHolder.getPropertyAt(i).getStyle() == ParameterStyle.QUERY){
-         Parameter param = new Parameter();
-         param.setName(paramsHolder.getPropertyAt(i).getName());
-         param.setValue(paramsHolder.getPropertyAt(i).getValue());
-         request.addQueryParameter(param);
-         //}
+      // Add query parameters only if presents.
+      if (hasConfigDirectChild(testRequest, "parameters")) {
+         List<Element> entries = getConfigDirectChildren(getConfigUniqueDirectChild(testRequest, "parameters"), "entry");
+         for (Element entry : entries) {
+            Parameter param = new Parameter();
+            param.setName(entry.getAttribute("key"));
+            param.setValue(entry.getAttribute("value"));
+            request.addQueryParameter(param);
+         }
       }
       return request;
    }
 
-   /**
-    * Build a Set of headers from SoapUI header definitions.
-    */
-   private Set<Header> buildHeaders(StringToStringsMap requestHeaders){
-      if (requestHeaders == null || requestHeaders.size() == 0){
-         return null;
-      }
+   private Set<Header> buildHeaders(Element requestOrResponse) throws Exception {
 
-      // Prepare and map the set of headers.
-      Set<Header> headers = new HashSet<>();
-      for (Map.Entry<String, List<String>> entry : requestHeaders.entrySet()){
-         Header header = new Header();
-         header.setName(entry.getKey());
-         header.setValues(new HashSet<>(entry.getValue()));
-         headers.add(header);
+      Element settingsElt = getConfigUniqueDirectChild(requestOrResponse, "settings");
+      List<Element> settings = getConfigDirectChildren(settingsElt, "setting");
+      for (Element setting : settings) {
+         if (setting.getAttribute("id").contains("@request-headers")) {
+
+            // 2 possibilities here:
+            // 1) &lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+            //      &lt;con:entry key="Authorization" value="Basic YWRtaW46YWRtaW4="/>
+            //      &lt;con:entry key="x-userid" value="s026210"/>
+            //    &lt;/xml-fragment>
+            // 2) &lt;entry key="toto"
+            //                value="tata" xmlns="http://eviware.com/soapui/config"/>
+            String headersContent = setting.getTextContent();
+            Element fragment = documentBuilder.parse(new InputSource(new StringReader(headersContent))).getDocumentElement();
+
+            Set<Header> headers = new HashSet<>();
+            if (headersContent.contains("xml-fragment")) {
+               List<Element> entries = getConfigDirectChildren(fragment, "entry");
+               for (Element entry : entries) {
+                  Header header = new Header();
+                  header.setName(entry.getAttribute("key"));
+                  header.setValues(Set.of(entry.getAttribute("value")));
+                  headers.add(header);
+               }
+            } else {
+               Header header = new Header();
+               header.setName(fragment.getAttribute("key"));
+               header.setValues(Set.of(fragment.getAttribute("value")));
+               headers.add(header);
+            }
+            return headers;
+         }
       }
-      return headers;
+      return null;
    }
 }

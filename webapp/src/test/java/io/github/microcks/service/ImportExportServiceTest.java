@@ -24,9 +24,10 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.repository.RepositoryTestsConfiguration;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
-import org.codehaus.jettison.json.JSONArray;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,6 +37,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,35 +98,37 @@ public class ImportExportServiceTest {
    public void testExportRepository(){
       String result = service.exportRepository(ids, "json");
 
+      ObjectMapper mapper = new ObjectMapper();
+
       // Check that result is a valid JSON object.
-      JSONObject jsonObj = null;
+      JsonNode jsonObj = null;
       try {
-         jsonObj = new JSONObject(result);
-      } catch (JSONException e) {
+         jsonObj = mapper.readTree(result);
+      } catch (IOException e) {
          fail("No exception should be thrown when parsing Json");
       }
 
       try{
          // Retrieve and assert on services part.
-         JSONArray services = jsonObj.getJSONArray("services");
-         assertEquals(3, services.length());
-         for (int i=0 ; i<services.length(); i++){
-            JSONObject service = services.getJSONObject(i);
-            String name = service.getString("name");
+         ArrayNode services = (ArrayNode) jsonObj.get("services");
+         assertEquals(3, services.size());
+         for (int i=0 ; i<services.size(); i++){
+            JsonNode service = services.get(i);
+            String name = service.get("name").asText();
             assertTrue("HelloWorld".equals(name) || "MyService-hello".equals(name));
          }
-      } catch (JSONException e) {
+      } catch (Exception e) {
          fail("Exception while getting services array");
       }
 
       try{
          // Retrieve and assert on resources part.
-         JSONArray resources = jsonObj.getJSONArray("resources");
-         assertEquals(1, resources.length());
-         JSONObject resource = resources.getJSONObject(0);
-         assertEquals("Resource 1", resource.getString("name"));
-         assertEquals("<wsdl></wsdl>", resource.getString("content"));
-      } catch (JSONException e) {
+         ArrayNode resources = (ArrayNode) jsonObj.get("resources");
+         assertEquals(1, resources.size());
+         JsonNode resource = resources.get(0);
+         assertEquals("Resource 1", resource.get("name").asText());
+         assertEquals("<wsdl></wsdl>", resource.get("content").asText());
+      } catch (Exception e) {
          fail("Exception while getting resources array");
       }
    }

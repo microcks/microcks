@@ -20,17 +20,26 @@ package io.github.microcks.util.test;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.TestReturn;
+import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.util.soap.SoapMessageValidator;
+/*
 import io.github.microcks.util.SoapMessageValidator;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlException;
+ */
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.util.UriUtils;
 
+import javax.xml.namespace.QName;
 import java.util.List;
 
 /**
@@ -47,6 +56,16 @@ public class SoapHttpTestRunner extends HttpTestRunner{
 
 	/** The URL of resources used for validation. */
 	private String resourceUrl = null;
+
+	private ResourceRepository resourceRepository;
+
+	/**
+	 *
+	 * @param resourceRepository
+	 */
+	public SoapHttpTestRunner(ResourceRepository resourceRepository) {
+		this.resourceRepository = resourceRepository;
+	}
 
 	/**
 	 * The URL of resources used for validation. 
@@ -84,6 +103,19 @@ public class SoapHttpTestRunner extends HttpTestRunner{
 			return code;
 		}
 
+		Resource wsdlResource = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL).get(0);
+		List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(),
+				new QName(service.getXmlNS(), operation.getOutputName()),
+				responseContent, resourceUrl);
+
+		log.debug("SoapBody validation errors: " + errors.size());
+
+		if (!errors.isEmpty()){
+			log.debug("Soap validation errors found " + errors.size() + ", marking test as failed.");
+			return TestReturn.FAILURE_CODE;
+		}
+
+		/*
 		try{
 			// Validate Soap message body according to operation output part.
 			List<XmlError> errors = SoapMessageValidator.validateSoapMessage(
@@ -99,6 +131,7 @@ public class SoapHttpTestRunner extends HttpTestRunner{
 			log.debug("XmlException while validating Soap response message", e);
 			return TestReturn.FAILURE_CODE;
 		}
+		*/
 		return code;
 	}
 }

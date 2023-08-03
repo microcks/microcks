@@ -36,7 +36,7 @@ import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -305,7 +305,8 @@ public class RestController {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
                   ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
-                  dispatchCriteria = (String) se.eval(dispatcherRules);
+                  String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
+                  dispatchCriteria = (String) se.eval(script);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
                }

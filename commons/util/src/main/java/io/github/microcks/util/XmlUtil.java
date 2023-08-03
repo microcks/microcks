@@ -36,7 +36,7 @@ public class XmlUtil {
    public static final String WSDL_NS = "http://schemas.xmlsoap.org/wsdl/";
 
    /**
-    * Retrieve direct children elements of a parent having specified namespace and tag. Only includes level 1 children?
+    * Retrieve direct children elements of a parent having specified namespace and tag. Only includes level 1 children.
     * @param parent The parent of children to find
     * @param namespace The namespace of children
     * @param tag The tag of children

@@ -77,4 +77,16 @@ public class ScriptEngineBinder {
       bindings.put("requestContext", requestContext);
       engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
    }
+
+   /**
+    * Review and adapt a script so that we ensure its compatibility with legacy SoapUI helper.
+    * @param script The script to review and adapt
+    * @return The script that may have been changed
+    */
+   public static String ensureSoapUICompatibility(String script) {
+      if (script.contains("com.eviware.soapui.support.XmlHolder")) {
+         return script.replaceAll("com.eviware.soapui.support.XmlHolder", "io.github.microcks.util.soapui.XmlHolder");
+      }
+      return script;
+   }
 }

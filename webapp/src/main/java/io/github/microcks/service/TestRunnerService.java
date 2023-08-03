@@ -29,7 +29,6 @@ import io.github.microcks.domain.TestReturn;
 import io.github.microcks.domain.TestRunnerType;
 import io.github.microcks.domain.TestStepResult;
 import io.github.microcks.event.TestCompletionEvent;
-import io.github.microcks.repository.ImportJobRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
@@ -41,7 +40,8 @@ import io.github.microcks.util.graphql.GraphQLTestRunner;
 import io.github.microcks.util.grpc.GrpcTestRunner;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.postman.PostmanTestStepsRunner;
-import io.github.microcks.util.soapui.SoapUITestStepsRunner;
+import io.github.microcks.util.soapui.SoapUIAssertionsTestRunner;
+//import io.github.microcks.util.soapui.SoapUITestStepsRunner;
 import io.github.microcks.util.test.AbstractTestRunner;
 import io.github.microcks.util.test.HttpTestRunner;
 import io.github.microcks.util.test.SoapHttpTestRunner;
@@ -345,7 +345,7 @@ public class TestRunnerService {
 
       switch (runnerType){
          case SOAP_HTTP:
-            SoapHttpTestRunner soapRunner = new SoapHttpTestRunner();
+            SoapHttpTestRunner soapRunner = new SoapHttpTestRunner(resourceRepository);
             soapRunner.setClientHttpRequestFactory(factory);
             soapRunner.setResourceUrl(validationResourceUrl);
             soapRunner.setSecret(secret);
@@ -378,7 +378,11 @@ public class TestRunnerService {
             postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
             return postmanRunner;
          case SOAP_UI:
-            SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(resourceRepository);
+            //SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(resourceRepository);
+            SoapUIAssertionsTestRunner soapUIRunner = new SoapUIAssertionsTestRunner(resourceRepository);
+            soapUIRunner.setClientHttpRequestFactory(factory);
+            soapUIRunner.setResourceUrl(validationResourceUrl);
+            soapUIRunner.setSecret(secret);
             return soapUIRunner;
          default:
             HttpTestRunner httpRunner = new HttpTestRunner();
