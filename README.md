@@ -21,6 +21,16 @@ It also reuses these assets for running compliance and non-regression tests agai
 
 The current development version is `1.8.0-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.8.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
+#### Sonarcloud Quality metrics
+
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=bugs)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=coverage)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+
 ## Versions
 
 Here are the naming conventions we're using for current releases, ongoing development maintenance activities.
