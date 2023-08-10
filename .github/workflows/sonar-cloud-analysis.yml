@@ -2,7 +2,8 @@ name: sonar-cloud-analysis
 on:
   push:
     branches:
-      - main
+      - master
+      - 1.8.x
   schedule:
     - cron: '0 4 * * *'  # Everyday at 4am UTC
   pull_request:
