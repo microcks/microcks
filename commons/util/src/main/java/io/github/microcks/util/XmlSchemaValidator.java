@@ -36,6 +36,10 @@ import java.util.stream.Collectors;
  */
 public class XmlSchemaValidator {
 
+   private XmlSchemaValidator() {
+      // Hide the implicit default constructor.
+   }
+
    /**
     * Validation the Xml string with provided stream on its Xml schema.
     * @param schemaStream A stream on reference Xml Schema

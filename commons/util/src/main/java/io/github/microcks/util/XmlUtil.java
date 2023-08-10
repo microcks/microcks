@@ -35,6 +35,10 @@ public class XmlUtil {
    /** WSDL public namespace. */
    public static final String WSDL_NS = "http://schemas.xmlsoap.org/wsdl/";
 
+   private XmlUtil() {
+      // Hide the implicit default constructor.
+   }
+
    /**
     * Retrieve direct children elements of a parent having specified namespace and tag. Only includes level 1 children.
     * @param parent The parent of children to find
@@ -47,10 +51,9 @@ public class XmlUtil {
       NodeList children = parent.getChildNodes();
       for (int i=0; i<children.getLength(); i++) {
          Node child = children.item(i);
-         if (child.getNodeType() == Node.ELEMENT_NODE) {
-            if (namespace.equals(child.getNamespaceURI()) && tag.equals(child.getLocalName())) {
-               directChildren.add((Element) child);
-            }
+         if (child.getNodeType() == Node.ELEMENT_NODE &&
+               namespace.equals(child.getNamespaceURI()) && tag.equals(child.getLocalName())) {
+            directChildren.add((Element) child);
          }
       }
       return directChildren;

@@ -72,6 +72,10 @@ public class SoapMessageValidator {
    private static final Pattern END_BODY_PATTERN = Pattern.compile("</(.*):Body>");
 
 
+   private SoapMessageValidator() {
+      // Hide the implicit default constructor.
+   }
+
    /**
     * Validate that given message has a well-formed Soap Envelope. This could Soap 1.1 or 1.2 envelope.
     * @param message The Soap message to validate.
@@ -97,7 +101,7 @@ public class SoapMessageValidator {
          errors.add("Exception while validating Soap envelope for message: " + e.getMessage());
       }
 
-      log.debug("SoapEnvelope validation errors: " + errors.size());
+      log.debug("SoapEnvelope validation errors: {}", errors.size());
       return errors;
    }
 
@@ -181,7 +185,7 @@ public class SoapMessageValidator {
          errors.add("Exception while validating Soap message: " + e.getMessage());
       }
 
-      log.debug("SoapMessage validation errors: " + errors.size());
+      log.debug("SoapMessage validation errors: {}", errors.size());
       return errors;
    }
 }
