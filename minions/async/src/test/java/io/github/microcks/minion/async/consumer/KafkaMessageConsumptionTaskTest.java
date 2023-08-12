@@ -52,10 +52,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for KafkaMessageConsumptionTask.
  * @author laurent
  */
-public class KafkaMessageConsumptionTaskTest {
+class KafkaMessageConsumptionTaskTest {
 
    @Test
-   public void testAcceptEndpoint() {
+   void testAcceptEndpoint() {
       AsyncTestSpecification specification = new AsyncTestSpecification();
       KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
 
@@ -76,7 +76,7 @@ public class KafkaMessageConsumptionTaskTest {
    }
 
    @Test
-   public void testAcceptEndpointFailures() {
+   void testAcceptEndpointFailures() {
       AsyncTestSpecification specification = new AsyncTestSpecification();
       KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
 
@@ -97,7 +97,7 @@ public class KafkaMessageConsumptionTaskTest {
    }
 
    @Test
-   public void testEndpointPattern() {
+   void testEndpointPattern() {
       Matcher matcher = KafkaMessageConsumptionTask.ENDPOINT_PATTERN.matcher("kafka://localhost:9092/UsersignedupAPI_0.1.2_user-signedup?registryUrl=http://localhost:8888");
       // Call matcher.find() to be able to use named expressions.
       matcher.find();
@@ -111,10 +111,10 @@ public class KafkaMessageConsumptionTaskTest {
    }
 
    @Test
-   public void testInitializeOptionsMap() {
+   void testInitializeOptionsMap() {
       AsyncTestSpecification specification = new AsyncTestSpecification();
-      specification.setEndpointUrl("kafka://localhost/testTopic?registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO");
-      String options = "registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO";
+      specification.setEndpointUrl("kafka://localhost/testTopic?registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO&startOffset=100");
+      String options = "registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO&startOffset=100";
 
       KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
       Map<String, String> optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
@@ -123,6 +123,7 @@ public class KafkaMessageConsumptionTaskTest {
       assertEquals("http://localhost:8888", optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_URL_OPTION));
       assertEquals("reg-user", optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_USERNAME_OPTION));
       assertEquals("USER_INFO", optionsMap.get(KafkaMessageConsumptionTask.REGISTRY_AUTH_CREDENTIALS_SOURCE));
+      assertEquals("100", optionsMap.get(KafkaMessageConsumptionTask.START_OFFSET));
    }
 
    /*

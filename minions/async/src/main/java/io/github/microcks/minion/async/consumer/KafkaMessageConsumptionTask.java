@@ -26,9 +26,11 @@ import io.github.microcks.minion.async.AsyncTestSpecification;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
@@ -36,6 +38,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.jboss.logging.Logger;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -63,6 +66,11 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    /** The endpoint URL option representing schema registry auth credentials source. */
    public static final String REGISTRY_AUTH_CREDENTIALS_SOURCE = "registryAuthCredSource";
 
+   /** The endpoint URL option representing the offset we should start consume from. */
+   public static final String START_OFFSET = "startOffset";
+   /** The endpoint URL option representing the offset whe should end consumer to. */
+   public static final String END_OFFSET = "endOffset";
+
    private File trustStore;
 
    private AsyncTestSpecification specification;
@@ -72,6 +80,9 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    protected KafkaConsumer<String, byte[]> consumer;
 
    protected KafkaConsumer<String, GenericRecord> avroConsumer;
+
+   protected Long startOffset;
+   protected Long endOffset;
 
 
    /**
@@ -124,7 +135,7 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
          avroConsumer.close();
       }
       if (trustStore != null && trustStore.exists()) {
-         trustStore.delete();
+         Files.delete(trustStore.toPath());
       }
    }
 
@@ -184,13 +195,32 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
          }
       }
 
+      instanciateKafkaConsumer(props, endpointTopic);
+   }
+
+   private void instanciateKafkaConsumer(Properties props, String endpointTopic) {
+      if (hasOption(START_OFFSET)) {
+         try {
+            startOffset = Long.parseLong(optionsMap.get(START_OFFSET));
+         } catch (NumberFormatException nfe) {
+            logger.warnf("The startOffset endpoint option {%s} is not a Long", optionsMap.get(START_OFFSET));
+         }
+      }
+      if (hasOption(END_OFFSET)) {
+         try {
+            endOffset = Long.parseLong(optionsMap.get(END_OFFSET));
+         } catch (NumberFormatException nfe) {
+            logger.warnf("The endOffset endpoint option {%s} is not a Long", optionsMap.get(END_OFFSET));
+         }
+      }
+
       // Create the consumer from properties and subscribe to given topic.
       if (hasOption(REGISTRY_URL_OPTION)) {
          avroConsumer = new KafkaConsumer<>(props);
-         avroConsumer.subscribe(Arrays.asList(endpointTopic));
+         avroConsumer.subscribe(Arrays.asList(endpointTopic), new StartOffsetSeeker());
       } else {
          consumer = new KafkaConsumer<>(props);
-         consumer.subscribe(Arrays.asList(endpointTopic));
+         consumer.subscribe(Arrays.asList(endpointTopic), new StartOffsetSeeker());
       }
    }
 
@@ -214,13 +244,23 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
          ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
 
-         for (ConsumerRecord<String, byte[]> record : records) {
+         boolean oufOfOffsetRange = false;
+         for (ConsumerRecord<String, byte[]> consumerRecord : records) {
+            // Check current offset if a limit was set.
+            if (endOffset != null && consumerRecord.offset() > endOffset) {
+               oufOfOffsetRange = true;
+               break;
+            }
             // Build a ConsumedMessage from Kafka record.
             ConsumedMessage message = new ConsumedMessage();
             message.setReceivedAt(System.currentTimeMillis());
-            message.setHeaders(buildHeaders(record.headers()));
-            message.setPayload(record.value());
+            message.setHeaders(buildHeaders(consumerRecord.headers()));
+            message.setPayload(consumerRecord.value());
             messages.add(message);
+         }
+         // Exit main waiting loop if we reach the end.
+         if (oufOfOffsetRange) {
+            break;
          }
       }
    }
@@ -233,23 +273,33 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
          ConsumerRecords<String, GenericRecord> records = avroConsumer.poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
 
-         for (ConsumerRecord<String, GenericRecord> record : records) {
+         boolean oufOfOffsetRange = false;
+         for (ConsumerRecord<String, GenericRecord> consumerRecord : records) {
+            // Check current offset if a limit was set.
+            if (endOffset != null && consumerRecord.offset() > endOffset) {
+               oufOfOffsetRange = true;
+               break;
+            }
             // Build a ConsumedMessage from Kafka record.
             ConsumedMessage message = new ConsumedMessage();
             message.setReceivedAt(System.currentTimeMillis());
-            message.setHeaders(buildHeaders(record.headers()));
-            message.setPayloadRecord(record.value());
+            message.setHeaders(buildHeaders(consumerRecord.headers()));
+            message.setPayloadRecord(consumerRecord.value());
             messages.add(message);
+         }
+         // Exit main waiting loop if we reach the end.
+         if (oufOfOffsetRange) {
+            break;
          }
       }
    }
 
    /** Build set of Microcks headers from Kafka headers. */
    private Set<Header> buildHeaders(Headers headers) {
-      if (headers == null || !headers.iterator().hasNext()) {
-         return null;
-      }
       Set<Header> results = new HashSet<>();
+      if (headers == null || !headers.iterator().hasNext()) {
+         return results;
+      }
       Iterator<org.apache.kafka.common.header.Header> headersIterator = headers.iterator();
       while (headersIterator.hasNext()) {
          org.apache.kafka.common.header.Header header = headersIterator.next();
@@ -259,5 +309,18 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
          results.add(result);
       }
       return results;
+   }
+
+   private class StartOffsetSeeker implements ConsumerRebalanceListener {
+      @Override
+      public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+         // Nothing to do on revocation.
+      }
+      @Override
+      public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+         if (startOffset != null) {
+            partitions.forEach(p -> consumer.seek(p, startOffset));
+         }
+      }
    }
 }
