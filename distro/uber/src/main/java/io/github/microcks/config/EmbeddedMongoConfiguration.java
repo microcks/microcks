@@ -46,7 +46,7 @@ public class EmbeddedMongoConfiguration {
    private static Logger log = LoggerFactory.getLogger(EmbeddedMongoConfiguration.class);
 
    @Value("${mongodb.storage.file:#{null}}")
-   private final Optional<String> storageFileName = null;
+   private Optional<String> storageFileName;
 
    private MongoClient client;
    private MongoServer server;
@@ -59,7 +59,7 @@ public class EmbeddedMongoConfiguration {
          log.info("Creating a new embedded Mongo Java Server with in-memory persistence");
          server = new MongoServer(new MemoryBackend());
       } else {
-         log.info("Creating a new embedded Mongo Java Server with disk persistence at " + storageFileName.get());
+         log.info("Creating a new embedded Mongo Java Server with disk persistence at {}", storageFileName.get());
          server = new MongoServer(new H2Backend(storageFileName.get()));
       }
 
@@ -72,7 +72,9 @@ public class EmbeddedMongoConfiguration {
       if (server == null) {
          mongoServer();
       }
-      client = MongoClients.create("mongodb://localhost:" + serverAddress.getPort());
+      if (client == null) {
+         client = MongoClients.create("mongodb://localhost:" + serverAddress.getPort());
+      }
       return client;
    }
 }

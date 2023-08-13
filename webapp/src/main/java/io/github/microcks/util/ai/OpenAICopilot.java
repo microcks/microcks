@@ -140,9 +140,7 @@ public class OpenAICopilot implements AICopilot {
       promptBuilder.append("\n###\n");
       promptBuilder.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
 
-      if (log.isDebugEnabled()) {
-         log.debug("Asking OpenAI to suggest samples for this prompt: {}", promptBuilder.toString());
-      }
+      log.debug("Asking OpenAI to suggest samples for this prompt: {}", promptBuilder);
 
       final List<ChatMessage> messages = new ArrayList<>();
       final ChatMessage assistantMessage = new ChatMessage(ChatMessageRole.ASSISTANT.value(), promptBuilder.toString());
@@ -155,25 +153,27 @@ public class OpenAICopilot implements AICopilot {
             .maxTokens(maxTokens)
             .logitBias(new HashMap<>()).build();
 
-      // Build a full HttpEntioy as we need to specify authentication headers.
-      HttpEntity request = new HttpEntity<>(chatCompletionRequest, createAuthenticationHeaders());
-      ChatCompletionChoice choice = restTemplate.exchange(BASE_URL + "/v1/chat/completions",
-                  HttpMethod.POST, request, ChatCompletionResult.class)
-            .getBody()
-            .getChoices()
-            .get(0);
+      // Build a full HttpEntity as we need to specify authentication headers.
+      HttpEntity<ChatCompletionRequest> request = new HttpEntity<>(chatCompletionRequest, createAuthenticationHeaders());
+      ChatCompletionResult completionResult = restTemplate.exchange(BASE_URL + "/v1/chat/completions",
+                  HttpMethod.POST, request, ChatCompletionResult.class).getBody();
 
-      if (log.isDebugEnabled()) {
-         log.debug("Got this raw output from OpenAI: " + choice.getMessage().getContent());
+      if (completionResult != null) {
+         ChatCompletionChoice choice = completionResult.getChoices().get(0);
+         log.debug("Got this raw output from OpenAI: {}", choice.getMessage().getContent());
+
+         // Find the matching operation on service.
+         Optional<Operation> operation = service.getOperations().stream()
+               .filter(op -> operationName.equals(op.getName()))
+               .findFirst();
+
+         // Use the helper to parse output content before returning.
+         if (operation.isPresent()) {
+            return AICopilotHelper.parseRequestResponseTemplatizedOutput(operation.get(), choice.getMessage().getContent());
+         }
       }
-
-      // Find the matching operation on service.
-      Optional<Operation> operation = service.getOperations().stream()
-            .filter(op -> operationName.equals(op.getName()))
-            .findFirst();
-
-      // Use the helper to parse output content before returning.
-      return AICopilotHelper.parseRequestResponseTemplatizedOutput(operation.get(), choice.getMessage().getContent());
+      // Return empty list.
+      return new ArrayList<>();
    }
 
    private MappingJackson2HttpMessageConverter mappingJacksonHttpMessageConverter() {
@@ -192,8 +192,8 @@ public class OpenAICopilot implements AICopilot {
    }
 
    private HttpHeaders createAuthenticationHeaders(){
-      return new HttpHeaders() {{
-         set("Authorization", "Bearer " + apiKey);
-      }};
+      HttpHeaders headers = new HttpHeaders();
+      headers.set("Authorization", "Bearer " + apiKey);
+      return headers;
    }
 }

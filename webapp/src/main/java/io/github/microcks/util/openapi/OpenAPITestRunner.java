@@ -102,8 +102,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
 
       int responseCode = 0;
       try {
-         responseCode = httpResponse.getRawStatusCode();
-         log.debug("Response status code : " + responseCode);
+         responseCode = httpResponse.getStatusCode().value();
+         log.debug("Response status code: {}", responseCode);
       } catch (IOException ioe) {
          log.debug("IOException while getting raw status code in response", ioe);
          return TestReturn.FAILURE_CODE;
@@ -112,8 +112,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Extract response content-type in any case.
       String contentType = null;
       if (httpResponse.getHeaders().getContentType() != null) {
-         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType().toString());
          contentType = httpResponse.getHeaders().getContentType().toString();
+         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType());
          // Sanitize charset information from media-type.
          if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
             contentType = contentType.substring(0, contentType.indexOf(";"));
@@ -123,23 +123,25 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // If required, compare response code and content-type to expected ones.
       if (validateResponseCode) {
          Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
-         log.debug("Response expected status code : " + expectedResponse.getStatus());
-         if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
-            log.debug("Response HttpStatus does not match expected one, returning failure");
-            lastValidationErrors = List.of(
-                  String.format("Response HttpStatus does not match expected one. Expecting %s but got %d",
-                        expectedResponse.getStatus(), responseCode)
-            );
-            return TestReturn.FAILURE_CODE;
-         }
+         if (expectedResponse != null) {
+            log.debug("Response expected status code: {}", expectedResponse.getStatus());
+            if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
+               log.debug("Response HttpStatus does not match expected one, returning failure");
+               lastValidationErrors = List.of(
+                     String.format("Response HttpStatus does not match expected one. Expecting %s but got %d",
+                           expectedResponse.getStatus(), responseCode)
+               );
+               return TestReturn.FAILURE_CODE;
+            }
 
-         if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
-            log.debug("Response Content-Type does not match expected one, returning failure");
-            lastValidationErrors = List.of(
-                  String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
-                        expectedResponse.getMediaType(), contentType)
-            );
-            return TestReturn.FAILURE_CODE;
+            if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
+               log.debug("Response Content-Type does not match expected one, returning failure");
+               lastValidationErrors = List.of(
+                     String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
+                           expectedResponse.getMediaType(), contentType)
+               );
+               return TestReturn.FAILURE_CODE;
+            }
          }
       }
 
@@ -197,7 +199,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
          }
 
          if (!lastValidationErrors.isEmpty()) {
-            log.debug("OpenAPI schema validation errors found " + lastValidationErrors.size() + ", marking test as failed.");
+            log.debug("OpenAPI schema validation errors found {}, marking test as failed.", lastValidationErrors.size());
             return TestReturn.FAILURE_CODE;
          }
          log.debug("OpenAPI schema validation of response is successful !");
