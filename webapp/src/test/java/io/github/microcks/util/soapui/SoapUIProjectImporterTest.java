@@ -1,4 +1,3 @@
-package io.github.microcks.util.soapui;
 /*
  * Licensed to Laurent Broudoux (the "Author") under one
  * or more contributor license agreements.  See the NOTICE file
@@ -17,6 +16,8 @@ package io.github.microcks.util.soapui;
  * specific language governing permissions and limitations
  * under the License.
  */
+package io.github.microcks.util.soapui;
+
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;

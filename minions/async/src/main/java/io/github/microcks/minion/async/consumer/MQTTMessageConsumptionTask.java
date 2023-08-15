@@ -27,6 +27,7 @@ import org.jboss.logging.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -114,7 +115,7 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
          }
       }
       if (trustStore != null && trustStore.exists()) {
-         trustStore.delete();
+         Files.delete(trustStore.toPath());
       }
    }
 

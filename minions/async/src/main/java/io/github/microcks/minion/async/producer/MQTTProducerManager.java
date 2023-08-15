@@ -31,7 +31,7 @@ import io.github.microcks.minion.async.AsyncMockDefinition;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * MQTT implementation of producer for async event messages.
@@ -103,13 +103,11 @@ public class MQTTProducerManager {
    public void publishMessage(String topic, String value) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
       try {
-         client.publish(topic, value.getBytes("UTF-8"), 0, false);
-      } catch (UnsupportedEncodingException uee) {
-         logger.warnf("Message %s cannot be encoded as UTF-8 bytes, ignoring it", uee);
+         client.publish(topic, value.getBytes(StandardCharsets.UTF_8), 0, false);
       } catch (MqttPersistenceException mpe) {
-         mpe.printStackTrace();
+         logger.warnf("MqttPersistenceException caught while publishing message, ignoring it", mpe);
       } catch (MqttException me) {
-         me.printStackTrace();
+         logger.warnf("MqttException caught while publishing messageMqttException", me);
       }
    }
 

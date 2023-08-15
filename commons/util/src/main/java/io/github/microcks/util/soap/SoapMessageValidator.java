@@ -43,7 +43,9 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,8 +70,6 @@ public class SoapMessageValidator {
    public static final String SOAP_ENVELOPE_12_NS = "http://www.w3.org/2003/05/soap-envelope";
 
    private static final Pattern XML_NS_CAPTURE_PATTERN = Pattern.compile("xmlns:(\\w+)=\"([^\"]*)\"", Pattern.DOTALL);
-   private static final Pattern START_BODY_PATTERN = Pattern.compile("(.*):Body>");
-   private static final Pattern END_BODY_PATTERN = Pattern.compile("</(.*):Body>");
 
 
    private SoapMessageValidator() {
@@ -121,7 +121,7 @@ public class SoapMessageValidator {
 
       try {
          // First thing is to parse WSDL to extract types schema.
-         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+         DocumentBuilderFactory factory = DocumentBuilderFactory.newDefaultInstance();
          factory.setNamespaceAware(true);
          DocumentBuilder documentBuilder = factory.newDocumentBuilder();
 
@@ -140,7 +140,7 @@ public class SoapMessageValidator {
             }
          }
 
-         TransformerFactory transformerFactory = TransformerFactory.newInstance();
+         TransformerFactory transformerFactory = TransformerFactory.newDefaultInstance();
          Transformer transformer = transformerFactory.newTransformer();
          transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
          transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
@@ -153,21 +153,21 @@ public class SoapMessageValidator {
          // Before extracting and validating body, we should capture all namespaces declaration to keep record
          // for later reinject them into body.
          Matcher nsMatcher = XML_NS_CAPTURE_PATTERN.matcher(message);
+         Map<String, String> nsToPrefix = new HashMap<>();
          StringBuilder nsBuilder = new StringBuilder();
          while (nsMatcher.find()) {
             nsBuilder.append(" ").append(nsMatcher.group(0));
+            nsToPrefix.put(nsMatcher.group(2), nsMatcher.group(1));
          }
 
-         // Then we have to extract body payload from soap envelope. We'll use regexp for that.
+         // Then we have to extract body payload from soap envelope. We'll use no regexp for that.
          String body = message;
-         Matcher sbMatcher = START_BODY_PATTERN.matcher(body);
-         if (sbMatcher.find()) {
-            body = body.substring(sbMatcher.end());
-            Matcher ebMatcher = END_BODY_PATTERN.matcher(body);
-            if (ebMatcher.find()) {
-               body = body.substring(0, ebMatcher.start());
-            }
-         }
+         int bodyStart = body.indexOf(":Body");
+         int bodyEnd = body.lastIndexOf(":Body>");
+         body = body.substring(bodyStart + 5, bodyEnd);
+         int firstClosingTag = body.indexOf(">");
+         int lastClosingTag = body.lastIndexOf("</");
+         body = body.substring(firstClosingTag + 1, lastClosingTag).trim();
 
          // Remove all namespaces declaration from body to avoid duplicates.
          body = body.replaceAll("\s" + XML_NS_CAPTURE_PATTERN.pattern(), "");
@@ -177,9 +177,16 @@ public class SoapMessageValidator {
 
          log.debug("Soap message body to validate: {}", body);
 
+         // Check soap message if the expected part.
+         String expectedStartTag = "<" + nsToPrefix.get(partQName.getNamespaceURI()) + ":" + partQName.getLocalPart();
+         String expectedEndTag = "</" + nsToPrefix.get(partQName.getNamespaceURI()) + ":" + partQName.getLocalPart() + ">";
+         if (!body.startsWith(expectedStartTag) || !body.endsWith(expectedEndTag)) {
+            errors.add("Expecting a " + partQName + " element but got another one");
+         }
+
          // And finally validate everything using that body ;-)
          errors.addAll(XmlSchemaValidator.validateXml(
-                     new ByteArrayInputStream(schemaContent.getBytes(StandardCharsets.UTF_8)), body, resourceUrl));
+               new ByteArrayInputStream(schemaContent.getBytes(StandardCharsets.UTF_8)), body, resourceUrl));
       } catch (Exception e) {
          log.error("Exception while validating Soap message: {}", e.getMessage());
          errors.add("Exception while validating Soap message: " + e.getMessage());

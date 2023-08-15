@@ -18,7 +18,6 @@
  */
 package io.github.microcks.util;
 
-import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
@@ -27,7 +26,6 @@ import javax.xml.validation.Validator;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Helper class for easy access to a Xml Schema validation. Validators embed an error handler and use a specific
@@ -61,7 +59,7 @@ public class XmlSchemaValidator {
     * @throws Exception if validator cannot be initialized (in case of malformed schema stream)
     */
    public static List<String> validateXml(InputStream schemaStream, String xmlString, String baseResourceUrl) throws Exception {
-      SchemaFactory factory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+      SchemaFactory factory = SchemaFactory.newDefaultInstance();
       factory.setResourceResolver(new XmlSchemaURLResolver(baseResourceUrl));
 
       Source schemaFile = new StreamSource(schemaStream);
@@ -75,6 +73,6 @@ public class XmlSchemaValidator {
 
       return errorHandler.getExceptions().stream()
             .map(e -> "line " + e.getLineNumber() + ": " + e.getMessage())
-            .collect(Collectors.toList());
+            .toList();
    }
 }

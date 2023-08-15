@@ -46,6 +46,28 @@ public class SoapMessageValidatorTest {
          </soapenv:Envelope>
          """;
 
+   private String validSoapRequest = """
+         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+            <soapenv:Header/>
+            <soapenv:Body>
+               <hel:sayHello>
+                  <name>Andrew</name>
+               </hel:sayHello>
+            </soapenv:Body>
+         </soapenv:Envelope>
+         """;
+
+   private String validSoapNSOnBody = """
+         <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+            <soapenv:Header/>
+            <soapenv:Body xmlns:hel="http://www.example.com/hello">
+               <hel:sayHelloResponse>
+                  <sayHello>Hello Andrew !</sayHello>
+               </hel:sayHelloResponse>
+            </soapenv:Body>
+         </soapenv:Envelope>
+         """;
+
    private String invalidSoap = """
          <soap:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
             <soap:Header/>
@@ -127,6 +149,17 @@ public class SoapMessageValidatorTest {
             validSoap, "http://localhost:8080");
       assertTrue(errors.isEmpty());
 
+      errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
+            new QName("http://www.example.com/hello", "sayHelloResponse"),
+            validSoapNSOnBody, "http://localhost:8080");
+      assertTrue(errors.isEmpty());
+
+      errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
+            new QName("http://www.example.com/hello", "sayHelloResponse"),
+            validSoapRequest, "http://localhost:8080");
+      assertFalse(errors.isEmpty());
+      assertEquals(1, errors.size());
+      assertTrue(errors.get(0).contains("Expecting a {http://www.example.com/hello}sayHelloResponse element"));
 
       errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
             new QName("http://www.example.com/hello", "sayHelloResponse"),
