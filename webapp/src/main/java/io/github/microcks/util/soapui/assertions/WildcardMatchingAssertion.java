@@ -33,7 +33,7 @@ public abstract class WildcardMatchingAssertion implements SoapUIAssertion {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(WildcardMatchingAssertion.class);
 
-   /** Allow wilcards configuration parameter. Value is expected to be parsed as boolean: "true" or "false". Default is false. */
+   /** Allow wildcards configuration parameter. Value is expected to be parsed as boolean: "true" or "false". Default is false. */
    public static final String ALLOW_WILDCARDS = "allowWildcards";
 
    protected boolean allowWildcards = false;

@@ -34,7 +34,13 @@ public class AssertionFactory {
    public static final String SCHEMA_COMPLIANCE = "Schema Compliance";
    public static final String XPATH_CONTAINS = "XPath Match";
    public static final String JSONPATH_MATCH = "JsonPath Match";
+   public static final String SIMPLE_CONTAINS = "Simple Contains";
+   public static final String SIMPLE_NOT_CONTAINS = "Simple NotContains";
 
+
+   private AssertionFactory() {
+      // Hide default constructor as it's a utility class.
+   }
 
    /**
     * Build and configuration a new assertion for the given type.
@@ -55,6 +61,8 @@ public class AssertionFactory {
          case SCHEMA_COMPLIANCE -> assertion = new SchemaConformanceAssertion();
          case XPATH_CONTAINS -> assertion = new XPathContainsAssertion();
          case JSONPATH_MATCH -> assertion = new JsonPathContentAssertion();
+         case SIMPLE_CONTAINS -> assertion = new SimpleContainsAssertion();
+         case SIMPLE_NOT_CONTAINS -> assertion = new SimpleNotContainsAssertion();
          default -> assertion = new UnknownAssertion(type);
       }
 
