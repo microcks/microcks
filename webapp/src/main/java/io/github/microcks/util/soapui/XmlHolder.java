@@ -20,6 +20,8 @@ package io.github.microcks.util.soapui;
 
 import io.github.microcks.util.WritableNamespaceContext;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -51,11 +53,12 @@ import java.util.Set;
  */
 public class XmlHolder implements Map<String, Object> {
 
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(XmlHolder.class);
+
    private Element xmlObject;
 
    private Map<String, String> declaredNamespaces;
-
-   private String propertyRef;
 
    private XPath xpath;
 
@@ -65,7 +68,7 @@ public class XmlHolder implements Map<String, Object> {
     * @throws Exception
     */
    public XmlHolder(String xml) throws Exception {
-      DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+      DocumentBuilderFactory factory = DocumentBuilderFactory.newDefaultInstance();
       factory.setNamespaceAware(true);
       DocumentBuilder documentBuilder = factory.newDocumentBuilder();
       xmlObject = documentBuilder.parse(new InputSource(new StringReader(xml))).getDocumentElement();
@@ -86,7 +89,7 @@ public class XmlHolder implements Map<String, Object> {
     * @throws Exception if Xml cannot be transformed back to string.
     */
    public String getXml() throws Exception {
-      TransformerFactory transformerFactory = TransformerFactory.newInstance();
+      TransformerFactory transformerFactory = TransformerFactory.newDefaultInstance();
       Transformer transformer = transformerFactory.newTransformer();
       transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
       transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
@@ -183,7 +186,7 @@ public class XmlHolder implements Map<String, Object> {
             return nodeValues != null && nodeValues.length == 1 ? nodeValues[0] : nodeValues;
          }
       } catch (Exception e) {
-         e.printStackTrace();
+         log.error("Exception while getting key {}", key, e);
       }
       return null;
    }
@@ -200,6 +203,9 @@ public class XmlHolder implements Map<String, Object> {
 
    @Override
    public void putAll(Map<? extends String, ?> m) {
+      for (Entry<? extends String, ?> entry : m.entrySet()) {
+         put(entry.getKey(), entry.getValue());
+      }
    }
 
    @Override
