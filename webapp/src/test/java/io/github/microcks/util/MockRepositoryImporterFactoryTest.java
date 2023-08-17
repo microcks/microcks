@@ -21,6 +21,7 @@ package io.github.microcks.util;
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
+import io.github.microcks.util.har.HARImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.openapi.SwaggerImporter;
@@ -30,6 +31,7 @@ import io.github.microcks.util.soapui.SoapUIProjectImporter;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -181,5 +183,15 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer for Swagger v2 JSON should not fail!");
       }
       assertTrue(importer instanceof SwaggerImporter);
+
+      // Load a HAR JSON file.
+      File harFile = new File("target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1.har");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(harFile, null);
+      } catch (IOException ioe) {
+         fail("Getting importer for HAR JSON file should not fail!");
+      }
+      assertTrue(importer instanceof HARImporter);
    }
 }
