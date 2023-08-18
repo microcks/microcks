@@ -22,6 +22,8 @@ import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+import io.github.microcks.util.DispatchStyles;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -130,20 +132,21 @@ public class OpenAICopilot implements AICopilot {
    }
 
    @Override
-   public List<? extends Exchange> suggestSampleExchanges(Service service, String operationName, Resource contract, int number) throws Exception {
-      // Build a prompt reusing templates and elements from AICopilotHelper.
-      StringBuilder promptBuilder = new StringBuilder(AICopilotHelper.getOpenAPIOperationPromptIntro(operationName, number));
-      promptBuilder.append("\n");
-      promptBuilder.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
-      promptBuilder.append("\n");
-      promptBuilder.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
-      promptBuilder.append("\n###\n");
-      promptBuilder.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
+   public List<? extends Exchange> suggestSampleExchanges(Service service, Operation operation, Resource contract, int number) throws Exception {
+      String prompt = "";
 
-      log.debug("Asking OpenAI to suggest samples for this prompt: {}", promptBuilder);
+      if (service.getType() == ServiceType.REST) {
+         prompt = preparePromptForOpenAPI(operation, contract, number);
+      } else if (service.getType() == ServiceType.GRAPHQL) {
+         prompt = preparePromptForGraphQL(operation, contract, number);
+      } else if (service.getType() == ServiceType.EVENT) {
+         prompt = preparePromptForAsyncAPI(operation, contract, number);
+      }
+
+      log.debug("Asking OpenAI to suggest samples for this prompt: {}", prompt);
 
       final List<ChatMessage> messages = new ArrayList<>();
-      final ChatMessage assistantMessage = new ChatMessage(ChatMessageRole.ASSISTANT.value(), promptBuilder.toString());
+      final ChatMessage assistantMessage = new ChatMessage(ChatMessageRole.ASSISTANT.value(), prompt);
       messages.add(assistantMessage);
 
       ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
@@ -162,18 +165,74 @@ public class OpenAICopilot implements AICopilot {
          ChatCompletionChoice choice = completionResult.getChoices().get(0);
          log.debug("Got this raw output from OpenAI: {}", choice.getMessage().getContent());
 
-         // Find the matching operation on service.
-         Optional<Operation> operation = service.getOperations().stream()
-               .filter(op -> operationName.equals(op.getName()))
-               .findFirst();
-
-         // Use the helper to parse output content before returning.
-         if (operation.isPresent()) {
-            return AICopilotHelper.parseRequestResponseTemplatizedOutput(operation.get(), choice.getMessage().getContent());
+         if (service.getType() == ServiceType.EVENT) {
+            return AICopilotHelper.parseUnidirectionalEventTemplateOutput(choice.getMessage().getContent());
+         } else {
+            return AICopilotHelper.parseRequestResponseTemplateOutput(service, operation, choice.getMessage().getContent());
          }
       }
       // Return empty list.
       return new ArrayList<>();
+   }
+
+   private String preparePromptForOpenAPI(Operation operation, Resource contract, int number) throws Exception {
+      StringBuilder prompt = new StringBuilder(AICopilotHelper.getOpenAPIOperationPromptIntro(operation.getName(), number));
+
+      // Build a prompt reusing templates and elements from AICopilotHelper.
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append("\n###\n");
+      prompt.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
+
+      return prompt.toString();
+   }
+
+   private String preparePromptForGraphQL(Operation operation, Resource contract, int number) {
+      StringBuilder prompt = new StringBuilder(AICopilotHelper.getGraphQLOperationPromptIntro(operation.getName(), number));
+
+      // We need to indicate the name or variables we want.
+      if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
+         StringBuilder variablesList = new StringBuilder();
+         if (operation.getDispatcherRules().contains("&&")) {
+            String[] variables = operation.getDispatcherRules().split("&&");
+            for (int i = 0; i < variables.length; i++) {
+               String variable = variables[i];
+               variablesList.append("$").append(variable.trim());
+               if (i < variables.length) {
+                  variablesList.append(", ");
+               }
+            }
+         } else {
+            variablesList.append("$").append(operation.getDispatcherRules());
+         }
+         prompt.append("Use only '").append(variablesList).append("' as variable identifiers.");
+      }
+
+      // Build a prompt reusing templates and elements from AICopilotHelper.
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append("\n###\n");
+      prompt.append(contract.getContent());
+
+      return prompt.toString();
+   }
+
+   private String preparePromptForAsyncAPI(Operation operation, Resource contract, int number) throws Exception {
+      StringBuilder prompt = new StringBuilder(AICopilotHelper.getAsyncAPIOperationPromptIntro(operation.getName(), number));
+
+      // Build a prompt reusing templates and elements from AICopilotHelper.
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.getUnidirectionalEventExampleYamlFormattingDirective(1));
+      prompt.append("\n###\n");
+      prompt.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
+
+      return prompt.toString();
    }
 
    private MappingJackson2HttpMessageConverter mappingJacksonHttpMessageConverter() {

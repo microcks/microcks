@@ -21,7 +21,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
 import { AICopilotService } from '../../../../services/aicopilot.service';
-import { Service, Exchange, RequestResponsePair } from '../../../../models/service.model';
+import { Service, ServiceType, Exchange, RequestResponsePair, UnidirectionalEvent } from '../../../../models/service.model';
 
 @Component({
   selector: 'generate-samples-dialog',
@@ -55,6 +55,10 @@ export class GenerateSamplesDialogComponent implements OnInit {
     */
   }
 
+  isEventTypeService(): boolean {
+    return this.service.type === ServiceType.EVENT || this.service.type === ServiceType.GENERIC_EVENT;
+  }
+
   getSamplesSuggestions(numberOfSamples: number = 2): void {
     this.copilotSvc.getSamplesSuggestions(this.service, this.operationName, numberOfSamples)
         .subscribe(
@@ -63,7 +67,42 @@ export class GenerateSamplesDialogComponent implements OnInit {
               if (res.length == 0) {
                 this.infoMessage = 'AI Copilot was not able to analyse your specification and provide samples in specified delay. Please retry later...'
               } else {
-                res.forEach(exchange => exchange['type'] = "reqRespPair");
+                res.forEach(exchange => {
+                  if (exchange['eventMessage'] != undefined) {
+                    exchange['type'] = "unidirEvent"
+                  } else exchange['type'] = "reqRespPair";
+                });
+                this.exchanges.push(...res);
+                this.selectedExchanges.push(...res);
+                this.infoMessage = 'You need to rename and may unselect samples before saving them';
+                this.errorMessage = undefined;
+              }
+            },
+            error: err => {
+              console.log('Observer got an error: ' + JSON.stringify(err));
+              this.errorMessage = 'Got an error on server side: ' + err.error;
+              this.infoMessage = undefined;
+            },
+            complete: () => console.log('Observer got a complete notification'),
+          }
+        );
+  }
+
+  getOtherSamples(): void {
+    this.infoMessage = undefined;
+    this.errorMessage = undefined;
+    this.copilotSvc.getSamplesSuggestions(this.service, this.operationName, 2)
+        .subscribe(
+          {
+            next: res => {
+              if (res.length == 0) {
+                this.infoMessage = 'AI Copilot was not able to analyse your specification and provide samples in specified delay. Please retry later...'
+              } else {
+                res.forEach(exchange => {
+                  if (exchange['eventMessage'] != undefined) {
+                    exchange['type'] = "unidirEvent"
+                  } else exchange['type'] = "reqRespPair";
+                });
                 this.exchanges.push(...res);
                 this.selectedExchanges.push(...res);
                 this.infoMessage = 'You need to rename and may unselect samples before saving them';
@@ -98,8 +137,17 @@ export class GenerateSamplesDialogComponent implements OnInit {
 
   updateSampleName($event: Event, index: number): void {
     this.exchangesNames[index] = String($event);
-    (this.exchanges[index] as RequestResponsePair).request.name = String($event);
-    (this.selectedExchanges[index] as RequestResponsePair).request.name = String($event);
+    if (this.exchanges[index]["eventMessage"] == undefined) {
+      // Dissociate request/response pair...
+      (this.exchanges[index] as RequestResponsePair).request.name = String($event);
+      (this.exchanges[index] as RequestResponsePair).response.name = String($event);
+      (this.selectedExchanges[index] as RequestResponsePair).request.name = String($event);
+      (this.selectedExchanges[index] as RequestResponsePair).response.name = String($event);
+    } else {
+      // ... from unidirectional event.
+      (this.exchanges[index] as UnidirectionalEvent).eventMessage.name = String($event);
+      (this.selectedExchanges[index] as UnidirectionalEvent).eventMessage.name = String($event);
+    }
     this.isSavingEnabled();
   }
 

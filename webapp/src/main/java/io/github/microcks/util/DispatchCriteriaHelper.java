@@ -402,6 +402,12 @@ public class DispatchCriteriaHelper{
       return "";
    }
 
+   /**
+    *
+    * @param paramsRule
+    * @param paramMap
+    * @return
+    */
    public static String extractFromParamMap(String paramsRule, Map<String, String> paramMap) {
       Set<String> sortedKeys = paramMap.keySet().stream()
             .sorted().collect(Collectors.toSet());

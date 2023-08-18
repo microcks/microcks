@@ -18,12 +18,15 @@
  */
 package io.github.microcks.util.ai;
 
+import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
@@ -33,8 +36,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -52,11 +58,22 @@ import java.util.Set;
  */
 public class AICopilotHelper {
 
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(AICopilotHelper.class);
+
    protected static final ObjectMapper JSON_MAPPER = new ObjectMapper();
    protected static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
 
    protected static final String OPENAPI_OPERATION_PROMPT_TEMPLATE = """
          Given the OpenAPI specification below, generate %2$d full examples (request and response) for operation '%1$s' strictly (no sub-path).
+         """;
+
+   protected static final String GRAPHQL_OPERATION_PROMPT_TEMPLATE = """
+         Given the GraphQL schema below, generate %2$d full examples (request and response) for operation '%1$s' only.
+         """;
+
+   protected static final String ASYNCAPI_OPERATION_PROMPT_TEMPLATE = """
+         Given the AsyncAPI specification below, generate %2$d full examples for operation '%1$s' only.
          """;
 
    protected static final String YAML_FORMATTING_PROMPT = """
@@ -83,15 +100,40 @@ public class AICopilotHelper {
              payload: <message payload>
          """;
 
-   /** Generate an OpenAPI prompt introduction, asking for generation of {@code numberOfSamples} sample for operation. */
+   private static final String HEADERS_NODE = "headers";
+   private static final String VARIABLES_NODE = "variables";
+
+   private AICopilotHelper() {
+      // Hides the default implicit one as it's a utility class.
+   }
+
+   /** Generate an OpenAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
    protected static String getOpenAPIOperationPromptIntro(String operationName, int numberOfSamples) {
       return String.format(OPENAPI_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
+   }
+
+   /** Generate a GraphQL prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   protected static String getGraphQLOperationPromptIntro(String operationName, int numberOfSamples) {
+      return String.format(GRAPHQL_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
+   }
+
+   /** Generate an AsyncAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   protected static String getAsyncAPIOperationPromptIntro(String operationName, int numerOfSamples) {
+      return String.format(ASYNCAPI_OPERATION_PROMPT_TEMPLATE, operationName, numerOfSamples);
    }
 
    protected static String getRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
       StringBuilder builder = new StringBuilder();
       for (int i=0; i<numberOfSamples; i++) {
          builder.append(String.format(REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
+      }
+      return builder.toString();
+   }
+
+   protected static String getUnidirectionalEventExampleYamlFormattingDirective(int numberOfSamples) {
+      StringBuilder builder = new StringBuilder();
+      for (int i=0; i<numberOfSamples; i++) {
+         builder.append(String.format(UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
       }
       return builder.toString();
    }
@@ -136,7 +178,7 @@ public class AICopilotHelper {
    }
 
    /** Transform the output respecting the {@code REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain exchanges. */
-   protected static List<RequestResponsePair> parseRequestResponseTemplatizedOutput(Operation operation, String content) throws Exception {
+   protected static List<RequestResponsePair> parseRequestResponseTemplateOutput(Service service, Operation operation, String content) throws Exception {
       List<RequestResponsePair> results = new ArrayList<>();
 
       JsonNode root = YAML_MAPPER.readTree(sanitizeYamlContent(content));
@@ -148,9 +190,9 @@ public class AICopilotHelper {
             // Deal with parsing request.
             JsonNode requestNode = example.path("request");
             Request request = new Request();
-            JsonNode requestHeadersNode = requestNode.path("headers");
+            JsonNode requestHeadersNode = requestNode.path(HEADERS_NODE);
             request.setHeaders(buildHeaders(requestHeadersNode));
-            request.setContent(getMessageContent(requestHeadersNode, requestNode.path("body")));
+            request.setContent(getRequestContent(requestHeadersNode, requestNode.path("body")));
 
             String url = requestNode.path("url").asText();
             if (url.contains("?")) {
@@ -167,21 +209,35 @@ public class AICopilotHelper {
             // Deal with parsing response.
             JsonNode responseNode = example.path("response");
             Response response = new Response();
-            JsonNode responseHeadersNode = responseNode.path("headers");
+            JsonNode responseHeadersNode = responseNode.path(HEADERS_NODE);
             response.setHeaders(buildHeaders(responseHeadersNode));
-            response.setContent(getMessageContent(responseHeadersNode, responseNode.path("body")));
+            response.setContent(getResponseContent(responseHeadersNode, responseNode.path("body")));
             response.setMediaType(responseHeadersNode.path("content-type").asText(null));
             response.setStatus(responseNode.path("code").asText("200"));
             response.setFault(response.getStatus().startsWith("4") || response.getStatus().startsWith("5"));
 
             //
             String dispatchCriteria = null;
-            String resourcePathPattern = operation.getName().split(" ")[1];
 
             if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
+               String resourcePathPattern = operation.getName().split(" ")[1];
                dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), resourcePathPattern, url);
+            } else if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
+            } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+               String resourcePathPattern = operation.getName().split(" ")[1];
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), resourcePathPattern, url);
+               dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
+            } else if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
+               // This dispatcher is used for GraphQL
+               Map<String, String> variables = getGraphQLVariables(request.getContent());
+               dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(), variables);
             }
             response.setDispatchCriteria(dispatchCriteria);
+
+            if (service.getType() == ServiceType.GRAPHQL) {
+               adaptGraphQLRequestContent(request);
+            }
 
             results.add(new RequestResponsePair(request, response));
          }
@@ -189,9 +245,27 @@ public class AICopilotHelper {
       return results;
    }
 
-   protected static List<UnidirectionalEvent> parseUnidirectionalEventTemplatizedOutput(String content) throws Exception {
+   /** Transform the output respecting the {@code UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain exchanges. */
+   protected static List<UnidirectionalEvent> parseUnidirectionalEventTemplateOutput(String content) throws Exception {
       List<UnidirectionalEvent> results = new ArrayList<>();
 
+      JsonNode root = YAML_MAPPER.readTree(sanitizeYamlContent(content));
+      if (root.getNodeType() == JsonNodeType.ARRAY) {
+         Iterator<JsonNode> examples = root.elements();
+         while (examples.hasNext()) {
+            JsonNode example = examples.next();
+
+            // Deal with parsing message.
+            JsonNode message = example.path("message");
+            EventMessage event = new EventMessage();
+            JsonNode headersNode = message.path(HEADERS_NODE);
+            event.setHeaders(buildHeaders(headersNode));
+            event.setMediaType("application/json");
+            event.setContent(getMessageContent("application/json", message.path("payload")));
+
+            results.add(new UnidirectionalEvent(event));
+         }
+      }
       return results;
    }
 
@@ -199,17 +273,39 @@ public class AICopilotHelper {
    private static String sanitizeYamlContent(String pseudoYaml) {
       pseudoYaml = pseudoYaml.trim();
       if (!pseudoYaml.startsWith("-")) {
-         boolean inYaml = false;
+         boolean inYaml = false;        // Are we currently in Yaml content?
+         boolean nextIsYaml = false;    // May the next line be Yaml content?
+         boolean addPadding = false;    // Do we have to add padding?
          StringBuilder yaml = new StringBuilder();
          String[] lines = pseudoYaml.split("\\r?\\n|\\r");
          for (String line: lines) {
             if (line.startsWith("-")) {
                inYaml = true;
-            } else if (line.startsWith("```") || line.length() == 0) {
+            }
+            if (line.trim().length() == 0) {
                inYaml = false;
             }
+            if (nextIsYaml && !line.startsWith("-")) {
+               inYaml = true;
+               nextIsYaml = false;
+               addPadding = true;
+               yaml.append("- ").append(line).append("\n");
+               continue;
+            }
+            if (line.startsWith("```")) {
+               // Starting or ending markdown block.
+               if (inYaml) {
+                  inYaml = false;
+                  nextIsYaml = false;
+                  addPadding = false;
+               } else {
+                  nextIsYaml = true;
+               }
+            }
             if (inYaml) {
-               yaml.append(line).append("\n");
+               yaml.append(addPadding ? "  ":"").append(line).append("\n");
+               // We don't know what next is going to be...
+               nextIsYaml = false;
             }
          }
          return yaml.toString();
@@ -224,23 +320,78 @@ public class AICopilotHelper {
          Map.Entry<String, JsonNode> headerNodeEntry = headerNodes.next();
          Header header = new Header();
          header.setName(headerNodeEntry.getKey());
-         header.setValues(Set.of(headerNodeEntry.getValue().textValue()));
+         header.setValues(Set.of(headerNodeEntry.getValue().asText()));
          headers.add(header);
       }
       return headers;
    }
 
-   private static String getMessageContent(JsonNode headersNode, JsonNode bodyNode) throws Exception {
-      String contentType = headersNode.path("content-type").asText(null);
+   private static String getRequestContent(JsonNode headersNode, JsonNode bodyNode) throws Exception {
+      String contentType = headersNode.path("accept").asText(null);
+      return getMessageContent(contentType, bodyNode);
+   }
 
+   private static String getResponseContent(JsonNode headersNode, JsonNode bodyNode) throws Exception {
+      String contentType = headersNode.path("content-type").asText(null);
+      return getMessageContent(contentType, bodyNode);
+   }
+
+   private static String getMessageContent(String contentType, JsonNode bodyNode) throws Exception {
       if (!bodyNode.isMissingNode()) {
-         if (contentType != null && contentType.contains("application/json")) {
+
+         if (!bodyNode.isTextual() && contentType != null && contentType.contains("application/json")
+               && !bodyNode.isEmpty()) {
             return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(bodyNode);
-         } else if (bodyNode.asText().length() > 0 && !bodyNode.asText().equals("null")) {
+         } else if (bodyNode.isTextual()) {
             return bodyNode.asText();
          }
       }
       return null;
+   }
+
+   private static Map<String, String> getGraphQLVariables(String requestContent) throws Exception {
+      JsonNode graphQL = JSON_MAPPER.readTree(requestContent);
+
+      if (graphQL.has(VARIABLES_NODE)) {
+         JsonNode variablesNode = graphQL.path(VARIABLES_NODE);
+         Map<String, String> results = new HashMap<>();
+         Set<Map.Entry<String, JsonNode>> elements = variablesNode.properties();
+         for (Map.Entry<String, JsonNode> element : elements) {
+            results.put(element.getKey(), element.getValue().asText());
+         }
+         return results;
+      } else {
+         log.warn("GraphQL request do not contain variables...");
+      }
+      return new HashMap<>();
+   }
+
+   private static void adaptGraphQLRequestContent(Request request) throws Exception {
+      JsonNode graphQL = JSON_MAPPER.readTree(request.getContent());
+
+      Map<String, JsonNode> variables = new HashMap<>();
+      if (graphQL.has(VARIABLES_NODE)) {
+         JsonNode variablesNode = graphQL.path(VARIABLES_NODE);
+         Set<Map.Entry<String, JsonNode>> elements = variablesNode.properties();
+         for (Map.Entry<String, JsonNode> element : elements) {
+            variables.put(element.getKey(), element.getValue());
+         }
+      }
+
+      if (graphQL.has("query")) {
+         String query = graphQL.path("query").asText();
+         for (Map.Entry<String, JsonNode> variable : variables.entrySet()) {
+            String variableValue = "";
+            if (variable.getValue().isTextual()) {
+               variableValue = "\"" + variable.getValue().asText() + "\"";
+            } else {
+               variableValue = JSON_MAPPER.writeValueAsString(variable.getValue());
+            }
+            query = query.replaceAll(":\\s+\\$" + variable.getKey(), ": " + variableValue);
+         }
+         log.debug("GraphQL query with reinjected variables values: {}", query);
+         request.setContent(query);
+      }
    }
 
    /** Follow the $ref if we have one. Otherwise return given node. */

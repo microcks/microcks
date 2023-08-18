@@ -19,9 +19,11 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.security.UserInfo;
@@ -41,6 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A controller for interacting with optional AI Copilot in Microcks.
@@ -93,21 +96,36 @@ public class AICopilotController {
          service = serviceRepository.findById(serviceId).orElse(null);
       }
 
-
       if (service != null) {
-         List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.OPEN_API_SPEC);
-         if (!resources.isEmpty()) {
+         log.debug("We found service, now looking for required contract...");
+         List<Resource> resources = null;
+         if (service.getType() == ServiceType.REST) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.OPEN_API_SPEC);
+         } else if (service.getType() == ServiceType.GRAPHQL) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA);
+         } else if (service.getType() == ServiceType.EVENT) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.ASYNC_API_SPEC);
+         }
 
+         // Find the matching operation on service.
+         Optional<Operation> operation = service.getOperations().stream()
+               .filter(op -> operationName.equals(op.getName()))
+               .findFirst();
+
+         log.info("Resources: {}", resources);
+         log.info("Operation: {}", operation);
+         if (!resources.isEmpty() && !operation.isEmpty()) {
             try {
-               List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operationName, resources.get(0), 2);
+               List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation.get(), resources.get(0), 2);
                return new ResponseEntity<>(exchanges, HttpStatus.OK);
             } catch (Exception e) {
-               e.printStackTrace();
+               log.error("Caught and exception while generating samples", e);
                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
             }
          }
       }
-      return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+      log.error("At least one mandatory parameters (serviceId, operationName or contract) is missing");
+      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
    @RequestMapping(value = "/samples/{id:.+}", method = RequestMethod.POST)

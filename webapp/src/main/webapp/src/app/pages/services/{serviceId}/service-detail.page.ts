@@ -368,6 +368,7 @@ export class ServiceDetailPageComponent implements OnInit {
     
     return result;
   }
+  
   public formatAsyncDestination(operation: Operation, eventMessage: EventMessage, binding: string): string {
     var serviceName = this.resolvedServiceView.service.name;
     var versionName = this.resolvedServiceView.service.version;
@@ -494,7 +495,10 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public allowAICopilotOnSamples(): boolean {
-    return this.hasAICopilotEnabled() && this.resolvedServiceView.service.type === 'REST';
+    return this.hasAICopilotEnabled() 
+        && (this.resolvedServiceView.service.type === 'REST' 
+            || this.resolvedServiceView.service.type === 'GRAPHQL'
+            || this.resolvedServiceView.service.type === 'EVENT');
   }
 
   public hasRepositoryTenancyFeatureEnabled(): boolean {

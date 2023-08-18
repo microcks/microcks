@@ -559,7 +559,14 @@ public class ServiceService {
       return false;
    }
 
-
+   /**
+    *
+    * @param id
+    * @param operationName
+    * @param exchanges
+    * @param userInfo
+    * @return
+    */
    public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,  UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
       log.debug("Is user allowed? {}", authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));

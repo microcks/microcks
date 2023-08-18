@@ -19,6 +19,7 @@
 package io.github.microcks.util.ai;
 
 import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Service;
 
@@ -35,11 +36,11 @@ public interface AICopilot {
     * on contract type (OpenAPI, AsyncAPI, GraphQL, ...) the implementation may adapt the way it asks
     * for generation and handle the result parsing.
     * @param service The Service to generate sample exchanges for
-    * @param operationName The name of Service operation to generate sample exchanges for
+    * @param operation The Service operation to generate sample exchanges for
     * @param contract The contract on which sample exchange will be based
     * @param number The number of requested samples.
     * @return A list of exchanges, size of list may be equal of lower than number if generation is incomplete.
     * @throws Exception If generation cannot be done (parsing errors, timeout, connection issues, reached quotas, ...)
     */
-   List<? extends Exchange> suggestSampleExchanges(Service service, String operationName, Resource contract, int number) throws Exception;
+   List<? extends Exchange> suggestSampleExchanges(Service service, Operation operation, Resource contract, int number) throws Exception;
 }
