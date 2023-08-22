@@ -20,9 +20,11 @@ package io.github.microcks.util.soapui;
 
 import io.github.microcks.util.WritableNamespaceContext;
 
+import javax.xml.xpath.XPathExpressionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
@@ -73,14 +75,51 @@ public class XmlHolder implements Map<String, Object> {
       DocumentBuilder documentBuilder = factory.newDocumentBuilder();
       xmlObject = documentBuilder.parse(new InputSource(new StringReader(xml))).getDocumentElement();
       xpath = XPathFactory.newInstance().newXPath();
+      updateXPathNamespaces(readXPathNamespaces());
    }
 
-   private void updateXPathNamespaces() {
+   private void updateXPathNamespaces(Map<String, String> declaredNamespaces) {
       WritableNamespaceContext nsContext = new WritableNamespaceContext();
       for (Entry<String, String> entry : declaredNamespaces.entrySet()) {
          nsContext.addNamespaceURI(entry.getKey(), entry.getValue());
       }
       xpath.setNamespaceContext(nsContext);
+   }
+
+   private Map<String, String> readXPathNamespaces() {
+      Map<String, String> namespaces = new HashMap<>();
+      addNamespacesToMap(xmlObject, namespaces);
+      return namespaces;
+   }
+
+   private static void addNamespacesToMap(Node node, Map<String, String> namespaces) {
+      NamedNodeMap attributes = node.getAttributes();
+      if (attributes != null) {
+         for (int i = 0; i < attributes.getLength(); i++) {
+            Node attribute = attributes.item(i);
+            if (attribute.getNodeType() == Node.ATTRIBUTE_NODE
+               && attribute.getNamespaceURI() != null) {
+               namespaces.put(getLocalPart(attribute.getNodeName()), attribute.getNodeValue());
+            }
+         }
+      }
+
+      NodeList child = node.getChildNodes();
+      for (int i = 0; i < child.getLength(); i++) {
+         addNamespacesToMap(child.item(i), namespaces);
+      }
+   }
+
+   private static String getLocalPart(String localPart) {
+      localPart = localPart.substring(localPart.indexOf(":") + 1);
+      return localPart;
+   }
+
+   private XPathExpression compileXPath(String xpathExpression) throws XPathExpressionException {
+      if (xpathExpression.trim().startsWith("declare namespace")) {
+         return SoapUIXPathBuilder.buildXPathMatcherFromRules(xpathExpression);
+      }
+      return xpath.compile(xpathExpression);
    }
 
    /**
@@ -120,7 +159,7 @@ public class XmlHolder implements Map<String, Object> {
          declaredNamespaces = new HashMap<>();
       }
       declaredNamespaces.put(prefix, uri);
-      updateXPathNamespaces();
+      updateXPathNamespaces(declaredNamespaces);
    }
 
    /**
@@ -130,7 +169,7 @@ public class XmlHolder implements Map<String, Object> {
     * @throws Exception if expression is not correct
     */
    public String getNodeValue(String xpathExpression) throws Exception {
-      XPathExpression expression = xpath.compile(xpathExpression);
+      XPathExpression expression = compileXPath(xpathExpression);
       return expression.evaluate(xmlObject);
    }
 
@@ -141,7 +180,7 @@ public class XmlHolder implements Map<String, Object> {
     * @throws Exception if expression is not correct
     */
    public String[] getNodeValues(String xpathExpression) throws Exception {
-      XPathExpression expression = xpath.compile(xpathExpression);
+      XPathExpression expression = compileXPath(xpathExpression);
       NodeList nodeList = (NodeList) expression.evaluate(xmlObject, XPathConstants.NODESET);
       String[] results = new String[nodeList.getLength()];
       for (int i=0; i<nodeList.getLength(); i++) {
