@@ -18,7 +18,6 @@
  */
 package io.github.microcks.minion.async.producer;
 
-
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Header;
 import io.github.microcks.minion.async.AsyncMockDefinition;
@@ -48,6 +47,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -123,12 +123,7 @@ public class GooglePubSubProducerManager {
                   .setCredentialsProvider(credentialsProvider).build();
             TopicAdminClient topicAdminClient = TopicAdminClient.create(topicAdminSettings);
 
-            try {
-               topicAdminClient.getTopic(topicName);
-            } catch (NotFoundException nfe) {
-               logger.infof("Topic {%s} does not exist yet, creating it", topic);
-               topicAdminClient.createTopic(topicName);
-            }
+            ensureTopicExists(topicAdminClient, topicName);
          }
 
          // Build a message for corresponding publisher.
@@ -152,7 +147,6 @@ public class GooglePubSubProducerManager {
          }, MoreExecutors.directExecutor());
       } catch (IOException ioe) {
          logger.warnf("Message sending has thrown an exception", ioe);
-         ioe.printStackTrace();
       }
    }
 
@@ -165,21 +159,21 @@ public class GooglePubSubProducerManager {
    public Map<String, String> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
       if (headers != null && !headers.isEmpty()) {
          return headers.stream().collect(Collectors.toMap(
-               header -> header.getName(),
+               Header::getName,
                header -> {
                   String firstValue = header.getValues().stream().findFirst().get();
                   if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
                      try {
                         return engine.getValue(firstValue);
-                     } catch (Throwable t) {
-                        logger.error("Failing at evaluating template " + firstValue, t);
+                     } catch (Exception e) {
+                        logger.error("Failing at evaluating template " + firstValue, e);
                         return firstValue;
                      }
                   }
                   return firstValue;
                }));
       }
-      return null;
+      return Collections.emptyMap();
    }
 
    /**
@@ -207,6 +201,15 @@ public class GooglePubSubProducerManager {
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
+   }
+
+   private void ensureTopicExists(TopicAdminClient topicAdminClient, TopicName topicName) {
+      try {
+         topicAdminClient.getTopic(topicName);
+      } catch (NotFoundException nfe) {
+         logger.infof("Topic {%s} does not exist yet, creating it", topicName);
+         topicAdminClient.createTopic(topicName);
+      }
    }
 
    private Publisher getPublisher(String topic) throws IOException {
