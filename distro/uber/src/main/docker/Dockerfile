@@ -10,21 +10,12 @@ LABEL io.k8s.description="Microcks is Open Source Kubernetes native tool for API
 # Install Java runtime
 RUN microdnf install java-17-openjdk-headless openssl curl-minimal ca-certificates -y \
  && microdnf clean all \
+ && rm /var/lib/rpm/rpmdb.sqlite \
  && mkdir -p /deployments
 
 # JAVA_APP_DIR is used by run-java.sh for finding the binaries
 ENV JAVA_APP_DIR=/deployments \
     JAVA_MAJOR_VERSION=8
-
-# Agent bond including Jolokia and jmx_exporter
-ADD ./src/main/docker/agent-bond-opts /opt/run-java-options
-RUN mkdir -p /opt/agent-bond \
- && curl https://repo1.maven.org/maven2/io/fabric8/agent-bond-agent/1.2.0/agent-bond-agent-1.2.0.jar \
-          -o /opt/agent-bond/agent-bond.jar \
- && chmod 444 /opt/agent-bond/agent-bond.jar \
- && chmod 755 /opt/run-java-options
-ADD ./src/main/docker/jmx_exporter_config.yml /opt/agent-bond/
-EXPOSE 8778 9779
 
 # Set working directory at /deployments
 WORKDIR /deployments
