@@ -48,14 +48,10 @@ import io.github.microcks.util.test.SoapHttpTestRunner;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.io.BasicHttpClientConnectionManager;
-import org.apache.hc.client5.http.socket.ConnectionSocketFactory;
-import org.apache.hc.client5.http.socket.PlainConnectionSocketFactory;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManager;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
 import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.apache.hc.client5.http.ssl.SSLConnectionSocketFactory;
-import org.apache.hc.core5.http.URIScheme;
-import org.apache.hc.core5.http.config.Registry;
-import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
@@ -245,7 +241,7 @@ public class TestRunnerService {
 
       // Update and save the completed TestCaseResult.
       // We cannot consider as success if we have no TestStepResults associated...
-      if (testCaseResult.getTestStepResults().size() > 0) {
+      if (!testCaseResult.getTestStepResults().isEmpty()) {
          testCaseResult.setSuccess(successFlag);
       }
       testCaseResult.setElapsedTime(caseElapsedTime);
@@ -325,14 +321,14 @@ public class TestRunnerService {
          log.error("Exception while building SSLContext with acceptingTrustStrategy", e);
          return null;
       }
-      SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+      SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext,
+            new String[] { "TLSv1.2", "TLSv1.3" }, null, NoopHostnameVerifier.INSTANCE);
 
-      final Registry<ConnectionSocketFactory> socketFactoryRegistry = RegistryBuilder.<ConnectionSocketFactory> create()
-            .register(URIScheme.HTTPS.id, sslsf)
-            .register(URIScheme.HTTP.id, new PlainConnectionSocketFactory())
+      // BasicHttpClientConnectionManager was facing issues detecting close connections and re-creating new ones.
+      // Switching to PoolingHttpClientConnectionManager for HC 5.2 solves this issue.
+      final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
+            .setSSLSocketFactory(sslsf)
             .build();
-
-      final BasicHttpClientConnectionManager connectionManager = new BasicHttpClientConnectionManager(socketFactoryRegistry);
 
       CloseableHttpClient httpClient = HttpClients.custom()
             .setConnectionManager(connectionManager)
@@ -377,7 +373,6 @@ public class TestRunnerService {
             postmanRunner.setPostmanRunnerUrl(postmanRunnerUrl);
             return postmanRunner;
          case SOAP_UI:
-            //SoapUITestStepsRunner soapUIRunner = new SoapUITestStepsRunner(resourceRepository);
             SoapUIAssertionsTestRunner soapUIRunner = new SoapUIAssertionsTestRunner(resourceRepository);
             soapUIRunner.setClientHttpRequestFactory(factory);
             soapUIRunner.setResourceUrl(validationResourceUrl);
@@ -394,8 +389,8 @@ public class TestRunnerService {
    /** Build a customer truststore with provided certificate in PEM format. */
    private KeyStore buildCustomCaCertTruststore(String caCertPem) throws Exception {
       // First compute a stripped PEM certificate and decode it from base64.
-      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
-            .replaceAll(END_CERTIFICATE, "");
+      String strippedPem = caCertPem.replace(BEGIN_CERTIFICATE, "")
+            .replace(END_CERTIFICATE, "");
       InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
 
       // Generate a new x509 certificate from the stripped decoded pem.
