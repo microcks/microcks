@@ -435,6 +435,18 @@ export class ServiceDetailPageComponent implements OnInit {
     return serviceName + "-" + versionName + "-" + operationName;
   }
 
+  public formatRequestContent(requestContent: string): string {
+    if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
+      console.log("GRAPHQL request: " + requestContent);
+      let request = JSON.parse(requestContent);
+      return request.query;
+    }
+    return requestContent;
+  }
+  public formatGraphQLVariables(requestContent: string): string {
+    let request = JSON.parse(requestContent);
+    return JSON.stringify(request.variables, null, 2);
+  }
 
   public copyToClipboard(url: string): void {
     let selBox = document.createElement('textarea');

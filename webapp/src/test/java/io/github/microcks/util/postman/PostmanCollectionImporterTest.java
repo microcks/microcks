@@ -599,7 +599,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
-      // Check that operations and and input/output have been found.
+      // Check that operations and input/output have been found.
       assertEquals(4, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
          if ("POST allFilms".equals(operation.getName())) {
@@ -635,8 +635,8 @@ public class PostmanCollectionImporterTest {
                RequestResponsePair pair = (RequestResponsePair) exchange;
 
                assertNotNull(pair.getRequest().getContent());
-               assertTrue(pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6MQ==\")")
-                  || pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6Mg==\")"));
+               assertTrue(pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6MQ==\"")
+                  || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6Mg==\""));
                assertNotNull(pair.getResponse().getContent());
                assertEquals("200", pair.getResponse().getStatus());
             }
@@ -674,9 +674,9 @@ public class PostmanCollectionImporterTest {
             assertNotNull(pair.getRequest().getContent());
             assertNotNull(pair.getResponse().getContent());
             // Add this check to ensure that "comment" found in Postman variables is correctly
-            // parsed and then serialized in request parameters without the enclosing double-quotes.
-            // This is a particularity of GraphQL query that is not real JSON.
-            assertTrue(pair.getRequest().getContent().contains("comment:"));
+            // integrated into variables.
+            assertTrue(pair.getRequest().getContent().contains("\"variables\":"));
+            assertTrue(pair.getRequest().getContent().contains("\"comment\":"));
             assertEquals("200", pair.getResponse().getStatus());
          }
          else {

@@ -499,7 +499,14 @@
                       </div>
                     </dd>
                   </dl>
-                  <pre *ngIf="exchange.request.content"><code [highlight]="exchange.request.content"></code></pre>
+                  <pre *ngIf="exchange.request.content"><code [highlight]="formatRequestContent(exchange.request.content)"></code></pre>
+                  <dl *ngIf="view.service.type === 'GRAPHQL'">
+                    <dt>Variables</dt>
+                    <dd>
+                      <pre><code [highlight]="formatGraphQLVariables(exchange.request.content)"></code></pre>
+                    </dd>
+                  </dl>
+
                   <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
                     <thead>
                       <tr>

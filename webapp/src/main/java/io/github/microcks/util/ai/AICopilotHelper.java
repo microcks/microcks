@@ -368,29 +368,14 @@ public class AICopilotHelper {
 
    private static void adaptGraphQLRequestContent(Request request) throws Exception {
       JsonNode graphQL = JSON_MAPPER.readTree(request.getContent());
-
-      Map<String, JsonNode> variables = new HashMap<>();
-      if (graphQL.has(VARIABLES_NODE)) {
-         JsonNode variablesNode = graphQL.path(VARIABLES_NODE);
-         Set<Map.Entry<String, JsonNode>> elements = variablesNode.properties();
-         for (Map.Entry<String, JsonNode> element : elements) {
-            variables.put(element.getKey(), element.getValue());
-         }
-      }
-
       if (graphQL.has("query")) {
+         // GraphQL query may have \n we'd like to escape for better display.
          String query = graphQL.path("query").asText();
-         for (Map.Entry<String, JsonNode> variable : variables.entrySet()) {
-            String variableValue = "";
-            if (variable.getValue().isTextual()) {
-               variableValue = "\"" + variable.getValue().asText() + "\"";
-            } else {
-               variableValue = JSON_MAPPER.writeValueAsString(variable.getValue());
-            }
-            query = query.replaceAll(":\\s+\\$" + variable.getKey(), ": " + variableValue);
+         if (query.contains("\n")) {
+            query = query.replace("\n", "\\n");
+            ((ObjectNode) graphQL).put("query", query);
+            request.setContent(JSON_MAPPER.writeValueAsString(graphQL));
          }
-         log.debug("GraphQL query with reinjected variables values: {}", query);
-         request.setContent(query);
       }
    }
 

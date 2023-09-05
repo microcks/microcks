@@ -30,7 +30,6 @@ import io.github.microcks.util.test.HttpTestRunner;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
@@ -69,15 +68,13 @@ public class GraphQLTestRunner extends HttpTestRunner {
 
    @Override
    protected void prepareRequest(Request request) {
-      ObjectNode graphqlRequest = mapper.createObjectNode();
-      graphqlRequest.put("query", request.getContent());
-      lastQueryContent = request.getContent();
       try {
-         request.setContent(mapper.writeValueAsString(graphqlRequest));
+         JsonNode requestNode = mapper.readTree(request.getContent());
+         lastQueryContent = requestNode.path("query").asText();
       } catch (JsonProcessingException jpe) {
          log.error("JsonProcessingException while preparing GraphQL test query", jpe);
+         lastQueryContent = "";
       }
-      log.debug("GraphQL request content is now {}", request.getContent());
    }
 
    @Override
@@ -88,8 +85,8 @@ public class GraphQLTestRunner extends HttpTestRunner {
 
       int responseCode = 0;
       try {
-         responseCode = httpResponse.getRawStatusCode();
-         log.debug("Response status code : " + responseCode);
+         responseCode = httpResponse.getStatusCode().value();
+         log.debug("Response status code : {}", responseCode);
       } catch (IOException ioe) {
          log.debug("IOException while getting raw status code in response", ioe);
          return TestReturn.FAILURE_CODE;
@@ -104,7 +101,7 @@ public class GraphQLTestRunner extends HttpTestRunner {
       // Extract response content-type in any case.
       String contentType = null;
       if (httpResponse.getHeaders().getContentType() != null) {
-         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType().toString());
+         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType());
          contentType = httpResponse.getHeaders().getContentType().toString();
          // Sanitize charset information from media-type.
          if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
@@ -129,7 +126,7 @@ public class GraphQLTestRunner extends HttpTestRunner {
          JsonNode responseSchema = null;
          try {
             responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(graphqlSchemaResource.getContent(), lastQueryContent);
-            log.debug("responseSchema: " + responseSchema);
+            log.debug("responseSchema: {}", responseSchema);
             lastValidationErrors = GraphQLSchemaValidator.validateJson(responseSchema, mapper.readTree(responseContent));
          } catch (IOException ioe) {
             log.debug("Response body cannot be accessed or transformed as Json, returning failure");
@@ -137,7 +134,7 @@ public class GraphQLTestRunner extends HttpTestRunner {
          }
 
          if (!lastValidationErrors.isEmpty()) {
-            log.debug("GraphQL schema validation errors found " + lastValidationErrors.size() + ", marking test as failed.");
+            log.debug("GraphQL schema validation errors found: {}, marking test as failed." + lastValidationErrors.size());
             return TestReturn.FAILURE_CODE;
          }
          log.debug("GraphQL schema validation of response is successful !");
@@ -157,8 +154,6 @@ public class GraphQLTestRunner extends HttpTestRunner {
       lastValidationErrors = null;
       return builder.toString();
    }
-
-
 
    /**
     * Build the HttpMethod corresponding to string.

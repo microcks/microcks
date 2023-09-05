@@ -112,8 +112,6 @@ public class AICopilotController {
                .filter(op -> operationName.equals(op.getName()))
                .findFirst();
 
-         log.info("Resources: {}", resources);
-         log.info("Operation: {}", operation);
          if (!resources.isEmpty() && !operation.isEmpty()) {
             try {
                List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation.get(), resources.get(0), 2);

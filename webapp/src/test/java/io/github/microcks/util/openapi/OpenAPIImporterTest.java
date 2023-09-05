@@ -91,7 +91,7 @@ public class OpenAPIImporterTest {
          fail("Exception should not be thrown");
       }
 
-      importAnAssertOnSimpleOpenAPIWithExtensions(importer);
+      importAndAssertOnSimpleOpenAPIWithExtensions(importer);
    }
 
    @Test
@@ -104,7 +104,7 @@ public class OpenAPIImporterTest {
          fail("Exception should not be thrown");
       }
 
-      importAnAssertOnSimpleOpenAPIWithExtensions(importer);
+      importAndAssertOnSimpleOpenAPIWithExtensions(importer);
    }
 
    @Test
@@ -1227,6 +1227,7 @@ public class OpenAPIImporterTest {
       assertTrue(refSchema.getContent().contains("A weather forecast for a requested region"));
    }
 
+
    private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {
       // Check that basic service properties are there.
       List<Service> services = null;
@@ -1339,7 +1340,7 @@ public class OpenAPIImporterTest {
       }
    }
 
-   private void importAnAssertOnSimpleOpenAPIWithExtensions(OpenAPIImporter importer) {
+   private void importAndAssertOnSimpleOpenAPIWithExtensions(OpenAPIImporter importer) {
       // Basic import and assertions.
       // Check that basic service properties are there.
       List<Service> services = null;
