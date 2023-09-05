@@ -107,7 +107,8 @@
             <ul>
               <li *ngFor="let operation of service.operations">
                 <label class="checkbox">
-                  <input type="checkbox" id="filteredOperationsNames" name="filteredOperationsNames" (change)="filterOperation(operation.name)" checked>
+                  <input type="checkbox" id="filteredOperationsNames" name="filteredOperationsNames" (change)="filterOperation(operation.name)"
+                         [checked]="!removedOperationsNames.includes(operation.name)">
                   {{ operation.name }}
                 </label>
               </li>

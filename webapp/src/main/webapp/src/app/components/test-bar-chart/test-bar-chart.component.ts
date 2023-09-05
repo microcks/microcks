@@ -108,9 +108,9 @@ export class TestBarChartComponent implements OnInit {
           return h + 'px';
         })
         .style('width', function(d) {
-          console.log('width: ' + width);
+          //console.log('width: ' + width);
           var w = width / chartData.length as number;
-          console.log('w: ' + w);
+          //console.log('w: ' + w);
           return w + 'px';
         })
         .attr('data-placement', 'left').attr('title', function(d) {
