@@ -18,7 +18,6 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-
 import com.google.protobuf.Duration;
 import com.google.pubsub.v1.*;
 import io.github.microcks.minion.async.AsyncTestSpecification;
@@ -166,7 +165,6 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
          subscriptionAdminClient.getSubscription(subscriptionName);
       } catch (NotFoundException nfe) {
          logger.infof("Subscription {%s} does not exist yet, creating it", subscriptionName);
-         //subscriptionAdminClient.createSubscription(subscriptionName, topicName, PushConfig.getDefaultInstance(), 10);
 
          // Customize subscription to avoid retention and let google auto-cleanup it.
          // Put the durations to the minimum values accepted by Google cloud.
@@ -177,11 +175,13 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
                .setAckDeadlineSeconds(10)
                .setRetainAckedMessages(false)
                .setMessageRetentionDuration(Duration.newBuilder().setSeconds(600).build())
-               .setExpirationPolicy(ExpirationPolicy.newBuilder().setTtl(Duration.newBuilder().setSeconds(24 * 3600)).build())
+               .setExpirationPolicy(ExpirationPolicy.newBuilder().setTtl(Duration.newBuilder().setSeconds(24 * 3600L)).build())
                .setEnableMessageOrdering(false)
                .setEnableExactlyOnceDelivery(false)
                .build();
          subscriptionAdminClient.createSubscription(subscriptionRequest);
+      } finally {
+         subscriptionAdminClient.close();
       }
    }
 }
