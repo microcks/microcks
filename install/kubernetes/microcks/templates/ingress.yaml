@@ -13,6 +13,9 @@ metadata:
     app: "{{ .Values.appName }}"
     group: microcks
 spec:
+  {{- if .Values.microcks.ingressClassName }}
+  ingressClassName: {{ .Values.microcks.ingressClassName | quote }}
+  {{- end }}
   tls:
   - hosts:
     - "{{ .Values.microcks.url }}"
@@ -44,6 +47,9 @@ metadata:
     app: "{{ .Values.appName }}"
     group: microcks
 spec:
+  {{- if .Values.microcks.grpcIngressClassName }}
+  ingressClassName: {{ .Values.microcks.grpcIngressClassName | quote }}
+  {{- end }}
   tls:
   - hosts:
      - {{ ( include "microcks-grpc.url" . ) }}
@@ -73,6 +79,9 @@ metadata:
     app: "{{ .Values.appName }}"
     group: microcks
 spec:
+  {{- if .Values.keycloak.ingressClassName }}
+  ingressClassName: {{ .Values.keycloak.ingressClassName | quote }}
+  {{- end }}
   tls:
   - hosts:
     - "{{ .Values.keycloak.url }}"
@@ -106,6 +115,9 @@ metadata:
     app: "{{ .Values.appName }}"
     group: microcks
 spec:
+  {{- if .Values.features.async.ws.ingressClassName }}
+  ingressClassName: {{ .Values.features.async.ws.ingressClassName | quote }}
+  {{- end }}
   tls:
   - hosts:
     - "{{ ( include "microcks-ws.url" . ) }}"
