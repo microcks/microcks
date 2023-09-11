@@ -8,7 +8,8 @@ microcks:
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
-    #kubernetes.io/ingress.class: nginx
+  #ingressClassName: nginx
+  #grpcIngressClassName: nginx
   generateCert: true
   image: quay.io/microcks/microcks:nightly
   replicas: 1
@@ -16,7 +17,6 @@ microcks:
   #serviceType: NodePort
 
   #grpcIngressAnnotations:
-    #kubernetes.io/ingress.class: myclass
     #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
     #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
 
@@ -62,7 +62,7 @@ keycloak:
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
-    #kubernetes.io/ingress.class: nginx
+  #ingressClassName: nginx
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
   generateCert: true
@@ -262,7 +262,7 @@ features:
       #ingressAnnotations:
         #cert-manager.io/issuer: my-ws-cert-issuer
         #kubernetes.io/tls-acme: "true"
-        #kubernetes.io/ingress.class: nginx
+      #ingressClassName: nginx
       generateCert: true
 
   repositoryFilter:
