@@ -18,9 +18,7 @@
     <logger name="org.springframework.data.mongodb" level="INFO"/>
     <logger name="org.keycloak" level="INFO"/>
     <logger name="class org.keycloak.adapters.tomcat.CatalinaRequestAuthenticator" level="INFO"/>
-    <logger name="com.eviware.soapui.impl.wsdl.support.http" level="WARN"/>
     <logger name="org.reflections" level="WARN"/>
-    <logger name="com.jayway.jsonpath" level="INFO"/>
     <logger name="sun.net.www.protocol.http" level="INFO"/>
 
     <logger name="jdk.event.security" level="WARN"/>
