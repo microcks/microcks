@@ -1,13 +1,32 @@
+/*
+ * Licensed to Laurent Broudoux (the "Author") under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership. Author licenses this
+ * file to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
 package io.github.microcks.security;
 
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.representations.AccessToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-import java.util.Arrays;
-import java.util.List;
 
+import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 /**
  * Simpler mappe for transforming KeyclaokSecurityContext token into UserInfo bean.
  * @author laurent
@@ -17,31 +36,29 @@ public class KeycloakTokenToUserInfoMapper {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(KeycloakTokenToUserInfoMapper.class);
 
-   /** The name of token claim that contains the groups information. */
-   public static final String MICROCKS_GROUPS_TOKEN_CLAIM = "microcks-groups";
-   /** The name of the token resource that holds roles information. */
-   public static final String MICROCKS_APP_RESOURCE = "microcks-app";
-
    /**
-    * Maps the information from KeycloakSecurityContext tokens into a UserInfo instance.
-    * @param context The current security context provided by Keycloak server adapter.
+    * Maps the information from Spring SecurityContext tokens into a UserInfo instance.
+    * @param context The current security context provided by Spring Security server adapter.
     * @return A new UserInfo with info coming from Keycloak tokens.
     */
-   public static UserInfo map(KeycloakSecurityContext context) {
-      AccessToken token = context.getToken();
+   public static UserInfo map(SecurityContext context) {
+      Authentication authentication = context.getAuthentication();
 
-      // Build groups string array if any.
-      String[] microcksGroups = null;
-      Object groups = context.getToken().getOtherClaims().get(MICROCKS_GROUPS_TOKEN_CLAIM);
-      if (groups instanceof List) {
-         Object[] objGroups = ((List) groups).toArray();
-         microcksGroups = Arrays.copyOf(objGroups, objGroups.length, String[].class);
+      if (authentication instanceof JwtAuthenticationToken jwtToken) {
+         Jwt jwt = jwtToken.getToken();
+
+         String[] microcksGroups = jwt.getClaimAsStringList(KeycloakJwtToken.MICROCKS_GROUPS_TOKEN_CLAIM).toArray(String[] ::new);
+
+         // Create and return UserInfo.
+         UserInfo userInfo = new UserInfo(jwt.getClaimAsString(NAME), jwt.getClaimAsString(PREFERRED_USERNAME),
+               jwt.getClaimAsString(GIVEN_NAME), jwt.getClaimAsString(FAMILY_NAME), jwt.getClaimAsString(EMAIL),
+               authentication.getAuthorities().stream()
+                     .map(grantedAuthority -> grantedAuthority.getAuthority().replace("ROLE_", ""))
+                     .toArray(String[]::new),
+               microcksGroups);
+         log.debug("Current user is: {}", userInfo);
+         return userInfo;
       }
-
-      // Create and return UserInfo.
-      UserInfo userInfo = new UserInfo(token.getName(), token.getPreferredUsername(), token.getGivenName(), token.getFamilyName(), token.getEmail(),
-            token.getResourceAccess(MICROCKS_APP_RESOURCE).getRoles().stream().toArray(String[] ::new), microcksGroups);
-      log.debug("Current user is: " + userInfo);
-      return userInfo;
+      return null;
    }
 }

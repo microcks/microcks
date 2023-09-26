@@ -232,7 +232,7 @@ public class ServiceController {
          UserInfo userInfo
       ) {
       log.debug("Updating operation {} of service {}", operationName, serviceId);
-      log.debug("ParameterConstraints?: " + operationOverride.getParameterConstraints());
+      log.debug("ParameterConstraints?: {}", operationOverride.getParameterConstraints());
       boolean result = serviceService.updateOperation(serviceId, operationName, operationOverride.getDispatcher(),
             operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(), operationOverride.getParameterConstraints(), userInfo);
       if (result){

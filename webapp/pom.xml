@@ -18,13 +18,13 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <junit.version>4.13.1</junit.version>
-    <keycloak.version>20.0.2</keycloak.version>
+    <bouncycastle.version>1.70</bouncycastle.version>
     <snakeyaml.version>2.0</snakeyaml.version>
     <mongo-java-server.version>1.43.0</mongo-java-server.version>
-    <xstream.version>1.4.20</xstream.version>
     <apache-httpclient.version>5.2.1</apache-httpclient.version>
     <commons-lang3.version>3.13.0</commons-lang3.version>
     <commons-io.version>2.13.0</commons-io.version>
+    <commons-codec.version>1.16.0</commons-codec.version>
     <groovy.version>4.0.13</groovy.version>
     <protobuf.version>3.23.3</protobuf.version>
     <grpc.version>1.56.1</grpc.version>
@@ -34,13 +34,6 @@
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.keycloak.bom</groupId>
-        <artifactId>keycloak-adapter-bom</artifactId>
-        <version>${keycloak.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
@@ -94,10 +87,26 @@
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-spring-boot-starter</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>${commons-codec.version}</version>
+    </dependency>
+
     <!-- Required since Spring 1.5 to 2.3 migration -->
     <dependency>
       <groupId>org.apache.httpcomponents.client5</groupId>
@@ -267,12 +276,6 @@
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
-    <!--
-    <repository>
-      <id>soapui</id>
-      <url>https://rapi.tools.ops.smartbear.io/nexus/content/groups/public</url>
-    </repository>
-    -->
   </repositories>
   <pluginRepositories>
     <!--

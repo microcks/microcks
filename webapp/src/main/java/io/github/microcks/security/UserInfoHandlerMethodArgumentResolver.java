@@ -18,10 +18,11 @@
  */
 package io.github.microcks.security;
 
-import org.keycloak.KeycloakSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.RequestAttributes;
@@ -58,13 +59,11 @@ public class UserInfoHandlerMethodArgumentResolver implements HandlerMethodArgum
 
       log.debug("Creating a new UserInfo to resolve {} argument", methodParameter.getMethod());
       UserInfo userInfo = null;
-      Object ksc = nativeWebRequest.getAttribute(KeycloakSecurityContext.class.getName(), RequestAttributes.SCOPE_REQUEST);
-      if (ksc != null) {
-         log.debug("Found a KeycloakSecurityContext to map to UserInfo");
-         KeycloakSecurityContext context = KeycloakSecurityContext.class.cast(ksc);
 
-         // Create and store UserInfo in request attribute.
-         userInfo = KeycloakTokenToUserInfoMapper.map(context);
+      SecurityContext securityContext = SecurityContextHolder.getContext();
+      if (securityContext.getAuthentication() != null) {
+         log.debug("Found a Spring Security Authentication to map to UserInfo");
+         userInfo = KeycloakTokenToUserInfoMapper.map(securityContext);
          nativeWebRequest.setAttribute(UserInfo.class.getName(), userInfo, RequestAttributes.SCOPE_REQUEST);
       }
 
