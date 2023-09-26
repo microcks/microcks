@@ -78,6 +78,15 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    /** SoapUI project property that references service version property. */
    public static final String SERVICE_VERSION_PROPERTY = "version";
 
+   protected static final String NAME_ATTRIBUTE = "name";
+   protected static final String ELEMENT_ATTRIBUTE = "element";
+   protected static final String MOCK_SERVICE_TAG = "mockService";
+   protected static final String REST_MOCK_SERVICE_TAG = "restMockService";
+   protected static final String MOCK_OPERATION_TAG = "mockOperation";
+   protected static final String REST_MOCK_ACTION_TAG = "restMockAction";
+   protected static final String REQUEST_TAG = "request";
+   protected static final String RESPONSE_TAG = "response";
+
    private String projectContent;
 
    private DocumentBuilder documentBuilder;
@@ -116,20 +125,20 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       List<Element> interfaceNodes = getConfigDirectChildren(projectElement, "interface");
       for (Element interfaceNode : interfaceNodes) {
          // Filter complete interface definition with name as attribute.
-         if (interfaceNode.getAttribute("name") != null) {
-            log.info("Found a service interface named: {}", interfaceNode.getAttribute("name"));
-            interfaces.put(interfaceNode.getAttribute("name"), interfaceNode);
+         if (interfaceNode.getAttribute(NAME_ATTRIBUTE) != null) {
+            log.info("Found a service interface named: {}", interfaceNode.getAttribute(NAME_ATTRIBUTE));
+            interfaces.put(interfaceNode.getAttribute(NAME_ATTRIBUTE), interfaceNode);
             serviceInterface = interfaceNode;
          }
       }
 
       // Try loading definitions from Soap mock services.
-      List<Element> mockServices = getConfigDirectChildren(projectElement, "mockService");
+      List<Element> mockServices = getConfigDirectChildren(projectElement, MOCK_SERVICE_TAG);
       if (!mockServices.isEmpty()) {
          result.addAll(getSoapServicesDefinitions(mockServices));
       }
       // Then try loading from Rest mock services.
-      List<Element> restMockServices = getConfigDirectChildren(projectElement, "restMockService");
+      List<Element> restMockServices = getConfigDirectChildren(projectElement, REST_MOCK_SERVICE_TAG);
       if (!restMockServices.isEmpty()) {
          result.addAll(getRestServicesDefinitions(restMockServices));
       }
@@ -144,14 +153,14 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          for (Element mockService : mockServices) {
             // Build a new Service.
             Service service = new Service();
-            service.setName(mockService.getAttribute("name"));
+            service.setName(mockService.getAttribute(NAME_ATTRIBUTE));
             service.setType(ServiceType.SOAP_HTTP);
 
             // Check version property that is mandatory.
             Element properties = getConfigUniqueDirectChild(mockService, "properties");
             service.setVersion(extractVersion(properties));
 
-            List<Element> mockOperations = getConfigDirectChildren(mockService, "mockOperation");
+            List<Element> mockOperations = getConfigDirectChildren(mockService, MOCK_OPERATION_TAG);
             for (Element mockOperation : mockOperations) {
 
                Element interfaceElement = interfaces.get(mockOperation.getAttribute("interface"));
@@ -163,7 +172,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
                // Build a new operation from mockOperation.
                Operation operation = new Operation();
-               operation.setName(mockOperation.getAttribute("name"));
+               operation.setName(mockOperation.getAttribute(NAME_ATTRIBUTE));
 
                Element interfaceOperation = getInterfaceOperation(interfaceElement, operation.getName());
                operation.setAction(interfaceOperation.getAttribute("action"));
@@ -219,23 +228,23 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       List<Element> wsdlOperations = getDirectChildren(binding, WSDL_NS, "operation");
       for (Element wsdlOperation : wsdlOperations) {
 
-         if (operation.getName().equals(wsdlOperation.getAttribute("name"))) {
+         if (operation.getName().equals(wsdlOperation.getAttribute(NAME_ATTRIBUTE))) {
             Element input = getUniqueDirectChild(wsdlOperation, WSDL_NS, "input");
             Element output = getUniqueDirectChild(wsdlOperation, WSDL_NS, "output");
-            String inputName = input.getAttribute("name");
-            String outputName = output.getAttribute("name");
+            String inputName = input.getAttribute(NAME_ATTRIBUTE);
+            String outputName = output.getAttribute(NAME_ATTRIBUTE);
 
             List<Element> messages = getDirectChildren(wsdlDoc, WSDL_NS, "message");
-            Optional<Element> inputMsg = messages.stream().filter(m -> inputName.equals(m.getAttribute("name"))).findFirst();
-            Optional<Element> outputMsg = messages.stream().filter(m -> outputName.equals(m.getAttribute("name"))).findFirst();
+            Optional<Element> inputMsg = messages.stream().filter(m -> inputName.equals(m.getAttribute(NAME_ATTRIBUTE))).findFirst();
+            Optional<Element> outputMsg = messages.stream().filter(m -> outputName.equals(m.getAttribute(NAME_ATTRIBUTE))).findFirst();
             if (inputMsg.isPresent()) {
                Element firstPart = getDirectChildren(inputMsg.get(), WSDL_NS, "part").get(0);
-               String localTag = firstPart.getAttribute("element").substring(firstPart.getAttribute("element").indexOf(":") + 1);
+               String localTag = firstPart.getAttribute(ELEMENT_ATTRIBUTE).substring(firstPart.getAttribute(ELEMENT_ATTRIBUTE).indexOf(":") + 1);
                operation.setInputName(localTag);
             }
             if (outputMsg.isPresent()) {
                Element firstPart = getDirectChildren(outputMsg.get(), WSDL_NS, "part").get(0);
-               String localTag = firstPart.getAttribute("element").substring(firstPart.getAttribute("element").indexOf(":") + 1);
+               String localTag = firstPart.getAttribute(ELEMENT_ATTRIBUTE).substring(firstPart.getAttribute(ELEMENT_ATTRIBUTE).indexOf(":") + 1);
                operation.setOutputName(localTag);
             }
          }
@@ -249,7 +258,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          for (Element mockService : restMockServices) {
             // Build a new Service.
             Service service = new Service();
-            service.setName(mockService.getAttribute("name"));
+            service.setName(mockService.getAttribute(NAME_ATTRIBUTE));
             service.setType(ServiceType.REST);
 
             // Check version property that is mandatory.
@@ -260,15 +269,15 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
             // with different resourcePaths. We have to track them to complete them in second step.
             Map<String, Operation> collectedOperations = new HashMap<>();
 
-            List<Element> mockOperations = getConfigDirectChildren(mockService, "restMockAction");
+            List<Element> mockOperations = getConfigDirectChildren(mockService, REST_MOCK_ACTION_TAG);
             for (Element mockOperation : mockOperations) {
                // Check already found operation.
-               Operation operation = collectedOperations.get(mockOperation.getAttribute("name"));
+               Operation operation = collectedOperations.get(mockOperation.getAttribute(NAME_ATTRIBUTE));
 
                if (operation == null) {
                   // Build a new operation from mockRestAction.
                   operation = new Operation();
-                  operation.setName(mockOperation.getAttribute("name"));
+                  operation.setName(mockOperation.getAttribute(NAME_ATTRIBUTE));
                   operation.setMethod(mockOperation.getAttribute("method"));
 
                   Element dispatchStyle = getConfigUniqueDirectChild(mockOperation, "dispatchStyle");
@@ -368,12 +377,12 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    private List<Exchange> getSoapMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
       Map<Request, Response> result = new HashMap<>();
       try {
-         List<Element> mockServices = getConfigDirectChildren(projectElement, "mockService");
+         List<Element> mockServices = getConfigDirectChildren(projectElement, MOCK_SERVICE_TAG);
          for (Element mockService : mockServices) {
             // Find the appropriate mock service.
-            if (service.getName().equals(mockService.getAttribute("name"))) {
+            if (service.getName().equals(mockService.getAttribute(NAME_ATTRIBUTE))) {
 
-               List<Element> mockOperations = getConfigDirectChildren(mockService, "mockOperation");
+               List<Element> mockOperations = getConfigDirectChildren(mockService, MOCK_OPERATION_TAG);
                for (Element mockOperation : mockOperations) {
                   // Find the appropriate mock service operation.
                   if (operation.getName().equals(mockOperation.getAttribute("operation"))) {
@@ -382,9 +391,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                      // Then filter only those that are candidates to mock response matching.
                      List<Element> candidateRequests = new ArrayList<>();
 
-                     List<Element> mockResponses = getConfigDirectChildren(mockOperation, "response");
+                     List<Element> mockResponses = getConfigDirectChildren(mockOperation, RESPONSE_TAG);
                      for (Element mockResponse : mockResponses) {
-                        String responseName = mockResponse.getAttribute("name");
+                        String responseName = mockResponse.getAttribute(NAME_ATTRIBUTE);
                         Element matchingRequest = availableRequests.get(responseName);
                         if (matchingRequest == null) {
                            matchingRequest = availableRequests.get(responseName + " Request");
@@ -394,7 +403,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                         }
 
                         if (matchingRequest == null) {
-                           log.warn("No request found for response " + responseName + " into SoapUI project " + projectElement.getAttribute("name"));
+                           log.warn("No request found for response '{}' into SoapUI project '{}'", responseName,  projectElement.getAttribute("name"));
                            continue;
                         }
                         candidateRequests.add(matchingRequest);
@@ -408,7 +417,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                            Map<String, String> matchToResponseMap = buildQueryMatchDispatchCriteriaToResponseMap(mockOperation);
                            for (Element candidateRequest : candidateRequests) {
                               // Evaluate matcher against request and get name of corresponding response.
-                              String requestContent = getConfigUniqueDirectChild(candidateRequest, "request").getTextContent();
+                              String requestContent = getConfigUniqueDirectChild(candidateRequest, REQUEST_TAG).getTextContent();
                               String dispatchCriteria = xpath.evaluate(new InputSource(new StringReader(requestContent)));
                               String correspondingResponse = matchToResponseMap.get(dispatchCriteria);
 
@@ -425,26 +434,26 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                         }
                      } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
                         for (Element candidateRequest : candidateRequests) {
-                           Element mockResponse = getMockResponseByName(mockOperation, candidateRequest.getAttribute("name"));
-                           if (mockResponse == null && candidateRequest.getAttribute("name").contains("Request")){
-                              mockResponse = getMockResponseByName(mockOperation, candidateRequest.getAttribute("name").replace(" Request", " Response"));
+                           Element mockResponse = getMockResponseByName(mockOperation, candidateRequest.getAttribute(NAME_ATTRIBUTE));
+                           if (mockResponse == null && candidateRequest.getAttribute(NAME_ATTRIBUTE).contains("Request")){
+                              mockResponse = getMockResponseByName(mockOperation, candidateRequest.getAttribute(NAME_ATTRIBUTE).replace(" Request", " Response"));
                            }
 
                            if (mockResponse == null){
                               log.warn("No response found for request {} into SoapUI project {}",
-                                    candidateRequest.getAttribute("name"), projectElement.getAttribute("name"));
+                                    candidateRequest.getAttribute(NAME_ATTRIBUTE), projectElement.getAttribute(NAME_ATTRIBUTE));
                               continue;
                            }
 
                            // Build response from MockResponse and response from matching one.
-                           Response response = buildResponse(mockResponse, mockResponse.getAttribute("name"));
+                           Response response = buildResponse(mockResponse, mockResponse.getAttribute(NAME_ATTRIBUTE));
                            Request request = buildRequest(candidateRequest);
                            result.put(request, response);
                         }
                      } else if (DispatchStyles.RANDOM.equals(operation.getDispatcher())){ {
                         if (availableRequests.isEmpty()) {
                            log.warn("A request is mandatory even for a RANDOM dispatch. Operation {} into SoapUI project  {}",
-                                 operation.getName(), projectElement.getAttribute("name"));
+                                 operation.getName(), projectElement.getAttribute(NAME_ATTRIBUTE));
                         } else {
                            // Use the first one for all the responses
                            Element mockRequest = availableRequests.values().iterator().next();
@@ -477,15 +486,15 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    private List<Exchange> getRestMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
       Map<Request, Response> result = new HashMap<>();
       try {
-         List<Element> mockServices = getConfigDirectChildren(projectElement, "restMockService");
+         List<Element> mockServices = getConfigDirectChildren(projectElement, REST_MOCK_SERVICE_TAG);
          for (Element mockService : mockServices) {
             // Find the appropriate mock service.
-            if (service.getName().equals(mockService.getAttribute("name"))) {
+            if (service.getName().equals(mockService.getAttribute(NAME_ATTRIBUTE))) {
 
-               List<Element> mockOperations = getConfigDirectChildren(mockService, "restMockAction");
+               List<Element> mockOperations = getConfigDirectChildren(mockService, REST_MOCK_ACTION_TAG);
                for (Element mockOperation : mockOperations) {
                   // Find the appropriate mock service operation.
-                  if (operation.getName().equals(mockOperation.getAttribute("name"))) {
+                  if (operation.getName().equals(mockOperation.getAttribute(NAME_ATTRIBUTE))) {
 
                      // Collect available test requests for this operation.
                      Map<String, Element> availableRequests = collectTestStepsRestRequests(operation);
@@ -496,7 +505,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                      Map<Element, Element> requestToResponses = new HashMap<>();
 
                      for (Element mockResponse : mockResponses) {
-                        String responseName = mockResponse.getAttribute("name");
+                        String responseName = mockResponse.getAttribute(NAME_ATTRIBUTE);
                         Element matchingRequest = availableRequests.get(responseName);
                         if (matchingRequest == null) {
                            matchingRequest = availableRequests.get(responseName + " Request");
@@ -506,7 +515,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                         }
 
                         if (matchingRequest == null) {
-                           log.warn("No request found for response " + responseName + " into SoapUI project " + projectElement.getAttribute("name"));
+                           log.warn("No request found for response '{}' into SoapUI project '{}'", responseName, projectElement.getAttribute("name"));
                            continue;
                         }
                         requestToResponses.put(matchingRequest, mockResponse);
@@ -525,7 +534,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                         }
                         else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())){
                            // Build a dispatch criteria that is equal to response name (that script evaluation should return...)
-                           dispatchCriteria = entry.getValue().getAttribute("name");
+                           dispatchCriteria = entry.getValue().getAttribute(NAME_ATTRIBUTE);
                         }
 
                         Response response = buildResponse(entry.getValue(), dispatchCriteria);
@@ -558,7 +567,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    private String extractVersion(Element properties) throws MockRepositoryImportException, MalformedXmlException {
       List<Element> propertyList = getConfigDirectChildren(properties, "property");
       for (Element property : propertyList) {
-         Element propertyName = getConfigUniqueDirectChild(property, "name");
+         Element propertyName = getConfigUniqueDirectChild(property, NAME_ATTRIBUTE);
          Element propertyValue = getConfigUniqueDirectChild(property, "value");
          if (SERVICE_VERSION_PROPERTY.equals(propertyName.getTextContent())) {
             return propertyValue.getTextContent();
@@ -571,7 +580,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    private Element getInterfaceOperation(Element serviceInterface, String operationName) throws MockRepositoryImportException {
       List<Element> operations = getConfigDirectChildren(serviceInterface, "operation");
       for (Element operation : operations) {
-         if (operationName.equals(operation.getAttribute("name"))) {
+         if (operationName.equals(operation.getAttribute(NAME_ATTRIBUTE))) {
             return operation;
          }
       }
@@ -594,8 +603,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                String operationName = getConfigUniqueDirectChild(config, "operation").getTextContent();
 
                if (operation.getName().equals(operationName)) {
-                  results.put(testStep.getAttribute("name"),
-                        getConfigUniqueDirectChild(config, "request"));
+                  results.put(testStep.getAttribute(NAME_ATTRIBUTE),
+                        getConfigUniqueDirectChild(config, REQUEST_TAG));
                }
             }
          }
@@ -612,12 +621,10 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          for (Element testCase : testCases) {
             List<Element> testSteps = getConfigDirectChildren(testCase, "testStep");
             for (Element testStep : testSteps) {
-
                Element config = getConfigUniqueDirectChild(testStep, "config");
                String operationName = config.getAttribute("resourcePath");
-
                if (operation.getName().equals(operationName)) {
-                  results.put(testStep.getAttribute("name"),
+                  results.put(testStep.getAttribute(NAME_ATTRIBUTE),
                         getConfigUniqueDirectChild(config, "restRequest"));
                }
             }
@@ -628,10 +635,10 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
    private List<Element> getMockRestResponses(Element restMockService, Operation operation) {
       List<Element> responses = new ArrayList<>();
-      List<Element> mockActions = getConfigDirectChildren(restMockService, "restMockAction");
+      List<Element> mockActions = getConfigDirectChildren(restMockService, REST_MOCK_ACTION_TAG);
       for (Element mockAction : mockActions) {
-         if (operation.getName().equals(mockAction.getAttribute("name"))) {
-            responses.addAll(getConfigDirectChildren(mockAction, "response"));
+         if (operation.getName().equals(mockAction.getAttribute(NAME_ATTRIBUTE))) {
+            responses.addAll(getConfigDirectChildren(mockAction, RESPONSE_TAG));
          }
       }
       return responses;
@@ -652,7 +659,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          List<Element> queries = SoapUIProjectParserUtils.getConfigDirectChildren(dispatchConfig, "query");
          for (Element query : queries) {
             String match = getConfigUniqueDirectChild(query, "match").getTextContent();
-            String response = getConfigUniqueDirectChild(query, "response").getTextContent();
+            String response = getConfigUniqueDirectChild(query, RESPONSE_TAG).getTextContent();
             matchResponseMap.put(match, response);
          }
       }
@@ -660,9 +667,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    }
 
    private Element getMockResponseByName(Element mockOperation, String responseName) {
-      List<Element> responses = getConfigDirectChildren(mockOperation, "response");
+      List<Element> responses = getConfigDirectChildren(mockOperation, RESPONSE_TAG);
       for (Element response : responses) {
-         if (responseName.equals(response.getAttribute("name"))) {
+         if (responseName.equals(response.getAttribute(NAME_ATTRIBUTE))) {
             return response;
          }
       }
@@ -671,7 +678,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
    private Response buildResponse(Element mockResponse, String dispatchCriteria) throws MockRepositoryImportException, Exception {
       Response response = new Response();
-      response.setName(mockResponse.getAttribute("name"));
+      response.setName(mockResponse.getAttribute(NAME_ATTRIBUTE));
       response.setContent(getConfigUniqueDirectChild(mockResponse, "responseContent").getTextContent());
       response.setHeaders(buildHeaders(mockResponse));
       response.setDispatchCriteria(dispatchCriteria);
@@ -685,8 +692,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
    private Request buildRequest(Element testRequest) throws MockRepositoryImportException, Exception {
       Request request = new Request();
-      request.setName(testRequest.getAttribute("name"));
-      request.setContent(getConfigUniqueDirectChild(testRequest, "request").getTextContent());
+      request.setName(testRequest.getAttribute(NAME_ATTRIBUTE));
+      request.setContent(getConfigUniqueDirectChild(testRequest, REQUEST_TAG).getTextContent());
       request.setHeaders(buildHeaders(testRequest));
 
       // Add query parameters only if presents.
