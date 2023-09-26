@@ -230,7 +230,8 @@ public class ServiceService {
             }
             for (Operation operation : service.getOperations()) {
                Operation existingOp = existingService.getOperations().stream()
-                     .filter(op -> op.getName().equals(operation.getName())).findFirst().orElse(null);
+                     .filter(op -> op.getName().equals(operation.getName()))
+                     .findFirst().orElse(null);
                if (existingOp != null) {
                   if (operation.getDefaultDelay() != null) {
                      existingOp.setDefaultDelay(operation.getDefaultDelay());

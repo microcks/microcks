@@ -39,6 +39,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 
@@ -333,6 +334,75 @@ public class ServiceServiceTest {
       assertEquals(5, importedSvc.getOperations().get(0).getResourcePaths().size());
    }
 
+   @Test
+   public void testImportServiceDefinitionMainGraphQLAndSecondaryHAR() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("films.graphql", true));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("Movie Graph API", importedSvc.getName());
+      assertEquals("1.0", importedSvc.getVersion());
+      assertEquals("films.graphql", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(4, importedSvc.getOperations().size());
+
+      Optional<Operation> opFilmOperation = importedSvc.getOperations().stream()
+            .filter(op -> op.getName().equals("film"))
+            .findFirst();
+      if (opFilmOperation.isEmpty()) {
+         fail("film operation should have been discovered");
+      }
+      Operation filmOperation = opFilmOperation.get();
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      assertEquals(0, requests.size());
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      assertEquals(0, responses.size());
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/har/movie-graph-api-1.0.har");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("movie-graph-api-1.0.har", false));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      importedSvc = services.get(0);
+      assertEquals("Movie Graph API", importedSvc.getName());
+      assertEquals("1.0", importedSvc.getVersion());
+      assertEquals("films.graphql", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(4, importedSvc.getOperations().size());
+
+      // Inspect and check requests.
+      requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      assertEquals(1, requests.size());
+      for (Request request : requests) {
+         assertEquals("movie-graph-api-1.0.har", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      assertEquals(1, requests.size());
+      for (Response response : responses) {
+         assertEquals("movie-graph-api-1.0.har", response.getSourceArtifact());
+      }
+   }
 
    @Test
    public void testCreateGenericResourceService() {

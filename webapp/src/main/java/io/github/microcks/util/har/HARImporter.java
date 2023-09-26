@@ -37,6 +37,11 @@ import io.github.microcks.util.dispatcher.JsonMappingException;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import graphql.language.Document;
+import graphql.language.Field;
+import graphql.language.OperationDefinition;
+import graphql.parser.Parser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -74,6 +80,11 @@ public class HARImporter implements MockRepositoryImporter {
 
    protected static final String REQUEST_NODE = "request";
    protected static final String RESPONSE_NODE = "response";
+
+   protected static final String GRAPHQL_VARIABLES_NODE = "variables";
+   protected static final String GRAPHQL_QUERY_NODE = "query";
+
+   private ObjectMapper jsonMapper;
 
    private JsonNode spec;
 
@@ -98,8 +109,8 @@ public class HARImporter implements MockRepositoryImporter {
     */
    public HARImporter(String specificationFilePath) throws IOException {
       File specificationFile = new File(specificationFilePath);
-      ObjectMapper mapper = new ObjectMapper();
-      spec = mapper.readTree(specificationFile);
+      jsonMapper = new ObjectMapper();
+      spec = jsonMapper.readTree(specificationFile);
    }
 
    @Override
@@ -155,7 +166,7 @@ public class HARImporter implements MockRepositoryImporter {
       }
 
       // Extract service operations.
-      service.setOperations(extractOperations(spec.path("log").path("entries").elements()));
+      service.setOperations(extractOperations(service.getType(), spec.path("log").path("entries").elements()));
 
       results.add(service);
       return results;
@@ -172,6 +183,7 @@ public class HARImporter implements MockRepositoryImporter {
 
       Optional<Operation> opOperation = operationToEntriesMap.keySet().stream()
             .filter(op -> op.getName().equals(operation.getName()))
+            .filter(op -> op.getMethod().equals(operation.getMethod()))
             .findFirst();
 
       if (opOperation.isPresent()) {
@@ -197,7 +209,11 @@ public class HARImporter implements MockRepositoryImporter {
             String requestUrl = shortenURL(requestNode.path("url").asText());
             log.debug("Extracting message definitions for entry url {}", requestUrl);
 
-            // Build dispatchCriteria.
+            // startedDateTIme is the only "unique" identifier for an entry...
+            String name = entry.path("startedDateTime").asText();
+            Request request = buildRequest(requestNode, name);
+
+            // Build dispatchCriteria before building response.
             String dispatchCriteria = null;
 
             if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
@@ -205,19 +221,37 @@ public class HARImporter implements MockRepositoryImporter {
             } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
                // We may have null dispatcher rules here if just one request
                // (as it prevents detecting patterns in URL and deducing parts)
-               if (operation.getDispatcherRules() != null) {
+               if (rootDispatcherRules != null) {
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rootDispatcherRules,
                         removeVerbFromURL(operation.getName()), requestUrl);
                }
             } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
-               // TODO
+               // We may have null dispatcher rules here if just one request
+               // (as it prevents detecting patterns in URL and deducing parts)
+               if (rootDispatcherRules != null) {
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(rootDispatcherRules,
+                        removeVerbFromURL(operation.getName()), requestUrl);
+               }
+               dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(rootDispatcherRules, requestUrl);
+            } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
+               // This dispatcher is used for GraphQL, we have to extract variables from request body.
+               dispatchCriteria = extractGraphQLCriteria(rootDispatcherRules, request.getContent());
             } else {
-               // TODO
+               // If dispatcher has been overriden (to SCRIPT for example), we should still put a generic resourcePath
+               // (maybe containing : parts) to later force operation matching at the mock controller level. Only do that
+               // when request url is not empty (means not the root url like POST /order).
+               if (requestUrl != null && requestUrl.length() > 0) {
+                  operation.addResourcePath(requestUrl);
+                  log.debug("Added operation generic resource path: {}", operation.getResourcePaths());
+               }
             }
 
-            // startedDateTIme is the only "unique" identifier for an entry...
-            String name = entry.path("startedDateTime").asText();
-            Request request = buildRequest(requestNode, name);
+            if (service.getType() == ServiceType.GRAPHQL) {
+               // We also have to shorten GraphQL body as we typically just display the query in Microcks.
+               //adaptGraphQLRequestContent(request);
+            }
+
+            // Finalize with response and store.
             Response response = buildResponse(responseNode, name, dispatchCriteria);
             result.put(request, response);
          }
@@ -251,7 +285,7 @@ public class HARImporter implements MockRepositoryImporter {
                String requestText = entry.path(REQUEST_NODE).path("postData").path("text").asText();
 
                if (responseText.contains("\"data\":") &&
-                     (requestText.contains("query") || requestText.contains("mutation") || requestText.contains("fragment"))) {
+                     (requestText.contains(GRAPHQL_QUERY_NODE) || requestText.contains("mutation") || requestText.contains("fragment"))) {
                   responseType = ServiceType.GRAPHQL;
                }
             } else if ("text/xml".equals(mimeType)) {
@@ -267,7 +301,7 @@ public class HARImporter implements MockRepositoryImporter {
    }
 
    /** Extract Service Operations from entries. */
-   private List<Operation> extractOperations(Iterator<JsonNode> entries) {
+   private List<Operation> extractOperations(ServiceType serviceType, Iterator<JsonNode> entries) {
       Map<String, Operation> discoveredOperations = new HashMap<>();
 
       List<JsonNode> candidateEntries = filterValidEntries(entries);
@@ -275,35 +309,43 @@ public class HARImporter implements MockRepositoryImporter {
       for (JsonNode entry : candidateEntries) {
          String requestMethod = entry.path(REQUEST_NODE).path("method").asText();
          String requestUrl = entry.path(REQUEST_NODE).path("url").asText();
+         String requestText = entry.path(REQUEST_NODE).path("postData").path("text").asText();
+
          String baseRequestUrl = shortenURL(requestUrl);
          String dispatcher = DispatchStyles.URI_PARTS;
          if (baseRequestUrl.contains("?")) {
             baseRequestUrl = baseRequestUrl.substring(0, baseRequestUrl.indexOf("?"));
             dispatcher = DispatchStyles.URI_PARAMS;
          }
+
+         // This is OK for REST only. Has to be changed for SOAP and GRAPHQL.
          String operationName = requestMethod + " " + baseRequestUrl;
+         if (serviceType == ServiceType.GRAPHQL) {
+            Parser requestParser = new Parser();
+            try {
+               Document graphqlRequest = requestParser.parseDocument(extractGraphQLQuery(requestText));
+               OperationDefinition graphqlOperation = (OperationDefinition) graphqlRequest.getDefinitions().get(0);
+               requestMethod = graphqlOperation.getOperation().toString();
+               operationName = ((Field) graphqlOperation.getSelectionSet().getSelections().get(0)).getName();
+               if ("QUERY".equals(requestMethod)) {
+                  dispatcher = DispatchStyles.QUERY_ARGS;
+               }
+            } catch (Exception e) {
+               log.warn("Error parsing GraphQL request: {}", e.getMessage());
+            }
+         }
 
          Operation existingOperation = discoveredOperations.get(operationName);
          if (existingOperation == null) {
             // Do we have other operation on different paths?
             String[] newCandidatePaths = operationName.split("/");
+            final String searchedMethod = requestMethod;
             List<Operation> similarOperations = discoveredOperations.values().stream()
-                  .filter(op -> requestMethod.equals(op.getMethod()))
+                  .filter(op -> searchedMethod.equals(op.getMethod()))
                   .filter(op -> newCandidatePaths.length == op.getName().split("/").length)
                   .toList();
 
-            Operation mostSimilarOperation = null;
-            if (!similarOperations.isEmpty()) {
-               int maxScore = 0;
-               for (Operation similarOperation : similarOperations) {
-                  int score = getSimilarityScore(similarOperation.getName(), operationName);
-                  if (score > 70 && score > maxScore) {
-                     maxScore = score;
-                     mostSimilarOperation = similarOperation;
-                  }
-               }
-            }
-
+            Operation mostSimilarOperation = findMostSimilarOperation(operationName, similarOperations);
             if (mostSimilarOperation != null) {
                List<String> uris = List.of(
                      removeVerbFromURL(mostSimilarOperation.getName()),
@@ -371,7 +413,23 @@ public class HARImporter implements MockRepositoryImporter {
             .toList();
    }
 
-   /** Compute a similarity score between a base URL and a candidate one. The greater the better. */
+   /** Find the most similar operation among candidates. */
+   private Operation findMostSimilarOperation(String operationName, List<Operation> similarOperations) {
+      Operation mostSimilarOperation = null;
+      if (!similarOperations.isEmpty()) {
+         int maxScore = 0;
+         for (Operation similarOperation : similarOperations) {
+            int score = getSimilarityScore(similarOperation.getName(), operationName);
+            if (score > 70 && score > maxScore) {
+               maxScore = score;
+               mostSimilarOperation = similarOperation;
+            }
+         }
+      }
+      return mostSimilarOperation;
+   }
+
+   /** Compute a similarity score between a base URL and a candidate one. The greater, the better. */
    private int getSimilarityScore(String base, String candidate) {
       int similarityScore = 0;
       int commonPrefixSize = 0;
@@ -480,6 +538,31 @@ public class HARImporter implements MockRepositoryImporter {
          }
       }
       return removeProtocolAndHostPort(url);
+   }
+
+   private String extractGraphQLQuery(String requestContent) {
+      try {
+         JsonNode requestNode = jsonMapper.readTree(requestContent);
+         return requestNode.path(GRAPHQL_QUERY_NODE).asText();
+      } catch (Exception e) {
+         log.error("Exception while extracting dispatch criteria from GraphQL variables: {}", e.getMessage(), e);
+      }
+      return "";
+   }
+
+   private String extractGraphQLCriteria(String dispatcherRules, String requestContent) {
+      String dispatchCriteria = "";
+      try {
+         JsonNode requestNode = jsonMapper.readTree(requestContent);
+         if (requestNode.has(GRAPHQL_VARIABLES_NODE)) {
+            JsonNode variablesNode = requestNode.path(GRAPHQL_VARIABLES_NODE);
+            Map<String, String> paramsMap = jsonMapper.convertValue(variablesNode, TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
+            dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
+         }
+      } catch (Exception e) {
+         log.error("Exception while extracting dispatch criteria from GraphQL variables: {}", e.getMessage(), e);
+      }
+      return dispatchCriteria;
    }
 
    private static String removeApiPrefix(String url, String apiPrefix) {

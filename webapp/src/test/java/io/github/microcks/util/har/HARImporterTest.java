@@ -24,6 +24,7 @@ import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 
@@ -346,6 +347,64 @@ public class HARImporterTest {
          } else {
             fail("Found an unknown operation! " + operation.getName());
          }
+      }
+   }
+
+   @Test
+   public void testGraphQLMessageImportWithExistingOperation() {
+      HARImporter importer = null;
+      try {
+         importer = new HARImporter("target/test-classes/io/github/microcks/util/har/movie-graph-api-1.0.har");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+
+      Service service = services.get(0);
+      assertEquals("Movie Graph API", service.getName());
+      assertEquals("1.0", service.getVersion());
+      assertEquals(ServiceType.GRAPHQL, service.getType());
+
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().get(0);
+      assertEquals("film", operation.getName());
+      assertEquals("QUERY", operation.getMethod());
+
+      // Now simulate a secondary artifact import.
+      operation.setDispatcher(DispatchStyles.QUERY_ARGS);
+      operation.setDispatcherRules("id");
+
+      List<Exchange> messages = null;
+      try {
+         messages = importer.getMessageDefinitions(service, operation);
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, messages.size());
+
+      Exchange exchange = messages.get(0);
+      if (exchange instanceof RequestResponsePair pair) {
+         Request request = pair.getRequest();
+         assertEquals("2023-08-23T11:15:01.184+02:00", request.getName());
+         assertTrue(request.getContent().contains("query film ($id: String)"));
+         assertTrue(request.getContent().contains("\"variables\":{"));
+         assertTrue(request.getContent().contains("\"id\": \"3\""));
+
+         Response response = pair.getResponse();
+         assertEquals("2023-08-23T11:15:01.184+02:00", response.getName());
+         assertEquals("200", response.getStatus());
+         assertEquals("application/json", response.getMediaType());
+         assertEquals("?id=3", response.getDispatchCriteria());
+         assertNotNull(response.getContent());
+      } else {
+         fail("Exchange is of unexpected type");
       }
    }
 }

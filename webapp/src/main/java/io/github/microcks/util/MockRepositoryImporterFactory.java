@@ -125,6 +125,9 @@ public class MockRepositoryImporterFactory {
       if (line.startsWith("<?xml")) {
          log.info("Found a XML pragma in file so assuming it's a SoapUI Project to import");
          return new SoapUIProjectImporter(mockRepository.getPath());
+      } else if (line.startsWith("\"log\":") || line.startsWith("{\"log\":")) {
+         log.info("Found a log JSON element in file so asssuming it's a HTTP Archive (HAR) to import");
+         return new HARImporter(mockRepository.getPath());
       } else if (line.matches(ASYNCAPI_2_REGEXP)) {
          log.info("Found an asyncapi: 2 pragma in file so assuming it's an AsyncAPI spec to import");
          return new AsyncAPIImporter(mockRepository.getPath(), referenceResolver);
@@ -137,9 +140,6 @@ public class MockRepositoryImporterFactory {
       } else if (line.contains("type Query {") || line.contains("type Mutation {") || line.contains("microcksId:")) {
          log.info("Found query, mutation or microcksId: pragmas in file so assuming it's a GraphQL schema to import");
          return new GraphQLImporter(mockRepository.getPath());
-      } else if (line.startsWith("\"log\":") || line.startsWith("{\"log\":")) {
-         log.info("Found a log JSON element in file so asssuming it's a HTTP Archive (HAR) to import");
-         return new HARImporter(mockRepository.getPath());
       }
       return null;
    }
