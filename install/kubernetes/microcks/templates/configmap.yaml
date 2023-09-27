@@ -71,12 +71,15 @@ data:
     spring.security.oauth2.client.registration.keycloak.client-id=microcks-app
     spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
     spring.security.oauth2.client.registration.keycloak.scope=openid,profile
-    spring.security.oauth2.client.provider.keycloak.issuer-uri=${KEYCLOAK_URL:http://localhost:8180}/realms/${keycloak.realm}
+    spring.security.oauth2.client.provider.keycloak.issuer-uri=${KEYCLOAK_URL}/realms/${keycloak.realm}
     spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
-    spring.security.oauth2.resourceserver.jwt.issuer-uri=${KEYCLOAK_URL:http://localhost:8180}/realms/${keycloak.realm}
+    spring.security.oauth2.resourceserver.jwt.issuer-uri=${sso.public-url}/realms/${keycloak.realm}
+    {{- if hasKey .Values.keycloak "privateUrl" }}
+    spring.security.oauth2.resourceserver.jwt.jwk-set-uri=${KEYCLOAK_URL}/realms/${keycloak.realm}/protocol/openid-connect/certs
+    {{- end }}
   
     # Keycloak configuration properties
-    keycloak.auth-server-url=${KEYCLOAK_URL:http://localhost:8180}
+    keycloak.auth-server-url=${KEYCLOAK_URL}
     keycloak.realm={{ .Values.keycloak.realm }}
     keycloak.resource=microcks-app
     keycloak.use-resource-role-mappings=true
