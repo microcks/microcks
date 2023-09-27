@@ -15,7 +15,7 @@ services:
     container_name: microcks-postman-runtime
 
   keycloak:
-    image: quay.io/keycloak/keycloak:20.0.2
+    image: quay.io/keycloak/keycloak:22.0.2
     container_name: microcks-keycloak
     ports:
       - "18080:8080"

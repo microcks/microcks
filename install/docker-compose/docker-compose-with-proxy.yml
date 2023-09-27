@@ -8,7 +8,7 @@ services:
       - "~/tmp/microcks-data:/data/db"
 
   keycloak:
-    image: quay.io/keycloak/keycloak:20.0.2
+    image: quay.io/keycloak/keycloak:22.0.2
     container_name: microcks-sso
     ports:
       - "18080:8080"
