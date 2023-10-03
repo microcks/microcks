@@ -30,7 +30,7 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
 
-import org.apache.commons.lang3.RandomUtils;
+import net.datafaker.Faker;
 import org.apache.xmlbeans.XmlError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +119,7 @@ public class SoapController {
       String action = extractSoapAction(request);
       log.debug("Extracted SOAP action from headers: {}", action);
 
-      if (action != null && action.length() > 0) {
+      if (action != null && !action.isEmpty()) {
          for (Operation operation : service.getOperations()) {
             if (action.equals(operation.getAction())) {
                rOperation = operation;
@@ -158,7 +158,7 @@ public class SoapController {
                log.debug("SoapBody validation errors: " + errors.size());
 
                // Return a 400 http code with errors.
-               if (errors != null && errors.size() > 0) {
+               if (!errors.isEmpty()) {
                   return new ResponseEntity<Object>(errors, HttpStatus.BAD_REQUEST);
                }
             } catch (Exception e) {
@@ -199,7 +199,7 @@ public class SoapController {
          }
 
          if (!responses.isEmpty()) {
-            int idx = DispatchStyles.RANDOM.equals(dispatcher) ? RandomUtils.nextInt(0, responses.size()) : 0;
+            int idx = DispatchStyles.RANDOM.equals(dispatcher) ? new Faker().random().nextInt(0, responses.size()) : 0;
             response = responses.get(idx);
          }
 
@@ -239,7 +239,7 @@ public class SoapController {
       }
 
       log.debug("No valid operation found by Microcks...");
-      return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
    }
 
    /**
@@ -278,7 +278,7 @@ public class SoapController {
     * @return The found Soap action if any. Can be null.
     */
    protected String extractSoapAction(HttpServletRequest request) {
-      String action = null;
+      String action;
       // If Soap 1.2, SOAPAction is in Content-Type header.
       String contentType = request.getContentType();
       if (contentType != null && contentType.startsWith("application/soap+xml") && contentType.contains("action=")) {

@@ -18,12 +18,12 @@
  */
 package io.github.microcks.util.el.function;
 
-import com.github.javafaker.Faker;
+import net.datafaker.Faker;
 import io.github.microcks.util.el.EvaluationContext;
 
 /**
- * This is a base class for function that are using Java Faker library
- * (see https://github.com/DiUS/java-faker). This base class provides a convenient method
+ * This is a base class for functions that are using Datafaker
+ * (see https://www.datafaker.net). This base class provides a convenient method
  * for retrieving or lazy loading a Faker that will be put into {@code EvaluationContext}.
  * @author laurent
  */

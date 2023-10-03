@@ -28,10 +28,7 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.ParameterConstraintUtil;
+import io.github.microcks.util.*;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
@@ -62,7 +59,6 @@ import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.parser.Parser;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -147,7 +143,7 @@ public class GraphQLController {
          graphqlHttpReq = GraphQLHttpRequest.from(body, request);
          graphqlRequest = requestParser.parseDocument(graphqlHttpReq.getQuery());
       } catch (Exception e) {
-         log.error("Error parsing GraphQL request: {}", e);
+         log.error("Error parsing GraphQL request", e);
          return new ResponseEntity<Object>("Error parsing GraphQL request: " + e.getMessage(), HttpStatus.BAD_REQUEST);
       }
 
@@ -171,7 +167,7 @@ public class GraphQLController {
          GraphQL graphQL = GraphQL.newGraphQL(graphQLSchema).build();
          ExecutionResult executionResult = graphQL.execute(graphqlHttpReq.getQuery());
 
-         String responseContent = null;
+         String responseContent;
          try {
             responseContent = mapper.writeValueAsString(executionResult);
          } catch (JsonProcessingException jpe) {
@@ -186,7 +182,7 @@ public class GraphQLController {
       final Long[] maxDelay = {(delay == null ? 0L : delay)};
 
       for (Selection selection : graphqlOperation.getSelectionSet().getSelections()) {
-         GraphQLQueryResponse graphqlResponse = null;
+         GraphQLQueryResponse graphqlResponse;
          try {
             graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
                   graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request);
@@ -240,7 +236,7 @@ public class GraphQLController {
                graphqlResponses.get(0).getResponse(), startTime);
       }
 
-      String responseContent = null;
+      String responseContent;
       JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
 
       // If multi-queries and aliases were used, recompose an aggregated result.
@@ -502,7 +498,7 @@ public class GraphQLController {
    }
 
    /** Simple wrapper around a GraphQL query response. */
-   protected class GraphQLQueryResponse {
+   protected static class GraphQLQueryResponse {
       String operationName;
       String alias;
       Long operationDelay;
@@ -551,7 +547,7 @@ public class GraphQLController {
    }
 
    /** Simple exception wrapping a processing error. */
-   protected class GraphQLQueryProcessingException extends Exception {
+   protected static class GraphQLQueryProcessingException extends Exception {
 
       HttpStatus status;
 
