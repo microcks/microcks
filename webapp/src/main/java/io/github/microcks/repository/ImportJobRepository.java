@@ -16,8 +16,9 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.ImportJob;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ import java.util.List;
  * Repository interface for ImportJob domain objects.
  * @author laurent
  */
-public interface ImportJobRepository extends MongoRepository<ImportJob, String>, CustomImportJobRepository {
+public interface ImportJobRepository extends PagingAndSortingRepository<ImportJob, String>, CustomImportJobRepository {
 
    @Query("{ 'name' : {'$regex':?0, '$options':'i'}}")
    List<ImportJob> findByNameLike(String name);

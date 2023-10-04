@@ -16,8 +16,8 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Response;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ import java.util.List;
  * Repository interface for Response domain objects.
  * @author laurent
  */
-public interface ResponseRepository extends MongoRepository<Response, String> {
+public interface ResponseRepository extends PagingAndSortingRepository<Response, String> {
 
    List<Response> findByOperationId(String operationId);
 

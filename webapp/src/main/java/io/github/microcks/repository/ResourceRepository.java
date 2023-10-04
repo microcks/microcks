@@ -17,8 +17,8 @@ package io.github.microcks.repository;
 
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 
@@ -26,7 +26,7 @@ import java.util.List;
  * Repository interface for Resource domain objects.
  * @author laurent
  */
-public interface ResourceRepository extends MongoRepository<Resource, String> {
+public interface ResourceRepository extends PagingAndSortingRepository<Resource, String> {
 
    Resource findByName(String name);
 

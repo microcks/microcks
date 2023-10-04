@@ -16,14 +16,14 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.TestConformanceMetric;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
-import org.springframework.data.mongodb.repository.MongoRepository;
 
 /**
  * Repository interface for TestConformanceMetric domain objects.
  * @author laurent
  */
-public interface TestConformanceMetricRepository extends MongoRepository<TestConformanceMetric, String>,
+public interface TestConformanceMetricRepository extends PagingAndSortingRepository<TestConformanceMetric, String>,
       CustomTestConformanceMetricRepository {
 
    TestConformanceMetric findByServiceId(String serviceId);

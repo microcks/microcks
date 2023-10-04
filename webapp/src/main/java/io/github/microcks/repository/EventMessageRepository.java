@@ -16,16 +16,16 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.EventMessage;
-import org.springframework.data.mongodb.repository.MongoRepository;
 
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.List;
 /**
  * Repository interface for EventMessage domain objects.
  * @author laurent
  */
-public interface EventMessageRepository extends MongoRepository<EventMessage, String> {
+public interface EventMessageRepository extends PagingAndSortingRepository<EventMessage, String> {
 
    List<EventMessage> findByOperationId(String operationId);
 
