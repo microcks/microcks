@@ -66,7 +66,7 @@ public class AuthorizationChecker {
     * @return True if authorized, false otherwise.
     */
    public boolean hasRole(UserInfo userInfo, String role) {
-      if (authenticationEnabled) {
+      if (authenticationEnabled && userInfo.getRoles() != null) {
          return Arrays.stream(userInfo.getRoles()).anyMatch(role::equals);
       }
       return true;
@@ -80,7 +80,7 @@ public class AuthorizationChecker {
     * @return True if authorized, false otherwise.
     */
    public boolean hasRoleForService(UserInfo userInfo, String role, Service service) {
-      if (authorizationEnabled && service.getMetadata().getLabels() != null) {
+      if (authorizationEnabled && userInfo.getRoles() != null && service.getMetadata().getLabels() != null) {
          // Build the full rolePath that is checked for group membership.
          String rolePath = MICROCKS_GROUPS_PREFIX + role + "/" + service.getMetadata().getLabels().get(filterLabelKey);
          boolean serviceRole = Arrays.stream(userInfo.getGroups()).anyMatch(rolePath::equals);
