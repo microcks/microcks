@@ -213,8 +213,8 @@ export class TestCreatePageComponent implements OnInit {
       }
     }
     // Reset OAuth2 parameters if not set.
-    if (this.oAuth2ClientContext.grantType === undefined || this.oAuth2ClientContext.grantType === 'none') {
-      this.oAuth2ClientContext = null;
+    if (this.oAuth2ClientContext.grantType === undefined) {
+      this.oAuth2ClientContext = undefined;
     }
     // Then, create thee test invoking the API.
     var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, 
