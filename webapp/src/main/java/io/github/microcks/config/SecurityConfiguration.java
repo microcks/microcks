@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.oauth2.client.servlet.OAuth2ClientAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -65,7 +66,12 @@ public class SecurityConfiguration {
                .requestMatchers("/api/services/*/*").hasAnyRole("manager", "admin")
                .requestMatchers("/api/jobs/*/*").hasAnyRole("manager", "admin")
                .requestMatchers("/api/artifact/*").hasAnyRole("manager", "admin")
-               .requestMatchers("/api/import", "/api/export").hasAnyRole("admin")
+               .requestMatchers("/api/import/*", "/api/export/*").hasAnyRole("admin")
+               .requestMatchers(HttpMethod.GET, "/api/secrets").hasAnyRole("user", "manager", "admin")
+               .requestMatchers(HttpMethod.GET, "/api/secrets/*").hasAnyRole("user", "manager", "admin")
+               .requestMatchers(HttpMethod.POST, "/api/secrets").hasAnyRole("admin")
+               .requestMatchers(HttpMethod.PUT, "/api/secrets/*").hasAnyRole("admin")
+               .requestMatchers(HttpMethod.DELETE, "/api/secrets/*").hasAnyRole("admin")
                .anyRequest().permitAll()
          );
 
