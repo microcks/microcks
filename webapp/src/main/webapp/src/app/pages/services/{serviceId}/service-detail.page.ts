@@ -448,6 +448,19 @@ export class ServiceDetailPageComponent implements OnInit {
     return JSON.stringify(request.variables, null, 2);
   }
 
+  public formatCurlCmd(operation: Operation, exchange: RequestResponsePair): string {
+    let mockUrl = this.formatMockUrl(operation, exchange.response.dispatchCriteria);
+    let cmd = "curl -X " + operation.method.toUpperCase() + " '" + mockUrl + "'";
+    if (exchange.request.content != null && exchange.request.content != undefined) {
+      cmd += " -d '" + exchange.request.content.replace(/\n/g, '') + "'";
+    }
+    for (let i=0; i < exchange.request.headers.length; i++) {
+      let header = exchange.request.headers[i];
+      cmd += " -H '" + header.name + ": " + header.values.join(', ') + "'";
+    }
+    return cmd;
+  }
+
   public copyToClipboard(url: string): void {
     let selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
