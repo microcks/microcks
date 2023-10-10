@@ -29,6 +29,14 @@
             <dt>Secret:</dt>
             <dd>{{ test.secretRef.name }}</dd>
           </span>
+          <span *ngIf="test.authorizedClient">
+            <dt>OAuth2 client:</dt>
+            <dd>
+              <code>{{ test.authorizedClient.principalName }}</code> principal<br/>
+              <code>{{ test.authorizedClient.tokenUri }}</code> tokenUri<br/>
+              <code>{{ test.authorizedClient.grantType }}</code> grant
+            </dd>
+          </span>
         </dl>
       </div>
       <div class="col-md-4">

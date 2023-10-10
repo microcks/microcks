@@ -18,6 +18,8 @@
  */
 package io.github.microcks.service;
 
+import io.github.microcks.domain.OAuth2AuthorizedClient;
+import io.github.microcks.domain.OAuth2ClientContext;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Response;
@@ -34,6 +36,8 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.repository.TestResultRepository;
+import io.github.microcks.security.AuthorizationException;
+import io.github.microcks.security.OAuth2AuthorizedClientProvider;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.asyncapi.AsyncAPITestRunner;
 import io.github.microcks.util.graphql.GraphQLTestRunner;
@@ -110,26 +114,27 @@ public class TestRunnerService {
    private ApplicationContext applicationContext;
 
    @Value("${tests-callback.url}")
-   private final String testsCallbackUrl = null;
+   private String testsCallbackUrl = null;
 
    @Value("${postman-runner.url}")
-   private final String postmanRunnerUrl = null;
+   private String postmanRunnerUrl = null;
 
    @Value("${async-minion.url}")
-   private final String asyncMinionUrl = null;
+   private String asyncMinionUrl = null;
 
    @Value("${validation.resourceUrl}")
-   private final String validationResourceUrl = null;
+   private String validationResourceUrl = null;
 
    /**
     * Launch tests using asynchronous/completable future pattern.
     * @param testResult TestResults to aggregate results within
     * @param service Service to test
     * @param runnerType Type of runner for launching the tests
+    * @param oAuth2Context An optional OAuth2ClientContext that may complement Secret information
     * @return A Future wrapping test results
     */
    @Async
-   public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service, TestRunnerType runnerType){
+   public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service, TestRunnerType runnerType, OAuth2ClientContext oAuth2Context){
       // Found next build number for this test.
       List<TestResult> older = testResultRepository.findByServiceId(service.getId(), PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
       if (older != null && !older.isEmpty() && older.get(0).getTestNumber() != null){
@@ -142,6 +147,32 @@ public class TestRunnerService {
       if (testResult.getSecretRef() != null) {
          secret = secretRepository.findById(testResult.getSecretRef().getSecretId()).orElse(null);
          log.debug("Using a secret to test endpoint? '{}'", secret != null ? secret.getName() : "none");
+      }
+
+      if (oAuth2Context != null) {
+         log.debug("Applying OAuth2 grant before actually running the test '{}'", oAuth2Context.getGrantType());
+         OAuth2AuthorizedClientProvider tokenProvider = new OAuth2AuthorizedClientProvider();
+         try {
+            OAuth2AuthorizedClient authorizedClient = tokenProvider.authorize(oAuth2Context);
+            testResult.setAuthorizedClient(authorizedClient);
+            if (secret != null) {
+               log.debug("Updating the Secret with token from OAuth2 for '{}'", authorizedClient.getPrincipalName());
+               secret.setToken(authorizedClient.getEncodedAccessToken());
+               secret.setTokenHeader(null);
+            } else {
+               secret = new Secret();
+               secret.setToken(authorizedClient.getEncodedAccessToken());
+            }
+         } catch (AuthorizationException authorizationException) {
+            log.error("OAuth2 token flow '{}' failed with: {}", oAuth2Context.getGrantType(), authorizationException.getMessage());
+            log.error("Marking the test as a failure before cancelling it");
+            // Set flags and add to results before exiting loop.
+            testResult.setSuccess(false);
+            testResult.setInProgress(false);
+            testResult.setElapsedTime(0);
+            testResultRepository.save(testResult);
+            return CompletableFuture.completedFuture(testResult);
+         }
       }
 
       // Initialize runner once as it is shared for each test.

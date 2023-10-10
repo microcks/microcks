@@ -18,11 +18,35 @@
  */
 import { SecretRef } from './secret.model';
 
+export enum OAuth2GrantType {
+  PASSWORD,
+  CLIENT_CREDENTIALS,
+  REFRESH_TOKEN
+}
+
+export class OAuth2ClientContext {
+  clientId: string;
+  clientSecret: string;
+  tokenUri: string;
+  scopes: string;
+  username: string;
+  password: string;
+  refreshToken: string;
+  grantType: OAuth2GrantType;
+}
+
+export class OAuth2AuthorizedClient {
+  grantType: OAuth2GrantType;
+  principalName: string;
+  tokenUri: string;
+}
+
 export class TestRequest {
   serviceId: string;
   testEndpoint: string;
   runnerType: TestRunnerType;
   operationsHeaders: any;
+  oAuth2Context: OAuth2ClientContext;
 }
 
 export class TestResult {
@@ -40,6 +64,7 @@ export class TestResult {
   operationHeaders: any;
   testCaseResults: TestCaseResult[];
   secretRef: SecretRef;
+  authorizedClient: OAuth2AuthorizedClient;
 }
 
 export class TestCaseResult {

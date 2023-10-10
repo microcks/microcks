@@ -31,15 +31,17 @@ public class TestOptionals {
    private Long timeout;
    private List<String> filteredOperations;
    private OperationsHeaders operationsHeaders;
+   private OAuth2ClientContext oAuth2Context;
 
    public TestOptionals() {
    }
 
-   public TestOptionals(SecretRef secretRef, Long timeout, List<String> filteredOperations, OperationsHeaders operationsHeaders) {
+   public TestOptionals(SecretRef secretRef, Long timeout, List<String> filteredOperations, OperationsHeaders operationsHeaders, OAuth2ClientContext oAuth2Context) {
       this.secretRef = secretRef;
       this.timeout = timeout;
       this.filteredOperations = filteredOperations;
       this.operationsHeaders = operationsHeaders;
+      this.oAuth2Context = oAuth2Context;
    }
 
    public SecretRef getSecretRef() {
@@ -72,5 +74,13 @@ public class TestOptionals {
 
    public void setOperationsHeaders(OperationsHeaders operationsHeaders) {
       this.operationsHeaders = operationsHeaders;
+   }
+
+   public OAuth2ClientContext getOAuth2Context() {
+      return oAuth2Context;
+   }
+
+   public void setOAuth2Context(OAuth2ClientContext oAuth2Context) {
+      this.oAuth2Context = oAuth2Context;
    }
 }

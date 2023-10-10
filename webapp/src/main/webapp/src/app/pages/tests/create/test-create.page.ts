@@ -28,7 +28,7 @@ import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { SecretsService } from '../../../services/secrets.service';
 import { Service } from '../../../models/service.model';
-import { TestRunnerType } from "../../../models/test.model";
+import { TestRunnerType, OAuth2ClientContext } from "../../../models/test.model";
 import { Secret } from '../../../models/secret.model';
 
 @Component({
@@ -53,6 +53,7 @@ export class TestCreatePageComponent implements OnInit {
     'globals': []
   };
   secrets: Secret[];
+  oAuth2ClientContext: OAuth2ClientContext = new OAuth2ClientContext();
 
   filteredOperation: string;
   removedOperationsNames: string[] = [];
@@ -176,7 +177,13 @@ export class TestCreatePageComponent implements OnInit {
 
   public checkForm(): void {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
-      && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined));
+        && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined));
+    // Check also the OAuth2 parameters.
+    if (this.submitEnabled && this.oAuth2ClientContext.grantType !== undefined && this.oAuth2ClientContext.grantType !== 'none') {
+      this.submitEnabled = (this.oAuth2ClientContext.tokenUri !== undefined && this.oAuth2ClientContext.tokenUri.length > 0
+          && this.oAuth2ClientContext.clientId !== undefined && this.oAuth2ClientContext.clientId.length > 0
+          && this.oAuth2ClientContext.clientSecret !== undefined && this.oAuth2ClientContext.clientSecret.length > 0);
+    }
     console.log("[createTest] submitEnabled: " + this.submitEnabled);
   }
 
@@ -198,10 +205,15 @@ export class TestCreatePageComponent implements OnInit {
         });
       }
     }
+    // Reset OAuth2 parameters if not set.
+    if (this.oAuth2ClientContext.grantType === undefined || this.oAuth2ClientContext.grantType === 'none') {
+      this.oAuth2ClientContext = null;
+    }
     // Then, create thee test invoking the API.
     var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, 
         timeout: this.timeout, secretName: this.secretName,
-        filteredOperations: filteredOperations, operationsHeaders: this.operationsHeaders};
+        filteredOperations: filteredOperations, operationsHeaders: this.operationsHeaders,
+        oAuth2Context: this.oAuth2ClientContext};
     console.log("[createTest] test: " + JSON.stringify(test));
     this.testsSvc.create(test).subscribe(
       {

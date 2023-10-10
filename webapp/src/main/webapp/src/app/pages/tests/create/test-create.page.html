@@ -101,6 +101,68 @@
             <p class="help-block">Pick the authentication secret that will be associated for connecting the test endpoint.</p>
           </div>
         </div>
+        <div class="control-group">
+          <label class="control-label" for="grantType">OAuth2 Grant</label>
+          <div class="controls">
+            <select class="form-control" id="grantType" name="grantType" [(ngModel)]="oAuth2ClientContext.grantType" (ngModelChange)="checkForm()">
+              <option value="none">None</option>
+              <option value="CLIENT_CREDENTIALS">Client credentials</option>
+              <option value="REFRESH_TOKEN">Refresh token</option>
+              <option value="PASSWORD">Password</option>
+            </select>
+            <p class="help-block">Select the OAuth2 grant type that allows retrieving a token for connecting the test endpoint.</p>
+          </div>
+          <div class="row" *ngIf="oAuth2ClientContext.grantType && oAuth2ClientContext.grantType != 'none'">
+            <div class="col-md-12">
+              <label class="control-label" for="tokenUri">OAuth2 Token URI</label>
+              <div class="controls">
+                <input id="tokenUri" name="tokenUri" class="form-control" [(ngModel)]="oAuth2ClientContext.tokenUri" (ngModelChange)="checkForm()" placeholder="eg. https://idp.acme.org/realms/my-app/protocol/openid-connect/token" />
+                <p class="help-block">The OAuth2 token URI that will be used for OAuth2 flow token retrieval.</p>
+              </div>
+            </div>
+          </div>
+          <div class="row" *ngIf="oAuth2ClientContext.grantType && oAuth2ClientContext.grantType != 'none'">
+            <div class="col-md-6">
+              <label class="control-label" for="clientId">Client Id</label>
+              <div class="controls">
+                <input id="clientId" name="clientId" class="form-control" [(ngModel)]="oAuth2ClientContext.clientId" (ngModelChange)="checkForm()"/>
+                <p class="help-block">Your OAuth2 client identifier.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="control-label" for="clientSecret">Client Secret</label>
+              <div class="controls">
+                <input type="password" id="clientSecret" name="clientSecret" class="form-control" [(ngModel)]="oAuth2ClientContext.clientSecret" (ngModelChange)="checkForm()"/>
+                <p class="help-block">Your OAuth2 client secret.</p>
+              </div>
+            </div>
+          </div>
+          <div class="row" *ngIf="oAuth2ClientContext.grantType === 'password'">
+            <div class="col-md-6">
+              <label class="control-label" for="username">Username</label>
+              <div class="controls">
+                <input id="username" name="username" class="form-control" />
+                <p class="help-block">The OAuth2 resource owner username.</p>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="control-label" for="password">Password</label>
+              <div class="controls">
+                <input type="password" id="password" name="password" class="form-control" />
+                <p class="help-block">The OAuth2 resource owner password.</p>
+              </div>
+            </div>
+          </div>
+          <div class="row" *ngIf="oAuth2ClientContext && oAuth2ClientContext.grantType === 'refresh_token'">
+            <div class="col-md-12">
+              <label class="control-label" for="secret">Refresh Token</label>
+              <div class="controls">
+                <input class="form-control" />
+                <p class="help-block">An OAuth2 long-lived refresh token to get a new access token.</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="control-group" *ngIf="service.type != 'EVENT'">
           <label class="control-label required-pf" for="filteredOperationsNames">Operations</label>
           <div class="controls">

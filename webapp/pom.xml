@@ -107,6 +107,11 @@
       <version>${commons-codec.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+
     <!-- Required since Spring 1.5 to 2.3 migration -->
     <dependency>
       <groupId>org.apache.httpcomponents.client5</groupId>
@@ -212,6 +217,12 @@
       <groupId>org.testcontainers</groupId>
       <artifactId>mongodb</artifactId>
       <version>1.17.6</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.dasniko</groupId>
+      <artifactId>testcontainers-keycloak</artifactId>
+      <version>3.0.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -18,6 +18,10 @@
  */
 package io.github.microcks.web.dto;
 
+import io.github.microcks.domain.OAuth2ClientContext;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 import java.util.Map;
 /**
@@ -33,6 +37,8 @@ public class TestRequestDTO {
    private Long timeout;
    private List<String> filteredOperations;
    private Map<String, List<HeaderDTO>> operationsHeaders;
+   @JsonProperty("oAuth2Context")
+   private OAuth2ClientContext oAuth2Context;
 
    public String getServiceId() {
       return serviceId;
@@ -60,5 +66,13 @@ public class TestRequestDTO {
 
    public Map<String, List<HeaderDTO>> getOperationsHeaders() {
       return operationsHeaders;
+   }
+
+   public OAuth2ClientContext getOAuth2Context() {
+      return oAuth2Context;
+   }
+
+   public void setOAuth2Context(OAuth2ClientContext oAuth2Context) {
+      this.oAuth2Context = oAuth2Context;
    }
 }

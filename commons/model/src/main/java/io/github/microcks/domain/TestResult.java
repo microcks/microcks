@@ -50,6 +50,7 @@ public class TestResult {
    private boolean inProgress = true;
    private TestRunnerType runnerType;
    private OperationsHeaders operationsHeaders;
+   private OAuth2AuthorizedClient authorizedClient;
 
    private List<TestCaseResult> testCaseResults = new ArrayList<>();
 
@@ -163,5 +164,13 @@ public class TestResult {
 
    public void setTestCaseResults(List<TestCaseResult> testCaseResults) {
       this.testCaseResults = testCaseResults;
+   }
+
+   public OAuth2AuthorizedClient getAuthorizedClient() {
+      return authorizedClient;
+   }
+
+   public void setAuthorizedClient(OAuth2AuthorizedClient authorizedClient) {
+      this.authorizedClient = authorizedClient;
    }
 }

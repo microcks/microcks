@@ -81,13 +81,14 @@ public class TestService {
       testResult.setTimeout(testOptionals.getTimeout());
       testResult.setSecretRef(testOptionals.getSecretRef());
       testResult.setOperationsHeaders(testOptionals.getOperationsHeaders());
+
       // Initialize the TestCaseResults containers before saving it.
       initializeTestCaseResults(testResult, service, testOptionals);
       testResultRepository.save(testResult);
 
       // Launch test asynchronously before returning result.
       log.debug("Calling launchTestsInternal() marked as Async");
-      testRunnerService.launchTestsInternal(testResult, service, runnerType);
+      testRunnerService.launchTestsInternal(testResult, service, runnerType, testOptionals.getOAuth2Context());
       log.debug("Async launchTestsInternal() as now finished");
       return testResult;
    }
@@ -177,7 +178,6 @@ public class TestService {
                || testOptionals.getFilteredOperations().contains(operation.getName())) {
             TestCaseResult testCaseResult = new TestCaseResult();
             testCaseResult.setOperationName(operation.getName());
-            String testCaseId = IdBuilder.buildTestCaseId(testResult, operation);
             testResult.getTestCaseResults().add(testCaseResult);
          }
       }
@@ -252,7 +252,7 @@ public class TestService {
 
       // Update and save the completed TestCaseResult.
       // We cannot consider as success if we have no TestStepResults associated...
-      if (testCaseResult.getTestStepResults().size() > 0) {
+      if (!testCaseResult.getTestStepResults().isEmpty()) {
          testCaseResult.setSuccess(successFlag);
       }
       testCaseResult.setElapsedTime(caseElapsedTime);
