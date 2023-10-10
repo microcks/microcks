@@ -95,7 +95,7 @@
           <label class="control-label" for="secret">Secret</label>
           <div class="controls">
             <select class="form-control" id="secret" name="secret" [(ngModel)]="secretId" (change)="updateSecretProperties($event)">
-              <option value="none">None</option>
+              <option value="undefined">None</option>
               <option *ngFor="let secret of secrets" [value]="secret.id">{{ secret.name }} </option>
             </select>
             <p class="help-block">Pick the authentication secret that will be associated for connecting the test endpoint.</p>
@@ -104,15 +104,15 @@
         <div class="control-group">
           <label class="control-label" for="grantType">OAuth2 Grant</label>
           <div class="controls">
-            <select class="form-control" id="grantType" name="grantType" [(ngModel)]="oAuth2ClientContext.grantType" (ngModelChange)="checkForm()">
-              <option value="none">None</option>
+            <select class="form-control" id="grantType" name="grantType" [(ngModel)]="oAuth2ClientContext.grantType" (ngModelChange)="checkForm()" (change)="updateGrantType($event)">
+              <option value="undefined">None</option>
               <option value="CLIENT_CREDENTIALS">Client credentials</option>
               <option value="REFRESH_TOKEN">Refresh token</option>
               <option value="PASSWORD">Password</option>
             </select>
             <p class="help-block">Select the OAuth2 grant type that allows retrieving a token for connecting the test endpoint.</p>
           </div>
-          <div class="row" *ngIf="oAuth2ClientContext.grantType && oAuth2ClientContext.grantType != 'none'">
+          <div class="row" *ngIf="oAuth2ClientContext.grantType">
             <div class="col-md-12">
               <label class="control-label" for="tokenUri">OAuth2 Token URI</label>
               <div class="controls">
@@ -121,7 +121,7 @@
               </div>
             </div>
           </div>
-          <div class="row" *ngIf="oAuth2ClientContext.grantType && oAuth2ClientContext.grantType != 'none'">
+          <div class="row" *ngIf="oAuth2ClientContext.grantType">
             <div class="col-md-6">
               <label class="control-label" for="clientId">Client Id</label>
               <div class="controls">

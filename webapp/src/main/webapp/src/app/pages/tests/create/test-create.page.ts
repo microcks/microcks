@@ -137,7 +137,7 @@ export class TestCreatePageComponent implements OnInit {
   }
   public updateSecretProperties(event: any): void {
     var secretId = event.target.value;
-    if ('none' != event.target.value) {
+    if ('undefined' != event.target.value) {
       for (var i=0; i<this.secrets.length; i++) {
         var secret = this.secrets[i];
         if (secretId === secret.id) {
@@ -149,6 +149,13 @@ export class TestCreatePageComponent implements OnInit {
       this.secretName = null;
     }
   }
+  public updateGrantType(event: any): void {
+      var secretId = event.target.value;
+      if ('undefined' === event.target.value) {
+        this.oAuth2ClientContext.grantType = undefined;
+        this.checkForm();
+      }
+    }
   public filterOperation(operationName: string) : void {
     if (this.removedOperationsNames.includes(operationName)) {
       this.removedOperationsNames.splice(this.removedOperationsNames.indexOf(operationName), 1);
@@ -179,7 +186,7 @@ export class TestCreatePageComponent implements OnInit {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
         && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined));
     // Check also the OAuth2 parameters.
-    if (this.submitEnabled && this.oAuth2ClientContext.grantType !== undefined && this.oAuth2ClientContext.grantType !== 'none') {
+    if (this.submitEnabled && this.oAuth2ClientContext.grantType !== undefined) {
       this.submitEnabled = (this.oAuth2ClientContext.tokenUri !== undefined && this.oAuth2ClientContext.tokenUri.length > 0
           && this.oAuth2ClientContext.clientId !== undefined && this.oAuth2ClientContext.clientId.length > 0
           && this.oAuth2ClientContext.clientSecret !== undefined && this.oAuth2ClientContext.clientSecret.length > 0);
