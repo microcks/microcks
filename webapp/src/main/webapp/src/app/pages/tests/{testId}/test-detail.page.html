@@ -11,7 +11,13 @@
       </div>
     </div>
 
-    <h1>Test {{ test.id }}</h1>
+    <h1>Test {{ test.id }}
+      <div class="pull-right">
+        <button class="btn btn-warning" (click)="openAddToCI()">
+          <span class="pficon pficon-in-progress"></span> Add to your CI/CD
+        </button>
+      </div>
+    </h1>
     <small>Created {{ test.testDate | timeAgo }}, ran on {{ test.testDate | date:'medium' }}</small>
 
     <h3 class="section-label">Properties</h3>

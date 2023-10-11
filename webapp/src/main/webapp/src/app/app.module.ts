@@ -76,6 +76,7 @@ import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_c
 import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
 import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page';
+import { AddToCIDialogComponent } from './pages/tests/{testId}/_components/add-to-ci.dialog';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { InvocationsServicePageComponent } from './pages/metrics/invocations/{serviceId}/invocations-service.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
@@ -87,6 +88,7 @@ import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVe
 
 import json from 'highlight.js/lib/languages/json';
 import xml from 'highlight.js/lib/languages/xml';
+import yaml from 'highlight.js/lib/languages/yaml';
 
 /**
  * Import specific languages to avoid importing everything
@@ -95,7 +97,8 @@ import xml from 'highlight.js/lib/languages/xml';
 export function getHighlightLanguages() {
   return [
     {name: 'json', func: json},
-    {name: 'xml', func: xml}
+    {name: 'xml', func: xml},
+    {name: 'yaml', func: yaml},
   ];
 }
 
@@ -110,7 +113,7 @@ export function configLoader(configService: ConfigService) {
     HourInvocationsBarChartComponent, TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
     ScoreTreemapComponent, GradeIndexComponent, DashboardPageComponent, ServicesPageComponent, DirectAPIWizardComponent,
     ServiceDetailPageComponent, OperationOverridePageComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
-    TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
+    TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, AddToCIDialogComponent, TestRunnerPageComponent,
     InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
     ArtifactUploaderDialogComponent, AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
     GroupsManagementDialogComponent, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
@@ -145,7 +148,7 @@ export function configLoader(configService: ConfigService) {
     }
   ],
   entryComponents: [
-    HelpDialogComponent, DirectAPIWizardComponent,
+    HelpDialogComponent, DirectAPIWizardComponent, AddToCIDialogComponent,
     EditLabelsDialogComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
     GroupsManagementDialogComponent

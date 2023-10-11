@@ -96,8 +96,8 @@ export class TestCreatePageComponent implements OnInit {
           this.testEndpoint = res.testedEndpoint;
           this.runnerType = res.runnerType;
           // Complete with optional properties.
-          if (res.operationHeaders) {
-            this.operationsHeaders = res.operationHeaders;
+          if (res.operationsHeaders) {
+            this.operationsHeaders = res.operationsHeaders;
           }
           if (res.timeout) {
             this.timeout = res.timeout;

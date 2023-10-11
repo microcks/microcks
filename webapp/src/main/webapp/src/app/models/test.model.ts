@@ -61,7 +61,7 @@ export class TestResult {
   success: boolean = false;
   inProgress: boolean = true;
   runnerType: TestRunnerType;
-  operationHeaders: any;
+  operationsHeaders: any;
   testCaseResults: TestCaseResult[];
   secretRef: SecretRef;
   authorizedClient: OAuth2AuthorizedClient;

@@ -22,12 +22,15 @@ import { ActivatedRoute, ParamMap } from "@angular/router";
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
+import { BsModalService } from 'ngx-bootstrap/modal';
+import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { ListConfig } from 'patternfly-ng/list';
 
 import { ServicesService } from '../../../services/services.service'
 import { TestsService } from '../../../services/tests.service';
 import { Service, ServiceType } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
+import { AddToCIDialogComponent } from './_components/add-to-ci.dialog';
 
 @Component({
   selector: 'test-detail-page',
@@ -43,7 +46,12 @@ export class TestDetailPageComponent implements OnInit {
   testMessages: any = {};
   resultsListConfig: ListConfig;
 
-  constructor(private servicesSvc: ServicesService, private testsSvc: TestsService, private route: ActivatedRoute) {
+  resolvedTest: TestResult;
+  resolvedService: Service;
+  modalRef: BsModalRef;
+
+  constructor(private servicesSvc: ServicesService, private testsSvc: TestsService, 
+    private modalService: BsModalService, private route: ActivatedRoute) {
   }
 
   ngOnInit() {
@@ -53,8 +61,10 @@ export class TestDetailPageComponent implements OnInit {
         this.testsSvc.getTestResult(params.get('testId')))
     );
     this.test.subscribe(res => {
+      this.resolvedTest = res;
       this.service = this.servicesSvc.getService(res.serviceId);
       this.service.subscribe(svc => {
+        this.resolvedService = svc;
         if (svc.type != ServiceType.EVENT) {
           res.testCaseResults.forEach(testCase => {
             var opName = this.encode(testCase.operationName);
@@ -84,6 +94,15 @@ export class TestDetailPageComponent implements OnInit {
       useExpandItems: true,
       hideClose: true
     } as ListConfig;
+  }
+
+  public openAddToCI(): void {
+    const initialState = {
+      closeBtnName: 'Close',
+      test: this.resolvedTest,
+      service: this.resolvedService
+    };
+    this.modalRef = this.modalService.show(AddToCIDialogComponent, {initialState});
   }
 
   public messagePairFor(operationName: string, requestName: string): any {

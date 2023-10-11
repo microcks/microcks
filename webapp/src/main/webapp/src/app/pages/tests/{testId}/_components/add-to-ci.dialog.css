@@ -1,0 +1,21 @@
+.instructions {
+  padding-top: 0.8em;
+  padding-bottom: 0.8em;
+}
+
+.instructions ol {
+  padding-inline-start: 20px;
+}
+
+.instructions li {
+  padding-top: 0.4em;
+  padding-bottom: 0.4em;
+}
+
+.instructions pre {
+  margin-top: 5px;
+}
+
+.instructions .btn {
+  margin-top: 5px;
+}

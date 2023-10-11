@@ -1,0 +1,137 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">Add this Test to your CI/CD Pipeline</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <h4>Instructions</h4>
+
+  <div class="intro">
+    Choose your CI/CD technologgy to get instructions on how to add this test confguration to your own pipeline.
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      <select class="form-control" id="ciType" name="ciType" [(ngModel)]="ciType">
+        <option value="undefined">Choose...</option>
+        <option value="github">GitHub Actions</option>
+        <option value="gitlab">GitLab CI</option>
+        <option value="jenkins">Jenkins</option>
+        <option value="tekton">Tekton</option>
+        <option value="cli">Microcks CLI</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="instructions" *ngIf="this.ciType === 'github'">
+    <ol>
+      <li>
+        Review <a href="https://github.com/marketplace/actions/microcks-test-github-action" target="new">Microcks Test GitHub action <i class="fa fa-external-link"></i></a> on GitHub Marketplace,
+      </li>
+      <li>
+        Configure GitHub Secrets to hold the Keycloak credentials (<code>MICROCKS_SERVICE_ACCOUNT</code> and <code>MICROCKS_SERVICE_ACCOUNT_SECRET</code>) matching a
+        <a href="https://microcks.io/documentation/automating/service-account/" target="new">Service Account <i class="fa fa-external-link"></i></a>,
+      </li>
+      <li>
+        Add this <code>step</code> into your GitHub Action Job where it make sense:
+        <div style="position: absolute; right: 15px">
+          <button class="btn btn-default" (click)="copyToClipboard(getGitHubActionCode())">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code [highlight]="getGitHubActionCode()" [languages]="['yaml']"></code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <div class="instructions" *ngIf="this.ciType === 'gitlab'">
+    <ol>
+      <li>
+        GitLab CI integration makes direct use of <a href="https://microcks.io/documentation/automating/cli/#container-image" target="new">Microcks CLI container image <i class="fa fa-external-link"></i></a>,
+      </li>
+      <li>
+        Declare Kecyloak <a href="https://microcks.io/documentation/automating/service-account/" target="new">Service Account <i class="fa fa-external-link"></i></a> credentials as 
+        <a href="https://docs.gitlab.com/ee/ci/variables/#for-a-project" target="new">GitLab CI/CD Variables<i class="fa fa-external-link"></i></a> (here we used <code>MICROCKS_CLIENT_ID</code>
+        and <code>MICROCKS_CLIENT_SECRET</code>),
+      </li>
+      <li>
+        Add this <code>job</code> into your GitLab CI file where it make sense:
+        <div style="position: absolute; right: 15px">
+          <button class="btn btn-default" (click)="copyToClipboard(getGitLabCICode())">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code [highlight]="getGitLabCICode()" [languages]="['yaml']"></code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <div class="instructions" *ngIf="this.ciType === 'jenkins'">
+    <ol>
+      <li>
+        Install the <a href="https://microcks.io/documentation/automating/jenkins/" target="new">Microcks Jenkins Plugin <i class="fa fa-external-link"></i></a> into your Jenkins instance,
+      </li>
+      <li>
+        Define at least on <a href="https://microcks.io/documentation/automating/jenkins/#setting-up-microcks-jenkins-plugin" target="new">Microcks Installation <i class="fa fa-external-link"></i></a>
+        with a name and a set of credentials matching a
+        <a href="https://microcks.io/documentation/automating/service-account/" target="new">Service Account <i class="fa fa-external-link"></i></a>,
+      </li>
+      <li>
+        Add this <code>directive</code> into your Jenkinsfile where it make sense, adapting the installation name (here we've used <code>microcks-production</code>):
+        <div style="position: absolute; right: 15px">
+          <button class="btn btn-default" (click)="copyToClipboard(getJenkinsGroovyCode())">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code [highlight]="getJenkinsGroovyCode()"></code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <div class="instructions" *ngIf="this.ciType === 'tekton'">
+    <ol>
+      <li>
+        Review the <a href="https://microcks.io/documentation/automating/tekton/" target="new">Microcks Tekton <i class="fa fa-external-link"></i></a> page,
+      </li>
+      <li>
+        Make sure a <code>microcks-tets</code> Task is present in your namespace. It is best practice to hide Keycloak <a href="https://microcks.io/documentation/automating/service-account/" target="new">Service Account <i class="fa fa-external-link"></i></a> credentials 
+        using to use by using a <code>Secret</code> like in <a href="https://github.com/microcks/microcks-cli/blob/master/tekton/microcks-test-with-secret.yaml" target="new">microcks-test-with-secret.yaml <i class="fa fa-external-link"></i></a>,
+      </li>
+      <li>
+        Add this <code>task</code> into your Pipeline where it make sense:
+        <div style="position: absolute; right: 15px">
+          <button class="btn btn-default" (click)="copyToClipboard(getTektonCode())">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code [highlight]="getTektonCode()" [languages]="['yaml']"></code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <div class="instructions" *ngIf="this.ciType === 'cli'">
+    <ol>
+      <li>
+        <a href="https://microcks.io/documentation/automating/cli/" target="new">Microcks CLI <i class="fa fa-external-link"></i></a> is a lightweight CLI you can use in any cases.
+        Just download the <a href="https://github.com/microcks/microcks-cli/releases" target="new">binary from GitHub<i class="fa fa-external-link"></i></a>,
+      </li>
+      <li>
+        Ensure to get the Keycloak <code>clientId</code> and <code>clientSecret</code> corresponding to your setup,
+      </li>
+      <li>
+        Adapt and run the following command in your automation script:
+        <div style="position: absolute; right: 15px">
+          <button class="btn btn-default" (click)="copyToClipboard(getCLICode())">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code [highlight]="getCLICode()" [languages]="['sh']"></code></pre>
+      </li>
+    </ol>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+  </div>
+</div>
