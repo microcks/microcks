@@ -437,7 +437,6 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public formatRequestContent(requestContent: string): string {
     if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
-      console.log("GRAPHQL request: " + requestContent);
       let request = JSON.parse(requestContent);
       return request.query;
     }
@@ -450,7 +449,13 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public formatCurlCmd(operation: Operation, exchange: RequestResponsePair): string {
     let mockUrl = this.formatMockUrl(operation, exchange.response.dispatchCriteria);
-    let cmd = "curl -X " + operation.method.toUpperCase() + " '" + mockUrl + "'";
+
+    let verb = operation.method.toUpperCase();
+    if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
+      verb = "POST";
+    }
+
+    let cmd = "curl -X " + verb + " '" + mockUrl + "'";
     if (exchange.request.content != null && exchange.request.content != undefined) {
       cmd += " -d '" + exchange.request.content.replace(/\n/g, '') + "'";
     }
