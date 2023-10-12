@@ -27,8 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -54,7 +54,7 @@ public class UploadArtifactController {
    @Autowired
    private ServiceService serviceService;
 
-   @RequestMapping(value = "/artifact/download", method = RequestMethod.POST)
+   @PostMapping(value = "/artifact/download")
    public ResponseEntity<?> importArtifact(@RequestParam(value = "url", required = true) String url,
                                            @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!url.isEmpty()) {
@@ -72,22 +72,22 @@ public class UploadArtifactController {
                   new ArtifactInfo(url, mainArtifact));
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item " + url, ioe);
-            return new ResponseEntity<Object>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
          } catch (MockRepositoryImportException mrie) {
-         return new ResponseEntity<Object>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+         return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          }
-         if (services != null && services.size() > 0) {
-            return new ResponseEntity<Object>("{\"name\": \"" + services.get(0).getName() + ":" + services.get(0).getVersion() + "\"}", HttpStatus.CREATED);
+         if (services != null && !services.isEmpty()) {
+            return new ResponseEntity<>("{\"name\": \"" + services.get(0).getName() + ":" + services.get(0).getVersion() + "\"}", HttpStatus.CREATED);
          }
       }
-      return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
+      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
    }
 
-   @RequestMapping(value = "/artifact/upload", method = RequestMethod.POST)
+   @PostMapping(value = "/artifact/upload")
    public ResponseEntity<?> importArtifact(@RequestParam(value = "file") MultipartFile file,
                                            @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!file.isEmpty()) {
-         log.debug("Content type of " + file.getOriginalFilename() + " is " + file.getContentType());
+         log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
 
          List<Service> services = null;
 
@@ -113,15 +113,15 @@ public class UploadArtifactController {
             // Now try importing services.
             services = serviceService.importServiceDefinition(new File(localFile), null, new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
          } catch (IOException ioe) {
-            log.error("Exception while writing uploaded item " + file.getOriginalFilename(), ioe);
-            return new ResponseEntity<Object>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);
+            log.error("Exception while writing uploaded item {}", file.getOriginalFilename(), ioe);
+            return new ResponseEntity<>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);
          } catch (MockRepositoryImportException mrie) {
-            return new ResponseEntity<Object>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          }
-         if (services != null && services.size() > 0) {
-            return new ResponseEntity<Object>(services.get(0).getName() + ":" + services.get(0).getVersion(), HttpStatus.CREATED);
+         if (services != null && !services.isEmpty()) {
+            return new ResponseEntity<>(services.get(0).getName() + ":" + services.get(0).getVersion(), HttpStatus.CREATED);
          }
       }
-      return new ResponseEntity<Object>(HttpStatus.NO_CONTENT);
+      return new ResponseEntity<>(HttpStatus.NO_CONTENT);
    }
 }

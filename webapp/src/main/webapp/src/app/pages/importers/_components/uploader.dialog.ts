@@ -18,6 +18,7 @@ import { Component, OnInit } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { FileUploader, FileItem, ParsedResponseHeaders } from 'ng2-file-upload';
+import { IAuthenticationService } from "../../../services/auth.service";
 
 
 @Component({
@@ -30,9 +31,15 @@ export class ArtifactUploaderDialogComponent implements OnInit {
   closeBtnName: string;
 
   mainArtifact: boolean = true;
-  uploader: FileUploader = new FileUploader({url: '/api/artifact/upload', itemAlias: 'file', parametersBeforeFiles: true});
+  uploader: FileUploader; 
   
-  constructor(public bsModalRef: BsModalRef, private notificationService: NotificationService) {}
+  constructor(public bsModalRef: BsModalRef, private notificationService: NotificationService, protected authService: IAuthenticationService) {
+    if (this.authService.isAuthenticated) {
+      this.uploader = new FileUploader({url: '/api/artifact/upload', authToken: 'Bearer ' + this.authService.getAuthenticationSecret(), itemAlias: 'file', parametersBeforeFiles: true});
+    } else {
+      this.uploader = new FileUploader({url: '/api/artifact/upload', itemAlias: 'file', parametersBeforeFiles: true});
+    }
+  }
  
   ngOnInit() {
     this.uploader.onErrorItem = (item: FileItem, response: string, status: number, headers: ParsedResponseHeaders) => {
