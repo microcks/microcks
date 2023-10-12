@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util.openapi;
 
@@ -1227,6 +1224,69 @@ public class OpenAPIImporterTest {
       assertTrue(refSchema.getContent().contains("A weather forecast for a requested region"));
    }
 
+   @Test
+   public void testExternalRelativeReferenceForExampleOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      ReferenceResolver resolver = new ReferenceResolver(
+            "http://localhost:8000/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml",
+            null, true);
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml", resolver);
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("WeatherForecast API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(3, resources.size());
+
+      Resource openAPISpec = resources.get(0);
+      assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
+      assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0-weather-forecast-schema.yaml"));
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0-weather-examples.json"));
+      System.err.println(openAPISpec.getContent());
+
+      Resource refSchema = resources.get(1);
+      assertEquals("WeatherForecast API-1.0.0-weather-forecast-schema.yaml", refSchema.getName());
+      assertEquals(ResourceType.JSON_SCHEMA, refSchema.getType());
+      assertEquals("./weather-forecast-schema.yaml", refSchema.getPath());
+      assertNotNull(refSchema.getContent());
+      assertTrue(refSchema.getContent().contains("A weather forecast for a requested region"));
+
+      Resource refExampleSchema = resources.get(2);
+      assertEquals("WeatherForecast API-1.0.0-weather-examples.json", refExampleSchema.getName());
+      assertEquals(ResourceType.JSON_SCHEMA, refExampleSchema.getType());
+      assertEquals("./weather-examples.json", refExampleSchema.getPath());
+      assertNotNull(refExampleSchema.getContent());
+      assertTrue(refExampleSchema.getContent().contains("\"region\": \"south\""));
+
+      Operation operation = service.getOperations().get(0);
+
+      // Check that messages have been correctly found.
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         e.printStackTrace();
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(1, exchanges.size());
+      assertEquals(1, operation.getResourcePaths().size());
+   }
 
    private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {
       // Check that basic service properties are there.
