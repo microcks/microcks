@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * This is an implementation of {@code AICopilot} using OpenAI API.
@@ -74,8 +73,7 @@ public class OpenAICopilot implements AICopilot {
    public static final String[] MANDATORY_CONFIG_KEYS = {API_KEY_CONFIG};
 
 
-   //private static final String BASE_URL = "https://api.openai.com/";
-   private static final String BASE_URL = "http://localhost:1234";
+   private static final String BASE_URL = "https://api.openai.com/";
 
    private RestTemplate restTemplate;
 
