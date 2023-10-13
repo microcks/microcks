@@ -27,11 +27,11 @@ The current development version is `1.8.0-SNAPSHOT`. [![GitHub Workflow Status](
 
 Here are the naming conventions we're using for current releases, ongoing development maintenance activities.
 
-| Status      | Version          | Branch   | Container images tags |
-| ----------- |------------------| -------- |-----------------------|
-| Stable      | `1.7.1`          | `master` | `1.7.1`, `latest`     |
-| Dev         | `1.8.0-SNAPSHOT` | `1.8.x`  | `nightly`             |
-| Maintenance | `1.7.2-SNAPSHOT` | `1.7.x`  | `maintenance`         |
+| Status      | Version          | Branch  | Container images tags |
+| ----------- | ---------------- | ------- | --------------------- |
+| Stable      | `1.7.1`          | `main`  | `1.7.1`, `latest`     |
+| Dev         | `1.8.0-SNAPSHOT` | `1.8.x` | `nightly`             |
+| Maintenance | `1.7.2-SNAPSHOT` | `1.7.x` | `maintenance`         |
 
 
 ## How to build Microcks

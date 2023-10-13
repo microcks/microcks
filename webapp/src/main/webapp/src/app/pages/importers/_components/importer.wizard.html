@@ -1,4 +1,4 @@
-<pfng-wizard #wizard [config]="wizardConfig" 
+<pfng-wizard #wizard [config]="wizardConfig"
     (onCancel)="wizardHost.closeImportJobWizardModal($event)" (onNext)="nextClicked($event)" (onStepChange)="stepChanged($event)">
   <pfng-wizard-step [config]="step1Config" [reviewTemplate]="step1ReviewTemplate">
     <form class="form-horizontal">
@@ -14,7 +14,7 @@
         <div class="control-group">
           <label class="control-label required-pf" for="repositoryUrl">Repository URL</label>
           <div class="controls">
-            <input type="url" placeholder="eg. http://git.mycompany.com/repos/master/MyRepository.xml" id="repositoryUrl" name="repositoryUrl" class="form-control" [(ngModel)]="job.repositoryUrl" (ngModelChange)="updateJobProperties()" required/>
+            <input type="url" placeholder="eg. http://git.mycompany.com/repos/main/MyRepository.xml" id="repositoryUrl" name="repositoryUrl" class="form-control" [(ngModel)]="job.repositoryUrl" (ngModelChange)="updateJobProperties()" required/>
             <p class="help-block">The URL we'll use to scan your project (may be a Git or Subversion repository).</p>
           </div>
         </div>

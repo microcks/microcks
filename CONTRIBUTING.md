@@ -2,7 +2,7 @@
 
 **Want to contribute? Great!** ✨ We try to make it easy, and all contributions, even the smaller ones, are more than welcome. This includes bug reports, fixes, documentation, examples... 
 
-First, you may need to read our [global contribution guide](https://github.com/microcks/.github/blob/master/CONTRIBUTING.md) and then to read this page.
+First, you may need to read our [global contribution guide](https://github.com/microcks/.github/blob/main/CONTRIBUTING.md) and then to read this page.
 
 ## Reporting an issue
 
