@@ -18,12 +18,12 @@
  */
 package io.github.microcks.util.el.function;
 
-import com.github.javafaker.Faker;
+import net.datafaker.Faker;
 import io.github.microcks.util.el.EvaluationContext;
 
 /**
- * This is a base class for function that are using Java Faker library
- * (see https://github.com/DiUS/java-faker). This base class provides a convenient method
+ * This is a base class for function that are using Datafaker
+ * (see <a href="https://www.datafaker.net">Datafaker</a>). This base class provides a convenient method
  * for retrieving or lazy loading a Faker that will be put into {@code EvaluationContext}.
  * @author laurent
  */
@@ -37,9 +37,9 @@ public abstract class FakerELFunction implements ELFunction {
     * @return A Faker implementation ready to use.
     */
    protected Faker retrieveFaker(EvaluationContext evaluationContext) {
-      Faker faker = null;
+      Faker faker;
       Object fakerObject = evaluationContext.lookupVariable(FAKER_VARIABLE_NAME);
-      if (fakerObject != null && fakerObject instanceof Faker) {
+      if (fakerObject instanceof Faker) {
          faker = (Faker) fakerObject;
       } else {
          // Build a new Faker and store it into context for later fakers.
