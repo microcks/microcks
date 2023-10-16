@@ -223,13 +223,13 @@ public class RestController {
             if (response.getHeaders() != null) {
                for (Header header : response.getHeaders()) {
                   if ("Location".equals(header.getName())) {
-                    String location = header.getValues().iterator().next();
-                    if (!AbsoluteUrlMatcher.matches(location)) {
-                      // We should process location in order to make relative URI specified an absolute one from
-                      // the client perspective.
-                      location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                        + request.getContextPath() + "/rest" + serviceAndVersion + location;
-                    }
+                     String location = header.getValues().iterator().next();
+                     if (!AbsoluteUrlMatcher.matches(location)) {
+                        // We should process location in order to make relative URI specified an absolute one from
+                        // the client perspective.
+                        location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+                            + request.getContextPath() + "/rest" + serviceAndVersion + location;
+                     }
                      responseHeaders.add(header.getName(), location);
                   } else {
                      if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
