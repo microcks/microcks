@@ -33,7 +33,6 @@ import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
 
-import net.datafaker.Faker;
 import org.apache.commons.lang3.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -202,7 +201,7 @@ public class SoapController {
          }
 
          if (!responses.isEmpty()) {
-            int idx = DispatchStyles.RANDOM.equals(dispatcher) ? new Faker().random().nextInt(0, responses.size()) : 0;
+            int idx = DispatchStyles.RANDOM.equals(dispatcher) ? RandomUtils.nextInt(0, responses.size()) : 0;
             response = responses.get(idx);
          }
 
