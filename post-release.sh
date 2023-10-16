@@ -39,7 +39,7 @@ if [[ $# -eq 2 ]]; then
 
   # Add and commit before cleaning up things.
   git add ./static/helm/microcks-$1.tgz
-  git commit -m 'microcks/microcks#$2 chore: Release Helm chart for $1' ./static/helm/index.yaml ./static/helm/microcks-$1.tgz
+  git commit -m 'microcks/microcks#'"$2"' chore: Release Helm chart for '"$1"'' ./static/helm/index.yaml ./static/helm/microcks-$1.tgz
   git push origin master
 
   rm -rf ./static/helm/tmp

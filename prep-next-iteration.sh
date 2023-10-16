@@ -38,5 +38,5 @@ if [[ $# -eq 2 ]]; then
   fi
 else
   echo "prep-next-iteration.sh must be called with <version> <next-container-tag> as 1st argument. Example:"
-  echo "$ ./prep-next-iteration.sh 1.7.1 '"$2"'"
+  echo "$ ./prep-next-iteration.sh 1.7.1 nightly"
 fi
