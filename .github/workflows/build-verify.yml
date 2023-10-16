@@ -51,8 +51,8 @@ jobs:
           if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
             echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
-          elif [[ $GITHUB_REF == 'refs/heads/1.7.x' ]]; then
-            echo "IMAGE_TAG=maintenance" >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == 'refs/heads/1.8.x' ]]; then
+            echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
           elif [[ $GITHUB_REF == "refs/tags/$GITHUB_REF_NAME" ]]; then
             echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
@@ -80,7 +80,7 @@ jobs:
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/webapp
-          mvn -B -q -Pprod -DskipTests package
+          mvn -B -q -Pprod -DskipTests install
           #docker build -f src/main/docker/Dockerfile -t quay.io/microcks/microcks:$IMAGE_TAG .
           docker buildx build --push \
             --platform=linux/amd64,linux/arm64 \
@@ -103,3 +103,16 @@ jobs:
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile.jvm \
             --tag=quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
+
+      - name: Build and push container image for uber distro
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/distro/uber
+          mvn -B -q -Pprod -DskipTests package
+          docker buildx build --push \
+            --platform=linux/amd64,linux/arm64 \
+            --builder=buildx-multi-arch \
+            --provenance=false \
+            --build-arg TAG=$IMAGE_TAG \
+            --file src/main/docker/Dockerfile \
+            --tag=quay.io/microcks/microcks-uber:$IMAGE_TAG .

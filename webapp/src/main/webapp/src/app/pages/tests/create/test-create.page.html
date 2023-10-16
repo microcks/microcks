@@ -14,166 +14,414 @@
     </div>
   </div>
 
-  <h1>New Test</h1>
+  <div class="row">
+    <div class="col-md-8">
+      <h1>New Test</h1>
 
-  <form class="form-horizontal">
-    <fieldset>
-      <div class="control-group form-inline">
-        <label class="control-label" for="service">Service under test</label>
-        <div class="controls">
-          <input id="service" class="form-control" readonly value="{{ service.name }}"/>
-          &nbsp;
-          <div class="input-group">
-            <span class="input-group-addon">v.</span>
-            <span id="version" name="version" class="form-control" readonly>{{ service.version }}</span>
-          </div>
-          <p class="help-block">The service and its version we're going to test.</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label required-pf" for="testEndpoint">Test Endpoint</label>
-        <div class="controls">
-          <span *ngIf="service.type != 'EVENT'">
-            <input type="url" placeholder="eg. http://{service.endpoint.url:port}/{service.path}" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
-            <p class="help-block">A valid endpoint to use for testing (Http URL for API or WebServices).</p>
-          </span>
-          <span *ngIf="service.type === 'EVENT'">
-            <input type="url" placeholder="eg. kafka://{kafka.broker.url:port}/{kafka.topic.name}" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
-            <p class="help-block">A valid endpoint to use for testing (Kafka/MQTT/NATS/AMQP/PubSub/SQS broker or WebSocket server + topic name for Asynchronous API).</p>
-          </span>
-        </div>
-      </div>
-      <div class="control-group" *ngIf="service.type === 'EVENT'">
-        <label class="control-label required-pf" for="filteredOperation">Operation</label>
-        <div class="controls">
-          <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
-            <option *ngFor="let operation of service.operations" [value]="operation.name">{{ operation.name }}</option>
-          </select>
-          <p class="help-block">Select the Asynchronous operation you want to test (only SUBSCRIBE is supported at the moment).</p>
-        </div>
-      </div>
-      <div class="control-group">
-        <label class="control-label required-pf" for="runnerType">Runner</label>
-        <div class="controls">
-          <select id="runnerType" name="runnerType" class="form-control" [(ngModel)]="runnerType" (ngModelChange)="checkForm()">
-            <option value="HTTP" *ngIf="service.type != 'EVENT'">HTTP</option>
-            <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP'">SOAP</option>
-            <option value="SOAP_UI" *ngIf="service.type != 'EVENT'">SOAP UI</option>
-            <option value="POSTMAN" *ngIf="service.type === 'REST'">POSTMAN</option>
-            <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST'">OPEN API SCHEMA</option>
-            <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT'">ASYNC API SCHEMA</option>
-            <option value="GRPC_PROTOBUF" *ngIf="service.type === 'GRPC'">GRPC PROTOBUF</option>
-            <option value="GRAPHQL_SCHEMA" *ngIf="service.type === 'GRAPHQL'">GRAPHQL SCHEMA</option>
-          </select>
-          <p class="help-block">
-            <span *ngIf="service.type != 'EVENT'">The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).</span>
-            <span *ngIf="service.type === 'EVENT'">The runner to use for this test (for now we only have ASYNC API SCHEMA compliance).</span>
-            <span class="learn-more-inline">
-              <a href="https://microcks.io/documentation/using/tests/" target="blanck">Learn More 
-                <i class="fa fa-external-link" aria-hidden="true"></i>
-              </a>
-            </span>
-          </p>
-        </div>
-      </div>
-
-      <div class="control-group">
-        <span *ngIf="!showAdvanced"><a (click)="showAdvancedPanel(true)" role="button">Show advanced options</a></span>
-        <span *ngIf="showAdvanced"><a (click)="showAdvancedPanel(false)" role="button">Hide advanced options</a></span>
-      </div>
-
-      <div *ngIf="showAdvanced" >
-        <small>This section allows to add timeout, security credentials for connecting endpoint and filter operations to test.</small>
-        <div class="control-group">
-          <label class="control-label required-pf" for="timeout">Timeout</label>
-          <div class="controls">
-            <input type="number" min="1000" max="30000" step="1000" id="timeout" name="timeout" class="form-control" [(ngModel)]="timeout" (ngModelChange)="checkForm()" required/>
-            <p class="help-block">Time to wait for the end of the test (value in milliseconds).</p>
-          </div>
-        </div>
-        <div class="control-group">
-          <label class="control-label" for="secret">Secret</label>
-          <div class="controls">
-            <select class="form-control" id="secret" name="secret" [(ngModel)]="secretId" (change)="updateSecretProperties($event)">
-              <option value="none">None</option>
-              <option *ngFor="let secret of secrets" [value]="secret.id">{{ secret.name }} </option>
-            </select>
-            <p class="help-block">Pick the authentication secret that will be associated for connecting the test endpoint.</p>
-          </div>
-        </div>
-        <div class="control-group" *ngIf="service.type != 'EVENT'">
-          <label class="control-label required-pf" for="filteredOperationsNames">Operations</label>
-          <div class="controls">
-            <ul>
-              <li *ngFor="let operation of service.operations">
-                <label class="checkbox">
-                  <input type="checkbox" id="filteredOperationsNames" name="filteredOperationsNames" (change)="filterOperation(operation.name)" checked>
-                  {{ operation.name }}
-                </label>
-              </li>
-            </ul>
-            <p class="help-block">Remove the operations you don't want to include in this test.</p>
-          </div>
-        </div>
-
-        <div *ngIf="service.type != 'EVENT'" style="margin-top: 10px">
-          <small>This section allows you to add/override requests headers with global or operation specific ones. Use comma-separated string for multiple values for same header.</small>
-          <div class="control-group operation-headers">
-              <h5 class="subsection">Globals headers</h5>
-              <div class="key-value-editor-entry key-value-editor-entry-header" 
-                  *ngIf="operationsHeaders['globals'] != null && operationsHeaders['globals'].length > 0">
-                <div class="key-value-editor-header key-header">Name</div>
-                <div class="key-value-editor-header value-header">Values</div>
+      <form class="form-horizontal">
+        <fieldset>
+          <div class="control-group form-inline">
+            <label class="control-label" for="service">Service under test</label>
+            <div class="controls">
+              <input id="service" class="form-control" readonly value="{{ service.name }}"/>
+              &nbsp;
+              <div class="input-group">
+                <span class="input-group-addon">v.</span>
+                <span id="version" name="version" class="form-control" readonly>{{ service.version }}</span>
               </div>
-              <div class="key-value-editor" *ngFor="let header of operationsHeaders['globals']">
-                <div class="key-value-editor-entry">
-                  <div class="key-value-editor-input">
-                    <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
-                  </div>
-                  <div class="key-value-editor-input">
-                    <input class="form-control" type="text" placeHolder="Values" name="values" [(ngModel)]="header.values">
-                  </div>
-                  <div class="key-value-editor-buttons">
-                    <a (click)="removeHeaderValue('globals', i)" class="as-item-delete" role="button">
-                      <i class="pficon pficon-close"></i>
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <a (click)="addHeaderValue('globals')" role="button">Add Header</a>
+              <p class="help-block">The service and its version we're going to test.</p>
             </div>
-          <div class="control-group operation-headers" *ngFor="let operation of service.operations; index as i;">
-            <h5 class="subsection">Headers for {{ operation.name }}</h5>
-            <div class="key-value-editor-entry key-value-editor-entry-header" 
-                *ngIf="operationsHeaders[operation.name] != null && operationsHeaders[operation.name].length > 0">
-              <div class="key-value-editor-header key-header">Name</div>
-              <div class="key-value-editor-header value-header">Values</div>
+          </div>
+          <div class="control-group">
+            <label class="control-label required-pf" for="testEndpoint">Test Endpoint</label>
+            <div class="controls">
+              <span *ngIf="service.type != 'EVENT'">
+                <input type="url" placeholder="eg. http://{service.endpoint.url:port}/{service.path}" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
+                <p class="help-block">A valid endpoint to use for testing (Http URL for API or WebServices).</p>
+              </span>
+              <span *ngIf="service.type === 'EVENT'">
+                <input type="url" placeholder="eg. kafka://{kafka.broker.url:port}/{kafka.topic.name}" id="testEndpoint" name="testEndpoint" class="form-control" [(ngModel)]="testEndpoint" (ngModelChange)="checkForm()" required/>
+                <p class="help-block">A valid endpoint to use for testing (Kafka/MQTT/NATS/AMQP/PubSub/SQS broker or WebSocket server + topic name for Asynchronous API).</p>
+              </span>
             </div>
-            <div class="key-value-editor" *ngFor="let header of operationsHeaders[operation.name]">
-              <div class="key-value-editor-entry">
-                <div class="key-value-editor-input">
-                  <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
-                </div>
-                <div class="key-value-editor-input">
-                  <input class="form-control" type="text" placeHolder="Values" name="values" [(ngModel)]="header.values">
-                </div>
-                <div class="key-value-editor-buttons">
-                  <a (click)="removeHeaderValue(operation.name, i)" class="as-item-delete" role="button">
-                    <i class="pficon pficon-close"></i>
+          </div>
+          <div class="control-group" *ngIf="service.type === 'EVENT'">
+            <label class="control-label required-pf" for="filteredOperation">Operation</label>
+            <div class="controls">
+              <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
+                <option *ngFor="let operation of service.operations" [value]="operation.name">{{ operation.name }}</option>
+              </select>
+              <p class="help-block">Select the Asynchronous operation you want to test (only SUBSCRIBE is supported at the moment).</p>
+            </div>
+          </div>
+          <div class="control-group">
+            <label class="control-label required-pf" for="runnerType">Runner</label>
+            <div class="controls">
+              <select id="runnerType" name="runnerType" class="form-control" [(ngModel)]="runnerType" (ngModelChange)="checkForm()">
+                <option value="HTTP" *ngIf="service.type != 'EVENT'">HTTP</option>
+                <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP'">SOAP</option>
+                <option value="SOAP_UI" *ngIf="service.type != 'EVENT'">SOAP UI</option>
+                <option value="POSTMAN" *ngIf="service.type === 'REST'">POSTMAN</option>
+                <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST'">OPEN API SCHEMA</option>
+                <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT'">ASYNC API SCHEMA</option>
+                <option value="GRPC_PROTOBUF" *ngIf="service.type === 'GRPC'">GRPC PROTOBUF</option>
+                <option value="GRAPHQL_SCHEMA" *ngIf="service.type === 'GRAPHQL'">GRAPHQL SCHEMA</option>
+              </select>
+              <p class="help-block">
+                <span *ngIf="service.type != 'EVENT'">The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).</span>
+                <span *ngIf="service.type === 'EVENT'">The runner to use for this test (for now we only have ASYNC API SCHEMA compliance).</span>
+                <span class="learn-more-inline">
+                  <a href="https://microcks.io/documentation/using/tests/" target="blanck">Learn More 
+                    <i class="fa fa-external-link" aria-hidden="true"></i>
                   </a>
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <span *ngIf="!showAdvanced"><a (click)="showAdvancedPanel(true)" role="button">Show advanced options</a></span>
+            <span *ngIf="showAdvanced"><a (click)="showAdvancedPanel(false)" role="button">Hide advanced options</a></span>
+          </div>
+
+          <div *ngIf="showAdvanced">
+            <small>This section allows to add timeout, security credentials for connecting endpoint and filter operations to test.</small>
+            <div class="control-group">
+              <label class="control-label required-pf" for="timeout">Timeout</label>
+              <div class="controls">
+                <input type="number" min="1000" max="30000" step="1000" id="timeout" name="timeout" class="form-control" [(ngModel)]="timeout" (ngModelChange)="checkForm()" required/>
+                <p class="help-block">Time to wait for the end of the test (value in milliseconds).</p>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="secret">Secret</label>
+              <div class="controls">
+                <select class="form-control" id="secret" name="secret" [(ngModel)]="secretId" (change)="updateSecretProperties($event)">
+                  <option value="undefined">None</option>
+                  <option *ngFor="let secret of secrets" [value]="secret.id">{{ secret.name }} </option>
+                </select>
+                <p class="help-block">Pick the authentication secret that will be associated for connecting the test endpoint.</p>
+              </div>
+            </div>
+            <div class="control-group">
+              <label class="control-label" for="grantType">OAuth2 Grant</label>
+              <div class="controls">
+                <select class="form-control" id="grantType" name="grantType" [(ngModel)]="oAuth2ClientContext.grantType" (ngModelChange)="checkForm()" (change)="updateGrantType($event)">
+                  <option value="undefined">None</option>
+                  <option value="CLIENT_CREDENTIALS">Client credentials</option>
+                  <option value="REFRESH_TOKEN">Refresh token</option>
+                  <option value="PASSWORD">Password</option>
+                </select>
+                <p class="help-block">Select the OAuth2 grant type that allows retrieving a token for connecting the test endpoint.</p>
+              </div>
+              <div class="row" *ngIf="oAuth2ClientContext.grantType">
+                <div class="col-md-12">
+                  <label class="control-label" for="tokenUri">OAuth2 Token URI</label>
+                  <div class="controls">
+                    <input id="tokenUri" name="tokenUri" class="form-control" [(ngModel)]="oAuth2ClientContext.tokenUri" (ngModelChange)="checkForm()" placeholder="eg. https://idp.acme.org/realms/my-app/protocol/openid-connect/token" />
+                    <p class="help-block">The OAuth2 token URI that will be used for OAuth2 flow token retrieval.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="row" *ngIf="oAuth2ClientContext.grantType">
+                <div class="col-md-6">
+                  <label class="control-label" for="clientId">Client Id</label>
+                  <div class="controls">
+                    <input id="clientId" name="clientId" class="form-control" [(ngModel)]="oAuth2ClientContext.clientId" (ngModelChange)="checkForm()"/>
+                    <p class="help-block">Your OAuth2 client identifier.</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label" for="clientSecret">Client Secret</label>
+                  <div class="controls">
+                    <input type="password" id="clientSecret" name="clientSecret" class="form-control" [(ngModel)]="oAuth2ClientContext.clientSecret" (ngModelChange)="checkForm()"/>
+                    <p class="help-block">Your OAuth2 client secret.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="row" *ngIf="oAuth2ClientContext.grantType === 'PASSWORD'">
+                <div class="col-md-6">
+                  <label class="control-label" for="username">Username</label>
+                  <div class="controls">
+                    <input id="username" name="username" class="form-control" />
+                    <p class="help-block">The OAuth2 resource owner username.</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label" for="password">Password</label>
+                  <div class="controls">
+                    <input type="password" id="password" name="password" class="form-control" />
+                    <p class="help-block">The OAuth2 resource owner password.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="row" *ngIf="oAuth2ClientContext && oAuth2ClientContext.grantType === 'REFRESH_TOKEN'">
+                <div class="col-md-12">
+                  <label class="control-label" for="secret">Refresh Token</label>
+                  <div class="controls">
+                    <input class="form-control" />
+                    <p class="help-block">An OAuth2 long-lived refresh token to get a new access token.</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <a (click)="addHeaderValue(operation.name)" role="button">Add Header</a>
+            <div class="control-group" *ngIf="service.type != 'EVENT'">
+              <label class="control-label required-pf" for="filteredOperationsNames">Operations</label>
+              <div class="controls">
+                <ul>
+                  <li *ngFor="let operation of service.operations">
+                    <label class="checkbox">
+                      <input type="checkbox" id="filteredOperationsNames" name="filteredOperationsNames" (change)="filterOperation(operation.name)"
+                            [checked]="!removedOperationsNames.includes(operation.name)">
+                      {{ operation.name }}
+                    </label>
+                  </li>
+                </ul>
+                <p class="help-block">Remove the operations you don't want to include in this test.</p>
+              </div>
+            </div>
+
+            <div *ngIf="service.type != 'EVENT'" style="margin-top: 10px">
+              <small>This section allows you to add/override requests headers with global or operation specific ones. Use comma-separated string for multiple values for same header.</small>
+              <div class="control-group operation-headers">
+                  <h5 class="subsection">Globals headers</h5>
+                  <div class="key-value-editor-entry key-value-editor-entry-header" 
+                      *ngIf="operationsHeaders['globals'] != null && operationsHeaders['globals'].length > 0">
+                    <div class="key-value-editor-header key-header">Name</div>
+                    <div class="key-value-editor-header value-header">Values</div>
+                  </div>
+                  <div class="key-value-editor" *ngFor="let header of operationsHeaders['globals']">
+                    <div class="key-value-editor-entry">
+                      <div class="key-value-editor-input">
+                        <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
+                      </div>
+                      <div class="key-value-editor-input">
+                        <input class="form-control" type="text" placeHolder="Values" name="values" [(ngModel)]="header.values">
+                      </div>
+                      <div class="key-value-editor-buttons">
+                        <a (click)="removeHeaderValue('globals', i)" class="as-item-delete" role="button">
+                          <i class="pficon pficon-close"></i>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  <a (click)="addHeaderValue('globals')" role="button">Add Header</a>
+                </div>
+              <div class="control-group operation-headers" *ngFor="let operation of service.operations; index as i;">
+                <h5 class="subsection">Headers for {{ operation.name }}</h5>
+                <div class="key-value-editor-entry key-value-editor-entry-header" 
+                    *ngIf="operationsHeaders[operation.name] != null && operationsHeaders[operation.name].length > 0">
+                  <div class="key-value-editor-header key-header">Name</div>
+                  <div class="key-value-editor-header value-header">Values</div>
+                </div>
+                <div class="key-value-editor" *ngFor="let header of operationsHeaders[operation.name]">
+                  <div class="key-value-editor-entry">
+                    <div class="key-value-editor-input">
+                      <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
+                    </div>
+                    <div class="key-value-editor-input">
+                      <input class="form-control" type="text" placeHolder="Values" name="values" [(ngModel)]="header.values">
+                    </div>
+                    <div class="key-value-editor-buttons">
+                      <a (click)="removeHeaderValue(operation.name, i)" class="as-item-delete" role="button">
+                        <i class="pficon pficon-close"></i>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+                <a (click)="addHeaderValue(operation.name)" role="button">Add Header</a>
+              </div>
+            </div>
           </div>
+          <div class="form-actions right pull-right">
+            <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>
+            <button class="btn btn-primary" (click)="createTest()" [disabled]="!submitEnabled">
+              <span class="fa fa-plus"></span> Launch test !
+            </button>
+          </div>
+        </fieldset>
+      </form>
+    </div>
+    <div class="col-md-4 help-bar">
+      <h3 class="section-label">Help needed?</h3>
+      <small>This sidebar provides some explanations and examples on test endpoints and advanced options.</small>
+
+      <div id="secured-endpoint-help">
+        <br/>
+        <h4>Accessing Secured Endpoint</h4>
+        <p>
+          If access to the Test Endpoint requires security materials, you may need to specify and combine those different advanced options:
+        </p>
+        <ul>
+          <li>A <a href="https://microcks.io/documentation/administrating/secrets/" target="blank">Secret <i class="fa fa-external-link" aria-hidden="true"></i></a>: allows you to store/reuse static informations for authentication and authorization. A Secret may hold basic authentication informations, token and additional certificates,</li>
+          <li>An <a href="https://microcks.io/documentation/using/tests/#oauth2-authorization" target="blank">OAuth2 Grant <i class="fa fa-external-link" aria-hidden="true"></i></a>: allows Microcks to run a dynamic OAuth2 flow to retrieve an Access Token that will be presented to the tested endpoint,</li>
+          <li *ngIf="service.type != 'EVENT'">Any <a (click)="showAdvancedPanel(true)">Additional Operation Headers</a>: allows you to specify any other form of materials that will be transfered as HTTP-header to the test endpoint.</li>
+        </ul>
+      </div>
+
+      <div id="async-endpoint-help" *ngIf="service.type === 'EVENT'">
+        <br/>
+        <h4>Async protocols Test Endpoint</h4>
+
+        <p>
+          For Event based-API through <a href="https://microcks.io/documentation/using/asyncapi" target="blank">AsyncAPI testing <i class="fa fa-external-link" aria-hidden="true"></i></a>, the Test Endpoint pattern is depending on the protocole binding you’d like to test.
+        </p>
+        <p>
+          Microcks supports <a (click)="testEndpoint = 'kafka://'"><code>kafka://</code></a>, <a (click)="testEndpoint = 'mqtt://'"><code>mqtt://</code></a>, 
+          <a (click)="testEndpoint = 'ws://'"><code>ws://</code></a>, <a (click)="testEndpoint = 'amqp://'"><code>amqp://</code></a>, 
+          <a (click)="testEndpoint = 'nats://'"><code>nats://</code></a>, <a (click)="testEndpoint = 'googlepubsub://'"><code>googlepubsub://</code></a>, 
+          <a (click)="testEndpoint = 'sns://'"><code>sns://</code></a> and <a (click)="testEndpoint = 'sqs://'"><code>sqs://</code></a> bindings.
+        </p>
+      
+        <div *ngIf="testEndpoint && testEndpoint.startsWith('kafka:')">
+          <br/>
+          <h5>Kafka endpoint pattern</h5>
+
+          <p>Kafka Test Endpoints have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
+
+          <pre><code [highlight]>kafka://kafka.broker.url:port/kafka.topic.name[?param1=value1&param2=value2]</code></pre>
+
+          <p>Here are the optional parameters available:</p>
+          <ul>
+            <li><code>startOffset</code>: The topic offset we start consuming mesages at</li>
+            <li><code>endOffset</code>: The topic offset we end consuming mesages at</li>
+            <li><code>registryUrl</code>: The URL of schema registry that is associated to the tested topic. This parameter can be required when using and testing Avro encoded messages.</li>
+            <li><code>registryUsername</code>: The username used if access to the registry is secured.</li>
+            <li><code>registryAuthCredSource</code>: The source for authentication credentials if any. Valid values are just <code>USER_INFO</code></li>
+          </ul>
+
+          <p>Here's below a sample endpoint with offsets:</p>
+          <div style="position: absolute; right: 20px">
+            <button class="btn btn-default" (click)="testEndpoint = 'kafka://mybroker.example.com:443/test-topic?startOffset=28&endOffset=30'">
+              <span class="fa fa-paste"></span> Copy
+            </button>
+          </div>
+          <pre><code highlight>kafka://mybroker.example.com:443/test-topic?startOffset=28&endOffset=30</code></pre>
+
+          <p>Here's below a sample endpoint with access to a registry:</p>
+          <div style="position: absolute; right: 20px">
+            <button class="btn btn-default" (click)="testEndpoint = 'kafka://mybroker.example.com:443/test-topic?registryUrl=https://schema-registry.example.com&registryUsername=fred:letmein&registryAuthCredSource=USER_INFO'">
+              <span class="fa fa-paste"></span> Copy
+            </button>
+          </div>
+          <pre><code highlight>kafka://mybroker.example.com:443/test-topic?registryUrl=https://schema-registry.example.com&registryUsername=fred:letmein&registryAuthCredSource=USER_INFO</code></pre>
         </div>
       </div>
-      <div class="form-actions right pull-right">
-        <button class="btn btn-default" type="button" (click)="cancel()">Cancel</button>
-        <button class="btn btn-primary" (click)="createTest()" [disabled]="!submitEnabled">
-          <span class="fa fa-plus"></span> Launch test !
-        </button>
+
+      <div *ngIf="testEndpoint && testEndpoint.startsWith('mqtt:')">
+        <br/>
+        <h5>MQTT endpoint pattern</h5>
+
+        <p>MQTT Test Endpoint have the following form with no optional parameters:</p>
+
+        <pre><code [highlight]>mqtt://mqtt.broker.url:port/mqtt.topic.name</code></pre>
       </div>
-    </fieldset>
-  </form>
-</div>
+
+      <div *ngIf="testEndpoint && testEndpoint.startsWith('ws:')">
+        <br/>
+        <h5>WebSocket endpoint pattern</h5>
+
+        <p>WebSocket Test Endpoint have the following form with no optional parameters:</p>
+
+        <pre><code [highlight]>ws://ws.endpoint.url:port/channel.name</code></pre>
+      </div>
+
+      <div *ngIf="testEndpoint && testEndpoint.startsWith('amqp:')">
+        <br/>
+        <h5>AMQP endpoint pattern</h5>
+
+        <p>AMQP 0.9.1 Test Endpoint have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
+
+        <pre><code [highlight]>amqp://amqp.broker.url:port/[amqp.vhost/]amqp.destination.type/amqp.destination.name[?param1=value1&param2=value2]</code></pre>
+
+        <p>Here are the optional parameters available:</p>
+        <ul>
+          <li><code>routingKey</code>: Used to specify a routing key for direct or topic exchanges. If not specified the <code>*</code> wildcard is used.</li>
+          <li><code>durable</code>: Flag telling if exchange to connect to is durable or not. Default is <code>false</code>.</li>
+          <li><code>h.header-name</code>: A bunch of headers where name starts with <code>h.</code> in order to deal with headers exchange. The <code>x-match</code> property is set to <code>any</code> to gather the most message as possible.</li>
+        </ul>
+
+        <p>Here's below a sample endpoint on a virtual host, for topic exchange using the <code>foo</code> routing key:</p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="testEndpoint = 'amqp://rabbitmq.example.com:5672/my-vhost/t/my-exchange-topic?routingKey=foo'">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>amqp://rabbitmq.example.com:5672/my-vhost/t/my-exchange-topic?routingKey=foo</code></pre>
+
+        <p>Here's below a sample endpoint for headers-typed exchange including 2 headers <code>h1</code> and <code>h2</code>:</p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="testEndpoint = 'amqp://rabbitmq.example.com:5672/h/my-exchange-headers?h.h1=v1&h.h2=v2'">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>amqp://rabbitmq.example.com:5672/h/my-exchange-headers?h.h1=v1&h.h2=v2</code></pre>
+      </div>
+
+      <div *ngIf="testEndpoint && testEndpoint.startsWith('nats:')">
+        <br/>
+        <h5>NATS endpoint pattern</h5>
+
+        <p>NATS Test Endpoint have the following form with no optional parameters:</p>
+
+        <pre><code [highlight]>nats://nats.endpoint.url:port/queue-or-subject.name</code></pre>
+      </div>
+
+      <div *ngIf="testEndpoint && testEndpoint.startsWith('googlepubsub:')">
+        <br/>
+        <h5>Google PubSub endpoint pattern</h5>
+
+        <p>Google PubSub Test Endpoint have the following form with no optional parameters:</p>
+
+        <pre><code [highlight]>googlepubsub://google-platform-project.name/topic.name</code></pre>
+      </div>
+
+      <div *ngIf="testEndpoint && testEndpoint.startsWith('sqs:')">
+        <br/>
+        <h5>Amazon SQS endpoint pattern</h5>
+
+        <p>Amazon Simple Queue Service Test Endpoint have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
+
+        <pre><code [highlight]>sqs://aws.region/sqs.queue.name[?param1=value1]</code></pre>
+
+        <p>Here are the optional parameters available:</p>
+        <ul>
+          <li><code>overrideUrl</code>: The AWS endpoint override URI used for API calls. Handy for using SQS via <a href="https://localstack.cloud/" target="blank">LocalStack</a>.</li>
+        </ul>
+      </div>
+
+      <div *ngIf="testEndpoint && testEndpoint.startsWith('sns:')">
+        <br/>
+        <h5>Amazon SNS endpoint pattern</h5>
+
+        <p>Amazon Simple Notification Service Test Endpoint have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
+
+        <pre><code [highlight]>sns://aws.region/sns.topic.name[?param1=value1]</code></pre>
+
+        <p>Here are the optional parameters available:</p>
+        <ul>
+          <li><code>overrideUrl</code>: The AWS endpoint override URI used for API calls. Handy for using SNS via <a href="https://localstack.cloud/" target="blank">LocalStack</a>.</li>
+        </ul>
+      </div>
+
+      <div id="operationsHeaders-help" *ngIf="showAdvanced && type != 'EVENT'">
+        <br/>
+        <h4>Additional Operations Headers</h4>
+
+        <p>
+          Additional Operations Headers allows you to add or override requests headers with your own values. 
+          They can be used to transfer additional security materials, traceability elements or any other needs.
+        </p>
+        <p>
+          Those headers and their values are applied either at a <code>global</code> level (for each and every requests of every operation)
+          or only at the specified <code>operation</code> level.
+        </p>
+        <p>
+          <b>Note:</b> The additional headers are applied just before sending a request so they may also overwrite security related headers
+          that may have been set by a Secret or an OAuth2 grant that are applied earlier in the process. Take care!
+        </p>
+      </div>
+
+      <br/>
+    </div>
+  </div>

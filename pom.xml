@@ -5,13 +5,14 @@
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
   <packaging>pom</packaging>
-  <version>1.7.2-SNAPSHOT</version>
+  <version>1.8.0-SNAPSHOT</version>
   <modules>
     <module>commons/util</module>
     <module>commons/model</module>
     <module>commons/util-el</module>
     <module>webapp</module>
     <module>minions/async</module>
+    <module>distro</module>
   </modules>
 
   <name>Microcks</name>
@@ -59,7 +60,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>2.7.8</spring-boot.version>
+    <spring-boot.version>3.1.1</spring-boot.version>
+    <sonar.organization>microcks</sonar.organization>
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
 
   <dependencyManagement>
@@ -96,6 +99,37 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>0.8.10</version>
+            <executions>
+              <execution>
+                <id>prepare-agent</id>
+                <goals>
+                  <goal>prepare-agent</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+                <configuration>
+                  <formats>
+                    <format>XML</format>
+                  </formats>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>release</id>
       <build>

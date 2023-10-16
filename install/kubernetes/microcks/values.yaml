@@ -8,15 +8,15 @@ microcks:
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
-    #kubernetes.io/ingress.class: nginx
+  #ingressClassName: nginx
+  #grpcIngressClassName: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:1.7.1
+  image: quay.io/microcks/microcks:nightly
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
 
   #grpcIngressAnnotations:
-    #kubernetes.io/ingress.class: myclass
     #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
     #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
 
@@ -62,11 +62,11 @@ keycloak:
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
-    #kubernetes.io/ingress.class: nginx
+  #ingressClassName: nginx
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
   generateCert: true
-  image: quay.io/keycloak/keycloak:20.0.2
+  image: quay.io/keycloak/keycloak:22.0.3
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
@@ -102,7 +102,7 @@ mongodb:
   #uri: mongodb:27017
   #uriParameters: "?ssl=true"
   #database: sampledb
-  image: centos/mongodb-34-centos7:latest
+  image: centos/mongodb-36-centos7:latest
   persistent: true
   volumeSize: 2Gi
   # Unless you uncomment following line and set class, persistent volume claim is created
@@ -138,7 +138,7 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
     
-    image: quay.io/microcks/microcks-async-minion:1.7.1
+    image: quay.io/microcks/microcks-async-minion:nightly
 
     kafka:
       install: true
@@ -262,7 +262,7 @@ features:
       #ingressAnnotations:
         #cert-manager.io/issuer: my-ws-cert-issuer
         #kubernetes.io/tls-acme: "true"
-        #kubernetes.io/ingress.class: nginx
+      #ingressClassName: nginx
       generateCert: true
 
   repositoryFilter:
@@ -278,3 +278,12 @@ features:
   microcksHub:
     enabled: true
     allowedRoles: admin,manager,manager-any
+
+  aiCopilot:
+    enabled: false
+    implementation: openai
+    openai:
+      apiKey: sk-my-openai-api-token
+      timeout: 20
+      #model: gpt-3.5-turbo
+      #maxTokens: 2000

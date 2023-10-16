@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util.openapi;
 
@@ -92,7 +89,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
     */
    @Override
    public HttpMethod buildMethod(String method){
-      return HttpMethod.resolve(method.toUpperCase());
+      return HttpMethod.valueOf(method.toUpperCase());
    }
 
    @Override
@@ -102,8 +99,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
 
       int responseCode = 0;
       try {
-         responseCode = httpResponse.getRawStatusCode();
-         log.debug("Response status code : " + responseCode);
+         responseCode = httpResponse.getStatusCode().value();
+         log.debug("Response status code: {}", responseCode);
       } catch (IOException ioe) {
          log.debug("IOException while getting raw status code in response", ioe);
          return TestReturn.FAILURE_CODE;
@@ -112,8 +109,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Extract response content-type in any case.
       String contentType = null;
       if (httpResponse.getHeaders().getContentType() != null) {
-         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType().toString());
          contentType = httpResponse.getHeaders().getContentType().toString();
+         log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType());
          // Sanitize charset information from media-type.
          if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
             contentType = contentType.substring(0, contentType.indexOf(";"));
@@ -123,14 +120,25 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // If required, compare response code and content-type to expected ones.
       if (validateResponseCode) {
          Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
-         log.debug("Response expected status code : " + expectedResponse.getStatus());
-         if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
-            log.debug("Response HttpStatus does not match expected one, returning failure");
-            return TestReturn.FAILURE_CODE;
-         }
+         if (expectedResponse != null) {
+            log.debug("Response expected status code: {}", expectedResponse.getStatus());
+            if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
+               log.debug("Response HttpStatus does not match expected one, returning failure");
+               lastValidationErrors = List.of(
+                     String.format("Response HttpStatus does not match expected one. Expecting %s but got %d",
+                           expectedResponse.getStatus(), responseCode)
+               );
+               return TestReturn.FAILURE_CODE;
+            }
 
-         if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
-            log.debug("Response Content-Type does not match expected one, returning failure");
+            if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
+               log.debug("Response Content-Type does not match expected one, returning failure");
+               lastValidationErrors = List.of(
+                     String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
+                           expectedResponse.getMediaType(), contentType)
+               );
+               return TestReturn.FAILURE_CODE;
+            }
          }
       }
 
@@ -188,7 +196,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
          }
 
          if (!lastValidationErrors.isEmpty()) {
-            log.debug("OpenAPI schema validation errors found " + lastValidationErrors.size() + ", marking test as failed.");
+            log.debug("OpenAPI schema validation errors found {}, marking test as failed.", lastValidationErrors.size());
             return TestReturn.FAILURE_CODE;
          }
          log.debug("OpenAPI schema validation of response is successful !");

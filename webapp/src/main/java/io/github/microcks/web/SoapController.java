@@ -1,37 +1,36 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.web;
 
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.SoapMessageValidator;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.script.ScriptEngineBinder;
+import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
 
 import org.apache.commons.lang3.RandomUtils;
-import org.apache.xmlbeans.XmlError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,12 +45,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.util.UriUtils;
 import org.xml.sax.InputSource;
 
+import jakarta.servlet.http.HttpServletRequest;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.servlet.http.HttpServletRequest;
+import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
 import java.util.HashMap;
@@ -81,6 +80,9 @@ public class SoapController {
 
    @Autowired
    private ResponseRepository responseRepository;
+
+   @Autowired
+   private ResourceRepository resourceRepository;
 
    @Autowired
    private ApplicationContext applicationContext;
@@ -151,19 +153,16 @@ public class SoapController {
 
          if (validate != null && validate) {
             log.debug("Soap message validation is turned on, validating...");
-            try {
-               List<XmlError> errors = SoapMessageValidator.validateSoapMessage(
-                     rOperation.getInputName(), service.getXmlNS(), body,
-                     resourceUrl + UriUtils.encodePath(service.getName() + "-" + version, "UTF-8") + ".wsdl", true);
-               log.debug("SoapBody validation errors: " + errors.size());
 
-               // Return a 400 http code with errors.
-               if (errors != null && errors.size() > 0) {
-                  return new ResponseEntity<Object>(errors, HttpStatus.BAD_REQUEST);
-               }
-            } catch (Exception e) {
-               log.error("Error during Soap validation", e);
-               return new ResponseEntity<Object>("Error during Soap validation: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+            Resource wsdlResource = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL).get(0);
+            List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(), new QName(service.getXmlNS(), rOperation.getInputName()),
+                     body, resourceUrl);
+
+            log.debug("SoapBody validation errors: " + errors.size());
+
+            // Return a 400 http code with errors.
+            if (errors != null && errors.size() > 0) {
+               return new ResponseEntity<Object>(errors, HttpStatus.BAD_REQUEST);
             }
          }
 
@@ -325,7 +324,8 @@ public class SoapController {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
          ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
-         return new DispatchContext((String) se.eval(dispatcherRules), requestContext);
+         String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
+         return new DispatchContext((String) se.eval(script), requestContext);
       } catch (Exception e) {
          log.error("Error during Script evaluation", e);
       }

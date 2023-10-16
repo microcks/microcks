@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.1.0-1760.1675784957
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.2-691
 
 MAINTAINER Laurent Broudoux <laurent@microcks.io>
 
@@ -48,7 +48,7 @@ RUN chown 1001 /deployments \
 USER 1001
 
 # Copy corresponding jar file
-COPY target/*.jar app.jar
+COPY target/*-exec.jar app.jar
 EXPOSE 8080
 
 # Run it

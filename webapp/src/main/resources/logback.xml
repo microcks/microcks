@@ -16,11 +16,7 @@
     <!-- Change com.mongodb to org.mongodb so that com.mongodb.FongoDBCollection is ignored, set to debug and tests do not fail... -->
     <logger name="org.mongodb" level="INFO"/>
     <logger name="org.springframework.data.mongodb" level="INFO"/>
-    <logger name="org.keycloak" level="INFO"/>
-    <logger name="class org.keycloak.adapters.tomcat.CatalinaRequestAuthenticator" level="INFO"/>
-    <logger name="com.eviware.soapui.impl.wsdl.support.http" level="WARN"/>
     <logger name="org.reflections" level="WARN"/>
-    <logger name="com.jayway.jsonpath" level="INFO"/>
     <logger name="sun.net.www.protocol.http" level="INFO"/>
 
     <logger name="jdk.event.security" level="WARN"/>
@@ -48,7 +44,6 @@
     <logger name="org.thymeleaf" level="WARN"/>
     <logger name="org.xnio" level="WARN"/>
     <logger name="com.mangofactory.swagger" level="WARN"/>
-    <logger name="com.wordnik.swagger" level="WARN"/>
     <logger name="sun.rmi.transport" level="WARN"/>
 
     <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">

@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.service;
 
@@ -81,6 +78,8 @@ public class ServiceService {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(ServiceService.class);
 
+   private static final String AI_COPILOT_SOURCE = "AI Copilot";
+
    @Autowired
    private ServiceRepository serviceRepository;
 
@@ -125,7 +124,7 @@ public class ServiceService {
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
    public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret, boolean disableSSLValidation, boolean mainArtifact) throws MockRepositoryImportException {
-      log.info("Importing service definitions from " + repositoryUrl);
+      log.info("Importing service definitions from {}", repositoryUrl);
       File localFile = null;
       Map<String, List<String>> fileProperties = null;
 
@@ -135,7 +134,6 @@ public class ServiceService {
             localFile = fileAndHeaders.getLocalFile();
             fileProperties = fileAndHeaders.getResponseHeaders();
          } catch (IOException ioe) {
-            log.error("Exception while downloading " + repositoryUrl, ioe);
             throw new MockRepositoryImportException(repositoryUrl + " cannot be downloaded", ioe);
          }
       } else {
@@ -169,7 +167,6 @@ public class ServiceService {
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(repositoryFile, referenceResolver);
       } catch (IOException ioe) {
-         log.error("Exception while accessing file " + repositoryFile.getPath(), ioe);
          throw new MockRepositoryImportException(ioe.getMessage(), ioe);
       }
 
@@ -230,7 +227,8 @@ public class ServiceService {
             }
             for (Operation operation : service.getOperations()) {
                Operation existingOp = existingService.getOperations().stream()
-                     .filter(op -> op.getName().equals(operation.getName())).findFirst().orElse(null);
+                     .filter(op -> op.getName().equals(operation.getName()))
+                     .findFirst().orElse(null);
                if (existingOp != null) {
                   if (operation.getDefaultDelay() != null) {
                      existingOp.setDefaultDelay(operation.getDefaultDelay());
@@ -255,7 +253,7 @@ public class ServiceService {
          // Remove resources previously attached to service.
          List<Resource> existingResources = resourceRepository.findByServiceIdAndSourceArtifact(
                reference.getId(), artifactInfo.getArtifactName());
-         if (existingResources != null && existingResources.size() > 0){
+         if (existingResources != null && !existingResources.isEmpty()){
             resourceRepository.deleteAll(existingResources);
          }
 
@@ -281,9 +279,7 @@ public class ServiceService {
             List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair pair = (RequestResponsePair)exchange;
-
+               if (exchange instanceof RequestResponsePair pair) {
                   // Associate request and response with operation and artifact.
                   pair.getRequest().setOperationId(operationId);
                   pair.getResponse().setOperationId(operationId);
@@ -295,9 +291,7 @@ public class ServiceService {
                   pair.getRequest().setResponseId(pair.getResponse().getId());
                   requestRepository.save(pair.getRequest());
 
-               } else if (exchange instanceof UnidirectionalEvent) {
-                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
-
+               } else if (exchange instanceof UnidirectionalEvent event) {
                   // Associate event message with operation and artifact before saving it..
                   event.getEventMessage().setOperationId(operationId);
                   event.getEventMessage().setSourceArtifact(artifactInfo.getArtifactName());
@@ -413,7 +407,6 @@ public class ServiceService {
          throws EntityAlreadyExistsException {
       log.info("Creating a new Service '{}-{}' for generic event {}", name, version, event);
 
-      long start = System.currentTimeMillis();
       // Check if corresponding Service already exists.
       Service existingService = serviceRepository.findByNameAndVersion(name, version);
       if (existingService != null) {
@@ -485,6 +478,9 @@ public class ServiceService {
          // Delete all resources first.
          resourceRepository.deleteAll(resourceRepository.findByServiceId(id));
 
+         // Delete all tests related to service.
+         testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
+
          // Delete all requests and responses bound to service operation.
          if (service != null) {
             for (Operation operation : service.getOperations()) {
@@ -493,15 +489,11 @@ public class ServiceService {
                responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
                eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
             }
+
+            // Finally delete service and publish event.
+            serviceRepository.delete(service);
+            publishServiceChangeEvent(service, ChangeType.DELETED);
          }
-
-         // Delete all tests related to service.
-         testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
-
-         // Finally delete service and publish event.
-         serviceRepository.delete(service);
-         publishServiceChangeEvent(service, ChangeType.DELETED);
-
          log.info("Service [{}] has been fully deleted", id);
          return true;
       }
@@ -545,7 +537,7 @@ public class ServiceService {
    public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay,
                                   List<ParameterConstraint> constraints, UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? " + authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      log.debug("Is user allowed? {}",  authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
       if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
             if (operation.getName().equals(operationName)) {
@@ -565,6 +557,48 @@ public class ServiceService {
       return false;
    }
 
+   /**
+    *
+    * @param id
+    * @param operationName
+    * @param exchanges
+    * @param userInfo
+    * @return
+    */
+   public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,  UserInfo userInfo) {
+      Service service = serviceRepository.findById(id).orElse(null);
+      log.debug("Is user allowed? {}", authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+         for (Operation operation : service.getOperations()) {
+            if (operation.getName().equals(operationName)) {
+               String operationId = IdBuilder.buildOperationId(service, operation);
+
+               for (Exchange exchange : exchanges) {
+                  if (exchange instanceof RequestResponsePair pair) {
+                     // Associate request and response with operation and artifact.
+                     pair.getRequest().setOperationId(operationId);
+                     pair.getResponse().setOperationId(operationId);
+                     pair.getRequest().setSourceArtifact(AI_COPILOT_SOURCE);
+                     pair.getResponse().setSourceArtifact(AI_COPILOT_SOURCE);
+
+                     // Save response and associate request with response before saving it.
+                     responseRepository.save(pair.getResponse());
+                     pair.getRequest().setResponseId(pair.getResponse().getId());
+                     requestRepository.save(pair.getRequest());
+
+                  } else if (exchange instanceof UnidirectionalEvent event) {
+                     // Associate event message with operation and artifact before saving it.
+                     event.getEventMessage().setOperationId(operationId);
+                     event.getEventMessage().setSourceArtifact(AI_COPILOT_SOURCE);
+                     eventMessageRepository.save(event.getEventMessage());
+                  }
+               }
+               return true;
+            }
+         }
+      }
+      return false;
+   }
 
    /** Recopy overriden operation mutable properties into newService. */
    private void copyOverridenOperations(Service existingService, Service newService) {

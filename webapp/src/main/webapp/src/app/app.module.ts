@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -71,10 +68,12 @@ import { ServicesPageComponent } from './pages/services/services.page';
 import { DirectAPIWizardComponent } from './pages/services/_components/direct-api.wizard'
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
+import { GenerateSamplesDialogComponent } from './pages/services/{serviceId}/_components/generate-samples.dialog';
 import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
 import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
 import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page';
+import { AddToCIDialogComponent } from './pages/tests/{testId}/_components/add-to-ci.dialog';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { InvocationsServicePageComponent } from './pages/metrics/invocations/{serviceId}/invocations-service.page';
 import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
@@ -86,6 +85,7 @@ import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVe
 
 import json from 'highlight.js/lib/languages/json';
 import xml from 'highlight.js/lib/languages/xml';
+import yaml from 'highlight.js/lib/languages/yaml';
 
 /**
  * Import specific languages to avoid importing everything
@@ -94,7 +94,8 @@ import xml from 'highlight.js/lib/languages/xml';
 export function getHighlightLanguages() {
   return [
     {name: 'json', func: json},
-    {name: 'xml', func: xml}
+    {name: 'xml', func: xml},
+    {name: 'yaml', func: yaml},
   ];
 }
 
@@ -108,8 +109,8 @@ export function configLoader(configService: ConfigService) {
     ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent, DayInvocationsBarChartComponent,
     HourInvocationsBarChartComponent, TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
     ScoreTreemapComponent, GradeIndexComponent, DashboardPageComponent, ServicesPageComponent, DirectAPIWizardComponent,
-    ServiceDetailPageComponent, OperationOverridePageComponent, GenericResourcesDialogComponent,
-    TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, TestRunnerPageComponent,
+    ServiceDetailPageComponent, OperationOverridePageComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
+    TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, AddToCIDialogComponent, TestRunnerPageComponent,
     InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
     ArtifactUploaderDialogComponent, AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
     GroupsManagementDialogComponent, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
@@ -144,8 +145,8 @@ export function configLoader(configService: ConfigService) {
     }
   ],
   entryComponents: [
-    HelpDialogComponent, DirectAPIWizardComponent,
-    EditLabelsDialogComponent, GenericResourcesDialogComponent,
+    HelpDialogComponent, DirectAPIWizardComponent, AddToCIDialogComponent,
+    EditLabelsDialogComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
     ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
     GroupsManagementDialogComponent
   ],

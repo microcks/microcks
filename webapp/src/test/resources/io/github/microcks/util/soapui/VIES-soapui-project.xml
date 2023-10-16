@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="63e9b1f4-b163-4f3a-8198-23823c9c13c5" activeEnvironment="Default" name="VIES" resourceRoot=""
+                    soapui-version="5.6.0" abortOnError="false" runType="SEQUENTIAL"
+                    xmlns:con="http://eviware.com/soapui/config">
+  <con:settings/>
+  <con:interface xsi:type="con:WsdlInterface" id="8c98cf88-390d-426c-acbd-46edbc7aba7b" wsaVersion="200508"
+                 name="VitaleServiceBinding-v2" type="wsdl"
+                 bindingName="{http://www.cnamts.fr/vitale/webservice/ServiceVitale/v2}VitaleServiceBinding-v2"
+                 soapVersion="1_2" anonymous="optional"
+                 definition="file:/C:/Users/PRIVATE/Documents/mock_soap/soapui/VITALE/VIES/VIES_ServiceVitale_v2.0.wsdl"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <con:settings/>
+    <con:definitionCache type="TEXT"
+                         rootPart="file:\C:\Users\PRIVATE\Documents\mock_soap\soapui\VITALE\VIES\VIES_ServiceVitale_v2.0.wsdl">
+      <con:part>
+        <con:url>file:\C:\Users\PRIVATE\Documents\mock_soap\soapui\VITALE\VIES\VIES_ServiceVitale_v2.0.wsdl</con:url>
+        <con:content><![CDATA[<!--Parametres de ce template WSDL ESPOIR (balises a remplacer dans tout
+	le document WSDL) : - [domaine] : nom du domaine fonctionnel de l'application 
+	exposant le service - [codeApplicatif] : Code applicatif du service au format 
+	cnam : ex : JK, BIMR etc.. - [ServiceMetierCourt] : le service metier court. 
+	Ex. : AAT - [ServiceMetierLong] : le service metier long. Ex. : ServiceAvisArretTravail 
+	- [versionMajeure] : version majeure du service au format suivant : ex : 
+	0, 1, 2 etc.. - [versionMineure] : version mineure du service au format suivant 
+	: ex : 0, 1, 2 etc.. - [nomOperation1] : le nom d'une operation. Pour definir 
+	d'autres operations, il faut dupliquer ce premier template. - [Documentation 
+	succincte du service] : doc. du present document WSDL - [Documentation succincte 
+	sur le contrat de service expose] : doc. du service expose (balise wsdl:service).-->
+<wsdl:definitions name="ServiceVitale-v2" targetNamespace="http://www.cnamts.fr/vitale/webservice/ServiceVitale/v2" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://www.cnamts.fr/vitale/webservice/ServiceVitale/v2" xmlns:metier="http://www.cnamts.fr/vitale/ServiceVitale/v2" xmlns:wsaw="http://www.w3.org/2006/02/addressing/wsdl" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:error="urn:siram:erreur">
+  <wsdl:documentation>Services du SI Vitale</wsdl:documentation>
+  <wsdl:types>
+    <xs:schema>
+      <xs:import namespace="http://www.cnamts.fr/vitale/ServiceVitale/v2" schemaLocation="xsd/Suivi_Parcours_Carte_2.0.xsd"/>
+      <xs:import namespace="urn:siram:erreur"/>
+    </xs:schema>
+  </wsdl:types>
+  <!--Declaration des formats des messages-->
+  <!--Message de requete-->
+  <wsdl:message name="recupererSuiviParcoursCarteRequest">
+    <wsdl:part name="recupererSuiviParcoursCarteRequestPart" element="metier:recupererSuiviParcoursCarteRequestElement"/>
+  </wsdl:message>
+  <!--Message de reponse-->
+  <wsdl:message name="recupererSuiviParcoursCarteResponse">
+    <wsdl:part name="recupererSuiviParcoursCarteResponsePart" element="metier:recupererSuiviParcoursCarteResponseElement"/>
+  </wsdl:message>
+  <!--Declaration d'un seul portType : un seul web service est expose Par 
+		contre, celui-ci peut definir plusieurs operations. Ici, nous en illustrons 
+		une seule a dupliquer-->
+  <wsdl:portType name="VitaleServicePortType">
+    <wsdl:operation name="recupererSuiviParcoursCarte">
+      <!--Adressage de l'action a mener pour cette operation-->
+      <wsdl:input name="recupererSuiviParcoursCarteRequest" message="tns:recupererSuiviParcoursCarteRequest" wsaw:Action="urn:ServiceVitale:2:recupererSuiviParcoursCarte"/>
+      <!--Attention, pour le message de reponse, la balise wsaw est identique 
+				a celle presente pour le message de requete-->
+      <wsdl:output name="recupererSuiviParcoursCarteResponse" message="tns:recupererSuiviParcoursCarteResponse" wsaw:Action="urn:ServiceVitale:2:recupererSuiviParcoursCarte"/>
+    </wsdl:operation>
+  </wsdl:portType>
+  <!--Declaration des operations associees au port unique-->
+  <wsdl:binding name="VitaleServiceBinding-v2" type="tns:VitaleServicePortType">
+    <!--Le protocole est obligatoirement http avec soap en mode "document"-->
+    <soap12:binding style="document" transport="http://www.w3.org/2003/05/soap/bindings/HTTP/"/>
+    <!--Cette balise fixe la norme WS-Addressing pour l'appel au service-->
+    <wsaw:UsingAddressing wsdl:required="true"/>
+    <wsdl:operation name="recupererSuiviParcoursCarte">
+      <!--La balise soap12:operation doit contenir la version de l'operation-->
+      <soap12:operation soapAction="urn:ServiceVitale:2:recupererSuiviParcoursCarte"/>
+      <!--Les messages de requete et de reponse ne doivent pas etre encodes 
+				use="literal"-->
+      <wsdl:input name="recupererSuiviParcoursCarteRequest">
+        <!--Attention, la balise soap:body Ne doit PAS contenir d'attribut message-->
+        <soap12:body parts="recupererSuiviParcoursCarteRequestPart" use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="recupererSuiviParcoursCarteResponse">
+        <soap12:body parts="recupererSuiviParcoursCarteResponsePart" use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <!--Declaration du service, Attention, un seul service doit etre expose 
+		par document WSDL.-->
+  <wsdl:service name="Vitale-v2">
+    <wsdl:documentation>Services du SI Vitale</wsdl:documentation>
+    <wsdl:port name="VitaleService" binding="tns:VitaleServiceBinding-v2">
+      <soap12:address location="http://HOST:PORT/MetierVIESws/Vitale-v2"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content>
+        <con:type>http://schemas.xmlsoap.org/wsdl/</con:type>
+      </con:part>
+      <con:part>
+        <con:url>file:\C:\Users\PRIVATE\Documents\mock_soap\soapui\VITALE\VIES\xsd\Suivi_Parcours_Carte_2.0.xsd
+        </con:url>
+        <con:content><![CDATA[<!--Parametres de ce template XSD ESPOIR (balises a remplacer dans tout
+	le document XSD) : - [domaine] : nom du domaine fonctionnel de l'application 
+	exposant le service - [ServiceMetierLong] : le service metier long. Ex. : 
+	ServiceAvisArretTravail - [versionMajeure] : version majeure du service au 
+	format suivant : ex : 1 , 2, 3 etc.. - [nomOperation1] : le nom d'une operation. 
+	Pour definir d'autres operations, il faut dupliquer ce premier template.-->
+<xs:schema targetNamespace="http://www.cnamts.fr/vitale/ServiceVitale/v2" version="1.0" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://www.cnamts.fr/vitale/ServiceVitale/v2">
+  <xs:element name="recupererSuiviParcoursCarteRequestElement" type="tns:recupererSuiviParcoursCarteRequest"/>
+  <xs:element name="recupererSuiviParcoursCarteResponseElement" type="tns:recupererSuiviParcoursCarteResponse"/>
+  <xs:complexType name="recupererSuiviParcoursCarteRequest">
+    <xs:sequence>
+      <xs:element name="nir" type="xs:string"/>
+      <xs:element name="caisse" type="xs:string"/>
+      <xs:element name="regime" type="xs:string"/>
+      <xs:element name="numEtat" type="xs:int" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="recupererSuiviParcoursCarteResponse">
+    <xs:sequence>
+      <xs:element name="codeAnomalie" type="xs:string" minOccurs="0"/>
+      <xs:element name="libelleAnomalie" type="xs:string" minOccurs="0"/>
+      <xs:element name="numEtape" type="xs:int" minOccurs="0"/>
+      <xs:element name="numEtat" type="xs:int" minOccurs="0"/>
+      <xs:element name="libelleEtat" type="xs:string" minOccurs="0"/>
+      <xs:element name="date" type="xs:date" minOccurs="0"/>
+      <xs:element name="detailSuiviCarte" type="tns:detailSuiviCarte" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="detailSuiviCarte">
+    <xs:sequence>
+      <xs:element name="numero" type="xs:int" minOccurs="0"/>
+      <xs:element name="origine" type="xs:string" minOccurs="0"/>
+      <xs:element name="libelle" type="xs:string" minOccurs="0"/>
+      <xs:element name="delai" type="xs:int" minOccurs="0"/>
+      <xs:element name="nbJours" type="xs:int" minOccurs="0"/>
+      <xs:element name="date" type="xs:date" minOccurs="0"/>
+      <xs:element name="codeEtatDernierRej" type="xs:string" minOccurs="0"/>
+      <xs:element name="numeroSerie" type="xs:string" minOccurs="0"/>
+      <xs:element name="listRejet" type="tns:rejet" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="rejet">
+    <xs:sequence>
+      <xs:element name="date" type="xs:date" minOccurs="0"/>
+      <xs:element name="codeMotif" type="xs:string" minOccurs="0"/>
+      <xs:element name="libMotif" type="xs:string" minOccurs="0"/>
+      <xs:element name="codeType" type="xs:string" minOccurs="0"/>
+      <xs:element name="codeEtat" type="xs:string" minOccurs="0"/>
+      <xs:element name="codeCause" type="xs:string" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>]]></con:content>
+        <con:type>http://www.w3.org/2001/XMLSchema</con:type>
+      </con:part>
+    </con:definitionCache>
+    <con:endpoints>
+      <con:endpoint>http://HOST:PORT/MetierVIESws/Vitale-v2</con:endpoint>
+    </con:endpoints>
+    <con:operation id="08a9622b-a37e-4d8d-bc70-0af573101a92" isOneWay="false"
+                   action="urn:ServiceVitale:2:recupererSuiviParcoursCarte" name="recupererSuiviParcoursCarte"
+                   bindingOperationName="recupererSuiviParcoursCarte" type="Request-Response"
+                   outputName="recupererSuiviParcoursCarteResponse" inputName="recupererSuiviParcoursCarteRequest"
+                   receivesAttachments="false" sendsAttachments="false">
+      <con:settings/>
+    </con:operation>
+  </con:interface>
+  <con:testSuite id="42196463-ee1e-4382-83c8-8609dc6e8177" name="VitaleServiceBinding-v2 TestSuite">
+    <con:settings/>
+    <con:runType>SEQUENTIAL</con:runType>
+    <con:testCase id="1e876155-1645-4699-86b7-628e93e69d68" failOnError="true" failTestCaseOnErrors="true"
+                  keepSession="false" maxResults="0" name="recupererSuiviParcoursCarte TestCase"
+                  searchProperties="true">
+      <con:settings/>
+      <con:testStep type="request" id="2c14c37e-1ab0-48fe-ab71-bfc2fbbbfdb1" name="Toto Request">
+        <con:settings/>
+        <con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <con:interface>VitaleServiceBinding-v2</con:interface>
+          <con:operation>recupererSuiviParcoursCarte</con:operation>
+          <con:request name="Toto Request" id="970bfb02-6e26-407c-99dd-4c88579729aa">
+            <con:settings>
+              <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/>
+              </con:setting>
+            </con:settings>
+            <con:encoding>UTF-8</con:encoding>
+            <con:endpoint>http://HOST:PORT/MetierVIESws/Vitale-v2</con:endpoint>
+            <con:request><![CDATA[<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:v2="http://www.cnamts.fr/vitale/ServiceVitale/v2">\r
+   <soap:Header/>\r
+   <soap:Body>\r
+      <v2:recupererSuiviParcoursCarteRequestElement>\r
+         <nir>1561044109273</nir>\r
+         <caisse>1</caisse>\r
+         <regime>1</regime>\r
+      </v2:recupererSuiviParcoursCarteRequestElement>\r
+   </soap:Body>\r
+</soap:Envelope>]]></con:request>
+            <con:credentials>
+              <con:authType>No Authorization</con:authType>
+            </con:credentials>
+            <con:jmsConfig JMSDeliveryMode="PERSISTENT"/>
+            <con:jmsPropertyConfig/>
+            <con:wsaConfig action="urn:ServiceVitale:2:recupererSuiviParcoursCarte" mustUnderstand="NONE"
+                           version="200508"/>
+            <con:wsrmConfig version="1.2"/>
+          </con:request>
+        </con:config>
+      </con:testStep>
+      <con:testStep type="request" name="Titi Request" id="5434eaca-9989-4d6a-a10e-5a737ff7ab21">
+        <con:settings/>
+        <con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <con:interface>VitaleServiceBinding-v2</con:interface>
+          <con:operation>recupererSuiviParcoursCarte</con:operation>
+          <con:request name="Titi Request" id="e157f46a-51be-4c87-aba2-be3ff299c99d">
+            <con:settings>
+              <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/>
+              </con:setting>
+            </con:settings>
+            <con:encoding>UTF-8</con:encoding>
+            <con:endpoint>http://HOST:PORT/MetierVIESws/Vitale-v2</con:endpoint>
+            <con:request><![CDATA[<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:v2="http://www.cnamts.fr/vitale/ServiceVitale/v2">\r
+   <soap:Header/>\r
+   <soap:Body>\r
+      <v2:recupererSuiviParcoursCarteRequestElement>\r
+         <nir>1561044109273</nir>\r
+         <caisse>2</caisse>\r
+         <regime>2</regime>\r
+      </v2:recupererSuiviParcoursCarteRequestElement>\r
+   </soap:Body>\r
+</soap:Envelope>]]></con:request>
+            <con:assertion type="SOAP Response" id="aa4fcd12-ffea-40bf-965c-797461028b4a"/>
+            <con:assertion type="Valid HTTP Status Codes" id="2e6c4162-30a7-418b-a2d6-806ed54aec9c"
+                           name="Valid HTTP Status Codes">
+              <con:configuration>
+                <codes/>
+              </con:configuration>
+            </con:assertion>
+            <con:assertion type="SOAP Fault Assertion" id="d4678fd0-7165-4c46-a577-87d904e3bbaf" name="Not SOAP Fault"/>
+            <con:credentials>
+              <con:authType>No Authorization</con:authType>
+            </con:credentials>
+            <con:jmsConfig JMSDeliveryMode="PERSISTENT"/>
+            <con:jmsPropertyConfig/>
+            <con:wsaConfig mustUnderstand="NONE" version="200508"/>
+            <con:wsrmConfig version="1.2"/>
+          </con:request>
+        </con:config>
+      </con:testStep>
+      <con:testStep type="request" name="Bad Request" id="2b73363b-b4c9-4404-a6e9-151dfcf75003">
+        <con:settings/>
+        <con:config xsi:type="con:RequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+          <con:interface>VitaleServiceBinding-v2</con:interface>
+          <con:operation>recupererSuiviParcoursCarte</con:operation>
+          <con:request name="Bad Request" id="e157f46a-51be-4c87-aba2-be3ff299c99d">
+            <con:settings>
+              <con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/>
+              </con:setting>
+            </con:settings>
+            <con:encoding>UTF-8</con:encoding>
+            <con:endpoint>http://HOST:PORT/MetierVIESws/Vitale-v2</con:endpoint>
+            <con:request><![CDATA[<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:v2="http://www.cnamts.fr/vitale/ServiceVitale/v2">\r
+   <soap:Header/>\r
+   <soap:Body>\r
+      <v2:recupererSuiviParcoursCarteRequestElement>\r
+         <nir>1561044109274</nir>\r
+         <caisse>3</caisse>\r
+         <regime>2</regime>\r
+      </v2:recupererSuiviParcoursCarteRequestElement>\r
+   </soap:Body>\r
+</soap:Envelope>]]></con:request>
+            <con:assertion type="SOAP Response" id="aa4fcd12-ffea-40bf-965c-797461028b4a"/>
+            <con:assertion type="Valid HTTP Status Codes" id="2e6c4162-30a7-418b-a2d6-806ed54aec9c"
+                           name="Valid HTTP Status Codes">
+              <con:configuration>
+                <codes/>
+              </con:configuration>
+            </con:assertion>
+            <con:assertion type="SOAP Fault Assertion" id="d4678fd0-7165-4c46-a577-87d904e3bbaf" name="Not SOAP Fault"/>
+            <con:credentials>
+              <con:authType>No Authorization</con:authType>
+            </con:credentials>
+            <con:jmsConfig JMSDeliveryMode="PERSISTENT"/>
+            <con:jmsPropertyConfig/>
+            <con:wsaConfig mustUnderstand="NONE" version="200508"/>
+            <con:wsrmConfig version="1.2"/>
+          </con:request>
+        </con:config>
+      </con:testStep>
+      <con:properties/>
+    </con:testCase>
+    <con:properties/>
+  </con:testSuite>
+  <con:mockService id="47bcc6da-c22c-4615-875f-aff01053c9f5" port="8088" path="/mockVitaleServiceBinding-v2"
+                   host="P107501A310111T" name="VitaleServiceBinding-v2 Mock">
+    <con:settings>
+      <con:setting id="com.eviware.soapui.impl.wsdl.mock.WsdlMockService@require-soap-action">false</con:setting>
+    </con:settings>
+    <con:properties>
+      <con:property>
+        <con:name>version</con:name>
+        <con:value>060000</con:value>
+      </con:property>
+    </con:properties>
+    <con:mockOperation name="recupererSuiviParcoursCarte" id="da9296e6-38b2-40dc-9079-5fc2503ae98f"
+                       interface="VitaleServiceBinding-v2" operation="recupererSuiviParcoursCarte">
+      <con:settings/>
+      <con:defaultResponse>Bad Response</con:defaultResponse>
+      <con:dispatchStyle>SCRIPT</con:dispatchStyle>
+      <con:dispatchPath>import com.eviware.soapui.support.XmlHolder
+        def holder = new XmlHolder(mockRequest.requestContent)
+        def nir = holder["//nir"]
+        def caisse = holder["//caisse"]
+        def regime = holder["//regime"]
+
+        if (nir == "1561044109273") {
+        if (caisse == "1" &amp;&amp; regime == "1") {
+        // requestContext.numEtape = 3
+        return "Toto Response"
+        }
+        if (caisse == "2" &amp;&amp; regime == "2") {
+        // requestContext.numEtape = 5
+        return "Titi Response"
+        }
+        }
+        // requestContext.numEtape = 1
+        return "Bad Response"
+
+      </con:dispatchPath>
+      <con:response name="Toto Response" id="a7b84b3e-96ed-4ce9-9470-7be6c298a006" httpResponseStatus="200"
+                    encoding="UTF-8">
+        <con:settings/>
+        <con:responseContent><![CDATA[<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:v2="http://www.cnamts.fr/vitale/ServiceVitale/v2">
+   <soap:Header/>
+   <soap:Body>
+      <v2:recupererSuiviParcoursCarteResponseElement>
+         <codeAnomalie>000</codeAnomalie>
+         <libelleAnomalie>Fin normale</libelleAnomalie>
+         <numEtape>${numEtape}</numEtape>
+         <numEtat>9</numEtat>
+         <libelleEtat>carteEnPersonnalisation</libelleEtat>
+         <date>2007-03-19+01:00</date>
+      </v2:recupererSuiviParcoursCarteResponseElement>
+   </soap:Body>
+</soap:Envelope>]]></con:responseContent>
+        <con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:ServiceVitale:2:recupererSuiviParcoursCarte"/>
+      </con:response>
+      <con:response name="Titi Response" id="0302815d-4f82-4a4c-9d1b-3e79f313b18b" httpResponseStatus="200"
+                    encoding="UTF-8">
+        <con:settings/>
+        <con:responseContent><![CDATA[<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:v2="http://www.cnamts.fr/vitale/ServiceVitale/v2">
+   <soap:Header/>
+   <soap:Body>
+      <v2:recupererSuiviParcoursCarteResponseElement>
+         <codeAnomalie>000</codeAnomalie>
+         <libelleAnomalie>Fin normale</libelleAnomalie>
+         <numEtape>${numEtape}</numEtape>
+         <numEtat>3</numEtat>
+         <libelleEtat>envoiFormulaire</libelleEtat>
+         <date>2007-03-19+01:00</date>
+         <detailSuiviCarte>
+            <numero>1</numero>
+            <origine>Réexpédiée suite à demande technicien</origine>
+            <delai>1</delai>
+            <nbJours>3583</nbJours>
+         </detailSuiviCarte>
+      </v2:recupererSuiviParcoursCarteResponseElement>
+   </soap:Body>
+</soap:Envelope>]]></con:responseContent>
+        <con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:ServiceVitale:2:recupererSuiviParcoursCarte"/>
+      </con:response>
+      <con:response name="Bad Response" id="fb79767f-8442-4547-974c-534595a77bf3" httpResponseStatus="200"
+                    encoding="UTF-8">
+        <con:settings/>
+        <con:responseContent><![CDATA[<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope" xmlns:v2="http://www.cnamts.fr/vitale/ServiceVitale/v2">
+   <soap:Header/>
+   <soap:Body>
+      <v2:recupererSuiviParcoursCarteResponseElement>
+         <codeAnomalie>000</codeAnomalie>
+         <libelleAnomalie>Fin normale</libelleAnomalie>
+         <numEtape>${numEtape}</numEtape>
+         <numEtat>17</numEtat>
+         <libelleEtat>carteNonValide</libelleEtat>
+         <date>2007-03-19+01:00</date>
+         <detailSuiviCarte>
+            <date>2009-12-30+01:00</date>
+            <numeroSerie>467100017</numeroSerie>
+            <listRejet>
+               <libMotif>Invalide</libMotif>
+            </listRejet>
+         </detailSuiviCarte>
+      </v2:recupererSuiviParcoursCarteResponseElement>
+   </soap:Body>
+</soap:Envelope>]]></con:responseContent>
+        <con:wsaConfig mustUnderstand="NONE" version="200508" action="urn:ServiceVitale:2:recupererSuiviParcoursCarte"/>
+      </con:response>
+      <con:dispatchConfig/>
+    </con:mockOperation>
+  </con:mockService>
+  <con:properties/>
+  <con:wssContainer/>
+  <con:oAuth2ProfileContainer/>
+  <con:oAuth1ProfileContainer/>
+</con:soapui-project>

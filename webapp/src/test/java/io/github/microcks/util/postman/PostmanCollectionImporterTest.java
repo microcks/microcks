@@ -1,26 +1,31 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util.postman;
 
+import io.github.microcks.domain.Exchange;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.domain.*;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,7 +33,11 @@ import java.io.IOException;
 import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 /**
  * This is a test case for class PostmanCollectionImporter.
@@ -54,7 +63,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Swagger Petstore", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -68,7 +77,7 @@ public class PostmanCollectionImporterTest {
             // assertions for findByStatus.
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
-            Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
             assertTrue(operation.getResourcePaths().contains("/v2/pet/findByStatus"));
 
             // Check that messages have been correctly found.
@@ -81,8 +90,7 @@ public class PostmanCollectionImporterTest {
             }
             assertEquals(1, exchanges.size());
             Exchange exchange = exchanges.get(0);
-            if (exchange instanceof RequestResponsePair) {
-               RequestResponsePair entry = (RequestResponsePair) exchange;
+            if (exchange instanceof RequestResponsePair entry) {
                Request request = entry.getRequest();
                Response response = entry.getResponse();
                assertNotNull(request);
@@ -116,8 +124,7 @@ public class PostmanCollectionImporterTest {
             assertTrue(operation.getResourcePaths().contains("/v2/pet/2"));
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -163,7 +170,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Swagger Petstore", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.1", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -177,7 +184,7 @@ public class PostmanCollectionImporterTest {
             // assertions for findByStatus.
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
-            Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
             assertTrue(operation.getResourcePaths().contains("/v2/pet/findByStatus"));
 
             // Check that messages have been correctly found.
@@ -185,13 +192,11 @@ public class PostmanCollectionImporterTest {
             try{
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
-               e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(1, exchanges.size());
             Exchange exchange = exchanges.get(0);
-            if (exchange instanceof RequestResponsePair) {
-               RequestResponsePair entry = (RequestResponsePair) exchange;
+            if (exchange instanceof RequestResponsePair entry) {
                Request request = entry.getRequest();
                Response response = entry.getResponse();
                assertNotNull(request);
@@ -225,8 +230,7 @@ public class PostmanCollectionImporterTest {
             assertTrue(operation.getResourcePaths().contains("/v2/pet/2"));
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -292,15 +296,13 @@ public class PostmanCollectionImporterTest {
             try{
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e){
-               e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(2, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -342,8 +344,7 @@ public class PostmanCollectionImporterTest {
             assertEquals(1, operation.getResourcePaths().size());
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -389,8 +390,7 @@ public class PostmanCollectionImporterTest {
             assertTrue(operation.getResourcePaths().contains("/order/7891011"));
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -478,7 +478,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Petstore API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("12.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -545,7 +545,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Petstore API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -596,7 +596,7 @@ public class PostmanCollectionImporterTest {
       assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
-      // Check that operations and and input/output have been found.
+      // Check that operations and input/output have been found.
       assertEquals(4, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
          if ("POST allFilms".equals(operation.getName())) {
@@ -632,8 +632,8 @@ public class PostmanCollectionImporterTest {
                RequestResponsePair pair = (RequestResponsePair) exchange;
 
                assertNotNull(pair.getRequest().getContent());
-               assertTrue(pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6MQ==\")")
-                  || pair.getRequest().getContent().contains("film (id: \"ZmlsbXM6Mg==\")"));
+               assertTrue(pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6MQ==\"")
+                  || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6Mg==\""));
                assertNotNull(pair.getResponse().getContent());
                assertEquals("200", pair.getResponse().getStatus());
             }
@@ -671,9 +671,9 @@ public class PostmanCollectionImporterTest {
             assertNotNull(pair.getRequest().getContent());
             assertNotNull(pair.getResponse().getContent());
             // Add this check to ensure that "comment" found in Postman variables is correctly
-            // parsed and then serialized in request parameters without the enclosing double-quotes.
-            // This is a particularity of GraphQL query that is not real JSON.
-            assertTrue(pair.getRequest().getContent().contains("comment:"));
+            // integrated into variables.
+            assertTrue(pair.getRequest().getContent().contains("\"variables\":"));
+            assertTrue(pair.getRequest().getContent().contains("\"comment\":"));
             assertEquals("200", pair.getResponse().getStatus());
          }
          else {

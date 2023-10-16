@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.web;
 
@@ -26,17 +23,14 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.ParameterConstraintUtil;
+import io.github.microcks.util.*;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,9 +47,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriUtils;
 
+import jakarta.servlet.http.HttpServletRequest;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
@@ -229,10 +223,13 @@ public class RestController {
             if (response.getHeaders() != null) {
                for (Header header : response.getHeaders()) {
                   if ("Location".equals(header.getName())) {
-                     // We should process location in order to make relative URI specified an absolute one from
-                     // the client perspective.
-                     String location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                        + request.getContextPath() + "/rest" + serviceAndVersion + header.getValues().iterator().next();
+                     String location = header.getValues().iterator().next();
+                     if (!AbsoluteUrlMatcher.matches(location)) {
+                        // We should process location in order to make relative URI specified an absolute one from
+                        // the client perspective.
+                        location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+                            + request.getContextPath() + "/rest" + serviceAndVersion + location;
+                     }
                      responseHeaders.add(header.getName(), location);
                   } else {
                      if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
@@ -305,7 +302,8 @@ public class RestController {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
                   ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
-                  dispatchCriteria = (String) se.eval(dispatcherRules);
+                  String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
+                  dispatchCriteria = (String) se.eval(script);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
                }

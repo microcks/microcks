@@ -171,6 +171,7 @@
                 </button>
                 <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
                   <li><a [routerLink]="['operation', item.name]">Edit Properties</a></li>
+                  <li><a (click)="openGenerateSamples(item.name)" *ngIf="allowAICopilotOnSamples()">AI Copilot Samples <i class="pficon pficon-optimize"></i></a></li>
                 </ul>
               </div>
             </div>
@@ -491,14 +492,25 @@
                     <dd>
                       <div class="input-group">
                         <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria) }}" disabled/>
-                        <span class="input-group-addon">
+                        <span class="input-group-addon" style="border-left: 0;">
                           <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
                             (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria))"></i>
+                        </span>
+                        <span class="input-group-addon" *ngIf="view.service.type != 'GRPC'">
+                          <i class="fa fa-terminal" tooltip="Curl to Clipboard" placement="top"
+                            (click)="copyToClipboard(formatCurlCmd(item, exchange))"></i>
                         </span>
                       </div>
                     </dd>
                   </dl>
-                  <pre *ngIf="exchange.request.content"><code [highlight]="exchange.request.content"></code></pre>
+                  <pre *ngIf="exchange.request.content"><code [highlight]="formatRequestContent(exchange.request.content)"></code></pre>
+                  <dl *ngIf="view.service.type === 'GRAPHQL'">
+                    <dt>Variables</dt>
+                    <dd>
+                      <pre><code [highlight]="formatGraphQLVariables(exchange.request.content)"></code></pre>
+                    </dd>
+                  </dl>
+
                   <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
                     <thead>
                       <tr>

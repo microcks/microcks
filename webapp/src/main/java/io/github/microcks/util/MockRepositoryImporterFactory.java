@@ -1,26 +1,24 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util;
 
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
+import io.github.microcks.util.har.HARImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
@@ -33,7 +31,7 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 /**
@@ -56,6 +54,10 @@ public class MockRepositoryImporterFactory {
    /** A RegExp for detecting a line containing the swagger pragma. */
    public static final String SWAGGER_REGEXP = ".*['\\\"]?swagger['\\\"]?\\s*:\\s*.*";
 
+   private MockRepositoryImporterFactory() {
+      // Private constructor to hide the implicit one as it's a utility class.
+   }
+
    /**
     * Create the right MockRepositoryImporter implementation depending on repository type.
     * @param mockRepository The file representing the repository type
@@ -69,49 +71,21 @@ public class MockRepositoryImporterFactory {
 
       // Analyse first lines of file content to guess repository type.
       String line = null;
-      BufferedReader reader = Files.newBufferedReader(mockRepository.toPath(), Charset.forName("UTF-8"));
-      while ((line = reader.readLine()) != null) {
-         line = line.trim();
-         // Check is we start with json object or array definition.
-         if (line.startsWith("\"_postman_id\":")) {
-            log.info("Found a _postman_id in file so assuming it's a Postman Collection to import");
-            importer = new PostmanCollectionImporter(mockRepository.getPath());
-            break;
-         } else if (line.startsWith("\"collection\":") || line.startsWith("{\"collection\":")) {
-            log.info("Found a collection in file so assuming it's a Postman Workspace Collection to import");
-            importer = new PostmanWorkspaceCollectionImporter(mockRepository.getPath());
-            break;
-         } else if (line.startsWith("<?xml")) {
-            log.info("Found a XML pragma in file so assuming it's a SoapUI Project to import");
-            importer = new SoapUIProjectImporter(mockRepository.getPath());
-            break;
-         } else if (line.matches(OPENAPI_3_REGEXP)) {
-            log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
-            importer = new OpenAPIImporter(mockRepository.getPath(), referenceResolver);
-            break;
-         } else if (line.matches(ASYNCAPI_2_REGEXP)) {
-            log.info("Found an asyncapi: 2 pragma in file so assuming it's an AsyncAPI spec to import");
-            importer = new AsyncAPIImporter(mockRepository.getPath(), referenceResolver);
-            break;
-         } else if (line.startsWith("syntax = \"proto3\";") || line.startsWith("syntax=\"proto3\";")) {
-            log.info("Found a syntax = proto3 pragma in file so assuming it's a GRPC Protobuf spec to import");
-            importer = new ProtobufImporter(mockRepository.getPath(), referenceResolver);
-            break;
-         } else if (line.contains("kind: APIMetadata")) {
-            log.info("Found a kind: APIMetadata pragma in file so assuming it's a Microcks APIMetadata to import");
-            importer = new MetadataImporter(mockRepository.getPath());
-            break;
-         } else if (line.contains("type Query {") || line.contains("type Mutation {") || line.contains("microcksId:")) {
-            log.info("Found query, mutation or microcksId: pragmas in file so assuming it's a GraphQL schema to import");
-            importer = new GraphQLImporter(mockRepository.getPath());
-            break;
-         } else if (line.matches(SWAGGER_REGEXP)) {
-            log.info("Found an swagger: pragma in file so assuming it's a Swagger spec to import");
-            importer = new SwaggerImporter(mockRepository.getPath(), referenceResolver);
-            break;
+      try (BufferedReader reader = Files.newBufferedReader(mockRepository.toPath(), StandardCharsets.UTF_8)) {
+         while ((line = reader.readLine()) != null && importer == null) {
+            line = line.trim();
+            // Check with basic Postman formats..
+            importer = checkPostmanImporters(line, mockRepository);
+            // Then try OpenAPI related ones...
+            if (importer == null) {
+               importer = checkOpenAPIImporters(line, mockRepository, referenceResolver);
+            }
+            // Then try any other else.
+            if (importer == null) {
+               importer = checkOtherImporters(line, mockRepository, referenceResolver);
+            }
          }
       }
-      reader.close();
 
       // Otherwise, default to SoapUI project importer implementation.
       if (importer == null) {
@@ -120,5 +94,50 @@ public class MockRepositoryImporterFactory {
       }
 
       return importer;
+   }
+
+   private static MockRepositoryImporter checkPostmanImporters(String line, File mockRepository) throws IOException {
+      if (line.startsWith("\"_postman_id\":")) {
+         log.info("Found a _postman_id in file so assuming it's a Postman Collection to import");
+         return new PostmanCollectionImporter(mockRepository.getPath());
+      } else if (line.startsWith("\"collection\":") || line.startsWith("{\"collection\":")) {
+         log.info("Found a collection in file so assuming it's a Postman Workspace Collection to import");
+         return new PostmanWorkspaceCollectionImporter(mockRepository.getPath());
+      }
+      return null;
+   }
+
+   private static MockRepositoryImporter checkOpenAPIImporters(String line, File mockRepository, ReferenceResolver referenceResolver) throws IOException {
+      if (line.matches(OPENAPI_3_REGEXP)) {
+         log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
+         return new OpenAPIImporter(mockRepository.getPath(), referenceResolver);
+      } else if (line.matches(SWAGGER_REGEXP)) {
+         log.info("Found an swagger: pragma in file so assuming it's a Swagger spec to import");
+         return new SwaggerImporter(mockRepository.getPath(), referenceResolver);
+      }
+      return null;
+   }
+
+   private static MockRepositoryImporter checkOtherImporters(String line, File mockRepository, ReferenceResolver referenceResolver) throws IOException {
+      if (line.startsWith("<?xml")) {
+         log.info("Found a XML pragma in file so assuming it's a SoapUI Project to import");
+         return new SoapUIProjectImporter(mockRepository.getPath());
+      } else if (line.startsWith("\"log\":") || line.startsWith("{\"log\":")) {
+         log.info("Found a log JSON element in file so asssuming it's a HTTP Archive (HAR) to import");
+         return new HARImporter(mockRepository.getPath());
+      } else if (line.matches(ASYNCAPI_2_REGEXP)) {
+         log.info("Found an asyncapi: 2 pragma in file so assuming it's an AsyncAPI spec to import");
+         return new AsyncAPIImporter(mockRepository.getPath(), referenceResolver);
+      } else if (line.startsWith("syntax = \"proto3\";") || line.startsWith("syntax=\"proto3\";")) {
+         log.info("Found a syntax = proto3 pragma in file so assuming it's a GRPC Protobuf spec to import");
+         return new ProtobufImporter(mockRepository.getPath(), referenceResolver);
+      } else if (line.contains("kind: APIMetadata")) {
+         log.info("Found a kind: APIMetadata pragma in file so assuming it's a Microcks APIMetadata to import");
+         return new MetadataImporter(mockRepository.getPath());
+      } else if (line.contains("type Query {") || line.contains("type Mutation {") || line.contains("microcksId:")) {
+         log.info("Found query, mutation or microcksId: pragmas in file so assuming it's a GraphQL schema to import");
+         return new GraphQLImporter(mockRepository.getPath());
+      }
+      return null;
    }
 }

@@ -1,23 +1,19 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.minion.async.consumer;
-
 
 import com.google.protobuf.Duration;
 import com.google.pubsub.v1.*;
@@ -166,7 +162,6 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
          subscriptionAdminClient.getSubscription(subscriptionName);
       } catch (NotFoundException nfe) {
          logger.infof("Subscription {%s} does not exist yet, creating it", subscriptionName);
-         //subscriptionAdminClient.createSubscription(subscriptionName, topicName, PushConfig.getDefaultInstance(), 10);
 
          // Customize subscription to avoid retention and let google auto-cleanup it.
          // Put the durations to the minimum values accepted by Google cloud.
@@ -177,11 +172,13 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
                .setAckDeadlineSeconds(10)
                .setRetainAckedMessages(false)
                .setMessageRetentionDuration(Duration.newBuilder().setSeconds(600).build())
-               .setExpirationPolicy(ExpirationPolicy.newBuilder().setTtl(Duration.newBuilder().setSeconds(24 * 3600)).build())
+               .setExpirationPolicy(ExpirationPolicy.newBuilder().setTtl(Duration.newBuilder().setSeconds(24 * 3600L)).build())
                .setEnableMessageOrdering(false)
                .setEnableExactlyOnceDelivery(false)
                .build();
          subscriptionAdminClient.createSubscription(subscriptionRequest);
+      } finally {
+         subscriptionAdminClient.close();
       }
    }
 }

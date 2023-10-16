@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>microcks-distro</artifactId>
+    <groupId>io.github.microcks</groupId>
+    <version>1.8.0-SNAPSHOT</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Microcks Uber App</name>
+  <artifactId>microcks-uber-app</artifactId>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <java.version>17</java.version>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
+    <mongo-java-server.version>1.43.0</mongo-java-server.version>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.github.microcks</groupId>
+      <artifactId>microcks-app</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.bwaldvogel</groupId>
+      <artifactId>mongo-java-server</artifactId>
+      <version>${mongo-java-server.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.bwaldvogel</groupId>
+      <artifactId>mongo-java-server-h2-backend</artifactId>
+      <version>${mongo-java-server.version}</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <version>${spring-boot.version}</version>
+        <configuration>
+          <mainClass>io.github.microcks.MicrocksApplication</mainClass>
+          <profiles>
+            <profile>uber</profile>
+          </profiles>
+          <arguments>
+            <argument>--spring.profiles.active=uber</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>prod</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring-boot.version}</version>
+            <configuration>
+              <mainClass>io.github.microcks.MicrocksApplication</mainClass>
+              <profiles>
+                <profile>uber</profile>
+              </profiles>
+              <arguments>
+                <argument>--spring.profiles.active=uber</argument>
+              </arguments>
+              <classifier>exec</classifier>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>repackage</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <!-- log configuration -->
+        <logback.loglevel>INFO</logback.loglevel>
+        <!-- default Spring profiles -->
+        <spring.profiles.active>uber</spring.profiles.active>
+      </properties>
+    </profile>
+  </profiles>
+</project>

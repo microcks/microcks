@@ -1,26 +1,24 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util;
 
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
+import io.github.microcks.util.har.HARImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.openapi.SwaggerImporter;
@@ -30,6 +28,7 @@ import io.github.microcks.util.soapui.SoapUIProjectImporter;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -181,5 +180,15 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer for Swagger v2 JSON should not fail!");
       }
       assertTrue(importer instanceof SwaggerImporter);
+
+      // Load a HAR JSON file.
+      File harFile = new File("target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1.har");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(harFile, null);
+      } catch (IOException ioe) {
+         fail("Getting importer for HAR JSON file should not fail!");
+      }
+      assertTrue(importer instanceof HARImporter);
    }
 }

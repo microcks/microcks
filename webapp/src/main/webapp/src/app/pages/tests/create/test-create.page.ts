@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 import { Component, OnInit} from "@angular/core";
 import { ActivatedRoute, Router, ParamMap } from "@angular/router";
@@ -28,7 +25,7 @@ import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { SecretsService } from '../../../services/secrets.service';
 import { Service } from '../../../models/service.model';
-import { TestRunnerType } from "../../../models/test.model";
+import { TestRunnerType, OAuth2ClientContext } from "../../../models/test.model";
 import { Secret } from '../../../models/secret.model';
 
 @Component({
@@ -53,6 +50,7 @@ export class TestCreatePageComponent implements OnInit {
     'globals': []
   };
   secrets: Secret[];
+  oAuth2ClientContext: OAuth2ClientContext = new OAuth2ClientContext();
 
   filteredOperation: string;
   removedOperationsNames: string[] = [];
@@ -95,8 +93,8 @@ export class TestCreatePageComponent implements OnInit {
           this.testEndpoint = res.testedEndpoint;
           this.runnerType = res.runnerType;
           // Complete with optional properties.
-          if (res.operationHeaders) {
-            this.operationsHeaders = res.operationHeaders;
+          if (res.operationsHeaders) {
+            this.operationsHeaders = res.operationsHeaders;
           }
           if (res.timeout) {
             this.timeout = res.timeout;
@@ -136,7 +134,7 @@ export class TestCreatePageComponent implements OnInit {
   }
   public updateSecretProperties(event: any): void {
     var secretId = event.target.value;
-    if ('none' != event.target.value) {
+    if ('undefined' != event.target.value) {
       for (var i=0; i<this.secrets.length; i++) {
         var secret = this.secrets[i];
         if (secretId === secret.id) {
@@ -148,6 +146,13 @@ export class TestCreatePageComponent implements OnInit {
       this.secretName = null;
     }
   }
+  public updateGrantType(event: any): void {
+      var secretId = event.target.value;
+      if ('undefined' === event.target.value) {
+        this.oAuth2ClientContext.grantType = undefined;
+        this.checkForm();
+      }
+    }
   public filterOperation(operationName: string) : void {
     if (this.removedOperationsNames.includes(operationName)) {
       this.removedOperationsNames.splice(this.removedOperationsNames.indexOf(operationName), 1);
@@ -176,7 +181,13 @@ export class TestCreatePageComponent implements OnInit {
 
   public checkForm(): void {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
-      && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined));
+        && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined));
+    // Check also the OAuth2 parameters.
+    if (this.submitEnabled && this.oAuth2ClientContext.grantType !== undefined) {
+      this.submitEnabled = (this.oAuth2ClientContext.tokenUri !== undefined && this.oAuth2ClientContext.tokenUri.length > 0
+          && this.oAuth2ClientContext.clientId !== undefined && this.oAuth2ClientContext.clientId.length > 0
+          && this.oAuth2ClientContext.clientSecret !== undefined && this.oAuth2ClientContext.clientSecret.length > 0);
+    }
     console.log("[createTest] submitEnabled: " + this.submitEnabled);
   }
 
@@ -198,10 +209,15 @@ export class TestCreatePageComponent implements OnInit {
         });
       }
     }
+    // Reset OAuth2 parameters if not set.
+    if (this.oAuth2ClientContext.grantType === undefined) {
+      this.oAuth2ClientContext = undefined;
+    }
     // Then, create thee test invoking the API.
     var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, 
         timeout: this.timeout, secretName: this.secretName,
-        filteredOperations: filteredOperations, operationsHeaders: this.operationsHeaders};
+        filteredOperations: filteredOperations, operationsHeaders: this.operationsHeaders,
+        oAuth2Context: this.oAuth2ClientContext};
     console.log("[createTest] test: " + JSON.stringify(test));
     this.testsSvc.create(test).subscribe(
       {

@@ -1,0 +1,157 @@
+{
+  "id": "myrealm",
+  "realm": "myrealm",
+  "displayName": "My Realm",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "users" : [
+    {
+      "username" : "admin",
+      "enabled": true,
+      "credentials" : [
+        { "type" : "password",
+          "value" : "myrealm123" }
+      ],
+      "realmRoles": [],
+      "applicationRoles": {
+        "realm-management": [ "manage-users", "manage-clients" ],
+        "account": [ "manage-account" ],
+        "myrealm-app": [ "user", "manager", "admin"]
+      }
+    }
+  ],
+  "roles": {
+    "realm": [],
+    "client": {
+      "myrealm-app": [
+        {
+          "name": "user",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "myrealm"
+        },
+        {
+          "name": "admin",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "myrealm"
+        },
+        {
+          "name": "manager",
+          "composite": false,
+          "clientRole": true,
+          "containerId": "myrealm"
+        }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "myrealm",
+      "path": "/myrealm",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {},
+      "subGroups": [
+        {
+          "name": "manager",
+          "path": "/myrealm/manager",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": []
+        }
+      ]
+    }
+  ],
+  "defaultRoles": [],
+  "requiredCredentials": [ "password" ],
+  "scopeMappings": [],
+  "clientScopeMappings": {
+    "myrealm-app": [
+      {
+        "client": "myrealm-app-js",
+        "roles": [
+          "manager",
+          "admin",
+          "user"
+        ]
+      }
+    ],
+    "realm-management": [
+      {
+        "client": "myrealm-app-js",
+        "roles": [
+          "manage-users",
+          "manage-clients"
+        ]
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "myrealm-app-js",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "fullScopeAllowed": false,
+      "protocolMappers": [
+        {
+          "name": "myrealm-group-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "myrealm-groups",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "myrealm-test",
+      "enabled": true,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "QAzrPEJJeDkjKtePKoXyzkqY6exkBauh",
+      "publicClient": false,
+      "protocol": "openid-connect",
+      "bearerOnly": false,
+      "consentRequired": false,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false
+    }
+  ],
+  "applications": [
+    {
+      "name": "myrealm-app",
+      "enabled": true,
+      "bearerOnly": true,
+      "defaultRoles": [
+        "user"
+      ]
+    },
+    {
+      "name": "myrealm-serviceaccount",
+      "secret": "ab54d329-e435-41ae-a900-ec6b3fe15c54",
+      "enabled": true,
+      "bearerOnly": false,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "clientAuthenticatorType": "client-secret"
+    }
+  ],
+  "keycloakVersion": "10.0.1"
+}

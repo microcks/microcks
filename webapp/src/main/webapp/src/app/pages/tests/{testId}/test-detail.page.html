@@ -11,7 +11,13 @@
       </div>
     </div>
 
-    <h1>Test {{ test.id }}</h1>
+    <h1>Test {{ test.id }}
+      <div class="pull-right">
+        <button class="btn btn-warning" (click)="openAddToCI()">
+          <span class="pficon pficon-in-progress"></span> Add to your CI/CD
+        </button>
+      </div>
+    </h1>
     <small>Created {{ test.testDate | timeAgo }}, ran on {{ test.testDate | date:'medium' }}</small>
 
     <h3 class="section-label">Properties</h3>
@@ -28,6 +34,14 @@
           <span *ngIf="test.secretRef">
             <dt>Secret:</dt>
             <dd>{{ test.secretRef.name }}</dd>
+          </span>
+          <span *ngIf="test.authorizedClient">
+            <dt>OAuth2 client:</dt>
+            <dd>
+              <code>{{ test.authorizedClient.principalName }}</code> principal<br/>
+              <code>{{ test.authorizedClient.tokenUri }}</code> tokenUri<br/>
+              <code>{{ test.authorizedClient.grantType }}</code> grant
+            </dd>
           </span>
         </dl>
       </div>

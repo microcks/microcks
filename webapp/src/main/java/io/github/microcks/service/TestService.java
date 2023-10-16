@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.service;
 
@@ -81,13 +78,14 @@ public class TestService {
       testResult.setTimeout(testOptionals.getTimeout());
       testResult.setSecretRef(testOptionals.getSecretRef());
       testResult.setOperationsHeaders(testOptionals.getOperationsHeaders());
+
       // Initialize the TestCaseResults containers before saving it.
       initializeTestCaseResults(testResult, service, testOptionals);
       testResultRepository.save(testResult);
 
       // Launch test asynchronously before returning result.
       log.debug("Calling launchTestsInternal() marked as Async");
-      testRunnerService.launchTestsInternal(testResult, service, runnerType);
+      testRunnerService.launchTestsInternal(testResult, service, runnerType, testOptionals.getOAuth2Context());
       log.debug("Async launchTestsInternal() as now finished");
       return testResult;
    }
@@ -177,7 +175,6 @@ public class TestService {
                || testOptionals.getFilteredOperations().contains(operation.getName())) {
             TestCaseResult testCaseResult = new TestCaseResult();
             testCaseResult.setOperationName(operation.getName());
-            String testCaseId = IdBuilder.buildTestCaseId(testResult, operation);
             testResult.getTestCaseResults().add(testCaseResult);
          }
       }
@@ -252,7 +249,7 @@ public class TestService {
 
       // Update and save the completed TestCaseResult.
       // We cannot consider as success if we have no TestStepResults associated...
-      if (testCaseResult.getTestStepResults().size() > 0) {
+      if (!testCaseResult.getTestStepResults().isEmpty()) {
          testCaseResult.setSuccess(successFlag);
       }
       testCaseResult.setElapsedTime(caseElapsedTime);

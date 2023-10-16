@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute, Router, ParamMap } from "@angular/router";
@@ -28,9 +25,11 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 import { ListConfig, ListEvent } from 'patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
+import { GenerateSamplesDialogComponent } from './_components/generate-samples.dialog';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint, Exchange, UnidirectionalEvent, RequestResponsePair, EventMessage } from '../../../models/service.model';
 import { TestConformanceMetric } from 'src/app/models/metric.model';
+import { AICopilotService } from '../../../services/aicopilot.service';
 import { IAuthenticationService } from "../../../services/auth.service";
 import { ConfigService } from '../../../services/config.service';
 import { ContractsService } from '../../../services/contracts.service';
@@ -58,7 +57,7 @@ export class ServiceDetailPageComponent implements OnInit {
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, 
       private metricsSvc: MetricsService, private authService: IAuthenticationService, private config: ConfigService,
-      private modalService: BsModalService, private notificationService: NotificationService,
+      private copilotSvc: AICopilotService, private modalService: BsModalService, private notificationService: NotificationService,
       private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
   }
 
@@ -179,6 +178,40 @@ export class ServiceDetailPageComponent implements OnInit {
       service: this.resolvedServiceView.service
     };
     this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
+  }
+
+  public openGenerateSamples(operationName: string): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      service: this.resolvedServiceView.service,
+      operationName: operationName
+    };
+    this.modalRef = this.modalService.show(GenerateSamplesDialogComponent, {initialState});
+    this.modalRef.setClass('modal-lg');
+    this.modalRef.content.saveSamplesAction.subscribe((exchanges) => {
+      this.copilotSvc.addSamplesSuggestions(this.resolvedServiceView.service, operationName, exchanges).subscribe(
+        {
+          next: res => {
+            // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
+            // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
+            // When done multiple times, serviceView re-assignation is not detected... So we have to force
+            // null, redetect and then re-assign a new Observable...
+            this.serviceView = null;
+            this.ref.detectChanges();
+            this.serviceView = this.servicesSvc.getServiceView(this.serviceId);
+            this.notificationService.message(NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name, "Samples have been added to " + operationName, false, null, null);
+            // Then trigger view reevaluation to update the samples list and the notifications toaster.
+            this.ref.detectChanges();
+          },
+          error: err => {
+            this.notificationService.message(NotificationType.DANGER,
+              this.resolvedServiceView.service.name, "Samples cannot be added (" + err.message + ")", false, null, null);
+          },
+          complete: () => console.log('Observer got a complete notification'),
+        }
+      );
+    });
   }
 
   public getExchangeName(exchange: Exchange): string {
@@ -332,6 +365,7 @@ export class ServiceDetailPageComponent implements OnInit {
     
     return result;
   }
+  
   public formatAsyncDestination(operation: Operation, eventMessage: EventMessage, binding: string): string {
     var serviceName = this.resolvedServiceView.service.name;
     var versionName = this.resolvedServiceView.service.version;
@@ -398,6 +432,36 @@ export class ServiceDetailPageComponent implements OnInit {
     return serviceName + "-" + versionName + "-" + operationName;
   }
 
+  public formatRequestContent(requestContent: string): string {
+    if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
+      let request = JSON.parse(requestContent);
+      return request.query;
+    }
+    return requestContent;
+  }
+  public formatGraphQLVariables(requestContent: string): string {
+    let request = JSON.parse(requestContent);
+    return JSON.stringify(request.variables, null, 2);
+  }
+
+  public formatCurlCmd(operation: Operation, exchange: RequestResponsePair): string {
+    let mockUrl = this.formatMockUrl(operation, exchange.response.dispatchCriteria);
+
+    let verb = operation.method.toUpperCase();
+    if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
+      verb = "POST";
+    }
+
+    let cmd = "curl -X " + verb + " '" + mockUrl + "'";
+    if (exchange.request.content != null && exchange.request.content != undefined) {
+      cmd += " -d '" + exchange.request.content.replace(/\n/g, '') + "'";
+    }
+    for (let i=0; i < exchange.request.headers.length; i++) {
+      let header = exchange.request.headers[i];
+      cmd += " -H '" + header.name + ": " + header.values.join(', ') + "'";
+    }
+    return cmd;
+  }
 
   public copyToClipboard(url: string): void {
     let selBox = document.createElement('textarea');
@@ -457,6 +521,13 @@ export class ServiceDetailPageComponent implements OnInit {
                 && this.hasAsyncAPIFeatureEnabled()));
   }
 
+  public allowAICopilotOnSamples(): boolean {
+    return this.hasAICopilotEnabled() 
+        && (this.resolvedServiceView.service.type === 'REST' 
+            || this.resolvedServiceView.service.type === 'GRAPHQL'
+            || this.resolvedServiceView.service.type === 'EVENT');
+  }
+
   public hasRepositoryTenancyFeatureEnabled(): boolean {
     return this.config.hasFeatureEnabled('repository-tenancy');
   }
@@ -467,6 +538,10 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public hasAsyncAPIFeatureEnabled(): boolean {
     return this.config.hasFeatureEnabled('async-api');
+  }
+
+  public hasAICopilotEnabled(): boolean {
+    return this.config.hasFeatureEnabled('ai-copilot');
   }
 
   public asyncAPIFeatureEndpoint(binding: string): string {

@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util.postman;
 
@@ -37,10 +34,9 @@ import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 
-import com.fasterxml.jackson.core.json.JsonWriteFeature;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +68,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    /** Postman collection property that references service version property. */
    public static final String SERVICE_VERSION_PROPERTY = "version";
 
+   private ObjectMapper mapper;
    private JsonNode collection;
    private String collectionContent;
    // Flag telling if V2 format is used.
@@ -92,7 +89,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          byte[] jsonBytes = Files.readAllBytes(Paths.get(collectionFilePath));
          collectionContent = new String(jsonBytes, StandardCharsets.UTF_8);
          // Convert them to Node using Jackson object mapper.
-         ObjectMapper mapper = new ObjectMapper();
+         mapper = new ObjectMapper();
          collection = mapper.readTree(jsonBytes);
       } catch (Exception e) {
          log.error("Exception while parsing Postman collection file " + collectionFilePath, e);
@@ -126,7 +123,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       try {
          service.setOperations(extractOperations());
       } catch (Throwable t) {
-         log.error("Runtime exception while extracting Operations for " + service.getName());
+         log.error("Runtime exception while extracting Operations for {}", service.getName());
          throw new MockRepositoryImportException("Runtime exception for " + service.getName() + ": " + t.getMessage());
       }
 
@@ -142,8 +139,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
       // On v2.1 collection format, we may have a version attribute under info.
       // See https://schema.getpostman.com/json/collection/v2.1.0/docs/index.html
-      if (collection.path("info").has("version")) {
-         version = collection.path("info").path("version").asText();
+      if (collection.path("info").has(SERVICE_VERSION_PROPERTY)) {
+         version = collection.path("info").path(SERVICE_VERSION_PROPERTY).asText();
       } else {
          String description = collection.path("info").path("description").asText();
          if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
@@ -191,7 +188,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    private List<Exchange> getMessageDefinitionsV2(Service service, Operation operation) {
-      Map<Request, Response> result = new HashMap<Request, Response>();
+      Map<Request, Response> result = new HashMap<>();
 
       Iterator<JsonNode> items = collection.path("item").elements();
       while (items.hasNext()) {
@@ -207,7 +204,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
    private Map<Request, Response> getMessageDefinitionsV2(String folderName, JsonNode itemNode, Operation operation) {
       log.debug("Extracting message definitions in folder " + folderName);
-      Map<Request, Response> result = new HashMap<Request, Response>();
+      Map<Request, Response> result = new HashMap<>();
       String itemNodeName = itemNode.path("name").asText();
 
       if (!itemNode.has("request")) {
@@ -272,6 +269,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                      String variables = requestNode.path("body").path("graphql").path("variables").asText();
                      dispatchCriteria = extractGraphQLCriteria(rootDispatcherRules, variables);
                   }
+               } else {
+                  // If dispatcher has been overriden (to SCRIPT for example), we should still put a generic resourcePath
+                  // (maybe containing : parts) to later force operation matching at the mock controller level. Only do that
+                  // when request url is not empty (means not the root url like POST /order).
+                  if (requestUrl != null && requestUrl.length() > 0) {
+                     operation.addResourcePath(extractResourcePath(requestUrl, null));
+                     log.debug("Added operation generic resource path: {}", operation.getResourcePaths());
+                  }
                }
 
                Request request = buildRequest(requestNode, responseNode.path("name").asText());
@@ -292,10 +297,25 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          if (requestNode.has("body") && requestNode.path("body").has("raw")) {
             request.setContent(requestNode.path("body").path("raw").asText());
          } else if (requestNode.has("body") && requestNode.path("body").has("graphql")) {
-            String content = requestNode.path("body").path("graphql").path("query").asText();
+            // We got to rebuild a specific HTTP request for GraphQL.
+            String query = requestNode.path("body").path("graphql").path("query").asText();
             String variables = requestNode.path("body").path("graphql").path("variables").asText();
-            content = replaceGraphQLVariables(content, variables);
-            request.setContent(content);
+            // Initialize with query field.
+            StringBuilder requestContent = new StringBuilder("{\"query\": \"")
+                  .append(query.replace("\n", "\\n"))
+                  .append("\"");
+
+            try {
+               // See if we have to add variables.
+               JsonNode variablesNode = mapper.readTree(variables);
+               if (variablesNode.isObject() && !variablesNode.isEmpty()) {
+                  requestContent.append(", \"variables\": ").append(variables);
+               }
+            } catch (JsonProcessingException jpe) {
+               log.warn("Json processing excpetion while parsing GraphQL variables, ignoring them: {}", jpe.getMessage());
+            }
+            requestContent.append("}");
+            request.setContent(requestContent.toString());
          }
          if (requestNode.path("url").has("variable")) {
             JsonNode variablesNode = requestNode.path("url").path("variable");
@@ -333,47 +353,13 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return parts;
    }
 
-   private String replaceGraphQLVariables(String content, String variables) {
-      if (variables != null && !variables.equals("{}")) {
-         ObjectMapper mapper = new ObjectMapper();
-         mapper.configure(JsonWriteFeature.QUOTE_FIELD_NAMES.mappedFeature(), false);
-         try {
-            JsonNode variablesNode = mapper.readTree(variables);
-            if (variablesNode.isObject()) {
-               ObjectNode varObject = (ObjectNode) variablesNode;
-               Iterator<String> fieldNames = varObject.fieldNames();
-               while (fieldNames.hasNext()) {
-                  String varName = fieldNames.next();
-                  JsonNode varValueNode = varObject.get(varName);
-                  String varValue = null;
-                  if (varValueNode.isTextual()) {
-                     varValue = varValueNode.asText();
-                     content = content.replaceAll("\\$" + varName + "([,)\\s])", "\"" + varValue + "\"$1");
-                  } else if (varValueNode.isNumber() || varValueNode.isBoolean()) {
-                     varValue = varValueNode.asText();
-                     content = content.replaceAll("\\$" + varName + "([,)\\s])", varValue + "$1");
-                  } else if (varValueNode.isObject()) {
-                     varValue = mapper.writeValueAsString(varValueNode);
-                     content = content.replaceAll("\\$" + varName + "([,)\\s])", varValue + "$1");
-                  }
-               }
-            }
-         } catch (Exception e) {
-            log.error("Exception while replacing GraphQL variables name in query content");
-         }
-      }
-      // Return unchanged content.
-      return content;
-   }
-
    private String extractGraphQLCriteria(String dispatcherRules, String variables) {
       String dispatchCriteria = "";
       try {
-         ObjectMapper mapper = new ObjectMapper();
          Map<String, String> paramsMap = mapper.readValue(variables, TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
          dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
       } catch (Exception e) {
-         log.error("Exception while extracting dispatch criteria from GraphQL variables: " + e.getMessage());
+         log.error("Exception while extracting dispatch criteria from GraphQL variables: {}", e.getMessage());
       }
       return dispatchCriteria;
    }
@@ -451,7 +437,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    private List<Operation> extractOperationsV2() {
       // Items corresponding to same operations may be defined multiple times in Postman
       // with different names and resource path. We have to track them to complete them in second step.
-      Map<String, Operation> collectedOperations = new HashMap<String, Operation>();
+      Map<String, Operation> collectedOperations = new HashMap<>();
 
       Iterator<JsonNode> items = collection.path("item").elements();
       while (items.hasNext()) {
@@ -511,6 +497,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                operation.setDispatcher(DispatchStyles.URI_PARTS);
             } else {
                operation.addResourcePath(extractResourcePath(url, null));
+               log.debug("Added operation generic resource path: {}", operation.getResourcePaths());
             }
          }
 

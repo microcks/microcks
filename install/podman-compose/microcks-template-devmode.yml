@@ -2,7 +2,7 @@ version: '2'
 
 services:
   mongo:
-    image: docker.io/library/mongo:3.4.23
+    image: docker.io/library/mongo:3.6.23
     container_name: microcks-db
     volumes:
       # Podman does not create missing folders, so we need to use an existing one
@@ -18,7 +18,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:1.7.1
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - "./config:/deployments/config"

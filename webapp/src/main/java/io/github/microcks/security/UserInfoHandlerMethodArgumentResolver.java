@@ -1,27 +1,25 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.security;
 
-import org.keycloak.KeycloakSecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.MethodParameter;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.context.request.RequestAttributes;
@@ -58,13 +56,11 @@ public class UserInfoHandlerMethodArgumentResolver implements HandlerMethodArgum
 
       log.debug("Creating a new UserInfo to resolve {} argument", methodParameter.getMethod());
       UserInfo userInfo = null;
-      Object ksc = nativeWebRequest.getAttribute(KeycloakSecurityContext.class.getName(), RequestAttributes.SCOPE_REQUEST);
-      if (ksc != null) {
-         log.debug("Found a KeycloakSecurityContext to map to UserInfo");
-         KeycloakSecurityContext context = KeycloakSecurityContext.class.cast(ksc);
 
-         // Create and store UserInfo in request attribute.
-         userInfo = KeycloakTokenToUserInfoMapper.map(context);
+      SecurityContext securityContext = SecurityContextHolder.getContext();
+      if (securityContext.getAuthentication() != null) {
+         log.debug("Found a Spring Security Authentication to map to UserInfo");
+         userInfo = KeycloakTokenToUserInfoMapper.map(securityContext);
          nativeWebRequest.setAttribute(UserInfo.class.getName(), userInfo, RequestAttributes.SCOPE_REQUEST);
       }
 

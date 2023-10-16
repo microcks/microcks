@@ -1,29 +1,35 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.OperationsHeaders;
+import io.github.microcks.domain.RequestResponsePair;
+import io.github.microcks.domain.Secret;
+import io.github.microcks.domain.SecretRef;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestCaseResult;
+import io.github.microcks.domain.TestOptionals;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestRunnerType;
+import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.service.MessageService;
-import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.service.TestService;
 import io.github.microcks.web.dto.HeaderDTO;
 import io.github.microcks.web.dto.TestCaseReturnDTO;
@@ -35,12 +41,23 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A Rest controller for API defined on test results.
@@ -69,7 +86,7 @@ public class TestController {
    private MessageService messageService;
 
 
-   @RequestMapping(value = "/tests/service/{serviceId}", method = RequestMethod.GET)
+   @GetMapping(value = "/tests/service/{serviceId}")
    public List<TestResult> listTestsByService(
          @PathVariable("serviceId") String serviceId,
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
@@ -80,7 +97,7 @@ public class TestController {
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "testNumber")));
    }
 
-   @RequestMapping(value = "/tests/service/{serviceId}/count", method = RequestMethod.GET)
+   @GetMapping(value = "/tests/service/{serviceId}/count")
    public Map<String, Long> countTestsByService(
          @PathVariable("serviceId") String serviceId
       ) {
@@ -90,7 +107,7 @@ public class TestController {
       return counter;
    }
 
-   @RequestMapping(value = "/tests", method = RequestMethod.POST)
+   @PostMapping(value = "/tests")
    public ResponseEntity<TestResult> createTest(@RequestBody TestRequestDTO test) {
       log.debug("Creating new test for {} on endpoint {}", test.getServiceId(), test.getTestEndpoint());
       Service service = null;
@@ -117,18 +134,18 @@ public class TestController {
          // TODO: should we return an error and refuse creating the test without secret ?
       }
 
-      TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(), operationsHeaders);
+      TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(), operationsHeaders, test.getOAuth2Context());
       TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, testOptionals);
       return new ResponseEntity<>(testResult, HttpStatus.CREATED);
    }
 
-   @RequestMapping(value = "/tests/{id}", method = RequestMethod.GET)
+   @GetMapping(value = "/tests/{id}")
    public ResponseEntity<TestResult> getTestResult(@PathVariable("id") String testResultId) {
       log.debug("Getting TestResult with id {}", testResultId);
       return new ResponseEntity<>(testResultRepository.findById(testResultId).orElse(null), HttpStatus.OK);
    }
 
-   @RequestMapping(value = "tests/{id}/messages/{testCaseId}", method = RequestMethod.GET)
+   @GetMapping(value = "tests/{id}/messages/{testCaseId}")
    public List<RequestResponsePair> getMessagesForTestCase(
          @PathVariable("id") String testResultId,
          @PathVariable("testCaseId") String testCaseId
@@ -139,13 +156,13 @@ public class TestController {
          testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
          testCaseId = testCaseId.replace('!', '/');
       } catch (UnsupportedEncodingException e) {
-         return null;
+         return Collections.emptyList();
       }
       log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
       return messageService.getRequestResponseByTestCase(testCaseId);
    }
 
-   @RequestMapping(value = "tests/{id}/events/{testCaseId}", method = RequestMethod.GET)
+   @GetMapping(value = "tests/{id}/events/{testCaseId}")
    public List<UnidirectionalEvent> getEventMessagesForTestCase(
          @PathVariable("id") String testResultId,
          @PathVariable("testCaseId") String testCaseId
@@ -156,13 +173,13 @@ public class TestController {
          testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
          testCaseId = testCaseId.replace('!', '/');
       } catch (UnsupportedEncodingException e) {
-         return null;
+         return Collections.emptyList();
       }
       log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
       return messageService.getEventByTestCase(testCaseId);
    }
 
-   @RequestMapping(value = "tests/{id}/testCaseResult", method = RequestMethod.POST)
+   @PostMapping(value = "tests/{id}/testCaseResult")
    public ResponseEntity<TestCaseResult> reportTestCaseResult(
          @PathVariable("id") String testResultId,
          @RequestBody TestCaseReturnDTO testCaseReturn

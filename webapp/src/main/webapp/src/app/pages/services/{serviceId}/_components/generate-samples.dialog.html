@@ -1,0 +1,145 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left"><i class="pficon pficon-optimize"></i> AI Copilot Suggested Samples</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <h4>
+    Operation {{operationName}}
+    <div class="pull-right" *ngIf="infoMessage != undefined">
+      <button class="btn btn-primary" (click)="getOtherSamples()">
+        <span class="fa fa-plus"></span> Get More
+      </button>
+    </div>
+  </h4>
+  <br/>
+  <div class="alert alert-warning" *ngIf="errorMessage != undefined">
+    <span class="pficon pficon-warning-triangle-o"></span>
+    <strong>{{errorMessage}}</strong>. Please excuse this beta status 🪲
+  </div>
+  <div class="alert alert-info" *ngIf="infoMessage != undefined">
+    <span class="pficon pficon-info"></span>
+    <strong>{{infoMessage}}</strong>
+  </div>
+
+  <div class="samples-container">
+    <tabset>
+      <tab *ngIf="infoMessage === undefined && errorMessage === undefined">
+        <ng-template tabHeading>
+          Waiting... <span style="display: inline-block; vertical-align: middle" class="spinner spinner-sm"> </span>
+        </ng-template>
+
+        <div class="col-md-6 sample-container" *ngIf="!isEventTypeService()">
+          <h5 class="subsection-label">Request</h5>
+          <div class="spinner spinner-lg"></div>
+        </div>
+        <div class="col-md-6 sample-container" *ngIf="!isEventTypeService()">
+          <h5 class="subsection-label">Response</h5>
+          <div class="spinner spinner-lg"></div>
+        </div>
+        <div class="col-md-12 sample-container" *ngIf="isEventTypeService()">
+          <h5 class="subsection-label">Event Message</h5>
+          <div class="spinner spinner-lg"></div>
+        </div>
+      </tab>
+      <tab *ngFor="let exchange of exchanges; index as i">
+        <ng-template tabHeading>
+          {{ getExchangeName(i) }}
+          <span class="learn-more-inline">
+            <i *ngIf="selectedExchanges[i] != undefined" tooltip="Selected" class="fa fa-check" aria-hidden="true"></i>&nbsp;
+            <i *ngIf="exchangesNames[i] == undefined" tooltip="Need name edit" class="pficon pficon-edit" aria-hidden="true"></i>  
+          </span>
+        </ng-template>
+
+        <div class="col-md-12">
+          <form class="form-vertical">
+            <div class="control-group">
+              <div class="controls">
+                <input type="text" id="name" name="name" class="form-control" size="20" [ngModel]="getExchangeName(i)" (ngModelChange)="updateSampleName($event, i)" required/>    
+              </div>
+              <label class="control-label" for="keepSample">
+                <input type="checkbox" id="keepSample" name="keepSample" [ngModel]="selectedExchanges[i] != undefined" (ngModelChange)="toggleSelectedExchange(i)"/> &nbsp; Keep '{{getExchangeName(i)}}' sample.
+              </label>
+            </div>
+          </form>
+        </div>
+        <div class="col-md-6 sample-container" *ngIf="!isEventTypeService()">
+          <h5 class="subsection-label">Request</h5>
+          <dl class="dl-horizontal left" *ngIf="exchange.request.queryParameters">
+            <dt>Request parameters:</dt>
+            <dd>
+              <span *ngFor="let parameter of exchange.request.queryParameters">
+                <code><small>{{parameter.name}}={{parameter.value}}</small></code> &nbsp;
+              </span>
+            </dd>
+          </dl>
+          <pre *ngIf="exchange.request.content"><code [highlight]="exchange.request.content"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
+            <thead>
+              <tr>
+                <th>Header name</th>
+                <th>Values</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let header of exchange.request.headers">
+                <td>{{ header.name }}</td>
+                <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-6 sample-container" *ngIf="!isEventTypeService()">
+          <h5 class="subsection-label">Response</h5>
+          <dl class="dl-horizontal left" *ngIf="service.type === 'REST' || service.type === 'GRAPHQL'">
+            <dt>Response Code and Type:</dt>
+            <dd>
+              <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
+            </dd>
+          </dl>
+          <pre *ngIf="exchange.response.content"><code [highlight]="exchange.response.content"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="exchange.response.headers">
+            <thead>
+              <tr>
+                <th>Header name</th>
+                <th>Values</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let header of exchange.response.headers">
+                <td>{{ header.name }}</td>
+                <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="col-md-12 sample-container" *ngIf="isEventTypeService()">
+          <h5 class="subsection-label">Event Message</h5>
+          <pre *ngIf="exchange.eventMessage.content"><code [highlight]="exchange.eventMessage.content"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="exchange.eventMessage.headers">
+            <thead>
+              <tr>
+                <th>Header name</th>
+                <th>Values</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let header of exchange.eventMessage.headers">
+                <td>{{ header.name }}</td>
+                <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </tab>
+    </tabset>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+    <button class="btn btn-primary" (click)="saveSamples()" [disabled]="!saveEnabled">
+      <span class="fa fa-plus"></span> Add
+    </button>
+  </div>
+</div>

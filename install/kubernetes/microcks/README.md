@@ -202,6 +202,20 @@ The table below describes all the fields of the `values.yaml`, providing informa
 | `features` | `microcksHub.enabled`       | **Optional**. Feature allowing to directly import mocks coming from `hub.microcks.io` marketplace. Default is `true`. See [Micorkcs Hub](https://microcks.io/documentation/using/advanced/microcks-hub) for more information.                                                                                       |
 | `features` | `async.enabled`             | **Optional**. Feature allowing to mock an tests asynchronous APIs through Events. Enabling it requires an active message broker. Default is `false`.                                                                                                                                                                |
 | `features` | `async.image`               | **Optional**. The reference of container image used for `async-minion` component. Chart comes with its default version.                                                                                                                                                                                             |
+| `features` | `aiCopilot`                 | **Optional**. Feature allowing to activate AI Copilot. Must be explicitly `enabled`. Default is `false`.                                                                                                                                                                                                              |
+
+### AI Copilot feature
+
+Here are below the configuration properties of the AI Copilot feature:
+
+| Section                     | Property           | Description                                                                                                                               |
+|-----------------------------| ------------------ |-------------------------------------------------------------------------------------------------------------------------------------------|
+| `features.aiCopilot`        | `enabled`          | **Optional**. Flag for enabling the feature. Default is `false`. Set to `true` to activate.                                               |
+| `features.aiCopilot`        | `implementation`   | **Optional**. Allow to choose an AI service implementation. Default is `openai` and its the only supported value at the moment.           |
+| `features.aiCopilot.openai` | `apiKey`           | **Madantory** when enabled. Put here your OpenAI API key.                                                                                 |
+| `features.aiCopilot.openai` | `timeout`          | **Optional**. Allow the customization of the timeout when requesting OpenAI. Default to `20` seconds.                                     |
+| `features.aiCopilot.openai` | `model`            | **Optional**. Allow the customization of the OpenAI model to use. Default may vary from one Microcks version to another.                  |
+| `features.aiCopilot.openai` | `maxTokens`        | **Optional**. Allow the customization of the maximum number of tokens that may be exchanged by OpenAI services. Default to `2000` tokens? |
 
 ### Kafka feature details
 

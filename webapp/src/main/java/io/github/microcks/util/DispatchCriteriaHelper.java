@@ -1,25 +1,22 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +32,10 @@ import java.util.stream.Collectors;
  */
 public class DispatchCriteriaHelper{
 
+   private DispatchCriteriaHelper() {
+      // Hide default no argument constructor as it's a utility class.
+   }
+
    /**
     * Extract a dispatch rule string from URI parameters (specified using example values)
     * @param uri The URI containing parameters
@@ -47,16 +48,11 @@ public class DispatchCriteriaHelper{
 
          for (String parameter : parameters.split("&")){
             String[] pair = parameter.split("=");
-            try {
-               String key = URLDecoder.decode(pair[0], "UTF-8");
-               String value = URLDecoder.decode(pair[1], "UTF-8");
-               if (params.length() > 0) {
-                  params.append(" && ");
-               }
-               params.append(key);
-            } catch (UnsupportedEncodingException e) {
-               e.printStackTrace();
+            String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
+            if (params.length() > 0) {
+               params.append(" && ");
             }
+            params.append(key);
          }
          return params.toString();
       }
@@ -96,12 +92,15 @@ public class DispatchCriteriaHelper{
       for (int suffixLen = 0;  suffixLen < uris.get(0).length(); suffixLen++) {
          char c = uris.get(0).charAt(uris.get(0).length() - suffixLen - 1);
          for (int i = 1; i < uris.size(); i++) {
-            if ( suffixLen >= uris.get(i).length() ||
+            if (suffixLen >= uris.get(i).length() ||
                   uris.get(i).charAt(uris.get(i).length() - suffixLen - 1) != c ) {
                // Mismatch found. Have we found at least one common char ?
                if (suffixLen > 0) {
                   String commonString = uris.get(i).substring(uris.get(i).length() - suffixLen - 1);
-                  return commonString.substring(commonString.indexOf('/'));
+                  if (commonString.indexOf('/') != - 1) {
+                     return commonString.substring(commonString.indexOf('/'));
+                  }
+                  return null;
                } else {
                   return null;
                }
@@ -155,6 +154,55 @@ public class DispatchCriteriaHelper{
    }
 
    /**
+    * Build a template URL like 'http://s/r/f/d/{part1}/{part2}' with parts extracted from given URIs.
+    * For example, given 'http://s/r/f/d/m/s' and 'http://s/r/f/d', method will detect 2 variable parts ('m' and 's').
+    * Because it does know anything about the semantics of this parts, it produces a generic dispatch rule <code>'part1 &amp;&amp; part2'</code>
+    * telling that URIs can be templatized like 'http://s/r/f/d/{part1}/{part2}'
+    * @param uris A set of URIs that are expected to share a common prefix
+    * @return A templatized URL containing parts.
+    */
+   public static String buildTemplateURLWithPartsFromURIs(List<String> uris) {
+      // 1st pass on collection: find a common prefix.
+      String commonURIPath = extractCommonPrefix(uris);
+
+      // 2nd pass on collection: find a common suffix.
+      String commonURIEnd = extractCommonSuffix(uris);
+
+      StringBuilder partsURI = new StringBuilder();
+      partsURI.append(commonURIPath);
+
+      int partsLen = 0;
+      for (String uri : uris) {
+         String parts = uri.substring(commonURIPath.length() + 1);
+         if (commonURIEnd != null) {
+            parts = parts.substring(0, parts.lastIndexOf(commonURIEnd));
+         }
+         int numOfParts = parts.split("/").length;
+         if (numOfParts > partsLen) {
+            partsLen = numOfParts;
+         }
+      }
+
+      if (partsLen > 0) {
+         for (int i = 0; i < partsLen; i++) {
+            if (i == 0) {
+               partsURI.append("/");
+            }
+            partsURI.append("{part").append(i + 1).append("}");
+            if (i < partsLen - 1) {
+               partsURI.append("/");
+            }
+         }
+      }
+
+      if (commonURIEnd != null) {
+         partsURI.append("/").append(commonURIEnd);
+      }
+
+      return partsURI.toString();
+   }
+
+   /**
     * Extract a dispatch rule string from URI pattern (containing variable parts within
     * {}) in order to explain which parts are variables.
     * @param pattern The URI pattern containing variables parts ({} or :part patterns)
@@ -167,12 +215,12 @@ public class DispatchCriteriaHelper{
       }
       // and as it may contains variables using '{{}}'.
       if (pattern.contains("{{") && pattern.contains("}}")) {
-         pattern = pattern.replaceAll("\\{\\{", "");
-         pattern = pattern.replaceAll("\\}\\}", "");
+         pattern = pattern.replace("{{", "");
+         pattern = pattern.replace("}}", "");
       }
-      // ad as it may contains $ signs with forms like '/items/$count'.
+      // and as it may contains $ signs with forms like '/items/$count'.
       if (pattern.contains("$")) {
-         pattern = pattern.replaceAll("\\$", "");
+         pattern = pattern.replace("$", "");
       }
 
       // Build a pattern for extracting parts from pattern.
@@ -210,7 +258,9 @@ public class DispatchCriteriaHelper{
     * @return A string representing dispatch criteria for the corresponding incoming request.
     */
    public static String extractFromURIPattern(String paramsRuleString, String pattern, String realURI){
-      Map<String, String> criteriaMap = new TreeMap<String, String>();
+      Map<String, String> criteriaMap = new TreeMap<>();
+      pattern = sanitizeURLForRegExp(pattern);
+      realURI = sanitizeURLForRegExp(realURI);
 
       // Build a pattern for extracting parts from pattern and a pattern for extracting values
       // from realURI. Supporting both {id} and :id.
@@ -224,8 +274,8 @@ public class DispatchCriteriaHelper{
          valuesPattern = pattern.replaceAll("(:[^:^/]+)", "(.+)");
       }
       if (pattern.contains("$")) {
-         partsPattern = partsPattern.replaceAll("\\$", "\\\\\\$");
-         valuesPattern = valuesPattern.replaceAll("\\$", "\\\\\\$");
+         partsPattern = partsPattern.replace("$", "\\$");
+         valuesPattern = valuesPattern.replace("$", "\\$");
       }
       Pattern partsP = Pattern.compile(partsPattern);
       Matcher partsM = partsP.matcher(pattern);
@@ -254,8 +304,8 @@ public class DispatchCriteriaHelper{
 
       // Just appends sorted entries, separating them with /.
       StringBuilder result = new StringBuilder();
-      for (String criteria : criteriaMap.keySet()){
-         result.append("/").append(criteria).append("=").append(criteriaMap.get(criteria));
+      for (Map.Entry<String, String> criteria : criteriaMap.entrySet()){
+         result.append("/").append(criteria.getKey()).append("=").append(criteria.getValue());
       }
       return result.toString();
    }
@@ -268,19 +318,20 @@ public class DispatchCriteriaHelper{
     */
    public static String buildFromPartsMap(String partsRule, Map<String, String> partsMap) {
       if (partsMap != null && !partsMap.isEmpty()) {
-         Map<String, String> criteriaMap = new TreeMap<String, String>();
+         Map<String, String> criteriaMap = new TreeMap<>();
          criteriaMap.putAll(partsMap);
 
          // Just appends sorted entries, separating them with /.
          StringBuilder result = new StringBuilder();
-         for (String criteria : criteriaMap.keySet()) {
-            // Check that criteria is embedded into the rule.
-            // Simply check word boundary with \b is not enough as - are valid in params (according RFC 3986)
-            // but not included into word boundary - so "word-ext" string is matching ".*\\bword\\b.*"
-            // We need to tweak it a bit to prevent matching when there's a - before or after the criteria we're
-            // looking for (see https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
-            if (partsRule.matches(".*(^|[^-])\\b" + criteria + "\\b([^-]|$).*")) {
-               result.append("/").append(criteria).append("=").append(criteriaMap.get(criteria));
+         for (Map.Entry<String, String> criteria : criteriaMap.entrySet()) {
+            /*
+             Check that criteria is embedded into the rule. Simply check word boundary with \b is not enough as - are
+             valid in params (according RFC 3986) but not included into word boundary - so "word-ext" string is matching
+             ".*\\bword\\b.*" We need to tweak it a bit to prevent matching when there's a - before or after the criteria we're
+             looking for (see https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
+            */
+            if (partsRule.matches(".*(^|[^-])\\b" + criteria.getKey() + "\\b([^-]|$).*")) {
+               result.append("/").append(criteria.getKey()).append("=").append(criteria.getValue());
             }
          }
          return result.toString();
@@ -296,19 +347,20 @@ public class DispatchCriteriaHelper{
     */
    public static String buildFromParamsMap(String paramsRule, Map<String, String> paramsMap) {
       if (paramsMap != null && !paramsMap.isEmpty()) {
-         Map<String, String> criteriaMap = new TreeMap<String, String>();
+         Map<String, String> criteriaMap = new TreeMap<>();
          criteriaMap.putAll(paramsMap);
 
          // Just appends sorted entries, separating them with ?.
          StringBuilder result = new StringBuilder();
-         for (String criteria : criteriaMap.keySet()) {
-            // Check that criteria is embedded into the rule.
-            // Simply check word boundary with \b is not enough as - are valid in params (according RFC 3986)
-            // but not included into word boundary - so "word-ext" string is matching ".*\\bword\\b.*"
-            // We need to tweak it a bit to prevent matching when there's a - before or after the criteria we're
-            // looking for (see https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
-            if (paramsRule.matches(".*(^|[^-])\\b" + criteria + "\\b([^-]|$).*")) {
-               result.append("?").append(criteria).append("=").append(criteriaMap.get(criteria));
+         for (Map.Entry<String, String> criteria : criteriaMap.entrySet()) {
+            /*
+             Check that criteria is embedded into the rule. Simply check word boundary with \b is not enough as - are
+             valid in params (according RFC 3986) but not included into word boundary - so "word-ext" string is matching
+             ".*\\bword\\b.*" We need to tweak it a bit to prevent matching when there's a - before or after the criteria we're
+             looking for (see https://stackoverflow.com/questions/32380375/hyphen-dash-to-be-included-in-regex-word-boundary-b)
+            */
+            if (paramsRule.matches(".*(^|[^-])\\b" + criteria.getKey() + "\\b([^-]|$).*")) {
+               result.append("?").append(criteria.getKey()).append("=").append(criteria.getValue());
             }
          }
          return result.toString();
@@ -323,27 +375,23 @@ public class DispatchCriteriaHelper{
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
    public static String extractFromURIParams(String paramsRule, String uri){
-      Map<String, String> criteriaMap = new TreeMap<String, String>();
+      Map<String, String> criteriaMap = new TreeMap<>();
 
       if (uri.contains("?") && uri.contains("=")) {
          String parameters = uri.substring(uri.indexOf("?") + 1);
 
          for (String parameter : parameters.split("&")){
             String[] pair = parameter.split("=");
-            try {
-               String key = URLDecoder.decode(pair[0], "UTF-8");
-               String value = URLDecoder.decode(pair[1], "UTF-8");
-               criteriaMap.put(key, value);
-            } catch (UnsupportedEncodingException e) {
-               e.printStackTrace();
-            }
+            String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
+            String value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+            criteriaMap.put(key, value);
          }
 
          // Just appends sorted entries, separating them with ?.
          StringBuilder result = new StringBuilder();
-         for (String criteria : criteriaMap.keySet()){
-            if (paramsRule.contains(criteria)) {
-               result.append("?").append(criteria).append("=").append(criteriaMap.get(criteria));
+         for (Map.Entry<String, String> criteria : criteriaMap.entrySet()){
+            if (paramsRule.contains(criteria.getKey())) {
+               result.append("?").append(criteria.getKey()).append("=").append(criteria.getValue());
             }
          }
          return result.toString();
@@ -351,6 +399,12 @@ public class DispatchCriteriaHelper{
       return "";
    }
 
+   /**
+    *
+    * @param paramsRule
+    * @param paramMap
+    * @return
+    */
    public static String extractFromParamMap(String paramsRule, Map<String, String> paramMap) {
       Set<String> sortedKeys = paramMap.keySet().stream()
             .sorted().collect(Collectors.toSet());
@@ -362,5 +416,9 @@ public class DispatchCriteriaHelper{
          }
       }
       return result.toString();
+   }
+
+   private static String sanitizeURLForRegExp(String url) {
+     return url.replace("+", " ");
    }
 }

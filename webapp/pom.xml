@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.7.2-SNAPSHOT</version>
+    <version>1.8.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -18,39 +18,34 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <junit.version>4.13.1</junit.version>
-    <!-- <keycloak.version>14.0.0</keycloak.version> -->
-    <keycloak.version>20.0.2</keycloak.version>
-    <mongo-java-server.version>1.24.0</mongo-java-server.version>
-    <soapui.version>5.6.0</soapui.version>
-    <soapui.jayway.version>0.9.1</soapui.jayway.version>
-    <xstream.version>1.4.20</xstream.version>
-    <grpc.version>1.49.1</grpc.version>
-    <apache-httpclient.version>4.5.13</apache-httpclient.version>
-    <protobuf.version>3.19.6</protobuf.version>
-    <grpc.version>1.47.1</grpc.version>
+    <bouncycastle.version>1.70</bouncycastle.version>
+    <snakeyaml.version>2.0</snakeyaml.version>
+    <mongo-java-server.version>1.43.0</mongo-java-server.version>
+    <apache-httpclient.version>5.2.1</apache-httpclient.version>
+    <commons-lang3.version>3.13.0</commons-lang3.version>
+    <commons-io.version>2.13.0</commons-io.version>
+    <commons-codec.version>1.16.0</commons-codec.version>
+    <groovy.version>4.0.13</groovy.version>
+    <protobuf.version>3.23.3</protobuf.version>
+    <grpc.version>1.56.1</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
+    <openai-gpt3-java.version>0.14.0</openai-gpt3-java.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
-      <dependency>
-        <groupId>org.keycloak.bom</groupId>
-        <artifactId>keycloak-adapter-bom</artifactId>
-        <version>${keycloak.version}</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-      <dependency>
-        <groupId>com.jayway.jsonpath</groupId>
-        <artifactId>json-path</artifactId>
-        <version>${soapui.jayway.version}</version>
-      </dependency>
       <dependency>
         <groupId>io.grpc</groupId>
         <artifactId>grpc-bom</artifactId>
         <version>${grpc.version}</version>
         <type>pom</type>
         <scope>import</scope>
+      </dependency>
+      <!-- Force Snakeyaml here as libs still pulls 1.33 version full of CVEs -->
+      <dependency>
+        <groupId>org.yaml</groupId>
+        <artifactId>snakeyaml</artifactId>
+        <version>${snakeyaml.version}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -92,134 +87,63 @@
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
     </dependency>
+
     <dependency>
-      <groupId>org.keycloak</groupId>
-      <artifactId>keycloak-spring-boot-starter</artifactId>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient</artifactId>
-      <version>${apache-httpclient.version}</version>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcpkix-jdk15on</artifactId>
+      <version>${bouncycastle.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <version>${commons-codec.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-client</artifactId>
+    </dependency>
+
     <!-- Required since Spring 1.5 to 2.3 migration -->
     <dependency>
-      <groupId>com.smartbear.soapui</groupId>
-      <artifactId>soapui</artifactId>
-      <version>${soapui.version}</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.jgoodies</groupId>
-          <artifactId>looks</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.openjfx</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>amf</groupId>
-          <artifactId>flex-messaging-common</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>amf</groupId>
-          <artifactId>flex-messaging-opt</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>amf</groupId>
-          <artifactId>flex-messaging-proxy</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>amf</groupId>
-          <artifactId>flex-messaging-remoting</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>l2fprod</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.bouncycastle</groupId>
-          <artifactId>bcprov-ext-jdk15on</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.sonatype.install4j</groupId>
-          <artifactId>i4jruntime</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>com.smartbear.utils.analytics</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>net.sf.saxon</groupId>
-          <artifactId>saxon</artifactId>
-        </exclusion>
-        <exclusion>
-          <artifactId>servlet-api</artifactId>
-          <groupId>jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jetty</artifactId>
-          <groupId>jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>jetty-util</artifactId>
-          <groupId>jetty</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>swingx</artifactId>
-          <groupId>swingx</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>htmlunit</artifactId>
-          <groupId>net.sourceforge.htmlunit</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>htmlunit-core-js</artifactId>
-          <groupId>net.sourceforge.htmlunit</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>hermes</artifactId>
-          <groupId>hermesjms</groupId>
-        </exclusion>
-        <!-- We need a fresher guava for GRPC -->
-        <exclusion>
-          <groupId>com.google.guava</groupId>
-          <artifactId>guava</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.xerces</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>javax.xml.bind</groupId>
-          <artifactId>jsr173_api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>stax</groupId>
-  		    <artifactId>stax-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>xerces</groupId>
-          <artifactId>xmlParserAPIs</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>xom</groupId>
-          <artifactId>xom</artifactId>
-        </exclusion>
-        <!-- Remove included Xstream that holds a lot of vulnerabilities -->
-        <exclusion>
-          <groupId>thoughtworks</groupId>
-          <artifactId>xstream</artifactId>
-        </exclusion>
-      </exclusions>
+      <groupId>org.apache.httpcomponents.client5</groupId>
+      <artifactId>httpclient5</artifactId>
+      <version>${apache-httpclient.version}</version>
     </dependency>
-    <!-- Replace Xstream from SoapUI with more recent version -->
+
     <dependency>
-      <groupId>com.thoughtworks.xstream</groupId>
-      <artifactId>xstream</artifactId>
-      <version>${xstream.version}</version>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>${commons-lang3.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>${commons-io.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-xml</artifactId>
+      <version>${groovy.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-json</artifactId>
+      <version>${groovy.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-jsr223</artifactId>
+      <version>${groovy.version}</version>
     </dependency>
 
     <dependency>
@@ -258,14 +182,18 @@
     </dependency>
 
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <!-- Needed by SoapUI for some assertions, so remove test scope -->
-      <!-- <scope>test</scope> -->
+      <groupId>com.theokanning.openai-gpt3-java</groupId>
+      <artifactId>api</artifactId>
+      <version>${openai-gpt3-java.version}</version>
     </dependency>
 
     <!-- Test related dependencies -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
@@ -282,13 +210,19 @@
     <dependency>
       <groupId>org.skyscreamer</groupId>
       <artifactId>jsonassert</artifactId>
-      <version>1.5.0</version>
+      <version>1.5.1</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>mongodb</artifactId>
-      <version>1.16.0</version>
+      <version>1.17.6</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.github.dasniko</groupId>
+      <artifactId>testcontainers-keycloak</artifactId>
+      <version>3.0.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -315,6 +249,7 @@
           <encoding>${project.build.sourceEncoding}</encoding>
           <compilerArgument>-Xlint:deprecation</compilerArgument>
           <compilerArgument>-Xlint:unchecked</compilerArgument>
+          <compilerArgument>-parameters</compilerArgument>
         </configuration>
       </plugin>
       <plugin>
@@ -352,10 +287,6 @@
       <id>central</id>
       <url>https://repo.maven.apache.org/maven2</url>
     </repository>
-    <repository>
-      <id>soapui</id>
-      <url>https://rapi.tools.ops.smartbear.io/nexus/content/groups/public</url>
-    </repository>
   </repositories>
   <pluginRepositories>
     <!--
@@ -368,7 +299,7 @@
 
   <profiles>
     <profile>
-      <id>uber</id>
+      <id>single</id>
       <build>
         <plugins>
           <plugin>
@@ -444,8 +375,8 @@
               </execution>
             </executions>
             <configuration>
-              <nodeVersion>v12.6.0</nodeVersion>
-              <npmVersion>6.9.0</npmVersion>
+              <nodeVersion>v16.0.0</nodeVersion>
+              <npmVersion>8.0.0</npmVersion>
               <workingDirectory>${basedir}/src/main/webapp</workingDirectory>
               <installDirectory>target</installDirectory>
             </configuration>
@@ -510,6 +441,7 @@
               <arguments>
                 <argument>--spring.profiles.active=prod</argument>
               </arguments>
+              <classifier>exec</classifier>
             </configuration>
             <executions>
               <execution>

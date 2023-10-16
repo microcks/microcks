@@ -2,13 +2,13 @@ version: '2'
 
 services:
   mongo:
-    image: mongo:3.4.23
+    image: mongo:3.6.23
     container_name: microcks-db
     volumes:
       - "~/tmp/microcks-data:/data/db"
 
   keycloak:
-    image: quay.io/keycloak/keycloak:20.0.2
+    image: quay.io/keycloak/keycloak:22.0.2
     container_name: microcks-sso
     ports:
       - "18080:8080"
@@ -31,7 +31,7 @@ services:
       - mongo
       - keycloak
       - postman
-    image: quay.io/microcks/microcks:1.7.1
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     ports:
       - "8080:8080"

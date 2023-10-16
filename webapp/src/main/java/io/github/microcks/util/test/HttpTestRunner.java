@@ -1,20 +1,17 @@
 /*
- * Licensed to Laurent Broudoux (the "Author") under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership. Author licenses this
- * file to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
+ * Copyright The Microcks Authors.
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package io.github.microcks.util.test;
 
@@ -90,7 +87,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
    public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
                                    List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException{
       if (log. isDebugEnabled()){
-         log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
+         log.debug("Launching test run on {} for {} request(s)", endpointUrl, requests.size());
       }
 
       if (requests.isEmpty()) {
@@ -113,7 +110,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             }
 
             customizedEndpointUrl += URIBuilder.buildURIFromPattern(operationName, request.getQueryParameters());
-            log.debug("Using customized endpoint url: " + customizedEndpointUrl);
+            log.debug("Using customized endpoint url: {}", customizedEndpointUrl);
          }
          ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(new URI(customizedEndpointUrl), method);
 
@@ -131,9 +128,9 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
                headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
             }
          }
-         if (headers.size() > 0){
+         if (!headers.isEmpty()){
             for (Header header : headers){
-               log.debug("Adding header " + header.getName() + " to request");
+               log.debug("Adding header {} to request", header.getName());
                httpRequest.getHeaders().add(header.getName(), buildValue(header.getValues()));
             }
             // Update request headers for traceability of possibly added ones.
@@ -152,7 +149,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          if (request.getContent() != null) {
             // Update request content with rendered body if necessary.
             request.setContent(TestRunnerCommons.renderRequestContent(request, headers));
-            log.trace("Sending following request content: " + request.getContent());
+            log.trace("Sending following request content: {}", request.getContent());
             httpRequest.getBody().write(request.getContent().getBytes());
          }
 
@@ -162,7 +159,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          try{
             httpResponse = httpRequest.execute();
          } catch (IOException ioe){
-            log.error("IOException while executing request " + request.getName() + " on " + endpointUrl, ioe);
+            log.error("IOException while executing request {} on {}", request.getName(), customizedEndpointUrl, ioe);
             code = TestReturn.FAILURE_CODE;
             message = ioe.getMessage();
          }
@@ -186,8 +183,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
          Response response = new Response();
          if (httpResponse != null){
             response.setContent(responseContent);
-            response.setStatus(String.valueOf(httpResponse.getRawStatusCode()));
-            log.debug("Response Content-Type: " + httpResponse.getHeaders().getContentType());
+            response.setStatus(String.valueOf(httpResponse.getStatusCode().value()));
+            log.debug("Response Content-Type: {}", httpResponse.getHeaders().getContentType());
             if (httpResponse.getHeaders().getContentType() != null) {
                response.setMediaType(httpResponse.getHeaders().getContentType().toString());
             }
@@ -195,6 +192,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
             if (headers != null){
                response.setHeaders(headers);
             }
+            log.info("Closing http response");
             httpResponse.close();
          }
 
@@ -241,8 +239,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
       int code = TestReturn.SUCCESS_CODE;
       // Set code to failure if http code out of correct ranges (20x and 30x).
       try{
-         if (httpResponse.getRawStatusCode() > 299){
-            log.debug("Http status code is " + httpResponse.getRawStatusCode() + ", marking test as failed.");
+         if (httpResponse.getStatusCode().value() > 299){
+            log.debug("Http status code is {}, marking test as failed.", httpResponse.getStatusCode().value());
             code = TestReturn.FAILURE_CODE;
          }
       } catch (IOException ioe){
@@ -274,7 +272,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod>{
       String message = null;
       // Set code to failure if http code out of correct ranges (20x and 30x).
       try{
-         message = String.valueOf(httpResponse.getRawStatusCode());
+         message = String.valueOf(httpResponse.getStatusCode().value());
       } catch (IOException ioe){
          log.debug("IOException while getting raw status code in response", ioe);
          message = "IOException while getting raw status code in response";
