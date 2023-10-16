@@ -15,7 +15,7 @@
  */
 package io.github.microcks.util.el.function;
 
-import com.github.javafaker.Faker;
+import net.datafaker.Faker;
 import io.github.microcks.util.el.EvaluationContext;
 
 /**
