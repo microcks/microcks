@@ -23,10 +23,7 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.ParameterConstraintUtil;
+import io.github.microcks.util.*;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
@@ -226,10 +223,13 @@ public class RestController {
             if (response.getHeaders() != null) {
                for (Header header : response.getHeaders()) {
                   if ("Location".equals(header.getName())) {
-                     // We should process location in order to make relative URI specified an absolute one from
-                     // the client perspective.
-                     String location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                        + request.getContextPath() + "/rest" + serviceAndVersion + header.getValues().iterator().next();
+                    String location = header.getValues().iterator().next();
+                    if (!AbsoluteUrlMatcher.matches(location)) {
+                      // We should process location in order to make relative URI specified an absolute one from
+                      // the client perspective.
+                      location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+                        + request.getContextPath() + "/rest" + serviceAndVersion + location;
+                    }
                      responseHeaders.add(header.getName(), location);
                   } else {
                      if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
