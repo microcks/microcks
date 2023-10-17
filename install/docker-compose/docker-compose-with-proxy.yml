@@ -46,6 +46,7 @@ services:
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080
+      - JAVA_OPTIONS=-Dspring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:18080/realms/microcks -Dspring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://keycloak:8080/realms/microcks/protocol/openid-connect/certs
       #- MAX_UPLOAD_FILE_SIZE=3MB
       - PROXY_HOST=squiqproxy.example.com
       - PROXY_PORT=9876

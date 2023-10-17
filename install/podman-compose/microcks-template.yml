@@ -47,5 +47,6 @@ services:
       - TEST_CALLBACK_URL=http://microcks:8080
       - KEYCLOAK_URL=http://keycloak:8080
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080
+      - JAVA_OPTIONS=-Dspring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:18080/realms/microcks -Dspring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://keycloak:8080/realms/microcks/protocol/openid-connect/certs
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       #- MAX_UPLOAD_FILE_SIZE=3MB
