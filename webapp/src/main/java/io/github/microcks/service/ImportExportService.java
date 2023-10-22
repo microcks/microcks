@@ -89,7 +89,7 @@ public class ImportExportService {
          log.info("Retrieve {} responses to import into repository", model != null ? model.getResponses().size() : 0);
          log.info("Retrieve {} requests to import into repository", model != null ? model.getRequests().size() : 0);
          log.info("Retrieve {} event messages to import into repository",
-               model !=  && model.getEventMessages() != null ? model.getEventMessages().size() : 0);
+               model != null && model.getEventMessages() != null ? model.getEventMessages().size() : 0);
       }
       if (model != null) {
          serviceRepository.saveAll(model.getServices());
