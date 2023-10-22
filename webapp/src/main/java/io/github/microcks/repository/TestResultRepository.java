@@ -17,8 +17,8 @@ package io.github.microcks.repository;
 
 import io.github.microcks.domain.TestResult;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Date;
 import java.util.List;
@@ -27,7 +27,7 @@ import java.util.List;
  * Repository interface for TestResult domain objects.
  * @author laurent
  */
-public interface TestResultRepository extends PagingAndSortingRepository<TestResult, String> {
+public interface TestResultRepository extends MongoRepository<TestResult, String> {
 
    List<TestResult> findByServiceId(String serviceId);
 

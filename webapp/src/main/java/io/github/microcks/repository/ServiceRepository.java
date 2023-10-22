@@ -17,15 +17,16 @@ package io.github.microcks.repository;
 
 import io.github.microcks.domain.Service;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
 /**
  * Repository interface for Service domain objects.
+ * 
  * @author laurent
  */
-public interface ServiceRepository extends PagingAndSortingRepository<Service, String>, CustomServiceRepository {
+public interface ServiceRepository extends MongoRepository<Service, String>, CustomServiceRepository {
 
    Service findByNameAndVersion(String name, String version);
 

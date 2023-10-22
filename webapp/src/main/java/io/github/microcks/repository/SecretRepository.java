@@ -17,16 +17,16 @@ package io.github.microcks.repository;
 
 import io.github.microcks.domain.Secret;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
 /**
  * Repository interface for Service domain objects.
+ * 
  * @author laurent
  */
-public interface SecretRepository extends PagingAndSortingRepository<Secret, String> {
+public interface SecretRepository extends MongoRepository<Secret, String> {
 
    List<Secret> findByName(String name);
 
