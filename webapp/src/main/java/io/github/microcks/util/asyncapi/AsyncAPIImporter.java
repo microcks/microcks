@@ -128,7 +128,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          } else {
             mapper = new ObjectMapper();
          }
-         spec = mapper.readTree(specContent.getBytes(StandardCharsets.UTF_8)));
+         spec = mapper.readTree(specContent.getBytes(StandardCharsets.UTF_8));
       } catch (Exception e) {
          log.error("Exception while parsing AsyncAPI specification file " + specificationFilePath, e);
          throw new IOException("AsyncAPI spec file parsing error");
