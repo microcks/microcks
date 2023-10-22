@@ -25,8 +25,10 @@ import java.util.Random;
  */
 public class RandomBooleanELFunction implements ELFunction {
 
+   private Random random = new Random();
+
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
-      return String.valueOf(new Random().nextBoolean());
+      return String.valueOf(random.nextBoolean());
    }
 }

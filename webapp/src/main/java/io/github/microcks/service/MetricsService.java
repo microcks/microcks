@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service bean for common processing around metrics.
+ * 
  * @author laurent
  */
 @org.springframework.stereotype.Service
@@ -61,15 +62,17 @@ public class MetricsService {
    private TestConformanceMetricRepository metricRepository;
 
    @Value("${features.feature.repository-filter.label-key}")
-   private final String filterLabelKey = null;
+   private String filterLabelKey;
 
-   @Value("${test-conformance.trend-size}")
-   private final int testConformanceTrendSize = 3;
-   @Value("${test-conformance.trend-history-size}")
-   private final int testConformanceTrendHistorySize = 10;
+   @Value("#{new Integer('${test-conformance.trend-size:3}')}")
+   private Integer testConformanceTrendSize;
+
+   @Value("#{new Integer('${test-conformance.trend-history-size:10}')}")
+   private Integer testConformanceTrendHistorySize;
 
    /**
     * Configure a TestConformanceMetric object for a given Service.
+    * 
     * @param service The Service to configure coverage metrics for.
     */
    public void configureTestConformanceMetric(Service service) {
@@ -83,16 +86,16 @@ public class MetricsService {
 
       // Update max possible score and aggregation label on crate or change.
       metric.setMaxPossibleScore(computeMaxPossibleConformanceScore(service));
-      if (filterLabelKey != null) {
-         if (service.getMetadata().getLabels() != null) {
-            metric.setAggregationLabelValue(service.getMetadata().getLabels().get(filterLabelKey));
-         }
+      if (filterLabelKey != null && service.getMetadata().getLabels() != null) {
+         metric.setAggregationLabelValue(service.getMetadata().getLabels().get(filterLabelKey));
       }
+
       metricRepository.save(metric);
    }
 
    /**
     * Remove TestConformanceMetric associated to a given Service.
+    * 
     * @param serviceId The identifier of Service to remove coverage metrics for.
     */
    public void removeTestConformanceMetric(String serviceId) {
@@ -104,6 +107,7 @@ public class MetricsService {
 
    /**
     * Update the test conformance score when a test is completed.
+    * 
     * @param testResult The newly completed Test for a Service.
     */
    public void updateTestConformanceMetricOnTestResult(TestResult testResult) {
@@ -124,7 +128,7 @@ public class MetricsService {
                   totalSteps++;
                }
             }
-            currentScore = metric.getMaxPossibleScore() * (totalSuccess / totalSteps);
+            currentScore = metric.getMaxPossibleScore() * (((double) totalSuccess) / ((double) totalSteps));
          }
 
          // Update entity with score and last update day.
@@ -175,11 +179,10 @@ public class MetricsService {
       }
    }
 
-
    /** Compute the max possible coverage for a Service. */
    private double computeMaxPossibleConformanceScore(Service service) {
       double maxScore = 0.00;
-      double operationContrib = 100 / service.getOperations().size();
+      double operationContrib = 100 / ((double) service.getOperations().size());
 
       for (Operation operation : service.getOperations()) {
          List exchanges;
@@ -208,9 +211,9 @@ public class MetricsService {
       // Compute day string representation.
       Calendar calendar = Calendar.getInstance();
       int month = calendar.get(Calendar.MONTH) + 1;
-      String monthStr = (month<10 ? "0" : "") + String.valueOf(month);
+      String monthStr = (month < 10 ? "0" : "") + String.valueOf(month);
       int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-      String dayOfMonthStr = (dayOfMonth<10 ? "0" : "") + String.valueOf(dayOfMonth);
+      String dayOfMonthStr = (dayOfMonth < 10 ? "0" : "") + String.valueOf(dayOfMonth);
 
       return calendar.get(Calendar.YEAR) + monthStr + dayOfMonthStr;
    }

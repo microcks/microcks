@@ -28,13 +28,13 @@ public class RandomStringELFunction implements ELFunction {
 
    public static final int DEFAULT_LENGTH = 32;
 
-   private static final int leftLimit = 48; // numeral '0'
-   private static final int rightLimit = 122; // letter 'z'
+   private static final int LEFT_LIMIT = 48; // numeral '0'
+   private static final int RIGHT_LIMIT = 122; // letter 'z'
+
+   private Random generator = new Random();
 
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
-      Random generator = new Random();
-
       if (args != null) {
          switch (args.length) {
             case 1:
@@ -52,7 +52,7 @@ public class RandomStringELFunction implements ELFunction {
 
    private String generateString(Random random, int length) {
       // See https://www.baeldung.com/java-random-string for reference.
-      return random.ints(leftLimit, rightLimit + 1)
+      return random.ints(LEFT_LIMIT, RIGHT_LIMIT + 1)
             .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
             .limit(length)
             .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)

@@ -24,11 +24,13 @@ import java.util.Random;
  */
 public class RandomValueELFunction implements ELFunction {
 
+   private Random random = new Random();
+
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
       if (args == null || args.length == 0) {
          return "";
       }
-      return args[new Random().nextInt(args.length)];
+      return args[random.nextInt(args.length)];
    }
 }
