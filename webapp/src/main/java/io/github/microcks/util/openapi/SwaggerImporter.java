@@ -23,11 +23,8 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,9 +33,6 @@ import java.util.List;
  * @author laurent
  */
 public class SwaggerImporter extends OpenAPIImporter {
-
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(SwaggerImporter.class);
 
    /**
     * Build a new importer.
@@ -61,6 +55,6 @@ public class SwaggerImporter extends OpenAPIImporter {
 
    @Override
    public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
-      return new ArrayList<>();
+      return Collections.emptyList();
    }
 }
