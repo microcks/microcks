@@ -32,6 +32,7 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
+import io.github.microcks.util.ObjectMapperFactory;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.metadata.MetadataExtensions;
@@ -41,7 +42,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +49,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -84,6 +84,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
    private static final List<String> VALID_VERBS = Arrays.asList("subscribe", "publish");
 
+   private static final String BINDINGS = "bindings";
+   private static final String SCHEMA_NODE = "schema";
+   private static final String EXAMPLES_NODE = "examples";
+   private static final String EXAMPLE_VALUE_NODE = "value";
+   private static final String EXAMPLE_PAYLOAD_NODE = "payload";
+
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local AsyncAPI spec file
@@ -92,10 +98,11 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
     */
    public AsyncAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
       this.referenceResolver = referenceResolver;
+      BufferedReader reader = null;
       try {
          // Analyse first lines of file content to guess repository type.
          String line = null;
-         BufferedReader reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), Charset.forName("UTF-8"));
+         reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), StandardCharsets.UTF_8);
          while ((line = reader.readLine()) != null) {
             line = line.trim();
             // Check is we start with json object or array definition.
@@ -108,25 +115,28 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                break;
             }
          }
-         reader.close();
 
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
-         specContent = new String(bytes, Charset.forName("UTF-8"));
+         specContent = new String(bytes, StandardCharsets.UTF_8);
          // Convert them to Node using Jackson object mapper.
          ObjectMapper mapper = null;
          if (isYaml) {
-            mapper = new ObjectMapper(new YAMLFactory());
+            mapper = ObjectMapperFactory.getYamlObjectMapper();
             // Jackson YAML parser can't deal with any quotes around "$ref" and double quotes around the path.
             specContent = specContent.replaceAll("[\\\"']?\\$ref[\\\"']?:\\s*[\\\"'](#.*)[\\\"']", "\\$ref: '$1'")
                   .replaceAll("[\\\"']?pattern[\\\"']?:\\s*[\\\"'](.*)[\\\"']", "pattern: $1");
          } else {
-            mapper = new ObjectMapper();
+            mapper = ObjectMapperFactory.getJsonObjectMapper();
          }
-         spec = mapper.readTree(specContent.getBytes(Charset.forName("UTF-8")));
+         spec = mapper.readTree(specContent.getBytes(StandardCharsets.UTF_8));
       } catch (Exception e) {
          log.error("Exception while parsing AsyncAPI specification file " + specificationFilePath, e);
          throw new IOException("AsyncAPI spec file parsing error");
+      } finally {
+         if (reader != null) {
+            reader.close();
+         }
       }
    }
 
@@ -179,7 +189,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       if (referenceResolver != null) {
          for (Operation operation : service.getOperations()) {
             String[] operationElements = operation.getName().split(" ");
-            String messageNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
+            String messageNamePtr = "/channels/" + operationElements[1].replace("/", "~1");
             messageNamePtr += "/" + operationElements[0].toLowerCase() + "/message";
 
             JsonNode messageNode = spec.at(messageNamePtr);
@@ -188,8 +198,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                messageNode = followRefIfAny(messageNode);
 
                // Extract payload schema here.
-               if (messageNode.has("payload")) {
-                  JsonNode payloadNode = messageNode.path("payload");
+               if (messageNode.has(EXAMPLE_PAYLOAD_NODE)) {
+                  JsonNode payloadNode = messageNode.path(EXAMPLE_PAYLOAD_NODE);
 
                   // Check we have a reference that is not a local one.
                   if (payloadNode.has("$ref")) {
@@ -302,8 +312,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                      contentType = extractedMsgBody.path("contentType").asText();
                   }
                   // No need to go further if no examples.
-                  if (extractedMsgBody.has("examples")) {
-                     Iterator<JsonNode> examples = extractedMsgBody.path("examples").elements();
+                  if (extractedMsgBody.has(EXAMPLES_NODE)) {
+                     Iterator<JsonNode> examples = extractedMsgBody.path(EXAMPLES_NODE).elements();
                      int exampleIndex = 0;
                      while (examples.hasNext()) {
                         JsonNode exampleNode = examples.next();
@@ -312,7 +322,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                         if (exampleNode.has("name")) {
                            // As of AsyncAPI 2.1.0 () we can now have a 'name' property for examples!
                            eventMessage = extractFromAsyncAPI21Example(contentType, exampleNode);
-                        } else if (exampleNode.has("payload")) {
+                        } else if (exampleNode.has(EXAMPLE_PAYLOAD_NODE)) {
                            // As of https://github.com/microcks/microcks/issues/385, we should support the restriction
                            // coming from AsyncAPI GItHub master revision and associated tooling...
                            eventMessage = extractFromAsyncAPIExample(contentType, exampleNode, channelName.trim() + "-" + exampleIndex);
@@ -383,11 +393,11 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                }
 
                // We have to look also for bindings. First at the upper channel level.
-               if (channel.getValue().has("bindings")) {
-                  Iterator<String> bindingNames = channel.getValue().path("bindings").fieldNames();
+               if (channel.getValue().has(BINDINGS)) {
+                  Iterator<String> bindingNames = channel.getValue().path(BINDINGS).fieldNames();
                   while (bindingNames.hasNext()) {
                      String bindingName = bindingNames.next();
-                     JsonNode binding = channel.getValue().path("bindings").path(bindingName);
+                     JsonNode binding = channel.getValue().path(BINDINGS).path(bindingName);
 
                      switch (bindingName) {
                         case "ws":
@@ -419,16 +429,18 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               b.setPersistent(true);
                            }
                            break;
+                        default:
+                           break;
                      }
                   }
                }
 
                // Then look for bindings at the operation level.
-               if (verb.getValue().has("bindings")) {
-                  Iterator<String> bindingNames = verb.getValue().path("bindings").fieldNames();
+               if (verb.getValue().has(BINDINGS)) {
+                  Iterator<String> bindingNames = verb.getValue().path(BINDINGS).fieldNames();
                   while (bindingNames.hasNext()) {
                      String bindingName = bindingNames.next();
-                     JsonNode binding = verb.getValue().path("bindings").path(bindingName);
+                     JsonNode binding = verb.getValue().path(BINDINGS).path(bindingName);
 
                      switch (bindingName) {
                         case "kafka":
@@ -476,6 +488,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               }
                            }
                            break;
+                        default:
+                           break;
                      }
                   }
                }
@@ -483,11 +497,11 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                // Then look for bindings at the message level.
                JsonNode messageBody = verb.getValue().path("message");
                messageBody = followRefIfAny(messageBody);
-               if (messageBody.has("bindings")) {
-                  Iterator<String> bindingNames = messageBody.path("bindings").fieldNames();
+               if (messageBody.has(BINDINGS)) {
+                  Iterator<String> bindingNames = messageBody.path(BINDINGS).fieldNames();
                   while (bindingNames.hasNext()) {
                      String bindingName = bindingNames.next();
-                     JsonNode binding = messageBody.path("bindings").path(bindingName);
+                     JsonNode binding = messageBody.path(BINDINGS).path(bindingName);
 
                      switch (bindingName) {
                         case "kafka":
@@ -500,6 +514,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                            break;
                         case "mqtt":
                         case "amqp1":
+                           break;
+                        default:
                            break;
                      }
                   }
@@ -585,7 +601,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          JsonNode example = exampleNode.path(exampleName);
 
          // No need to go further if no payload.
-         if (example.has("payload")) {
+         if (example.has(EXAMPLE_PAYLOAD_NODE)) {
             String exampleValue = getExamplePayload(example);
 
             // Build and store a request object.
@@ -628,13 +644,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          if (headers != null) {
             while (headers.hasNext()) {
                Entry<String, JsonNode> property = headers.next();
-               String propertyName = property.getKey();
 
                Header header = new Header();
                header.setName(property.getKey());
                // Values may be multiple and CSV.
                Set<String> headerValues = Arrays.stream(property.getValue().asText().split(","))
-                     .map(value -> value.trim())
+                     .map(String::trim)
                      .collect(Collectors.toSet());
                header.setValues(headerValues);
                results.add(header);
@@ -646,12 +661,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
    /** Get the value of an example. This can be direct value field or those of followed $ref. */
    private String getExamplePayload(JsonNode example) {
-      if (example.has("payload")) {
-         if (example.path("payload").getNodeType() == JsonNodeType.ARRAY ||
-               example.path("payload").getNodeType() == JsonNodeType.OBJECT ) {
-            return example.path("payload").toString();
+      if (example.has(EXAMPLE_PAYLOAD_NODE)) {
+         if (example.path(EXAMPLE_PAYLOAD_NODE).getNodeType() == JsonNodeType.ARRAY ||
+               example.path(EXAMPLE_PAYLOAD_NODE).getNodeType() == JsonNodeType.OBJECT ) {
+            return example.path(EXAMPLE_PAYLOAD_NODE).toString();
          }
-         return example.path("payload").asText();
+         return example.path(EXAMPLE_PAYLOAD_NODE).asText();
       }
       if (example.has("$payloadRef")) {
          // $ref: '#/components/examples/param_laurent'
@@ -684,14 +699,14 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          String parameterName = parameterEntry.getKey();
          log.debug("Processing param {}", parameterName);
 
-         if (parameter.has("schema") && parameter.path("schema").has("examples")) {
-            Iterator<String> exampleNames = parameter.path("schema").path("examples").fieldNames();
+         if (parameter.has(SCHEMA_NODE) && parameter.path(SCHEMA_NODE).has(EXAMPLES_NODE)) {
+            Iterator<String> exampleNames = parameter.path(SCHEMA_NODE).path(EXAMPLES_NODE).fieldNames();
 
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
                log.debug("Processing example {}", exampleName);
 
-               JsonNode example = parameter.path("schema").path("examples").path(exampleName);
+               JsonNode example = parameter.path(SCHEMA_NODE).path(EXAMPLES_NODE).path(exampleName);
                String exampleValue = getExampleValue(example);
                log.debug("{} {} {}", parameterName, exampleName, exampleValue);
 
@@ -709,12 +724,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
    /** Get the value of an example. This can be direct value field or those of followed $ref */
    private String getExampleValue(JsonNode example) {
-      if (example.has("value")) {
-         if (example.path("value").getNodeType() == JsonNodeType.ARRAY ||
-               example.path("value").getNodeType() == JsonNodeType.OBJECT) {
-            return example.path("value").toString();
+      if (example.has(EXAMPLE_VALUE_NODE)) {
+         if (example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.ARRAY ||
+               example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.OBJECT) {
+            return example.path(EXAMPLE_VALUE_NODE).toString();
          }
-         return example.path("value").asText();
+         return example.path(EXAMPLE_VALUE_NODE).asText();
       }
       if (example.has("$ref")) {
          // $ref: '#/components/examples/param_laurent'

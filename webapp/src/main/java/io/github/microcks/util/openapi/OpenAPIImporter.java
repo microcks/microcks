@@ -32,6 +32,7 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
+import io.github.microcks.util.ObjectMapperFactory;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
@@ -42,7 +43,6 @@ import io.github.microcks.util.metadata.MetadataExtractor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +50,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -81,6 +81,10 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
    private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head", "patch", "trace");
 
+   private static final String CONTENT_NODE = "content";
+   private static final String EXAMPLES_NODE = "examples";
+   private static final String EXAMPLE_VALUE_NODE = "value";
+
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local OpenAPI spec file
@@ -89,10 +93,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
     */
    public OpenAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
       this.referenceResolver = referenceResolver;
+      BufferedReader reader = null;
       try {
          // Analyse first lines of file content to guess repository type.
          String line = null;
-         BufferedReader reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), Charset.forName("UTF-8"));
+         reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), StandardCharsets.UTF_8);
          while ((line = reader.readLine()) != null) {
             line = line.trim();
             // Check is we start with json object or array definition.
@@ -105,22 +110,20 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                break;
             }
          }
-         reader.close();
 
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
-         specContent = new String(bytes, Charset.forName("UTF-8"));
+         specContent = new String(bytes, StandardCharsets.UTF_8);
          // Convert them to Node using Jackson object mapper.
-         ObjectMapper mapper = null;
-         if (isYaml) {
-            mapper = new ObjectMapper(new YAMLFactory());
-         } else {
-            mapper = new ObjectMapper();
-         }
+         ObjectMapper mapper = isYaml ? ObjectMapperFactory.getYamlObjectMapper() : ObjectMapperFactory.getJsonObjectMapper();
          spec = mapper.readTree(bytes);
       } catch (Exception e) {
          log.error("Exception while parsing OpenAPI specification file " + specificationFilePath, e);
          throw new IOException("OpenAPI spec file parsing error");
+      } finally {
+         if (reader != null) {
+            reader.close();
+         }
       }
    }
 
@@ -264,10 +267,10 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                         Entry<String, JsonNode> content = contents.next();
                         String contentValue = content.getKey();
 
-                        Iterator<String> exampleNames = content.getValue().path("examples").fieldNames();
+                        Iterator<String> exampleNames = content.getValue().path(EXAMPLES_NODE).fieldNames();
                         while (exampleNames.hasNext()) {
                            String exampleName = exampleNames.next();
-                           JsonNode example = content.getValue().path("examples").path(exampleName);
+                           JsonNode example = content.getValue().path(EXAMPLES_NODE).path(exampleName);
 
                            // We should have everything at hand to build response here.
                            Response response = new Response();
@@ -280,7 +283,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                            }
                            List<Header> responseHeaders = headersByExample.get(exampleName);
                            if (responseHeaders != null) {
-                              responseHeaders.stream().forEach(header -> response.addHeader(header));
+                              responseHeaders.stream().forEach(response::addHeader);
                            }
 
                            // Do we have a request for this example?
@@ -331,7 +334,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                                  header.setName(headerEntry.getKey());
                                  // Values may be multiple and CSV.
                                  Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(","))
-                                       .map(value -> value.trim())
+                                       .map(String::trim)
                                        .collect(Collectors.toSet());
                                  header.setValues(headerValues);
                                  request.addHeader(header);
@@ -474,11 +477,11 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          String parameterName = parameter.path("name").asText();
 
          if (parameter.has("in") && parameter.path("in").asText().equals(parameterType)
-               && parameter.has("examples")) {
-            Iterator<String> exampleNames = parameter.path("examples").fieldNames();
+               && parameter.has(EXAMPLES_NODE)) {
+            Iterator<String> exampleNames = parameter.path(EXAMPLES_NODE).fieldNames();
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
-               JsonNode example = parameter.path("examples").path(exampleName);
+               JsonNode example = parameter.path(EXAMPLES_NODE).path(exampleName);
                String exampleValue = getExampleValue(example);
 
                Map<String, String> exampleParams = results.get(exampleName);
@@ -501,16 +504,16 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       Map<String, Request> results = new HashMap<>();
 
       JsonNode requestBody = verbNode.path("requestBody");
-      Iterator<String> contentTypeNames = requestBody.path("content").fieldNames();
+      Iterator<String> contentTypeNames = requestBody.path(CONTENT_NODE).fieldNames();
       while (contentTypeNames.hasNext()) {
          String contentTypeName = contentTypeNames.next();
-         JsonNode contentType = requestBody.path("content").path(contentTypeName);
+         JsonNode contentType = requestBody.path(CONTENT_NODE).path(contentTypeName);
 
-         if (contentType.has("examples")) {
-            Iterator<String> exampleNames = contentType.path("examples").fieldNames();
+         if (contentType.has(EXAMPLES_NODE)) {
+            Iterator<String> exampleNames = contentType.path(EXAMPLES_NODE).fieldNames();
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
-               JsonNode example = contentType.path("examples").path(exampleName);
+               JsonNode example = contentType.path(EXAMPLES_NODE).path(exampleName);
                String exampleValue = getExampleValue(example);
 
                // Build and store a request object.
@@ -548,16 +551,16 @@ public class OpenAPIImporter implements MockRepositoryImporter {
             String headerName = headerNames.next();
             JsonNode headerNode = headersNode.path(headerName);
 
-            if (headerNode.has("examples")) {
-               Iterator<String> exampleNames = headerNode.path("examples").fieldNames();
+            if (headerNode.has(EXAMPLES_NODE)) {
+               Iterator<String> exampleNames = headerNode.path(EXAMPLES_NODE).fieldNames();
                while (exampleNames.hasNext()) {
                   String exampleName = exampleNames.next();
-                  JsonNode example = headerNode.path("examples").path(exampleName);
+                  JsonNode example = headerNode.path(EXAMPLES_NODE).path(exampleName);
                   String exampleValue = getExampleValue(example);
 
                   // Example may be multiple CSV.
-                  Set<String> values = Arrays.stream(
-                        exampleValue.split(",")).map(value -> value.trim())
+                  Set<String> values = Arrays.stream(exampleValue.split(","))
+                        .map(String::trim)
                         .collect(Collectors.toSet());
 
                   Header header = new Header();
@@ -583,12 +586,12 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
    /** Get the value of an example. This can be direct value field or those of followed $ref */
    private String getExampleValue(JsonNode example) {
-      if (example.has("value")) {
-         if (example.path("value").getNodeType() == JsonNodeType.ARRAY ||
-               example.path("value").getNodeType() == JsonNodeType.OBJECT ) {
-            return example.path("value").toString();
+      if (example.has(EXAMPLE_VALUE_NODE)) {
+         if (example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.ARRAY ||
+               example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.OBJECT ) {
+            return example.path(EXAMPLE_VALUE_NODE).toString();
          }
-         return example.path("value").asText();
+         return example.path(EXAMPLE_VALUE_NODE).asText();
       }
       if (example.has("$ref")) {
          JsonNode component = followRefIfAny(example);
@@ -603,7 +606,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          JsonNode component = followRefIfAny(response);
          return getResponseContent(component);
       }
-      return response.path("content");
+      return response.path(CONTENT_NODE);
    }
 
    /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2)*/
