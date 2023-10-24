@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.microcks.config;
 
 import io.github.microcks.util.ObjectMapperFactory;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
-
-import javax.annotation.PostConstruct;
 
 /**
  * Allows the configuration of the ObjectMapperFactory at startup time of Microcks application.
