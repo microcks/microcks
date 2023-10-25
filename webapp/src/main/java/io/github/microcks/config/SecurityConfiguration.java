@@ -27,9 +27,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static io.github.microcks.security.AuthorizationChecker.*;
 /**
  * A bean responsible for Security filter chain configuration using Spring Security ODIC adapters.
  * @author laurent
@@ -55,20 +57,20 @@ public class SecurityConfiguration {
       // Disable CSRF because of state-less session-management
       http.csrf(csrf -> csrf.disable());
 
-      if (keycloakEnabled) {
+      if (Boolean.TRUE.equals(keycloakEnabled)) {
          log.info("Keycloak is enabled, configuring oauth2 & request authorization");
 
          http.authorizeHttpRequests(registry -> registry
-               .requestMatchers("/api/services", "/api/services/*", "/api/jobs", "/api/jobs/*").hasAnyRole("user", "manager", "admin")
-               .requestMatchers("/api/services/*/*").hasAnyRole("manager", "admin")
-               .requestMatchers("/api/jobs/*/*").hasAnyRole("manager", "admin")
-               .requestMatchers("/api/artifact/*").hasAnyRole("manager", "admin")
-               .requestMatchers("/api/import/*", "/api/export/*").hasAnyRole("admin")
-               .requestMatchers(HttpMethod.GET, "/api/secrets").hasAnyRole("user", "manager", "admin")
-               .requestMatchers(HttpMethod.GET, "/api/secrets/*").hasAnyRole("user", "manager", "admin")
-               .requestMatchers(HttpMethod.POST, "/api/secrets").hasAnyRole("admin")
-               .requestMatchers(HttpMethod.PUT, "/api/secrets/*").hasAnyRole("admin")
-               .requestMatchers(HttpMethod.DELETE, "/api/secrets/*").hasAnyRole("admin")
+               .requestMatchers("/api/services", "/api/services/*", "/api/jobs", "/api/jobs/*").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/services/*/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/jobs/*/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/artifact/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/import/*", "/api/export/*").hasAnyRole(ROLE_ADMIN)
+               .requestMatchers(HttpMethod.GET, "/api/secrets").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers(HttpMethod.GET, "/api/secrets/*").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers(HttpMethod.POST, "/api/secrets").hasAnyRole(ROLE_ADMIN)
+               .requestMatchers(HttpMethod.PUT, "/api/secrets/*").hasAnyRole(ROLE_ADMIN)
+               .requestMatchers(HttpMethod.DELETE, "/api/secrets/*").hasAnyRole(ROLE_ADMIN)
                .anyRequest().permitAll()
          );
 
@@ -79,6 +81,11 @@ public class SecurityConfiguration {
          log.info("Keycloak is disabled, permitting all requests");
          http.authorizeHttpRequests(registry -> registry.anyRequest().permitAll());
       }
+
+      // Disable the publication of X-Frame-Options to allow embedding the UI.
+      // See https://github.com/microcks/microcks/issues/952
+      http.headers(headers ->
+            headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
 
       return http.build();
    }
