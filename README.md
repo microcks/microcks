@@ -21,7 +21,7 @@ To get involved with our community, please make sure you are familiar with the p
 
 ## Build Status
 
-The current development version is `1.8.0-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.8.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
+The current development version is `1.8.1-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.8.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
 #### Sonarcloud Quality metrics
 
@@ -39,8 +39,8 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version          | Branch   | Container images tags |
 | ----------- |------------------| -------- |-----------------------|
-| Stable      | `1.7.1`          | `master` | `1.7.1`, `latest`     |
-| Dev         | `1.8.0-SNAPSHOT` | `1.8.x`  | `nightly`             |
+| Stable      | `1.8.0`          | `master` | `1.8.0`, `latest`     |
+| Dev         | `1.8.1-SNAPSHOT` | `1.8.x`  | `nightly`             |
 | Maintenance | `1.7.2-SNAPSHOT` | `1.7.x`  | `maintenance`         |
 
 
