@@ -19,7 +19,7 @@
     <maven.compiler.target>17</maven.compiler.target>
     <junit.version>4.13.1</junit.version>
     <bouncycastle.version>1.70</bouncycastle.version>
-    <snakeyaml.version>2.0</snakeyaml.version>
+    <snakeyaml.version>2.2</snakeyaml.version>
     <mongo-java-server.version>1.43.0</mongo-java-server.version>
     <apache-httpclient.version>5.2.1</apache-httpclient.version>
     <commons-lang3.version>3.13.0</commons-lang3.version>
@@ -457,9 +457,7 @@
             <version>1.2.2</version>
             <configuration>
               <imageName>${docker.image.prefix}/${docker.image.name}</imageName>
-              <!-- <dockerDirectory>src/main/docker</dockerDirectory> -->
-              <dockerDirectory>src/main/docker/ubi</dockerDirectory>
-              <!-- <dockerDirectory>src/main/docker/fabric8-ubi</dockerDirectory> -->
+              <dockerDirectory>src/main/docker</dockerDirectory>
               <resources>
                 <resource>
                   <targetPath>/</targetPath>
