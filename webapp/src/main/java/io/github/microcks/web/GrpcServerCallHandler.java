@@ -156,6 +156,8 @@ public class GrpcServerCallHandler {
                List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.PROTOBUF_DESCRIPTOR);
                if (resources == null || resources.size() != 1) {
                   log.error("Did not found any pre-processed Protobuf binary descriptor...");
+                  streamObserver.onError(Status.FAILED_PRECONDITION.withDescription("No pre-processed Protobuf binary descriptor found").asException());
+                  return;
                }
                Resource pbResource = resources.get(0);
 
@@ -177,8 +179,14 @@ public class GrpcServerCallHandler {
                   responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), fallback.getFallback());
                }
 
+               if (responses.isEmpty()) {
+                  // In case no response found (because dispatcher is null for example), just get one for the operation.
+                  log.debug("No responses found so far, tempting with just bare operationId...");
+                  responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(service, grpcOperation));
+               }
+
                // No filter to apply, just check that we have a response.
-               if (responses.size() > 0) {
+               if (!responses.isEmpty()) {
                   Response response = responses.get(0);
                   // Use a builder for out type with a Json parser to merge content and build outMsg.
                   DynamicMessage.Builder outBuilder = DynamicMessage.newBuilder(md.getOutputType());
@@ -218,38 +226,40 @@ public class GrpcServerCallHandler {
             t.printStackTrace();
          }
       }
-   }
 
-   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
-   private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules, String jsonBody) {
-      String dispatchCriteria = null;
-      Map<String, Object> requestContext = null;
+      /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
+      private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules, String jsonBody) {
+         String dispatchCriteria = null;
+         Map<String, Object> requestContext = null;
 
-      // Depending on dispatcher, evaluate request with rules.
-      if (dispatcher != null) {
-         switch (dispatcher) {
-            case DispatchStyles.JSON_BODY:
-               try {
-                  JsonEvaluationSpecification specification = JsonEvaluationSpecification.buildFromJsonString(dispatcherRules);
-                  dispatchCriteria = JsonExpressionEvaluator.evaluate(jsonBody, specification);
-               } catch (JsonMappingException jme) {
-                  log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
-               }
-               break;
-            case DispatchStyles.SCRIPT:
-               ScriptEngineManager sem = new ScriptEngineManager();
-               requestContext = new HashMap<>();
-               try {
-                  // Evaluating request with script coming from operation dispatcher rules.
-                  ScriptEngine se = sem.getEngineByExtension("groovy");
-                  ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext);
-                  dispatchCriteria = (String) se.eval(dispatcherRules);
-               } catch (Exception e) {
-                  log.error("Error during Script evaluation", e);
-               }
-               break;
+         // Depending on dispatcher, evaluate request with rules.
+         if (dispatcher != null) {
+            switch (dispatcher) {
+               case DispatchStyles.JSON_BODY:
+                  try {
+                     JsonEvaluationSpecification specification = JsonEvaluationSpecification.buildFromJsonString(dispatcherRules);
+                     dispatchCriteria = JsonExpressionEvaluator.evaluate(jsonBody, specification);
+                  } catch (JsonMappingException jme) {
+                     log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
+                  }
+                  break;
+               case DispatchStyles.SCRIPT:
+                  ScriptEngineManager sem = new ScriptEngineManager();
+                  requestContext = new HashMap<>();
+                  try {
+                     // Evaluating request with script coming from operation dispatcher rules.
+                     ScriptEngine se = sem.getEngineByExtension("groovy");
+                     ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext);
+                     dispatchCriteria = (String) se.eval(dispatcherRules);
+                  } catch (Exception e) {
+                     log.error("Error during Script evaluation", e);
+                  }
+                  break;
+               default:
+                  break;
+            }
          }
+         return new DispatchContext(dispatchCriteria, requestContext);
       }
-      return new DispatchContext(dispatchCriteria, requestContext);
    }
 }
