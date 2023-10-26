@@ -64,8 +64,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of MockRepositoryImporter that deals with AsyncAPI v2.0.x specification
+ * An implementation of MockRepositoryImporter that deals with AsyncAPI v2.0.x
+ * specification
  * file ; whether encoding into JSON or YAML documents.
+ * 
  * @author laurent
  */
 public class AsyncAPIImporter implements MockRepositoryImporter {
@@ -92,25 +94,26 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
    /**
     * Build a new importer.
+    * 
     * @param specificationFilePath The path to local AsyncAPI spec file
-    * @param referenceResolver An optional resolver for references present into the AsyncAPI file
+    * @param referenceResolver     An optional resolver for references present into
+    *                              the AsyncAPI file
     * @throws IOException if project file cannot be found or read.
     */
    public AsyncAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
       this.referenceResolver = referenceResolver;
-      BufferedReader reader = null;
-      try {
+      try (
+            BufferedReader reader = Files.newBufferedReader(new File(specificationFilePath).toPath(),
+                  StandardCharsets.UTF_8);) {
          // Analyse first lines of file content to guess repository type.
          String line = null;
-         reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), StandardCharsets.UTF_8);
          while ((line = reader.readLine()) != null) {
             line = line.trim();
             // Check is we start with json object or array definition.
             if (line.startsWith("{") || line.startsWith("[")) {
                isYaml = false;
                break;
-            }
-            else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("asyncapi: ")) {
+            } else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("asyncapi: ")) {
                isYaml = true;
                break;
             }
@@ -133,10 +136,6 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       } catch (Exception e) {
          log.error("Exception while parsing AsyncAPI specification file " + specificationFilePath, e);
          throw new IOException("AsyncAPI spec file parsing error");
-      } finally {
-         if (reader != null) {
-            reader.close();
-         }
       }
    }
 
@@ -212,7 +211,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                         Resource schemaResource = resolvedExternalRefResources.get(ref);
                         if (schemaResource == null) {
                            try {
-                              // Remove trailing anchor marker (we may have this in Avro schema to point exact Resource)
+                              // Remove trailing anchor marker (we may have this in Avro schema to point exact
+                              // Resource)
                               if (ref.contains("#")) {
                                  ref = ref.substring(0, ref.indexOf("#"));
                               }
@@ -242,14 +242,16 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                                     schemaResource.setType(ResourceType.AVRO_SCHEMA);
                                  }
                               } else {
-                                 // We should probably go deeper here and inspect the content of resolved resource
+                                 // We should probably go deeper here and inspect the content of resolved
+                                 // resource
                                  // to actually get the real schema type...
                                  schemaResource.setType(ResourceType.JSON_SCHEMA);
                               }
 
                               if (!ref.startsWith("http")) {
                                  // If a relative resource, replace with new name.
-                                 specContent = specContent.replace(ref, URLEncoder.encode(schemaResource.getName(), "UTF-8"));
+                                 specContent = specContent.replace(ref,
+                                       URLEncoder.encode(schemaResource.getName(), "UTF-8"));
                               }
 
                               results.add(schemaResource);
@@ -260,7 +262,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                            // Mark it as resolved.
                            resolvedExternalRefResources.put(ref, schemaResource);
                         }
-                        schemaResource.addOperation(operation.getName());
+
+                        if (schemaResource != null) {
+                           schemaResource.addOperation(operation.getName());
+                        } else {
+                           log.warn("Cannot add operation because schema resourse is null");
+                        }
                      }
                   }
                }
@@ -269,14 +276,16 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          // Finally try to clean up resolved references and associated resources (files)
          referenceResolver.cleanResolvedReferences();
       }
-      // Set the content of main AsyncAPI that may have been updated with dereferenced dependencies.
+      // Set the content of main AsyncAPI that may have been updated with dereferenced
+      // dependencies.
       resource.setContent(specContent);
 
       return results;
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       List<Exchange> result = new ArrayList<>();
 
       // Retrieve default content type, defaulting to application/json.
@@ -302,7 +311,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
             if (operation.getName().equals(verbName.toUpperCase() + " " + channelName.trim())) {
                JsonNode messageBody = verb.getValue().path("message");
 
-               // If it's a $ref or multi-structure (oneOf, anyOf, allOf), then navigate to them.
+               // If it's a $ref or multi-structure (oneOf, anyOf, allOf), then navigate to
+               // them.
                List<JsonNode> messageBodies = followRefsIfAny(messageBody);
 
                for (JsonNode extractedMsgBody : messageBodies) {
@@ -325,7 +335,8 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                         } else if (exampleNode.has(EXAMPLE_PAYLOAD_NODE)) {
                            // As of https://github.com/microcks/microcks/issues/385, we should support the restriction
                            // coming from AsyncAPI GItHub master revision and associated tooling...
-                           eventMessage = extractFromAsyncAPIExample(contentType, exampleNode, channelName.trim() + "-" + exampleIndex);
+                           eventMessage = extractFromAsyncAPIExample(contentType, exampleNode,
+                                 channelName.trim() + "-" + exampleIndex);
                         } else {
                            eventMessage = extractFromMicrocksExample(contentType, exampleNode);
                         }
@@ -338,8 +349,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                               String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
                               operation.addResourcePath(resourcePath);
                               eventMessage.setDispatchCriteria(
-                                    DispatchCriteriaHelper.buildFromPartsMap(operation.getDispatcherRules(), parts)
-                              );
+                                    DispatchCriteriaHelper.buildFromPartsMap(operation.getDispatcherRules(), parts));
                            }
 
                            result.add(new UnidirectionalEvent(eventMessage));
@@ -627,7 +637,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       if (example.has("headers")) {
          Iterator<Entry<String, JsonNode>> headers = null;
 
-         if (example.path("headers").getNodeType() == JsonNodeType.OBJECT ) {
+         if (example.path("headers").getNodeType() == JsonNodeType.OBJECT) {
             headers = example.path("headers").fields();
          } else if (example.path("headers").getNodeType() == JsonNodeType.STRING) {
             // Try to parse string as a JSON Object...
@@ -659,7 +669,10 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       return results;
    }
 
-   /** Get the value of an example. This can be direct value field or those of followed $ref. */
+   /**
+    * Get the value of an example. This can be direct value field or those of
+    * followed $ref.
+    */
    private String getExamplePayload(JsonNode example) {
       if (example.has(EXAMPLE_PAYLOAD_NODE)) {
          if (example.path(EXAMPLE_PAYLOAD_NODE).getNodeType() == JsonNodeType.ARRAY ||
@@ -722,7 +735,10 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       return results;
    }
 
-   /** Get the value of an example. This can be direct value field or those of followed $ref */
+   /**
+    * Get the value of an example. This can be direct value field or those of
+    * followed $ref
+    */
    private String getExampleValue(JsonNode example) {
       if (example.has(EXAMPLE_VALUE_NODE)) {
          if (example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.ARRAY ||
@@ -760,7 +776,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
          for (String structure : MULTI_STRUCTURES) {
             if (referencableNode.has(structure) && referencableNode.path(structure).isArray()) {
                ArrayNode arrayNode = (ArrayNode) referencableNode.path(structure);
-               for (int i=0; i<arrayNode.size(); i++) {
+               for (int i = 0; i < arrayNode.size(); i++) {
                   JsonNode structureNode = arrayNode.get(i);
                   results.add(followRefIfAny(structureNode));
                }
@@ -778,7 +794,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
    private static Binding retrieveOrInitOperationBinding(Operation operation, BindingType type) {
       Binding binding = null;
       if (operation.getBindings() != null) {
-         binding = operation.getBindings().get(type);
+         binding = operation.getBindings().get(type.toString());
       }
       if (binding == null) {
          binding = new Binding(type);

@@ -45,8 +45,10 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This is a utility class for accessing HTTP content using diverse security authentication
+ * This is a utility class for accessing HTTP content using diverse security
+ * authentication
  * mechanisms and output formats
+ * 
  * @author laurent
  */
 public class HTTPDownloader {
@@ -54,127 +56,139 @@ public class HTTPDownloader {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(HTTPDownloader.class);
 
-
    /** Constant representing the header line in a custom CA Cert in PEM format. */
    private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
    /** Constant representing the footer line in a custom CA Cert in PEM format. */
    private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
 
-
    /**
-    * Manage the retrieval of Etag / ETag header on remote url. Depending on secret content, HTTP
-    * connection is prepared for handling proxy username/password, target service authentication (through basic and
-    * bearer authorization or customer request header), remote SSL connection through installation of CA certificate
-    * or disabling SSL validation (ie. accepting all certificate and hostname verifications).
-    * @param remoteUrl The remote URL to check
-    * @param secret The secret associated with this remote URL (if any. Can be null)
-    * @param disableSSLValidation Whether to disable SSL validation. If true, all SSL related information from
+    * Manage the retrieval of Etag / ETag header on remote url. Depending on secret
+    * content, HTTP
+    * connection is prepared for handling proxy username/password, target service
+    * authentication (through basic and
+    * bearer authorization or customer request header), remote SSL connection
+    * through installation of CA certificate
+    * or disabling SSL validation (ie. accepting all certificate and hostname
+    * verifications).
+    * 
+    * @param remoteUrl            The remote URL to check
+    * @param secret               The secret associated with this remote URL (if
+    *                             any. Can be null)
+    * @param disableSSLValidation Whether to disable SSL validation. If true, all
+    *                             SSL related information from
     *                             secret will be ignored.
     * @return The value of Etag / ETag header if any. null if none.
-    * @throws IOException if anything goes wrong (request preparation or execution).
+    * @throws IOException if anything goes wrong (request preparation or
+    *                     execution).
     */
    public static String getURLEtag(String remoteUrl, Secret secret, boolean disableSSLValidation) throws IOException {
 
       // Build remote URLConnection and the read response headers.
       HttpURLConnection connection = prepareURLConnection(remoteUrl, secret, disableSSLValidation);
 
-      try{
+      try {
          // Try simple syntax.
          String etag = connection.getHeaderField("Etag");
-         if (etag != null){
-            log.debug("Found an Etag for " + remoteUrl + ": " + etag);
+         if (etag != null) {
+            log.debug("Found an Etag for {} : {}", remoteUrl, etag);
             return etag;
          }
          // Try other syntax.
          etag = connection.getHeaderField("ETag");
-         if (etag != null){
-            log.debug("Found an ETag for " + remoteUrl + ": " + etag);
+         if (etag != null) {
+            log.debug("Found an Etag for {} : {}", remoteUrl, etag);
             return etag;
          }
-      } catch (Exception e){
-         log.error("Caught an exception while retrieving Etag for " + remoteUrl, e);
+      } catch (Exception e) {
+         log.error("Caught an exception while retrieving Etag for {}", remoteUrl, e);
       }
-      log.debug("No Etag found for " + remoteUrl + " !");
+      log.debug("No Etag found for {} !", remoteUrl);
       return null;
    }
 
    /**
-    * Handle the HTTP/HTTPS download of remote url as a local temporary file. Depending on secret content, HTTP
-    * connection is prepared for handling proxy username/password, target service authentication (through basic and
-    * bearer authorization or customer request header), remote SSL connection through installation of CA certificate
-    * or disabling SSL validation (ie. accepting all certificate and hostname verifications).
-    * @param remoteUrl The remote URL to download and transfer into resulting file
-    * @param secret The secret associated with this remote URL (if any. Can be null)
-    * @param disableSSLValidation Whether to disable SSL validation. If true, all SSL related information from
+    * Handle the HTTP/HTTPS download of remote url as a local temporary file.
+    * Depending on secret content, HTTP
+    * connection is prepared for handling proxy username/password, target service
+    * authentication (through basic and
+    * bearer authorization or customer request header), remote SSL connection
+    * through installation of CA certificate
+    * or disabling SSL validation (ie. accepting all certificate and hostname
+    * verifications).
+    * 
+    * @param remoteUrl            The remote URL to download and transfer into
+    *                             resulting file
+    * @param secret               The secret associated with this remote URL (if
+    *                             any. Can be null)
+    * @param disableSSLValidation Whether to disable SSL validation. If true, all
+    *                             SSL related information from
     *                             secret will be ignored.
     * @return A temporary file containing downloaded content.
-    * @throws IOException if anything goes wrong (request preparation or execution).
+    * @throws IOException if anything goes wrong (request preparation or
+    *                     execution).
     */
-   public static File handleHTTPDownloadToFile(String remoteUrl, Secret secret, boolean disableSSLValidation) throws IOException {
+   public static File handleHTTPDownloadToFile(String remoteUrl, Secret secret, boolean disableSSLValidation)
+         throws IOException {
 
       // Build remote URLConnection and local target file.
       HttpURLConnection connection = prepareURLConnection(remoteUrl, secret, disableSSLValidation);
       File localFile = File.createTempFile("microcks-" + System.currentTimeMillis(), ".download");
 
-      ReadableByteChannel rbc = null;
-      FileOutputStream fos = null;
-      try {
-         rbc = Channels.newChannel(connection.getInputStream());
-         // Transfer file to local.
-         fos = new FileOutputStream(localFile);
+      try (
+            ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
+            // Transfer file to local.
+            FileOutputStream fos = new FileOutputStream(localFile);) {
          fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-      }
-      finally {
-         if (fos != null)
-            fos.close();
-         if (rbc != null)
-            rbc.close();
       }
       return localFile;
    }
 
    /**
-    * Handle the HTTP/HTTPS download of remote url as a local temporary file. Depending on secret content, HTTP
-    * connection is prepared for handling proxy username/password, target service authentication (through basic and
-    * bearer authorization or customer request header), remote SSL connection through installation of CA certificate
-    * or disabling SSL validation (ie. accepting all certificate and hostname verifications).
-    * @param remoteUrl The remote URL to download and transfer into resulting file
-    * @param secret The secret associated with this remote URL (if any. Can be null)
-    * @param disableSSLValidation Whether to disable SSL validation. If true, all SSL related information from
+    * Handle the HTTP/HTTPS download of remote url as a local temporary file.
+    * Depending on secret content, HTTP
+    * connection is prepared for handling proxy username/password, target service
+    * authentication (through basic and
+    * bearer authorization or customer request header), remote SSL connection
+    * through installation of CA certificate
+    * or disabling SSL validation (ie. accepting all certificate and hostname
+    * verifications).
+    * 
+    * @param remoteUrl            The remote URL to download and transfer into
+    *                             resulting file
+    * @param secret               The secret associated with this remote URL (if
+    *                             any. Can be null)
+    * @param disableSSLValidation Whether to disable SSL validation. If true, all
+    *                             SSL related information from
     *                             secret will be ignored.
-    * @return A temporary file containing downloaded content as well as Http download headers.
-    * @throws IOException if anything goes wrong (request preparation or execution).
+    * @return A temporary file containing downloaded content as well as Http
+    *         download headers.
+    * @throws IOException if anything goes wrong (request preparation or
+    *                     execution).
     */
-   public static FileAndHeaders handleHTTPDownloadToFileAndHeaders(String remoteUrl, Secret secret, boolean disableSSLValidation) throws IOException {
+   public static FileAndHeaders handleHTTPDownloadToFileAndHeaders(String remoteUrl, Secret secret,
+         boolean disableSSLValidation) throws IOException {
 
       // Build remote URLConnection and local target file.
       HttpURLConnection connection = prepareURLConnection(remoteUrl, secret, disableSSLValidation);
       File localFile = File.createTempFile("microcks-" + System.currentTimeMillis(), ".download");
 
-      ReadableByteChannel rbc = null;
-      FileOutputStream fos = null;
       Map<String, List<String>> responseHeaders = null;
-      try {
-         rbc = Channels.newChannel(connection.getInputStream());
-
-         // Transfer file to local.
-         fos = new FileOutputStream(localFile);
+      try (
+            ReadableByteChannel rbc = Channels.newChannel(connection.getInputStream());
+            // Transfer file to local.
+            FileOutputStream fos = new FileOutputStream(localFile);) {
          fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
          responseHeaders = connection.getHeaderFields();
-      }
-      finally {
-         if (fos != null)
-            fos.close();
-         if (rbc != null)
-            rbc.close();
       }
       return new FileAndHeaders(localFile, responseHeaders);
    }
 
    /**
-    * Prepare an URLConnection with all the security related stuffs specified by optional secret.
+    * Prepare an URLConnection with all the security related stuffs specified by
+    * optional secret.
     */
-   private static HttpURLConnection prepareURLConnection(String remoteUrl, Secret secret, boolean disableSSLValidation) throws IOException {
+   private static HttpURLConnection prepareURLConnection(String remoteUrl, Secret secret, boolean disableSSLValidation)
+         throws IOException {
 
       // Build remote URL and connection to prepare.
       URL website = new URL(remoteUrl);
@@ -232,8 +246,10 @@ public class HTTPDownloader {
          public java.security.cert.X509Certificate[] getAcceptedIssuers() {
             return null;
          }
+
          public void checkClientTrusted(X509Certificate[] certs, String authType) {
          }
+
          public void checkServerTrusted(X509Certificate[] certs, String authType) {
          }
       } };
@@ -261,8 +277,10 @@ public class HTTPDownloader {
          public java.security.cert.X509Certificate[] getAcceptedIssuers() {
             return null;
          }
+
          public void checkClientTrusted(X509Certificate[] certs, String authType) {
          }
+
          public void checkServerTrusted(X509Certificate[] certs, String authType) {
          }
       } };
@@ -292,7 +310,7 @@ public class HTTPDownloader {
 
       // Generate a new x509 certificate from the stripped decoded pem.
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      X509Certificate caCert = (X509Certificate)cf.generateCertificate(is);
+      X509Certificate caCert = (X509Certificate) cf.generateCertificate(is);
 
       // Set a new certificate into keystore.
       TrustManagerFactory tmf = TrustManagerFactory
@@ -312,7 +330,8 @@ public class HTTPDownloader {
    /**
     * Install a TrustManager that validates the CA certificate.
     */
-   private static void installCustomCaCertTrustManager(String caCertPem, HttpURLConnection connection) throws Exception {
+   private static void installCustomCaCertTrustManager(String caCertPem, HttpURLConnection connection)
+         throws Exception {
       // First compute a stripped PEM certificate and decode it from base64.
       String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
             .replaceAll(END_CERTIFICATE, "");
@@ -320,7 +339,7 @@ public class HTTPDownloader {
 
       // Generate a new x509 certificate from the stripped decoded pem.
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      X509Certificate caCert = (X509Certificate)cf.generateCertificate(is);
+      X509Certificate caCert = (X509Certificate) cf.generateCertificate(is);
 
       // Set a new certificate into keystore.
       TrustManagerFactory tmf = TrustManagerFactory
@@ -352,6 +371,7 @@ public class HTTPDownloader {
       public File getLocalFile() {
          return localFile;
       }
+
       public Map<String, List<String>> getResponseHeaders() {
          return responseHeaders;
       }

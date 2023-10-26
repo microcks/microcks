@@ -34,19 +34,19 @@ public class ProxyConfiguration {
    private static Logger log = LoggerFactory.getLogger(ProxyConfiguration.class);
 
    @Value("${network.proxyHost}")
-   private final String proxyHost = null;
+   private String proxyHost;
 
    @Value("${network.nonProxyHosts}")
-   private final String nonProxyHosts = null;
+   private String nonProxyHosts;
 
    @Value("${network.proxyPort}")
-   private final Integer proxyPort = null;
+   private Integer proxyPort;
 
    @Value("${network.proxyUsername}")
-   private final String proxyUsername = null;
+   private String proxyUsername;
 
    @Value("${network.proxyPassword}")
-   private final String proxyPassword = null;
+   private String proxyPassword;
 
    @Bean
    public ProxySettings buildProxySettings() {

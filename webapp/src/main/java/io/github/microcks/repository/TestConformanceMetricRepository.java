@@ -19,6 +19,7 @@ import io.github.microcks.domain.TestConformanceMetric;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+
 /**
  * Repository interface for TestConformanceMetric domain objects.
  * @author laurent

@@ -16,6 +16,7 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.DailyStatistic;
+
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;

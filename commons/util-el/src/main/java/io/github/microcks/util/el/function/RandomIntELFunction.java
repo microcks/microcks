@@ -28,11 +28,11 @@ import java.util.Random;
  * @author laurent
  */
 public class RandomIntELFunction implements ELFunction {
+   
+   private Random generator = new Random();
 
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
-      Random generator = new Random();
-
       if (args != null) {
          switch (args.length) {
             case 1:

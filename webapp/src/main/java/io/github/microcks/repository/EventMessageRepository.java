@@ -16,8 +16,8 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.EventMessage;
-import org.springframework.data.mongodb.repository.MongoRepository;
 
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
