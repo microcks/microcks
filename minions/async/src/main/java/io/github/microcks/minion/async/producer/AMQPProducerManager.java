@@ -71,7 +71,11 @@ public class AMQPProducerManager {
    /**
     * Initialize the AMQP connection post construction.
     *
-    * @throws IOException,URISyntaxException,URISyntaxException,KeyManagementException,TimeoutException If connection to AMQP Broker cannot be done.
+    * @throws IOException If an I/O error occurs while connecting to the AMQP broker.
+    * @throws URISyntaxException If the URI syntax is invalid.
+    * @throws KeyManagementException If there is an issue with the key management.
+    * @throws TimeoutException If the connection to the AMQP broker times out.
+    * @throws NoSuchAlgorithmException If the required algorithm is not available.
     */
    @PostConstruct
    public void create() throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException, TimeoutException {
@@ -86,7 +90,11 @@ public class AMQPProducerManager {
 
    /**
     * @return A newly created connection to configured broker
-    * @throws IOException,URISyntaxException,URISyntaxException,KeyManagementException,TimeoutException If connection to AMQP Broker cannot be done.
+    * @throws IOException If an I/O error occurs while connecting to the AMQP broker.
+    * @throws URISyntaxException If the URI syntax is invalid.
+    * @throws KeyManagementException If there is an issue with the key management.
+    * @throws TimeoutException If the connection to the AMQP broker times out.
+    * @throws NoSuchAlgorithmException If the required algorithm is not available.
     */
    protected Connection createConnection() throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
       ConnectionFactory factory = new ConnectionFactory();
