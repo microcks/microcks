@@ -31,9 +31,6 @@ public class OAuth2ClientContext implements Serializable {
    private String refreshToken;
    private OAuth2GrantType grantType;
 
-   public OAuth2ClientContext() {
-   }
-
    public String getClientId() {
       return clientId;
    }
