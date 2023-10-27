@@ -24,17 +24,22 @@ import io.github.microcks.domain.TestResult;
  * @author laurent
  */
 public class IdBuilder {
-   
+
+  /**
+   * Private Constructor. So that the utility class cannot be instanced
+   */
+    private IdBuilder(){}
+
    /**
     * Build a unique operation Id from service and operation.
-    * @param service The domain service holding operation 
+    * @param service The domain service holding operation
     * @param operation A domain bean representing operation to build an id for
     * @return A unique identifier for operation.
     */
    public static String buildOperationId(Service service, Operation operation) {
       return service.getId() + "-" + operation.getName();
    }
-   
+
    /**
     * Build a unique TestCase Id from test result and operation.
     * @param testResult The domain testResult holding test case
