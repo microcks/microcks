@@ -48,7 +48,7 @@ public class Metadata {
    /** @return An immutable version of annotations map. */
    public Map<String, String> getAnnotations() {
       if (annotations == null) {
-         return null;
+         return Map.of();
       }
       return Collections.unmodifiableMap(annotations);
    }
@@ -78,7 +78,7 @@ public class Metadata {
    /** @return An immutable version of labels map. */
    public Map<String, String> getLabels() {
       if (labels == null) {
-         return null;
+         return Map.of();
       }
       return Collections.unmodifiableMap(labels);
    }
