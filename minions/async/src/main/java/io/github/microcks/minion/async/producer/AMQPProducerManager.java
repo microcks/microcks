@@ -170,37 +170,37 @@ public class AMQPProducerManager {
     * @return A set of rendered Microcks headers.
     */
    public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
-      if (headers != null && !headers.isEmpty()) {
-         Set<Header> renderedHeaders = new HashSet<>(headers.size());
+       if (headers == null || headers.isEmpty()) {
+           return Collections.emptySet();
+       }
+       Set<Header> renderedHeaders = new HashSet<>(headers.size());
 
-         for (Header header : headers) {
-            Optional<String> optionalValue = header.getValues().stream().findFirst();
-            if (optionalValue.isPresent()) {
-               String firstValue = optionalValue.get();
-               if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-                  try {
-                     Header renderedHeader = new Header();
-                     renderedHeader.setName(header.getName());
-                     renderedHeader.setValues(Set.of(engine.getValue(firstValue)));
-                     renderedHeaders.add(renderedHeader);
-                  } catch (Exception t) {
-                     logger.error("Failing at evaluating template " + firstValue, t);
-                     Header renderedHeader = new Header();
-                     renderedHeader.setName(header.getName());
-                     renderedHeader.setValues(Set.of(firstValue));
-                     renderedHeaders.add(renderedHeader);
-                  }
-               } else {
-                  Header renderedHeader = new Header();
-                  renderedHeader.setName(header.getName());
-                  renderedHeader.setValues(Set.of(firstValue));
-                  renderedHeaders.add(renderedHeader);
-               }
-            }
+       for (Header header : headers) {
+         Optional<String> optionalValue = header.getValues().stream().findFirst();
+         if (optionalValue.isEmpty()) {
+           continue;
          }
-         return renderedHeaders;
-      }
+         String firstValue = optionalValue.get();
+         if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) try {
+             Header renderedHeader = new Header();
+             renderedHeader.setName(header.getName());
+             renderedHeader.setValues(Set.of(engine.getValue(firstValue)));
+             renderedHeaders.add(renderedHeader);
+         } catch (Exception t) {
+             logger.error("Failing at evaluating template " + firstValue, t);
+             Header renderedHeader = new Header();
+             renderedHeader.setName(header.getName());
+             renderedHeader.setValues(Set.of(firstValue));
+             renderedHeaders.add(renderedHeader);
+         }
+         else {
+           Header renderedHeader = new Header();
+           renderedHeader.setName(header.getName());
+           renderedHeader.setValues(Set.of(firstValue));
+           renderedHeaders.add(renderedHeader);
+         }
+       }
+     return renderedHeaders;
 
-      return Collections.emptySet();
    }
 }
