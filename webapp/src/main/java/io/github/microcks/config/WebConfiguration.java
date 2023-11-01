@@ -48,7 +48,8 @@ public class WebConfiguration implements ServletContextInitializer {
 
    @Value("${mocks.rest.enable-cors-policy}")
    private final Boolean enableCorsPolicy = null;
-
+   @Value("${mocks.rest.cors.allowedOrigins}")
+   private String corsAllowedOrigins;
 
    @Override
    public void onStartup(ServletContext servletContext) throws ServletException {
@@ -66,7 +67,8 @@ public class WebConfiguration implements ServletContextInitializer {
             if (enableCorsPolicy) {
                registry.addMapping("/rest/**")
                      .allowedMethods("POST", "PUT", "GET", "OPTIONS", "DELETE", "PATCH")
-                     .allowedOrigins("*");
+                     .allowedOrigins(corsAllowedOrigins)
+                     .allowCredentials(true);
             }
          }
       };
