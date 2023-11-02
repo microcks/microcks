@@ -1,0 +1,23 @@
+openapi: "3.0.0"
+info:
+  title: Broken Ref
+  version: 2.0.0
+paths:
+  /v1.0/endpoint:
+    get:
+      description: Broken Ref
+
+      responses:
+        '200':
+          content:
+            application/json:
+              examples:
+                $ref: '#/paths/~1v1.0~1endpoint/get/responses/200/headers/x-Some-Header/examples'
+          description: redirect to pdf file
+          headers:
+            x-Some-Header:
+              examples:
+                example1:
+                  value: 'someValue'
+              schema:
+                type: string

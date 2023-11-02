@@ -267,10 +267,16 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                         Entry<String, JsonNode> content = contents.next();
                         String contentValue = content.getKey();
 
-                        Iterator<String> exampleNames = content.getValue().path(EXAMPLES_NODE).fieldNames();
+                        JsonNode examplesNode = content.getValue().path(EXAMPLES_NODE);
+                        if (examplesNode.has("$ref")) {
+                           examplesNode = followRefIfAny(examplesNode);
+                        }
+
+                        //Iterator<String> exampleNames = content.getValue().path(EXAMPLES_NODE).fieldNames();
+                        Iterator<String> exampleNames = examplesNode.fieldNames();
                         while (exampleNames.hasNext()) {
                            String exampleName = exampleNames.next();
-                           JsonNode example = content.getValue().path(EXAMPLES_NODE).path(exampleName);
+                           JsonNode example = examplesNode.path(exampleName);
 
                            // We should have everything at hand to build response here.
                            Response response = new Response();

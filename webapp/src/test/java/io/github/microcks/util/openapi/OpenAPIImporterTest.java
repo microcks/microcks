@@ -1141,6 +1141,67 @@ public class OpenAPIImporterTest {
    }
 
    @Test
+   public void testExamplesRefsOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/examples-ref-openapi.yaml", null);
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Broken Ref", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("2.0.0", service.getVersion());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+
+         if ("GET /v1.0/endpoint".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+            assertEquals(1, operation.getResourcePaths().size());
+            assertTrue(operation.getResourcePaths().contains("/v1.0/endpoint"));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+
+                  assertEquals("example1", request.getName());
+                  assertEquals("example1", response.getName());
+                  assertEquals("someValue", response.getContent());
+               }
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   @Test
    public void testExternalRelativeReferenceOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
@@ -1223,6 +1284,7 @@ public class OpenAPIImporterTest {
       assertNotNull(refSchema.getContent());
       assertTrue(refSchema.getContent().contains("A weather forecast for a requested region"));
    }
+
 
    private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {
       // Check that basic service properties are there.
