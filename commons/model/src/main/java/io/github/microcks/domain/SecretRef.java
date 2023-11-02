@@ -21,8 +21,8 @@ package io.github.microcks.domain;
  */
 public class SecretRef {
 
-   String secretId;
-   String name;
+   private String secretId;
+   private String name;
 
    public SecretRef() {
    }
