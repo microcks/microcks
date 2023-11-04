@@ -36,8 +36,10 @@ RUN microdnf install curl-minimal ca-certificates ${JAVA_PACKAGE} -y \
     && echo "securerandom.source=file:/dev/urandom" >> /etc/alternatives/jre/lib/security/java.security
 
 # Configure the JAVA_OPTIONS, you can add -XshowSettings:vm to also display the heap size.
-ENV JAVA_MAIN_CLASS="io.quarkus.runner.GeneratedMain"
 ENV JAVA_OPTIONS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+
+ENV JAVA_APP_DIR="/deployments"
+ENV JAVA_MAIN_CLASS="io.quarkus.runner.GeneratedMain"
 
 COPY target/lib/ /deployments/lib/
 COPY target/*-runner.jar /deployments/
