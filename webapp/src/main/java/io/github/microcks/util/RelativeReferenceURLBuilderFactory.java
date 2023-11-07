@@ -37,7 +37,8 @@ public class RelativeReferenceURLBuilderFactory {
     */
    public static RelativeReferenceURLBuilder getRelativeReferenceURLBuilder(Map<String, List<String>> baseFileProperties) {
       if (baseFileProperties != null) {
-         if (baseFileProperties.containsKey(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER)) {
+         if (baseFileProperties.containsKey(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER) ||
+               baseFileProperties.containsKey(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER.toLowerCase())) {
             log.debug("Found a GitLab File specific header, returning a GitLabReferenceURLBuilder");
             return new GitLabReferenceURLBuilder();
          }

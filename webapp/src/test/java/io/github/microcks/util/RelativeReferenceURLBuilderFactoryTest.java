@@ -40,5 +40,9 @@ public class RelativeReferenceURLBuilderFactoryTest {
       properties = Map.of(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER, List.of("value1", "value2"));
       builder = RelativeReferenceURLBuilderFactory.getRelativeReferenceURLBuilder(properties);
       assertTrue(builder instanceof GitLabReferenceURLBuilder);
+
+      properties = Map.of(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER.toLowerCase(), List.of("value1", "value2"));
+      builder = RelativeReferenceURLBuilderFactory.getRelativeReferenceURLBuilder(properties);
+      assertTrue(builder instanceof GitLabReferenceURLBuilder);
    }
 }

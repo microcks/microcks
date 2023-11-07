@@ -33,8 +33,12 @@ public class GitLabReferenceURLBuilder extends SimpleReferenceURLBuilder {
 
    @Override
    public String getFileName(String baseRepositoryURL, Map<String, List<String>> headers) {
-      if (headers != null && headers.containsKey(GITLAB_FILE_NAME_HEADER)) {
-         return headers.get(GITLAB_FILE_NAME_HEADER).get(0);
+      if (headers != null) {
+         for (String key : headers.keySet()) {
+            if (key.equalsIgnoreCase(GITLAB_FILE_NAME_HEADER)) {
+               return headers.get(key).get(0);
+            }
+         }
       }
 
       // If not present, extract from raw URL.
