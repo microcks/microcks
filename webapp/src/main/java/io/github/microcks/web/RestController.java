@@ -83,7 +83,7 @@ public class RestController {
    @Value("${mocks.rest.cors.allowCredentials}")
    private Boolean corsAllowCredentials;
 
-  @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
+   @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
    public ResponseEntity<?> execute(
          @PathVariable("service") String serviceName,
