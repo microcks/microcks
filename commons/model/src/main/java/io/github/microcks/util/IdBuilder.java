@@ -25,10 +25,10 @@ import io.github.microcks.domain.TestResult;
  */
 public class IdBuilder {
 
-  /**
-   * Private Constructor. So that the utility class cannot be instanced
-   */
-    private IdBuilder(){}
+   /**
+    * Private Constructor. So that the utility class cannot be instanced
+    */
+   private IdBuilder(){}
 
    /**
     * Build a unique operation Id from service and operation.
