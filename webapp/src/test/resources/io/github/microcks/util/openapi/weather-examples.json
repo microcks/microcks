@@ -1,0 +1,14 @@
+[
+  {
+    "region": "east",
+    "temp": -6.6,
+    "weather": "frosty",
+    "visibility": 523
+  },
+  {
+    "region": "south",
+    "temp": 28.3,
+    "weather": "sunny",
+    "visibility": 1500
+  }
+]
