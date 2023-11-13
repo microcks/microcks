@@ -40,6 +40,10 @@ microcks:
       value: 0 0 0/2 * * *
     #- name: MAX_UPLOAD_FILE_SIZE
     #  value: 5MB
+    #- name: CORS_REST_ALLOWED_ORIGINS
+    #  value: my-site.acme.com
+    #- name: CORS_REST_ALLOW_CREDENTIALS
+    #  value: 'true'
 
   #logLevel: TRACE | DEBUG | INFO | WARN
   logLevel: INFO
