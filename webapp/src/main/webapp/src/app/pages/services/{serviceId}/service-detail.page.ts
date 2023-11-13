@@ -44,6 +44,8 @@ import { ServicesService } from '../../../services/services.service';
 })
 export class ServiceDetailPageComponent implements OnInit {
 
+  readonly hlLang: string[] = ['json', 'xml', 'yaml'];
+
   modalRef: BsModalRef;
   serviceId: string;
   serviceView: Observable<ServiceView>;

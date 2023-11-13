@@ -326,7 +326,7 @@
                     <dt>Content Type:</dt>
                     <dd><code><small>{{ exchange.eventMessage.mediaType }}</small></code></dd>
                   </dl>
-                  <pre *ngIf="exchange.eventMessage.content"><code [highlight]="exchange.eventMessage.content"></code></pre>
+                  <pre *ngIf="exchange.eventMessage.content"><code [highlight]="exchange.eventMessage.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="exchange.eventMessage.headers">
                     <thead>
                       <tr>
@@ -503,11 +503,11 @@
                       </div>
                     </dd>
                   </dl>
-                  <pre *ngIf="exchange.request.content"><code [highlight]="formatRequestContent(exchange.request.content)"></code></pre>
+                  <pre *ngIf="exchange.request.content"><code [highlight]="formatRequestContent(exchange.request.content)" [languages]="hlLang"></code></pre>
                   <dl *ngIf="view.service.type === 'GRAPHQL'">
                     <dt>Variables</dt>
                     <dd>
-                      <pre><code [highlight]="formatGraphQLVariables(exchange.request.content)"></code></pre>
+                      <pre><code [highlight]="formatGraphQLVariables(exchange.request.content)" [languages]="hlLang"></code></pre>
                     </dd>
                   </dl>
 
@@ -534,7 +534,7 @@
                       <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
                     </dd>
                   </dl>
-                  <pre *ngIf="exchange.response.content"><code [highlight]="exchange.response.content"></code></pre>
+                  <pre *ngIf="exchange.response.content"><code [highlight]="exchange.response.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="exchange.response.headers">
                     <thead>
                       <tr>
