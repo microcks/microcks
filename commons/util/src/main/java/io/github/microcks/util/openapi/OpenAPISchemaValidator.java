@@ -264,6 +264,10 @@ public class OpenAPISchemaValidator {
 
    /** Entry point method for converting an OpenAPI schema node to Json schema. */
    private static JsonNode convertOpenAPISchemaToJsonSchema(JsonNode jsonNode) {
+     // Convert components
+     if(jsonNode.has("components")){
+       convertProperties(jsonNode.path("components").path("schemas").elements());
+     }
       // Convert schema for all structures.
       for (String structure : STRUCTURES) {
          if (jsonNode.has(structure) && jsonNode.path(structure).isArray()) {
