@@ -184,11 +184,18 @@ public class TestRunnerService {
       }
 
       for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
+
          // Retrieve operation corresponding to testCase.
          Operation operation = service.getOperations().stream()
                .filter(o -> o.getName().equals(testCaseResult.getOperationName())).findFirst().get();
          String testCaseId = IdBuilder.buildTestCaseId(testResult, operation);
-
+         if(operation.isSkipped()) {
+            testCaseResult.setSuccess(true);
+            testCaseResult.setSkipped(true);
+            testCaseResult.setElapsedTime(0);
+            testResultRepository.save(testResult);
+            continue;
+         }
          // Prepare collection of requests to launch.
          List<Request> requests = requestRepository.findByOperationId(IdBuilder.buildOperationId(service, operation));
          requests = cloneRequestsForTestCase(requests, testCaseId);
@@ -211,14 +218,14 @@ public class TestRunnerService {
 
          // Update result if we got returns. If no returns, it means that there's no
          // sample request for that operation -> mark it as failed.
-         if (results == null) {
-            testCaseResult.setSuccess(false);
-            testCaseResult.setElapsedTime(0);
-            testResultRepository.save(testResult);
-         } else if (!results.isEmpty()) {
+          if (results == null) {
+              testCaseResult.setSuccess(false);
+              testCaseResult.setElapsedTime(0);
+              testResultRepository.save(testResult);
+          } else if (!results.isEmpty()) {
             updateTestCaseResultWithReturns(testCaseResult, results, testCaseId);
             testResultRepository.save(testResult);
-         }
+          }
       }
 
       // Update success, progress indicators and total time before saving and returning.

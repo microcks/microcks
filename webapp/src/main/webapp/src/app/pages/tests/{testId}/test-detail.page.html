@@ -47,7 +47,7 @@
       </div>
       <div class="col-md-4">
         <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
-        <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i> 
+        <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i>
         <i *ngIf="!test.inProgress && !test.success" class="fa fa-2x fa-fw fa-times-circle"></i>
         <i *ngIf="timedOut(test)" class="fa fa-2x fa-fw fa-clock-o"></i>
         <span class="label label-info">{{ displayTestType(test.runnerType) }}</span>
@@ -79,14 +79,15 @@
               <div class="list-pf-description text-overflow-pf">
                 <div>
                   <span class="pficon pficon-image"> </span>
-                  <strong>  {{ item.testStepResults.length }}</strong> test(s)
+                  <strong>  {{ item.testStepResults.length }}</strong> test(s) <span *ngIf="!item.inProgress && item.success && item.skipped"> (Skipped)</span>
                 </div>
               </div>
             </div>
             <div class="list-pf-additional-content">
               <div>
                 <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-fw fa-refresh fa-spin"></i>
-                <i *ngIf="!test.inProgress && item.success" class="fa fa-fw fa-check-circle"></i> 
+                <i *ngIf="!test.inProgress && item.success && !item.skipped" class="fa fa-fw fa-check-circle"></i>
+                <i *ngIf="!test.inProgress && item.success && item.skipped" class="fa fa-fw fa fa-circle-o"></i>
                 <i *ngIf="!test.inProgress && !item.success" class="fa fa-fw fa-times-circle"></i>
                 <i *ngIf="timedOut(test)" class="fa fa-fw fa-clock-o"></i>
                 <span class="time-elapsed">in {{ item.elapsedTime }} ms</span>
@@ -100,10 +101,10 @@
             <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName || testStep.eventMessageName }}" (select)="onTestStepSelect(testStep, $event)">
               <ng-template tabHeading>
                 <i *ngIf="test.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
-                <i *ngIf="!test.inProgress && testStep.success" class="fa fa-fw fa-check-circle"></i> 
+                <i *ngIf="!test.inProgress && testStep.success" class="fa fa-fw fa-check-circle"></i>
                 <i *ngIf="!test.inProgress && !testStep.success" class="fa fa-fw fa-times-circle"></i>
               </ng-template>
-              <div class="row" *ngIf="testMessages[encode(item.operationName)]">  
+              <div class="row" *ngIf="testMessages[encode(item.operationName)]">
                 <div class="col-md-6" *ngIf="service.type != 'EVENT'">
                   <h5 class="subsection-label">Request</h5>
 

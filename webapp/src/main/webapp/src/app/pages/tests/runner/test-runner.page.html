@@ -36,7 +36,7 @@
       </div>
       <div class="col-md-4">
         <i *ngIf="test.inProgress" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
-        <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i> 
+        <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i>
         <i *ngIf="!test.inProgress && !test.success" class="fa fa-2x fa-fw fa-times-circle"></i>
         <span class="label label-info">{{ test.runnerType }}</span>
       </div>
@@ -67,14 +67,15 @@
               <div class="list-pf-description text-overflow-pf">
                 <div>
                   <span class="pficon pficon-image"> </span>
-                  <strong>  {{ item.testStepResults.length }}</strong> test(s)
+                  <strong>  {{ item.testStepResults.length }}</strong> test(s) <span *ngIf="!item.inProgress && item.success && item.skipped"> (Skipped)</span>
                 </div>
               </div>
             </div>
             <div class="list-pf-additional-content">
             <div>
                 <i *ngIf="item.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
-                <i *ngIf="!item.inProgress && item.success" class="fa fa-fw fa-check-circle"></i> 
+              <i *ngIf="!item.inProgress && item.success && !item.skipped" class="fa fa-fw fa-check-circle"></i>
+              <i *ngIf="!item.inProgress && item.success && item.skipped" class="fa fa-fw fa-circle-o"></i>
                 <i *ngIf="!item.inProgress && !item.success" class="fa fa-fw fa-times-circle"></i>
                 <span class="time-elapsed">in {{ item.elapsedTime }} ms</span>
               </div>
@@ -83,7 +84,7 @@
         </ng-template>
 
         <ng-template #resultDetailTemplate let-item="item" let-index="index">
-          <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">  
+          <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">
             <div *ngFor="let testStep of item.testStepResults" class="list-group-item">
               <div class="list-view-pf-main-info">
                 <div class="list-view-pf-body">
@@ -97,7 +98,8 @@
                   <div class="list-view-pf-additional-info">
                     <div class="list-view-pf-additional-info-item" >
                       <i *ngIf="testStep.inProgress" class="fa fa-fw fa-refresh fa-spin"></i>
-                      <i *ngIf="!testStep.inProgress && testStep.success" class="fa fa-fw fa-check-circle"></i> 
+                      <i *ngIf="!item.inProgress && item.success && !item.skipped" class="fa fa-fw fa-check-circle"></i>
+                      <i *ngIf="!item.inProgress && item.success && item.skipped" class="fa fa-fw fa-circle-o"></i>
                       <i *ngIf="!testStep.inProgress && !testStep.success" class="fa fa-fw fa-times-circle"></i>
                       <span class="time-elapsed">in {{ testStep.elapsedTime }} ms</span>
                     </div>

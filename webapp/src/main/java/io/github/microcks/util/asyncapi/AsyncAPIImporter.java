@@ -383,7 +383,11 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
                   MetadataExtractor.completeOperationProperties(operation,
                         verb.getValue().path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
                }
-
+               // Check if operation should be skipped while testing
+               if (verb.getValue().has(MetadataExtensions.MICROCKS_SKIP_TEST)) {
+                  MetadataExtractor.shouldSkipTest(operation,
+                        verb.getValue().path(MetadataExtensions.MICROCKS_SKIP_TEST));
+               }
                // Deal with dispatcher stuffs.
                if (operation.getDispatcher() == null && channelHasParts(channelName)) {
                   operation.setDispatcher(DispatchStyles.URI_PARTS);

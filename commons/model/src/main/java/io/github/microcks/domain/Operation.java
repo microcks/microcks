@@ -41,6 +41,7 @@ public class Operation {
    private String dispatcherRules;
    private Long defaultDelay;
 
+  private boolean skipped;
    private Set<String> resourcePaths;
    private List<ParameterConstraint> parameterConstraints;
 
@@ -162,4 +163,11 @@ public class Operation {
       }
       parameterConstraints.add(constraint);
    }
+  public boolean isSkipped() {
+    return skipped;
+  }
+
+  public void setSkipped(boolean skipped) {
+    this.skipped = skipped;
+  }
 }

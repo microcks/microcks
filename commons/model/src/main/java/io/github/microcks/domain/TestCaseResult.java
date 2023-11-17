@@ -29,6 +29,8 @@ public class TestCaseResult {
 
    private boolean success = false;
    private long elapsedTime = -1;
+
+   private boolean skipped = false;
    private String operationName;
 
    private List<TestStepResult> testStepResults = new ArrayList<>();
@@ -48,6 +50,10 @@ public class TestCaseResult {
    public void setElapsedTime(long elapsedTime) {
       this.elapsedTime = elapsedTime;
    }
+
+   public boolean isSkipped() {return skipped;}
+
+   public void setSkipped(boolean skipped) {this.skipped = skipped;}
 
    public String getOperationName() {
       return operationName;

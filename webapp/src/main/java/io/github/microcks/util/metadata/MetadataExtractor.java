@@ -60,4 +60,15 @@ public class MetadataExtractor {
          operation.setDispatcherRules(node.path("dispatcherRules").asText());
       }
    }
+
+  /**
+   * Set boolean value to define if a test should be skipped
+   * @param operation The object to complete
+   * @param node Node representing a metadata node
+   */
+   public static void shouldSkipTest(Operation operation, JsonNode node) {
+      if(node != null ){
+        operation.setSkipped(node.asBoolean());
+      }
+  }
 }
