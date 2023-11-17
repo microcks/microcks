@@ -28,8 +28,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.header.Headers;
+import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.jboss.logging.Logger;
@@ -62,11 +65,17 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    public static final String REGISTRY_USERNAME_OPTION = "registryUsername";
    /** The endpoint URL option representing schema registry auth credentials source. */
    public static final String REGISTRY_AUTH_CREDENTIALS_SOURCE = "registryAuthCredSource";
+   /** Optional consumer group.id property. */
+   public static final String GROUP_ID_OPTION = "groupId";
+   /** Optional consumer sasl.login.callback.handler.class property. */
+   public static final String SASL_LOGIN_CALLBACK_HANDLER_CLASS_OPTION = "saslLoginCallbackHandlerClass";
 
    /** The endpoint URL option representing the offset we should start consume from. */
    public static final String START_OFFSET = "startOffset";
    /** The endpoint URL option representing the offset whe should end consumer to. */
    public static final String END_OFFSET = "endOffset";
+
+   public static final String SECURITY_PROTOCOL_PROP_NAME = "security.protocol";
 
    private File trustStore;
 
@@ -153,8 +162,10 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       Properties props = new Properties();
       props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, endpointBrokerUrl);
 
-      // Generate a unique GroupID for no collision with previous or other consumers.
-      props.put(ConsumerConfig.GROUP_ID_CONFIG, specification.getTestResultId() + "-" + System.currentTimeMillis());
+      // Generate a unique GroupID for no collision with previous or other consumers if it's not defined in the options.
+      String groupId = optionsMap.get(GROUP_ID_OPTION);
+      props.put(ConsumerConfig.GROUP_ID_CONFIG,
+         groupId == null ? specification.getTestResultId() + "-" + System.currentTimeMillis() : groupId);
       props.put(ConsumerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-test");
 
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
@@ -184,15 +195,27 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
             trustStore = ConsumptionTaskCommons.installBrokerCertificate(specification);
 
             // Then we have to add SSL specific properties.
-            props.put("security.protocol", "SSL");
+            props.put(SECURITY_PROTOCOL_PROP_NAME, SecurityProtocol.SSL.name);
             props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStore.getAbsolutePath());
             props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, ConsumptionTaskCommons.TRUSTSTORE_PASSWORD);
+
+            completePropertiesWithSaslSslConfig(props);
          } catch (Exception e) {
             logger.error("Exception while installing custom truststore: " + e.getMessage());
          }
       }
 
       instanciateKafkaConsumer(props, endpointTopic);
+   }
+
+   private void completePropertiesWithSaslSslConfig(Properties props) {
+      String saslLoginCallbackHandlerClass = optionsMap.get(SASL_LOGIN_CALLBACK_HANDLER_CLASS_OPTION);
+      if (saslLoginCallbackHandlerClass != null) {
+         props.put(SECURITY_PROTOCOL_PROP_NAME, SecurityProtocol.SASL_SSL.name);
+         props.put(SaslConfigs.SASL_MECHANISM, OAuthBearerLoginModule.OAUTHBEARER_MECHANISM);
+         props.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;");
+         props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, saslLoginCallbackHandlerClass);
+      }
    }
 
    private void instanciateKafkaConsumer(Properties props, String endpointTopic) {
