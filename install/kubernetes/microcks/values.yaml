@@ -144,6 +144,14 @@ features:
     
     image: quay.io/microcks/microcks-async-minion:nightly
 
+    env:
+      #- name: OAUTH_CLIENT_ID
+      #  value: <kafka-oauth-client-id>
+      #- name: OAUTH_CLIENT_SECRET
+      #  value: <kafka-oauth-client-secret>
+      #- name: OAUTH_TOKEN_ENDPOINT_URI
+      #  value: <kafka-oauth-endpoint-uri>
+
     kafka:
       install: true
       url: 192.168.99.100.nip.io
