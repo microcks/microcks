@@ -440,15 +440,18 @@ public class OpenAPISchemaValidatorTest {
         [
           {
            "name": "Brian May",
-           "birthDate": "1947-07-19T00:00:00.0Z"
+           "birthDate": "1947-07-19T00:00:00.0Z",
+           "deathDate": null
           },
           {
            "name": "Roger Taylor",
-           "birthDate": "1949-07-26T00:00:00.0Z"
+           "birthDate": "1949-07-26T00:00:00.0Z",
+           "deathDate": null
           },
           {
            "name": "John Deacon",
-           "birthDate": "1951-08-19T00:00:00.0Z"
+           "birthDate": "1951-08-19T00:00:00.0Z",
+           "deathDate": null
           },
           {
             "name": "Freddy Mercury",

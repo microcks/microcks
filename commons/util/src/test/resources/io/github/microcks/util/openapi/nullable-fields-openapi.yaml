@@ -37,6 +37,7 @@ components:
           value: false
   schemas:
     human:
+      type: object
       properties:
         name:
           type: string
