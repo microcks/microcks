@@ -47,6 +47,10 @@ public class JsonSchemaValidator {
    public static final String JSON_V12_SCHEMA_IDENTIFIER = "http://json-schema.org/draft/2020-12/schema#";
    public static final String JSON_SCHEMA_IDENTIFIER_ELEMENT = "$schema";
 
+   public static final String JSON_SCHEMA_COMPONENTS_ELEMENT = "components";
+   public static final String JSON_SCHEMA_PROPERTIES_ELEMENT = "properties";
+   public static final String JSON_SCHEMA_FORMAT_ELEMENT = "format";
+
    /**
     * Check if a Json object is valid against the given Json schema specification.
     * @param schemaText The Json schema specification as a string

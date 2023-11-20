@@ -18,7 +18,6 @@ package io.github.microcks.util.openapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.github.fge.jsonschema.core.exceptions.ProcessingException;
@@ -34,6 +33,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import static io.github.microcks.util.JsonSchemaValidator.*;
 /**
  * Helper class for validating Json objects against their OpenAPI schema. Supported version
  * of OpenAPI schema is https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md.
@@ -51,6 +51,10 @@ public class OpenAPISchemaValidator {
          "nullable", "discriminator", "readOnly", "writeOnly",
          "xml", "externalDocs", "example", "deprecated"
    };
+
+   /** Private constructor to hide the implicit one. */
+   private OpenAPISchemaValidator() {
+   }
 
    /**
     * Check if a Json object is valid against the given OpenAPI schema specification.
@@ -206,7 +210,7 @@ public class OpenAPISchemaValidator {
       // Build a schema object with responseNode schema as root and by importing
       // all the common parts that may be referenced by references.
       JsonNode schemaNode = messageNode.path("schema").deepCopy();
-      ((ObjectNode) schemaNode).set("components", specificationNode.path("components").deepCopy());
+      ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT, specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
       return validateJson(schemaNode, jsonNode, namespace);
    }
@@ -243,7 +247,6 @@ public class OpenAPISchemaValidator {
             break;
          }
          if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")) {
-            isYaml = true;
             break;
          }
       }
@@ -264,10 +267,10 @@ public class OpenAPISchemaValidator {
 
    /** Entry point method for converting an OpenAPI schema node to Json schema. */
    private static JsonNode convertOpenAPISchemaToJsonSchema(JsonNode jsonNode) {
-     // Convert components
-     if(jsonNode.has("components")){
-       convertProperties(jsonNode.path("components").path("schemas").elements());
-     }
+      // Convert components.
+      if (jsonNode.has(JSON_SCHEMA_COMPONENTS_ELEMENT)){
+         convertProperties(jsonNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).path("schemas").elements());
+      }
       // Convert schema for all structures.
       for (String structure : STRUCTURES) {
          if (jsonNode.has(structure) && jsonNode.path(structure).isArray()) {
@@ -281,7 +284,7 @@ public class OpenAPISchemaValidator {
 
       // Convert properties and types.
       if (jsonNode.has("type") && jsonNode.path("type").asText().equals("object")) {
-         convertProperties(jsonNode.path("properties").elements());
+         convertProperties(jsonNode.path(JSON_SCHEMA_PROPERTIES_ELEMENT).elements());
       } else {
          convertType(jsonNode);
       }
@@ -304,14 +307,14 @@ public class OpenAPISchemaValidator {
       }
    }
 
-   /** Deal with conerting type of a Json node object. */
+   /** Deal with converting type of a Json node object. */
    private static void convertType(JsonNode node) {
       if (node.has("type") && !node.path("type").asText().equals("object")) {
 
          // Convert date format to date-time.
-         if (node.has("format") && node.path("format").asText().equals("date")
+         if (node.has(JSON_SCHEMA_FORMAT_ELEMENT) && node.path(JSON_SCHEMA_FORMAT_ELEMENT).asText().equals("date")
                && node.path("type").asText().equals("string")) {
-            ((ObjectNode) node).put("format", "date-time");
+            ((ObjectNode) node).put(JSON_SCHEMA_FORMAT_ELEMENT, "date-time");
          }
 
          // Convert nullable in additional type and remove node.

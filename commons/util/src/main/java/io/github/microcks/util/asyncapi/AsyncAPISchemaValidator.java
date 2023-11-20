@@ -39,6 +39,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import static io.github.microcks.util.JsonSchemaValidator.*;
 /**
  * Helper class for validating Json objects against their AsyncAPI schema. Supported version
  * of AsyncAPI schema is https://www.asyncapi.com/docs/specifications/2.0.0/.
@@ -55,6 +56,10 @@ public class AsyncAPISchemaValidator {
    private static final String[] NOT_SUPPORTED_ATTRIBUTES = {
          "discriminator", "externalDocs", "deprecated"
    };
+
+   /** Private constructor to hide the implicit one. */
+   private AsyncAPISchemaValidator() {
+   }
 
    /**
     * Check if a Json object is valid against the given AsyncAPI schema specification.
@@ -179,7 +184,7 @@ public class AsyncAPISchemaValidator {
          return Arrays.asList(e.getMessage());
       }
       // Import all the common parts that may be referenced by references.
-      ((ObjectNode) schemaNode).set("components", specificationNode.path("components").deepCopy());
+      ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT, specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
       return validateJson(schemaNode, jsonNode, namespace);
    }
@@ -294,7 +299,6 @@ public class AsyncAPISchemaValidator {
             break;
          }
          if (line.startsWith("---") || line.startsWith("-") || line.startsWith("asyncapi: ")) {
-            isYaml = true;
             break;
          }
       }
@@ -314,6 +318,10 @@ public class AsyncAPISchemaValidator {
 
    /** Entry point method for converting an AsyncAPI schema node to Json schema. */
    private static JsonNode convertAsyncAPISchemaToJsonSchema(JsonNode jsonNode) {
+      // Convert components.
+      if (jsonNode.has("components")){
+         convertProperties(jsonNode.path("components").path("schemas").elements());
+      }
       // Convert schema for all structures.
       for (String structure : STRUCTURES) {
          if (jsonNode.has(structure) && jsonNode.path(structure).isArray()) {
@@ -327,7 +335,7 @@ public class AsyncAPISchemaValidator {
 
       // Convert properties and types.
       if (jsonNode.has("type") && jsonNode.path("type").asText().equals("object")) {
-         convertProperties(jsonNode.path("properties").elements());
+         convertProperties(jsonNode.path(JSON_SCHEMA_PROPERTIES_ELEMENT).elements());
       } else {
          convertType(jsonNode);
       }
@@ -355,9 +363,9 @@ public class AsyncAPISchemaValidator {
       if (node.has("type") && !node.path("type").asText().equals("object")) {
 
          // Convert date format to date-time.
-         if (node.has("format") && node.path("format").asText().equals("date")
+         if (node.has(JSON_SCHEMA_FORMAT_ELEMENT) && node.path(JSON_SCHEMA_FORMAT_ELEMENT).asText().equals("date")
                && node.path("type").asText().equals("string")) {
-            ((ObjectNode) node).put("format", "date-time");
+            ((ObjectNode) node).put(JSON_SCHEMA_FORMAT_ELEMENT, "date-time");
          }
 
          // Convert nullable in additional type and remove node.
