@@ -1,0 +1,67 @@
+openapi: 3.0.3
+info:
+  title: Sample API
+  version: '1.0'
+paths:
+  /queen/members:
+    get:
+      parameters:
+        - $ref: "#/components/parameters/alive"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/human"
+              examples:
+                "Alive":
+                  $ref: '#/components/examples/alive'
+                "Dead":
+                  $ref: '#/components/examples/dead'
+
+components:
+  parameters:
+    alive:
+      name: isAlive
+      in: path
+      required: true
+      schema:
+        type: boolean
+      examples:
+        "Alive":
+          value: true
+        "Dead":
+          value: false
+  schemas:
+    human:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: false
+        birthDate:
+          type: string
+          format: date-time
+          nullable: false
+        deathDate:
+          type: string
+          format: date-time
+          nullable: true
+
+  examples:
+    alive:
+      value:
+        - name: "Brian May"
+          birthDate: "1947-07-19T00:00:00.0Z"
+        - name: "Roger Taylor"
+          birthDate: "1949-07-26T00:00:00.0Z"
+        - name: "John Deacon"
+          birthDate: "1951-08-19T00:00:00.0Z"
+    dead:
+      value:
+        - name: "Freddy Mercury"
+          birthDate: "1946-09-15T00:00:00.0Z"
+          deathDate: "1946-11-24T00:00:00.0Z"
