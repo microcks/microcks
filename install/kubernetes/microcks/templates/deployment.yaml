@@ -66,6 +66,8 @@ spec:
             value: http://{{ .Values.appName }}-postman-runtime:8080
           - name: TEST_CALLBACK_URL
             value: http://{{ .Values.appName }}:8080
+          - name: KEYCLOAK_ENABLED
+            value: "{{ .Values.keycloak.enabled }}"
           {{- if hasKey .Values.keycloak "privateUrl" }}
           - name: KEYCLOAK_URL
             value: "{{ .Values.keycloak.privateUrl }}"
@@ -335,7 +337,7 @@ spec:
       restartPolicy: Always
       dnsPolicy: ClusterFirst
 {{- end }}
-{{- if and .Values.keycloak.install }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
 apiVersion: apps/v1
 kind: Deployment

@@ -64,7 +64,7 @@ spec:
             name: "{{ .Values.appName }}-grpc"
             port:
               number: 9090
-{{- if .Values.keycloak.install }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1

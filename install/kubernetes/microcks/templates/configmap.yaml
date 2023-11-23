@@ -198,7 +198,7 @@ data:
   {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
-{{- if .Values.keycloak.install }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -444,7 +444,7 @@ data:
     {{ else }}
     %kube.kafka.bootstrap.servers={{ .Values.features.async.kafka.url }}
     %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.features.async.kafka.url }}
-    
+
       {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
     %kube.kafka.security.protocol=SSL
       {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
@@ -507,14 +507,14 @@ data:
     %kube.amqp.username={{ .Values.features.async.amqp.username }}
     %kube.amqp.password={{ .Values.features.async.amqp.password }}
     {{- end }}
-    
+
     {{- if .Values.features.async.nats.url }}
     # Access to NATS broker.
     %kube.nats.server={{ .Values.features.async.nats.url }}
     %kube.nats.username={{ .Values.features.async.nats.username }}
     %kube.nats.password={{ .Values.features.async.nats.password }}
     {{- end }}
-    
+
     {{- if .Values.features.async.googlepubsub.project }}
     # Access to Google PubSub.
     %kube.googlepubsub.project={{ .Values.features.async.googlepubsub.project }}

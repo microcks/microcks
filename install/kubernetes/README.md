@@ -145,7 +145,10 @@ Typically, you may want to configure the following blocks and options:
 * Global part is mandatory and contain attributes like `appName` of your install,
 * `microcks` part is mandatory and contain attributes like the number of `replicas` and the access `url` if you want some customizations,
 * `postman` part is mandatory for the number of `replicas`
-* `keycloak` part is optional and allows specifying if you want a new install or reuse an existing instance,
+* `keycloak` part is optional and allows specifying :
+  * if you want a new install or reuse an existing instance: `keycloak.install`
+  * if you want microcks to delegate authentication to keycloak: `keycloak.enabled`.
+  * Note that `keycloak.enabled=false` forces keycloak not be installed in this release
 * `mongodb` part is optional and allows specifying if you want a new install or reuse an existing instance.
 * `features` part is optional and allows enabling and configuring opt-in features of Microcks.
 
