@@ -40,7 +40,7 @@ It has been exposed using TLS passthrough on the Ingress controller, you should 
 
   $ kubectl get secret microcks-microcks-grpc-secret -n microcks -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
   
-Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to protect user access.
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into 'microcks-keycloak-admin' secret.
 ```
@@ -79,7 +79,7 @@ It has been exposed using TLS passthrough on the Ingress controller, you should 
 
   $ kubectl get secret microcks-microcks-grpc-secret -n  -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
 
-Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to protect user access.
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into 'microcks-keycloak-admin' secret.
 ```
@@ -124,7 +124,7 @@ To learn more about the release, try:
 
 Microcks is available at https://microcks.192.168.64.6.nip.io.
 
-Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to protect user access.
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into 'microcks-keycloak-admin' secret.
 

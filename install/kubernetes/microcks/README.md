@@ -40,7 +40,7 @@ It has been exposed using TLS passthrough on the Ingress controller, you should 
 
   $ kubectl get secret microcks-microcks-grpc-secret -n microcks -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
   
-Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to protect user access.
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into 'microcks-keycloak-admin' secret.
 ```
@@ -79,7 +79,7 @@ It has been exposed using TLS passthrough on the Ingress controller, you should 
 
   $ kubectl get secret microcks-microcks-grpc-secret -n  -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
 
-Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to protect user access.
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into 'microcks-keycloak-admin' secret.
 ```
@@ -124,7 +124,7 @@ To learn more about the release, try:
 
 Microcks is available at https://microcks.192.168.64.6.nip.io.
 
-Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io/auth to protect user access.
+Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into 'microcks-keycloak-admin' secret.
 
@@ -145,7 +145,10 @@ Typically, you may want to configure the following blocks and options:
 * Global part is mandatory and contain attributes like `appName` of your install,
 * `microcks` part is mandatory and contain attributes like the number of `replicas` and the access `url` if you want some customizations,
 * `postman` part is mandatory for the number of `replicas`
-* `keycloak` part is optional and allows specifying if you want a new install or reuse an existing instance,
+* `keycloak` part is optional and allows specifying :
+    * if you want a new install or reuse an existing instance: `keycloak.install`
+    * if you want microcks to delegate authentication to keycloak: `keycloak.enabled`.
+    * Note that `keycloak.enabled=false` forces keycloak not be installed in this release
 * `mongodb` part is optional and allows specifying if you want a new install or reuse an existing instance.
 * `features` part is optional and allows enabling and configuring opt-in features of Microcks.
 

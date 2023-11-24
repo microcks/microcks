@@ -15,7 +15,7 @@ It has been exposed using TLS passthrough on the Ingress controller, you should 
   $ kubectl get secret {{ .Values.appName }}-microcks-grpc-secret -n {{ .Release.Namespace }} -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
 
 {{- if and .Values.keycloak.enabled .Values.keycloak.install }}
-Keycloak has been deployed on https://{{ .Values.keycloak.url }}/auth to protect user access.
+Keycloak has been deployed on https://{{ .Values.keycloak.url }} to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
 username and password found into '{{ .Values.appName }}-keycloak-admin' secret.
 {{- end }}
