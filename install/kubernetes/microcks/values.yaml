@@ -206,6 +206,10 @@ features:
         # as well as a JAAS configuration line with login module, username and password.
         #saslMechanism: SCRAM-SHA-512
         #saslJaasConfig: org.apache.kafka.common.security.scram.ScramLoginModule required username="scram-user" password="tDtDCT3pYKE5";
+        # or an OAuth configuration (you'll need here to extend the async-minion image with your handler class implementation)
+        #saslMechanism: OAUTHBEARER
+        #saslJaasConfig: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;
+        #saslLoginCallbackHandlerClass: io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler
 
     # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
     mqtt:

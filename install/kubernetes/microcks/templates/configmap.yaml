@@ -474,7 +474,10 @@ data:
       {{- end }}
     %kube.kafka.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
     %kube.kafka.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
-
+        {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
+    %kube.kafka.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
+        {{- end }}
+    
     %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SASL_SSL
       {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
@@ -483,6 +486,9 @@ data:
       {{- end }}
     %kube.mp.messaging.incoming.microcks-services-updates.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
     %kube.mp.messaging.incoming.microcks-services-updates.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
+        {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
+    %kube.mp.messaging.incoming.microcks-services-updates.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
+        {{- end }}
       {{- end }}
     {{ end }}
 
