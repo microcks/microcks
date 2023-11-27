@@ -45,7 +45,7 @@ Produce WS Ingress URL
 {{ regexReplaceAll "^([^.-]+)(.*)" .Values.microcks.url "${1}-ws${2}" }}
 {{- end -}}
 
-{/*
+{{/*
 Generate certificates for microcks WS ingress
 */}}
 {{- define "microcks-ws-ingress.gen-certs" -}}
@@ -54,3 +54,22 @@ Generate certificates for microcks WS ingress
 tls.crt: {{ $cert.Cert | b64enc }}
 tls.key: {{ $cert.Key | b64enc }}
 {{- end -}}
+
+{{/*
+Generate common labels
+*/}}
+{{- define "microcks-common-labels" -}}
+{{- range $name, $value := .Values.commonLabels }}
+{{ $name }}: {{ $value | quote }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Generate common annotations
+*/}}
+{{- define "microcks-common-annotations" -}}
+{{- range $name, $value := .Values.commonAnnotations }}
+{{ $name }}: {{ $value | quote }}
+{{- end -}}
+{{- end -}}
+

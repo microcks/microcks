@@ -6,6 +6,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: spring
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.microcks.replicas }}
   selector:
@@ -21,8 +24,10 @@ spec:
         deploymentconfig: "{{ .Values.appName }}"
         container: spring
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: spring
@@ -186,6 +191,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: postman-runtime
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
 spec:
   replicas: 1
   selector:
@@ -201,8 +210,10 @@ spec:
         deploymentconfig: "{{ .Values.appName }}-postman-runtime"
         container: postman-runtime
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: postman-runtime
@@ -214,8 +225,7 @@ spec:
         - name: LOG_LEVEL
           value: info
         resources:
-          limits:
-            memory: 256Mi
+          {{- toYaml .Values.postman.resources | nindent 10 }}
         livenessProbe:
           httpGet:
             path: "/health"
@@ -251,6 +261,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: mongodb
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
   creationTimestamp:
 spec:
   strategy:
@@ -269,6 +283,9 @@ spec:
         deploymentconfig: mongodb
         container: mongodb
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+      annotations:
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
       securityContext:
@@ -347,6 +364,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   strategy:
     type: Recreate
@@ -364,8 +384,10 @@ spec:
         deploymentconfig: keycloak
         container: keycloak
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: keycloak-server
@@ -469,6 +491,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak-postgresql
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   strategy:
     type: Recreate
@@ -486,6 +511,9 @@ spec:
         deploymentconfig: keycloak-postgresql
         container: keycloak-postgresql
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+      annotations:
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
       securityContext:
@@ -556,6 +584,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: async-minion
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
 spec:
   strategy:
     type: Recreate
@@ -573,8 +605,10 @@ spec:
         deploymentconfig: async-minion
         container: async-minion
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: async-minion
