@@ -291,6 +291,9 @@ public class KafkaProducerManager {
                logger.debug("Adding SASL_SSL specific connection properties");
                props.put(SaslConfigs.SASL_MECHANISM, config.getValue("kafka.sasl.mechanism", String.class));
                props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getValue("kafka.sasl.jaas.config", String.class));
+               if (config.getOptionalValue("kafka.sasl.login.callback.handler.class", String.class).isPresent()) {
+                 props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, config.getValue("kafka.sasl.login.callback.handler.class", String.class));
+               }
                break;
             case "SSL":
                logger.debug("Adding SSL specific connection properties");
