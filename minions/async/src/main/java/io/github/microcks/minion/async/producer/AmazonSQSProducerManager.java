@@ -150,7 +150,7 @@ public class AmazonSQSProducerManager {
 
          // Retrieve queue URL from local defs and publish message.
          String queueUrl = queueUrls.get(queue);
-         SendMessageResponse response = sqsClient.sendMessage(mr -> mr.queueUrl(queueUrl)
+         sqsClient.sendMessage(mr -> mr.queueUrl(queueUrl)
                .messageBody(value)
                .messageAttributes(headers)
                .build());
@@ -172,7 +172,7 @@ public class AmazonSQSProducerManager {
    public Map<String, MessageAttributeValue> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
       if (headers != null && !headers.isEmpty()) {
          return headers.stream().collect(Collectors.toMap(
-               header -> header.getName(),
+               Header::getName,
                header -> {
                   String firstValue = header.getValues().stream().findFirst().get();
                   String finaleValue = firstValue;
@@ -222,6 +222,7 @@ public class AmazonSQSProducerManager {
    }
 
    private String createQueueAndGetURL(String queueName) {
+      logger.infof("Creating new AWS SQS queue: %s", queueName);
       CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
             .queueName(queueName)
             .build();
