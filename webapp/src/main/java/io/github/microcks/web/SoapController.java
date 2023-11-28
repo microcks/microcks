@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.InputSource;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -115,6 +116,11 @@ public class SoapController {
       log.info("Service name: " + serviceName);
       // Retrieve service and correct operation.
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
+      if (service == null) {
+         return new ResponseEntity<String>(
+            String.format("The service %s with version %s does not exist!", serviceName, version),
+            HttpStatus.NOT_FOUND);
+      }
       Operation rOperation = null;
 
       // Enhancement : retrieve SOAPAction from request headers
@@ -134,6 +140,9 @@ public class SoapController {
       // Enhancement : if not found, try getting operation from soap:body directly!
       if (rOperation == null) {
          String operationName = extractOperationName(body);
+         if (action == null || action.length() > 0) {
+            action = operationName;
+         }
          log.debug("Extracted operation name from payload: {}", operationName);
 
          if (operationName != null) {
@@ -154,7 +163,13 @@ public class SoapController {
          if (validate != null && validate) {
             log.debug("Soap message validation is turned on, validating...");
 
-            Resource wsdlResource = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL).get(0);
+            List<Resource> wsdlResources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL);
+            if (wsdlResources.isEmpty()) {
+               return new ResponseEntity<String>(
+                  String.format("The service %s with version %s does not have a wsdl!", serviceName, version),
+                  HttpStatus.NOT_FOUND);
+            }
+            Resource wsdlResource = wsdlResources.get(0);
             List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(), new QName(service.getXmlNS(), rOperation.getInputName()),
                      body, resourceUrl);
 
@@ -179,13 +194,21 @@ public class SoapController {
          Response response = null;
          DispatchContext dispatchContext = null;
 
-         // Depending on dispatcher, evaluate request with rules.
-         if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
-            dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
-         } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-            dispatchContext = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
-         } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
-            dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
+         try {
+            // Depending on dispatcher, evaluate request with rules.
+            if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
+            } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
+            } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
+               dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
+            } else {
+               return new ResponseEntity<String>(
+                  String.format("The dispatch %s is not supported!", dispatcher),
+                  HttpStatus.NOT_FOUND);
+            }
+         } catch (ResponseStatusException e) {
+            return new ResponseEntity<String>(e.getMessage(), e.getStatusCode());
          }
 
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
@@ -200,6 +223,10 @@ public class SoapController {
          if (!responses.isEmpty()) {
             int idx = DispatchStyles.RANDOM.equals(dispatcher) ? RandomUtils.nextInt(0, responses.size()) : 0;
             response = responses.get(idx);
+         } else {
+            return new ResponseEntity<String>(
+               String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()),
+               HttpStatus.BAD_REQUEST);
          }
 
          // Set Content-Type to "text/xml".
@@ -237,8 +264,9 @@ public class SoapController {
          return new ResponseEntity<Object>(responseContent, responseHeaders, HttpStatus.OK);
       }
 
-      log.debug("No valid operation found by Microcks...");
-      return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+      return new ResponseEntity<String>(
+         String.format("The operation %s does not exist!", action),
+         HttpStatus.NOT_FOUND);
    }
 
    /**
@@ -312,8 +340,8 @@ public class SoapController {
          return new DispatchContext(xpath.evaluate(new InputSource(new StringReader(body))), null);
       } catch (Exception e) {
          log.error("Error during Xpath evaluation", e);
+         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Xpath evaluation: " + e.getMessage());
       }
-      return null;
    }
 
    /** Build a dispatch context after a Groovy script evaluation coming from rules. */
@@ -328,8 +356,8 @@ public class SoapController {
          return new DispatchContext((String) se.eval(script), requestContext);
       } catch (Exception e) {
          log.error("Error during Script evaluation", e);
+         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Script evaluation: " + e.getMessage());
       }
-      return null;
    }
 
    /**
