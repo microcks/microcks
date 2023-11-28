@@ -272,7 +272,7 @@
               </dl>
             </div>
           </div>
-          <dl class="dl-horizontal left" *ngIf="view.service.type == 'GENERIC_REST'">
+          <dl class="dl-horizontal left" *ngIf="view.service.type === 'GENERIC_REST'">
             <dt>Mock URL:</dt>
             <dd>
               <div class="input-group">
@@ -439,7 +439,7 @@
                     </dl>
                   </span>
                   <span *ngIf="hasBinding(item, 'SQS')">
-                    <dl>
+                    <dl class="dl-horizontal left">
                       <dt>AWS SQS Queue:</dt>
                       <dd>
                         <div class="input-group">
@@ -455,7 +455,7 @@
                     </dl>
                   </span>
                   <span *ngIf="hasBinding(item, 'SNS')">
-                    <dl>
+                    <dl class="dl-horizontal left">
                       <dt>AWS SNS Topic:</dt>
                       <dd>
                         <div class="input-group">
@@ -469,7 +469,7 @@
                     </dl>
                   </span>
                   <span *ngIf="hasBinding(item, 'AMQP1')">
-                    <dl>
+                    <dl class="dl-horizontal left">
                       <dt>AMQP destination:</dt>
                       <dd>
                         <div class="input-group">

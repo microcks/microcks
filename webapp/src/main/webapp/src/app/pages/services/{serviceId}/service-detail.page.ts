@@ -276,6 +276,12 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'GOOGLEPUBSUB':
             result += 'Google PubSub';
             break;
+          case 'SNS':
+            result += 'Amazon SNS';
+            break;
+          case 'SQS':
+            result += 'Amazon SQS';
+            break;
         }
         if (i+1 < bindings.length) {
           result += ", ";
