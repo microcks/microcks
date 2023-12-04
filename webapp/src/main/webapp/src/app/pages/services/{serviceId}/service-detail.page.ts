@@ -445,11 +445,18 @@ export class ServiceDetailPageComponent implements OnInit {
       let request = JSON.parse(requestContent);
       return request.query;
     }
-    return requestContent;
+    return this.prettyPrintIfJSON(requestContent);
   }
   public formatGraphQLVariables(requestContent: string): string {
     let request = JSON.parse(requestContent);
     return JSON.stringify(request.variables, null, 2);
+  }
+  public prettyPrintIfJSON(content: string): string {
+    if ((content.startsWith('[') || content.startsWith('{')) && content.indexOf('\n') == -1) {
+      let jsonContent = JSON.parse(content);
+      return JSON.stringify(jsonContent, null, 2);
+    }
+    return content;
   }
 
   public formatCurlCmd(operation: Operation, exchange: RequestResponsePair): string {
