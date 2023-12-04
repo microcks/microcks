@@ -50,6 +50,8 @@ public class AsyncAPISchemaValidator {
    /** A commons logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(AsyncAPISchemaValidator.class);
 
+   public static final String ASYNC_SCHEMA_PAYLOAD_ELEMENT = "payload";
+
    private static final String[] STRUCTURES = {
          "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties"
    };
@@ -237,12 +239,12 @@ public class AsyncAPISchemaValidator {
     * checked in terms of type compatibility, name and required/optional property. It returns a
     * list of validation error messages.
     * @param specificationNode The AsyncAPI full specification as a Jackson node
-    * @param record The avro record representing actual message
+    * @param avroRecord The avro record representing actual message
     * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
     * @param schemaMap An optional local Schema registry snapshot for resolving Avro schemas
     * @return The list of validation failures. If empty, avro record is valid !
     */
-   public static List<String> validateAvroMessage(JsonNode specificationNode, GenericRecord record,
+   public static List<String> validateAvroMessage(JsonNode specificationNode, GenericRecord avroRecord,
                                                   String messagePathPointer, SchemaMap schemaMap) {
       // Retrieve the schemas to validate record against.
       Schema[] avroSchemas = null;
@@ -255,14 +257,14 @@ public class AsyncAPISchemaValidator {
       // Validation is a deep one. Each element should be checked.
       // We just need to have conformance to one schema among the different ones.
       for (Schema avroSchema : avroSchemas) {
-         if (AvroUtil.validate(avroSchema, record)) {
+         if (AvroUtil.validate(avroSchema, avroRecord)) {
             return Arrays.asList();
          }
       }
       // Produce some insights on what's going wrong. We'll accumulate the errors on different schemas.
       List<String> errors = new ArrayList<>();
       for (Schema avroSchema : avroSchemas) {
-         errors.addAll(AvroUtil.getValidationErrors(avroSchema, record));
+         errors.addAll(AvroUtil.getValidationErrors(avroSchema, avroRecord));
       }
       return errors;
    }
@@ -362,12 +364,6 @@ public class AsyncAPISchemaValidator {
    private static void convertType(JsonNode node) {
       if (node.has("type") && !node.path("type").asText().equals("object")) {
 
-         // Convert date format to date-time.
-         if (node.has(JSON_SCHEMA_FORMAT_ELEMENT) && node.path(JSON_SCHEMA_FORMAT_ELEMENT).asText().equals("date")
-               && node.path("type").asText().equals("string")) {
-            ((ObjectNode) node).put(JSON_SCHEMA_FORMAT_ELEMENT, "date-time");
-         }
-
          // Convert nullable in additional type and remove node.
          if (node.path("nullable").asBoolean()) {
             String type = node.path("type").asText();
@@ -399,12 +395,12 @@ public class AsyncAPISchemaValidator {
    /** Retrieve the Json schema node corresponding to a single message definition. */
    private static JsonNode retrieveSingleMessageSchemaNode(JsonNode specificationNode, JsonNode messageNode) throws Exception {
       // Check that message node has a payload attribute.
-      if (!messageNode.has("payload")) {
+      if (!messageNode.has(ASYNC_SCHEMA_PAYLOAD_ELEMENT)) {
          log.debug("messageNode {} has no 'payload' attribute", messageNode);
          throw new Exception("message definition has no valid payload in AsyncAPI specification");
       }
       // Navigate to payload definition.
-      messageNode = messageNode.path("payload");
+      messageNode = messageNode.path(ASYNC_SCHEMA_PAYLOAD_ELEMENT);
 
       // Payload node can be just a reference to another schema...
       messageNode = followRefIfAny(messageNode, specificationNode);
@@ -455,13 +451,13 @@ public class AsyncAPISchemaValidator {
    /** Build an Avro schema for spring message definition. */
    private static Schema buildSingleMessageAvroSchema(JsonNode specificationNode, JsonNode messageNode, SchemaMap schemaMap) throws Exception {
       // Check that message node has a payload attribute.
-      if (!messageNode.has("payload")) {
+      if (!messageNode.has(ASYNC_SCHEMA_PAYLOAD_ELEMENT)) {
          log.debug("messageNode {} has no 'payload' attribute", messageNode);
          throw new Exception("message definition has no valid payload in AsyncAPI specification");
       }
 
       // Navigate to payload definition.
-      messageNode = messageNode.path("payload");
+      messageNode = messageNode.path(ASYNC_SCHEMA_PAYLOAD_ELEMENT);
 
       // Payload node can be just a reference to another schema... But in the case of Avro, this is an external schema
       // as #/components/schemas can only hold JSON schemas. So we have to use a registry for resolving and accessing

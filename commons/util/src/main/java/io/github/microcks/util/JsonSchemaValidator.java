@@ -49,7 +49,6 @@ public class JsonSchemaValidator {
 
    public static final String JSON_SCHEMA_COMPONENTS_ELEMENT = "components";
    public static final String JSON_SCHEMA_PROPERTIES_ELEMENT = "properties";
-   public static final String JSON_SCHEMA_FORMAT_ELEMENT = "format";
 
    /**
     * Check if a Json object is valid against the given Json schema specification.

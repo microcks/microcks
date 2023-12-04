@@ -311,12 +311,6 @@ public class OpenAPISchemaValidator {
    private static void convertType(JsonNode node) {
       if (node.has("type") && !node.path("type").asText().equals("object")) {
 
-         // Convert date format to date-time.
-         if (node.has(JSON_SCHEMA_FORMAT_ELEMENT) && node.path(JSON_SCHEMA_FORMAT_ELEMENT).asText().equals("date")
-               && node.path("type").asText().equals("string")) {
-            ((ObjectNode) node).put(JSON_SCHEMA_FORMAT_ELEMENT, "date-time");
-         }
-
          // Convert nullable in additional type and remove node.
          if (node.path("nullable").asBoolean()) {
             String type = node.path("type").asText();
