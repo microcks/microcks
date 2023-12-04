@@ -6,6 +6,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: spring
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 data:
   features.properties: |-
     features.feature.microcks-hub.enabled={{ .Values.features.microcksHub.enabled }}
@@ -46,7 +49,7 @@ data:
     {{- if .Values.features.async.sns.region }}
     features.feature.async-api.endpoint-SNS={{ .Values.features.async.sns.region }}{{ if .Values.features.async.sns.endpointOverride }} at {{ .Values.features.async.sns.endpointOverride }}{{ end }}
     {{- end }}
-    
+
     features.feature.ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
   application.properties: |-
     # Application configuration properties
@@ -77,7 +80,7 @@ data:
     {{- if hasKey .Values.keycloak "privateUrl" }}
     spring.security.oauth2.resourceserver.jwt.jwk-set-uri=${KEYCLOAK_URL}/realms/${keycloak.realm}/protocol/openid-connect/certs
     {{- end }}
-  
+
     # Keycloak configuration properties
     keycloak.auth-server-url=${KEYCLOAK_URL}
     keycloak.realm={{ .Values.keycloak.realm }}
@@ -123,7 +126,7 @@ data:
     # Grpc server properties
     grpc.server.certChainFilePath=/deployments/config/grpc/tls.crt
     grpc.server.privateKeyFilePath=/deployments/config/grpc/tls.key
-    
+
     # AI Copilot configuration properties
     ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
     ai-copilot.implementation={{ .Values.features.aiCopilot.implementation }}
@@ -208,6 +211,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 data:
   microcks-realm.json: |-
     {
@@ -418,6 +424,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: async-minion
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 data:
   application.properties: |-
     # Configuration file.
@@ -528,7 +537,7 @@ data:
     %kube.googlepubsub.service-account-location=/deployments/config/googlepubsub/sa/{{ .Values.features.async.googlepubsub.serviceAccountSecretRef.fileKey }}
       {{- end }}
     {{- end }}
-    
+
     {{- if .Values.features.async.sqs.region }}
     # Access to Amazon SQS.
     %kube.amazonsqs.region={{ .Values.features.async.sqs.region }}
@@ -543,7 +552,7 @@ data:
     %kube.amazonsqs.endpoint-override={{ .Values.features.async.sqs.endpointOverride }}
     {{- end }}
     {{- end }}
-    
+
     {{- if .Values.features.async.sns.region }}
     # Access to Amazon SNS.
     %kube.amazonsns.region={{ .Values.features.async.sns.region }}

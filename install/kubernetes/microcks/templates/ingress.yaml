@@ -4,14 +4,16 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}"
-  annotations:
-    ingress.kubernetes.io/rewrite-target: /
-  {{- with .Values.microcks.ingressAnnotations }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
   labels:
     app: "{{ .Values.appName }}"
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    ingress.kubernetes.io/rewrite-target: /
+    {{- with .Values.microcks.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   {{- if .Values.microcks.ingressClassName }}
   ingressClassName: {{ .Values.microcks.ingressClassName | quote }}
@@ -36,16 +38,18 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}-grpc"
-  annotations:
-    ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-  {{- with .Values.microcks.grpcIngressAnnotations }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
   labels:
     app: "{{ .Values.appName }}"
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    {{- with .Values.microcks.grpcIngressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   {{- if .Values.microcks.grpcIngressClassName }}
   ingressClassName: {{ .Values.microcks.grpcIngressClassName | quote }}
@@ -70,14 +74,16 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}-keycloak"
-  annotations:
-    ingress.kubernetes.io/rewrite-target: /
-  {{- with .Values.keycloak.ingressAnnotations }}
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
   labels:
     app: "{{ .Values.appName }}"
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    ingress.kubernetes.io/rewrite-target: /
+    {{- with .Values.keycloak.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   {{- if .Values.keycloak.ingressClassName }}
   ingressClassName: {{ .Values.keycloak.ingressClassName | quote }}
@@ -104,16 +110,18 @@ kind: Ingress
 apiVersion: networking.k8s.io/v1
 metadata:
   name: "{{ .Values.appName }}-ws"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
   annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
     ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3000"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3000"
   {{- with .Values.features.async.ws.ingressAnnotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  labels:
-    app: "{{ .Values.appName }}"
-    group: microcks
 spec:
   {{- if .Values.features.async.ws.ingressClassName }}
   ingressClassName: {{ .Values.features.async.ws.ingressClassName | quote }}

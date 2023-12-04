@@ -23,7 +23,7 @@ microcks:
   resources:
     requests:
       cpu: 200m
-      #memory: 400Mi
+      memory: 512Mi
     limits:
       #cpu: 500m
       memory: 512Mi
@@ -54,6 +54,11 @@ microcks:
 postman:
   image: quay.io/microcks/microcks-postman-runtime:latest
   replicas: 1
+  resources:
+    requests:
+      memory: 256Mi
+    limits:
+      memory: 256Mi
 
 keycloak:
   # Use keycloack in this release
@@ -85,10 +90,10 @@ keycloak:
   resources:
     requests:
       cpu: 400m
-      memory: 400Mi
+      memory: 512Mi
     limits:
       #cpu: 500m
-      #memory: 512Mi
+      memory: 512Mi
 
   persistent: true
   volumeSize: 1Gi
@@ -131,9 +136,9 @@ mongodb:
     #helm.sh/resource-policy: keep
 
   resources:
-    #requests:
-      #cpu: 250m
-      #memory: 400Mi
+    requests:
+      cpu: 250m
+      memory: 512Mi
     limits:
       #cpu: 500m
       memory: 512Mi
@@ -306,3 +311,9 @@ features:
       timeout: 20
       #model: gpt-3.5-turbo
       #maxTokens: 2000
+
+# common labels associated with all resources helm chart
+commonLabels: {}
+
+# common annotations associated with all resource of this helm chart
+commonAnnotations: {}
