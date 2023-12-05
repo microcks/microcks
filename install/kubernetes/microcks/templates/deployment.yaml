@@ -167,7 +167,7 @@ spec:
             name: "{{ .Values.appName }}-config"
         - name: "{{ .Values.appName }}-grpc-certs"
           secret:
-            secretName: "{{ .Values.appName }}-microcks-grpc-secret"
+            secretName: "{{ .Values.microcks.grpcSecretRef | default (print .Values.appName "-microcks-grpc-secret") }}"
         {{- if eq .Values.features.async.kafka.install false }}
           {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
           {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
@@ -424,13 +424,23 @@ spec:
         - name: KEYCLOAK_ADMIN
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.usernameKey | default "username" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: username
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: KEYCLOAK_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.passwordKey | default "password" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: password
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: OPERATING_MODE
           value: clustered
         - name: KC_DB
@@ -438,13 +448,23 @@ spec:
         - name: KC_DB_USER
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.postgresUsernameKey | default "postgresUsername" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: postgresUsername
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.postgresPasswordKey | default "postgresPassword" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: postgresPassword
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: KC_DB_URL_DATABASE
           value: root
         - name: KC_DB_URL_HOST
