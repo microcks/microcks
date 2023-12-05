@@ -34,6 +34,7 @@ import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
@@ -64,6 +65,9 @@ public class AsyncAPITestManager {
 
    @Inject
    SchemaRegistry schemaRegistry;
+
+   @Inject
+   private Config config;
 
    @ConfigProperty(name = "io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url")
    String microcksUrl;
@@ -300,7 +304,7 @@ public class AsyncAPITestManager {
       /** Find the appropriate MessageConsumptionTask implementation depending on specification. */
       private MessageConsumptionTask buildMessageConsumptionTask(AsyncTestSpecification testSpecification) {
          if (KafkaMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
-            return new KafkaMessageConsumptionTask(testSpecification);
+            return new KafkaMessageConsumptionTask(testSpecification, config);
          }
          if (MQTTMessageConsumptionTask.acceptEndpoint(testSpecification.getEndpointUrl().trim())) {
             return new MQTTMessageConsumptionTask(testSpecification);

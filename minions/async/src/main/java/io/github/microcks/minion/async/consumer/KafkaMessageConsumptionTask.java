@@ -20,6 +20,7 @@ import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 
 import io.github.microcks.domain.Header;
 import io.github.microcks.minion.async.AsyncTestSpecification;
+import io.github.microcks.minion.async.util.KafkaSecurityPropsFiller;
 
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -28,13 +29,12 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
-import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
-import org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.eclipse.microprofile.config.Config;
 import org.jboss.logging.Logger;
 
 import java.io.*;
@@ -67,19 +67,19 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    public static final String REGISTRY_AUTH_CREDENTIALS_SOURCE = "registryAuthCredSource";
    /** Optional consumer group.id property. */
    public static final String GROUP_ID_OPTION = "groupId";
-   /** Optional consumer sasl.login.callback.handler.class property. */
-   public static final String SASL_LOGIN_CALLBACK_HANDLER_CLASS_OPTION = "saslLoginCallbackHandlerClass";
+   /** Optional variable to define whether security options from config are needed. */
+   public static final String CONFIG_SECURITY_PROTOCOL_OPTION = "configSecurityProtocol";
 
    /** The endpoint URL option representing the offset we should start consume from. */
    public static final String START_OFFSET = "startOffset";
    /** The endpoint URL option representing the offset whe should end consumer to. */
    public static final String END_OFFSET = "endOffset";
 
-   public static final String SECURITY_PROTOCOL_PROP_NAME = "security.protocol";
-
    private File trustStore;
 
-   private AsyncTestSpecification specification;
+   private final AsyncTestSpecification specification;
+
+   private final Config config;
 
    protected Map<String, String> optionsMap;
 
@@ -95,8 +95,9 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
     * Create a new consumption task from an Async test specification.
     * @param testSpecification The specification holding endpointURL and timeout.
     */
-   public KafkaMessageConsumptionTask(AsyncTestSpecification testSpecification) {
+   public KafkaMessageConsumptionTask(AsyncTestSpecification testSpecification, Config config) {
       this.specification = testSpecification;
+      this.config = config;
    }
 
    /**
@@ -163,9 +164,8 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, endpointBrokerUrl);
 
       // Generate a unique GroupID for no collision with previous or other consumers if it's not defined in the options.
-      String groupId = optionsMap.get(GROUP_ID_OPTION);
       props.put(ConsumerConfig.GROUP_ID_CONFIG,
-         groupId == null ? specification.getTestResultId() + "-" + System.currentTimeMillis() : groupId);
+         hasOption(GROUP_ID_OPTION) ? optionsMap.get(GROUP_ID_OPTION) : specification.getTestResultId() + "-" + System.currentTimeMillis());
       props.put(ConsumerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-test");
 
       props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
@@ -195,27 +195,19 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
             trustStore = ConsumptionTaskCommons.installBrokerCertificate(specification);
 
             // Then we have to add SSL specific properties.
-            props.put(SECURITY_PROTOCOL_PROP_NAME, SecurityProtocol.SSL.name);
+            props.put("security.protocol", SecurityProtocol.SSL.name);
             props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, trustStore.getAbsolutePath());
             props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, ConsumptionTaskCommons.TRUSTSTORE_PASSWORD);
-
-            completePropertiesWithSaslSslConfig(props);
          } catch (Exception e) {
             logger.error("Exception while installing custom truststore: " + e.getMessage());
          }
       }
 
-      instanciateKafkaConsumer(props, endpointTopic);
-   }
-
-   private void completePropertiesWithSaslSslConfig(Properties props) {
-      String saslLoginCallbackHandlerClass = optionsMap.get(SASL_LOGIN_CALLBACK_HANDLER_CLASS_OPTION);
-      if (saslLoginCallbackHandlerClass != null) {
-         props.put(SECURITY_PROTOCOL_PROP_NAME, SecurityProtocol.SASL_SSL.name);
-         props.put(SaslConfigs.SASL_MECHANISM, OAuthBearerLoginModule.OAUTHBEARER_MECHANISM);
-         props.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;");
-         props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, saslLoginCallbackHandlerClass);
+      if (hasOption(CONFIG_SECURITY_PROTOCOL_OPTION)) {
+         KafkaSecurityPropsFiller.fillSpecificSecurityProps(optionsMap.get(CONFIG_SECURITY_PROTOCOL_OPTION), props, config);
       }
+
+      instanciateKafkaConsumer(props, endpointTopic);
    }
 
    private void instanciateKafkaConsumer(Properties props, String endpointTopic) {

@@ -54,7 +54,7 @@ class KafkaMessageConsumptionTaskTest {
    @Test
    void testAcceptEndpoint() {
       AsyncTestSpecification specification = new AsyncTestSpecification();
-      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
+      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification, null);
 
       assertTrue(KafkaMessageConsumptionTask
             .acceptEndpoint("kafka://localhost/testTopic"));
@@ -75,7 +75,7 @@ class KafkaMessageConsumptionTaskTest {
    @Test
    void testAcceptEndpointFailures() {
       AsyncTestSpecification specification = new AsyncTestSpecification();
-      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
+      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification, null);
 
       assertFalse(KafkaMessageConsumptionTask
             .acceptEndpoint("localhost:9092/testTopic"));
@@ -113,7 +113,7 @@ class KafkaMessageConsumptionTaskTest {
       specification.setEndpointUrl("kafka://localhost/testTopic?registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO&startOffset=100");
       String options = "registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO&startOffset=100";
 
-      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
+      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification, null);
       Map<String, String> optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
 
       assertNotNull(optionsMap);
