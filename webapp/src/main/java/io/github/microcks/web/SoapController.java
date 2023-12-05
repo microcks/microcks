@@ -40,6 +40,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -127,7 +128,7 @@ public class SoapController {
       String action = extractSoapAction(request);
       log.debug("Extracted SOAP action from headers: {}", action);
 
-      if (action != null && action.length() > 0) {
+      if (StringUtils.hasText(action)) {
          for (Operation operation : service.getOperations()) {
             if (action.equals(operation.getAction())) {
                rOperation = operation;
@@ -140,7 +141,8 @@ public class SoapController {
       // Enhancement : if not found, try getting operation from soap:body directly!
       if (rOperation == null) {
          String operationName = extractOperationName(body);
-         if (action == null || action.length() > 0) {
+         if (!StringUtils.hasText(action)) {
+            // if the action is not in the header, we override it with the action from the body
             action = operationName;
          }
          log.debug("Extracted operation name from payload: {}", operationName);
