@@ -558,12 +558,12 @@ public class ServiceService {
    }
 
    /**
-    *
-    * @param id
-    * @param operationName
-    * @param exchanges
-    * @param userInfo
-    * @return
+    * Add new sample exchanges to an existing service.
+    * @param id The identifier of service to add exchanges for
+    * @param operationName The name of operation to add exchanges for
+    * @param exchanges A list of exchanges to add to the corresponding service operation
+    * @param userInfo The current user information to check if authorized to do the update
+    * @return True if service operation has been found and updated, false otherwise.
     */
    public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,  UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
@@ -593,6 +593,8 @@ public class ServiceService {
                      eventMessageRepository.save(event.getEventMessage());
                   }
                }
+               // Publish a Service update event before returning.
+               publishServiceChangeEvent(service, ChangeType.UPDATED);
                return true;
             }
          }
