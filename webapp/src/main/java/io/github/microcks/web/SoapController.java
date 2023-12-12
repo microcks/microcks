@@ -169,7 +169,7 @@ public class SoapController {
             if (wsdlResources.isEmpty()) {
                return new ResponseEntity<String>(
                   String.format("The service %s with version %s does not have a wsdl!", serviceName, version),
-                  HttpStatus.NOT_FOUND);
+                  HttpStatus.PRECONDITION_FAILED);
             }
             Resource wsdlResource = wsdlResources.get(0);
             List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(), new QName(service.getXmlNS(), rOperation.getInputName()),
