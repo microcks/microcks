@@ -442,14 +442,26 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public formatRequestContent(requestContent: string): string {
     if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
-      let request = JSON.parse(requestContent);
-      return request.query;
+      try {
+        let request = JSON.parse(requestContent);
+        return request.query;
+      } catch (error) {
+        console.log("Error while parsing GraphQL request content: " + error.message);
+        return requestContent;
+      }
     }
     return this.prettyPrintIfJSON(requestContent);
   }
   public formatGraphQLVariables(requestContent: string): string {
-    let request = JSON.parse(requestContent);
-    return JSON.stringify(request.variables, null, 2);
+    try {
+      let request = JSON.parse(requestContent);
+      if (request.variables) {
+        return JSON.stringify(request.variables, null, 2);
+      }
+    } catch (error) {
+      console.log("Error while parsing GraphQL request content: " + error.message);
+    }
+    return "";
   }
   public prettyPrintIfJSON(content: string): string {
     if ((content.startsWith('[') || content.startsWith('{')) && content.indexOf('\n') == -1) {
