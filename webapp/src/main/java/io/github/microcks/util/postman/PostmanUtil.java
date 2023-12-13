@@ -32,6 +32,10 @@ public class PostmanUtil {
    /** Regular expression used to evaluate operation name matching. */
    private static final String OPERATION_NAME_EXPRESSION_PREFIX = "(GET|POST|PUT|PATCH|DELETE|OPTION)?( *)(/)?";
 
+   /** Private constructor to hide the default one. */
+   private PostmanUtil() {
+   }
+
    /**
     * Tells if 2 operations may be equivalent giving their names. Useful when comparing OpenAPI operations
     * (containing <code>{param}</code> in path) and Postman operations (containing <code>:param</code> in path).
@@ -46,7 +50,7 @@ public class PostmanUtil {
       }
       // Then we may have an OpenAPI template we should convert to Postman and check again.
       if (operationNameRef.contains("/{")) {
-         String transformedName = operationNameRef.replaceAll("/\\{", "/:").replaceAll("}", "");
+         String transformedName = operationNameRef.replaceAll("/\\{", "/:").replace("}", "");
          if (transformedName.equalsIgnoreCase(operationNameCandidate)) {
             return true;
          }
@@ -56,7 +60,7 @@ public class PostmanUtil {
          // Finally check again adding a verb as prefix.
          return operationNameCandidate.matches(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef);
       } catch (PatternSyntaxException pse) {
-         log.warn(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef + " throws a PatternSyntaxException");
+         log.warn("{}{} throws a PatternSyntaxException", OPERATION_NAME_EXPRESSION_PREFIX, operationNameRef);
       }
       return false;
    }
