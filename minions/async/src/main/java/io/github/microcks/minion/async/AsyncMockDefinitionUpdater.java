@@ -17,6 +17,7 @@ package io.github.microcks.minion.async;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.domain.ServiceView;
 import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceViewChangeEvent;
@@ -28,7 +29,6 @@ import org.jboss.logging.Logger;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 /**
@@ -55,44 +55,57 @@ public class AsyncMockDefinitionUpdater {
 
    @Incoming("microcks-services-updates")
    public void onServiceUpdate(ServiceViewChangeEvent serviceViewChangeEvent) {
-      logger.info("Received a new change event [" + serviceViewChangeEvent.getChangeType() + "] for '"
-            + serviceViewChangeEvent.getServiceId() + "', at " + serviceViewChangeEvent.getTimestamp());
+      logger.infof("Received a new change event [%s] for '%s', at %d",
+            serviceViewChangeEvent.getChangeType(),
+            serviceViewChangeEvent.getServiceId(),
+            serviceViewChangeEvent.getTimestamp());
 
+      applyServiceChangeEvent(serviceViewChangeEvent);
+   }
+
+   public void applyServiceChangeEvent(ServiceViewChangeEvent serviceViewChangeEvent) {
       // Remove existing definitions or add/update existing for EVENT services.
       if (serviceViewChangeEvent.getChangeType().equals(ChangeType.DELETED)) {
-         logger.info("Removing mock definitions for " + serviceViewChangeEvent.getServiceId());
+         logger.infof("Removing mock definitions for %s", serviceViewChangeEvent.getServiceId());
          mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
          schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
       } else {
          // Only deal with service of type EVENT...
          if (serviceViewChangeEvent.getServiceView() != null && (serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)
                || serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.GENERIC_EVENT)) ) {
-            // Browse and check operation regarding restricted frequencies and supported bindings.
-            boolean scheduled = false;
-            for (Operation operation : serviceViewChangeEvent.getServiceView().getService().getOperations()) {
-               if (Arrays.asList(restrictedFrequencies).contains(operation.getDefaultDelay())
-                     && operation.getBindings().keySet().stream().anyMatch(Arrays.asList(supportedBindings)::contains)) {
 
-                  logger.info("Found '" + operation.getName() + "' as a candidate for async message mocking");
-                  // Build an Async mock definition and store it into repository.
-                  AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceViewChangeEvent.getServiceView().getService(), operation,
-                        serviceViewChangeEvent.getServiceView().getMessagesMap().get(operation.getName()).stream()
-                              .filter(e -> e instanceof UnidirectionalEvent)
-                              .map(e -> ((UnidirectionalEvent)e).getEventMessage())
-                              .collect(Collectors.toList())
-                  );
-                  mockRepository.storeMockDefinition(mockDefinition);
-                  schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
-                  scheduled = true;
-               }
-            }
+            // Browse and check operation regarding restricted frequencies and supported bindings.
+            boolean scheduled = scheduleOperations(serviceViewChangeEvent.getServiceView());
 
             if (!scheduled) {
-               logger.info("Ensure to un-schedule " + serviceViewChangeEvent.getServiceId() + " on this minion. Removing definitions.");
+               logger.infof("Ensure to un-schedule %s on this minion. Removing definitions.", serviceViewChangeEvent.getServiceId());
                mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
                schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
             }
          }
       }
+   }
+
+   /** Browse and check operation regarding restricted frequencies and supported bindings. */
+   private boolean scheduleOperations(ServiceView serviceView) {
+      boolean scheduled = false;
+      for (Operation operation : serviceView.getService().getOperations()) {
+         if (Arrays.asList(restrictedFrequencies).contains(operation.getDefaultDelay())
+               && operation.getBindings().keySet().stream().anyMatch(Arrays.asList(supportedBindings)::contains)) {
+
+            logger.info("Found '" + operation.getName() + "' as a candidate for async message mocking");
+            // Build an Async mock definition and store it into repository.
+            AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(), operation,
+                  serviceView.getMessagesMap().get(operation.getName()).stream()
+                        .filter(UnidirectionalEvent.class::isInstance)
+                        .map(e -> ((UnidirectionalEvent)e).getEventMessage())
+                        .toList()
+            );
+            mockRepository.storeMockDefinition(mockDefinition);
+            schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
+            scheduled = true;
+         }
+      }
+      return scheduled;
    }
 }
