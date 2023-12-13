@@ -30,7 +30,10 @@ import org.jboss.logging.Logger;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,7 +45,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event
  * messages.
- * 
+ *
  * @author laurent
  */
 @ApplicationScoped
@@ -67,11 +70,15 @@ public class AMQPProducerManager {
 
    /**
     * Initialize the AMQP connection post construction.
-    * 
-    * @throws Exception If connection to AMQP Broker cannot be done.
+    *
+    * @throws IOException If an I/O error occurs while connecting to the AMQP broker.
+    * @throws URISyntaxException If the URI syntax is invalid.
+    * @throws KeyManagementException If there is an issue with the key management.
+    * @throws TimeoutException If the connection to the AMQP broker times out.
+    * @throws NoSuchAlgorithmException If the required algorithm is not available.
     */
    @PostConstruct
-   public void create() throws Exception {
+   public void create() throws IOException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException, TimeoutException {
       try {
          amqpConnection = createConnection();
       } catch (Exception e) {
@@ -83,14 +90,18 @@ public class AMQPProducerManager {
 
    /**
     * @return A newly created connection to configured broker
-    * @throws Exception in case of connection failure
+    * @throws IOException If an I/O error occurs while connecting to the AMQP broker.
+    * @throws URISyntaxException If the URI syntax is invalid.
+    * @throws KeyManagementException If there is an issue with the key management.
+    * @throws TimeoutException If the connection to the AMQP broker times out.
+    * @throws NoSuchAlgorithmException If the required algorithm is not available.
     */
-   protected Connection createConnection() throws Exception {
+   protected Connection createConnection() throws IOException, TimeoutException, URISyntaxException, NoSuchAlgorithmException, KeyManagementException {
       ConnectionFactory factory = new ConnectionFactory();
       factory.setUri("amqp://" + amqpServer);
 
-      if (amqpUsername != null && amqpUsername.length() > 0
-            && amqpPassword != null && amqpPassword.length() > 0) {
+      if (amqpUsername != null && !amqpUsername.isEmpty()
+            && amqpPassword != null && !amqpPassword.isEmpty()) {
          logger.infof("Connecting to AMQP broker with user '%s'", amqpUsername);
          factory.setUsername(amqpUsername);
          factory.setPassword(amqpPassword);
@@ -101,7 +112,7 @@ public class AMQPProducerManager {
 
    /**
     * Publish a message on specified destination.
-    * 
+    *
     * @param destinationType The type of destination (queue, topic, fanout, ...)
     * @param destinationName The name of destination
     * @param value           The message payload
@@ -122,7 +133,6 @@ public class AMQPProducerManager {
             properties = new AMQP.BasicProperties.Builder().headers(amqpHeaders).build();
          }
          channel.basicPublish(destinationName, "", properties, value.getBytes(StandardCharsets.UTF_8));
-         channel.close();
       } catch (IOException | TimeoutException ioe) {
          logger.warnf("Message %s sending has thrown an exception", ioe);
          ioe.printStackTrace();
@@ -152,7 +162,7 @@ public class AMQPProducerManager {
 
    /**
     * Render Microcks headers using the template engine.
-    * 
+    *
     * @param engine  The template engine to reuse (because we do not want to
     *                initialize and manage a context at the KafkaProducerManager
     *                level.)
@@ -160,37 +170,37 @@ public class AMQPProducerManager {
     * @return A set of rendered Microcks headers.
     */
    public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
-      if (headers != null && !headers.isEmpty()) {
-         Set<Header> renderedHeaders = new HashSet<>(headers.size());
+       if (headers == null || headers.isEmpty()) {
+           return Collections.emptySet();
+       }
+       Set<Header> renderedHeaders = new HashSet<>(headers.size());
 
-         for (Header header : headers) {
-            Optional<String> optionalValue = header.getValues().stream().findFirst();
-            if (optionalValue.isPresent()) {
-               String firstValue = optionalValue.get();
-               if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-                  try {
-                     Header renderedHeader = new Header();
-                     renderedHeader.setName(header.getName());
-                     renderedHeader.setValues(Set.of(engine.getValue(firstValue)));
-                     renderedHeaders.add(renderedHeader);
-                  } catch (Throwable t) {
-                     logger.error("Failing at evaluating template " + firstValue, t);
-                     Header renderedHeader = new Header();
-                     renderedHeader.setName(header.getName());
-                     renderedHeader.setValues(Set.of(firstValue));
-                     renderedHeaders.add(renderedHeader);
-                  }
-               } else {
-                  Header renderedHeader = new Header();
-                  renderedHeader.setName(header.getName());
-                  renderedHeader.setValues(Set.of(firstValue));
-                  renderedHeaders.add(renderedHeader);
-               }
-            }
+       for (Header header : headers) {
+         Optional<String> optionalValue = header.getValues().stream().findFirst();
+         if (optionalValue.isEmpty()) {
+           continue;
          }
-         return renderedHeaders;
-      }
+         String firstValue = optionalValue.get();
+         if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) try {
+             Header renderedHeader = new Header();
+             renderedHeader.setName(header.getName());
+             renderedHeader.setValues(Set.of(engine.getValue(firstValue)));
+             renderedHeaders.add(renderedHeader);
+         } catch (Exception t) {
+             logger.error("Failing at evaluating template " + firstValue, t);
+             Header renderedHeader = new Header();
+             renderedHeader.setName(header.getName());
+             renderedHeader.setValues(Set.of(firstValue));
+             renderedHeaders.add(renderedHeader);
+         }
+         else {
+           Header renderedHeader = new Header();
+           renderedHeader.setName(header.getName());
+           renderedHeader.setValues(Set.of(firstValue));
+           renderedHeaders.add(renderedHeader);
+         }
+       }
+     return renderedHeaders;
 
-      return Collections.emptySet();
    }
 }
