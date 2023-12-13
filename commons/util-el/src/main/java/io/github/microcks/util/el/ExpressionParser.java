@@ -38,7 +38,13 @@ import java.util.List;
 public class ExpressionParser {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ExpressionParser.class);
+   private static final Logger log = LoggerFactory.getLogger(ExpressionParser.class);
+
+
+  /**
+   * Private constructor for Helper Class
+   */
+   private ExpressionParser(){}
 
    /**
     * Navigate the template for finding expressions that can be evaluated into this template. Expressions
@@ -57,56 +63,48 @@ public class ExpressionParser {
 
       while (startIdx < template.length()) {
          int prefixIndex = template.indexOf(expressionPrefix, startIdx);
-         if (prefixIndex >= startIdx) {
-            // an inner expression was found - this is a composite
-            if (prefixIndex > startIdx) {
-               log.debug("Found a literal expression starting at " + startIdx);
-               expressions.add(new LiteralExpression(template.substring(startIdx, prefixIndex)));
-            }
-            int afterPrefixIndex = prefixIndex + expressionPrefix.length();
-            int suffixIndex = skipToCorrectEndSuffix(expressionSuffix, template, afterPrefixIndex);
-            if (suffixIndex == -1) {
-               log.info("No ending suffix '" + expressionSuffix + "' for expression starting at character " +
-                     prefixIndex + ": " + template.substring(prefixIndex));
-               throw new ParseException(template, prefixIndex,
-                     "No ending suffix '" + expressionSuffix + "' for expression starting at character " +
-                           prefixIndex + ": " + template.substring(prefixIndex));
-            }
-            if (suffixIndex == afterPrefixIndex) {
-               log.info("No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                     "' at character " + prefixIndex);
-               throw new ParseException(template, prefixIndex,
-                     "No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                           "' at character " + prefixIndex);
-            }
-            String expr = template.substring(prefixIndex + expressionPrefix.length(), suffixIndex);
-            expr = expr.trim();
-            if (expr.isEmpty()) {
-               log.info("No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                     "' at character " + prefixIndex);
-               throw new ParseException(template, prefixIndex,
-                     "No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                           "' at character " + prefixIndex);
-            }
-            expressions.add(doParseExpression(expr, context));
-            startIdx = suffixIndex + expressionSuffix.length();
-            log.debug("Expression accumulated. Pursuing with index " + startIdx + " on " + template.length());
-         } else {
-            // no more expression. finalize with a literal.
-            expressions.add(new LiteralExpression(template.substring(startIdx, template.length())));
-            break;
-         }
+          if (prefixIndex < startIdx) {
+             // no more expression. finalize with a literal.
+             expressions.add(new LiteralExpression(template.substring(startIdx)));
+             break;
+          }
+          // an inner expression was found - this is a composite
+          if (prefixIndex > startIdx) {
+             log.debug("Found a literal expression starting at %d".formatted(startIdx));
+             expressions.add(new LiteralExpression(template.substring(startIdx, prefixIndex)));
+          }
+          int afterPrefixIndex = prefixIndex + expressionPrefix.length();
+          int suffixIndex = skipToCorrectEndSuffix(expressionSuffix, template, afterPrefixIndex);
+          if (suffixIndex == -1) {
+            String noEndingSuffixlogString = "No ending suffix '%s' for expression starting at character %d: %s".formatted(expressionSuffix, prefixIndex, template.substring(prefixIndex));
+            log.info(noEndingSuffixlogString);
+             throw new ParseException(template, prefixIndex,
+               noEndingSuffixlogString);
+          }
+          String noExpressionDefinedWithinDelimiterErrorString = "No expression defined within delimiter '%s%s' at character %d".formatted(expressionPrefix, expressionSuffix, prefixIndex);
+          if (suffixIndex == afterPrefixIndex) {
+              log.info(noExpressionDefinedWithinDelimiterErrorString);
+              throw new ParseException(template, prefixIndex,
+                noExpressionDefinedWithinDelimiterErrorString);
+           }
+          String expr = template.substring(prefixIndex + expressionPrefix.length(), suffixIndex);
+          expr = expr.trim();
+          if (expr.isEmpty()) {
+             log.info(noExpressionDefinedWithinDelimiterErrorString);
+             throw new ParseException(template, prefixIndex,
+               noExpressionDefinedWithinDelimiterErrorString);
+          }
+          expressions.add(doParseExpression(expr, context));
+          startIdx = suffixIndex + expressionSuffix.length();
+          log.debug("Expression accumulated. Pursuing with index %d on %d".formatted(startIdx, template.length()));
       }
       return expressions.toArray(new Expression[0]);
    }
 
    /** Find for next suitable correct end suffix. Could be extended in future to manager recursivity... */
    private static int skipToCorrectEndSuffix(String expressionSuffix, String template, int afterPrefixIndex) {
-      int nextSuffix = template.indexOf(expressionSuffix, afterPrefixIndex);
-      if (nextSuffix == -1) {
-         return -1; // the suffix is missing
-      }
-      return nextSuffix;
+       // the suffix is missing
+       return template.indexOf(expressionSuffix, afterPrefixIndex);
    }
 
    /** Depending on expression string, try to guess if it's a Redirect, a Literal, a Function or a VariableReference expression. */
@@ -116,7 +114,7 @@ public class ExpressionParser {
       log.debug("hasRedirect:{}", hasRedirect);
 
       if (hasRedirect) {
-         String[] parts = expressionString.split("\\>");
+         String[] parts = expressionString.split(">");
          Expression[] expressions = new Expression[parts.length];
          for (int i=0; i < parts.length; i++) {
             expressions[i] = doParseSimpleExpression(parts[i].trim(), context);
@@ -142,50 +140,57 @@ public class ExpressionParser {
 
       // Check if it's a VariableReferenceExpression.
       if (hasVariable && (!hasArgs || varBeforeArgs)) {
-         log.debug("Found a variable reference expression " + expressionString);
-         String variableName = expressionString.substring(0, expressionString.indexOf('.'));
-         Object variable = context.lookupVariable(variableName);
-         String pathExpression = expressionString.substring(expressionString.indexOf('.') + 1);
-
-         if (variable != null) {
-            return new VariableReferenceExpression(variable, pathExpression);
-         }
-         log.warn("Variable with name " + variableName + " cannot be found into EvaluationContext. " +
-               "Returning empty literal expression");
-         return new LiteralExpression("");
+        return getVariableReferenceExpression(expressionString, context);
       }
 
       // Check if it's a ELFunctionExpression
       if (hasArgs || isPostmanFunction) {
-         log.debug("Found a function expression " + expressionString);
-
-         String functionName = null;
-         String[] args = new String[0];
-         // Checking for easier Postman compatibility notation first.
-         if (expressionString.startsWith("$")) {
-            functionName = expressionString.substring(1);
-         } else {
-            functionName = expressionString.substring(0, argsStart);
-            String argsString = expressionString.substring(argsStart + 1, argsEnd);
-            // Parse arguments if non empty string.
-            if (argsString.length() > 0) {
-               args = Arrays.stream(argsString.split(","))
-                     .map(arg -> arg.trim()).toArray(String[]::new);
-            }
-         }
-
-         Class<ELFunction> functionClazz = context.lookupFunction(functionName);
-         ELFunction function = null;
-         try {
-            function = functionClazz.newInstance();
-         } catch (Exception e) {
-            log.error("Exception while instantiating the functionClazz " + functionClazz, e);
-            return new LiteralExpression("");
-         }
-         return new FunctionExpression(function, args);
+        return getELFunctionExpression(expressionString, context, argsStart, argsEnd);
       }
 
       log.info("No ELFunction or complex VariableReference expressions found... Returning simple VariableReference");
       return new VariableReferenceExpression(expressionString);
    }
+
+  private static Expression getELFunctionExpression(String expressionString, EvaluationContext context, int argsStart, int argsEnd) {
+    log.debug("Found a function expression %s".formatted(expressionString));
+
+    String functionName;
+    String[] args = new String[0];
+    // Checking for easier Postman compatibility notation first.
+    if (expressionString.startsWith("$")) {
+       functionName = expressionString.substring(1);
+    } else {
+       functionName = expressionString.substring(0, argsStart);
+       String argsString = expressionString.substring(argsStart + 1, argsEnd);
+       // Parse arguments if non empty string.
+       if (!argsString.isEmpty()) {
+          args = Arrays.stream(argsString.split(","))
+                .map(String::trim).toArray(String[]::new);
+       }
+    }
+
+    Class<ELFunction> functionClazz = context.lookupFunction(functionName);
+    ELFunction function;
+    try {
+       function = functionClazz.getDeclaredConstructor().newInstance();
+    } catch (Exception e) {
+       log.error("Exception while instantiating the functionClazz %s".formatted(functionClazz), e);
+      return new LiteralExpression("");
+    }
+    return new FunctionExpression(function, args);
+  }
+
+  private static Expression getVariableReferenceExpression(String expressionString, EvaluationContext context) {
+    log.debug("Found a variable reference expression %s".formatted(expressionString));
+    String variableName = expressionString.substring(0, expressionString.indexOf('.'));
+    Object variable = context.lookupVariable(variableName);
+    String pathExpression = expressionString.substring(expressionString.indexOf('.') + 1);
+
+    if (variable != null) {
+      return new VariableReferenceExpression(variable, pathExpression);
+    }
+    log.warn("Variable with name %s cannot be found into EvaluationContext. Returning empty literal expression".formatted(variableName));
+    return new LiteralExpression("");
+  }
 }
