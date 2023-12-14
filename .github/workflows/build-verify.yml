@@ -116,3 +116,17 @@ jobs:
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile \
             --tag=quay.io/microcks/microcks-uber:$IMAGE_TAG .
+
+      - name: Build and push container for async minion in uber distro
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/distro/uber-async-minion
+          mvn -B -q -DskipTests package
+          #docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-user-async-minion:$IMAGE_TAG .
+          docker buildx build --push \
+            --platform=linux/amd64,linux/arm64 \
+            --builder=buildx-multi-arch \
+            --provenance=false \
+            --build-arg TAG=$IMAGE_TAG \
+            --file src/main/docker/Dockerfile.jvm \
+            --tag=quay.io/microcks/microcks-uber-async-minion:$IMAGE_TAG .
