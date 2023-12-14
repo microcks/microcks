@@ -23,7 +23,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * This is an implementation of {@code ServiceChangeEventChannel} that uses a Kafka topic
+ * This is an implementation of {@code ServiceChangeEventChannel} that uses a Kafka topic as
  * a destination recipient for {@code ServiceViewChangeEvent}.
  * @author laurent
  */
