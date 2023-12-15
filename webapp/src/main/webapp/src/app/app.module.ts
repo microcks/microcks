@@ -82,7 +82,7 @@ import { ArtifactUploaderDialogComponent } from './pages/importers/_components/u
 import { HubPageComponent } from './pages/hub/hub.page';
 import { HubPackagePageComponent } from './pages/hub/package/package.page';
 import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
-
+import { ExchangesTabsetComponent } from './pages/services/{serviceId}/_components/exchanges-tabset/exchanges-tabset.component';
 import json from 'highlight.js/lib/languages/json';
 import xml from 'highlight.js/lib/languages/xml';
 import yaml from 'highlight.js/lib/languages/yaml';
@@ -113,16 +113,17 @@ export function configLoader(configService: ConfigService) {
     TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, AddToCIDialogComponent, TestRunnerPageComponent,
     InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
     ArtifactUploaderDialogComponent, AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
-    GroupsManagementDialogComponent, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent
+    GroupsManagementDialogComponent, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent,
+    ExchangesTabsetComponent
   ],
   imports: [
     BrowserModule, BrowserAnimationsModule, FormsModule, AppRoutingModule, HttpClientModule,
     BsDatepickerModule.forRoot(), BsDropdownModule.forRoot(), ModalModule.forRoot(), TabsModule.forRoot(), TooltipModule.forRoot(),
     HighlightModule, FileUploadModule,
-    AboutModalModule, 
+    AboutModalModule,
     CardModule, DonutChartModule, SparklineChartModule,
     ListModule, PaginationModule, ToolbarModule,
-    WizardModule, ToastNotificationListModule, 
+    WizardModule, ToastNotificationListModule,
   ],
   providers: [
     ConfigService, {
