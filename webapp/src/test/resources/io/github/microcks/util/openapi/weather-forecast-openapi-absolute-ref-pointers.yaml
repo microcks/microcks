@@ -17,7 +17,7 @@ paths:
       operationId: GetForecast
       summary: Get forecast for region
       parameters:
-        - $ref: 'https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-common.yaml#parameters/region'
+        - $ref: 'https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-common.yaml#/parameters/region'
         - name: apiKey
           description: Client API key
           schema:

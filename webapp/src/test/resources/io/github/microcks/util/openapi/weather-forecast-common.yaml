@@ -4,7 +4,10 @@ info:
   type: object
 parameters:
   region:
-    type: string
+    name: region
+    description: The region to get forecast for
+    schema:
+      type: string
     in: path
     required: true
     examples:
