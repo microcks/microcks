@@ -1,0 +1,20 @@
+info:
+  title: Common objects to reuse
+  description: Common objects to reuse
+  type: object
+parameters:
+  region:
+    type: string
+    in: path
+    required: true
+    examples:
+      unknown:
+        value: other
+      north:
+        value: north
+      west:
+        value: west
+      east:
+        value: east
+      south:
+        value: south
