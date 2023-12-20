@@ -27,12 +27,11 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.util.AbstractJsonRepositoryImporter;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.ObjectMapperFactory;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
@@ -41,18 +40,12 @@ import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -69,15 +62,10 @@ import java.util.stream.Collectors;
  * file ; whether encoding into JSON or YAML documents.
  * @author laurent
  */
-public class OpenAPIImporter implements MockRepositoryImporter {
+public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(OpenAPIImporter.class);
-
-   private boolean isYaml = true;
-   private JsonNode spec;
-   private String specContent;
-   private ReferenceResolver referenceResolver;
 
    private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head", "patch", "trace");
 
@@ -92,39 +80,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
     * @throws IOException if project file cannot be found or read.
     */
    public OpenAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
-      this.referenceResolver = referenceResolver;
-      BufferedReader reader = null;
-      try {
-         // Analyse first lines of file content to guess repository type.
-         String line = null;
-         reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), StandardCharsets.UTF_8);
-         while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            // Check is we start with json object or array definition.
-            if (line.startsWith("{") || line.startsWith("[")) {
-               isYaml = false;
-               break;
-            }
-            else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")) {
-               isYaml = true;
-               break;
-            }
-         }
-
-         // Read spec bytes.
-         byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
-         specContent = new String(bytes, StandardCharsets.UTF_8);
-         // Convert them to Node using Jackson object mapper.
-         ObjectMapper mapper = isYaml ? ObjectMapperFactory.getYamlObjectMapper() : ObjectMapperFactory.getJsonObjectMapper();
-         spec = mapper.readTree(bytes);
-      } catch (Exception e) {
-         log.error("Exception while parsing OpenAPI specification file " + specificationFilePath, e);
-         throw new IOException("OpenAPI spec file parsing error");
-      } finally {
-         if (reader != null) {
-            reader.close();
-         }
-      }
+      super(specificationFilePath, referenceResolver);
    }
 
    @Override
@@ -133,17 +89,19 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
       // Build a new service.
       Service service = new Service();
-
-      service.setName(spec.path("info").path("title").asText());
-      service.setVersion(spec.path("info").path("version").asText());
+      service.setName(rootSpecification.path("info").path("title").asText());
+      service.setVersion(rootSpecification.path("info").path("version").asText());
       service.setType(ServiceType.REST);
 
       // Complete metadata if specified via extension.
-      if (spec.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
+      if (rootSpecification.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
          Metadata metadata = new Metadata();
-         MetadataExtractor.completeMetadata(metadata, spec.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         MetadataExtractor.completeMetadata(metadata, rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
          service.setMetadata(metadata);
       }
+
+      // Before extraction operations, we need to get and build external reference if we have a resolver.
+      initializeExternalReferences(service);
 
       // Then build its operations.
       service.setOperations(extractOperations());
@@ -158,7 +116,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
 
       // Build a suitable name.
       String name = service.getName() + "-" + service.getVersion();
-      if (isYaml) {
+      if (Boolean.TRUE.equals(isYaml)) {
          name += ".yaml";
       } else {
          name += ".json";
@@ -170,42 +128,22 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       resource.setType(ResourceType.OPEN_API_SPEC);
       results.add(resource);
 
-      // Browse all document references for external JSON schemas
-      // only if we have a resolver available.
-      if (referenceResolver != null) {
-
-         Set<String> references = new HashSet<>();
-         findAllExternalRefs(spec, references);
-
-         for (String ref : references) {
+      for (Resource externalResource : externalResources) {
+         // If a relative resource, replace with new name.
+         if (!externalResource.getPath().startsWith("http")) {
             try {
-               // Extract content using resolver.
-               String content = referenceResolver.getHttpReferenceContent(ref, "UTF-8");
-               String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
-
-               // Build a new resource from content. Use the escaped operation path.
-               Resource schemaResource = new Resource();
-               schemaResource.setName(IdBuilder.buildResourceFullName(service, resourceName));
-               schemaResource.setPath(ref);
-               schemaResource.setContent(content);
-               schemaResource.setType(ResourceType.JSON_SCHEMA);
-
-               if (!ref.startsWith("http")) {
-                  // If a relative resource, replace with new name.
-                  specContent = specContent.replace(ref, URLEncoder.encode(schemaResource.getName(), "UTF-8"));
-               }
-
-               results.add(schemaResource);
+               rootSpecificationContent = rootSpecificationContent.replace(externalResource.getPath(),
+                     URLEncoder.encode(externalResource.getName(), StandardCharsets.UTF_8.name()));
             } catch (IOException ioe) {
-               log.error("IOException while trying to resolve reference " + ref, ioe);
-               log.info("Ignoring the reference {} cause it could not be resolved", ref);
+               log.error("IOException while trying to resolve reference {}", externalResource.getPath(), ioe);
+               log.info("Ignoring the reference {} cause it could not be resolved", externalResource.getPath());
             }
          }
-         // Finally try to clean up resolved references and associated resources (files)
-         referenceResolver.cleanResolvedReferences();
       }
       // Set the content of main OpenAPI that may have been updated with dereferenced dependencies.
-      resource.setContent(specContent);
+      resource.setContent(rootSpecificationContent);
+      // Add the external resources that were imported during service discovery.
+      results.addAll(externalResources);
 
       return results;
    }
@@ -215,7 +153,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       Map<Request, Response> result = new HashMap<>();
 
       // Iterate on specification "paths" nodes.
-      Iterator<Entry<String, JsonNode>> paths = spec.path("paths").fields();
+      Iterator<Entry<String, JsonNode>> paths = rootSpecification.path("paths").fields();
       while (paths.hasNext()) {
          Entry<String, JsonNode> path = paths.next();
          String pathName = path.getKey();
@@ -272,7 +210,6 @@ public class OpenAPIImporter implements MockRepositoryImporter {
                            examplesNode = followRefIfAny(examplesNode);
                         }
 
-                        //Iterator<String> exampleNames = content.getValue().path(EXAMPLES_NODE).fieldNames();
                         Iterator<String> exampleNames = examplesNode.fieldNames();
                         while (exampleNames.hasNext()) {
                            String exampleName = exampleNames.next();
@@ -397,7 +334,7 @@ public class OpenAPIImporter implements MockRepositoryImporter {
       List<Operation> results = new ArrayList<>();
 
       // Iterate on specification "paths" nodes.
-      Iterator<Entry<String, JsonNode>> paths = spec.path("paths").fields();
+      Iterator<Entry<String, JsonNode>> paths = rootSpecification.path("paths").fields();
       while (paths.hasNext()) {
          Entry<String, JsonNode> path = paths.next();
          String pathName = path.getKey();
@@ -448,25 +385,6 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          }
       }
       return results;
-   }
-
-   /**
-    * Browser Json node to extract references and store them into externalRefs.
-    */
-   private void findAllExternalRefs(JsonNode node, Set<String> externalRefs) {
-      // If node as a $ref child, it's a stop condition.
-      if (node.has("$ref")) {
-         String ref = node.path("$ref").asText();
-         if (!ref.startsWith("#")) {
-            externalRefs.add(ref);
-         }
-      } else {
-         // Iterate on all other children.
-         Iterator<JsonNode> children = node.elements();
-         while (children.hasNext()) {
-            findAllExternalRefs(children.next(), externalRefs);
-         }
-      }
    }
 
    /**
@@ -593,11 +511,8 @@ public class OpenAPIImporter implements MockRepositoryImporter {
    /** Get the value of an example. This can be direct value field or those of followed $ref */
    private String getExampleValue(JsonNode example) {
       if (example.has(EXAMPLE_VALUE_NODE)) {
-         if (example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.ARRAY ||
-               example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.OBJECT ) {
-            return example.path(EXAMPLE_VALUE_NODE).toString();
-         }
-         return example.path(EXAMPLE_VALUE_NODE).asText();
+         JsonNode valueNode = followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
+         return getValueString(valueNode);
       }
       if (example.has("$ref")) {
          JsonNode component = followRefIfAny(example);
@@ -648,20 +563,6 @@ public class OpenAPIImporter implements MockRepositoryImporter {
          }
       }
       return false;
-   }
-
-   /** Follow the $ref if we have one. Otherwise return given node. */
-   private JsonNode followRefIfAny(JsonNode referencableNode) {
-      if (referencableNode.has("$ref")) {
-         String ref = referencableNode.path("$ref").asText();
-         return getNodeForRef(ref);
-      }
-      return referencableNode;
-   }
-
-   /** */
-   private JsonNode getNodeForRef(String reference) {
-      return spec.at(reference.substring(1));
    }
 
    /** Check variables parts presence into given url. */

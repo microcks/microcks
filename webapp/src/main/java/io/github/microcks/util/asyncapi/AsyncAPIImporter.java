@@ -27,12 +27,12 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.UnidirectionalEvent;
+import io.github.microcks.util.AbstractJsonRepositoryImporter;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.ObjectMapperFactory;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.metadata.MetadataExtensions;
@@ -45,13 +45,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -65,25 +60,15 @@ import java.util.stream.Collectors;
 
 /**
  * An implementation of MockRepositoryImporter that deals with AsyncAPI v2.0.x
- * specification
- * file ; whether encoding into JSON or YAML documents.
- * 
+ * specification file ; whether encoding into JSON or YAML documents.
  * @author laurent
  */
-public class AsyncAPIImporter implements MockRepositoryImporter {
+public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(AsyncAPIImporter.class);
 
-   private static final String[] MULTI_STRUCTURES = {
-         "allOf", "anyOf", "oneOf"
-   };
-
-   private boolean isYaml = true;
-   private JsonNode spec;
-   private String specContent;
-   private ReferenceResolver referenceResolver;
-
+   private static final String[] MULTI_STRUCTURES = {"allOf", "anyOf", "oneOf"};
    private static final List<String> VALID_VERBS = Arrays.asList("subscribe", "publish");
 
    private static final String BINDINGS = "bindings";
@@ -94,49 +79,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
    /**
     * Build a new importer.
-    * 
     * @param specificationFilePath The path to local AsyncAPI spec file
-    * @param referenceResolver     An optional resolver for references present into
-    *                              the AsyncAPI file
+    * @param referenceResolver     An optional resolver for references present into the AsyncAPI file
     * @throws IOException if project file cannot be found or read.
     */
    public AsyncAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
-      this.referenceResolver = referenceResolver;
-      try (
-            BufferedReader reader = Files.newBufferedReader(new File(specificationFilePath).toPath(),
-                  StandardCharsets.UTF_8);) {
-         // Analyse first lines of file content to guess repository type.
-         String line = null;
-         while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            // Check is we start with json object or array definition.
-            if (line.startsWith("{") || line.startsWith("[")) {
-               isYaml = false;
-               break;
-            } else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("asyncapi: ")) {
-               isYaml = true;
-               break;
-            }
-         }
-
-         // Read spec bytes.
-         byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
-         specContent = new String(bytes, StandardCharsets.UTF_8);
-         // Convert them to Node using Jackson object mapper.
-         ObjectMapper mapper = null;
-         if (isYaml) {
-            mapper = ObjectMapperFactory.getYamlObjectMapper();
-            // Jackson YAML parser can't deal with any quotes around "$ref" and double quotes around the path.
-            specContent = specContent.replaceAll("[\\\"']?\\$ref[\\\"']?:\\s*[\\\"'](#.*)[\\\"']", "\\$ref: '$1'")
-                  .replaceAll("[\\\"']?pattern[\\\"']?:\\s*[\\\"'](.*)[\\\"']", "pattern: $1");
-         } else {
-            mapper = ObjectMapperFactory.getJsonObjectMapper();
-         }
-         spec = mapper.readTree(specContent.getBytes(StandardCharsets.UTF_8));
-      } catch (Exception e) {
-         log.error("Exception while parsing AsyncAPI specification file " + specificationFilePath, e);
-         throw new IOException("AsyncAPI spec file parsing error");
-      }
+      super(specificationFilePath, referenceResolver);
    }
 
    @Override
@@ -146,14 +94,14 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       // Build a new service.
       Service service = new Service();
 
-      service.setName(spec.path("info").path("title").asText());
-      service.setVersion(spec.path("info").path("version").asText());
+      service.setName(rootSpecification.path("info").path("title").asText());
+      service.setVersion(rootSpecification.path("info").path("version").asText());
       service.setType(ServiceType.EVENT);
 
       // Complete metadata if specified via extension.
-      if (spec.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
+      if (rootSpecification.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
          Metadata metadata = new Metadata();
-         MetadataExtractor.completeMetadata(metadata, spec.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         MetadataExtractor.completeMetadata(metadata, rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
          service.setMetadata(metadata);
       }
 
@@ -171,7 +119,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
       // Build a suitable name.
       String name = service.getName() + "-" + service.getVersion();
-      if (isYaml) {
+      if (Boolean.TRUE.equals(isYaml)) {
          name += ".yaml";
       } else {
          name += ".json";
@@ -191,7 +139,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
             String messageNamePtr = "/channels/" + operationElements[1].replace("/", "~1");
             messageNamePtr += "/" + operationElements[0].toLowerCase() + "/message";
 
-            JsonNode messageNode = spec.at(messageNamePtr);
+            JsonNode messageNode = rootSpecification.at(messageNamePtr);
             if (messageNode != null) {
                // If it's a $ref, then navigate to it.
                messageNode = followRefIfAny(messageNode);
@@ -250,7 +198,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
                               if (!ref.startsWith("http")) {
                                  // If a relative resource, replace with new name.
-                                 specContent = specContent.replace(ref,
+                                 rootSpecificationContent = rootSpecificationContent.replace(ref,
                                        URLEncoder.encode(schemaResource.getName(), "UTF-8"));
                               }
 
@@ -278,7 +226,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       }
       // Set the content of main AsyncAPI that may have been updated with dereferenced
       // dependencies.
-      resource.setContent(specContent);
+      resource.setContent(rootSpecificationContent);
 
       return results;
    }
@@ -290,12 +238,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
 
       // Retrieve default content type, defaulting to application/json.
       String defaultContentType = "application/json";
-      if (spec.has("defaultContentType")) {
-         defaultContentType = spec.get("defaultContentType").asText("application/json");
+      if (rootSpecification.has("defaultContentType")) {
+         defaultContentType = rootSpecification.get("defaultContentType").asText("application/json");
       }
 
       // Iterate on specification "channels" nodes.
-      Iterator<Entry<String, JsonNode>> channels = spec.path("channels").fields();
+      Iterator<Entry<String, JsonNode>> channels = rootSpecification.path("channels").fields();
       while (channels.hasNext()) {
          Entry<String, JsonNode> channel = channels.next();
          String channelName = channel.getKey();
@@ -369,7 +317,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       List<Operation> results = new ArrayList<>();
 
       // Iterate on specification "channels" nodes.
-      Iterator<Entry<String, JsonNode>> channels = spec.path("channels").fields();
+      Iterator<Entry<String, JsonNode>> channels = rootSpecification.path("channels").fields();
       while (channels.hasNext()) {
          Entry<String, JsonNode> channel = channels.next();
          String channelName = channel.getKey();
@@ -539,9 +487,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       return results;
    }
 
-   /**
-    * Browse Json node to extract references and store them into externalRefs.
-    */
+   /** Browse Json node to extract references and store them into externalRefs. */
    private void findAllExternalRefs(JsonNode node, Set<String> externalRefs) {
       // If node as a $ref child, it's a stop condition.
       if (node.has("$ref")) {
@@ -675,16 +621,12 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
     */
    private String getExamplePayload(JsonNode example) {
       if (example.has(EXAMPLE_PAYLOAD_NODE)) {
-         if (example.path(EXAMPLE_PAYLOAD_NODE).getNodeType() == JsonNodeType.ARRAY ||
-               example.path(EXAMPLE_PAYLOAD_NODE).getNodeType() == JsonNodeType.OBJECT ) {
-            return example.path(EXAMPLE_PAYLOAD_NODE).toString();
-         }
-         return example.path(EXAMPLE_PAYLOAD_NODE).asText();
+         return getValueString(example.path(EXAMPLE_PAYLOAD_NODE));
       }
       if (example.has("$payloadRef")) {
          // $ref: '#/components/examples/param_laurent'
          String ref = example.path("$payloadRef").asText();
-         JsonNode component = spec.at(ref.substring(1));
+         JsonNode component = rootSpecification.at(ref.substring(1));
          return getExamplePayload(component);
       }
       return null;
@@ -741,27 +683,14 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
     */
    private String getExampleValue(JsonNode example) {
       if (example.has(EXAMPLE_VALUE_NODE)) {
-         if (example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.ARRAY ||
-               example.path(EXAMPLE_VALUE_NODE).getNodeType() == JsonNodeType.OBJECT) {
-            return example.path(EXAMPLE_VALUE_NODE).toString();
-         }
-         return example.path(EXAMPLE_VALUE_NODE).asText();
+         JsonNode valueNode = followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
+         return getValueString(valueNode);
       }
       if (example.has("$ref")) {
-         // $ref: '#/components/examples/param_laurent'
          JsonNode component = followRefIfAny(example);
          return getExampleValue(component);
       }
       return null;
-   }
-
-   /** */
-   private JsonNode followRefIfAny(JsonNode referencableNode) {
-      if (referencableNode.has("$ref")) {
-         String ref = referencableNode.path("$ref").asText();
-         return spec.at(ref.substring(1));
-      }
-      return referencableNode;
    }
 
    /** */
@@ -770,7 +699,7 @@ public class AsyncAPIImporter implements MockRepositoryImporter {
       if (referencableNode.has("$ref")) {
          // Extract single reference.
          String ref = referencableNode.path("$ref").asText();
-         results.add(spec.at(ref.substring(1)));
+         results.add(rootSpecification.at(ref.substring(1)));
       } else {
          // Check for multi-structures.
          for (String structure : MULTI_STRUCTURES) {

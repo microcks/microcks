@@ -61,9 +61,9 @@ paths:
                     weather: rainy
                     visibility: 300
                 east:
-                  $ref: '#components/examples/eastExample'
+                  $ref: '#/components/examples/eastExample'
                 south:
-                  $ref: '#components/examples/southExample'
+                  $ref: '#/components/examples/southExample'
         "404":
           description: Region is unknown
           content:
@@ -76,7 +76,8 @@ paths:
 components:
   examples:
     eastExample:
-      externalValue: './weather-examples.json#/0'
+      value:
+        $ref: './weather-examples.json#/0'
     southExample:
       value:
         $ref: './weather-examples.json#/1'
