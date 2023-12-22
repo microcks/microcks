@@ -92,7 +92,7 @@
             </div>
             <div class="col-xs-5">
               <dt>Conformance score</dt>
-              <span class="conformance-score">{{ conformanceMetric.currentScore || '0.0' }}</span>%
+              <span class="conformance-score">{{ conformanceMetric.currentScore | number: '.1-2' || '0.0' }}</span>%
               <i class="fa fa-arrow-up conformance-trend"
                 [class.fa-arrow-right]="conformanceMetric.latestTrend === 'STABLE' || conformanceMetric.latestTrend === null"
                 [class.fa-arrow-up]="conformanceMetric.latestTrend === 'UP' || conformanceMetric.latestTrend === 'LOW_UP'"
