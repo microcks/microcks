@@ -17,6 +17,7 @@ package io.github.microcks.config;
 
 import io.github.microcks.web.filter.CorsFilter;
 import io.github.microcks.web.filter.DynamicOriginCorsFilter;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,45 +35,44 @@ import java.util.Arrays;
 import java.util.EnumSet;
 
 /**
+ * Spring Web configuration class.
  * @author laurent
  */
 @Configuration
 public class WebConfiguration implements ServletContextInitializer {
 
-  /**
-   * A simple logger for diagnostic messages.
-   */
-  private static Logger log = LoggerFactory.getLogger(WebConfiguration.class);
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(WebConfiguration.class);
 
-  @Autowired
-  private Environment env;
+   @Autowired
+   private Environment env;
 
-  @Value("${mocks.rest.enable-cors-policy}")
-  private final Boolean enableCorsPolicy = null;
-  @Value("${mocks.rest.cors.allowedOrigins}")
-  private String corsAllowedOrigins;
-  @Value("${mocks.rest.cors.allowCredentials}")
-  private Boolean corsAllowCredentials;
+   @Value("${mocks.rest.enable-cors-policy}")
+   private Boolean enableCorsPolicy = null;
+   @Value("${mocks.rest.cors.allowedOrigins}")
+   private String corsAllowedOrigins;
+   @Value("${mocks.rest.cors.allowCredentials}")
+   private Boolean corsAllowCredentials;
 
 
-  @Override
-  public void onStartup(ServletContext servletContext) throws ServletException {
-    log.info("Starting web application configuration, using profiles: {}", Arrays.toString(env.getActiveProfiles()));
-    EnumSet<DispatcherType> disps = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD, DispatcherType.ASYNC);
-    initCORSFilter(servletContext, disps);
-    log.info("Web application fully configured");
-  }
+   @Override
+   public void onStartup(ServletContext servletContext) throws ServletException {
+      log.info("Starting web application configuration, using profiles: {}", Arrays.toString(env.getActiveProfiles()));
+      EnumSet<DispatcherType> disps = EnumSet.of(DispatcherType.REQUEST, DispatcherType.FORWARD, DispatcherType.ASYNC);
+      initCORSFilter(servletContext, disps);
+      log.info("Web application fully configured");
+   }
 
 
-   /** */
+   /** Configure the CORS filter on API endpoints as well as on Mock endpoints. */
    private void initCORSFilter(ServletContext servletContext, EnumSet<DispatcherType> disps) {
       FilterRegistration.Dynamic corsFilter = servletContext.addFilter("corsFilter", new CorsFilter());
       corsFilter.addMappingForUrlPatterns(disps, true, "/api/*");
       corsFilter.addMappingForUrlPatterns(disps, true, "/dynarest/*");
       corsFilter.setAsyncSupported(true);
-     if (enableCorsPolicy) {
-       FilterRegistration.Dynamic corsFilter2 = servletContext.addFilter("dynamicOriginCorsFilter", new DynamicOriginCorsFilter(corsAllowedOrigins, corsAllowCredentials));
-       corsFilter2.addMappingForUrlPatterns(disps, true, "/rest/*");
-     }
+      if (Boolean.TRUE.equals(enableCorsPolicy)) {
+         FilterRegistration.Dynamic dynamicOriginCorsFilter = servletContext.addFilter("dynamicOriginCorsFilter", new DynamicOriginCorsFilter(corsAllowedOrigins, corsAllowCredentials));
+         dynamicOriginCorsFilter.addMappingForUrlPatterns(disps, true, "/rest/*");
+      }
    }
 }
