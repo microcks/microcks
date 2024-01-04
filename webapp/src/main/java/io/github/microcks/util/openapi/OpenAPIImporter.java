@@ -69,6 +69,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head", "patch", "trace");
 
+   private static final String PARAMETERS_NODE = "parameters";
+   private static final String PARAMETERS_QUERY_VALUE = "query";
    private static final String CONTENT_NODE = "content";
    private static final String EXAMPLES_NODE = "examples";
    private static final String EXAMPLE_VALUE_NODE = "value";
@@ -172,7 +174,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                // Find examples fragments defined at the verb level.
                Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(verb.getValue(), "path");
                pathParametersByExample.putAll(pathPathParametersByExample);
-               Map<String, Map<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue(), "query");
+               Map<String, Map<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue(), PARAMETERS_QUERY_VALUE);
                Map<String, Map<String, String>> headerParametersByExample = extractParametersByExample(verb.getValue(), "header");
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
 
@@ -361,11 +363,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
                // Deal with dispatcher stuffs if needed.
                if (operation.getDispatcher() == null) {
-                  if (operationHasParameters(verb.getValue(), "query") && urlHasParts(pathName)) {
+                  if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE) && urlHasParts(pathName)) {
                      operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName)
                            + " ?? " + extractOperationParams(verb.getValue()));
                      operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
-                  } else if (operationHasParameters(verb.getValue(), "query")) {
+                  } else if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE)) {
                      operation.setDispatcherRules(extractOperationParams(verb.getValue()));
                      operation.setDispatcher(DispatchStyles.URI_PARAMS);
                   } else if (urlHasParts(pathName)) {
@@ -395,7 +397,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    private Map<String, Map<String, String>> extractParametersByExample(JsonNode node, String parameterType) {
       Map<String, Map<String, String>> results = new HashMap<>();
 
-      Iterator<JsonNode> parameters = node.path("parameters").elements();
+      Iterator<JsonNode> parameters = node.path(PARAMETERS_NODE).elements();
       while (parameters.hasNext()) {
          JsonNode parameter = followRefIfAny(parameters.next());
          String parameterName = parameter.path("name").asText();
@@ -533,7 +535,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2)*/
    private String extractOperationParams(JsonNode operation) {
       StringBuilder params = new StringBuilder();
-      Iterator<JsonNode> parameters = operation.path("parameters").elements();
+      Iterator<JsonNode> parameters = operation.path(PARAMETERS_NODE).elements();
       while (parameters.hasNext()) {
          JsonNode parameter = followRefIfAny(parameters.next());
 
@@ -550,10 +552,10 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    /** Check parameters presence into given operation node. */
    private boolean operationHasParameters(JsonNode operation, String parameterType) {
-      if (!operation.has("parameters")) {
+      if (!operation.has(PARAMETERS_NODE)) {
          return false;
       }
-      Iterator<JsonNode> parameters = operation.path("parameters").elements();
+      Iterator<JsonNode> parameters = operation.path(PARAMETERS_NODE).elements();
       while (parameters.hasNext()) {
          JsonNode parameter = followRefIfAny(parameters.next());
 

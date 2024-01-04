@@ -46,7 +46,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'weather-forecast-schema.json'
+                $ref: './weather-forecast-schema.yaml'
               examples:
                 $ref: './weather-forecast-examples.yaml'
         "404":

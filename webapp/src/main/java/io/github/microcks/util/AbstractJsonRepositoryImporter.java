@@ -61,10 +61,10 @@ public abstract class AbstractJsonRepositoryImporter {
    protected Map<Resource, JsonNode> externalResourcesContent = new HashMap<>();
 
    /**
-    *
-    * @param specificationFilePath
-    * @param referenceResolver
-    * @throws IOException
+    * Build a new importer using the path of specification file and an optional reference resolver.
+    * @param specificationFilePath The path to local JSON spec file
+    * @param referenceResolver An optional resolver for references present into the OpenAPI file
+    * @throws IOException if JSON spec file cannot be found or read.
     */
    protected AbstractJsonRepositoryImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
       this.referenceResolver = referenceResolver;
@@ -78,7 +78,8 @@ public abstract class AbstractJsonRepositoryImporter {
             // Check is we start with json object or array definition.
             if (line.startsWith("{") || line.startsWith("[")) {
                isYaml = false;
-            }  else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")) {
+            }  else if (line.startsWith("---") || line.startsWith("-")
+                  || line.startsWith("openapi: ") || line.startsWith("asyncapi: ")) {
                isYaml = true;
             }
          }
@@ -88,15 +89,7 @@ public abstract class AbstractJsonRepositoryImporter {
          rootSpecificationContent = new String(bytes, StandardCharsets.UTF_8);
 
          // Convert them to Node using Jackson object mapper.
-         ObjectMapper mapper = null;
-         if (isYaml) {
-            mapper = ObjectMapperFactory.getYamlObjectMapper();
-            // Jackson YAML parser can't deal with any quotes around "$ref" and double quotes around the path.
-            rootSpecificationContent = rootSpecificationContent.replaceAll("[\\\"']?\\$ref[\\\"']?:\\s*[\\\"'](#.*)[\\\"']", "\\$ref: '$1'")
-                  .replaceAll("[\\\"']?pattern[\\\"']?:\\s*[\\\"'](.*)[\\\"']", "pattern: $1");
-         } else {
-            mapper = ObjectMapperFactory.getJsonObjectMapper();
-         }
+         ObjectMapper mapper = getObjectMapper(isYaml);
          rootSpecification = mapper.readTree(rootSpecificationContent.getBytes(StandardCharsets.UTF_8));
       } catch (Exception e) {
          log.error("Exception while parsing JSON specification file " + specificationFilePath, e);
@@ -109,7 +102,9 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /**
-    *
+    * Given a service, initialize all external references that may be found via
+    * `$ref` nodes pointing to absolute or relative pointers. This has a the side effect
+    * to initialize the `externalResources` member.
     * @param service
     */
    protected void initializeExternalReferences(Service service) {
@@ -117,7 +112,8 @@ public abstract class AbstractJsonRepositoryImporter {
          Set<String> references = new HashSet<>();
          findAllExternalRefs(rootSpecification, references);
 
-         for (String ref : references) {
+         while (!references.isEmpty()) {
+            String ref = references.stream().findFirst().orElseThrow();
             try {
                // Extract content using resolver.
                String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8.name());
@@ -130,6 +126,10 @@ public abstract class AbstractJsonRepositoryImporter {
                schemaResource.setContent(content);
                schemaResource.setType(ResourceType.JSON_SCHEMA);
 
+               ObjectMapper mapper = getObjectMapper(!ref.endsWith(".json"));
+               JsonNode resourceRootSpecification = mapper.readTree(content);
+               findAllExternalRefs(resourceRootSpecification, references);
+
                if (!ref.startsWith("http")) {
                   // If a relative resource, replace with new name.
                   rootSpecificationContent = rootSpecificationContent.replace(ref, URLEncoder.encode(schemaResource.getName(), StandardCharsets.UTF_8.name()));
@@ -139,6 +139,8 @@ public abstract class AbstractJsonRepositoryImporter {
                log.error("IOException while trying to resolve reference {}", ref, ioe);
                log.info("Ignoring the reference {} cause it could not be resolved", ref);
             }
+            // Remove ref as it has been processed.
+            references.remove(ref);
          }
          // Finally try to clean up resolved references and associated resources (files)
          referenceResolver.cleanResolvedReferences();
@@ -162,6 +164,11 @@ public abstract class AbstractJsonRepositoryImporter {
       }
       // Else get raw representation.
       return valueNode.asText();
+   }
+
+   /** Get appropriate Yaml or Json object mapper. */
+   private ObjectMapper getObjectMapper(boolean isYaml) {
+      return isYaml ? ObjectMapperFactory.getYamlObjectMapper() : ObjectMapperFactory.getJsonObjectMapper();
    }
 
    /** Browse Json node to extract references and store them into externalRefs. */
