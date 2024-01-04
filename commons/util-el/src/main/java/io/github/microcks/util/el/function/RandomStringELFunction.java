@@ -24,30 +24,25 @@ import java.util.Random;
  * You may specify string length as first argument. Default length is 32.
  * @author laurent
  */
-public class RandomStringELFunction implements ELFunction {
+public class RandomStringELFunction extends AbstractRandomELFunction {
 
    public static final int DEFAULT_LENGTH = 32;
 
    private static final int LEFT_LIMIT = 48; // numeral '0'
    private static final int RIGHT_LIMIT = 122; // letter 'z'
 
-   private Random generator = new Random();
-
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
-      if (args != null) {
-         switch (args.length) {
-            case 1:
-               int maxLength = DEFAULT_LENGTH;
-               try {
-                  maxLength = Integer.parseInt(args[0]);
-               } catch (NumberFormatException nfe) {
-                  // Ignore, we'll stick to the default.
-               }
-               return generateString(generator, maxLength);
+      if (args != null && args.length == 1) {
+         int maxLength = DEFAULT_LENGTH;
+         try {
+            maxLength = Integer.parseInt(args[0]);
+         } catch (NumberFormatException nfe) {
+            // Ignore, we'll stick to the default.
          }
+         return generateString(getRandom(), maxLength);
       }
-      return generateString(generator, DEFAULT_LENGTH);
+      return generateString(getRandom(), DEFAULT_LENGTH);
    }
 
    private String generateString(Random random, int length) {

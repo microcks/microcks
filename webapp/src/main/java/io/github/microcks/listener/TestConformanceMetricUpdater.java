@@ -18,8 +18,8 @@ package io.github.microcks.listener;
 import io.github.microcks.event.TestCompletionEvent;
 import io.github.microcks.service.MetricsService;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
@@ -32,8 +32,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class TestConformanceMetricUpdater implements ApplicationListener<TestCompletionEvent> {
 
-   /** A commons logger for diagnostic messages. */
-   private static Log log = LogFactory.getLog(TestConformanceMetricUpdater.class);
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(TestConformanceMetricUpdater.class);
 
    @Autowired
    private MetricsService metricsService;
@@ -41,7 +41,7 @@ public class TestConformanceMetricUpdater implements ApplicationListener<TestCom
    @Override
    @Async
    public void onApplicationEvent(TestCompletionEvent event) {
-      log.debug("Received a TestCompletionEvent on " + event.getResult().getId());
+      log.debug("Received a TestCompletionEvent on {}", event.getResult().getId());
       metricsService.updateTestConformanceMetricOnTestResult(event.getResult());
       log.debug("Processing of TestCompletionEvent done !");
    }

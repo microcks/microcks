@@ -15,16 +15,23 @@
  */
 package io.github.microcks.util.el.function;
 
-import io.github.microcks.util.el.EvaluationContext;
+import java.security.SecureRandom;
+import java.util.Random;
 
 /**
- * Implementation of ELFunction that generates a random boolean.
+ * This is a base class for random data generator that holds a secure random generator.
  * @author laurent
  */
-public class RandomBooleanELFunction extends AbstractRandomELFunction {
+public abstract class AbstractRandomELFunction implements ELFunction {
 
-   @Override
-   public String evaluate(EvaluationContext evaluationContext, String... args) {
-      return String.valueOf(getRandom().nextBoolean());
+   private static Random random = new SecureRandom();
+
+   /** Default protected constructor to hide the implicit one. */
+   protected AbstractRandomELFunction() {
+   }
+
+   /** Get a random generator. */
+   protected static Random getRandom() {
+      return random;
    }
 }

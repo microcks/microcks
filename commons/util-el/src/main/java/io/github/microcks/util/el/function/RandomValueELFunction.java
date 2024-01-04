@@ -22,15 +22,13 @@ import java.util.Random;
  * Implementation of ELFunction that pick a value among random ones.
  * @author laurent
  */
-public class RandomValueELFunction implements ELFunction {
-
-   private Random random = new Random();
+public class RandomValueELFunction extends AbstractRandomELFunction {
 
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
       if (args == null || args.length == 0) {
          return "";
       }
-      return args[random.nextInt(args.length)];
+      return args[getRandom().nextInt(args.length)];
    }
 }

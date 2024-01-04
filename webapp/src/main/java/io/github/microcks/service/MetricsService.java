@@ -107,7 +107,7 @@ public class MetricsService {
 
    /**
     * Update the test conformance score when a test is completed.
-    * 
+    *
     * @param testResult The newly completed Test for a Service.
     */
    public void updateTestConformanceMetricOnTestResult(TestResult testResult) {

@@ -76,6 +76,8 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
    private static final String EXAMPLES_NODE = "examples";
    private static final String EXAMPLE_VALUE_NODE = "value";
    private static final String EXAMPLE_PAYLOAD_NODE = "payload";
+   private static final String QUEUE_VALUE = "queue";
+   private static final String TOPIC_VALUE = "topic";
 
    /**
     * Build a new importer.
@@ -152,7 +154,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                   if (payloadNode.has("$ref")) {
 
                      Set<String> references = new HashSet<>();
-                     findAllExternalRefs(payloadNode, references);
+                     findAllExternalRefsAsyncAPI(payloadNode, references);
 
                      for (String ref : references) {
                         // We may have already resolved it if referenced more than once.
@@ -368,9 +370,9 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                            b = retrieveOrInitOperationBinding(operation, BindingType.AMQP);
                            if (binding.has("is")) {
                               String is = binding.path("is").asText();
-                              if ("queue".equals(is)) {
-                                 b.setDestinationType("queue");
-                                 JsonNode queue = binding.get("queue");
+                              if (QUEUE_VALUE.equals(is)) {
+                                 b.setDestinationType(QUEUE_VALUE);
+                                 JsonNode queue = binding.get(QUEUE_VALUE);
                                  b.setDestinationName(queue.get("name").asText());
                               } else if ("routingKey".equals(is)) {
                                  JsonNode exchange = binding.get("exchange");
@@ -380,8 +382,8 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                            break;
                         case "googlepubsub":
                            b = retrieveOrInitOperationBinding(operation, BindingType.GOOGLEPUBSUB);
-                           if (binding.has("topic")) {
-                              b.setDestinationName(binding.get("topic").asText());
+                           if (binding.has(TOPIC_VALUE)) {
+                              b.setDestinationName(binding.get(TOPIC_VALUE).asText());
                            }
                            if (binding.has("messageRetentionDuration")) {
                               b.setPersistent(true);
@@ -423,15 +425,15 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                            break;
                         case "nats":
                            b = retrieveOrInitOperationBinding(operation, BindingType.NATS);
-                           if (binding.has("queue")) {
-                              b.setDestinationName(binding.path("queue").asText());
+                           if (binding.has(QUEUE_VALUE)) {
+                              b.setDestinationName(binding.path(QUEUE_VALUE).asText());
                            }
                            break;
                         case "sqs":
                            b = retrieveOrInitOperationBinding(operation, BindingType.SQS);
-                           if (binding.has("queue")) {
-                              if (binding.get("queue").has("name")) {
-                                 b.setDestinationName(binding.get("queue").get("name").asText());
+                           if (binding.has(QUEUE_VALUE)) {
+                              if (binding.get(QUEUE_VALUE).has("name")) {
+                                 b.setDestinationName(binding.get(QUEUE_VALUE).get("name").asText());
                               }
                               if (binding.has("messageRetentionPeriod")) {
                                  b.setPersistent(true);
@@ -440,10 +442,8 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                            break;
                         case "sns":
                            b = retrieveOrInitOperationBinding(operation, BindingType.SNS);
-                           if (binding.has("topic")) {
-                              if (binding.get("topic").has("name")) {
-                                 b.setDestinationName(binding.get("topic").get("name").asText());
-                              }
+                           if (binding.has(TOPIC_VALUE) && binding.get(TOPIC_VALUE).has("name")) {
+                              b.setDestinationName(binding.get(TOPIC_VALUE).get("name").asText());
                            }
                            break;
                         default:
@@ -488,20 +488,20 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
    }
 
    /** Browse Json node to extract references and store them into externalRefs. */
-   private void findAllExternalRefs(JsonNode node, Set<String> externalRefs) {
+   private void findAllExternalRefsAsyncAPI(JsonNode node, Set<String> externalRefs) {
       // If node as a $ref child, it's a stop condition.
       if (node.has("$ref")) {
          String ref = node.path("$ref").asText();
          if (!ref.startsWith("#")) {
             externalRefs.add(ref);
          } else {
-            findAllExternalRefs(followRefIfAny(node), externalRefs);
+            findAllExternalRefsAsyncAPI(followRefIfAny(node), externalRefs);
          }
       } else {
          // Iterate on all other children.
          Iterator<JsonNode> children = node.elements();
          while (children.hasNext()) {
-            findAllExternalRefs(children.next(), externalRefs);
+            findAllExternalRefsAsyncAPI(children.next(), externalRefs);
          }
       }
    }

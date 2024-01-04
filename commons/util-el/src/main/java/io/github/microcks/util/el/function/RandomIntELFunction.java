@@ -27,9 +27,7 @@ import java.util.Random;
  * an integer in designated intervfal is generated.
  * @author laurent
  */
-public class RandomIntELFunction implements ELFunction {
-   
-   private Random generator = new Random();
+public class RandomIntELFunction extends AbstractRandomELFunction {
 
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
@@ -42,7 +40,7 @@ public class RandomIntELFunction implements ELFunction {
                } catch (NumberFormatException nfe) {
                   // Ignore, we'll stick to integer max value.
                }
-               return String.valueOf(generator.nextInt(maxValue));
+               return String.valueOf(getRandom().nextInt(maxValue));
             case 2:
                int minValue = 0;
                maxValue = Integer.MAX_VALUE;
@@ -52,11 +50,11 @@ public class RandomIntELFunction implements ELFunction {
                } catch (NumberFormatException nfe) {
                   // Ignore, we'll stick to the defaults.
                }
-               return String.valueOf(generator.nextInt(maxValue - minValue) + minValue);
+               return String.valueOf(getRandom().nextInt(maxValue - minValue) + minValue);
             default:
-               return String.valueOf(generator.nextInt());
+               return String.valueOf(getRandom().nextInt());
          }
       }
-      return String.valueOf(generator.nextInt());
+      return String.valueOf(getRandom().nextInt());
    }
 }
