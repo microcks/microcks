@@ -1,0 +1,12 @@
+north:
+  value:
+    $ref: './weather-forecast-common-regions.yaml#/regions/north'
+west:
+  value:
+    $ref: './weather-forecast-common-regions.yaml#/regions/west'
+east:
+  value:
+    $ref: './weather-forecast-common-regions.yaml#/regions/east'
+south:
+  value:
+    $ref: './weather-forecast-common-regions.yaml#/regions/south'
