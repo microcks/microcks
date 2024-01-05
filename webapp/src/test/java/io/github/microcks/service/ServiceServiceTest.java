@@ -140,11 +140,6 @@ public class ServiceServiceTest {
       // Inspect and check resources.
       List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
       assertEquals(10, resources.size());
-      for (Resource resource : resources) {
-         System.err.println(resource.getName() + " - " + resource.getSourceArtifact() + " - " + resource.getPath());
-         System.err.println(resource.getContent());
-         System.err.println("  ==============================  ");
-      }
 
       // Now inspect operations.
       assertEquals(1, importedSvc.getOperations().size());
