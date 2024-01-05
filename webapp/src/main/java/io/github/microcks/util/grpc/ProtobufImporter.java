@@ -88,7 +88,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
       try {
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(protoFilePath));
-         specContent = new String(bytes, Charset.forName("UTF-8"));
+         specContent = new String(bytes, StandardCharsets.UTF_8);
 
          // Resolve and retrieve imports if any.
          List<File> resolvedImportsLocalFiles = null;
@@ -105,7 +105,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
          // Cleanup locally downloaded dependencies needed by protoc.
          if (resolvedImportsLocalFiles != null) {
-            resolvedImportsLocalFiles.forEach(f -> f.delete());
+            resolvedImportsLocalFiles.forEach(File::delete);
          }
       } catch (Exception e) {
          log.error("Exception while parsing Protobuf schema file " + protoFilePath, e);
@@ -155,7 +155,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
       try {
          byte[] binaryPB = Files.readAllBytes(Path.of(protoDirectory, protoFileName + BINARY_DESCRIPTOR_EXT));
-         String base64PB = new String(Base64.getEncoder().encode(binaryPB), "UTF-8");
+         String base64PB = new String(Base64.getEncoder().encode(binaryPB), StandardCharsets.UTF_8);
 
          Resource descResource = new Resource();
          descResource.setName(service.getName() + "-" + service.getVersion() + BINARY_DESCRIPTOR_EXT);
@@ -175,7 +175,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
             protoResource.setType(ResourceType.PROTOBUF_SCHEMA);
             protoResource.setPath(p);
             try {
-               protoResource.setContent(Files.readString(f.toPath(), Charset.forName("UTF-8")));
+               protoResource.setContent(Files.readString(f.toPath(), StandardCharsets.UTF_8));
             } catch (IOException ioe) {
                log.error("", ioe);
             }
@@ -198,7 +198,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
    private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles) {
       String line = null;
       try {
-         BufferedReader reader = Files.newBufferedReader(protoFilePath, Charset.forName("UTF-8"));
+         BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8);
          while ((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.startsWith("import ")) {
@@ -221,7 +221,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
                   Path importPath = protoFilePath.getParent().resolve(importStr);
                   if (!Files.exists(importPath)) {
                      // Not there, so resolve it remotely and write to local file for protoc.
-                     String importContent = referenceResolver.getHttpReferenceContent(importStr, "UTF-8");
+                     String importContent = referenceResolver.getHttpReferenceContent(importStr, StandardCharsets.UTF_8);
                      try {
                         Files.createDirectories(importPath.getParent());
                         Files.createFile(importPath);

@@ -15,6 +15,9 @@
  */
 package io.github.microcks.util;
 
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -75,10 +78,10 @@ public class GitLabReferenceURLBuilder extends SimpleReferenceURLBuilder {
 
       // Now do a simple reference url build. We need to ensure that there's a root
       // by adding a starting /. We'll remove it after the build when recomposing result.
-      String pathFragment = super.buildRemoteURL("/" + basePath.replaceAll(ENCODED_FILE_SEPARATOR, "/"), referencePath);
+      String pathFragment = super.buildRemoteURL("/" + URLDecoder.decode(basePath, StandardCharsets.UTF_8), referencePath);
 
       return rootURL + "/"
-            + pathFragment.substring(1).replaceAll("/", ENCODED_FILE_SEPARATOR) + "/"
+            + URLEncoder.encode(pathFragment.substring(1), StandardCharsets.UTF_8) + "/"
             + formatOptions;
    }
 }

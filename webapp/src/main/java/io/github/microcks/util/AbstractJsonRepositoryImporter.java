@@ -109,14 +109,17 @@ public abstract class AbstractJsonRepositoryImporter {
     */
    protected void initializeExternalReferences(Service service) {
       if (referenceResolver != null) {
-         Set<String> references = new HashSet<>();
-         findAllExternalRefs(rootSpecification, references);
+         Map<String, String> referenceBases = new HashMap<>();
+         Set<String> references = findAllExternalRefs(rootSpecification);
+         references.forEach(ref -> referenceBases.put(ref, referenceResolver.getBaseRepositoryUrl()));
 
          while (!references.isEmpty()) {
             String ref = references.stream().findFirst().orElseThrow();
             try {
+               referenceResolver.setBaseRepositoryUrl(referenceBases.get(ref));
+
                // Extract content using resolver.
-               String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8.name());
+               String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
                String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
 
                // Build a new resource from content. Use the escaped operation path.
@@ -126,13 +129,19 @@ public abstract class AbstractJsonRepositoryImporter {
                schemaResource.setContent(content);
                schemaResource.setType(ResourceType.JSON_SCHEMA);
 
+               // Now go down the resource content and resolve its embedded references.
+               // Also update the references bases to track the root url for this ref in order
                ObjectMapper mapper = getObjectMapper(!ref.endsWith(".json"));
                JsonNode resourceRootSpecification = mapper.readTree(content);
-               findAllExternalRefs(resourceRootSpecification, references);
+               Set<String> embeddedReferences = findAllExternalRefs(resourceRootSpecification);
+               references.addAll(embeddedReferences);
+               embeddedReferences.forEach(embeddedRef ->
+                  referenceBases.put(embeddedRef, referenceResolver.getReferenceURL(ref))
+               );
 
                if (!ref.startsWith("http")) {
                   // If a relative resource, replace with new name.
-                  rootSpecificationContent = rootSpecificationContent.replace(ref, URLEncoder.encode(schemaResource.getName(), StandardCharsets.UTF_8.name()));
+                  rootSpecificationContent = rootSpecificationContent.replace(ref, URLEncoder.encode(schemaResource.getName(), StandardCharsets.UTF_8));
                }
                externalResources.add(schemaResource);
             } catch (IOException ioe) {
@@ -172,7 +181,8 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /** Browse Json node to extract references and store them into externalRefs. */
-   private void findAllExternalRefs(JsonNode node, Set<String> externalRefs) {
+   private Set<String> findAllExternalRefs(JsonNode node) {
+      Set<String> externalRefs = new HashSet<>();
       // If node has a $ref child, it's a stop condition.
       if (node.has("$ref")) {
          String ref = node.path("$ref").asText();
@@ -188,9 +198,10 @@ public abstract class AbstractJsonRepositoryImporter {
          // Iterate on all other children.
          Iterator<JsonNode> children = node.elements();
          while (children.hasNext()) {
-            findAllExternalRefs(children.next(), externalRefs);
+            externalRefs.addAll(findAllExternalRefs(children.next()));
          }
       }
+      return externalRefs;
    }
 
    /** Get the JsonNode for reference within the specification. */

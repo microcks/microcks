@@ -119,6 +119,30 @@ public class ServiceServiceTest {
    }
 
    @Test
+   public void testImportServiceDefinitionFromGitLabURL() {
+      List<Service> services = null;
+      try {
+         services = service.importServiceDefinition("https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example%2Fopenapi.yaml/raw?head=main", null,
+               true, true);
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("OpenAPI Car API", importedSvc.getName());
+      assertEquals("1.0.0", importedSvc.getVersion());
+      assertEquals("openapi.yaml", importedSvc.getSourceArtifact());
+
+      // Inspect and check resources.
+      List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(10, resources.size());
+   }
+
+   @Test
    public void testImportServiceDefinitionMainAndSecondary() {
       List<Service> services = null;
       try {

@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -168,7 +169,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                               }
 
                               // Extract content using resolver.
-                              String content = referenceResolver.getHttpReferenceContent(ref, "UTF-8");
+                              String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
                               String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
 
                               // Build a new resource from content. Use the escaped operation path.
