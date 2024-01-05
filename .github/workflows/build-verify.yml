@@ -89,7 +89,7 @@ jobs:
             --provenance=false \
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile \
-            --tag=quay.io/microcks/microcks:$IMAGE_TAG
+            --tag=quay.io/microcks/microcks:$IMAGE_TAG \
             --tag=docker.io/microcks/microcks:$IMAGE_TAG .
 
       - name: Build and push container for async minion
