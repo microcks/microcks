@@ -115,12 +115,14 @@ public abstract class AbstractJsonRepositoryImporter {
 
          while (!references.isEmpty()) {
             String ref = references.stream().findFirst().orElseThrow();
+            System.err.println("Ref is " + ref);
             try {
                referenceResolver.setBaseRepositoryUrl(referenceBases.get(ref));
 
                // Extract content using resolver.
                String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
                String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
+               System.err.println("Creating a resource with resourceName: " + resourceName);
 
                // Build a new resource from content. Use the escaped operation path.
                Resource schemaResource = new Resource();

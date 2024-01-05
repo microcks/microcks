@@ -112,7 +112,7 @@ public class ServiceServiceTest {
       // Inspect and check responses.
       List<Response> responses = responseRepository.findByOperationId(
             IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
-      assertEquals(5, requests.size());
+      assertEquals(5, responses.size());
       for (Response response : responses) {
          assertEquals("weather-forecast-openapi.yaml", response.getSourceArtifact());
       }
@@ -140,6 +140,49 @@ public class ServiceServiceTest {
       // Inspect and check resources.
       List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
       assertEquals(10, resources.size());
+      for (Resource resource : resources) {
+         System.err.println(resource.getName() + " - " + resource.getSourceArtifact() + " - " + resource.getPath());
+         System.err.println(resource.getContent());
+         System.err.println("  ==============================  ");
+      }
+
+      // Now inspect operations.
+      assertEquals(1, importedSvc.getOperations().size());
+      assertEquals("GET /owner/{owner}/car", importedSvc.getOperations().get(0).getName());
+      assertEquals(DispatchStyles.URI_PARTS, importedSvc.getOperations().get(0).getDispatcher());
+      assertEquals(3, importedSvc.getOperations().get(0).getResourcePaths().size());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(3, requests.size());
+      for (Request request : requests) {
+         assertEquals("openapi.yaml", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(3, responses.size());
+      for (Response response : responses) {
+         assertEquals("openapi.yaml", response.getSourceArtifact());
+         switch (response.getName()) {
+            case "laurent":
+               assertEquals("/owner=0", response.getDispatchCriteria());
+               assertEquals("[{\"model\":\"BMW X5\",\"year\":2018},{\"model\":\"Tesla Model 3\",\"year\":2020}]", response.getContent());
+               break;
+            case "maxime":
+               assertEquals("/owner=1", response.getDispatchCriteria());
+               assertEquals("[{\"model\":\"Volkswagen Golf\",\"year\":2017}]", response.getContent());
+               break;
+            case "NOT_FOUND":
+               assertEquals("/owner=999999999", response.getDispatchCriteria());
+               assertEquals("{\"error\":\"Could not find owner\"}", response.getContent());
+               break;
+            default:
+               fail("Unknown response message");
+         }
+      }
    }
 
    @Test

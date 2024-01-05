@@ -159,12 +159,13 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       while (paths.hasNext()) {
          Entry<String, JsonNode> path = paths.next();
          String pathName = path.getKey();
+         JsonNode pathValue = followRefIfAny(path.getValue());
 
          // Find examples fragments defined at the path level.
-         Map<String, Map<String, String>> pathPathParametersByExample = extractParametersByExample(path.getValue(), "path");
+         Map<String, Map<String, String>> pathPathParametersByExample = extractParametersByExample(pathValue, "path");
 
          // Iterate on specification path, "verbs" nodes.
-         Iterator<Entry<String, JsonNode>> verbs = path.getValue().fields();
+         Iterator<Entry<String, JsonNode>> verbs = pathValue.fields();
          while (verbs.hasNext()) {
             Entry<String, JsonNode> verb = verbs.next();
             String verbName = verb.getKey();
@@ -340,9 +341,10 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       while (paths.hasNext()) {
          Entry<String, JsonNode> path = paths.next();
          String pathName = path.getKey();
+         JsonNode pathValue = followRefIfAny(path.getValue());
 
          // Iterate on specification path, "verbs" nodes.
-         Iterator<Entry<String, JsonNode>> verbs = path.getValue().fields();
+         Iterator<Entry<String, JsonNode>> verbs = pathValue.fields();
          while (verbs.hasNext()) {
             Entry<String, JsonNode> verb = verbs.next();
             String verbName = verb.getKey();
