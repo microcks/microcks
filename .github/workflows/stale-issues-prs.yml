@@ -1,0 +1,42 @@
+name: Manage stale issues and PRs
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  stale:
+    if: startsWith(github.repository, 'microcks/')
+    name: Mark issue or PR as stale
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@99b6c709598e2b0d0841cd037aaf1ba07a4410bd #v5.2.0 but pointing to commit for security reasons
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: |
+            This issue has been automatically marked as stale because it has not had recent activity :sleeping:
+            
+            It will be closed in 30 days if no further activity occurs. To unstale this issue, add a comment with a detailed explanation. 
+            
+            There can be many reasons why some specific issue has no activity. The most probable cause is lack of time, not lack of interest. Microcks is a Cloud Native Computing Foundation project not owned by a single for-profit company. It is a community-driven initiative ruled under [open governance model](https://github.com/microcks/.github/blob/main/CODE_OF_CONDUCT.md). 
+            
+            Let us figure out together how to push this issue forward. Connect with us through [one of many communication channels](https://microcks.io/community/) we established here.
+            
+            Thank you for your patience :heart:
+          stale-pr-message: |
+            This pull request has been automatically marked as stale because it has not had recent activity :sleeping:
+            
+            It will be closed in 30 days if no further activity occurs. To unstale this pull request, add a comment with detailed explanation.
+            
+            There can be many reasons why some specific pull request has no activity. The most probable cause is lack of time, not lack of interest. Microcks is a Cloud Native Computing Foundation project not owned by a single for-profit company. It is a community-driven initiative ruled under [open governance model](https://github.com/microcks/.github/blob/main/CODE_OF_CONDUCT.md). 
+            
+            Let us figure out together how to push this pull request forward. Connect with us through [one of many communication channels](https://microcks.io/community/) we established here.
+            
+            Thank you for your patience :heart:
+          days-before-stale: 30
+          days-before-close: 30
+          stale-issue-label: stale
+          stale-pr-label: stale
+          exempt-issue-labels: keep-open
+          exempt-pr-labels: keep-open
+          close-issue-reason: not_planned
