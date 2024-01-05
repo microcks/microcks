@@ -34,7 +34,7 @@ import graphql.schema.idl.TypeUtil;
 
 /**
  * This is an implementation of GraphQL-Java QueryVisitor that takes care of
- * building a Json Schema that could be apply to the response of a GraphQL query.
+ * building a Json Schema that could be applied to the response of a GraphQL query.
  * @author laurent
  */
 public class JsonSchemaBuilderQueryVisitor implements QueryVisitor {
@@ -99,7 +99,7 @@ public class JsonSchemaBuilderQueryVisitor implements QueryVisitor {
          fieldNode.put(JSON_SCHEMA_TYPE, JSON_SCHEMA_ARRAY_TYPE);
          ObjectNode items = fieldNode.putObject(JSON_SCHEMA_ITEMS);
 
-         // Depending on item type, we should init an object structure.
+         // Depending on item type, we should initialize an object structure.
          TypeName itemTypeInfo = TypeUtil.unwrapAll(definitionType);
          if (!ScalarInfo.isGraphqlSpecifiedScalar(itemTypeInfo.getName())) {
             items.put(JSON_SCHEMA_TYPE, JSON_SCHEMA_OBJECT_TYPE);
@@ -108,12 +108,11 @@ public class JsonSchemaBuilderQueryVisitor implements QueryVisitor {
             parentNode = items;
             currentNode = properties;
          }
-      } else if (outputType instanceof GraphQLEnumType) {
+      } else if (outputType instanceof GraphQLEnumType enumType) {
          // Then we deal with enumerations.
          fieldNode.put(JSON_SCHEMA_TYPE, JSON_SCHEMA_STRING_TYPE);
          ArrayNode enumNode = fieldNode.putArray(JSON_SCHEMA_ENUM);
 
-         GraphQLEnumType enumType = (GraphQLEnumType) outputType;
          for (GraphQLEnumValueDefinition valDef : enumType.getValues()) {
             enumNode.add(valDef.getName());
          }
@@ -145,7 +144,7 @@ public class JsonSchemaBuilderQueryVisitor implements QueryVisitor {
          case "Float":
             return "number";
          case "ID":
-            return "string";
+            return JSON_SCHEMA_STRING_TYPE;
          default:
             return graphqlScalarType.toLowerCase();
       }
