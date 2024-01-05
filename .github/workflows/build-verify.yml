@@ -104,7 +104,8 @@ jobs:
             --provenance=false \
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile.jvm \
-            --tag=quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
+            --tag=quay.io/microcks/microcks-async-minion:$IMAGE_TAG \
+            --tag=docker.io/microcks/microcks-async-minion:$IMAGE_TAG .
 
       - name: Build and push container image for uber distro
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
@@ -117,7 +118,8 @@ jobs:
             --provenance=false \
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile \
-            --tag=quay.io/microcks/microcks-uber:$IMAGE_TAG .
+            --tag=quay.io/microcks/microcks-uber:$IMAGE_TAG \
+            --tag=docker.io/microcks/microcks-uber:$IMAGE_TAG .
 
       - name: Build and push container for async minion in uber distro
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
@@ -131,4 +133,5 @@ jobs:
             --provenance=false \
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile.jvm \
-            --tag=quay.io/microcks/microcks-uber-async-minion:$IMAGE_TAG .
+            --tag=quay.io/microcks/microcks-uber-async-minion:$IMAGE_TAG \
+            --tag=docker.io/microcks/microcks-uber-async-minion:$IMAGE_TAG .
