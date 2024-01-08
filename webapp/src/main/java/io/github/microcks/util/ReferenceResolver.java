@@ -47,6 +47,7 @@ public class ReferenceResolver {
    private RelativeReferenceURLBuilder urlBuilder;
 
    private Map<String, File> resolvedReferences = new HashMap<>();
+   private Map<String, File> relativeResolvedReferences = new HashMap<>();
 
    /**
     * Build a new reference resolver.
@@ -115,24 +116,34 @@ public class ReferenceResolver {
     */
    public String getHttpReferenceContent(String relativePath, Charset encoding) throws IOException {
       // Check the file first.
-      File referenceFile = resolvedReferences.get(relativePath);
+      String remoteUrl = getReferenceURL(relativePath);
+      File referenceFile = resolvedReferences.get(remoteUrl);
       if (referenceFile == null) {
-         String remoteUrl = getReferenceURL(relativePath);
          log.info("Downloading a reference file at {}", remoteUrl);
          // Now download this relative file and store its reference into the cache.
          referenceFile = HTTPDownloader.handleHTTPDownloadToFile(remoteUrl, repositorySecret, disableSSLValidation);
-         resolvedReferences.put(relativePath, referenceFile);
+         resolvedReferences.put(remoteUrl, referenceFile);
       }
+      // Keep track on how we resolved this relativePath.
+      relativeResolvedReferences.put(relativePath, referenceFile);
 
       return Files.readString(referenceFile.toPath(), encoding);
    }
 
    /**
     * Get resolved references map.
-    * @return The map of resolved references
+    * @return The map of resolved references with keys being absolute paths.
     */
    public Map<String, File> getResolvedReferences() {
       return resolvedReferences;
+   }
+
+   /**
+    * Get relative resolved references map.
+    * @return The map of resolved references with keys being relative paths.
+    */
+   public Map<String, File> getRelativeResolvedReferences() {
+      return relativeResolvedReferences;
    }
 
    /** Cleans up already resolved references. */
@@ -141,5 +152,6 @@ public class ReferenceResolver {
          referenceFile.delete();
       }
       resolvedReferences.clear();
+      relativeResolvedReferences.clear();
    }
 }

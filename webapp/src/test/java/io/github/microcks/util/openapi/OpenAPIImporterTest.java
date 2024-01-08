@@ -1509,7 +1509,7 @@ public class OpenAPIImporterTest {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./weather-forecast-examples.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
-            assertTrue(refResource.getContent().contains("$ref: './weather-forecast-common-regions.yaml#/regions/north'"));
+            assertTrue(refResource.getContent().contains("$ref: 'WeatherForecast+API-1.0.0--weather-forecast-common-regions.yaml#/regions/north'"));
          } else if ("WeatherForecast API-1.0.0--weather-forecast-common-regions.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./weather-forecast-common-regions.yaml", refResource.getPath());

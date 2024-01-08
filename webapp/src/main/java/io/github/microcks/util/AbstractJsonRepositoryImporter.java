@@ -107,24 +107,31 @@ public abstract class AbstractJsonRepositoryImporter {
     * to initialize the `externalResources` member.
     * @param service The main service for naming discovered resources.
     */
-   protected void initializeReferencedResources(Service service) {
+   protected void initializeReferencedResources(Service service) throws MockRepositoryImportException {
       if (referenceResolver != null) {
          String rootBaseUrl = referenceResolver.getBaseRepositoryUrl();
 
-         // First pass: seek, resolve and build reference resources.
+         // Keep track and collect reference resources, using absolute URL as key.
          Map<String, Resource> referenceResources = new HashMap<>();
+
+         // We need to create a temporary root resource to initiate the recursive resolution.
+         Resource rootResource = new Resource();
+         rootResource.setName(service.getName() + "-" + service.getVersion());
+         rootResource.setContent(rootSpecificationContent);
+         referenceResources.put(rootBaseUrl, rootResource);
+
+         // Seek, resolve and build reference resources.
          resolveExternalReferences(service, referenceResources, rootBaseUrl, "", rootSpecification);
 
-         // Second pass: update root specification content with new reference names.
-         referenceResolver.setBaseRepositoryUrl(rootBaseUrl);
-         Set<String> references = findAllExternalRefs(rootSpecification);
-         for (String ref : references) {
-            if (!ref.startsWith("http")) {
-               String refUrl = referenceResolver.getReferenceURL(ref);
-               Resource refResource = referenceResources.get(refUrl);
-               rootSpecificationContent = rootSpecificationContent.replace(ref,
-                     URLEncoder.encode(refResource.getName(), StandardCharsets.UTF_8));
-            }
+         // Secondly: update root specification content with new reference names and
+         // Refresh the root specification node with re-normalized references.
+         rootSpecificationContent = rootResource.getContent();
+         try {
+            ObjectMapper mapper = getObjectMapper(isYaml);
+            rootSpecification = mapper.readTree(rootSpecificationContent.getBytes(StandardCharsets.UTF_8));
+         } catch (Exception e) {
+            log.error("Exception while parsing re-normalized JSON specification file", e);
+            throw new MockRepositoryImportException("Exception while parsing re-normalized JSON specification file");
          }
 
          // Finally try to clean up resolved references and associated resources (files)
@@ -136,6 +143,7 @@ public abstract class AbstractJsonRepositoryImporter {
    private void resolveExternalReferences(Service service, Map<String, Resource> referenceResources, String baseRepositoryUrl,
                                           String baseContext, JsonNode resourceSpecification) {
       Set<String> references = findAllExternalRefs(resourceSpecification);
+      Resource currentResource = referenceResources.get(baseRepositoryUrl);
 
       for (String ref : references) {
          referenceResolver.setBaseRepositoryUrl(baseRepositoryUrl);
@@ -182,8 +190,8 @@ public abstract class AbstractJsonRepositoryImporter {
          if (!ref.startsWith("http") && referenceResource != null) {
             // If a relative resource, replace with new name in resource content.
             String refNewName = referenceResources.get(refUrl).getName();
-            String normalizedContent = referenceResource.getContent().replace(ref, URLEncoder.encode(refNewName, StandardCharsets.UTF_8));
-            referenceResource.setContent(normalizedContent);
+            String normalizedContent = currentResource.getContent().replace(ref, URLEncoder.encode(refNewName, StandardCharsets.UTF_8));
+            currentResource.setContent(normalizedContent);
          }
       }
    }
@@ -280,7 +288,9 @@ public abstract class AbstractJsonRepositoryImporter {
       }
 
       for (Resource resource : externalResources) {
-         if (path.equals(resource.getPath())) {
+         // Path direct equality is for absolute ref ("http://raw.githubusercontent.com/...")
+         // Path equality with resource name if for relative refs that have been re-normalized ("Service name+Service version+...))
+         if (path.equals(resource.getPath()) || path.equals(URLEncoder.encode(resource.getName(), StandardCharsets.UTF_8))) {
             JsonNode resourceNode = externalResourcesContent.computeIfAbsent(resource, k -> {
                   try {
                      return ObjectMapperFactory.getYamlObjectMapper().readTree(resource.getContent());

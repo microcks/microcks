@@ -169,7 +169,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
       // Now build resources for dependencies if any.
       if (referenceResolver != null) {
-         referenceResolver.getResolvedReferences().forEach((p, f) -> {
+         referenceResolver.getRelativeResolvedReferences().forEach((p, f) -> {
             Resource protoResource = new Resource();
             protoResource.setName(service.getName() + "-" + service.getVersion() + "-" + p.replaceAll("/", "~1"));
             protoResource.setType(ResourceType.PROTOBUF_SCHEMA);
