@@ -120,6 +120,9 @@ data:
       {{- end }}
     spring.kafka.producer.properties.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
     spring.kafka.producer.properties.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
+        {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
+    spring.kafka.producer.properties.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
+        {{- end }}
       {{- end }}
     {{- end }}
 
