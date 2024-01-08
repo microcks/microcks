@@ -138,13 +138,13 @@ public abstract class AbstractJsonRepositoryImporter {
       Set<String> references = findAllExternalRefs(resourceSpecification);
 
       for (String ref : references) {
+         referenceResolver.setBaseRepositoryUrl(baseRepositoryUrl);
          String refUrl = referenceResolver.getReferenceURL(ref);
 
          Resource referenceResource = referenceResources.get(refUrl);
          if (referenceResource == null) {
             try {
                // Extract content using resolver.
-               referenceResolver.setBaseRepositoryUrl(baseRepositoryUrl);
                String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
 
                // Build resource name from short name.
@@ -297,8 +297,6 @@ public abstract class AbstractJsonRepositoryImporter {
       log.warn("Found no resource for reference {}", externalReference);
       return null;
    }
-
-   private record JsonReference(String absoluteUrl, Resource referenceResource) {}
 
    /** Custom runtime exception for Json repository parsing errors. */
    public class JsonRepositoryParsingException extends RuntimeException {
