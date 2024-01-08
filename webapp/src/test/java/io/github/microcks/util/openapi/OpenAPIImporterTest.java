@@ -1233,10 +1233,10 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0-weather-forecast-schema.yaml"));
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0--weather-forecast-schema.yaml"));
 
       Resource refSchema = resources.get(1);
-      assertEquals("WeatherForecast API-1.0.0-weather-forecast-schema.yaml", refSchema.getName());
+      assertEquals("WeatherForecast API-1.0.0--weather-forecast-schema.yaml", refSchema.getName());
       assertEquals(ResourceType.JSON_SCHEMA, refSchema.getType());
       assertEquals("./weather-forecast-schema.yaml", refSchema.getPath());
       assertNotNull(refSchema.getContent());
@@ -1275,16 +1275,16 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0-weather-forecast-schema.yaml"));
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0--weather-forecast-schema.yaml"));
 
       for (int i=1; i<3; i++) {
          Resource refResource = resources.get(i);
-         if ("WeatherForecast API-1.0.0-weather-examples.json".equals(refResource.getName())) {
+         if ("WeatherForecast API-1.0.0--weather-examples.json".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./weather-examples.json", refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("\"region\": \"east\""));
-         } else if ("WeatherForecast API-1.0.0-weather-forecast-schema.yaml".equals(refResource.getName())) {
+         } else if ("WeatherForecast API-1.0.0--weather-forecast-schema.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./weather-forecast-schema.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
@@ -1496,21 +1496,21 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0-weather-forecast-schema.yaml"));
+      assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0--weather-forecast-schema.yaml"));
 
       for (int i=1; i<4; i++) {
          Resource refResource = resources.get(i);
-         if ("WeatherForecast API-1.0.0-weather-forecast-schema.yaml".equals(refResource.getName())) {
+         if ("WeatherForecast API-1.0.0--weather-forecast-schema.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./weather-forecast-schema.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("A weather forecast for a requested region"));
-         } else if ("WeatherForecast API-1.0.0-weather-forecast-examples.yaml".equals(refResource.getName())) {
+         } else if ("WeatherForecast API-1.0.0--weather-forecast-examples.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./weather-forecast-examples.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("$ref: './weather-forecast-common-regions.yaml#/regions/north'"));
-         } else if ("WeatherForecast API-1.0.0-weather-forecast-common-regions.yaml".equals(refResource.getName())) {
+         } else if ("WeatherForecast API-1.0.0--weather-forecast-common-regions.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./weather-forecast-common-regions.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());

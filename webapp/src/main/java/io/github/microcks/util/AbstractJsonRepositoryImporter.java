@@ -103,59 +103,113 @@ public abstract class AbstractJsonRepositoryImporter {
 
    /**
     * Given a service, initialize all external references that may be found via
-    * `$ref` nodes pointing to absolute or relative pointers. This has a the side effect
+    * `$ref` nodes pointing to absolute or relative pointers. This has the side effect
     * to initialize the `externalResources` member.
-    * @param service
+    * @param service The main service for naming discovered resources.
     */
-   protected void initializeExternalReferences(Service service) {
+   protected void initializeReferencedResources(Service service) {
       if (referenceResolver != null) {
-         Map<String, String> referenceBases = new HashMap<>();
+         String rootBaseUrl = referenceResolver.getBaseRepositoryUrl();
+
+         // First pass: seek, resolve and build reference resources.
+         Map<String, Resource> referenceResources = new HashMap<>();
+         resolveExternalReferences(service, referenceResources, rootBaseUrl, "", rootSpecification);
+
+         // Second pass: update root specification content with new reference names.
+         referenceResolver.setBaseRepositoryUrl(rootBaseUrl);
          Set<String> references = findAllExternalRefs(rootSpecification);
-         references.forEach(ref -> referenceBases.put(ref, referenceResolver.getBaseRepositoryUrl()));
+         for (String ref : references) {
+            if (!ref.startsWith("http")) {
+               String refUrl = referenceResolver.getReferenceURL(ref);
+               Resource refResource = referenceResources.get(refUrl);
+               rootSpecificationContent = rootSpecificationContent.replace(ref,
+                     URLEncoder.encode(refResource.getName(), StandardCharsets.UTF_8));
+            }
+         }
 
-         while (!references.isEmpty()) {
-            String ref = references.stream().findFirst().orElseThrow();
-            System.err.println("Ref is " + ref);
+         // Finally try to clean up resolved references and associated resources (files)
+         referenceResolver.cleanResolvedReferences();
+      }
+   }
+
+   /** Recursive method for browsing resource spec, finding $ref, downloading content and accumulating result in referenceResources. */
+   private void resolveExternalReferences(Service service, Map<String, Resource> referenceResources, String baseRepositoryUrl,
+                                          String baseContext, JsonNode resourceSpecification) {
+      Set<String> references = findAllExternalRefs(resourceSpecification);
+
+      for (String ref : references) {
+         String refUrl = referenceResolver.getReferenceURL(ref);
+
+         Resource referenceResource = referenceResources.get(refUrl);
+         if (referenceResource == null) {
             try {
-               referenceResolver.setBaseRepositoryUrl(referenceBases.get(ref));
-
                // Extract content using resolver.
+               referenceResolver.setBaseRepositoryUrl(baseRepositoryUrl);
                String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
+
+               // Build resource name from short name.
                String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
-               System.err.println("Creating a resource with resourceName: " + resourceName);
+               String referenceContext = buildContext(baseContext, ref.substring(0, ref.lastIndexOf('/')));
+               // Introduce a context tracker if it's a relative dependency.
+               if (!ref.startsWith("http")) {
+                  resourceName = IdBuilder.buildResourceFullName(service, resourceName, referenceContext);
+               } else {
+                  resourceName = IdBuilder.buildResourceFullName(service, resourceName);
+               }
 
                // Build a new resource from content. Use the escaped operation path.
-               Resource schemaResource = new Resource();
-               schemaResource.setName(IdBuilder.buildResourceFullName(service, resourceName));
-               schemaResource.setPath(ref);
-               schemaResource.setContent(content);
-               schemaResource.setType(ResourceType.JSON_SCHEMA);
+               referenceResource = new Resource();
+               referenceResource.setName(resourceName);
+               referenceResource.setPath(ref);
+               referenceResource.setContent(content);
+               referenceResource.setType(ResourceType.JSON_SCHEMA);
+
+               // Keep track of this newly created resource.
+               referenceResources.put(refUrl, referenceResource);
+               externalResources.add(referenceResource);
 
                // Now go down the resource content and resolve its embedded references.
                // Also update the references bases to track the root url for this ref in order
                ObjectMapper mapper = getObjectMapper(!ref.endsWith(".json"));
-               JsonNode resourceRootSpecification = mapper.readTree(content);
-               Set<String> embeddedReferences = findAllExternalRefs(resourceRootSpecification);
-               references.addAll(embeddedReferences);
-               embeddedReferences.forEach(embeddedRef ->
-                  referenceBases.put(embeddedRef, referenceResolver.getReferenceURL(ref))
-               );
-
-               if (!ref.startsWith("http")) {
-                  // If a relative resource, replace with new name.
-                  rootSpecificationContent = rootSpecificationContent.replace(ref, URLEncoder.encode(schemaResource.getName(), StandardCharsets.UTF_8));
-               }
-               externalResources.add(schemaResource);
+               JsonNode refResourceSpecification = mapper.readTree(content);
+               resolveExternalReferences(service, referenceResources, refUrl, referenceContext, refResourceSpecification);
             } catch (IOException ioe) {
                log.error("IOException while trying to resolve reference {}", ref, ioe);
                log.info("Ignoring the reference {} cause it could not be resolved", ref);
             }
-            // Remove ref as it has been processed.
-            references.remove(ref);
          }
-         // Finally try to clean up resolved references and associated resources (files)
-         referenceResolver.cleanResolvedReferences();
+
+         if (!ref.startsWith("http") && referenceResource != null) {
+            // If a relative resource, replace with new name in resource content.
+            String refNewName = referenceResources.get(refUrl).getName();
+            String normalizedContent = referenceResource.getContent().replace(ref, URLEncoder.encode(refNewName, StandardCharsets.UTF_8));
+            referenceResource.setContent(normalizedContent);
+         }
       }
+   }
+
+   /** Build a context for resource name in order to avoid name collisions (resource having same short name in different folders. */
+   private String buildContext(String baseContext, String referencePath) {
+      // Treat the obvious "." case.
+      if (".".equals(referencePath)) {
+         return baseContext;
+      }
+      // Else recompose a path to append.
+      String pathToAppend = referencePath;
+      while (pathToAppend.startsWith("../")) {
+         if (baseContext.contains("/")){
+            baseContext = baseContext.substring(0, baseContext.lastIndexOf("/"));
+         }
+         pathToAppend = pathToAppend.substring(3);
+      }
+      if (pathToAppend.startsWith("./")) {
+         pathToAppend = pathToAppend.substring(2);
+      }
+      if (pathToAppend.startsWith("/")) {
+         pathToAppend = pathToAppend.substring(1);
+      }
+      String result = baseContext + "/" + pathToAppend;
+      return result.startsWith("/") ? result.substring(1) : result;
    }
 
    /** Follow the $ref if we have one. Otherwise, return given node. */
@@ -243,6 +297,8 @@ public abstract class AbstractJsonRepositoryImporter {
       log.warn("Found no resource for reference {}", externalReference);
       return null;
    }
+
+   private record JsonReference(String absoluteUrl, Resource referenceResource) {}
 
    /** Custom runtime exception for Json repository parsing errors. */
    public class JsonRepositoryParsingException extends RuntimeException {

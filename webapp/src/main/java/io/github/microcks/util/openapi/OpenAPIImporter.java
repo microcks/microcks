@@ -44,8 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -103,7 +101,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       }
 
       // Before extraction operations, we need to get and build external reference if we have a resolver.
-      initializeExternalReferences(service);
+      initializeReferencedResources(service);
 
       // Then build its operations.
       service.setOperations(extractOperations());
@@ -129,21 +127,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       resource.setName(name);
       resource.setType(ResourceType.OPEN_API_SPEC);
       results.add(resource);
-
-      for (Resource externalResource : externalResources) {
-         // If a relative resource, replace with new name.
-         if (!externalResource.getPath().startsWith("http")) {
-            try {
-               rootSpecificationContent = rootSpecificationContent.replace(externalResource.getPath(),
-                     URLEncoder.encode(externalResource.getName(), StandardCharsets.UTF_8.name()));
-            } catch (IOException ioe) {
-               log.error("IOException while trying to resolve reference {}", externalResource.getPath(), ioe);
-               log.info("Ignoring the reference {} cause it could not be resolved", externalResource.getPath());
-            }
-         }
-      }
-      // Set the content of main OpenAPI that may have been updated with dereferenced dependencies.
+      // Set the content of main OpenAPI that may have been updated with normalized dependencies with initializeReferencedResources().
       resource.setContent(rootSpecificationContent);
+
       // Add the external resources that were imported during service discovery.
       results.addAll(externalResources);
 

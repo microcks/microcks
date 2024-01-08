@@ -181,6 +181,50 @@ public class ServiceServiceTest {
    }
 
    @Test
+   public void testImportServiceDefinitionFromGitLabURL2() {
+      List<String> resourceNames = List.of("OpenAPI Car API-1.0.0.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}-path.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-404-response.yaml",
+         "OpenAPI Car API-1.0.0-paths-components-schemas-Error.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-404-examples-NOT_FOUND.yaml",
+         "OpenAPI Car API-1.0.0-paths-components-parameters-path-owner.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-200-response.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-200-examples-maxime.yaml",
+         "OpenAPI Car API-1.0.0-paths-components-schemas-Owner.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-200-examples-laurent.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-path.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-404-response.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-404-examples-NOT_FOUND.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-200-response.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-200-examples-maxime.yaml",
+         "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-200-examples-laurent.yaml");
+      List<Service> services = null;
+      try {
+         services = service.importServiceDefinition("https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example-2%2Fopenapi.yaml/raw?head=main", null,
+               true, true);
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("OpenAPI Car API", importedSvc.getName());
+      assertEquals("1.0.0", importedSvc.getVersion());
+      assertEquals("openapi.yaml", importedSvc.getSourceArtifact());
+
+      // Inspect and check resources.
+      List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(resourceNames.size(), resources.size());
+      for (Resource resource : resources) {
+         assertEquals("openapi.yaml", resource.getSourceArtifact());
+         assertTrue(resourceNames.contains(resource.getName()));
+      }
+   }
+
+   @Test
    public void testImportServiceDefinitionMainAndSecondary() {
       List<Service> services = null;
       try {
