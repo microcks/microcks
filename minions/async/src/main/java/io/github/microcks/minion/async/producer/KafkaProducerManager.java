@@ -21,13 +21,13 @@ import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.minion.async.AsyncMockDefinition;
+import io.github.microcks.minion.async.util.KafkaSecurityPropsFiller;
 import io.github.microcks.util.el.TemplateEngine;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
 import org.apache.kafka.common.header.Header;
 import org.apache.kafka.common.header.internals.RecordHeader;
@@ -286,22 +286,7 @@ public class KafkaProducerManager {
             props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.truststore.type", String.class));
          }
 
-         switch (securityProtocolValue) {
-            case "SASL_SSL":
-               logger.debug("Adding SASL_SSL specific connection properties");
-               props.put(SaslConfigs.SASL_MECHANISM, config.getValue("kafka.sasl.mechanism", String.class));
-               props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getValue("kafka.sasl.jaas.config", String.class));
-               if (config.getOptionalValue("kafka.sasl.login.callback.handler.class", String.class).isPresent()) {
-                 props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, config.getValue("kafka.sasl.login.callback.handler.class", String.class));
-               }
-               break;
-            case "SSL":
-               logger.debug("Adding SSL specific connection properties");
-               props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.keystore.location", String.class));
-               props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.keystore.password", String.class));
-               props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.keystore.type", String.class));
-               break;
-         }
+         KafkaSecurityPropsFiller.fillSpecificSecurityProps(securityProtocolValue, props, config);
       }
    }
 }
