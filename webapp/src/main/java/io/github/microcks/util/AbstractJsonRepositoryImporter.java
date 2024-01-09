@@ -157,8 +157,9 @@ public abstract class AbstractJsonRepositoryImporter {
 
                // Build resource name from short name.
                String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
-               String referenceContext = buildContext(baseContext, ref.substring(0, ref.lastIndexOf('/')));
+               String referencePath = ref.contains("/") ? ref.substring(0, ref.lastIndexOf('/')) : ".";
                // Introduce a context tracker if it's a relative dependency.
+               String referenceContext = buildContext(baseContext, referencePath);
                if (!ref.startsWith("http")) {
                   resourceName = IdBuilder.buildResourceFullName(service, resourceName, referenceContext);
                } else {
