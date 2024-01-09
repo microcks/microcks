@@ -82,6 +82,7 @@ public class AsyncMinionApp {
 
    /** Application startup method. */
    void onStart(@Observes StartupEvent ev) {
+
       // We need to retrieve Keycloak server from Microcks config.
       KeycloakConfig config = microcksAPIConnector.getKeycloakConfig();
       logger.infof("Microcks Keycloak server url {%s} and realm {%s}", config.getAuthServerUrl(), config.getRealm());

@@ -432,4 +432,51 @@ public class OpenAPISchemaValidatorTest {
 
       assertTrue(errors.isEmpty());
    }
+
+   @Test
+   public void testNullableFieldInComponentRef(){
+     String openAPIText = null;
+     String jsonText = """
+        [
+          {
+           "name": "Brian May",
+           "birthDate": "1947-07-19T00:00:00.0Z",
+           "deathDate": null
+          },
+          {
+           "name": "Roger Taylor",
+           "birthDate": "1949-07-26T00:00:00.0Z",
+           "deathDate": null
+          },
+          {
+           "name": "John Deacon",
+           "birthDate": "1951-08-19T00:00:00.0Z",
+           "deathDate": null
+          },
+          {
+            "name": "Freddy Mercury",
+            "birthDate": "1946-09-15T00:00:00.0Z",
+            "deathDate": "1946-11-24T00:00:00.0Z"
+          }
+        ]
+       """;
+     JsonNode openAPISpec = null;
+     JsonNode contentNode = null;
+
+     try {
+       // Load full specification from file.
+       openAPIText =  FileUtils.readFileToString(
+         new File("target/test-classes/io/github/microcks/util/openapi/nullable-fields-openapi.yaml"));
+       // Extract JSON nodes using OpenAPISchemaValidator methods.
+       openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+       contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+     } catch (Exception e) {
+       fail("Exception should not be thrown");
+     }
+
+     // Validate the content for Get /accounts response message.
+     List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+       "/paths/~1queen~1members/get/responses/200", "application/json");
+     assertTrue(errors.isEmpty());
+   }
 }

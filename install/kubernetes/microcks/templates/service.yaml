@@ -6,6 +6,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: spring
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
 spec:
   ports:
   - protocol: TCP
@@ -27,6 +31,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: spring
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   ports:
     - protocol: TCP
@@ -48,6 +55,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: postman-runtime
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   ports:
   - protocol: TCP
@@ -70,6 +80,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: mongodb
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   ports:
   - name: mongodb
@@ -84,7 +97,7 @@ spec:
   type: ClusterIP
   sessionAffinity: None
 {{- end }}
-{{- if and .Values.keycloak.install }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
 kind: Service
 apiVersion: v1
@@ -94,6 +107,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   ports:
   - protocol: TCP
@@ -115,6 +131,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak-postgresql
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   ports:
   - name: postgresql
@@ -139,6 +158,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: async-minion
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
 spec:
   ports:
     - protocol: TCP

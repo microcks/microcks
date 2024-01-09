@@ -13,5 +13,6 @@
 
   <modules>
     <module>uber</module>
+    <module>uber-async-minion</module>
   </modules>
 </project>

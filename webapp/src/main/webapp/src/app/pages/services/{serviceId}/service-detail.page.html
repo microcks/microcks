@@ -1,5 +1,5 @@
 <div class="form-group pull-right">
-  <pfng-toast-notification-list [notifications]="notifications" 
+  <pfng-toast-notification-list [notifications]="notifications"
       (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
   </pfng-toast-notification-list>
 </div>
@@ -85,14 +85,14 @@
                 <grade-index [score]="conformanceMetric.maxPossibleScore"></grade-index>
               </div>
               <div style="margin-top: 5px;">
-                <a href="https://microcks.io/documentation/using/tests/#conformance-metrics">Learn More 
+                <a href="https://microcks.io/documentation/using/tests/#conformance-metrics" target="_blank">Learn More
                   <i class="fa fa-external-link" aria-hidden="true"></i>
                 </a>
               </div>
             </div>
             <div class="col-xs-5">
               <dt>Conformance score</dt>
-              <span class="conformance-score">{{conformanceMetric.currentScore || '0.0'}}</span>%
+              <span class="conformance-score">{{ conformanceMetric.currentScore | number: '.1-2' || '0.0' }}</span>%
               <i class="fa fa-arrow-up conformance-trend"
                 [class.fa-arrow-right]="conformanceMetric.latestTrend === 'STABLE' || conformanceMetric.latestTrend === null"
                 [class.fa-arrow-up]="conformanceMetric.latestTrend === 'UP' || conformanceMetric.latestTrend === 'LOW_UP'"
@@ -114,7 +114,7 @@
           </div>
         </div>
       </div>
-      <span *ngIf="view.service.type == 'GENERIC_REST'">
+      <span *ngIf="view.service.type === 'GENERIC_REST'">
         <p>
           You may have already used this Direct API to record resources.<br/>
           Check <a (click)="openResources()">what's in the repository <i class="glyphicon glyphicon-transfer"></i></a>.
@@ -137,7 +137,7 @@
         (onActionSelect)="handleAction($event, null)"
         (onDblClick)="handleDblClick($event)"
         (onSelectionChange)="handleSelectionChange($event)">
-      
+
         <ng-template #operationTemplate let-item="item" let-index="index">
           <div class="list-pf-left">
           </div>
@@ -163,7 +163,7 @@
                 <strong>  {{ view.messagesMap[item.name].length }}</strong> sample(s)
               </div>
             </div>
-            
+
             <div class="list-view-pf-actions">
               <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="allowOperationsPropertiesEdit()">
                 <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -189,9 +189,9 @@
               </span>
               <span *ngIf="!isEventTypeService()">
                 <dt>Dispatcher:</dt>
-                <dd><code>{{ item.dispatcher }}</code> &nbsp; 
+                <dd><code>{{ item.dispatcher }}</code> &nbsp;
                   <span class="learn-more-inline">
-                    <a href="https://microcks.io/documentation/using/mocks/">Learn More 
+                    <a href="https://microcks.io/documentation/using/advanced/dispatching/" target="_blank">Learn More
                       <i class="fa fa-external-link" aria-hidden="true"></i>
                     </a>
                   </span>
@@ -207,9 +207,9 @@
                 </dd>
                 <dt>Available bindings:</dt>
                 <dd>
-                  {{ getBindingsList(item) }} &nbsp; 
+                  {{ getBindingsList(item) }} &nbsp;
                   <span class="learn-more-inline">
-                    <a href="https://microcks.io/documentation/using/asyncapi/#bindings">Learn More 
+                    <a href="https://microcks.io/documentation/using/asyncapi/#bindings" target="_blank">Learn More
                       <i class="fa fa-external-link" aria-hidden="true"></i>
                     </a>
                   </span>
@@ -272,13 +272,13 @@
               </dl>
             </div>
           </div>
-          <dl class="dl-horizontal left" *ngIf="view.service.type == 'GENERIC_REST'">
+          <dl class="dl-horizontal left" *ngIf="view.service.type === 'GENERIC_REST'">
             <dt>Mock URL:</dt>
             <dd>
               <div class="input-group">
                 <input type="text" class="form-control" value="{{ formatMockUrl(item, null) }}" disabled/>
                 <span class="input-group-addon">
-                  <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
+                  <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
                     (click)="copyToClipboard(formatMockUrl(item, null))"></i>
                 </span>
               </div>
@@ -310,249 +310,28 @@
           </div>
 
           <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
-          <tabset>
-            <tab *ngFor="let exchange of view.messagesMap[item.name]">
-              <ng-template tabHeading>
-                {{ getExchangeName(exchange) }}
-                <span class="learn-more-inline">
-                  <i tooltip="Source artifact: {{ getExchangeSourceArtifact(exchange) }}" containerClass="tooltip-break" class="pficon pficon-resources-almost-empty" aria-hidden="true"></i>
-                </span>
-              </ng-template>
-
-              <div class="row" *ngIf="isEventTypeService()">
-                <div class="col-md-6">
-                  <h5 class="subsection-label">Message</h5>
-                  <dl class="dl-horizontal left">
-                    <dt>Content Type:</dt>
-                    <dd><code><small>{{ exchange.eventMessage.mediaType }}</small></code></dd>
-                  </dl>
-                  <pre *ngIf="exchange.eventMessage.content"><code [highlight]="exchange.eventMessage.content"></code></pre>
-                  <table class="table table-condensed" width="100%" *ngIf="exchange.eventMessage.headers">
-                    <thead>
-                      <tr>
-                        <th>Header name</th>
-                        <th>Values</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let header of exchange.eventMessage.headers">
-                        <td>{{ header.name }}</td>
-                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col-md-6">
-                  <h5 class="subsection-label">Bindings details</h5>
-                  <span *ngIf="hasBinding(item, 'KAFKA')">
-                    <dl class="dl-horizontal left">
-                      <dt>Kafka topic:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'KAFKA') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
-                              (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'KAFKA'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                      <dt>Kafka Key type:</dt>
-                      <dd>{{ getBindingProperty(item, 'KAFKA', 'keyType') }}</dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'MQTT')">
-                    <dl class="dl-horizontal left">
-                      <dt>MQTT topic:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'MQTT') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
-                              (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'MQTT'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                      <dt>MQTT QoS:</dt>
-                      <dd>{{ getBindingProperty(item, 'MQTT', 'qoS') }}</dd>
-                      <dt>MQTT retain:</dt>
-                      <dd>{{ getBindingProperty(item, 'MQTT', 'persistent') }}</dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'NATS')">
-                    <dl class="dl-horizontal left">
-                      <dt>NATS topic:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'NATS') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
-                              (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'NATS'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'WS')">
-                    <dl class="dl-horizontal left">
-                      <dt>WebSocket endpoint:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'WS') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'WS'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                      <dt>WS method:</dt>
-                      <dd>{{ getBindingProperty(item, 'WS', 'method') }}</dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'AMQP')">
-                    <dl class="dl-horizontal left">
-                      <dt>AMQP exchange:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'AMQP') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'AMQP'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                      <dt>AMQP exchange type:</dt>
-                      <dd>{{ getBindingProperty(item, 'AMQP', 'destinationType') }}</dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'GOOGLEPUBSUB')">
-                    <dl class="dl-horizontal left">
-                      <dt>Google PubSub topic:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'GOOGLEPUBSUB') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'GOOGLEPUBSUB'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'SQS')">
-                    <dl>
-                      <dt>AWS SQS Queue:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'SQS') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'SQS'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                      <dt>AWS SQS persistent:</dt>
-                      <dd>{{ getBindingProperty(item, 'SQS', 'persistent') }}</dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'SNS')">
-                    <dl>
-                      <dt>AWS SNS Topic:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'SNS') }}" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                               (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'SNS'))"></i>
-                          </span>
-                        </div>
-                      </dd>
-                    </dl>
-                  </span>
-                  <span *ngIf="hasBinding(item, 'AMQP1')">
-                    <dl>
-                      <dt>AMQP destination:</dt>
-                      <dd>
-                        <div class="input-group">
-                          <input type="text" class="form-control" value="topic/UsersignedupAPI_0.1.0_user-signedup" disabled/>
-                          <span class="input-group-addon">
-                            <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
-                              (click)="copyToClipboard('topic/UsersignedupAPI_0.1.0_user-signedup')"></i>
-                          </span>
-                        </div>
-                      </dd>
-                    </dl>
-                  </span>
-                </div>
-              </div>
-              <div class="row" *ngIf="!isEventTypeService()">
-                <div class="col-md-6">
-                  <h5 class="subsection-label">Request</h5>
-                  <dl>
-                    <dt>Mock URL</dt>
-                    <dd>
-                      <div class="input-group">
-                        <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria) }}" disabled/>
-                        <span class="input-group-addon" style="border-left: 0;">
-                          <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top" 
-                            (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria))"></i>
-                        </span>
-                        <span class="input-group-addon" *ngIf="view.service.type != 'GRPC'">
-                          <i class="fa fa-terminal" tooltip="Curl to Clipboard" placement="top"
-                            (click)="copyToClipboard(formatCurlCmd(item, exchange))"></i>
-                        </span>
-                      </div>
-                    </dd>
-                  </dl>
-                  <pre *ngIf="exchange.request.content"><code [highlight]="formatRequestContent(exchange.request.content)"></code></pre>
-                  <dl *ngIf="view.service.type === 'GRAPHQL'">
-                    <dt>Variables</dt>
-                    <dd>
-                      <pre><code [highlight]="formatGraphQLVariables(exchange.request.content)"></code></pre>
-                    </dd>
-                  </dl>
-
-                  <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
-                    <thead>
-                      <tr>
-                        <th>Header name</th>
-                        <th>Values</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let header of exchange.request.headers">
-                        <td>{{ header.name }}</td>
-                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                <div class="col-md-6">
-                  <h5 class="subsection-label">Response</h5>
-                  <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST' || view.service.type === 'GRAPHQL'">
-                    <dt>Response Code and Type:</dt>
-                    <dd>
-                      <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
-                    </dd>
-                  </dl>
-                  <pre *ngIf="exchange.response.content"><code [highlight]="exchange.response.content"></code></pre>
-                  <table class="table table-condensed" width="100%" *ngIf="exchange.response.headers">
-                    <thead>
-                      <tr>
-                        <th>Header name</th>
-                        <th>Values</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr *ngFor="let header of exchange.response.headers">
-                        <td>{{ header.name }}</td>
-                        <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </tab>
-          </tabset>
+          <app-exchanges-tabset
+          [item]="item"
+          [view]="view"
+          [resolvedServiceView]="resolvedServiceView"
+          [notificationService]="notificationService"
+          [isEventTypeService]="isEventTypeService"
+          [getExchangeName]="getExchangeName"
+          [getExchangeSourceArtifact]="getExchangeSourceArtifact"
+          [hasBinding]="hasBinding"
+          [getBindingProperty]="getBindingProperty"
+          [formatMockUrl]="formatMockUrl"
+          [formatAsyncDestination]="formatAsyncDestination"
+          [formatRequestContent]="formatRequestContent"
+          [formatGraphQLVariables]="formatGraphQLVariables"
+          [prettyPrintIfJSON]="prettyPrintIfJSON"
+          [formatCurlCmd]="formatCurlCmd"
+          [copyToClipboard]="copyToClipboard"
+          [removeVerbInUrl]="removeVerbInUrl"
+          [encodeUrl]="encodeUrl"
+          [asyncAPIFeatureEndpoint]="asyncAPIFeatureEndpoint"
+          [config]="config"
+          ></app-exchanges-tabset>
         </ng-template>
 
     </pfng-list>

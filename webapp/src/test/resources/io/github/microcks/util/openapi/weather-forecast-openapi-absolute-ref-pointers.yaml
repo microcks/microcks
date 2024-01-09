@@ -12,57 +12,12 @@ info:
     name: MIT License
     url: https://opensource.org/licenses/MIT
 paths:
-  /forecast:
-    get:
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: 'weather-forecast-schema.json'
-              examples:
-                all:
-                  value:
-                    - region: north
-                      temp: -1.5
-                      weather: snowy
-                      visibility: 25
-                    - region: west
-                      temp: 12.2
-                      weather: rainy
-                      visibility: 300
-                    - region: east
-                      temp: -6.6
-                      weather: frosty
-                      visibility: 523
-                    - region: south
-                      temp: 28.3
-                      weather: sunny
-                      visibility: 1500
   /forecast/{region}:
     get:
       operationId: GetForecast
       summary: Get forecast for region
       parameters:
-        - name: region
-          description: The region to get forecast for
-          schema:
-            type: string
-          in: path
-          required: true
-          examples:
-            unknown:
-              value: other
-            north:
-              value: north
-            west:
-              value: west
-            east:
-              value: east
-            south:
-              value: south
+        - $ref: 'https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-common.yaml#/parameters/region'
         - name: apiKey
           description: Client API key
           schema:
@@ -75,7 +30,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'weather-forecast-schema.json'
+                $ref: 'https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-schema.yaml'
               examples:
                 north:
                   value:

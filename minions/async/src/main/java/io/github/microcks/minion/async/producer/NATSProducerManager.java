@@ -33,10 +33,12 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * NATS implementation of producer for async event messages.
+ * 
  * @author laurent
  */
 @ApplicationScoped
@@ -58,6 +60,7 @@ public class NATSProducerManager {
 
    /**
     * Initialize the NATS client post construction.
+    * 
     * @throws Exception If connection to NATS Broker cannot be done.
     */
    @PostConstruct
@@ -73,7 +76,9 @@ public class NATSProducerManager {
 
    /**
     * Create a NATS Connection and connect it to the server.
-    * @return A new NATS Connection implementation initialized with configuration properties.
+    * 
+    * @return A new NATS Connection implementation initialized with configuration
+    *         properties.
     * @throws Exception in case of connection failure
     */
    protected Connection createClient() throws Exception {
@@ -91,8 +96,9 @@ public class NATSProducerManager {
 
    /**
     * Publish a message on specified topic.
-    * @param topic The destination topic for message
-    * @param value The message payload
+    * 
+    * @param topic   The destination topic for message
+    * @param value   The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
    public void publishMessage(String topic, String value, Headers headers) {
@@ -104,39 +110,49 @@ public class NATSProducerManager {
             .build();
       client.publish(msg);
    }
-   
+
    /**
     * Transform and render Microcks headers into NATS specific headers.
-    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the NATSProducerManager level.)
+    * 
+    * @param engine  The template engine to reuse (because we do not want to
+    *                initialize and manage a context at the NATSProducerManager
+    *                level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of NATS headers.
     */
    public Headers renderEventMessageHeaders(TemplateEngine engine, Set<io.github.microcks.domain.Header> headers) {
       if (headers != null && !headers.isEmpty()) {
-        Headers natsHeaders = new Headers();
+         Headers natsHeaders = new Headers();
          for (io.github.microcks.domain.Header header : headers) {
-            String headerValue;
-            String firstValue = header.getValues().stream().findFirst().get();
-            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-               try {
-                  headerValue = Base64.getEncoder().encodeToString(engine.getValue(firstValue).getBytes());
-               } catch (Throwable t) {
-                  logger.error("Failing at evaluating template " + firstValue, t);
+            Optional<String> optionalValue = header.getValues().stream().findFirst();
+            if (optionalValue.isPresent()) {
+               String headerValue;
+               String firstValue = optionalValue.get();
+               if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+                  try {
+                     headerValue = Base64.getEncoder().encodeToString(engine.getValue(firstValue).getBytes());
+                  } catch (Throwable t) {
+                     logger.error("Failing at evaluating template " + firstValue, t);
+                     headerValue = Base64.getEncoder().encodeToString(firstValue.getBytes());
+                  }
+               } else {
                   headerValue = Base64.getEncoder().encodeToString(firstValue.getBytes());
                }
-            } else {
-                headerValue = Base64.getEncoder().encodeToString(firstValue.getBytes());
+               natsHeaders.add(header.getName(), headerValue);
             }
-            natsHeaders.add(header.getName(), headerValue);
-        }
+
+         }
          return natsHeaders;
       }
+
       return null;
    }
-   
+
    /**
-    * Get the NATS topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
-    * @param definition The AsyncMockDefinition
+    * Get the NATS topic name corresponding to a AsyncMockDefinition, sanitizing
+    * all parameters.
+    * 
+    * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic
     * @return The topic name for definition and event
     */

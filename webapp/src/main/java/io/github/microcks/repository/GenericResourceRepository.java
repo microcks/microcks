@@ -17,17 +17,18 @@ package io.github.microcks.repository;
 
 import io.github.microcks.domain.GenericResource;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.List;
 
 /**
  * This is a Mongo repository interface for GenericResource domain objects.
+ * 
  * @author laurent
  */
 public interface GenericResourceRepository extends MongoRepository<GenericResource, String>,
-      CustomGenericResourceRepository{
+      CustomGenericResourceRepository {
 
    List<GenericResource> findByServiceId(String serviceId, Pageable pageable);
 

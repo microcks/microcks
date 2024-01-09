@@ -40,6 +40,7 @@ import java.util.List;
 
 /**
  * A Service for managing imports and exports of Microcks repository part.
+ * 
  * @author laurent
  */
 @org.springframework.stereotype.Service
@@ -68,29 +69,29 @@ public class ImportExportService {
 
    /**
     * Import a repository from JSON definitions.
-    * @param json A String encoded into json and representing repository object definitions.
+    * 
+    * @param json A String encoded into json and representing repository object
+    *             definitions.
     * @return A boolean indicating operation success.
     */
-   public boolean importRepository(String json){
+   public boolean importRepository(String json) {
       ObjectMapper mapper = new ObjectMapper();
       ImportExportModel model = null;
-      try{
+      try {
          model = mapper.readValue(json, ImportExportModel.class);
-      } catch (Exception e){
+      } catch (Exception e) {
          log.error("Exception while reading json import", e);
       }
 
-      if (log.isInfoEnabled()){
-         log.info("Retrieve " + model.getServices().size() + " services to import into repository");
-         log.info("Retrieve " + model.getResources().size() + " resources to import into repository");
-         log.info("Retrieve " + model.getResponses().size() + " responses to import into repository");
-         log.info("Retrieve " + model.getRequests().size() + " requests to import into repository");
-         // Make it optional to allow importing an old snapshot.
-         if (model.getEventMessages() != null) {
-            log.info("Retrieve " + model.getEventMessages().size() + " event messages to import into repository");
-         }
+      if (log.isInfoEnabled()) {
+         log.info("Retrieve {} services to import into repository", model != null ? model.getServices().size() : 0);
+         log.info("Retrieve {} resources to import into repository", model != null ? model.getResources().size() : 0);
+         log.info("Retrieve {} responses to import into repository", model != null ? model.getResponses().size() : 0);
+         log.info("Retrieve {} requests to import into repository", model != null ? model.getRequests().size() : 0);
+         log.info("Retrieve {} event messages to import into repository",
+               model != null && model.getEventMessages() != null ? model.getEventMessages().size() : 0);
       }
-      if (model != null){
+      if (model != null) {
          serviceRepository.saveAll(model.getServices());
          resourceRepository.saveAll(model.getResources());
          responseRepository.saveAll(model.getResponses());
@@ -100,7 +101,8 @@ public class ImportExportService {
             eventMessageRepository.saveAll(model.getEventMessages());
          }
 
-         // Once everything is saved, be sure to fire a change event to allow propagation.
+         // Once everything is saved, be sure to fire a change event to allow
+         // propagation.
          for (Service service : model.getServices()) {
             publishServiceChangeEvent(service);
          }
@@ -118,36 +120,37 @@ public class ImportExportService {
 
    /**
     * Get a partial export of repository using the specified services identifiers.
-    * @param ids The list of service ids to export
+    * 
+    * @param ids    The list of service ids to export
     * @param format The format for this export (reserved for future usage)
     * @return A string representation of this repository export
     */
-   public String exportRepository(List<String> ids, String format){
+   public String exportRepository(List<String> ids, String format) {
       StringBuilder result = new StringBuilder("{");
       ObjectMapper mapper = new ObjectMapper();
 
       // First, retrieve service list.
       List<Service> services = serviceRepository.findByIdIn(ids);
-      try{
+      try {
          String jsonArray = mapper.writeValueAsString(services);
          result.append("\"services\":").append(jsonArray).append(", ");
-      } catch (Exception e){
+      } catch (Exception e) {
          log.error("Exception while serializing services for export", e);
       }
 
       // Then, get resources associated to services.
       List<Resource> resources = resourceRepository.findByServiceIdIn(ids);
-      try{
+      try {
          String jsonArray = mapper.writeValueAsString(resources);
          result.append("\"resources\":").append(jsonArray).append(", ");
-      } catch (Exception e){
+      } catch (Exception e) {
          log.error("Exception while serializing resources for export", e);
       }
 
       // Finally, get requests and responses associated to the services.
       List<String> operationIds = new ArrayList<>();
-      for (Service service : services){
-         for (Operation operation : service.getOperations()){
+      for (Service service : services) {
+         for (Operation operation : service.getOperations()) {
             operationIds.add(IdBuilder.buildOperationId(service, operation));
          }
       }
@@ -155,14 +158,14 @@ public class ImportExportService {
       List<Request> requests = requestRepository.findByOperationIdIn(operationIds);
       List<Response> responses = responseRepository.findByOperationIdIn(operationIds);
       List<EventMessage> eventMessages = eventMessageRepository.findByOperationIdIn(operationIds);
-      try{
+      try {
          String jsonArray = mapper.writeValueAsString(requests);
          result.append("\"requests\":").append(jsonArray).append(", ");
          jsonArray = mapper.writeValueAsString(responses);
          result.append("\"responses\":").append(jsonArray).append(", ");
          jsonArray = mapper.writeValueAsString(eventMessages);
          result.append("\"eventMessages\":").append(jsonArray);
-      } catch (Exception e){
+      } catch (Exception e) {
          log.error("Exception while serializing messages for export", e);
       }
 
@@ -175,9 +178,6 @@ public class ImportExportService {
       private List<Request> requests;
       private List<Response> responses;
       private List<EventMessage> eventMessages;
-
-      public ImportExportModel() {
-      }
 
       public List<Service> getServices() {
          return services;

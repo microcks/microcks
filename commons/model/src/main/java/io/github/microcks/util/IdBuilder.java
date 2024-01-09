@@ -24,17 +24,22 @@ import io.github.microcks.domain.TestResult;
  * @author laurent
  */
 public class IdBuilder {
-   
+
+   /**
+    * Private Constructor. So that the utility class cannot be instanced
+    */
+   private IdBuilder(){}
+
    /**
     * Build a unique operation Id from service and operation.
-    * @param service The domain service holding operation 
+    * @param service The domain service holding operation
     * @param operation A domain bean representing operation to build an id for
     * @return A unique identifier for operation.
     */
    public static String buildOperationId(Service service, Operation operation) {
       return service.getId() + "-" + operation.getName();
    }
-   
+
    /**
     * Build a unique TestCase Id from test result and operation.
     * @param testResult The domain testResult holding test case
@@ -64,5 +69,18 @@ public class IdBuilder {
     */
    public static String buildResourceFullName(Service service, String resourceName) {
       return service.getName() + "-" + service.getVersion() + "-" + resourceName;
+   }
+
+   /**
+    * Build the full name of a Resource dedicated to no particular operations of a Service. Such Resource is typically
+    * a global Schema dependency that defines shared data types, so that you'll be able to easily retrieve it later.
+    * @param service The domain service owning this resource
+    * @param resourceName The name of resource
+    * @param context The context this resource belongs to
+    * @return A full name for this globally attached resource.
+    */
+   public static String buildResourceFullName(Service service, String resourceName, String context) {
+      return service.getName() + "-" + service.getVersion() + "-"
+            + context.replace('/', '-').replace(".", "") + "-" + resourceName;
    }
 }

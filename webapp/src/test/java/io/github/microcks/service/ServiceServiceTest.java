@@ -112,10 +112,178 @@ public class ServiceServiceTest {
       // Inspect and check responses.
       List<Response> responses = responseRepository.findByOperationId(
             IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
-      assertEquals(5, requests.size());
+      assertEquals(5, responses.size());
       for (Response response : responses) {
          assertEquals("weather-forecast-openapi.yaml", response.getSourceArtifact());
       }
+   }
+
+   @Test
+   public void testImportServiceDefinitionFromGitLabURL() {
+      List<Service> services = null;
+      try {
+         services = service.importServiceDefinition("https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example%2Fopenapi.yaml/raw?head=main", null,
+               true, true);
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("OpenAPI Car API", importedSvc.getName());
+      assertEquals("1.0.0", importedSvc.getVersion());
+      assertEquals("openapi.yaml", importedSvc.getSourceArtifact());
+
+      // Inspect and check resources.
+      List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(10, resources.size());
+
+      // Now inspect operations.
+      assertEquals(1, importedSvc.getOperations().size());
+      assertEquals("GET /owner/{owner}/car", importedSvc.getOperations().get(0).getName());
+      assertEquals(DispatchStyles.URI_PARTS, importedSvc.getOperations().get(0).getDispatcher());
+      assertEquals(3, importedSvc.getOperations().get(0).getResourcePaths().size());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(3, requests.size());
+      for (Request request : requests) {
+         assertEquals("openapi.yaml", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository.findByOperationId(
+            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(3, responses.size());
+      for (Response response : responses) {
+         assertEquals("openapi.yaml", response.getSourceArtifact());
+         switch (response.getName()) {
+            case "laurent":
+               assertEquals("/owner=0", response.getDispatchCriteria());
+               assertEquals("[{\"model\":\"BMW X5\",\"year\":2018},{\"model\":\"Tesla Model 3\",\"year\":2020}]", response.getContent());
+               break;
+            case "maxime":
+               assertEquals("/owner=1", response.getDispatchCriteria());
+               assertEquals("[{\"model\":\"Volkswagen Golf\",\"year\":2017}]", response.getContent());
+               break;
+            case "NOT_FOUND":
+               assertEquals("/owner=999999999", response.getDispatchCriteria());
+               assertEquals("{\"error\":\"Could not find owner\"}", response.getContent());
+               break;
+            default:
+               fail("Unknown response message");
+         }
+      }
+   }
+
+   @Test
+   public void testImportServiceDefinitionFromGitLabURL2() {
+      List<String> resourceNames = List.of("OpenAPI Car API-1.0.0.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}-path.yaml",
+            "OpenAPI Car API-1.0.0-paths-components-schemas-Error.yaml",
+            "OpenAPI Car API-1.0.0-paths-components-schemas-Owner.yaml",
+            "OpenAPI Car API-1.0.0-paths-components-schemas-Car.yaml",
+            "OpenAPI Car API-1.0.0-paths-components-parameters-path-owner.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-404-response.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-404-examples-NOT_FOUND.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-200-response.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-200-examples-maxime.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}-get-200-examples-laurent.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-path.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-404-response.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-404-examples-NOT_FOUND.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-200-response.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-200-examples-maxime.yaml",
+            "OpenAPI Car API-1.0.0-paths-owner@{owner}@car-get-200-examples-laurent.yaml");
+      List<Service> services = null;
+      try {
+         services = service.importServiceDefinition("https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example-2%2Fopenapi.yaml/raw?head=main", null,
+               true, true);
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("OpenAPI Car API", importedSvc.getName());
+      assertEquals("1.0.0", importedSvc.getVersion());
+      assertEquals("openapi.yaml", importedSvc.getSourceArtifact());
+
+      // Inspect and check resources.
+      List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(resourceNames.size(), resources.size());
+      for (Resource resource : resources) {
+         assertEquals("openapi.yaml", resource.getSourceArtifact());
+         assertTrue(resourceNames.contains(resource.getName()));
+      }
+
+      // Now inspect operations.
+      assertEquals(2, importedSvc.getOperations().size());
+      for (Operation operation : importedSvc.getOperations()) {
+         assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+         assertEquals(3, operation.getResourcePaths().size());
+
+         // Inspect and check requests and responses.
+         List<Request> requests = requestRepository.findByOperationId(
+               IdBuilder.buildOperationId(importedSvc, operation));
+         List<Response> responses = responseRepository.findByOperationId(
+               IdBuilder.buildOperationId(importedSvc, operation));
+
+         switch (operation.getName()) {
+            case "GET /owner/{owner}":
+               for (Response response : responses) {
+                  assertEquals("openapi.yaml", response.getSourceArtifact());
+                  switch (response.getName()) {
+                     case "laurent":
+                        assertEquals("/owner=0", response.getDispatchCriteria());
+                        assertEquals("{\"name\":\"Laurent\"}", response.getContent());
+                        break;
+                     case "maxime":
+                        assertEquals("/owner=1", response.getDispatchCriteria());
+                        assertEquals("{\"name\":\"Maxime\"}", response.getContent());
+                        break;
+                     case "NOT_FOUND":
+                        assertEquals("/owner=999999999", response.getDispatchCriteria());
+                        assertEquals("{\"error\":\"Could not find owner\"}", response.getContent());
+                        break;
+                     default:
+                        fail("Unknown response message");
+                  }
+               }
+               break;
+            case "GET /owner/{owner}/car":
+               for (Response response : responses) {
+                  assertEquals("openapi.yaml", response.getSourceArtifact());
+                  switch (response.getName()) {
+                     case "laurent":
+                        assertEquals("/owner=0", response.getDispatchCriteria());
+                        assertEquals("[{\"model\":\"BMW X5\",\"year\":2018},{\"model\":\"Tesla Model 3\",\"year\":2020}]", response.getContent());
+                        break;
+                     case "maxime":
+                        assertEquals("/owner=1", response.getDispatchCriteria());
+                        assertEquals("[{\"model\":\"Volkswagen Golf\",\"year\":2017}]", response.getContent());
+                        break;
+                     case "NOT_FOUND":
+                        assertEquals("/owner=999999999", response.getDispatchCriteria());
+                        assertEquals("{\"error\":\"Could not find owner\"}", response.getContent());
+                        break;
+                     default:
+                        fail("Unknown response message");
+                  }
+               }
+               break;
+            default:
+               fail("Unknown operation");
+         }
+      }
+
    }
 
    @Test

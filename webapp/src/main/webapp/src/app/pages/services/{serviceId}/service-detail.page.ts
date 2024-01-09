@@ -44,6 +44,8 @@ import { ServicesService } from '../../../services/services.service';
 })
 export class ServiceDetailPageComponent implements OnInit {
 
+  readonly hlLang: string[] = ['json', 'xml', 'yaml'];
+
   modalRef: BsModalRef;
   serviceId: string;
   serviceView: Observable<ServiceView>;
@@ -274,6 +276,12 @@ export class ServiceDetailPageComponent implements OnInit {
           case 'GOOGLEPUBSUB':
             result += 'Google PubSub';
             break;
+          case 'SNS':
+            result += 'Amazon SNS';
+            break;
+          case 'SQS':
+            result += 'Amazon SQS';
+            break;
         }
         if (i+1 < bindings.length) {
           result += ", ";
@@ -434,14 +442,33 @@ export class ServiceDetailPageComponent implements OnInit {
 
   public formatRequestContent(requestContent: string): string {
     if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
-      let request = JSON.parse(requestContent);
-      return request.query;
+      try {
+        let request = JSON.parse(requestContent);
+        return request.query;
+      } catch (error) {
+        console.log("Error while parsing GraphQL request content: " + error.message);
+        return requestContent;
+      }
     }
-    return requestContent;
+    return this.prettyPrintIfJSON(requestContent);
   }
   public formatGraphQLVariables(requestContent: string): string {
-    let request = JSON.parse(requestContent);
-    return JSON.stringify(request.variables, null, 2);
+    try {
+      let request = JSON.parse(requestContent);
+      if (request.variables) {
+        return JSON.stringify(request.variables, null, 2);
+      }
+    } catch (error) {
+      console.log("Error while parsing GraphQL request content: " + error.message);
+    }
+    return "";
+  }
+  public prettyPrintIfJSON(content: string): string {
+    if ((content.startsWith('[') || content.startsWith('{')) && content.indexOf('\n') == -1) {
+      let jsonContent = JSON.parse(content);
+      return JSON.stringify(jsonContent, null, 2);
+    }
+    return content;
   }
 
   public formatCurlCmd(operation: Operation, exchange: RequestResponsePair): string {

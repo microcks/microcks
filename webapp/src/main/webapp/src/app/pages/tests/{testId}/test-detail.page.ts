@@ -37,6 +37,8 @@ import { AddToCIDialogComponent } from './_components/add-to-ci.dialog';
 })
 export class TestDetailPageComponent implements OnInit {
 
+  readonly hlLang: string[] = ['json', 'xml', 'yaml'];
+
   now: number;
   test: Observable<TestResult>;
   service: Observable<Service>;

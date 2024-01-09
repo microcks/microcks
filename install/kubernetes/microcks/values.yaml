@@ -9,9 +9,10 @@ microcks:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
   #ingressClassName: nginx
+  #grpcSecretRef: my-secret-for-microcks-grpc
   #grpcIngressClassName: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:1.8.0-fix-1
+  image: quay.io/microcks/microcks:1.8.1-M1
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
@@ -23,7 +24,7 @@ microcks:
   resources:
     requests:
       cpu: 200m
-      #memory: 400Mi
+      memory: 512Mi
     limits:
       #cpu: 500m
       memory: 512Mi
@@ -40,6 +41,10 @@ microcks:
       value: 0 0 0/2 * * *
     #- name: MAX_UPLOAD_FILE_SIZE
     #  value: 5MB
+    #- name: CORS_REST_ALLOWED_ORIGINS
+    #  value: my-site.acme.com
+    #- name: CORS_REST_ALLOW_CREDENTIALS
+    #  value: 'true'
 
   #logLevel: TRACE | DEBUG | INFO | WARN
   logLevel: INFO
@@ -50,8 +55,16 @@ microcks:
 postman:
   image: quay.io/microcks/microcks-postman-runtime:latest
   replicas: 1
+  resources:
+    requests:
+      memory: 256Mi
+    limits:
+      memory: 256Mi
 
 keycloak:
+  # Use keycloack in this release
+  enabled: true
+  # Install keycloack in this release
   install: true
   realm: microcks
   # Now that we switched to newer version of Keycloak-X, default url does not contain '/auth' path
@@ -72,16 +85,24 @@ keycloak:
   # Beware that in case of update, new value will be generated and
   #adminPassword: 123
 
+  # Or you can uncomment secretRef block if credentials are provided through a Secret.
+  #secretRef:
+    #secret: keycloak
+    #usernameKey: username
+    #passwordKey: password
+    #postgresUsernameKey: postgresUsername
+    #postgresPasswordKey: postgresPassword
+
   # Uncomment to change Keycloak Service to a NodePort
   #serviceType: NodePort
 
   resources:
     requests:
       cpu: 400m
-      memory: 400Mi
+      memory: 512Mi
     limits:
       #cpu: 500m
-      #memory: 512Mi
+      memory: 512Mi
 
   persistent: true
   volumeSize: 1Gi
@@ -108,7 +129,7 @@ mongodb:
   # Unless you uncomment following line and set class, persistent volume claim is created
   # with no storage class and relies on cluster default one.
   #storageClassName: my-awesome-class
-  
+
   username: userM
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.
@@ -124,9 +145,9 @@ mongodb:
     #helm.sh/resource-policy: keep
 
   resources:
-    #requests:
-      #cpu: 250m
-      #memory: 400Mi
+    requests:
+      cpu: 250m
+      memory: 512Mi
     limits:
       #cpu: 500m
       memory: 512Mi
@@ -137,8 +158,16 @@ features:
     defaultBinding: KAFKA
     defaultFrequency: 10
     defaultAvroEncoding: RAW
-    
-    image: quay.io/microcks/microcks-async-minion:1.8.0-fix-1
+
+    image: quay.io/microcks/microcks-async-minion:1.8.1-M1
+
+    env:
+      #- name: OAUTH_CLIENT_ID
+      #  value: <kafka-oauth-client-id>
+      #- name: OAUTH_CLIENT_SECRET
+      #  value: <kafka-oauth-client-secret>
+      #- name: OAUTH_TOKEN_ENDPOINT_URI
+      #  value: <kafka-oauth-endpoint-uri>
 
     kafka:
       install: true
@@ -191,6 +220,10 @@ features:
         # as well as a JAAS configuration line with login module, username and password.
         #saslMechanism: SCRAM-SHA-512
         #saslJaasConfig: org.apache.kafka.common.security.scram.ScramLoginModule required username="scram-user" password="tDtDCT3pYKE5";
+        # or an OAuth configuration (you'll need here to extend the async-minion image with your handler class implementation)
+        #saslMechanism: OAUTHBEARER
+        #saslJaasConfig: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;
+        #saslLoginCallbackHandlerClass: io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler
 
     # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
     mqtt:
@@ -287,3 +320,9 @@ features:
       timeout: 20
       #model: gpt-3.5-turbo
       #maxTokens: 2000
+
+# common labels associated with all resources helm chart
+commonLabels: {}
+
+# common annotations associated with all resource of this helm chart
+commonAnnotations: {}

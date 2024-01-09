@@ -17,16 +17,14 @@ package io.github.microcks.util.el.function;
 
 import io.github.microcks.util.el.EvaluationContext;
 
-import java.util.Random;
-
 /**
  * Implementation of ELFunction that generates a random boolean.
  * @author laurent
  */
-public class RandomBooleanELFunction implements ELFunction {
+public class RandomBooleanELFunction extends AbstractRandomELFunction {
 
    @Override
    public String evaluate(EvaluationContext evaluationContext, String... args) {
-      return String.valueOf(new Random().nextBoolean());
+      return String.valueOf(getRandom().nextBoolean());
    }
 }

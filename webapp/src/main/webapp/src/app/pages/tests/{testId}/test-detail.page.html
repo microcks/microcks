@@ -107,7 +107,7 @@
                 <div class="col-md-6" *ngIf="service.type != 'EVENT'">
                   <h5 class="subsection-label">Request</h5>
 
-                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).request.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).request.content"></code></pre>
+                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).request.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).request.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="messagePairFor(item.operationName, testStep.requestName).request.headers">
                     <thead>
                       <tr>
@@ -142,7 +142,7 @@
                       </dd>
                     </span>
                   </dl>
-                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).response.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).response.content"></code></pre>
+                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).response.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).response.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="messagePairFor(item.operationName, testStep.requestName).response.headers">
                     <thead>
                       <tr>
@@ -177,7 +177,7 @@
                       </dd>
                     </span>
                   </dl>
-                  <pre *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content"><code [highlight]="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content"></code></pre>
+                  <pre *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content"><code [highlight]="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.headers">
                     <thead>
                       <tr>

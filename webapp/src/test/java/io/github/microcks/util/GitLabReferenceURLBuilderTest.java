@@ -38,6 +38,9 @@ public class GitLabReferenceURLBuilderTest {
 
       Map<String, List<String>> headers = Map.of("X-Gitlab-File-Name", List.of("FooBar.yaml"));
       assertEquals("FooBar.yaml", builder.getFileName(BASE_URL, headers));
+
+      headers = Map.of("x-gitlab-file-name", List.of("FooBar.yaml"));
+      assertEquals("FooBar.yaml", builder.getFileName(BASE_URL, headers));
    }
 
    @Test

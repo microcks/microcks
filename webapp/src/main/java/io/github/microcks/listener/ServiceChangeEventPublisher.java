@@ -28,12 +28,12 @@ import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.service.MessageService;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.domain.ServiceView;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -48,8 +48,8 @@ import java.util.Map;
 @ConditionalOnProperty(value="async-api.enabled", havingValue="true", matchIfMissing=true)
 public class ServiceChangeEventPublisher implements ApplicationListener<ServiceChangeEvent> {
 
-   /** A commons logger for diagnostic messages. */
-   private static Log log = LogFactory.getLog(ServiceChangeEventPublisher.class);
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(ServiceChangeEventPublisher.class);
 
    @Autowired
    private ServiceRepository serviceRepository;
@@ -58,12 +58,12 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
    private MessageService messageService;
 
    @Autowired
-   private KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate;
+   private ServiceChangeEventChannel channel;
 
    @Override
    @Async
    public void onApplicationEvent(ServiceChangeEvent event) {
-      log.debug("Received a ServiceChangeEvent on " + event.getServiceId());
+      log.debug("Received a ServiceChangeEvent on {}", event.getServiceId());
 
       ServiceView serviceView = null;
       if (event.getChangeType() != ChangeType.DELETED) {
@@ -92,7 +92,12 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
 
       // Build and send a ServiceViewChangeEvent that wraps ServiceView.
       ServiceViewChangeEvent serviceViewChangeEvent = new ServiceViewChangeEvent(event.getServiceId(), serviceView, event.getChangeType(), System.currentTimeMillis());
-      kafkaTemplate.send("microcks-services-updates", event.getServiceId(), serviceViewChangeEvent);
-      log.debug("Processing of ServiceChangeEvent done !");
+      try {
+         channel.sendServiceViewChangeEvent(serviceViewChangeEvent);
+         log.debug("Processing of ServiceChangeEvent done !");
+      } catch (Exception e) {
+         // This is best effort sending, just log the exception.
+         log.error("Failed sending ServiceChangeEvent to correct channel", e);
+      }
    }
 }

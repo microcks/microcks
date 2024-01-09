@@ -25,7 +25,7 @@ import io.github.microcks.util.DispatchStyles;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.theokanning.openai.completion.chat.ChatCompletionChoice;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import com.theokanning.openai.completion.chat.ChatCompletionResult;
@@ -57,25 +57,33 @@ public class OpenAICopilot implements AICopilot {
    private static Logger log = LoggerFactory.getLogger(OpenAICopilot.class);
 
 
-   /** Configuration parameters holding the OpenAI API key. */
+   /** Configuration parameter holding the OpenAI API key. */
    public static final String API_KEY_CONFIG = "api-key";
+
+   /** Configuration parameter holding the OpenAI API URL. */
+   public static final String API_URL_CONFIG = "api-url";
 
    /** Configuration parameters holding the timeout in seconds for API calls. */
    public static final String TIMEOUT_KEY_CONFIG = "timeout";
 
-   /** Configuration parameters holding the name of model to use. */
+   /** Configuration parameter holding the name of model to use. */
    public static final String MODEL_KEY_CONFIG = "model";
 
-   /** Configuration parameters holding the maximum number of tokens to use. */
+   /** Configuration parameter holding the maximum number of tokens to use. */
    public static final String MAX_TOKENS_KEY_CONFIG = "maxTokens";
 
    /** The mandatory configuration keys required by this implementation. */
-   public static final String[] MANDATORY_CONFIG_KEYS = {API_KEY_CONFIG};
+   protected static final String[] MANDATORY_CONFIG_KEYS = {API_KEY_CONFIG};
 
 
-   private static final String BASE_URL = "https://api.openai.com/";
+   /** Default online URL for OpenAI API. */
+   private static final String OPENAI_BASE_URL = "https://api.openai.com/";
+
+   private static final String SECTION_DELIMITER = "\n###\n";
 
    private RestTemplate restTemplate;
+
+   private String apiUrl = OPENAI_BASE_URL;
 
    private String apiKey;
 
@@ -107,6 +115,9 @@ public class OpenAICopilot implements AICopilot {
       }
       if (configuration.containsKey(MODEL_KEY_CONFIG)) {
          model = configuration.get(MODEL_KEY_CONFIG);
+      }
+      if (configuration.containsKey(API_URL_CONFIG)) {
+         apiUrl = configuration.get(API_URL_CONFIG);
       }
       // Finally retrieve the OpenAI Api key.
       apiKey = configuration.get(API_KEY_CONFIG);
@@ -154,7 +165,7 @@ public class OpenAICopilot implements AICopilot {
 
       // Build a full HttpEntity as we need to specify authentication headers.
       HttpEntity<ChatCompletionRequest> request = new HttpEntity<>(chatCompletionRequest, createAuthenticationHeaders());
-      ChatCompletionResult completionResult = restTemplate.exchange(BASE_URL + "/v1/chat/completions",
+      ChatCompletionResult completionResult = restTemplate.exchange(apiUrl + "/v1/chat/completions",
                   HttpMethod.POST, request, ChatCompletionResult.class).getBody();
 
       if (completionResult != null) {
@@ -179,7 +190,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
       prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
-      prompt.append("\n###\n");
+      prompt.append(SECTION_DELIMITER);
       prompt.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
 
       return prompt.toString();
@@ -211,7 +222,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
       prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
-      prompt.append("\n###\n");
+      prompt.append(SECTION_DELIMITER);
       prompt.append(contract.getContent());
 
       return prompt.toString();
@@ -225,7 +236,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
       prompt.append(AICopilotHelper.getUnidirectionalEventExampleYamlFormattingDirective(1));
-      prompt.append("\n###\n");
+      prompt.append(SECTION_DELIMITER);
       prompt.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
 
       return prompt.toString();
@@ -241,7 +252,7 @@ public class OpenAICopilot implements AICopilot {
       ObjectMapper mapper = new ObjectMapper();
       mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
       mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-      mapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+      mapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
       mapper.addMixIn(ChatCompletionRequest.class, ChatCompletionRequestMixIn.class);
       return mapper;
    }

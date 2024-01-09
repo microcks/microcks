@@ -31,14 +31,18 @@ import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 /**
- * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event messages.
+ * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event
+ * messages.
+ * 
  * @author laurent
  */
 @ApplicationScoped
@@ -52,7 +56,7 @@ public class AMQPProducerManager {
    @ConfigProperty(name = "amqp.server")
    String amqpServer;
 
-   @ConfigProperty(name = "amqp.clientid", defaultValue="microcks-async-minion")
+   @ConfigProperty(name = "amqp.clientid", defaultValue = "microcks-async-minion")
    String amqpClientId;
 
    @ConfigProperty(name = "amqp.username")
@@ -63,6 +67,7 @@ public class AMQPProducerManager {
 
    /**
     * Initialize the AMQP connection post construction.
+    * 
     * @throws Exception If connection to AMQP Broker cannot be done.
     */
    @PostConstruct
@@ -96,20 +101,20 @@ public class AMQPProducerManager {
 
    /**
     * Publish a message on specified destination.
+    * 
     * @param destinationType The type of destination (queue, topic, fanout, ...)
     * @param destinationName The name of destination
-    * @param value The message payload
-    * @param headers A set of headers if any (maybe null or empty)
+    * @param value           The message payload
+    * @param headers         A set of headers if any (maybe null or empty)
     */
    public void publishMessage(String destinationType, String destinationName, String value, Set<Header> headers) {
       logger.infof("Publishing on destination {%s}, message: %s ", destinationName, value);
-      try {
-         Channel channel = amqpConnection.createChannel();
+      try (Channel channel = amqpConnection.createChannel()) {
          channel.exchangeDeclare(destinationName, destinationType);
 
          AMQP.BasicProperties properties = null;
          // Adding headers to properties if provided.
-         if (headers != null && headers.size() > 0) {
+         if (headers != null && !headers.isEmpty()) {
             Map<String, Object> amqpHeaders = new HashMap<>();
             for (Header header : headers) {
                amqpHeaders.put(header.getName(), header.getValues().toArray()[0]);
@@ -147,7 +152,10 @@ public class AMQPProducerManager {
 
    /**
     * Render Microcks headers using the template engine.
-    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the KafkaProducerManager level.)
+    * 
+    * @param engine  The template engine to reuse (because we do not want to
+    *                initialize and manage a context at the KafkaProducerManager
+    *                level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of rendered Microcks headers.
     */
@@ -156,29 +164,33 @@ public class AMQPProducerManager {
          Set<Header> renderedHeaders = new HashSet<>(headers.size());
 
          for (Header header : headers) {
-            String firstValue = header.getValues().stream().findFirst().get();
-            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-               try {
-                  Header renderedHeader = new Header();
-                  renderedHeader.setName(header.getName());
-                  renderedHeader.setValues(Set.of(engine.getValue(firstValue)));
-                  renderedHeaders.add(renderedHeader);
-               } catch (Throwable t) {
-                  logger.error("Failing at evaluating template " + firstValue, t);
+            Optional<String> optionalValue = header.getValues().stream().findFirst();
+            if (optionalValue.isPresent()) {
+               String firstValue = optionalValue.get();
+               if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+                  try {
+                     Header renderedHeader = new Header();
+                     renderedHeader.setName(header.getName());
+                     renderedHeader.setValues(Set.of(engine.getValue(firstValue)));
+                     renderedHeaders.add(renderedHeader);
+                  } catch (Throwable t) {
+                     logger.error("Failing at evaluating template " + firstValue, t);
+                     Header renderedHeader = new Header();
+                     renderedHeader.setName(header.getName());
+                     renderedHeader.setValues(Set.of(firstValue));
+                     renderedHeaders.add(renderedHeader);
+                  }
+               } else {
                   Header renderedHeader = new Header();
                   renderedHeader.setName(header.getName());
                   renderedHeader.setValues(Set.of(firstValue));
                   renderedHeaders.add(renderedHeader);
                }
-            } else {
-               Header renderedHeader = new Header();
-               renderedHeader.setName(header.getName());
-               renderedHeader.setValues(Set.of(firstValue));
-               renderedHeaders.add(renderedHeader);
             }
          }
          return renderedHeaders;
       }
-      return null;
+
+      return Collections.emptySet();
    }
 }

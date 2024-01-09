@@ -34,7 +34,6 @@ import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
 import software.amazon.awssdk.services.sns.model.ListTopicsRequest;
 import software.amazon.awssdk.services.sns.model.ListTopicsResponse;
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sns.model.PublishResponse;
 import software.amazon.awssdk.services.sns.model.Topic;
 
 import jakarta.annotation.PostConstruct;
@@ -136,27 +135,31 @@ public class AmazonSNSProducerManager {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
       try {
          if (topicArns.get(topic) == null) {
+            boolean exists = false;
             // Ensure topic exists on AWS by trying to get it in the list.
             ListTopicsRequest listRequest = ListTopicsRequest.builder().build();
             ListTopicsResponse listResponse = snsClient.listTopics(listRequest);
 
-            if (listResponse.hasTopics() && listResponse.topics().size() > 0) {
+            if (listResponse.hasTopics() && !listResponse.topics().isEmpty()) {
                logger.infof("listResponse.hasTopics(): %d", listResponse.topics().size());
                for (Topic topicTopic : listResponse.topics()) {
                   logger.infof("Found AWS SNS topic: %s", topicTopic.toString());
                   if (topicTopic.topicArn().endsWith(":" + topic)) {
                      topicArns.put(topic, topicTopic.topicArn());
+                     exists = true;
                      break;
                   }
                }
-            } else {
+            }
+
+            if (!exists) {
                topicArns.put(topic, createTopicAndGetArn(topic));
             }
          }
 
          // Retrieve topic ARN from local defs and publish message.
          String topicArn = topicArns.get(topic);
-         PublishResponse response = snsClient.publish(pr -> pr.topicArn(topicArn)
+         snsClient.publish(pr -> pr.topicArn(topicArn)
                .message(value)
                .messageAttributes(headers)
                .build());
@@ -178,7 +181,7 @@ public class AmazonSNSProducerManager {
    public Map<String, MessageAttributeValue> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
       if (headers != null && !headers.isEmpty()) {
          return headers.stream().collect(Collectors.toMap(
-               header -> header.getName(),
+               Header::getName,
                header -> {
                   String firstValue = header.getValues().stream().findFirst().get();
                   String finaleValue = firstValue;
@@ -228,6 +231,7 @@ public class AmazonSNSProducerManager {
    }
 
    private String createTopicAndGetArn(String topicName) {
+      logger.infof("Creating new AWS SNS topic: %s", topicName);
       CreateTopicRequest createTopicRequest = CreateTopicRequest.builder()
             .name(topicName)
             .build();

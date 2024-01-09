@@ -47,6 +47,7 @@ public class ReferenceResolver {
    private RelativeReferenceURLBuilder urlBuilder;
 
    private Map<String, File> resolvedReferences = new HashMap<>();
+   private Map<String, File> relativeResolvedReferences = new HashMap<>();
 
    /**
     * Build a new reference resolver.
@@ -55,14 +56,9 @@ public class ReferenceResolver {
     * @param disableSSLValidation Whether to disable or enable the SSL trusting of certificates
     */
    public ReferenceResolver(String baseRepositoryUrl, Secret repositorySecret, boolean disableSSLValidation) {
+      this.setBaseRepositoryUrl(baseRepositoryUrl);
       this.repositorySecret = repositorySecret;
       this.disableSSLValidation = disableSSLValidation;
-      // Remove trailing / to ease things later.
-      if (baseRepositoryUrl.endsWith("/")) {
-         this.baseRepositoryUrl = baseRepositoryUrl.substring(0, baseRepositoryUrl.length() - 1);
-      } else {
-         this.baseRepositoryUrl = baseRepositoryUrl;
-      }
       this.urlBuilder = new SimpleReferenceURLBuilder();
    }
 
@@ -74,15 +70,41 @@ public class ReferenceResolver {
     */
    public ReferenceResolver(String baseRepositoryUrl, Secret repositorySecret, boolean disableSSLValidation,
                             RelativeReferenceURLBuilder urlBuilder) {
+      this.setBaseRepositoryUrl(baseRepositoryUrl);
       this.repositorySecret = repositorySecret;
       this.disableSSLValidation = disableSSLValidation;
+      this.urlBuilder = urlBuilder;
+   }
+
+   /** @return the current base repository url. */
+   public String getBaseRepositoryUrl() {
+      return baseRepositoryUrl;
+   }
+
+   /**
+    * Update the base repository url to use as root for relative reference resolution.
+    * @param baseRepositoryUrl The new base repository url.
+    */
+   public void setBaseRepositoryUrl(String baseRepositoryUrl) {
       // Remove trailing / to ease things later.
       if (baseRepositoryUrl.endsWith("/")) {
          this.baseRepositoryUrl = baseRepositoryUrl.substring(0, baseRepositoryUrl.length() - 1);
       } else {
          this.baseRepositoryUrl = baseRepositoryUrl;
       }
-      this.urlBuilder = urlBuilder;
+   }
+
+   /**
+    * Get the full URL corresponding to a reference relative path
+    * @param referenceRelativePath The reference relative path to resolve
+    * @return The absolute URL if a relative path, the orginal path/URL otherwise.
+    */
+   public String getReferenceURL(String referenceRelativePath) {
+      String remoteUrl = referenceRelativePath;
+      if (!referenceRelativePath.startsWith("http")) {
+         remoteUrl = urlBuilder.buildRemoteURL(this.baseRepositoryUrl, referenceRelativePath);
+      }
+      return remoteUrl;
    }
 
    /**
@@ -92,29 +114,36 @@ public class ReferenceResolver {
     * @return A string representation of reference content.
     * @throws IOException if access to remote reference fails (not found or connection issues)
     */
-   public String getHttpReferenceContent(String relativePath, String encoding) throws IOException {
+   public String getHttpReferenceContent(String relativePath, Charset encoding) throws IOException {
       // Check the file first.
-      File referenceFile = resolvedReferences.get(relativePath);
+      String remoteUrl = getReferenceURL(relativePath);
+      File referenceFile = resolvedReferences.get(remoteUrl);
       if (referenceFile == null) {
-         String remoteUrl = relativePath;
-         if (!relativePath.startsWith("http")) {
-            remoteUrl = urlBuilder.buildRemoteURL(this.baseRepositoryUrl, relativePath);
-         }
          log.info("Downloading a reference file at {}", remoteUrl);
          // Now download this relative file and store its reference into the cache.
          referenceFile = HTTPDownloader.handleHTTPDownloadToFile(remoteUrl, repositorySecret, disableSSLValidation);
-         resolvedReferences.put(relativePath, referenceFile);
+         resolvedReferences.put(remoteUrl, referenceFile);
       }
+      // Keep track on how we resolved this relativePath.
+      relativeResolvedReferences.put(relativePath, referenceFile);
 
-      return Files.readString(referenceFile.toPath(), Charset.forName(encoding));
+      return Files.readString(referenceFile.toPath(), encoding);
    }
 
    /**
     * Get resolved references map.
-    * @return The map of resolved references
+    * @return The map of resolved references with keys being absolute paths.
     */
    public Map<String, File> getResolvedReferences() {
       return resolvedReferences;
+   }
+
+   /**
+    * Get relative resolved references map.
+    * @return The map of resolved references with keys being relative paths.
+    */
+   public Map<String, File> getRelativeResolvedReferences() {
+      return relativeResolvedReferences;
    }
 
    /** Cleans up already resolved references. */
@@ -123,5 +152,6 @@ public class ReferenceResolver {
          referenceFile.delete();
       }
       resolvedReferences.clear();
+      relativeResolvedReferences.clear();
    }
 }

@@ -77,7 +77,11 @@ public class RestController {
 
    @Value("${mocks.rest.enable-cors-policy}")
    private final Boolean enableCorsPolicy = null;
+   @Value("${mocks.rest.cors.allowedOrigins}")
+   private String corsAllowedOrigins;
 
+   @Value("${mocks.rest.cors.allowCredentials}")
+   private Boolean corsAllowCredentials;
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
@@ -382,10 +386,10 @@ public class RestController {
 
       // Apply CORS headers to response with 204 response code.
       ResponseEntity<Object> response = ResponseEntity.noContent()
-               .header("Access-Control-Allow-Origin", "*")
+               .header("Access-Control-Allow-Origin", corsAllowedOrigins)
                .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH")
                .headers(requestHeaders)
-               .header("Access-Allow-Credentials", "true")
+               .header("Access-Allow-Credentials", String.valueOf(corsAllowCredentials))
                .header("Access-Control-Max-Age", "3600")
                .header("Vary", "Accept-Encoding, Origin")
                .build();

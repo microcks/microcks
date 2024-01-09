@@ -255,7 +255,6 @@ public class ProtobufImporterTest {
                   "GoodbyeService-v1-shared~1uuid.proto".equals(resource.getName()));
          } else if (ResourceType.PROTOBUF_DESCRIPTOR.equals(resource.getType())) {
             assertEquals("GoodbyeService-v1.pbb", resource.getName());
-            System.err.println("base64: " + resource.getContent());
             try {
                // Check Protobuf Descriptor.
                byte[] decodedBinaryPB = Base64.getDecoder().decode(resource.getContent().getBytes("UTF-8"));

@@ -1,0 +1,24 @@
+info:
+  title: Common regions objects to reuse
+  description: Common regions objects to reuse
+regions:
+  north:
+    region: north
+    temp: -1.5
+    weather: snowy
+    visibility: 25
+  west:
+    region: west
+    temp: 12.2
+    weather: rainy
+    visibility: 300
+  east:
+    region: east
+    temp: -6.6
+    weather: frosty
+    visibility: 523
+  south:
+    region: south
+    temp: 28.3
+    weather: sunny
+    visibility: 1500

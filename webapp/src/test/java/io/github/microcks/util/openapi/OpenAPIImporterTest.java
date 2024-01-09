@@ -1141,6 +1141,67 @@ public class OpenAPIImporterTest {
    }
 
    @Test
+   public void testExamplesRefsOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/examples-ref-openapi.yaml", null);
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Broken Ref", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("2.0.0", service.getVersion());
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+
+      for (Operation operation : service.getOperations()) {
+
+         if ("GET /v1.0/endpoint".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+            assertEquals(1, operation.getResourcePaths().size());
+            assertTrue(operation.getResourcePaths().contains("/v1.0/endpoint"));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair) {
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+
+                  assertEquals("example1", request.getName());
+                  assertEquals("example1", response.getName());
+                  assertEquals("someValue", response.getContent());
+               }
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   @Test
    public void testExternalRelativeReferenceOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
@@ -1172,14 +1233,104 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0-weather-forecast-schema.yaml"));
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0--weather-forecast-schema.yaml"));
 
       Resource refSchema = resources.get(1);
-      assertEquals("WeatherForecast API-1.0.0-weather-forecast-schema.yaml", refSchema.getName());
+      assertEquals("WeatherForecast API-1.0.0--weather-forecast-schema.yaml", refSchema.getName());
       assertEquals(ResourceType.JSON_SCHEMA, refSchema.getType());
       assertEquals("./weather-forecast-schema.yaml", refSchema.getPath());
       assertNotNull(refSchema.getContent());
       assertTrue(refSchema.getContent().contains("A weather forecast for a requested region"));
+   }
+
+   @Test
+   public void testExternalRelativeReferenceWithJSONPointerOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      ReferenceResolver resolver = new ReferenceResolver(
+            "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml",
+            null, true);
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml", resolver);
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("WeatherForecast API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(3, resources.size());
+
+      Resource openAPISpec = resources.get(0);
+      assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
+      assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0--weather-forecast-schema.yaml"));
+
+      for (int i=1; i<3; i++) {
+         Resource refResource = resources.get(i);
+         if ("WeatherForecast API-1.0.0--weather-examples.json".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("./weather-examples.json", refResource.getPath());
+            assertNotNull(refResource.getContent());
+            assertTrue(refResource.getContent().contains("\"region\": \"east\""));
+         } else if ("WeatherForecast API-1.0.0--weather-forecast-schema.yaml".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("./weather-forecast-schema.yaml", refResource.getPath());
+            assertNotNull(refResource.getContent());
+            assertTrue(refResource.getContent().contains("A weather forecast for a requested region"));
+         } else {
+            fail("Unknown ref resource found");
+         }
+      }
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("GET /forecast/{region}".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(5, exchanges.size());
+            assertEquals(5, operation.getResourcePaths().size());
+            assertTrue(operation.getResourcePaths().contains("/forecast/north"));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair entry) {
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertNotNull(response.getContent());
+
+                  if ("unknown".equals(request.getName())) {
+                     assertEquals("Region is unknown. Choose in north, west, east or south.", response.getContent());
+                  } else {
+                     assertEquals("/region=" + request.getName(), response.getDispatchCriteria());
+                     assertTrue(response.getContent().contains("\"region\":\"" + request.getName() + "\""));
+                  }
+               }
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
    }
 
    @Test
@@ -1222,6 +1373,190 @@ public class OpenAPIImporterTest {
       assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-schema.yaml", refSchema.getPath());
       assertNotNull(refSchema.getContent());
       assertTrue(refSchema.getContent().contains("A weather forecast for a requested region"));
+   }
+
+   @Test
+   public void testExternalAbsoluteReferenceWithJSONPointerOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      ReferenceResolver resolver = new ReferenceResolver(
+            "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/",
+            null, true);
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref-pointers.yaml", resolver);
+      } catch (IOException ioe) {
+         ioe.printStackTrace();
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("WeatherForecast API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(3, resources.size());
+
+      Resource openAPISpec = resources.get(0);
+      assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
+      assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
+      assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0-weather-forecast-schema.yaml"));
+
+      for (int i=1; i<3; i++) {
+         Resource refResource = resources.get(i);
+         if ("WeatherForecast API-1.0.0-weather-forecast-common.yaml".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-common.yaml", refResource.getPath());
+            assertNotNull(refResource.getContent());
+            assertTrue(refResource.getContent().contains("title: Common objects to reuse"));
+         } else if ("WeatherForecast API-1.0.0-weather-forecast-schema.yaml".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-schema.yaml", refResource.getPath());
+            assertNotNull(refResource.getContent());
+            assertTrue(refResource.getContent().contains("A weather forecast for a requested region"));
+         } else {
+            fail("Unknown ref resource found");
+         }
+      }
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("GET /forecast/{region}".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(5, exchanges.size());
+            assertEquals(5, operation.getResourcePaths().size());
+            assertTrue(operation.getResourcePaths().contains("/forecast/north"));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair entry) {
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertNotNull(response.getContent());
+
+                  if ("unknown".equals(request.getName())) {
+                     assertEquals("Region is unknown. Choose in north, west, east or south.", response.getContent());
+                  } else {
+                     assertEquals("/region=" + request.getName(), response.getDispatchCriteria());
+                     assertTrue(response.getContent().contains("\"region\":\"" + request.getName() + "\""));
+                  }
+               }
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   @Test
+   public void testExternalRelativeRecursiveReferenceWithJSONPointerOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      ReferenceResolver resolver = new ReferenceResolver(
+            "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-recursive-ref.yaml",
+            null, true);
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-recursive-ref.yaml", resolver);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("WeatherForecast API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(4, resources.size());
+
+      Resource openAPISpec = resources.get(0);
+      assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
+      assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
+      assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0--weather-forecast-schema.yaml"));
+
+      for (int i=1; i<4; i++) {
+         Resource refResource = resources.get(i);
+         if ("WeatherForecast API-1.0.0--weather-forecast-schema.yaml".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("./weather-forecast-schema.yaml", refResource.getPath());
+            assertNotNull(refResource.getContent());
+            assertTrue(refResource.getContent().contains("A weather forecast for a requested region"));
+         } else if ("WeatherForecast API-1.0.0--weather-forecast-examples.yaml".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("./weather-forecast-examples.yaml", refResource.getPath());
+            assertNotNull(refResource.getContent());
+            assertTrue(refResource.getContent().contains("$ref: 'WeatherForecast+API-1.0.0--weather-forecast-common-regions.yaml#/regions/north'"));
+         } else if ("WeatherForecast API-1.0.0--weather-forecast-common-regions.yaml".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("./weather-forecast-common-regions.yaml", refResource.getPath());
+            assertNotNull(refResource.getContent());
+            assertTrue(refResource.getContent().contains("title: Common regions objects to reuse"));
+         } else {
+            fail("Unknown ref resource found");
+         }
+      }
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("GET /forecast/{region}".equals(operation.getName())) {
+            assertEquals("GET", operation.getMethod());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(5, exchanges.size());
+            assertEquals(5, operation.getResourcePaths().size());
+            assertTrue(operation.getResourcePaths().contains("/forecast/north"));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair entry) {
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertNotNull(response.getContent());
+
+                  if ("unknown".equals(request.getName())) {
+                     assertEquals("Region is unknown. Choose in north, west, east or south.", response.getContent());
+                  } else {
+                     assertEquals("/region=" + request.getName(), response.getDispatchCriteria());
+                     assertTrue(response.getContent().contains("\"region\":\"" + request.getName() + "\""));
+                  }
+               }
+            }
+         } else {
+            fail("Unknown operation name: " + operation.getName());
+         }
+      }
    }
 
    private void importAndAssertOnSimpleOpenAPI(OpenAPIImporter importer) {

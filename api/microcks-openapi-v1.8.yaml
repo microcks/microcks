@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Microcks API v1.8
-  version: 1.8.0
+  version: 1.8.1
   description: "API offered by Microcks, the Kubernetes native tool for API and microservices\
     \ mocking and testing (microcks.io)"
   contact:
@@ -195,79 +195,6 @@ paths:
       operationId: DeleteImportJob
       summary: Delete ImportJob
       description: Delete an ImportJob
-    parameters:
-    - name: id
-      description: Unique identifier of ImportJob to manage
-      schema:
-        type: string
-      in: path
-      required: true
-  /jobs/{id}/activate:
-    put:
-      tags:
-      - job
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImportJob'
-          description: ImportJob is activated
-      security:
-      - jwt-bearer:
-        - user
-      operationId: ActivateImportJob
-      summary: Activate an ImportJob
-      description: "Make an ImportJob active, so that it is executed"
-    parameters:
-    - name: id
-      description: Unique identifier of ImportJob to manage
-      schema:
-        type: string
-      in: path
-      required: true
-  /jobs/{id}/start:
-    put:
-      tags:
-      - job
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImportJob'
-          description: Started ImportJob
-      security:
-      - jwt-bearer:
-        - user
-      operationId: StartImportJob
-      summary: Start an ImportJob
-      description: Starting an ImportJob forces it to immediatly import mock definitions
-    parameters:
-    - name: id
-      description: Unique identifier of ImportJob to manage
-      schema:
-        type: string
-      in: path
-      required: true
-  /jobs/{id}/stop:
-    put:
-      tags:
-      - job
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ImportJob'
-          description: Stopped ImportJob
-      security:
-      - jwt-bearer:
-        - user
-      operationId: StopImportJob
-      summary: Stop an ImportJob
-      description: "Stopping an ImportJob desactivate it, so that it won't execute\
-        \ at next schedule"
     parameters:
     - name: id
       description: Unique identifier of ImportJob to manage
@@ -715,23 +642,6 @@ paths:
         type: string
       in: path
       required: true
-  /services/labels:
-    get:
-      tags:
-      - mock
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LabelsMap'
-          description: "Already used labels: keys are label Keys, values are array\
-            \ of label Values"
-      security:
-      - jwt-bearer:
-        - admin
-      operationId: GetServicesLabels
-      summary: Get the already used labels for Services
   /services/search:
     get:
       tags:
@@ -1065,6 +975,99 @@ paths:
           description: Test results summary for specified <limit> last days.
       operationId: GetLatestTestResults
       summary: Get latest tests results
+  /jobs/{id}/start:
+    put:
+      tags:
+      - job
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJob'
+          description: Started ImportJob
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: StartImportJob
+      summary: Start an ImportJob
+      description: Starting an ImportJob forces it to immediatly import mock definitions
+    parameters:
+    - name: id
+      description: Unique identifier of ImportJob to manage
+      schema:
+        type: string
+      in: path
+      required: true
+  /jobs/{id}/stop:
+    put:
+      tags:
+      - job
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJob'
+          description: Stopped ImportJob
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: StopImportJob
+      summary: Stop an ImportJob
+      description: "Stopping an ImportJob desactivate it, so that it won't execute\
+        \ at next schedule"
+    parameters:
+    - name: id
+      description: Unique identifier of ImportJob to manage
+      schema:
+        type: string
+      in: path
+      required: true
+  /jobs/{id}/activate:
+    put:
+      tags:
+      - job
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImportJob'
+          description: ImportJob is activated
+      security:
+      - jwt-bearer:
+        - manager
+        - admin
+      operationId: ActivateImportJob
+      summary: Activate an ImportJob
+      description: "Make an ImportJob active, so that it is executed"
+    parameters:
+    - name: id
+      description: Unique identifier of ImportJob to manage
+      schema:
+        type: string
+      in: path
+      required: true
+  /services/labels:
+    get:
+      tags:
+      - mock
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabelsMap'
+          description: "Already used labels: keys are label Keys, values are array\
+            \ of label Values"
+      security:
+      - jwt-bearer:
+        - user
+      operationId: GetServicesLabels
+      summary: Get the already used labels for Services
 components:
   schemas:
     TestCaseResult:

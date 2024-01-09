@@ -6,6 +6,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: spring
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.microcks.replicas }}
   selector:
@@ -21,8 +24,10 @@ spec:
         deploymentconfig: "{{ .Values.appName }}"
         container: spring
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: spring
@@ -66,6 +71,8 @@ spec:
             value: http://{{ .Values.appName }}-postman-runtime:8080
           - name: TEST_CALLBACK_URL
             value: http://{{ .Values.appName }}:8080
+          - name: KEYCLOAK_ENABLED
+            value: "{{ .Values.keycloak.enabled }}"
           {{- if hasKey .Values.keycloak "privateUrl" }}
           - name: KEYCLOAK_URL
             value: "{{ .Values.keycloak.privateUrl }}"
@@ -160,7 +167,7 @@ spec:
             name: "{{ .Values.appName }}-config"
         - name: "{{ .Values.appName }}-grpc-certs"
           secret:
-            secretName: "{{ .Values.appName }}-microcks-grpc-secret"
+            secretName: "{{ .Values.microcks.grpcSecretRef | default (print .Values.appName "-microcks-grpc-secret") }}"
         {{- if eq .Values.features.async.kafka.install false }}
           {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
           {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
@@ -184,6 +191,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: postman-runtime
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
 spec:
   replicas: 1
   selector:
@@ -199,8 +210,10 @@ spec:
         deploymentconfig: "{{ .Values.appName }}-postman-runtime"
         container: postman-runtime
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: postman-runtime
@@ -212,8 +225,7 @@ spec:
         - name: LOG_LEVEL
           value: info
         resources:
-          limits:
-            memory: 256Mi
+          {{- toYaml .Values.postman.resources | nindent 10 }}
         livenessProbe:
           httpGet:
             path: "/health"
@@ -249,6 +261,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: mongodb
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
   creationTimestamp:
 spec:
   strategy:
@@ -267,6 +283,9 @@ spec:
         deploymentconfig: mongodb
         container: mongodb
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+      annotations:
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
       securityContext:
@@ -335,7 +354,7 @@ spec:
       restartPolicy: Always
       dnsPolicy: ClusterFirst
 {{- end }}
-{{- if and .Values.keycloak.install }}
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -345,6 +364,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   strategy:
     type: Recreate
@@ -362,8 +384,10 @@ spec:
         deploymentconfig: keycloak
         container: keycloak
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: keycloak-server
@@ -400,13 +424,23 @@ spec:
         - name: KEYCLOAK_ADMIN
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.usernameKey | default "username" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: username
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: KEYCLOAK_ADMIN_PASSWORD
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.passwordKey | default "password" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: password
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: OPERATING_MODE
           value: clustered
         - name: KC_DB
@@ -414,13 +448,23 @@ spec:
         - name: KC_DB_USER
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.postgresUsernameKey | default "postgresUsername" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: postgresUsername
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: KC_DB_PASSWORD
           valueFrom:
             secretKeyRef:
+              {{- if hasKey .Values.keycloak "secretRef" }}
+              key: {{ .Values.keycloak.secretRef.postgresPasswordKey | default "postgresPassword" }}
+              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
+              {{- else }}
               key: postgresPassword
               name: "{{ .Values.appName }}-keycloak-admin"
+              {{- end }}
         - name: KC_DB_URL_DATABASE
           value: root
         - name: KC_DB_URL_HOST
@@ -467,6 +511,9 @@ metadata:
     app: "{{ .Values.appName }}"
     container: keycloak-postgresql
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
 spec:
   strategy:
     type: Recreate
@@ -484,6 +531,9 @@ spec:
         deploymentconfig: keycloak-postgresql
         container: keycloak-postgresql
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+      annotations:
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
       securityContext:
@@ -554,6 +604,10 @@ metadata:
     app: "{{ .Values.appName }}"
     container: async-minion
     group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
 spec:
   strategy:
     type: Recreate
@@ -571,8 +625,10 @@ spec:
         deploymentconfig: async-minion
         container: async-minion
         group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
       containers:
       - name: async-minion
@@ -644,6 +700,9 @@ spec:
               {{- end }}
             {{- end }}
             {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.env }}
+          {{- toYaml .Values.features.async.env | nindent 10 }}
           {{- end }}
         ports:
         - containerPort: 8080
