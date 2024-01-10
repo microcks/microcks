@@ -2,7 +2,7 @@ name: build-verify-package
 on:
   push:
     paths-ignore:
-      #- '.github/**'
+      - '.github/**'
       - '.gitignore'
       - 'LICENSE'
       - 'README*'
@@ -52,6 +52,9 @@ jobs:
             echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
           elif [[ $GITHUB_REF == 'refs/heads/1.8.x' ]]; then
+            echo "IMAGE_TAG=maintenance" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+          elif [[ $GITHUB_REF == 'refs/heads/1.9.x' ]]; then
             echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
           elif [[ $GITHUB_REF == "refs/tags/$GITHUB_REF_NAME" ]]; then
