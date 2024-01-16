@@ -17,15 +17,17 @@ RUN microdnf install java-17-openjdk-headless openssl curl-minimal ca-certificat
 ENV JAVA_APP_DIR=/deployments \
     JAVA_MAJOR_VERSION=8
 
-# Agent bond including Jolokia and jmx_exporter
-ADD ./src/main/docker/agent-bond-opts /opt/run-java-options
-RUN mkdir -p /opt/agent-bond \
- && curl https://repo1.maven.org/maven2/io/fabric8/agent-bond-agent/1.2.0/agent-bond-agent-1.2.0.jar \
-          -o /opt/agent-bond/agent-bond.jar \
- && chmod 444 /opt/agent-bond/agent-bond.jar \
- && chmod 755 /opt/run-java-options
-ADD ./src/main/docker/jmx_exporter_config.yml /opt/agent-bond/
-EXPOSE 8778 9779
+# Opentelemetry Agent Instrumentation
+# By default we deactivate the agent with OTEL_JAVAAGENT_ENABLED=false
+RUN curl https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.32.0/opentelemetry-javaagent.jar -Lo /opt/opentelemetry-javaagent.jar
+ENV JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar \
+    OTEL_JAVAAGENT_ENABLED=false \
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://o11y_otel:4317 \
+    OTEL_METRICS_EXPORTER=otlp \
+    OTEL_LOGS_EXPORTER=otlp \
+    OTEL_TRACES_EXPORTER=otlp \
+    OTEL_RESOURCE_ATTRIBUTES=service.name=microcks,service.namespace=microcks-ns,service.instance.id=microcks-cnt,service.version=1.9.0-SNAPSHOT
+
 
 # Set working directory at /deployments
 WORKDIR /deployments

@@ -1,0 +1,27 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+exporters:
+  otlp:
+    endpoint: o11y_tempo:4317
+    tls:
+      insecure: true
+  loki:
+    endpoint: http://o11y_loki:3100/loki/api/v1/push
+  prometheusremotewrite:
+    endpoint: http://o11y_prom:9090/api/v1/write
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      exporters: [otlp]
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheusremotewrite]
+    logs:
+      receivers: [otlp]
+      exporters: [loki]
+  extensions: [health_check]
+extensions:
+  health_check:
