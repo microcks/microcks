@@ -85,7 +85,7 @@
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
 
-    <!-- observability with otel -->
+    <!-- observability with Otel -->
     <dependency>
       <groupId>io.opentelemetry.javaagent</groupId>
       <artifactId>opentelemetry-javaagent</artifactId>
@@ -457,6 +457,13 @@
                 <argument>--spring.profiles.active=prod</argument>
               </arguments>
               <classifier>exec</classifier>
+              <excludes>
+                <!-- Otel agent should be provided at the bootstrap level within the container image -->
+                <exclude>
+                  <groupId>io.opentelemetry.javaagent</groupId>
+                  <artifactId>opentelemetry-javaagent</artifactId>
+                </exclude>
+              </excludes>
             </configuration>
             <executions>
               <execution>
