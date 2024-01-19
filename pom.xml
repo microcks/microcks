@@ -60,7 +60,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>3.1.1</spring-boot.version>
+    <spring-boot.version>3.2.1</spring-boot.version>
     <sonar.organization>microcks</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>

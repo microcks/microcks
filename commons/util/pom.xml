@@ -31,7 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>17</java.version>
     <junit.version>4.13.1</junit.version>
-    <jackson.version>2.15.2</jackson.version>
+    <jackson.version>2.15.3</jackson.version>
     <snakeyaml.version>2.0</snakeyaml.version>
     <avro.version>1.11.1</avro.version>
     <graphql-java.version>20.4</graphql-java.version>
