@@ -15,6 +15,8 @@
  */
 package io.github.microcks.util;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.junit.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -178,7 +180,7 @@ public class DispatchCriteriaHelperTest {
 
    @Test
    public void testBuildFromPartsMap() {
-      Map<String, String> partsMap = new HashMap<>();
+      Multimap<String, String> partsMap = ArrayListMultimap.create();
       partsMap.put("year", "2018");
       partsMap.put("month", "05");
       partsMap.put("year-summary", "true");
@@ -199,7 +201,7 @@ public class DispatchCriteriaHelperTest {
 
    @Test
    public void testBuildFromParamsMap() {
-      Map<String, String> paramsMap = new HashMap<>();
+      Multimap<String, String> paramsMap = ArrayListMultimap.create();
       paramsMap.put("page", "1");
       paramsMap.put("limit", "20");
       paramsMap.put("limitation", "20");
@@ -217,6 +219,24 @@ public class DispatchCriteriaHelperTest {
       dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && limitation", paramsMap);
       assertEquals("?limitation=20?page=1", dispatchCriteria);
    }
+
+  @Test
+  public void testBuildFromParamsArrayMap() {
+    Multimap<String, String> paramsMap = ArrayListMultimap.create();
+    paramsMap.put("page", "1");
+    paramsMap.put("limit", "20");
+    paramsMap.put("limitation", "20");
+    paramsMap.put("status", "available");
+    paramsMap.put("status", "busy");
+
+    // 2 parameters should be taken into account, one with two values according to rules.
+    String dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("page && status", paramsMap);
+    assertEquals("?page=1?status=available?status=busy", dispatchCriteria);
+
+    // 1 parameter with two values should be taken into account according to rules
+    dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap("status", paramsMap);
+    assertEquals("?status=available?status=busy", dispatchCriteria);
+  }
 
   @Test
   public void extractCommonSuffix() {
