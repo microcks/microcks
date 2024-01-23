@@ -143,13 +143,13 @@ public class URIBuilderTest {
     // Test with old wadl like template format.
     String pattern = "http://localhost:8080/blog/{year}/{month}";
     String uri = URIBuilder.buildURIFromPattern(pattern, parameters);
-    assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published".equals(uri)
+    assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published&status=proofred".equals(uri)
       || "http://localhost:8080/blog/2018/05?status=published&status=proofred&page=0".equals(uri));
 
     // Test with new swagger like template format.
     pattern = "http://localhost:8080/blog/:year/:month";
     uri = URIBuilder.buildURIFromPattern(pattern, parameters);
-    assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published".equals(uri)
+    assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published&status=proofred".equals(uri)
       || "http://localhost:8080/blog/2018/05?status=published&status=proofred&page=0".equals(uri));
   }
 }
