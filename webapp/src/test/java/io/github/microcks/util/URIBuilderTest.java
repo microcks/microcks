@@ -15,6 +15,8 @@
  */
 package io.github.microcks.util;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import io.github.microcks.domain.Parameter;
 import org.junit.Test;
 
@@ -127,4 +129,27 @@ public class URIBuilderTest {
       assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published".equals(uri)
             || "http://localhost:8080/blog/2018/05?status=published&page=0".equals(uri));
    }
+
+  @Test
+  public void testBuildURIFromPatternWithMapWithParamsArray() {
+    // Prepare a bunch of parameters.
+    Multimap<String, String> parameters = ArrayListMultimap.create();
+    parameters.put("year", "2018");
+    parameters.put("month", "05");
+    parameters.put("status", "published");
+    parameters.put("status", "proofred");
+    parameters.put("page", "0");
+
+    // Test with old wadl like template format.
+    String pattern = "http://localhost:8080/blog/{year}/{month}";
+    String uri = URIBuilder.buildURIFromPattern(pattern, parameters);
+    assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published&status=proofred".equals(uri)
+      || "http://localhost:8080/blog/2018/05?status=published&status=proofred&page=0".equals(uri));
+
+    // Test with new swagger like template format.
+    pattern = "http://localhost:8080/blog/:year/:month";
+    uri = URIBuilder.buildURIFromPattern(pattern, parameters);
+    assertTrue("http://localhost:8080/blog/2018/05?page=0&status=published&status=proofred".equals(uri)
+      || "http://localhost:8080/blog/2018/05?status=published&status=proofred&page=0".equals(uri));
+  }
 }

@@ -15,6 +15,10 @@
  */
 package io.github.microcks.util;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.TreeMultimap;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -25,6 +29,7 @@ import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 
 /**
  * This is a helper for extracting and building dispatch criteria from many sources.
@@ -310,20 +315,32 @@ public class DispatchCriteriaHelper{
       return result.toString();
    }
 
-   /**
-    * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
-    * @param partsRule The dispatch rules referencing parts to consider
-    * @param partsMap The Map containing parts (not necessarily sorted)
-    * @return A string representing dispatch criteria for the corresponding incoming request.
-    */
-   public static String buildFromPartsMap(String partsRule, Map<String, String> partsMap) {
+  /**
+   * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
+   * @param partsRule The dispatch rules referencing parts to consider
+   * @param partsMap The Map containing parts (not necessarily sorted)
+   * @return A string representing dispatch criteria for the corresponding incoming request.
+   */
+  public static String buildFromPartsMap(String partsRule, Map<String, String> partsMap) {
+    Multimap<String, String> multimap = partsMap.entrySet().stream()
+      .collect(ArrayListMultimap::create, (m, e) -> m.put(e.getKey(), e.getValue()), Multimap::putAll);
+    return buildFromPartsMap(partsRule, multimap);
+  }
+
+
+    /**
+     * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
+     * @param partsRule The dispatch rules referencing parts to consider
+     * @param partsMap The Multimap containing parts (not necessarily sorted)
+     * @return A string representing dispatch criteria for the corresponding incoming request.
+     */
+   public static String buildFromPartsMap(String partsRule, Multimap<String, String> partsMap) {
       if (partsMap != null && !partsMap.isEmpty()) {
-         Map<String, String> criteriaMap = new TreeMap<>();
-         criteriaMap.putAll(partsMap);
+         Multimap<String, String> criteriaMap = TreeMultimap.create(partsMap);
 
          // Just appends sorted entries, separating them with /.
          StringBuilder result = new StringBuilder();
-         for (Map.Entry<String, String> criteria : criteriaMap.entrySet()) {
+         for (Map.Entry<String, String> criteria : criteriaMap.entries()) {
             /*
              Check that criteria is embedded into the rule. Simply check word boundary with \b is not enough as - are
              valid in params (according RFC 3986) but not included into word boundary - so "word-ext" string is matching
@@ -345,14 +362,13 @@ public class DispatchCriteriaHelper{
     * @param paramsMap The Map containing URI params (not necessarily sorted)
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
-   public static String buildFromParamsMap(String paramsRule, Map<String, String> paramsMap) {
+   public static String buildFromParamsMap(String paramsRule, Multimap<String, String> paramsMap) {
       if (paramsMap != null && !paramsMap.isEmpty()) {
-         Map<String, String> criteriaMap = new TreeMap<>();
-         criteriaMap.putAll(paramsMap);
+        Multimap<String, String> criteriaMap = TreeMultimap.create(paramsMap);
 
          // Just appends sorted entries, separating them with ?.
          StringBuilder result = new StringBuilder();
-         for (Map.Entry<String, String> criteria : criteriaMap.entrySet()) {
+         for (Map.Entry<String, String> criteria : criteriaMap.entries()) {
             /*
              Check that criteria is embedded into the rule. Simply check word boundary with \b is not enough as - are
              valid in params (according RFC 3986) but not included into word boundary - so "word-ext" string is matching
@@ -375,7 +391,7 @@ public class DispatchCriteriaHelper{
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
    public static String extractFromURIParams(String paramsRule, String uri){
-      Map<String, String> criteriaMap = new TreeMap<>();
+      Multimap<String, String> criteriaMap = TreeMultimap.create();
 
       if (uri.contains("?") && uri.contains("=")) {
          String parameters = uri.substring(uri.indexOf("?") + 1);
@@ -389,7 +405,7 @@ public class DispatchCriteriaHelper{
 
          // Just appends sorted entries, separating them with ?.
          StringBuilder result = new StringBuilder();
-         for (Map.Entry<String, String> criteria : criteriaMap.entrySet()){
+         for (Map.Entry<String, String> criteria : criteriaMap.entries()){
             if (paramsRule.contains(criteria.getKey())) {
                result.append("?").append(criteria.getKey()).append("=").append(criteria.getValue());
             }
