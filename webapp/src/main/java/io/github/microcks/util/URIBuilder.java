@@ -15,9 +15,10 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.domain.Parameter;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import io.github.microcks.domain.Parameter;
 import org.springframework.web.util.UriUtils;
 
 import java.io.UnsupportedEncodingException;
@@ -31,6 +32,10 @@ import java.util.Map;
  * @author laurent
  */
 public class URIBuilder{
+
+   private URIBuilder() {
+      // Hide default no argument constructor as it's a utility class.
+   }
 
    /**
     * Build a URI from a URI pattern (using {} or /: for marked variable parts) and using

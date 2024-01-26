@@ -15,10 +15,6 @@
  */
 package io.github.microcks.util.openapi;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Metadata;
@@ -42,6 +38,11 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -414,7 +415,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
               }
 
               if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isArray()) {
-                  //Array of query params
+                  // Array of query params.
                   for (JsonNode current : (ArrayNode) exampleValue) {
                       exampleParams.put(parameterName, getValueString(current));
                   }
@@ -527,7 +528,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
     return null;
   }
 
-   /** Get the value of an example. This can be direct value field or those of followed $ref */
+   /** Get the serialized value of an example. This can be direct value field or those of followed $ref */
    private String getSerializedExampleValue(JsonNode example) {
       JsonNode exampleValue = getExampleValue(example);
       return exampleValue != null ? getValueString(exampleValue) : null;

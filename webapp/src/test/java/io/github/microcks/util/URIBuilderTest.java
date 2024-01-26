@@ -15,9 +15,10 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.domain.Parameter;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import io.github.microcks.domain.Parameter;
 import org.junit.Test;
 
 import java.util.ArrayList;
