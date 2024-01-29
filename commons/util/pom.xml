@@ -32,9 +32,9 @@
     <java.version>17</java.version>
     <junit.version>4.13.1</junit.version>
     <jackson.version>2.15.3</jackson.version>
-    <snakeyaml.version>2.0</snakeyaml.version>
-    <avro.version>1.11.1</avro.version>
-    <graphql-java.version>20.4</graphql-java.version>
+    <snakeyaml.version>2.2</snakeyaml.version>
+    <avro.version>1.11.3</avro.version>
+    <graphql-java.version>21.3</graphql-java.version>
   </properties>
 
   <dependencies>
@@ -107,7 +107,7 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.13.0</version>
+      <version>2.15.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
