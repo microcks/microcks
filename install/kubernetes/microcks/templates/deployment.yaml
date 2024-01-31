@@ -160,6 +160,11 @@ spec:
             mountPath: "/deployments/config/kafka/keystore"
             {{- end }}
           {{- end }}
+          {{- if .Values.microcks.customSecretRef }}
+          - name: "{{ .Values.microcks.customSecretRef.secret }}"
+            mountPath: "/deployments/config/custom/secret/{{ .Values.microcks.customSecretRef.key }}"
+            subPath: "{{ .Values.microcks.customSecretRef.key }}"
+          {{- end}}
         terminationMessagePath: "/dev/termination-log"
       volumes:
         - name: "{{ .Values.appName }}-config"
@@ -181,6 +186,11 @@ spec:
           secret:
             secretName: "{{ .Values.features.async.kafka.authentication.keystoreSecretRef.secret }}"
           {{- end }}
+        {{- end }}
+        {{- if .Values.microcks.customSecretRef }}
+        - name: "{{ .Values.microcks.customSecretRef.secret }}"
+          secret:
+            secretName: "{{ .Values.microcks.customSecretRef.secret }}"
         {{- end }}
 ---
 apiVersion: apps/v1
