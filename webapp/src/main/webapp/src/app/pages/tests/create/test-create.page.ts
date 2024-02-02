@@ -103,6 +103,12 @@ export class TestCreatePageComponent implements OnInit {
             this.secretId = res.secretRef.secretId;
             this.secretName = res.secretRef.name;
           }
+          if (res.authorizedClient) {
+            this.oAuth2ClientContext = res.authorizedClient;
+            if (this.oAuth2ClientContext.scopes && this.oAuth2ClientContext.scopes.length > 0) {
+              this.oAuth2ClientContext.scopes = this.oAuth2ClientContext.scopes.replace('openid', ' ').trim();
+            }
+          }
           // Finalize with filtered operations.
           if (this.resolvedService.type === "EVENT" && res.testCaseResults.length == 1) {
             this.filteredOperation = res.testCaseResults[0].operationName;

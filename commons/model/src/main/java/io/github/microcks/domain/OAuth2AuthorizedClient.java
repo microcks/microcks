@@ -26,6 +26,7 @@ public class OAuth2AuthorizedClient {
    private OAuth2GrantType grantType;
    private String principalName;
    private String tokenUri;
+   private String scopes;
    @Transient
    private String encodedAccessToken;
 
@@ -37,12 +38,14 @@ public class OAuth2AuthorizedClient {
     * @param grantType OAuth2 authorization flow/grant type applied.
     * @param principalName Name of authorized principal
     * @param tokenUri IDP URI used for token retrieval
+    * @param scopes Included scopes (separated using space)
     * @param encodedAccessToken THe volatile access token, encoded in base64
     */
-   public OAuth2AuthorizedClient(OAuth2GrantType grantType, String principalName, String tokenUri, String encodedAccessToken) {
+   public OAuth2AuthorizedClient(OAuth2GrantType grantType, String principalName, String tokenUri, String scopes, String encodedAccessToken) {
       this.grantType = grantType;
       this.principalName = principalName;
       this.tokenUri = tokenUri;
+      this.scopes = scopes;
       this.encodedAccessToken = encodedAccessToken;
    }
 
@@ -68,6 +71,14 @@ public class OAuth2AuthorizedClient {
 
    public void setTokenUri(String tokenUri) {
       this.tokenUri = tokenUri;
+   }
+
+   public String getScopes() {
+      return scopes;
+   }
+
+   public void setScopes(String scopes) {
+      this.scopes = scopes;
    }
 
    public String getEncodedAccessToken() {

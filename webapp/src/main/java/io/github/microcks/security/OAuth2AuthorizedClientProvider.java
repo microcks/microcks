@@ -70,7 +70,8 @@ public class OAuth2AuthorizedClientProvider {
          principalName = oAuth2ClientContext.getUsername();
       }
 
-      return new OAuth2AuthorizedClient(oAuth2ClientContext.getGrantType(), principalName, oAuth2ClientContext.getTokenUri(), accessToken.getTokenValue());
+      return new OAuth2AuthorizedClient(oAuth2ClientContext.getGrantType(), principalName, oAuth2ClientContext.getTokenUri(),
+            String.join(" ", accessToken.getScopes()), accessToken.getTokenValue());
    }
 
    private OAuth2AccessToken getResourceOwnerPasswordAccessToken(OAuth2ClientContext oAuth2ClientContext) {

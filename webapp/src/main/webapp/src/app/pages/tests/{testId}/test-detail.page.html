@@ -40,7 +40,8 @@
             <dd>
               <code>{{ test.authorizedClient.principalName }}</code> principal<br/>
               <code>{{ test.authorizedClient.tokenUri }}</code> tokenUri<br/>
-              <code>{{ test.authorizedClient.grantType }}</code> grant
+              <code>{{ test.authorizedClient.grantType }}</code> grant<br/>
+              <code *ngIf="test.authorizedClient.scopes">{{ test.authorizedClient.scopes }}</code> scopes
             </dd>
           </span>
         </dl>
