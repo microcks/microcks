@@ -24,6 +24,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * Servlet filter that set the response CORS headers accordingly the configuration
@@ -52,10 +55,11 @@ public class DynamicOriginCorsFilter implements Filter {
       if (origin == null) {
          origin = corsAllowedOrigins;
       }
+      List<String> headerNames = Collections.list(httpRequest.getHeaderNames());
       response.setHeader("Access-Control-Allow-Origin", origin);
       response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
       response.setHeader("Access-Control-Max-Age", "3600");
-      response.setHeader("Access-Control-Allow-Headers", "*");
+      response.setHeader("Access-Control-Allow-Headers", String.join(", ", headerNames));
       if (Boolean.TRUE.equals(corsAllowCredentials)) {
          response.setHeader("Access-Control-Allow-Credentials", "true");
       }
