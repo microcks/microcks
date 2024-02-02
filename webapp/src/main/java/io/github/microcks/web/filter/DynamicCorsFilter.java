@@ -25,14 +25,13 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 
 /**
  * Servlet filter that set the response CORS headers accordingly the configuration
  * and incoming request.
  */
-public class DynamicOriginCorsFilter implements Filter {
+public class DynamicCorsFilter implements Filter {
    private final String corsAllowedOrigins;
    private final Boolean corsAllowCredentials;
 
@@ -41,7 +40,7 @@ public class DynamicOriginCorsFilter implements Filter {
    * @param corsAllowedOrigins Allowed origin forced if nothing found in incoming request
    * @param corsAllowCredentials Whether to set allow credentials
    */
-   public DynamicOriginCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
+   public DynamicCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
       this.corsAllowedOrigins = corsAllowedOrigins;
       this.corsAllowCredentials = corsAllowCredentials;
    }
