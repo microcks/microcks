@@ -104,9 +104,10 @@ export class TestCreatePageComponent implements OnInit {
             this.secretName = res.secretRef.name;
           }
           if (res.authorizedClient) {
-            this.oAuth2ClientContext = res.authorizedClient;
-            if (this.oAuth2ClientContext.scopes && this.oAuth2ClientContext.scopes.length > 0) {
-              this.oAuth2ClientContext.scopes = this.oAuth2ClientContext.scopes.replace('openid', ' ').trim();
+            this.oAuth2ClientContext.grantType = res.authorizedClient.grantType;
+            this.oAuth2ClientContext.tokenUri = res.authorizedClient.tokenUri;
+            if (res.authorizedClient.scopes && res.authorizedClient.scopes.length > 0) {
+              this.oAuth2ClientContext.scopes = res.authorizedClient.scopes.replace('openid', ' ').trim();
             }
           }
           // Finalize with filtered operations.
