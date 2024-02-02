@@ -2053,6 +2053,9 @@ components:
         timeout:
           description: The maximum time (in milliseconds) to wait for this test ends
           type: integer
+        authorizedClient:
+          $ref: '#/components/schemas/OAuth2AuthorizedClient'
+          description: The OAuth2 authorized client that performed the test
     Binding:
       description: Protocol binding details for asynchronous operations
       required:
@@ -2146,6 +2149,27 @@ components:
       - CLIENT_CREDENTIALS
       - REFRESH_TOKEN
       type: string
+    OAuth2AuthorizedClient:
+      description: OAuth2 authorized client that performed a test
+      required:
+      - grantType
+      - principalName
+      - tokenUri
+      type: object
+      properties:
+        grantType:
+          $ref: '#/components/schemas/OAuth2GrantType'
+          description: OAuth2 authorization flow/grant type applied
+        principalName:
+          description: Name of authorized principal (clientId or username in the case
+            of Password grant type)
+          type: string
+        tokenUri:
+          description: Identity Provider URI used for token retrieval
+          type: string
+        scopes:
+          description: Included scopes (separated using space)
+          type: string
   responses:
     ServiceResponse:
       content:
