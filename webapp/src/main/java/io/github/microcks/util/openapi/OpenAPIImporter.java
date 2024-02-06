@@ -125,7 +125,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          name += ".json";
       }
 
-      // Build a brand new resource just with spec content.
+      // Build a brand-new resource just with spec content.
       Resource resource = new Resource();
       resource.setName(name);
       resource.setType(ResourceType.OPEN_API_SPEC);
@@ -323,7 +323,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /**
     * Extract the list of operations from Specification.
     */
-   private List<Operation> extractOperations() throws MockRepositoryImportException {
+   private List<Operation> extractOperations() {
       List<Operation> results = new ArrayList<>();
 
       // Iterate on specification "paths" nodes.

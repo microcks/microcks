@@ -171,7 +171,7 @@ public abstract class AbstractJsonRepositoryImporter {
                referenceResource.setName(resourceName);
                referenceResource.setPath(ref);
                referenceResource.setContent(content);
-               referenceResource.setType(ResourceType.JSON_SCHEMA);
+               referenceResource.setType(guessResourceType(ref, content));
 
                // Keep track of this newly created resource.
                referenceResources.put(refUrl, referenceResource);
@@ -307,6 +307,18 @@ public abstract class AbstractJsonRepositoryImporter {
       }
       log.warn("Found no resource for reference {}", externalReference);
       return null;
+   }
+
+   /** Try to guess resource type from a reference name and its content. */
+   private ResourceType guessResourceType(String ref, String content) {
+      if (ref.endsWith(".avsc")) {
+         return ResourceType.AVRO_SCHEMA;
+      } else if (ref.endsWith(".proto")) {
+         return ResourceType.PROTOBUF_SCHEMA;
+      } else if (content.contains("$schema") || content.contains("properties:") || content.contains("\"properties\":")) {
+         return ResourceType.JSON_SCHEMA;
+      }
+      return ResourceType.JSON_FRAGMENT;
    }
 
    /** Custom runtime exception for Json repository parsing errors. */

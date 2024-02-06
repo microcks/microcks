@@ -117,7 +117,8 @@ export enum ContractType {
   PROTOBUF_DESCRIPTOR,
   GRAPHQL_SCHEMA,
   POSTMAN_COLLECTION,
-  SOAP_UI_PROJECT
+  SOAP_UI_PROJECT,
+  JSON_FRAGMENT
 }
 
 export class Header {

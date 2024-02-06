@@ -1280,7 +1280,7 @@ public class OpenAPIImporterTest {
       for (int i=1; i<3; i++) {
          Resource refResource = resources.get(i);
          if ("WeatherForecast API-1.0.0--weather-examples.json".equals(refResource.getName())) {
-            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
             assertEquals("./weather-examples.json", refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("\"region\": \"east\""));
@@ -1412,7 +1412,7 @@ public class OpenAPIImporterTest {
       for (int i=1; i<3; i++) {
          Resource refResource = resources.get(i);
          if ("WeatherForecast API-1.0.0-weather-forecast-common.yaml".equals(refResource.getName())) {
-            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
             assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-common.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("title: Common objects to reuse"));
@@ -1496,7 +1496,7 @@ public class OpenAPIImporterTest {
       Resource openAPISpec = resources.get(0);
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
-      assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0--weather-forecast-schema.yaml"));
+      assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0--weather-forecast-schema.yaml"));
 
       for (int i=1; i<4; i++) {
          Resource refResource = resources.get(i);
@@ -1506,12 +1506,12 @@ public class OpenAPIImporterTest {
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("A weather forecast for a requested region"));
          } else if ("WeatherForecast API-1.0.0--weather-forecast-examples.yaml".equals(refResource.getName())) {
-            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
             assertEquals("./weather-forecast-examples.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("$ref: 'WeatherForecast+API-1.0.0--weather-forecast-common-regions.yaml#/regions/north'"));
          } else if ("WeatherForecast API-1.0.0--weather-forecast-common-regions.yaml".equals(refResource.getName())) {
-            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
             assertEquals("./weather-forecast-common-regions.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("title: Common regions objects to reuse"));
