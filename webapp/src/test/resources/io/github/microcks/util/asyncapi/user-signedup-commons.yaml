@@ -1,0 +1,28 @@
+components:
+  messageTraits:
+    commonHeaders:
+      headers:
+        type: object
+        properties:
+          my-app-header:
+            type: integer
+            minimum: 0
+            maximum: 100
+      examples:
+        - laurent:
+            my-app-header: 21
+        - yacine:
+            my-app-header: 22
+  schema:
+    UserInfo:
+      type: object
+      additionalProperties: false
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        age:
+          type: integer
+          minimum: 18
