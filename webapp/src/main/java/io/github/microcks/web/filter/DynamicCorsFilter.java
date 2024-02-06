@@ -25,43 +25,55 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.List;
+import java.util.Enumeration;
 
 /**
- * Servlet filter that set the response CORS headers accordingly the configuration
+ * Servlet filter that set the response CORS headers accordingly the
+ * configuration
  * and incoming request.
  */
 public class DynamicCorsFilter implements Filter {
-   private final String corsAllowedOrigins;
-   private final Boolean corsAllowCredentials;
+  private final String corsAllowedOrigins;
+  private final Boolean corsAllowCredentials;
 
   /**
    * Build a new DynamicOriginCorsFilter.
-   * @param corsAllowedOrigins Allowed origin forced if nothing found in incoming request
+   *
+   * @param corsAllowedOrigins   Allowed origin forced if nothing found in
+   *                             incoming request
    * @param corsAllowCredentials Whether to set allow credentials
    */
-   public DynamicCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
-      this.corsAllowedOrigins = corsAllowedOrigins;
-      this.corsAllowCredentials = corsAllowCredentials;
-   }
+  public DynamicCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
+    this.corsAllowedOrigins = corsAllowedOrigins;
+    this.corsAllowCredentials = corsAllowCredentials;
+  }
 
-   @Override
-   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
-         throws IOException, ServletException {
-      HttpServletResponse response = (HttpServletResponse) servletResponse;
-      HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-      String origin = httpRequest.getHeader("Origin");
-      if (origin == null) {
-         origin = corsAllowedOrigins;
-      }
-      List<String> headerNames = Collections.list(httpRequest.getHeaderNames());
-      response.setHeader("Access-Control-Allow-Origin", origin);
-      response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
-      response.setHeader("Access-Control-Max-Age", "3600");
-      response.setHeader("Access-Control-Allow-Headers", String.join(", ", headerNames));
-      if (Boolean.TRUE.equals(corsAllowCredentials)) {
-         response.setHeader("Access-Control-Allow-Credentials", "true");
-      }
-      chain.doFilter(servletRequest, servletResponse);
-   }
+  @Override
+  public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
+      throws IOException, ServletException {
+    HttpServletResponse response = (HttpServletResponse) servletResponse;
+    HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+    String origin = httpRequest.getHeader("Origin");
+    if (origin == null) {
+      origin = corsAllowedOrigins;
+    }
+    response.setHeader("Access-Control-Allow-Origin", origin);
+    response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
+    response.setHeader("Access-Control-Max-Age", "3600");
+    response.setHeader("Access-Control-Allow-Headers", getHeadersString(httpRequest));
+    if (Boolean.TRUE.equals(corsAllowCredentials)) {
+      response.setHeader("Access-Control-Allow-Credentials", "true");
+    }
+    chain.doFilter(servletRequest, servletResponse);
+  }
+
+  private String getHeadersString(HttpServletRequest httpRequest) {
+    Enumeration<String> headerNamesEnumeration = httpRequest.getHeaderNames();
+    if (headerNamesEnumeration != null) {
+      var headerNamesList = Collections.list(headerNamesEnumeration);
+      return String.join(", ", headerNamesList);
+    } else {
+      return "*";
+    }
+  }
 }
