@@ -68,7 +68,7 @@ public class IdBuilder {
     * @return A full name for this globally attached resource.
     */
    public static String buildResourceFullName(Service service, String resourceName) {
-      return service.getName() + "-" + service.getVersion() + "-" + resourceName;
+      return service.getName() + "-" + service.getVersion() + "-" + Sanitizer.urlSanitize(resourceName);
    }
 
    /**
@@ -80,7 +80,12 @@ public class IdBuilder {
     * @return A full name for this globally attached resource.
     */
    public static String buildResourceFullName(Service service, String resourceName, String context) {
-      return service.getName() + "-" + service.getVersion() + "-"
-            + context.replace('/', '-').replace(".", "") + "-" + resourceName;
+      return service.getName()
+            + "-"
+            + service.getVersion()
+            + "-"
+            + Sanitizer.urlSanitize(context.replace(".", ""))
+            + "-"
+            + Sanitizer.urlSanitize(resourceName);
    }
 }
