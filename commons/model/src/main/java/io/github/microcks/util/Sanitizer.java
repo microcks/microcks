@@ -31,6 +31,7 @@ public class Sanitizer {
 
    /**
     * Sanitize a string to be used in a URL.
+    * It replaces all characters that are not in the set of allowed characters by a dash.
     *
     * @param string the string to sanitize
     * @return the sanitized string
