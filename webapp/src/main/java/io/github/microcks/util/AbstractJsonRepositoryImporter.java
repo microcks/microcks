@@ -241,7 +241,7 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /** Get appropriate Yaml or Json object mapper. */
-   private ObjectMapper getObjectMapper(boolean isYaml) {
+   protected ObjectMapper getObjectMapper(boolean isYaml) {
       return isYaml ? ObjectMapperFactory.getYamlObjectMapper() : ObjectMapperFactory.getJsonObjectMapper();
    }
 

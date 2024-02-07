@@ -18,9 +18,6 @@ channels:
     messages:
       userSignedUp:
         $ref: '#/components/messages/userSignedUp'
-    bindings:
-      ws:
-        method: POST
 operations:
   publishUserSignedUps:
     action: 'send'
@@ -29,12 +26,12 @@ operations:
     summary: Receive information about user signed up
     messages:
       - $ref: '#/channels/user-signedup/messages/userSignedUp'
-    x-microcks-operation:
-      frequency: 30
 components:
   messages:
     userSignedUp:
       description: An event describing that a user just signed up
+      contentType: avro/binary
+      schemaFormat: application/vnd.apache.avro+json;version=1.9.0
       traits:
         - $ref: './user-signedup-commons.yaml#/components/messageTraits/commonHeaders'
       headers:
@@ -45,7 +42,9 @@ components:
             format: date-time
             description: Date and time when the event was sent
       payload:
-        $ref: './user-signedup-schemas.yaml#/components/schemas/UserInfo'
+        schemaFormat: "application/vnd.apache.avro+json;version=1.9.0"
+        schema:
+          $ref: "./user-signedup.avsc#/User"
       examples:
         - name: laurent
           summary: Example for Laurent user

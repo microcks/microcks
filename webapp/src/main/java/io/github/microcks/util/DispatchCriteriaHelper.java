@@ -30,12 +30,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-
 /**
  * This is a helper for extracting and building dispatch criteria from many sources.
  * @author laurent
  */
-public class DispatchCriteriaHelper{
+public class DispatchCriteriaHelper {
+
+   private static final String CURLY_PART_PATTERN = "(\\{[^\\}]+\\})";
+   private static final String CURLY_PART_EXTRACTION_PATTERN = "\\\\{(.+)\\\\}";
 
    private DispatchCriteriaHelper() {
       // Hide default no argument constructor as it's a utility class.
@@ -231,13 +233,33 @@ public class DispatchCriteriaHelper{
       // Build a pattern for extracting parts from pattern.
       String partsPattern = null;
       if (pattern.contains("/{")) {
-         partsPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "\\\\{(.+)\\\\}");
+         partsPattern = pattern.replaceAll(CURLY_PART_PATTERN, CURLY_PART_EXTRACTION_PATTERN);
       } else if (pattern.contains("/:")) {
          // We should add a leading / to avoid getting port number ;-)
          partsPattern = pattern.replaceAll("(/:[^:^/]+)", "\\/:(.+)");
       }
-      if (partsPattern != null) {
-         Pattern partsP = Pattern.compile(partsPattern);
+      return buildPartsDispatchRule(pattern, partsPattern);
+   }
+
+   /**
+    * Extract a dispatch rule string from String pattern (containing variable parts within
+    * {}) in order to explain which parts are variables.
+    * @param pattern The String pattern containing variables parts ({} patterns)
+    * @return A string representing dispatch rules for the corresponding incoming request.
+    */
+   public static String extractPartsFromStringPattern(String pattern){
+      // Build a pattern for extracting parts from pattern.
+      String partsPattern = null;
+      if (pattern.contains("{")) {
+         partsPattern = pattern.replaceAll(CURLY_PART_PATTERN, CURLY_PART_EXTRACTION_PATTERN);
+      }
+      return buildPartsDispatchRule(pattern, partsPattern);
+   }
+
+   /** Apply a regexp on pattern to extract parts and create a dispatch rule. */
+   private static String buildPartsDispatchRule(String pattern, String partsExtractPattern) {
+      if (partsExtractPattern != null) {
+         Pattern partsP = Pattern.compile(partsExtractPattern);
          Matcher partsM = partsP.matcher(pattern);
 
          if (partsM.matches()) {
@@ -272,8 +294,8 @@ public class DispatchCriteriaHelper{
       String partsPattern = null;
       String valuesPattern = null;
       if (pattern.indexOf("/{") != -1) {
-         partsPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "\\\\{(.+)\\\\}");
-         valuesPattern = pattern.replaceAll("(\\{[^\\}]+\\})", "(.+)");
+         partsPattern = pattern.replaceAll(CURLY_PART_PATTERN, CURLY_PART_EXTRACTION_PATTERN);
+         valuesPattern = pattern.replaceAll(CURLY_PART_PATTERN, "(.+)");
       } else {
          partsPattern = pattern.replaceAll("(:[^:^/]+)", "\\:(.+)");
          valuesPattern = pattern.replaceAll("(:[^:^/]+)", "(.+)");
@@ -416,10 +438,10 @@ public class DispatchCriteriaHelper{
    }
 
    /**
-    *
-    * @param paramsRule
-    * @param paramMap
-    * @return
+    * Extract and build a dispatch criteria string from URI parameters already stored into a Map.
+    * @param paramsRule The dispatch rules referencing parameters to consider
+    * @param paramMap The URI fetched params from which we should build a specific dispatch criteria
+    * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
    public static String extractFromParamMap(String paramsRule, Map<String, String> paramMap) {
       Set<String> sortedKeys = paramMap.keySet().stream()

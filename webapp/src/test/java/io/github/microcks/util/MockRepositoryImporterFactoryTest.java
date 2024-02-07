@@ -15,6 +15,7 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.util.asyncapi.AsyncAPI3Importer;
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
@@ -130,6 +131,16 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer for AsyncAPI YAML should not fail!");
       }
       assertTrue(importer instanceof AsyncAPIImporter);
+
+      // Load an AsyncAPI v3 YAML file.
+      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
+      } catch (Throwable t) {
+         fail("Getting importer for AsyncAPI v3 YAML should not fail!");
+      }
+      assertTrue(importer instanceof AsyncAPI3Importer);
 
       // Load a Protobuf schema file.
       File protobufSchema = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");

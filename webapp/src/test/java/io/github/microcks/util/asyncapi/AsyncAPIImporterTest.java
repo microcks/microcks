@@ -17,7 +17,6 @@ package io.github.microcks.util.asyncapi;
 
 import io.github.microcks.domain.*;
 import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
 

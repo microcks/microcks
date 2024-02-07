@@ -15,8 +15,6 @@
  */
 package io.github.microcks.util.asyncapi;
 
-import io.github.microcks.domain.Binding;
-import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
@@ -39,9 +37,7 @@ import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +53,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import static io.github.microcks.util.asyncapi.AsyncAPICommons.*;
 
 /**
  * An implementation of MockRepositoryImporter that deals with AsyncAPI v2.0.x
@@ -71,14 +68,6 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
 
    private static final String[] MULTI_STRUCTURES = {"allOf", "anyOf", "oneOf"};
    private static final List<String> VALID_VERBS = Arrays.asList("subscribe", "publish");
-
-   private static final String BINDINGS = "bindings";
-   private static final String SCHEMA_NODE = "schema";
-   private static final String EXAMPLES_NODE = "examples";
-   private static final String EXAMPLE_VALUE_NODE = "value";
-   private static final String EXAMPLE_PAYLOAD_NODE = "payload";
-   private static final String QUEUE_VALUE = "queue";
-   private static final String TOPIC_VALUE = "topic";
 
    /**
     * Build a new importer.
@@ -128,7 +117,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
          name += ".json";
       }
 
-      // Build a brand new resource just with spec content.
+      // Build a brand-new resource just with spec content.
       Resource resource = new Resource();
       resource.setName(name);
       resource.setType(ResourceType.ASYNC_API_SPEC);
@@ -355,129 +344,19 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
 
                // We have to look also for bindings. First at the upper channel level.
                if (channel.getValue().has(BINDINGS)) {
-                  Iterator<String> bindingNames = channel.getValue().path(BINDINGS).fieldNames();
-                  while (bindingNames.hasNext()) {
-                     String bindingName = bindingNames.next();
-                     JsonNode binding = channel.getValue().path(BINDINGS).path(bindingName);
-
-                     switch (bindingName) {
-                        case "ws":
-                           Binding b = retrieveOrInitOperationBinding(operation, BindingType.WS);
-                           if (binding.has("method")) {
-                              b.setMethod(binding.path("method").asText());
-                           }
-                           break;
-                        case "amqp":
-                           b = retrieveOrInitOperationBinding(operation, BindingType.AMQP);
-                           if (binding.has("is")) {
-                              String is = binding.path("is").asText();
-                              if (QUEUE_VALUE.equals(is)) {
-                                 b.setDestinationType(QUEUE_VALUE);
-                                 JsonNode queue = binding.get(QUEUE_VALUE);
-                                 b.setDestinationName(queue.get("name").asText());
-                              } else if ("routingKey".equals(is)) {
-                                 JsonNode exchange = binding.get("exchange");
-                                 b.setDestinationType(exchange.get("type").asText());
-                              }
-                           }
-                           break;
-                        case "googlepubsub":
-                           b = retrieveOrInitOperationBinding(operation, BindingType.GOOGLEPUBSUB);
-                           if (binding.has(TOPIC_VALUE)) {
-                              b.setDestinationName(binding.get(TOPIC_VALUE).asText());
-                           }
-                           if (binding.has("messageRetentionDuration")) {
-                              b.setPersistent(true);
-                           }
-                           break;
-                        default:
-                           break;
-                     }
-                  }
+                  AsyncAPICommons.completeChannelLevelBindings(operation, channel.getValue().get(BINDINGS));
                }
 
                // Then look for bindings at the operation level.
                if (verb.getValue().has(BINDINGS)) {
-                  Iterator<String> bindingNames = verb.getValue().path(BINDINGS).fieldNames();
-                  while (bindingNames.hasNext()) {
-                     String bindingName = bindingNames.next();
-                     JsonNode binding = verb.getValue().path(BINDINGS).path(bindingName);
-
-                     switch (bindingName) {
-                        case "kafka":
-                           break;
-                        case "mqtt":
-                           Binding b = retrieveOrInitOperationBinding(operation, BindingType.MQTT);
-                           if (binding.has("qos")) {
-                              b.setQoS(binding.path("qos").asText());
-                           }
-                           if (binding.has("retain")) {
-                              b.setPersistent(binding.path("retain").asBoolean());
-                           }
-                           break;
-                        case "amqp1":
-                           b = retrieveOrInitOperationBinding(operation, BindingType.AMQP1);
-                           if (binding.has("destinationName")) {
-                              b.setDestinationName(binding.path("destinationName").asText());
-                           }
-                           if (binding.has("destinationType")) {
-                              b.setDestinationType(binding.path("destinationType").asText());
-                           }
-                           break;
-                        case "nats":
-                           b = retrieveOrInitOperationBinding(operation, BindingType.NATS);
-                           if (binding.has(QUEUE_VALUE)) {
-                              b.setDestinationName(binding.path(QUEUE_VALUE).asText());
-                           }
-                           break;
-                        case "sqs":
-                           b = retrieveOrInitOperationBinding(operation, BindingType.SQS);
-                           if (binding.has(QUEUE_VALUE)) {
-                              if (binding.get(QUEUE_VALUE).has("name")) {
-                                 b.setDestinationName(binding.get(QUEUE_VALUE).get("name").asText());
-                              }
-                              if (binding.has("messageRetentionPeriod")) {
-                                 b.setPersistent(true);
-                              }
-                           }
-                           break;
-                        case "sns":
-                           b = retrieveOrInitOperationBinding(operation, BindingType.SNS);
-                           if (binding.has(TOPIC_VALUE) && binding.get(TOPIC_VALUE).has("name")) {
-                              b.setDestinationName(binding.get(TOPIC_VALUE).get("name").asText());
-                           }
-                           break;
-                        default:
-                           break;
-                     }
-                  }
+                  AsyncAPICommons.completeOperationLevelBindings(operation, verb.getValue().get(BINDINGS));
                }
 
                // Then look for bindings at the message level.
                JsonNode messageBody = verb.getValue().path("message");
                messageBody = followRefIfAny(messageBody);
                if (messageBody.has(BINDINGS)) {
-                  Iterator<String> bindingNames = messageBody.path(BINDINGS).fieldNames();
-                  while (bindingNames.hasNext()) {
-                     String bindingName = bindingNames.next();
-                     JsonNode binding = messageBody.path(BINDINGS).path(bindingName);
-
-                     switch (bindingName) {
-                        case "kafka":
-                           Binding b = retrieveOrInitOperationBinding(operation, BindingType.KAFKA);
-                           if (binding.has("key")) {
-                              b.setKeyType(binding.path("key").path("type").asText());
-                           }
-                           break;
-                        case "nats":
-                           break;
-                        case "mqtt":
-                        case "amqp1":
-                           break;
-                        default:
-                           break;
-                     }
-                  }
+                  AsyncAPICommons.completeMessageLevelBindings(operation, messageBody.get(BINDINGS));
                }
 
                results.add(operation);
@@ -520,7 +399,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
       eventMessage.setMediaType(contentType);
 
       // Now complete with specified headers.
-      List<Header> headers = getExampleHeaders(exampleNode);
+      List<Header> headers = AsyncAPICommons.getExampleHeaders(exampleNode);
       for (Header header : headers) {
          eventMessage.addHeader(header);
       }
@@ -540,7 +419,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
       eventMessage.setMediaType(contentType);
 
       // Now complete with specified headers.
-      List<Header> headers = getExampleHeaders(exampleNode);
+      List<Header> headers = AsyncAPICommons.getExampleHeaders(exampleNode);
       for (Header header : headers) {
          eventMessage.addHeader(header);
       }
@@ -568,52 +447,13 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
             eventMessage.setMediaType(contentType);
 
             // Now complete with specified headers.
-            List<Header> headers = getExampleHeaders(example);
+            List<Header> headers = AsyncAPICommons.getExampleHeaders(example);
             for (Header header : headers) {
                eventMessage.addHeader(header);
             }
          }
       }
       return eventMessage;
-   }
-
-   /** Extract the list of Header from an example node. */
-   private List<Header> getExampleHeaders(JsonNode example) {
-      List<Header> results = new ArrayList<>();
-
-      if (example.has("headers")) {
-         Iterator<Entry<String, JsonNode>> headers = null;
-
-         if (example.path("headers").getNodeType() == JsonNodeType.OBJECT) {
-            headers = example.path("headers").fields();
-         } else if (example.path("headers").getNodeType() == JsonNodeType.STRING) {
-            // Try to parse string as a JSON Object...
-            try {
-               ObjectMapper mapper = new ObjectMapper();
-               JsonNode headersNode = mapper.readTree(example.path("headers").asText());
-               headers = headersNode.fields();
-
-            } catch (Exception e) {
-               log.warn("Headers value {} is a string but not JSON, skipping it", example.path("headers").asText());
-            }
-         }
-
-         if (headers != null) {
-            while (headers.hasNext()) {
-               Entry<String, JsonNode> property = headers.next();
-
-               Header header = new Header();
-               header.setName(property.getKey());
-               // Values may be multiple and CSV.
-               Set<String> headerValues = Arrays.stream(property.getValue().asText().split(","))
-                     .map(String::trim)
-                     .collect(Collectors.toSet());
-               header.setValues(headerValues);
-               results.add(header);
-            }
-         }
-      }
-      return results;
    }
 
    /**
@@ -718,18 +558,5 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
          results.add(referencableNode);
       }
       return results;
-   }
-
-   /** */
-   private static Binding retrieveOrInitOperationBinding(Operation operation, BindingType type) {
-      Binding binding = null;
-      if (operation.getBindings() != null) {
-         binding = operation.getBindings().get(type.toString());
-      }
-      if (binding == null) {
-         binding = new Binding(type);
-         operation.addBinding(type.toString(), binding);
-      }
-      return binding;
    }
 }
