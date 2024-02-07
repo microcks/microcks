@@ -380,30 +380,12 @@ export class ServiceDetailPageComponent implements OnInit {
     var operationName = operation.name;
 
     if (binding === "WS") {
+      // Specific encoding for urls.
       serviceName = serviceName.replace(/\s/g, '+');
-      var versionName = this.resolvedServiceView.service.version.replace(/\s/g, '+');
-      operationName = this.removeVerbInUrl(operationName);
+      versionName = versionName.replace(/\s/g, '+');
 
-      var dispatchCriteria = eventMessage.dispatchCriteria;
-      if (eventMessage.dispatchCriteria != null) {
-        const wsParts = {};
-        let wsPartsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
-
-        wsPartsCriteria = this.encodeUrl(wsPartsCriteria);
-        wsPartsCriteria.split('/').forEach(function(element, index, array) {
-          if (element){
-            wsParts[element.split('=')[0]] = element.split('=')[1];
-          }
-        });
-
-        operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function(match, p1, string) {
-          return wsParts[p1];
-        });
-        // Support also Postman syntax with /:part
-        operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, function(match, p1, string) {
-          return wsParts[p1];
-        });
-      }
+      // Remove verb and templatized part if any.
+      operationName = this.getDestinationOperationPart(operation, eventMessage);
 
       return this.asyncAPIFeatureEndpoint('WS') + "/api/ws/" + serviceName + "/" + versionName + "/" + operationName;
     }
@@ -412,24 +394,10 @@ export class ServiceDetailPageComponent implements OnInit {
     serviceName = serviceName.replace(/\s/g, '');
     serviceName = serviceName.replace(/-/g, '');
 
-    // Remove verb and replace '/' by '-' in operation name.
-    operationName = this.removeVerbInUrl(operationName);
-    const parts = {};
-    let partsCriteria = eventMessage.dispatchCriteria;
-    if (partsCriteria != null) {
+    // Remove verb and templatized part if any.
+    operationName = this.getDestinationOperationPart(operation, eventMessage);
 
-      partsCriteria = this.encodeUrl(partsCriteria);
-      partsCriteria.split('/').forEach(function (element, index, array) {
-        if (element) {
-          parts[element.split('=')[0]] = element.split('=')[1];
-        }
-      });
-
-      operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function (match, p1, string) {
-        return (parts[p1] != null) ? parts[p1] : match;
-      });
-    }
-
+    // Sanitize operation name depending on protocol.
     if ('KAFKA' === binding || 'GOOGLEPUBSUB' === binding || 'SQS' === binding || 'SNS' === binding) {
       operationName = operationName.replace(/\//g, '-');
     }
@@ -438,6 +406,38 @@ export class ServiceDetailPageComponent implements OnInit {
     }
 
     return serviceName + "-" + versionName + "-" + operationName;
+  }
+
+  private getDestinationOperationPart(operation: Operation, eventMessage: EventMessage): string {
+    // In AsyncAPI v2, channel address is directly the operation name.
+    var operationPart = this.removeVerbInUrl(operation.name);
+
+    // Take care of templatized address for URI_PART dispatcher style.
+    if (operation.dispatcher === 'URI_PARTS') {
+      // In AsyncAPI v3, operation is different from channel and channel templatized address may be in resourcePaths.
+      for (let i=0; i<operation.resourcePaths.length; i++) {
+        let resourcePath = operation.resourcePaths[i];
+        if (resourcePath.indexOf('{') != -1) {
+          operationPart = resourcePath;
+          break;
+        }
+      }
+
+      // No replace the part placeholders with their values.
+      if (eventMessage.dispatchCriteria != null) {
+        var parts = {};
+        let partsCriteria = this.encodeUrl(eventMessage.dispatchCriteria);
+        partsCriteria.split('/').forEach(function (element, index, array) {
+          if (element) {
+            parts[element.split('=')[0]] = element.split('=')[1];
+          }
+        });
+        operationPart = operationPart.replace(/{([a-zA-Z0-9-_]+)}/g, function (match, p1, string) {
+          return (parts[p1] != null) ? parts[p1] : match;
+        });
+      } 
+    }
+    return operationPart;
   }
 
   public formatRequestContent(requestContent: string): string {
@@ -511,7 +511,8 @@ export class ServiceDetailPageComponent implements OnInit {
         || operationName.startsWith("POST ") || operationName.startsWith("DELETE ")
         || operationName.startsWith("OPTIONS ") || operationName.startsWith("PATCH ")
         || operationName.startsWith("HEAD ") || operationName.startsWith("TRACE ")
-        || operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
+        || operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")
+        || operationName.startsWith("SEND ") || operationName.startsWith("RECEIVE ")) {
       operationName = operationName.slice(operationName.indexOf(' ') + 1);
     } 
     return operationName;

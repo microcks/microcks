@@ -121,18 +121,14 @@ public class WebSocketProducerManager {
     * @return The request URI corresponding to def and message
     */
    public String getRequestURI(AsyncMockDefinition definition, EventMessage eventMessage) {
-
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "+");
+
       // Produce version name part of topic name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "+");
+
       // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-      // Replace the parts
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       return "/api/ws/" + serviceName + "/" + versionName + "/" + operationName;
    }

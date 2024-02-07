@@ -219,12 +219,7 @@ public class AmazonSNSProducerManager {
       versionName = versionName.replace(".", "");
 
       // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-      operationName = operationName.replace('/', '-');
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '-' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;

@@ -15,8 +15,6 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import org.jboss.logging.Logger;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import java.util.ArrayList;
@@ -33,9 +31,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author laurent
  */
 public class WebSocketSessionRegistry {
-
-   /** Get a JBoss logging logger. */
-   private final Logger logger = Logger.getLogger(getClass());
 
    private Map<String, List<Session>> sessions = new ConcurrentHashMap<>();
 

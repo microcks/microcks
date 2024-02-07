@@ -168,9 +168,9 @@ public class KafkaProducerManager {
     */
    public void publishMessage(String topic, String key, String value, Set<Header> headers) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
-      ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-      addHeadersToRecord(record, headers);
-      producer.send(record);
+      ProducerRecord<String, String> kafkaRecord = new ProducerRecord<>(topic, key, value);
+      addHeadersToRecord(kafkaRecord, headers);
+      producer.send(kafkaRecord);
       producer.flush();
    }
 
@@ -183,9 +183,9 @@ public class KafkaProducerManager {
     */
    public void publishMessage(String topic, String key, byte[] value, Set<Header> headers) {
       logger.infof("Publishing on topic {%s}, bytes: %s ", topic, new String(value));
-      ProducerRecord<String, byte[]> record = new ProducerRecord<>(topic, key, value);
-      addHeadersToRecord(record, headers);
-      bytesProducer.send(record);
+      ProducerRecord<String, byte[]> kafkaRecord = new ProducerRecord<>(topic, key, value);
+      addHeadersToRecord(kafkaRecord, headers);
+      bytesProducer.send(kafkaRecord);
       bytesProducer.flush();
    }
 
@@ -199,9 +199,9 @@ public class KafkaProducerManager {
     */
    public void publishMessage(String topic, String key, GenericRecord value, Set<Header> headers) {
       logger.infof("Publishing on topic {%s}, record: %s ", topic, value.toString());
-      ProducerRecord<String, GenericRecord> record = new ProducerRecord<>(topic, key, value);
-      addHeadersToRecord(record, headers);
-      registryProducer.send(record);
+      ProducerRecord<String, GenericRecord> kafkaRecord = new ProducerRecord<>(topic, key, value);
+      addHeadersToRecord(kafkaRecord, headers);
+      registryProducer.send(kafkaRecord);
       registryProducer.flush();
    }
 
@@ -244,28 +244,27 @@ public class KafkaProducerManager {
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
+
       // Produce version name part of topic name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
+
       // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
       operationName = operationName.replace('/', '-');
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
    }
 
    /**
     * Completing the ProducerRecord with the set of provided headers.
-    * @param record The record to complete
+    * @param kafkaRecord The record to complete
     * @param headers The set of headers
     */
-   protected void addHeadersToRecord(ProducerRecord record, Set<Header> headers) {
+   protected void addHeadersToRecord(ProducerRecord kafkaRecord, Set<Header> headers) {
       if (headers != null) {
          for (Header header : headers) {
-            record.headers().add(header);
+            kafkaRecord.headers().add(header);
          }
       }
    }
@@ -300,6 +299,8 @@ public class KafkaProducerManager {
                props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.keystore.location", String.class));
                props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.keystore.password", String.class));
                props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.keystore.type", String.class));
+               break;
+            default:
                break;
          }
       }

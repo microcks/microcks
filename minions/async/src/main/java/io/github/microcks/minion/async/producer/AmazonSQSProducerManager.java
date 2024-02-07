@@ -34,7 +34,6 @@ import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -199,8 +198,6 @@ public class AmazonSQSProducerManager {
     * @return The short name of a SQS queue
     */
    public String getQueueName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
-
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
@@ -210,12 +207,7 @@ public class AmazonSQSProducerManager {
       versionName = versionName.replace(".", "");
 
       // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-      operationName = operationName.replace('/', '-');
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '-' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;

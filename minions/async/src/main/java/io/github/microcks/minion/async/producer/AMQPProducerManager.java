@@ -122,7 +122,6 @@ public class AMQPProducerManager {
             properties = new AMQP.BasicProperties.Builder().headers(amqpHeaders).build();
          }
          channel.basicPublish(destinationName, "", properties, value.getBytes(StandardCharsets.UTF_8));
-         channel.close();
       } catch (IOException | TimeoutException ioe) {
          logger.warnf("Message %s sending has thrown an exception", ioe);
          ioe.printStackTrace();
@@ -130,21 +129,15 @@ public class AMQPProducerManager {
    }
 
    public String getDestinationName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
-
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
+
       // Produce version name part of topic name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
 
-      // replace the parts
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      // Produce operation name part of topic name.
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
