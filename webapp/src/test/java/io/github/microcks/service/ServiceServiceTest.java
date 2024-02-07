@@ -220,7 +220,6 @@ public class ServiceServiceTest {
       List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
       assertEquals(resourceNames.size(), resources.size());
       for (Resource resource : resources) {
-        System.out.println(resource.getName());
          assertEquals("openapi.yaml", resource.getSourceArtifact());
          assertTrue(resourceNames.contains(resource.getName()));
       }
