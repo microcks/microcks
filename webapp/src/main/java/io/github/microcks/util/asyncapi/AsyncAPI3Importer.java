@@ -216,9 +216,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
             if (AsyncAPICommons.channelAddressHasParts(address)) {
                operation.setDispatcher(DispatchStyles.URI_PARTS);
                operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromStringPattern(address));
-            } else {
-               operation.addResourcePath(address);
             }
+            operation.addResourcePath(address);
          }
 
          if (channelNode.has(BINDINGS)) {

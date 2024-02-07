@@ -113,10 +113,12 @@ class AsyncAPI3ImporterTest {
       for (Operation operation : service.getOperations()) {
          assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
          assertEquals("streetlightId", operation.getDispatcherRules());
-         assertNull(operation.getResourcePaths());
+         assertNotNull(operation.getResourcePaths());
+         assertEquals(1, operation.getResourcePaths().size());
 
          if ("RECEIVE receiveLightMeasurement".equals(operation.getName())) {
             assertEquals("RECEIVE", operation.getMethod());
+            assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured"));
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -128,7 +130,7 @@ class AsyncAPI3ImporterTest {
             assertEquals(1, exchanges.size());
 
             // Check resource paths have been discovered.
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.123.lighting.measured"));
 
             Exchange exchange = exchanges.get(0);
@@ -187,10 +189,12 @@ class AsyncAPI3ImporterTest {
       for (Operation operation : service.getOperations()) {
          assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
          assertEquals("streetlightId", operation.getDispatcherRules());
-         assertNull(operation.getResourcePaths());
+         assertNotNull(operation.getResourcePaths());
+         assertEquals(1, operation.getResourcePaths().size());
 
          if ("RECEIVE receiveLightMeasurement".equals(operation.getName())) {
             assertEquals("RECEIVE", operation.getMethod());
+            assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured"));
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -202,7 +206,7 @@ class AsyncAPI3ImporterTest {
             assertEquals(1, exchanges.size());
 
             // Check resource paths have been discovered.
-            assertEquals(1, operation.getResourcePaths().size());
+            assertEquals(2, operation.getResourcePaths().size());
             assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured"));
 
             Exchange exchange = exchanges.get(0);
