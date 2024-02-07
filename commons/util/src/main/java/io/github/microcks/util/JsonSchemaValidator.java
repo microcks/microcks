@@ -50,6 +50,10 @@ public class JsonSchemaValidator {
    public static final String JSON_SCHEMA_COMPONENTS_ELEMENT = "components";
    public static final String JSON_SCHEMA_PROPERTIES_ELEMENT = "properties";
 
+   private JsonSchemaValidator() {
+      // Private constructor to hide the implicit public one.
+   }
+
    /**
     * Check if a Json object is valid against the given Json schema specification.
     * @param schemaText The Json schema specification as a string
@@ -71,7 +75,7 @@ public class JsonSchemaValidator {
     */
    public static boolean isJsonValid(String schemaText, String jsonText, String namespace) throws IOException {
       try {
-         List<String> errors = validateJson(schemaText, jsonText);
+         List<String> errors = validateJson(schemaText, jsonText, namespace);
          if (!errors.isEmpty()) {
             log.debug("Get validation errors, returning false");
             return false;
@@ -194,8 +198,8 @@ public class JsonSchemaValidator {
 
       final JsonSchemaFactory factory;
       if (namespace != null) {
-         log.debug("Setting namespace to " + namespace + " in Json schema loading configuration");
-         // Setup a loading configuration for provided namespace.
+         log.debug("Setting namespace to {} in Json schema loading configuration", namespace);
+         // Set up a loading configuration for provided namespace.
          final LoadingConfiguration cfg = LoadingConfiguration.newBuilder()
                .setURITranslatorConfiguration(
                      URITranslatorConfiguration.newBuilder().setNamespace(namespace).freeze()

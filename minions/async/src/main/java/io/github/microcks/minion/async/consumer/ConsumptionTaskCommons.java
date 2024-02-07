@@ -40,6 +40,10 @@ public class ConsumptionTaskCommons {
    /** The password that is used when generating a custom truststore. */
    public static final String TRUSTSTORE_PASSWORD = "password";
 
+   private ConsumptionTaskCommons() {
+      // Private constructor to hide the implicit public one.
+   }
+
    /**
     * Install broker custom certificate into a truststore file.
     * @param specification The specification holding secret information

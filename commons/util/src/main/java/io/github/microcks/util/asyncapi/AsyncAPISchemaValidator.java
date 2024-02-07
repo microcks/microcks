@@ -52,8 +52,9 @@ public class AsyncAPISchemaValidator {
 
    public static final String ASYNC_SCHEMA_PAYLOAD_ELEMENT = "payload";
 
+   private static final String ONE_OF_STRUCT = "oneOf";
    private static final String[] STRUCTURES = {
-         "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties"
+         "allOf", "anyOf", ONE_OF_STRUCT, "not", "items", "additionalProperties"
    };
    private static final String[] NOT_SUPPORTED_ATTRIBUTES = {
          "discriminator", "externalDocs", "deprecated"
@@ -175,8 +176,18 @@ public class AsyncAPISchemaValidator {
       // We need to build a node holding schema information.
       JsonNode schemaNode = null;
       try {
-         if (messageNode.has("oneOf")) {
-            ArrayNode oneOfMessageNode = (ArrayNode) messageNode.get("oneOf");
+         if (messageNode.isArray()) {
+            // In the case of AsyncAPI v3, we always got messages even if there's just one element.
+            // Wrapping them in oneOf, make us lose details on validation errors so just do it if necessary.
+            ArrayNode messagesNode = (ArrayNode) messageNode;
+            if (messagesNode.size() > 1) {
+               schemaNode = buildOneOfMessageSchemaNode(specificationNode, (ArrayNode) messageNode);
+            } else {
+               schemaNode = retrieveSingleMessageSchemaNode(specificationNode,
+                     followRefIfAny(messagesNode.get(0), specificationNode));
+            }
+         } else if (messageNode.has(ONE_OF_STRUCT)) {
+            ArrayNode oneOfMessageNode = (ArrayNode) messageNode.get(ONE_OF_STRUCT);
             schemaNode = buildOneOfMessageSchemaNode(specificationNode, oneOfMessageNode);
          } else {
             schemaNode = retrieveSingleMessageSchemaNode(specificationNode, messageNode);
@@ -220,7 +231,7 @@ public class AsyncAPISchemaValidator {
             // Validation is shallow: we cannot detect schema incompatibilities as we do not
             // have the schema used for writing. Just checking we can read with given schema.
             AvroUtil.avroToAvroRecord(avroBinary, avroSchema);
-            // We're satisfying at least one shema. Exit here.
+            // We're satisfying at least one schema. Exit here.
             return Arrays.asList();
          } catch (AvroTypeException ate) {
             errors.add("Avro schema cannot be used to read message: " + ate.getMessage());
@@ -362,14 +373,12 @@ public class AsyncAPISchemaValidator {
 
    /** Deal with converting type of a Json node object. */
    private static void convertType(JsonNode node) {
-      if (node.has("type") && !node.path("type").asText().equals("object")) {
-
-         // Convert nullable in additional type and remove node.
-         if (node.path("nullable").asBoolean()) {
-            String type = node.path("type").asText();
-            ArrayNode typeArray = ((ObjectNode) node).putArray("type");
-            typeArray.add(type).add("null");
-         }
+      // Convert nullable in additional type and remove node.
+      if (node.has("type") && !node.path("type").asText().equals("object")
+            &&node.path("nullable").asBoolean()) {
+         String type = node.path("type").asText();
+         ArrayNode typeArray = ((ObjectNode) node).putArray("type");
+         typeArray.add(type).add("null");
       }
    }
 
@@ -379,12 +388,12 @@ public class AsyncAPISchemaValidator {
       ObjectMapper mapper = new ObjectMapper();
       ObjectNode schemaNode = mapper.createObjectNode();
       ArrayNode oneOfNode = mapper.createArrayNode();
-      schemaNode.set("oneOf", oneOfNode);
+      schemaNode.set(ONE_OF_STRUCT, oneOfNode);
 
       // Extract the schema payload for each alternative of the message.
       for (int i=0; i<oneOfMessageNode.size(); i++) {
          JsonNode altMessageNode = oneOfMessageNode.get(i);
-         // Extract the
+         // Extract the alternative message node.
          altMessageNode = followRefIfAny(altMessageNode, specificationNode);
          oneOfNode.add(retrieveSingleMessageSchemaNode(specificationNode, altMessageNode));
       }
@@ -425,8 +434,17 @@ public class AsyncAPISchemaValidator {
       // Message node can be just a reference.
       messageNode = followRefIfAny(messageNode, specificationNode);
 
-      if (messageNode.has("oneOf")) {
-         ArrayNode oneOfMessageNode = (ArrayNode) messageNode.get("oneOf");
+      if (messageNode.isArray()) {
+         // In the case of AsyncAPI v3, we always got messages even if there's just one element.
+         // Wrapping them in oneOf, make us lose details on validation errors so just do it if necessary.
+         ArrayNode messagesNode = (ArrayNode) messageNode;
+         if (messagesNode.size() > 1) {
+            return buildOneOfMessagesAvroSchemas(specificationNode, (ArrayNode) messageNode, schemaMap);
+         }
+         return new Schema[]{buildSingleMessageAvroSchema(specificationNode,
+               followRefIfAny(messagesNode.get(0), specificationNode), schemaMap)};
+      } else if (messageNode.has(ONE_OF_STRUCT)) {
+         ArrayNode oneOfMessageNode = (ArrayNode) messageNode.get(ONE_OF_STRUCT);
          return buildOneOfMessagesAvroSchemas(specificationNode, oneOfMessageNode, schemaMap);
       } else {
          return new Schema[]{buildSingleMessageAvroSchema(specificationNode, messageNode, schemaMap)};
@@ -492,7 +510,7 @@ public class AsyncAPISchemaValidator {
    private static JsonNode followRefIfAny(JsonNode referencableNode, JsonNode documentRoot) {
       if (referencableNode.has("$ref")) {
          String ref = referencableNode.path("$ref").asText();
-         return documentRoot.at(ref.substring(1));
+         return followRefIfAny(documentRoot.at(ref.substring(1)), documentRoot);
       }
       return referencableNode;
    }

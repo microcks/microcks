@@ -147,12 +147,10 @@ public class AsyncAPITestManager {
                            null, null)
                );
             } finally {
-               if (messageConsumptionTask != null) {
-                  try {
-                     messageConsumptionTask.close();
-                  } catch (Throwable t) {
-                     // This was best effort, just ignore the exception...
-                  }
+               try {
+                  messageConsumptionTask.close();
+               } catch (Throwable t) {
+                  // This was best effort, just ignore the exception...
                }
                executorService.shutdown();
             }
@@ -189,15 +187,8 @@ public class AsyncAPITestManager {
             logger.errorf("Retrieval of AsyncAPI schema for validation fails for {%s}", specification.getTestResultId());
          }
 
-         // Compute operation JSON pointer to navigate the spec.
-         String[] operationElements = specification.getOperationName().split(" ");
-         String operationNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
-         if ("SUBSCRIBE".equals(operationElements[0])) {
-            operationNamePtr += "/subscribe";
-         } else {
-            operationNamePtr += "/publish";
-         }
-         String messagePathPointer = operationNamePtr + "/message";
+         // Compute message JSON pointer to navigate the spec.
+         String messagePathPointer = findMessagePathPointer(specificationNode);
 
          // Retrieve expected content type from specification and produce a schema registry snapshot.
          String expectedContentType = null;
@@ -275,6 +266,29 @@ public class AsyncAPITestManager {
             }
             testCaseReturn.addTestReturn(testReturn);
          }
+      }
+
+      /** Define the JSON pointer expression to access the operation messages. */
+      private String findMessagePathPointer(JsonNode specificationNode) {
+         String messagePathPointer = "";
+         String[] operationElements = specification.getOperationName().split(" ");
+
+         String asyncApi = specificationNode.path("asyncapi").asText("2");
+         if (asyncApi.startsWith("3")) {
+            // Assume we have an AsyncAPI v3 document.
+            String operationNamePtr = "/operations/" + operationElements[1].replaceAll("/", "~1");
+            messagePathPointer = operationNamePtr + "/messages";
+         } else {
+            // Assume we have an AsyncAPI v2 document.
+            String operationNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
+            if ("SUBSCRIBE".equals(operationElements[0])) {
+               operationNamePtr += "/subscribe";
+            } else {
+               operationNamePtr += "/publish";
+            }
+            messagePathPointer = operationNamePtr + "/message";
+         }
+         return messagePathPointer;
       }
 
       /** Retrieve the expected content type for an AsyncAPI message. */
