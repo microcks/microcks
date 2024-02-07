@@ -17,8 +17,8 @@ package io.github.microcks.listener;
 
 import io.github.microcks.event.ServiceViewChangeEvent;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -28,11 +28,19 @@ import org.springframework.stereotype.Component;
  * @author laurent
  */
 @Component
+@Profile({"default", "prod"})
 @ConditionalOnProperty(value="async-api.enabled", havingValue="true", matchIfMissing=true)
 public class KafkaServiceChangeEventChannel implements ServiceChangeEventChannel {
 
-   @Autowired
-   private KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate;
+   private final KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate;
+
+   /**
+    * Build a new KafkaServiceChangeEventChannel from a KafkaTemplate.
+    * @param kafkaTemplate THe template used for sending Kafka messages.
+    */
+   public KafkaServiceChangeEventChannel(KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate) {
+      this.kafkaTemplate = kafkaTemplate;
+   }
 
    @Override
    public void sendServiceViewChangeEvent(ServiceViewChangeEvent event) throws Exception {
