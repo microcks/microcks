@@ -43,10 +43,10 @@ import static org.junit.Assert.assertNotNull;
  * This is a test case for class AsyncAPI3Importer.
  * @author laurent
  */
-public class AsyncAPI3ImporterTest {
+class AsyncAPI3ImporterTest {
 
    @Test
-   public void testSimpleAsyncAPI3ImportYAML() {
+   void testSimpleAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml", null);
@@ -79,7 +79,7 @@ public class AsyncAPI3ImporterTest {
    }
 
    @Test
-   public void testStaticParametersAsyncAPI3ImportYAML() {
+   void testStaticParametersAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-static.yaml", null);
@@ -153,7 +153,7 @@ public class AsyncAPI3ImporterTest {
    }
 
    @Test
-   public void testDynamicParametersAsyncAPI3ImportYAML() {
+   void testDynamicParametersAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-dynamic.yaml", null);
@@ -227,7 +227,7 @@ public class AsyncAPI3ImporterTest {
    }
 
    @Test
-   public void testRemoteRelativeReferenceAsyncAPI3ImportYAML() {
+   void testRemoteRelativeReferenceAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-ref.yaml",
@@ -289,7 +289,7 @@ public class AsyncAPI3ImporterTest {
    }
 
    @Test
-   public void testRemoteRelativeAvroReferenceAsyncAPI3ImportYAML() {
+   void testRemoteRelativeAvroReferenceAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
          importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml",
