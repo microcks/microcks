@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
@@ -46,8 +45,7 @@ import java.util.Map;
 
 /**
  * This is a utility class for accessing HTTP content using diverse security
- * authentication
- * mechanisms and output formats
+ * authentication mechanisms and output formats
  * 
  * @author laurent
  */
@@ -60,6 +58,10 @@ public class HTTPDownloader {
    private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
    /** Constant representing the footer line in a custom CA Cert in PEM format. */
    private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
+
+   private HTTPDownloader() {
+      // Private constrcutor to hide the implicit public one.
+   }
 
    /**
     * Manage the retrieval of Etag / ETag header on remote url. Depending on secret
@@ -201,7 +203,8 @@ public class HTTPDownloader {
             if (disableSSLValidation) {
                log.debug("SSL Validation is disabled for {}, installing accept everything TrustManager", remoteUrl);
                installAcceptEverythingTrustManager(connection);
-            } else if (secret != null && secret.getCaCertPem() != null) {
+            } else if (secret != null && secret.getCaCertPem() != null
+                  && secret.getCaCertPem().trim().length() > 0) {
                log.debug("Secret for {} contains a CA Cert, installing certificate into TrustManager", remoteUrl);
                installCustomCaCertTrustManager(secret.getCaCertPem(), connection);
             }
@@ -240,37 +243,6 @@ public class HTTPDownloader {
    /**
     * Install a TrustManager that accept every verification of host name.
     */
-   private static void installAcceptEverythingTrustManager() throws Exception {
-      // Create a trust manager that does not validate certificate chains
-      TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
-         public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-            return null;
-         }
-
-         public void checkClientTrusted(X509Certificate[] certs, String authType) {
-         }
-
-         public void checkServerTrusted(X509Certificate[] certs, String authType) {
-         }
-      } };
-
-      // Install the all-trusting trust manager.
-      final SSLContext sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
-      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-
-      // Create and install all-trusting host name verifier.
-      HostnameVerifier allHostsValid = new HostnameVerifier() {
-         public boolean verify(String hostname, SSLSession session) {
-            return true;
-         }
-      };
-      HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-   }
-
-   /**
-    * Install a TrustManager that accept every verification of host name.
-    */
    private static void installAcceptEverythingTrustManager(HttpURLConnection connection) throws Exception {
       // Create a trust manager that does not validate certificate chains
       TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
@@ -279,9 +251,11 @@ public class HTTPDownloader {
          }
 
          public void checkClientTrusted(X509Certificate[] certs, String authType) {
+            // No check to do here as we must accept everything.
          }
 
          public void checkServerTrusted(X509Certificate[] certs, String authType) {
+            // No check to do here as we must accept everything.
          }
       } };
 
@@ -291,40 +265,8 @@ public class HTTPDownloader {
       ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
 
       // Create and install all-trusting host name verifier.
-      HostnameVerifier allHostsValid = new HostnameVerifier() {
-         public boolean verify(String hostname, SSLSession session) {
-            return true;
-         }
-      };
+      HostnameVerifier allHostsValid = (hostname, session) -> true;
       ((HttpsURLConnection) connection).setHostnameVerifier(allHostsValid);
-   }
-
-   /**
-    * Install a TrustManager that validates the CA certificate.
-    */
-   private static void installCustomCaCertTrustManager(String caCertPem) throws Exception {
-      // First compute a stripped PEM certificate and decode it from base64.
-      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
-            .replaceAll(END_CERTIFICATE, "");
-      InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
-
-      // Generate a new x509 certificate from the stripped decoded pem.
-      CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      X509Certificate caCert = (X509Certificate) cf.generateCertificate(is);
-
-      // Set a new certificate into keystore.
-      TrustManagerFactory tmf = TrustManagerFactory
-            .getInstance(TrustManagerFactory.getDefaultAlgorithm());
-      KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-      ks.load(null); // You don't need the KeyStore instance to come from a file.
-      ks.setCertificateEntry("caCert", caCert);
-
-      tmf.init(ks);
-
-      // Install the new TrustManager.
-      SSLContext sslContext = SSLContext.getInstance("TLS");
-      sslContext.init(null, tmf.getTrustManagers(), null);
-      HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
    }
 
    /**
@@ -333,8 +275,8 @@ public class HTTPDownloader {
    private static void installCustomCaCertTrustManager(String caCertPem, HttpURLConnection connection)
          throws Exception {
       // First compute a stripped PEM certificate and decode it from base64.
-      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
-            .replaceAll(END_CERTIFICATE, "");
+      String strippedPem = caCertPem.replace(BEGIN_CERTIFICATE, "")
+            .replace(END_CERTIFICATE, "");
       InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
 
       // Generate a new x509 certificate from the stripped decoded pem.
@@ -356,9 +298,7 @@ public class HTTPDownloader {
       ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
    }
 
-   /**
-    *
-    */
+   /** Simple wrapper around a downloaded local file and the header we received during the download. */
    public static class FileAndHeaders {
       private File localFile;
       private Map<String, List<String>> responseHeaders;
