@@ -51,7 +51,7 @@
               <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
                 <option *ngFor="let operation of service.operations" [value]="operation.name">{{ operation.name }}</option>
               </select>
-              <p class="help-block">Select the Asynchronous operation you want to test (only SUBSCRIBE is supported at the moment).</p>
+              <p class="help-block">Select the Asynchronous operation you want to test.</p>
             </div>
           </div>
           <div class="control-group">
