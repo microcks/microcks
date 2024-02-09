@@ -128,7 +128,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
          for (DescriptorProtos.ServiceDescriptorProto sdp : fdp.getServiceList()) {
             // Build a new service.
             Service service = new Service();
-            service.setName(sdp.getName());
+            service.setName(packageName + "." + sdp.getName());
             service.setVersion(version);
             service.setType(ServiceType.GRPC);
             service.setXmlNS(packageName);

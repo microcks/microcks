@@ -41,7 +41,6 @@ import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -62,21 +61,27 @@ public class GrpcServerCallHandler {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(GrpcServerCallHandler.class);
 
-   @Autowired
-   private ServiceRepository serviceRepository;
-
-   @Autowired
-   private ResourceRepository resourceRepository;
-
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private ApplicationContext applicationContext;
+   private final ServiceRepository serviceRepository;
+   private final ResourceRepository resourceRepository;
+   private final ResponseRepository responseRepository;
+   private final ApplicationContext applicationContext;
 
    @Value("${mocks.enable-invocation-stats}")
-   private final Boolean enableInvocationStats = null;
+   private Boolean enableInvocationStats = null;
 
+   /**
+    * Build a new GrpcServerCallHandler with all the repositories it needs and application context.
+    * @param serviceRepository Repository for getting service definitions
+    * @param resourceRepository Repository for getting service resources definitions
+    * @param responseRepository Repository for getting mock responses definitions
+    * @param applicationContext The Spring current application context
+    */
+   public GrpcServerCallHandler(ServiceRepository serviceRepository, ResourceRepository resourceRepository, ResponseRepository responseRepository, ApplicationContext applicationContext) {
+      this.serviceRepository = serviceRepository;
+      this.resourceRepository = resourceRepository;
+      this.responseRepository = responseRepository;
+      this.applicationContext = applicationContext;
+   }
 
    /**
     * Create an ServerCallHandler that uses Microcks mocks for unary calls.
@@ -107,7 +112,7 @@ public class GrpcServerCallHandler {
          this.fullMethodName = fullMethodName;
          // Retrieve operation name, service name and version from fullMethodName.
          operationName = fullMethodName.substring(fullMethodName.indexOf("/") + 1);
-         serviceName = fullMethodName.substring(fullMethodName.lastIndexOf(".") + 1, fullMethodName.indexOf("/"));
+         serviceName = fullMethodName.substring(0, fullMethodName.indexOf("/"));
          String packageName = fullMethodName.substring(0, fullMethodName.lastIndexOf("."));
          String[] parts = packageName.split("\\.");
          serviceVersion = (parts.length > 2 ? parts[parts.length - 1] : packageName);

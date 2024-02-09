@@ -25,7 +25,6 @@ import io.grpc.ServerMethodDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
@@ -40,13 +39,20 @@ public class GrpcMockHandlerRegistry extends HandlerRegistry {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(GrpcMockHandlerRegistry.class);
 
-   @Autowired
-   private GrpcServerCallHandler serverCallHandler;
+   private final GrpcServerCallHandler serverCallHandler;
+
+   /**
+    * Buidl a new GrpcMockHandlerRegistry with a callback handler.
+    * @param serverCallHandler The server callback handler to use
+    */
+   public GrpcMockHandlerRegistry(GrpcServerCallHandler serverCallHandler) {
+      this.serverCallHandler = serverCallHandler;
+   }
 
    @Nullable
    @Override
    public ServerMethodDefinition<?, ?> lookupMethod(String fullMethodName, @Nullable String authority) {
-      log.debug("lookupMethod() with fullMethodName: " + fullMethodName);
+      log.debug("lookupMethod() with fullMethodName: {}", fullMethodName);
       return ServerMethodDefinition.create(mockMethodDescriptor(fullMethodName), mockServerCallHandler(fullMethodName));
    }
 

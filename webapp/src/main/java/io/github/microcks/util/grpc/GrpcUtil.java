@@ -21,7 +21,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import io.grpc.MethodDescriptor;
 import io.grpc.protobuf.services.BinaryLogProvider;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -32,22 +32,31 @@ import java.util.List;
  */
 public class GrpcUtil {
 
+   private GrpcUtil() {
+      // Private constructor to hide the implicit public one.
+   }
+
    /**
     * Find a Protobuf method descriptor using a base64 encoded representation of the proto descriptor + service and method name.
     * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
     * @param serviceName The name of the service to get method for.
     * @param methodName The name of the method.
     * @return A Protobuf MethodDescriptor
-    * @throws UnsupportedEncodingException If base64 content is not encoded in uTF-8
     * @throws InvalidProtocolBufferException If representation is not understood as protobuf descriptor.
     * @throws Descriptors.DescriptorValidationException If included FileDescriptor cannot be validated.
     */
    public static Descriptors.MethodDescriptor findMethodDescriptor(String base64ProtobufDescriptor, String serviceName, String methodName)
-         throws UnsupportedEncodingException, InvalidProtocolBufferException, Descriptors.DescriptorValidationException{
+         throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException{
+
+      // Now we may have serviceName as being the FQDN. We have to find short version to later findServiceByName().
+      String shortServiceName = serviceName;
+      if (serviceName.contains(".")) {
+         shortServiceName = serviceName.substring(serviceName.lastIndexOf(".") + 1);
+      }
 
       // Protobuf binary descriptor has been encoded in base64 to be stored as a string.
       // Decode it and recreate DescriptorProtos objects.
-      byte[] decodedBinaryPB = Base64.getDecoder().decode(base64ProtobufDescriptor.getBytes("UTF-8"));
+      byte[] decodedBinaryPB = Base64.getDecoder().decode(base64ProtobufDescriptor.getBytes(StandardCharsets.UTF_8));
       DescriptorProtos.FileDescriptorSet fds = DescriptorProtos.FileDescriptorSet.parseFrom(decodedBinaryPB);
 
       Descriptors.ServiceDescriptor sd = null;
@@ -60,7 +69,7 @@ public class GrpcUtil {
                   dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
             dependencies.add(fd);
             // Search for service.
-            sd = fd.findServiceByName(serviceName);
+            sd = fd.findServiceByName(shortServiceName);
             if (sd != null) {
                break;
             }
@@ -68,7 +77,7 @@ public class GrpcUtil {
       } else {
          Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(0),
                new Descriptors.FileDescriptor[]{}, true);
-         sd = fd.findServiceByName(serviceName);
+         sd = fd.findServiceByName(shortServiceName);
       }
 
       return sd.findMethodByName(methodName);
