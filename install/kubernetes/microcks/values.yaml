@@ -1,25 +1,98 @@
 appName: microcks
-ingresses: true
+
+global:
+  image:
+    # -- Overrides the Docker registry globally for all images.
+    registry: quay.io
+    # -- Optional list of imagePullSecrets.
+    pullSecrets: []
 
 microcks:
-  url: microcks-microcks.192.168.99.100.nip.io
-  #url: microcks-microcks.192.168.64.6.nip.io
-  #ingressSecretRef: my-secret-for-microcks-ingress
-  #ingressAnnotations:
-    #cert-manager.io/issuer: my-cert-issuer
-    #kubernetes.io/tls-acme: "true"
-  #ingressClassName: nginx
-  #grpcSecretRef: my-secret-for-microcks-grpc
-  #grpcIngressClassName: nginx
-  generateCert: true
-  image: quay.io/microcks/microcks:1.8.1
-  replicas: 1
-  # Uncomment to change Microcks Service to a NodePort
-  #serviceType: NodePort
+  image:
+    # -- The Docker registry
+    registry: quay.io
+    # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository
+    repository: microcks/microcks
+    # -- Overrides the image tag whose default is the chart's appVersion
+    tag: null
+    # -- Microcks image's SHA256 digest (either in format "sha256:XYZ" or "XYZ"). When set, will override `image.tag`.
+    digest: null
+    # -- Docker image pull policy
+    pullPolicy: IfNotPresent
 
-  #grpcIngressAnnotations:
-    #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
-    #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
+  replicas: 1
+
+  service:
+    app:
+      # -- Creates a Service
+      enabled: true
+      # -- App service type
+      type: ClusterIP
+    grpc:
+      # -- Creates a Service
+      enabled: true
+      # -- gRPC service type
+      type: ClusterIP
+
+  ## -- Additional init containers
+  initContainers: []
+
+  # -- Additional containers
+  extraContainers: []
+
+  generateCert: true
+
+  ingress:
+    app:
+      # -- Specifies whether an ingress for Microcks should be created
+      enabled: false
+      # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
+      # ingressClassName: nginx
+      # -- Annotations for the Microcks app ingress
+      #       cert-manager.io/issuer: my-cert-issuer
+      #       kubernetes.io/tls-acme: "true"
+      annotations: {}
+      # -- Hosts configuration for the ingress
+      hosts:
+        - host: microcks.example.com
+          paths:
+            - path: /
+              # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
+              # pathType: Prefix
+      # -- TLS configuration for the ingress
+      tls:
+        - secretName: microcks-tls
+          hosts:
+            - microcks.example.com
+    grpc:
+      # -- Specifies whether an ingress for Microcks gRPC should be created
+      enabled: false
+      # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
+      # ingressClassName: nginx
+      # -- Annotations for the Microcks gRPC ingress
+      #       nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+      #       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      annotations: {}
+      # -- Hosts configuration for the gRPC ingress
+      hosts:
+        - host: grpc.microcks.example.com
+          paths:
+            - path: /
+            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
+            # pathType: Prefix
+      # -- TLS configuration for the gRPC ingress
+      tls:
+          - secretName: microcks-tls
+            hosts:
+              - microcks.example.com
+
+  # -- Extra volumes to mount
+  extraVolumeMounts: []
+
+  # -- Extra volumes
+  extraVolumes: []
 
   resources:
     requests:
@@ -63,7 +136,17 @@ microcks:
 
 
 postman:
-  image: quay.io/microcks/microcks-postman-runtime:latest
+  image:
+    # -- The Docker registry
+    registry: quay.io
+    # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository
+    repository: microcks/microcks-postman-runtime
+    # -- Image tag
+    tag: latest
+    # -- Docker image pull policy
+    pullPolicy: IfNotPresent
   replicas: 1
   resources:
     requests:
@@ -79,17 +162,42 @@ keycloak:
   realm: microcks
   # Now that we switched to newer version of Keycloak-X, default url does not contain '/auth' path
   # If you use an older external Keycloak instance, url must include the '/auth' path
-  url: keycloak-microcks.192.168.99.100.nip.io
   #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080
-  #ingressSecretRef: my-secret-for-keycloak-ingress
-  #ingressAnnotations:
-    #cert-manager.io/issuer: my-cert-issuer
-    #kubernetes.io/tls-acme: "true"
-  #ingressClassName: nginx
+
+  ingress:
+    # -- Specifies whether an ingress for Keycloak should be created
+    enabled: false
+    # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
+    # ingressClassName: nginx
+    # -- Annotations for the Keycloak ingress
+    annotations: {}
+    # -- Hosts configuration for the ingress
+    hosts:
+      - host: keycloak.microcks.example.com
+        paths:
+          - path: /
+            # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
+            # pathType: Prefix
+    # -- TLS configuration for the ingress
+    tls:
+      - secretName: keycloak-microcks-tls
+        hosts:
+          - keycloak.microcks.example.com
+
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
   generateCert: true
-  image: quay.io/keycloak/keycloak:22.0.3
+  image:
+    # -- The Docker registry
+    registry: quay.io
+    # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository
+    repository: keycloak/keycloak
+    # -- Image tag
+    tag: 22.0.3
+    # -- Docker image pull policy
+    pullPolicy: IfNotPresent
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
@@ -119,7 +227,17 @@ keycloak:
   # Unless you uncomment following line and set class, persistent volume claim is created
   # with no storage class and relies on cluster default one.
   #storageClassName: my-awesome-class
-  postgresImage: centos/postgresql-95-centos7:latest
+  postgresImage:
+    # -- The Docker registry
+    registry: quay.io
+    # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository
+    repository: centos/postgresql-95-centos7
+    # -- Image tag
+    tag: latest
+    # -- Docker image pull policy
+    pullPolicy: IfNotPresent
   username: userP
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.
@@ -133,7 +251,17 @@ mongodb:
   #uri: mongodb:27017
   #uriParameters: "?ssl=true"
   #database: sampledb
-  image: centos/mongodb-36-centos7:latest
+  image:
+    # -- The Docker registry
+    registry: quay.io
+    # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
+    pullSecrets: []
+    # -- Docker image repository
+    repository: centos/mongodb-36-centos7
+    # -- Image tag
+    tag: latest
+    # -- Docker image pull policy
+    pullPolicy: IfNotPresent
   persistent: true
   volumeSize: 2Gi
   # Unless you uncomment following line and set class, persistent volume claim is created
@@ -169,7 +297,46 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
 
-    image: quay.io/microcks/microcks-async-minion:1.8.1
+    image:
+      # -- The Docker registry
+      registry: quay.io
+      # -- Optional list of imagePullSecrets. Overrides `global.image.pullSecrets`
+      pullSecrets: []
+      # -- Docker image repository
+      repository: microcks/microcks-async-minion
+      # -- Image tag
+      tag: 1.8.1
+      # -- Docker image pull policy
+      pullPolicy: IfNotPresent
+
+    service:
+      # -- Creates a Service
+      enabled: true
+      # -- Service type
+      type: ClusterIP
+
+    ingress:
+      # -- Specifies whether an ingress for Async feature should be created
+      enabled: false
+      # -- Ingress Class Name. MAY be required for Kubernetes versions >= 1.18
+      # ingressClassName: nginx
+      # -- Annotations for the Async feature ingress
+      #      ingress.kubernetes.io/rewrite-target: /
+      #      nginx.ingress.kubernetes.io/proxy-read-timeout: "3000"
+      #      nginx.ingress.kubernetes.io/proxy-send-timeout: "3000"
+      annotations: {}
+      # -- Hosts configuration for the ingress
+      hosts:
+        - host: microcks.example.com
+          paths:
+            - path: /api/ws
+              # -- pathType (e.g. ImplementationSpecific, Prefix, .. etc.) might also be required by some Ingress Controllers
+              # pathType: Prefix
+      # -- TLS configuration for the ingress
+      tls:
+        - secretName: microcks-tls
+          hosts:
+            - microcks.example.com
 
     env:
       #- name: OAUTH_CLIENT_ID

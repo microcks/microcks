@@ -1,4 +1,4 @@
-{{- if .Values.ingresses -}}
+{{- if .Values.microcks.ingress.app -}}
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
@@ -10,29 +10,44 @@ metadata:
     {{- include "microcks-common-labels" . | nindent 4 }}
   annotations:
     {{- include "microcks-common-annotations" . | nindent 4 }}
-    ingress.kubernetes.io/rewrite-target: /
-    {{- with .Values.microcks.ingressAnnotations }}
+    {{- with .Values.microcks.ingress.app.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  {{- if .Values.microcks.ingressClassName }}
-  ingressClassName: {{ .Values.microcks.ingressClassName | quote }}
+  {{- if .Values.microcks.ingress.app.ingressClassName }}
+  ingressClassName: {{ .Values.microcks.ingress.app.ingressClassName | quote }}
   {{- end }}
+  {{- if .Values.microcks.ingress.app.tls }}
   tls:
-  - hosts:
-    - "{{ .Values.microcks.url }}"
-    secretName: {{ .Values.microcks.ingressSecretRef | default (print .Values.appName "-microcks-ingress-secret") }}
+    {{- range .Values.microcks.ingress.app.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- with .secretName }}
+      secretName: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
   rules:
-  - host: "{{ .Values.microcks.url }}"
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: "{{ .Values.appName }}"
-            port:
-              number: 8080
+    {{- range .Values.microcks.ingress.app.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if .pathType }}
+            pathType: {{ .pathType }}
+            {{- end }}
+            backend:
+              service:
+                name: "{{ $.Values.appName }}"
+                port:
+                  number: 8080
+            {{- end }}
+      {{- end }}
+{{- end }}
+{{- if .Values.microcks.ingress.grpc.enabled }}
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
@@ -44,67 +59,44 @@ metadata:
     {{- include "microcks-common-labels" . | nindent 4 }}
   annotations:
     {{- include "microcks-common-annotations" . | nindent 4 }}
-    ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
-    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
-    {{- with .Values.microcks.grpcIngressAnnotations }}
+    {{- with .Values.microcks.ingress.grpc.annotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
 spec:
-  {{- if .Values.microcks.grpcIngressClassName }}
-  ingressClassName: {{ .Values.microcks.grpcIngressClassName | quote }}
+  {{- if .Values.microcks.ingress.grpc.ingressClassName }}
+  ingressClassName: {{ .Values.microcks.ingress.grpc.ingressClassName | quote }}
   {{- end }}
+  {{- if .Values.microcks.ingress.grpc.tls }}
   tls:
-  - hosts:
-     - {{ ( include "microcks-grpc.url" . ) }}
-  rules:
-  - host: {{ ( include "microcks-grpc.url" . ) }}
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: "{{ .Values.appName }}-grpc"
-            port:
-              number: 9090
-{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
----
-kind: Ingress
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: "{{ .Values.appName }}-keycloak"
-  labels:
-    app: "{{ .Values.appName }}"
-    group: microcks
-    {{- include "microcks-common-labels" . | nindent 4 }}
-  annotations:
-    {{- include "microcks-common-annotations" . | nindent 4 }}
-    ingress.kubernetes.io/rewrite-target: /
-    {{- with .Values.keycloak.ingressAnnotations }}
-    {{- toYaml . | nindent 4 }}
+    {{- range .Values.microcks.ingress.grpc.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- with .secretName }}
+      secretName: {{ . }}
+      {{- end }}
     {{- end }}
-spec:
-  {{- if .Values.keycloak.ingressClassName }}
-  ingressClassName: {{ .Values.keycloak.ingressClassName | quote }}
   {{- end }}
-  tls:
-  - hosts:
-    - "{{ .Values.keycloak.url }}"
-    secretName: {{ .Values.keycloak.ingressSecretRef | default (print .Values.appName "-keycloak-ingress-secret") }}
   rules:
-  - host: "{{ .Values.keycloak.url }}"
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: "{{ .Values.appName }}-keycloak"
-            port:
-              number: 8080
+    {{- range .Values.microcks.ingress.grpc.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if .pathType }}
+            pathType: {{ .pathType }}
+            {{- end }}
+            backend:
+              service:
+                name: "{{ $.Values.appName }}"
+                port:
+                  number: 9090
+            {{- end }}
+      {{- end }}
 {{- end }}
-{{- if and .Values.features.async.enabled }}
+{{- if and .Values.features.async.enabled .Values.features.async.ingress.enabled }}
 ---
 kind: Ingress
 apiVersion: networking.k8s.io/v1
@@ -116,30 +108,40 @@ metadata:
     {{- include "microcks-common-labels" . | nindent 4 }}
   annotations:
     {{- include "microcks-common-annotations" . | nindent 4 }}
-    ingress.kubernetes.io/rewrite-target: /
-    nginx.ingress.kubernetes.io/proxy-read-timeout: "3000"
-    nginx.ingress.kubernetes.io/proxy-send-timeout: "3000"
-  {{- with .Values.features.async.ws.ingressAnnotations }}
+    {{- with .Values.features.async.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
-  {{- if .Values.features.async.ws.ingressClassName }}
-  ingressClassName: {{ .Values.features.async.ws.ingressClassName | quote }}
+  {{- if .Values.features.async.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.features.async.ingress.ingressClassName | quote }}
   {{- end }}
+  {{- if .Values.features.async.ingress.tls }}
   tls:
-  - hosts:
-    - "{{ ( include "microcks-ws.url" . ) }}"
-    secretName: {{ .Values.features.async.ws.ingressSecretRef | default (print .Values.appName "-microcks-ws-ingress-secret") }}
+    {{- range .Values.features.async.ingress.tls }}
+    - hosts:
+        {{- range .hosts }}
+        - {{ . | quote }}
+        {{- end }}
+      {{- with .secretName }}
+      secretName: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
   rules:
-  - host: "{{ ( include "microcks-ws.url" . ) }}"
-    http:
-      paths:
-        - path: /api/ws
-          pathType: Prefix
-          backend:
-            service:
-              name: "{{ .Values.appName }}-async-minion"
-              port:
-                number: 8080
+    {{- range .Values.features.async.ingress.hosts }}
+    - host: {{ .host | quote }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            {{- if .pathType }}
+            pathType: {{ .pathType }}
+            {{- end }}
+            backend:
+              service:
+                name: "{{ $.Values.appName }}-async-minion"
+                port:
+                  number: 8080
+            {{- end }}
+      {{- end }}
 {{- end }}
-{{- end -}}

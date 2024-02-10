@@ -1,0 +1,51 @@
+{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-keycloak"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: keycloak
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+spec:
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      name: keycloak
+  type: {{ .Values.keycloak.serviceType | default "ClusterIP" | quote }}
+  sessionAffinity: None
+  selector:
+    app: "{{ .Values.appName }}"
+    container: keycloak
+    group: microcks
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-keycloak-postgresql"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: keycloak-postgresql
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+spec:
+  ports:
+    - name: postgresql
+      protocol: TCP
+      port: 5432
+      targetPort: 5432
+      nodePort: 0
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: "{{ .Values.appName }}"
+    container: keycloak-postgresql
+    group: microcks
+{{- end }}

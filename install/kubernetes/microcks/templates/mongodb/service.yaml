@@ -1,0 +1,28 @@
+{{- if and .Values.mongodb.install }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-mongodb"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: mongodb
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+spec:
+  ports:
+    - name: mongodb
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+      nodePort: 0
+  selector:
+    app: "{{ .Values.appName }}"
+    container: mongodb
+    group: microcks
+  type: ClusterIP
+  sessionAffinity: None
+{{- end }}
+
