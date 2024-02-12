@@ -48,7 +48,7 @@
                           {"name": "jean-pierre", "model": "Peugeot Traveler", "year": 2017}
                       ]
                     x-microcks-example:
-                      delay: 10
+                      delay: 1000
 
 
 
@@ -84,7 +84,4 @@
               {"name": "123", "model": "Pewpew Moblie", "year": 2000}
           ]
         x-microcks-example:
-            delay: 20
-  tags:
-  - name: car
-    description:
+            delay: 5000
