@@ -18,24 +18,19 @@
         description: List all cars of owner description
         operationId: getCarsOp
         parameters:
-        - name: page
-          in: query
+        - name: owner
+          in: path
           description: Result page wanted
-          required: false
+          required: true
           schema:
             type: integer
           examples:
             laurent_cars:
               value: 0
-        - name: limit
-          in: query
-          description: Number of result in page
-          required: false
-          schema:
-            type: integer
-          examples:
-            laurent_cars:
-              value: 20
+            maxime_cars:
+              value: 1
+            tom_cars:
+              value: 2
         responses:
           200:
             description: Success
