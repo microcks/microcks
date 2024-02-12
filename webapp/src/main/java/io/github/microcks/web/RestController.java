@@ -248,11 +248,13 @@ public class RestController {
                   dispatchContext.requestContext(), response);
 
             // Setting delay to default one if not set.
-            if (delay == null && rOperation.getDefaultDelay() != null) {
-               delay = rOperation.getDefaultDelay();
-               if (response.getDelay() != 0){
-                  delay = response.getDelay();
-               }
+            if (delay == null) {
+              if (rOperation.getDefaultDelay() != null){
+                delay = rOperation.getDefaultDelay();
+              }
+              if (response.getDelay() != 0) {
+                delay = response.getDelay();
+              }
             }
             MockControllerCommons.waitForDelay(startTime, delay);
 
