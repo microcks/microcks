@@ -205,7 +205,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                         Iterator<String> exampleNames = examplesNode.fieldNames();
                         while (exampleNames.hasNext()) {
                            String exampleName = exampleNames.next();
-                           JsonNode example = examplesNode.path(exampleName);
+                           JsonNode example = followRefIfAny(examplesNode.path(exampleName));
 
                            // We should have everything at hand to build response here.
                            Response response = new Response();
