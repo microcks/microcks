@@ -213,6 +213,12 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                            response.setMediaType(contentValue);
                            response.setStatus(responseCode.getKey());
                            response.setContent(getSerializedExampleValue(example));
+
+                           // Complete response properties if any.
+                           if (example.has(MetadataExtensions.MICROCKS_OPERATION_EXTENSION)) {
+                              MetadataExtractor.completeResponseProperties(response,
+                                 example.path(MetadataExtensions.MICROCKS_OPERATION_EXTENSION));
+                           }
                            if (!responseCode.getKey().startsWith("2")) {
                               response.setFault(true);
                            }

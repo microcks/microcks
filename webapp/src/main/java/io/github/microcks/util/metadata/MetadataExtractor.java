@@ -17,23 +17,28 @@ package io.github.microcks.util.metadata;
 
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * Util methods for extracting Metadata or operation properties from JsonNode.
+ *
  * @author laurent
  */
 public class MetadataExtractor {
 
    /**
     * Complete a Metadata object with extracted metadata from JsonNode.
+    *
     * @param metadata The object to complete
-    * @param node Node representing a metadata node
+    * @param node     Node representing a metadata node
     */
    public static void completeMetadata(Metadata metadata, JsonNode node) {
       JsonNode annotationsNode = node.get("annotations");
       if (annotationsNode != null) {
-         annotationsNode.fields().forEachRemaining(entry -> metadata.setAnnotation(entry.getKey(), entry.getValue().asText()));
+         annotationsNode.fields()
+               .forEachRemaining(entry -> metadata.setAnnotation(entry.getKey(), entry.getValue().asText()));
       }
       JsonNode labelsNode = node.get("labels");
       if (labelsNode != null) {
@@ -43,8 +48,9 @@ public class MetadataExtractor {
 
    /**
     * Complete an Operation object with extracted properties from JsonNode.
+    *
     * @param operation The object to complete
-    * @param node Node representing an operation node
+    * @param node      Node representing an operation node
     */
    public static void completeOperationProperties(Operation operation, JsonNode node) {
       if (node.has("delay")) {
@@ -58,6 +64,20 @@ public class MetadataExtractor {
       }
       if (node.has("dispatcherRules")) {
          operation.setDispatcherRules(node.path("dispatcherRules").asText());
+      }
+   }
+
+   /**
+    *
+    *
+    * Complete a Response object with the extracted properties from JsonNode
+    *
+    * @param response the response to complete
+    * @param path     Node representing an operation node
+    */
+   public static void completeResponseProperties(Response response, JsonNode node) {
+      if (node.has("delay")) {
+         response.setDelay(node.path("delay").asLong(0));
       }
    }
 }
