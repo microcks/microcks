@@ -1861,13 +1861,13 @@ public class OpenAPIImporterTest {
          assertNotNull(response);
          switch (response.getName()) {
           case "laurent_cars":
-            assertEquals(Long.valueOf(1000L), response.getDelay());
+            assertTrue(1000 == response.getDelay());
             break;
           case "maxime_cars":
-            assertEquals(Long.valueOf(5000L), response.getDelay());
+            assertTrue(5000 == response.getDelay());
             break;
           case "tom_cars":
-            assertEquals(Long.valueOf(0L), response.getDelay());
+            assertTrue(0 == response.getDelay());
             break;
 
           default:
