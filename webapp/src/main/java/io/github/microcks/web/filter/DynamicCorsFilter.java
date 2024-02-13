@@ -24,8 +24,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
 
 /**
  * Servlet filter that set the response CORS headers accordingly the
@@ -37,7 +40,7 @@ public class DynamicCorsFilter implements Filter {
   private final Boolean corsAllowCredentials;
 
   /**
-   * Build a new DynamicOriginCorsFilter.
+   * Build a new DynamicCorsFilter.
    *
    * @param corsAllowedOrigins   Allowed origin forced if nothing found in
    *                             incoming request
@@ -67,13 +70,32 @@ public class DynamicCorsFilter implements Filter {
     chain.doFilter(servletRequest, servletResponse);
   }
 
+  /**
+   * Build a string with all the headers from the incoming request.
+   *
+   * This method will also add the headers from the
+   * "Access-Control-Request-Headers" header if present.
+   *
+   * @param httpRequest
+   * @return
+   */
   private String getHeadersString(HttpServletRequest httpRequest) {
+    var headerNamesList = new HashSet<String>();
     Enumeration<String> headerNamesEnumeration = httpRequest.getHeaderNames();
+
     if (headerNamesEnumeration != null) {
-      var headerNamesList = Collections.list(headerNamesEnumeration);
-      return String.join(", ", headerNamesList);
-    } else {
+      headerNamesList.addAll(Collections.list(headerNamesEnumeration));
+    }
+
+    String accessControlRequestHeaders = httpRequest.getHeader("Access-Control-Request-Headers");
+    if (accessControlRequestHeaders != null) {
+      List<String> headerNames = Arrays.stream(accessControlRequestHeaders.split(",")).map(String::trim).toList();
+      headerNamesList.addAll(headerNames);
+    }
+
+    if (headerNamesList.isEmpty()) {
       return "*";
     }
+    return String.join(", ", headerNamesList);
   }
 }

@@ -75,6 +75,23 @@ public class DynamicCorsFilterTest {
       filter.doFilter(request, response, chain);
       verify(response).setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
     }
+
+    @Test
+    void shouldAddRequestHeadersToAccessControlAllowHeaders() throws IOException, ServletException {
+      Vector<String> headerNames = new Vector<>();
+      headerNames.add("Content-Type");
+      headerNames.add("Authorization");
+      headerNames.add("X-Custom-Header");
+      headerNames.add("Access-Control-Request-Headers");
+      Enumeration<String> headerNamesEnum = headerNames.elements();
+      when(request.getHeaderNames()).thenReturn(headerNamesEnum);
+
+      when(request.getHeader("Access-Control-Request-Headers")).thenReturn("X-Custom-Header-1, X-Custom-Header-2");
+
+      filter.doFilter(request, response, chain);
+
+      verify(response).setHeader("Access-Control-Allow-Headers", "Authorization, X-Custom-Header, Access-Control-Request-Headers, X-Custom-Header-1, X-Custom-Header-2, Content-Type");
+    }
   }
 
   @Nested
