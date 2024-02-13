@@ -57,6 +57,8 @@ public class SecurityConfiguration {
       // Disable CSRF because of state-less session-management
       http.csrf(csrf -> csrf.disable());
 
+      // Disable CORS as we already have a filter in WebConfiguration that does the job
+      http.cors(cors -> cors.disable());
       if (Boolean.TRUE.equals(keycloakEnabled)) {
          log.info("Keycloak is enabled, configuring oauth2 & request authorization");
 
