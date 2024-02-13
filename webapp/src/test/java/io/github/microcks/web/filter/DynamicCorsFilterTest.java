@@ -22,6 +22,9 @@ import static org.mockito.Mockito.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import graphql.language.Argument;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -73,7 +76,37 @@ public class DynamicCorsFilterTest {
       when(request.getHeaderNames()).thenReturn(headerNamesEnum);
 
       filter.doFilter(request, response, chain);
-      verify(response).setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+      verify(response).setHeader(eq("Access-Control-Allow-Headers"), captor.capture());
+      String value = captor.getValue();
+      assert value.contains("Content-Type");
+      assert value.contains("Authorization");
+    }
+
+    @Test
+    void shouldAddRequestHeadersToAccessControlAllowHeaders() throws IOException, ServletException {
+      Vector<String> headerNames = new Vector<>();
+      headerNames.add("Content-Type");
+      headerNames.add("Authorization");
+      headerNames.add("X-Custom-Header");
+      headerNames.add("Access-Control-Request-Headers");
+      Enumeration<String> headerNamesEnum = headerNames.elements();
+      when(request.getHeaderNames()).thenReturn(headerNamesEnum);
+
+      when(request.getHeader("Access-Control-Request-Headers")).thenReturn("X-Custom-Header-1, X-Custom-Header-2");
+
+      filter.doFilter(request, response, chain);
+
+      ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+
+      verify(response).setHeader(eq("Access-Control-Allow-Headers"), captor.capture());
+      String value = captor.getValue();
+      assert value.contains("Content-Type");
+      assert value.contains("Authorization");
+      assert value.contains("X-Custom-Header");
+      assert value.contains("X-Custom-Header-1");
+      assert value.contains("X-Custom-Header-2");
+      assert value.contains("Access-Control-Request-Headers");
     }
   }
 
