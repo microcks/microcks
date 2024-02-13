@@ -73,7 +73,7 @@ public class MetadataExtractor {
     * Complete a Response object with the extracted properties from JsonNode
     *
     * @param response the response to complete
-    * @param path     Node representing an operation node
+    * @param node     Node representing an operation node
     */
    public static void completeResponseProperties(Response response, JsonNode node) {
       if (node.has("delay")) {
