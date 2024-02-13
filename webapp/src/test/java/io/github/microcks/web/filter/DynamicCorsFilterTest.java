@@ -73,7 +73,7 @@ public class DynamicCorsFilterTest {
       when(request.getHeaderNames()).thenReturn(headerNamesEnum);
 
       filter.doFilter(request, response, chain);
-      verify(response).setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      verify(response).setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
     }
 
     @Test
