@@ -27,7 +27,7 @@ import java.util.Base64;
 import java.util.List;
 
 /**
- * Helper class containing utility methods related to Grpc/Protobuf decriptors.
+ * Helper class containing utility methods related to Grpc/Protobuf descriptors.
  * @author laurent
  */
 public class GrpcUtil {
@@ -46,7 +46,7 @@ public class GrpcUtil {
     * @throws Descriptors.DescriptorValidationException If included FileDescriptor cannot be validated.
     */
    public static Descriptors.MethodDescriptor findMethodDescriptor(String base64ProtobufDescriptor, String serviceName, String methodName)
-         throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException{
+         throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
 
       // Now we may have serviceName as being the FQDN. We have to find short version to later findServiceByName().
       String shortServiceName = serviceName;
@@ -54,12 +54,29 @@ public class GrpcUtil {
          shortServiceName = serviceName.substring(serviceName.lastIndexOf(".") + 1);
       }
 
+      // Find descriptor with this service name as symbol.
+      Descriptors.FileDescriptor fd = findFileDescriptorBySymbol(base64ProtobufDescriptor, shortServiceName);
+      Descriptors.ServiceDescriptor sd = fd.findServiceByName(shortServiceName);
+
+      return sd.findMethodByName(methodName);
+   }
+
+   /**
+    * Find a Protobuf file descriptor using a base64 encoded representation of the proto descriptor + symbol name.
+    * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
+    * @param symbol The name of a symbol to get descriptor for (can be a service, a message type or an extension).
+    * @return A Protobuf FileDescriptor
+    * @throws InvalidProtocolBufferException If representation is not understood as protobuf descriptor.
+    * @throws Descriptors.DescriptorValidationException If included FileDescriptor cannot be validated.
+    */
+   public static Descriptors.FileDescriptor findFileDescriptorBySymbol(String base64ProtobufDescriptor, String symbol)
+         throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
+
       // Protobuf binary descriptor has been encoded in base64 to be stored as a string.
       // Decode it and recreate DescriptorProtos objects.
       byte[] decodedBinaryPB = Base64.getDecoder().decode(base64ProtobufDescriptor.getBytes(StandardCharsets.UTF_8));
       DescriptorProtos.FileDescriptorSet fds = DescriptorProtos.FileDescriptorSet.parseFrom(decodedBinaryPB);
 
-      Descriptors.ServiceDescriptor sd = null;
       if (fds.getFileCount() > 1) {
          // Build dependencies.
          List<Descriptors.FileDescriptor> dependencies = new ArrayList<>();
@@ -68,19 +85,15 @@ public class GrpcUtil {
             Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(i),
                   dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
             dependencies.add(fd);
-            // Search for service.
-            sd = fd.findServiceByName(shortServiceName);
-            if (sd != null) {
-               break;
+
+            // Search for symbol.
+            if (fd.findServiceByName(symbol) != null || fd.findMessageTypeByName(symbol) != null
+                  || fd.findExtensionByName(symbol) != null) {
+               return fd;
             }
          }
-      } else {
-         Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(0),
-               new Descriptors.FileDescriptor[]{}, true);
-         sd = fd.findServiceByName(shortServiceName);
       }
-
-      return sd.findMethodByName(methodName);
+      return Descriptors.FileDescriptor.buildFrom(fds.getFile(0), new Descriptors.FileDescriptor[]{}, true);
    }
 
    /**

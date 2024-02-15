@@ -25,7 +25,6 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -60,21 +59,24 @@ public class GrpcServerStarter {
 
    private static final String END_RSA_PRIVATE_KEY = "-----END RSA PRIVATE KEY-----";
 
+   private final GrpcMockHandlerRegistry mockHandlerRegistry;
+
    @Value("${grpc.server.port:9090}")
-   private final Integer serverPort = 9090;
+   private Integer serverPort = 9090;
 
    @Value("${grpc.server.certChainFilePath:}")
-   private final String certChainFilePath = null;
+   private String certChainFilePath = null;
 
    @Value("${grpc.server.privateKeyFilePath:}")
-   private final String privateKeyFilePath = null;
-
-   @Autowired
-   private GrpcMockHandlerRegistry mockHandlerRegistry;
+   private String privateKeyFilePath = null;
 
    private AtomicBoolean isRunning = new AtomicBoolean(false);
 
    private CountDownLatch latch;
+
+   public GrpcServerStarter(GrpcMockHandlerRegistry mockHandlerRegistry) {
+      this.mockHandlerRegistry = mockHandlerRegistry;
+   }
 
    @PostConstruct
    public void startGrpcServer() {
@@ -107,6 +109,7 @@ public class GrpcServerStarter {
                            .keyManager(new FileInputStream(certChainFilePath),
                                  new ByteArrayInputStream(privateKeyBytes));
                      grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
+                           .addService(mockHandlerRegistry.getReflectionService())
                            .fallbackHandlerRegistry(mockHandlerRegistry)
                            .build();
                   }
@@ -119,7 +122,7 @@ public class GrpcServerStarter {
                   .build();
          }
          grpcServer.start();
-         log.info("GRPC Server started on port " + serverPort);
+         log.info("GRPC Server started on port {}", serverPort);
 
          Server finalGrpcServer = grpcServer;
          Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -168,11 +171,11 @@ public class GrpcServerStarter {
          PrivateKey privatekey = null;
 
          log.debug("Parsed PrivateKey: {}", object);
-         if (object instanceof PEMKeyPair) {
-            privatekey = converter.getPrivateKey(((PEMKeyPair) object).getPrivateKeyInfo());
+         if (object instanceof PEMKeyPair pemKeyPair) {
+            privatekey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
          }
-         if (object instanceof PrivateKeyInfo) {
-            privatekey = converter.getPrivateKey((PrivateKeyInfo) object);
+         if (object instanceof PrivateKeyInfo privateKeyInfo) {
+            privatekey = converter.getPrivateKey(privateKeyInfo);
          }
          if (privatekey != null) {
             log.debug("Found PrivateKey Algorithm: {}", privatekey.getAlgorithm()); // ex. RSA

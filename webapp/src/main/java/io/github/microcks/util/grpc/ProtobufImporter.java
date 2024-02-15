@@ -34,7 +34,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -188,8 +187,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
    @Override
    public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
-      List<Exchange> result = new ArrayList<>();
-      return result;
+      return new ArrayList<>();
    }
 
    /**
@@ -197,8 +195,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
     */
    private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles) {
       String line = null;
-      try {
-         BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8);
+      try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
          while ((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.startsWith("import ")) {

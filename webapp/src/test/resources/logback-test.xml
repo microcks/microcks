@@ -12,4 +12,8 @@
   <logger name="org.springframework.test" level="ERROR"/>
   <logger name="io.github.microcks" level="INFO"/>
   <logger name="io.github.microcks.web.AbstractBaseIT" level="INFO"/>
+
+  <logger name="tc" level="INFO"/>
+  <logger name="org.testcontainers" level="INFO"/>
+  <logger name="com.github.dockerjava" level="WARN"/>
 </configuration>
