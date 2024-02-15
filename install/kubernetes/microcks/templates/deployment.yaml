@@ -162,8 +162,7 @@ spec:
           {{- end }}
           {{- if .Values.microcks.customSecretRef }}
           - name: "{{ .Values.microcks.customSecretRef.secret }}"
-            mountPath: "/deployments/config/custom/secret/{{ .Values.microcks.customSecretRef.key }}"
-            subPath: "{{ .Values.microcks.customSecretRef.key }}"
+            mountPath: "/deployments/config/custom/secret"
           {{- end}}
         terminationMessagePath: "/dev/termination-log"
       volumes:
