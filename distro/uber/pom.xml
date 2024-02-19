@@ -95,5 +95,68 @@
         <spring.profiles.active>uber</spring.profiles.active>
       </properties>
     </profile>
+    <profile>
+      <id>native</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring-boot.version}</version>
+            <configuration>
+              <mainClass>io.github.microcks.MicrocksApplication</mainClass>
+              <profiles>
+                <profile>uber</profile>
+              </profiles>
+              <arguments>
+                <argument>--spring.profiles.active=uber</argument>
+              </arguments>
+              <image>
+                <!-- <builder>paketobuildpacks/builder-jammy-tiny:latest</builder> -->
+                <!-- <builder>dashaun/builder:tiny</builder> -->
+                <builder>dashaun/builder:base</builder>
+                <env>
+                  <BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
+                  <BP_NATIVE_IMAGE_BUILD_ARGUMENTS>--verbose --initialize-at-run-time=io.grpc.netty.shaded.io.netty.bootstrap,io.grpc.netty.shaded.io.netty.buffer,io.grpc.netty.shaded.io.netty.channel,io.grpc.netty.shaded.io.netty.channel.socket.nio,io.grpc.netty.shaded.io.netty.handler,io.grpc.netty.shaded.io.netty.handler.ssl,io.grpc.netty.shaded.io.netty.internal.tcnative,io.grpc.netty.shaded.io.netty.resolver,io.grpc.netty.shaded.io.netty.util.internal,io.grpc.netty.shaded.io.netty.util.internal.logging,io.grpc.netty.shaded.io.netty.util,io.grpc.netty.shaded.io.netty.util.concurrent --trace-class-initialization=ch.qos.logback.classic.PatternLayout,ch.qos.logback.core.subst.Token,ch.qos.logback.core.pattern.parser.Parser,ch.qos.logback.core.model.processor.DefaultProcessor$1,org.springframework.boot.logging.logback.ColorConverter,ch.qos.logback.classic.Level,ch.qos.logback.classic.Logger,ch.qos.logback.core.CoreConstants,ch.qos.logback.core.status.StatusBase,ch.qos.logback.core.model.processor.ChainedModelFilter$1,ch.qos.logback.core.util.StatusPrinter,ch.qos.logback.core.util.Loader,ch.qos.logback.core.status.InfoStatus,ch.qos.logback.classic.model.processor.LogbackClassicDefaultNestedComponentRules,ch.qos.logback.core.util.Duration,ch.qos.logback.core.subst.NodeToStringTransformer$1,org.slf4j.LoggerFactory,ch.qos.logback.core.model.processor.ImplicitModelHandler$1,ch.qos.logback.core.subst.Parser$1</BP_NATIVE_IMAGE_BUILD_ARGUMENTS>
+                </env>
+              </image>
+            </configuration>
+            <executions>
+              <execution>
+                <id>process-aot</id>
+                <goals>
+                  <goal>process-aot</goal>
+                </goals>
+                <configuration>
+                  <profiles>uber</profiles>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.graalvm.buildtools</groupId>
+            <artifactId>native-maven-plugin</artifactId>
+            <version>0.9.28</version>
+            <extensions>true</extensions>
+            <configuration>
+              <classesDirectory>${project.build.outputDirectory}</classesDirectory>
+              <metadataRepository>
+                <enabled>true</enabled>
+              </metadataRepository>
+              <requiredVersion>22.3</requiredVersion>
+              <agent>true</agent>
+            </configuration>
+            <executions>
+              <execution>
+                <id>add-reachability-metadata</id>
+                <goals>
+                  <goal>add-reachability-metadata</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
   </profiles>
 </project>
