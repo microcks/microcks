@@ -244,8 +244,14 @@ public class RestController {
             }
 
             // Render response content before waiting and returning.
-            String responseContent = MockControllerCommons.renderResponseContent(body, resourcePath, request,
-                  dispatchContext.requestContext(), response);
+            Object responseContent;
+
+            if (!response.isBinaryContent()){
+              responseContent = MockControllerCommons.renderResponseContent(body, resourcePath, request,
+              dispatchContext.requestContext(), response);
+            }else {
+              responseContent =  Base64.getDecoder().decode(body);
+            }
 
             // Setting delay to default one if not set.
             if (delay == null && rOperation.getDefaultDelay() != null) {

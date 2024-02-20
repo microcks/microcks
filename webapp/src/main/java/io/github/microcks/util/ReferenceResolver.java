@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
 import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
@@ -107,14 +108,15 @@ public class ReferenceResolver {
       return remoteUrl;
    }
 
-   /**
-    * Retrieve a reference content from remote repository using its relative path?
+
+
+      /**
+    * Retrieve a reference content in byte format from remote repository using its relative path?
     * @param relativePath The relative path of the reference to retrieve
-    * @param encoding The encoding to use for building a string representation of content.
     * @return A string representation of reference content.
     * @throws IOException if access to remote reference fails (not found or connection issues)
     */
-   public String getHttpReferenceContent(String relativePath, Charset encoding) throws IOException {
+    public byte[] getHttpReferenceBytesContent(String relativePath) throws IOException {
       // Check the file first.
       String remoteUrl = getReferenceURL(relativePath);
       File referenceFile = resolvedReferences.get(remoteUrl);
@@ -127,8 +129,34 @@ public class ReferenceResolver {
       // Keep track on how we resolved this relativePath.
       relativeResolvedReferences.put(relativePath, referenceFile);
 
-      return Files.readString(referenceFile.toPath(), encoding);
+      return Files.readAllBytes(referenceFile.toPath());
    }
+    /**
+    * Retrieve a reference content in string format from remote repository using its relative path?
+    * @param relativePath The relative path of the reference to retrieve
+    * @param encoding The encoding to use for building a string representation of content.
+    * @return A string representation of reference content.
+    * @throws IOException if access to remote reference fails (not found or connection issues) or if encoding is not supported
+    */
+    public String getHttpReferenceContent(String relativePath, Charset encoding) throws IOException {
+
+      byte[] content = getHttpReferenceBytesContent(relativePath);
+
+      CharsetDecoder decoder = encoding.newDecoder();
+
+      return decoder.decode(java.nio.ByteBuffer.wrap(content)).toString();
+    }
+
+    /**
+     * Retrieve a reference content in base64 format from remote repository using its relative path?
+     * @param relativePath The relative path of the reference to retrieve
+     * @return A string representation of reference content.
+     * @throws IOException if access to remote reference fails (not found or connection issues)
+     */
+    public String getHttpReferenceBase64Content(String relativePath) throws IOException {
+      byte[] content = getHttpReferenceBytesContent(relativePath);
+      return java.util.Base64.getEncoder().encodeToString(content);
+    }
 
    /**
     * Get resolved references map.
