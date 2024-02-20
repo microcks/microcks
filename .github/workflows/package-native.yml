@@ -64,8 +64,8 @@ jobs:
       - name: Set builder image for arm64
         if: matrix.arch == 'arm64'
         run: |
-          echo "BUILDER_IMAGE=dashaun/builder@sha256:b0d48a636f799c487c8c0c8f691a2a46a8c01342fc0c2b4979af2033ff6d6fa5" >> "$GITHUB_ENV"
-          echo "RUNNER_IMAGE=dmikusa/run-jammy-base@sha256:87aa098479d8eb9a30dedd6fafacf954d465882b867c8a573da6abcd347ba1b4" >> "$GITHUB_ENV"
+          echo "BUILDER_IMAGE=dashaun/builder@sha256:378bdc9fd7bdba105d64f294a8a7ca168dce5e496cad22307ccabb66fb571f9a" >> "$GITHUB_ENV"
+          echo "RUNNER_IMAGE=dmikusa/run-jammy-base@sha256:01d2f750569d14b0374dfa3f9f106ada23ff3dfa68f2ac33fb95d3d8e058b5e9" >> "$GITHUB_ENV"
 
       - name: Build native image for ${{ matrix.arch }}
         run: |
