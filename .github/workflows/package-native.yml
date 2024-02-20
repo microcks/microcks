@@ -55,13 +55,13 @@ jobs:
         with:
           install: true
 
-      - name: Set builder image for arm64
-        if: matrix.arch == 'arm64'
+      - name: Set builder image for amd64
+        if: matrix.arch == 'amd64'
         run: |
           echo "BUILDER_IMAGE=dashaun/builder@sha256:92811b61280130099527b40c7650c871187a7e1cebb21744d93e480fc34cbcb0" >> "$GITHUB_ENV"
 
-      - name: Set builder image for amd64
-        if: matrix.arch == 'amd64'
+      - name: Set builder image for arm64
+        if: matrix.arch == 'arm64'
         run: |
           echo "BUILDER_IMAGE=dashaun/builder@sha256:378bdc9fd7bdba105d64f294a8a7ca168dce5e496cad22307ccabb66fb571f9a" >> "$GITHUB_ENV"
 
