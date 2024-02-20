@@ -249,8 +249,8 @@ public class RestController {
             if (!response.isBinaryContent()){
               responseContent = MockControllerCommons.renderResponseContent(body, resourcePath, request,
               dispatchContext.requestContext(), response);
-            }else {
-              responseContent =  Base64.getDecoder().decode(body);
+            } else {
+              responseContent =  Base64.getDecoder().decode(response.getContent());
             }
 
             // Setting delay to default one if not set.
