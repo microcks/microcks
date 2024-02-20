@@ -1,6 +1,10 @@
 name: package-native
-on: workflow_dispatch
-
+on:
+  push:
+    paths-ignore:
+      - '.gitignore'
+      - 'LICENSE'
+      - 'README*'
 jobs:
   build-native-images:
     runs-on: ubuntu-latest
