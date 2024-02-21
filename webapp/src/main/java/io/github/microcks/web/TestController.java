@@ -36,7 +36,6 @@ import io.github.microcks.web.dto.TestCaseReturnDTO;
 import io.github.microcks.web.dto.TestRequestDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -70,21 +69,29 @@ public class TestController {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(TestController.class);
 
-   @Autowired
-   private TestResultRepository testResultRepository;
+   private final TestResultRepository testResultRepository;
+   private final ServiceRepository serviceRepository;
+   private final SecretRepository secretRepository;
+   private final TestService testService;
+   private final MessageService messageService;
 
-   @Autowired
-   private ServiceRepository serviceRepository;
 
-   @Autowired
-   private SecretRepository secretRepository;
-
-   @Autowired
-   private TestService testService;
-
-   @Autowired
-   private MessageService messageService;
-
+   /**
+    * Create a TestController with required dependencies.
+    * @param testService Service to launch tests and report results
+    * @param messageService Service to report new test messages
+    * @param testResultRepository Get access to test results
+    * @param serviceRepository Get access to Services
+    * @param secretRepository Get access to Secrets
+    */
+   public TestController(TestService testService, MessageService messageService, TestResultRepository testResultRepository,
+                         ServiceRepository serviceRepository, SecretRepository secretRepository) {
+      this.testService = testService;
+      this.messageService = messageService;
+      this.testResultRepository = testResultRepository;
+      this.serviceRepository = serviceRepository;
+      this.secretRepository = secretRepository;
+   }
 
    @GetMapping(value = "/tests/service/{serviceId}")
    public List<TestResult> listTestsByService(
@@ -169,12 +176,8 @@ public class TestController {
    ) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
       // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
-      try {
-         testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
-         testCaseId = testCaseId.replace('!', '/');
-      } catch (UnsupportedEncodingException e) {
-         return Collections.emptyList();
-      }
+      testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8);
+      testCaseId = testCaseId.replace('!', '/');
       log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
       return messageService.getEventByTestCase(testCaseId);
    }

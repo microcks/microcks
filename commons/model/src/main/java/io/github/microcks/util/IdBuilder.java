@@ -81,11 +81,8 @@ public class IdBuilder {
     */
    public static String buildResourceFullName(Service service, String resourceName, String context) {
       return service.getName()
-            + "-"
-            + service.getVersion()
-            + "-"
-            + Sanitizer.urlSanitize(context.replace(".", ""))
-            + "-"
-            + Sanitizer.urlSanitize(resourceName);
+            + "-" + service.getVersion()
+            + "-" + Sanitizer.urlSanitize(context.replace(".", ""))
+            + "-" + Sanitizer.urlSanitize(resourceName);
    }
 }
