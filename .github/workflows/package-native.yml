@@ -1,23 +1,37 @@
 name: package-native
 on:
-  push:
-    paths-ignore:
-      - '.gitignore'
-      - 'LICENSE'
-      - 'README*'
+  workflow_dispatch: # allows manual triggering
+  schedule:
+    - cron: '0 3 * * *'  # Every day at 3am UTC
 jobs:
+  check-latest-commit:
+    runs-on: ubuntu-latest
+    outputs:
+      should-run: ${{ steps.should-run.outputs.should-run }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Print latest commit sha
+        run: echo ${{ github.sha }}
+
+      - id: should-run
+        name: Check latest commit is less than a day
+        continue-on-error: true
+        if: ${{ github.event_name == 'schedule' }}
+        run: test -z $(git rev-list --after="24 hours" ${{ github.sha }}) &amp;&amp; echo "::set-output name=should-run::false"
+
   build-native-images:
     runs-on: ubuntu-latest
     environment: Build
+    needs: check-latest-commit
+    if: ${{ needs.check-latest-commit.outputs.should-run != 'false' }}
     strategy:
       matrix:
         arch:
           - amd64
           - arm64
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
