@@ -487,6 +487,14 @@ export class ServiceDetailPageComponent implements OnInit {
       let header = exchange.request.headers[i];
       cmd += " -H '" + header.name + ": " + header.values.join(', ') + "'";
     }
+
+    // Add a content-type header if missing and obvious we need one.
+    if (exchange.request.content != null && !cmd.toLowerCase().includes("-h 'content-type:")) {
+      if (exchange.request.content.startsWith('[') || exchange.request.content.startsWith('{')) {
+        cmd += " -H 'Content-Type: application/json'";
+      }
+    }
+
     return cmd;
   }
 
