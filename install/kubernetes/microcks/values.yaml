@@ -81,6 +81,7 @@ keycloak:
   # If you use an older external Keycloak instance, url must include the '/auth' path
   url: keycloak-microcks.192.168.99.100.nip.io
   #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080
+  validateIssuerUri: true
   #ingressSecretRef: my-secret-for-keycloak-ingress
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
