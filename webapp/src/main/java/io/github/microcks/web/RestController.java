@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.gateway.mvc.ProxyExchange;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -45,12 +46,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.net.URI;
 import java.util.*;
+import java.util.function.BiFunction;
 
 /**
  * A controller for mocking Rest responses.
@@ -62,6 +66,20 @@ public class RestController {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(RestController.class);
+
+   /** Proxy destination header name */
+   private static final String REMOTE_URL_HOLDER = "x-microcks-proxy-to";
+
+   /** Proxy methods map */
+   private static final Map<String, BiFunction<ProxyExchange<byte[]>, URI, ResponseEntity<byte[]>>> SUPPORTED_PROXY_METHODS = Map.of(
+      "HEAD", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).head(),
+      "OPTIONS", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).options(),
+      "GET", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).get(),
+      "POST", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).post(),
+      "PUT", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).put(),
+      "PATCH", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).patch(),
+      "DELETE", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).delete()
+   );
 
    @Autowired
    private ServiceRepository serviceRepository;
@@ -85,12 +103,13 @@ public class RestController {
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
-   public ResponseEntity<?> execute(
+   public ResponseEntity<byte[]> execute(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
          @RequestParam(value="delay", required=false) Long delay,
          @RequestBody(required=false) String body,
-         HttpServletRequest request
+         HttpServletRequest request,
+         ProxyExchange<byte[]> proxy
       ) {
 
       log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}",
@@ -163,7 +182,7 @@ public class RestController {
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
          String violationMsg = validateParameterConstraintsIfAny(rOperation, request);
          if (violationMsg != null) {
-            return new ResponseEntity<Object>(violationMsg + ". Check parameter constraints.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(), HttpStatus.BAD_REQUEST);
          }
 
          // We must find dispatcher and its rules. Default to operation ones but
@@ -258,9 +277,21 @@ public class RestController {
                MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
             }
 
-            return new ResponseEntity<Object>(responseContent, responseHeaders, status);
+            // Call remote url if necessary
+            String remoteUrl = responseHeaders.getFirst(REMOTE_URL_HOLDER);
+            if (StringUtils.isNotEmpty(remoteUrl) && !remoteUrl.equals(request.getRequestURL().toString())) {
+               URI destination = UriComponentsBuilder.fromHttpUrl(remoteUrl).build().toUri();
+               proxy.header("Host", destination.getHost());
+               if (SUPPORTED_PROXY_METHODS.containsKey(request.getMethod())) {
+                  return SUPPORTED_PROXY_METHODS.get(request.getMethod()).apply(proxy, destination);
+               } else {
+                  log.warn("Unsupported proxying method - {}", request.getMethod());
+               }
+            }
+
+            return new ResponseEntity<>(responseContent.getBytes(), responseHeaders, status);
          }
-         return new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
+         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
       }
 
       // Handle OPTIONS request if CORS policy is enabled.
@@ -270,7 +301,7 @@ public class RestController {
       }
 
       log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
-      return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
    }
 
 
@@ -374,7 +405,7 @@ public class RestController {
    }
 
    /** Handle a CORS request putting the correct headers in response entity. */
-   private ResponseEntity<Object> handleCorsRequest(HttpServletRequest request) {
+   private ResponseEntity<byte[]> handleCorsRequest(HttpServletRequest request) {
       // Retrieve and set access control headers from those coming in request.
       List<String> accessControlHeaders = new ArrayList<>();
       Collections.list(request.getHeaders("Access-Control-Request-Headers")).forEach(
@@ -385,7 +416,7 @@ public class RestController {
       requestHeaders.setAccessControlExposeHeaders(accessControlHeaders);
 
       // Apply CORS headers to response with 204 response code.
-      ResponseEntity<Object> response = ResponseEntity.noContent()
+      ResponseEntity<byte[]> response = ResponseEntity.noContent()
                .header("Access-Control-Allow-Origin", corsAllowedOrigins)
                .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH")
                .headers(requestHeaders)

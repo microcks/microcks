@@ -17,11 +17,17 @@ package io.github.microcks.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Response;
+import io.github.microcks.repository.ResponseRepository;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -31,6 +37,9 @@ import static org.junit.Assert.fail;
  * @author laurent
  */
 public class RestControllerIT extends AbstractBaseIT {
+
+   @Autowired
+   ResponseRepository responseRepository;
 
    @Test
    public void testOpenAPIMocking() {
@@ -88,7 +97,7 @@ public class RestControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
    }
-   
+
    @Test
    public void testFallbackMatchingWithRegex() {
       // Upload modified pastry spec
@@ -102,20 +111,40 @@ public class RestControllerIT extends AbstractBaseIT {
       try {
          JsonNode details = mapper.readTree(response.getBody());
          String description = details.get("description").asText();
-         assertTrue(description.startsWith("Detail -"));   
+         assertTrue(description.startsWith("Detail -"));
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
-      
+
       // Check operation with an undefined defined mock (name: 'Dummy'), should use fallback dispatching based on regular expression matching
       response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JsonNode details = mapper.readTree(response.getBody());
          String description = details.get("description").asText();
-         assertTrue(description.startsWith("Detail -"));          
+         assertTrue(description.startsWith("Detail -"));
       } catch (Exception e) {
          fail("No Exception should be thrown here");
-      }      
+      }
+   }
+
+   @Test
+   public void testProxy() {
+      // Upload pastry-with-proxy spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+
+      // Set real port to response header
+      Response responseFromDb = responseRepository.findAll().stream().filter(r -> r.getOperationId().endsWith("GET /pastry")).findFirst().orElseThrow();
+      Header header = responseFromDb.getHeaders().iterator().next();
+      header.setValues(Set.of(header.getValues().iterator().next().replaceFirst("http://localhost", getServerUrl())));
+      responseRepository.save(responseFromDb);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
    }
 }
