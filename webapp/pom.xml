@@ -30,7 +30,6 @@
     <grpc.version>1.56.1</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.14.0</openai-gpt3-java.version>
-    <spring-cloud-gateway-mvc.version>4.1.1</spring-cloud-gateway-mvc.version>
   </properties>
 
   <dependencyManagement>
@@ -111,12 +110,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-oauth2-client</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework.cloud</groupId>
-      <artifactId>spring-cloud-gateway-mvc</artifactId>
-      <version>${spring-cloud-gateway-mvc.version}</version>
     </dependency>
 
     <!-- Required since Spring 1.5 to 2.3 migration -->

@@ -35,17 +35,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.gateway.mvc.ProxyExchange;
 import org.springframework.context.ApplicationContext;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
@@ -54,7 +57,6 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.net.URI;
 import java.util.*;
-import java.util.function.BiFunction;
 
 /**
  * A controller for mocking Rest responses.
@@ -70,16 +72,7 @@ public class RestController {
    /** Proxy destination header name */
    private static final String REMOTE_URL_HOLDER = "x-microcks-proxy-to";
 
-   /** Proxy methods map */
-   private static final Map<String, BiFunction<ProxyExchange<byte[]>, URI, ResponseEntity<byte[]>>> SUPPORTED_PROXY_METHODS = Map.of(
-      "HEAD", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).head(),
-      "OPTIONS", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).options(),
-      "GET", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).get(),
-      "POST", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).post(),
-      "PUT", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).put(),
-      "PATCH", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).patch(),
-      "DELETE", (ProxyExchange<byte[]> proxy, URI destination) -> proxy.uri(destination).delete()
-   );
+   private static final RestTemplate restTemplate = new RestTemplate();
 
    @Autowired
    private ServiceRepository serviceRepository;
@@ -108,12 +101,13 @@ public class RestController {
          @PathVariable("version") String version,
          @RequestParam(value="delay", required=false) Long delay,
          @RequestBody(required=false) String body,
+         @RequestHeader HttpHeaders headers,
          HttpServletRequest request,
-         ProxyExchange<byte[]> proxy
+         HttpMethod method
       ) {
 
       log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}",
-            serviceName, version, request.getRequestURI(), request.getMethod());
+            serviceName, version, request.getRequestURI(), method);
       log.debug("Request body: {}", body);
 
       long startTime = System.currentTimeMillis();
@@ -146,7 +140,7 @@ public class RestController {
       Operation rOperation = null;
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
-         if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
+         if (operation.getMethod().equals(method.name())) {
             // ... then check is we have a matching resource path.
             if (operation.getResourcePaths() != null && (operation.getResourcePaths().contains(resourcePath)
                   || operation.getResourcePaths().contains(trimmedResourcePath)) ) {
@@ -161,7 +155,7 @@ public class RestController {
       if (rOperation == null) {
          for (Operation operation : service.getOperations()) {
             // Select operation based onto Http verb (GET, POST, PUT, etc ...)
-            if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
+            if (operation.getMethod().equals(method.name())) {
                // ... then check is current resource path matches operation path pattern.
                if (operation.getResourcePaths() != null) {
                   // Produce a matching regexp removing {part} and :part from pattern.
@@ -279,14 +273,10 @@ public class RestController {
 
             // Call remote url if necessary
             String remoteUrl = responseHeaders.getFirst(REMOTE_URL_HOLDER);
-            if (StringUtils.isNotEmpty(remoteUrl) && !remoteUrl.equals(request.getRequestURL().toString())) {
+            if (StringUtils.isNotEmpty(remoteUrl) && !remoteUrl.contentEquals(request.getRequestURL())) {
                URI destination = UriComponentsBuilder.fromHttpUrl(remoteUrl).build().toUri();
-               proxy.header("Host", destination.getHost());
-               if (SUPPORTED_PROXY_METHODS.containsKey(request.getMethod())) {
-                  return SUPPORTED_PROXY_METHODS.get(request.getMethod()).apply(proxy, destination);
-               } else {
-                  log.warn("Unsupported proxying method - {}", request.getMethod());
-               }
+               headers.put("Host", List.of(destination.getHost()));
+               return restTemplate.exchange(destination, method, new HttpEntity<>(body, headers), byte[].class);
             }
 
             return new ResponseEntity<>(responseContent.getBytes(), responseHeaders, status);
@@ -295,7 +285,7 @@ public class RestController {
       }
 
       // Handle OPTIONS request if CORS policy is enabled.
-      else if (enableCorsPolicy && "OPTIONS".equals(request.getMethod().toUpperCase())) {
+      else if (enableCorsPolicy && HttpMethod.OPTIONS.equals(method)) {
          log.debug("No valid operation found but Microcks configured to apply CORS policy");
          return handleCorsRequest(request);
       }
