@@ -32,6 +32,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
 
 /**
  * This is a test case for class AICopilotHelper.
@@ -422,4 +427,441 @@ public class AICopilotHelperTest {
       assertEquals(1, example2.getResponse().getHeaders().size());
       assertEquals("?id=456", example2.getResponse().getDispatchCriteria());
    }
+
+  @Test
+  public void testRemoveTagsInNode() throws Exception {
+    // Create an ObjectMapper and a test JsonNode
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode specNode = mapper.createObjectNode();
+    specNode.put("info", "Information");
+    specNode.put("openapi", "3.0.0");
+    specNode.put("paths", "/path");
+    specNode.put("tags", "Tags");
+    specNode.put("components", "Components");
+    specNode.put("servers", "Servers");
+
+    // Define fields to keep
+    List<String> keysToKeep = List.of("info", "openapi", "paths");
+
+    // Call method removeTagsInNode
+    AICopilotHelper.removeTagsInNode(specNode, keysToKeep);
+
+    // Ensure only desired fields
+    assertFalse(specNode.has("tags"));
+    assertFalse(specNode.has("components"));
+    assertFalse(specNode.has("servers"));
+    assertTrue(specNode.has("info"));
+    assertTrue(specNode.has("openapi"));
+    assertTrue(specNode.has("paths"));
+  }
+
+  @Test
+  public void testGetFieldNames() throws Exception {
+    // Create an ObjectMapper and a test JsonNode
+    ObjectMapper mapper = new ObjectMapper();
+    ObjectNode specNode = mapper.createObjectNode();
+    specNode.put("info", "Information");
+    specNode.put("openapi", "3.0.0");
+    specNode.put("paths", "/path");
+
+    // Call the getFieldNames method
+    List<String> fieldNames = AICopilotHelper.getFieldNames(specNode);
+
+    // Verify that the field names are retrieved correctly
+    List<String> expectedFieldNames = List.of("info", "openapi", "paths");
+    assertEquals(expectedFieldNames, fieldNames);
+  }
+
+  @Test
+  public void testRemoveSecurityTagInVerbNode() throws Exception {
+    String jsonPathSpec = "{\"get\":{\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"text/xml\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}},\"description\":\"Pastry with specified name\"}},\"operationId\":\"GetPastryByName\",\"summary\":\"Get Pastry by name\",\"description\":\"Get Pastry by name\",\"security\":[{\"clientSecret\":[],\"clientId\":[]}]}}";
+    // Create a test JsonNode with a security tag in the verb node
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode pathSpec = mapper.readTree(jsonPathSpec);
+
+    // Call the removeSecurityTagInVerbNode method
+    AICopilotHelper.removeSecurityTagInVerbNode(pathSpec, "get");
+
+    // Verify that the security tag is removed from the verb node
+    assertFalse(pathSpec.get("get").has("security"));
+
+    // Call the removeSecurityTagInVerbNode method
+    AICopilotHelper.removeSecurityTagInVerbNode(pathSpec, "get");
+
+    // Verify that the method does not throw an exception when the security tag is
+    // absent
+    // and the verb node remains unchanged
+    assertFalse(pathSpec.get("get").has("security"));
+  }
+
+  @Test
+  public void testReduceSpecSize() throws Exception {
+    // Create a test JsonNode with a security tag in the verb node
+    String jsonSpecNode = "{\"openapi\":\"3.0.2\",\"info\":{\"title\":\"API Pastry - 2.0\",\"version\":\"2.0.0\",\"description\":\"API definition of API Pastry sample app\",\"contact\":{\"name\":\"Laurent Broudoux\",\"url\":\"http://github.com/lbroudoux\",\"email\":\"laurent.broudoux@gmail.com\"},\"license\":{\"name\":\"MIT License\",\"url\":\"https://opensource.org/licenses/MIT\"}},\"paths\":{\"/pastry\":{\"summary\":\"Global operations on pastries\",\"get\":{\"tags\":[\"pastry\"],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"type\":\"array\",\"items\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}}},\"description\":\"Get list of pastries\"}},\"operationId\":\"GetPastries\",\"summary\":\"Get list of pastries\"}},\"/pastry/{name}\":{\"summary\":\"Specific operation on pastry\",\"get\":{\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"text/xml\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}},\"description\":\"Pastry with specified name\"}},\"operationId\":\"GetPastryByName\",\"summary\":\"Get Pastry by name\",\"description\":\"Get Pastry by name\",\"security\":[{\"clientSecret\":[],\"clientId\":[]}]},\"patch\":{\"requestBody\":{\"content\":{\"application/json\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"text/xml\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}},\"required\":true},\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"text/xml\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}},\"description\":\"Changed pastry\"}},\"operationId\":\"PatchPastry\",\"summary\":\"Patch existing pastry\"},\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}]}},\"components\":{\"schemas\":{\"Pastry\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"securitySchemes\":{\"clientId\":{\"type\":\"apiKey\",\"name\":\"Client-Id\",\"in\":\"header\"},\"clientSecret\":{\"type\":\"apiKey\",\"name\":\"Client-Secret\",\"in\":\"header\"}}},\"tags\":[{\"name\":\"pastry\",\"description\":\"Pastry resource\"}]}";
+
+    // Create a ObjectMapper
+    ObjectMapper mapper = new ObjectMapper();
+    // Create a test JsonNode with references and tags
+    JsonNode specNode = mapper.readTree(jsonSpecNode);
+
+    // Call the reduceSpecSize method
+    AICopilotHelper.reduceSpecSize(specNode, "GET /pastry/{name}");
+
+    // Verify that the keys not to keep are removed correctly
+    assertFalse(specNode.has("tags"));
+    assertFalse(specNode.has("components"));
+
+    assertTrue(specNode.has("paths"));
+    assertTrue(specNode.has("openapi"));
+    assertTrue(specNode.has("info"));
+
+    assertTrue(specNode.get("paths").has("/pastry/{name}"));
+    assertFalse(specNode.get("paths").has("/pastry"));
+    // Ensure security property is removed
+    assertFalse(specNode.get("paths").get("/pastry/{name}").has("security"));
+  }
+
+  @Test
+  public void testResolveReferenceAndRemoveTagsInNode() throws Exception {
+
+    // Cadena JSON de ejemplo
+    String jsonSpecNode = "{\"openapi\":\"3.0.2\",\"info\":{\"title\":\"API Pastry - 2.0\",\"version\":\"2.0.0\",\"description\":\"API definition of API Pastry sample app\",\"contact\":{\"name\":\"Laurent Broudoux\",\"url\":\"http://github.com/lbroudoux\",\"email\":\"laurent.broudoux@gmail.com\"},\"license\":{\"name\":\"MIT License\",\"url\":\"https://opensource.org/licenses/MIT\"}},\"paths\":{\"/pastry\":{\"summary\":\"Global operations on pastries\",\"get\":{\"tags\":[\"pastry\"],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"type\":\"array\",\"items\":{\"$ref\":\"#/components/schemas/Pastry\"}},\"examples\":{\"pastries_json\":{\"value\":[{\"name\":\"Baba Rhum\",\"description\":\"Delicieux Baba au Rhum pas calorique du tout\",\"size\":\"L\",\"price\":3.2,\"status\":\"available\"},{\"name\":\"Divorces\",\"description\":\"Delicieux Divorces pas calorique du tout\",\"size\":\"M\",\"price\":2.8,\"status\":\"available\"},{\"name\":\"Tartelette Fraise\",\"description\":\"Delicieuse Tartelette aux Fraises fraiches\",\"size\":\"S\",\"price\":2,\"status\":\"available\"}]}}}},\"description\":\"Get list of pastries\"}},\"operationId\":\"GetPastries\",\"summary\":\"Get list of pastries\"}},\"/pastry/{name}\":{\"summary\":\"Specific operation on pastry\",\"get\":{\"parameters\":[{\"examples\":{\"Eclair Cafe\":{\"value\":\"Eclair Cafe\"},\"Eclair Cafe Xml\":{\"value\":\"Eclair Cafe\"},\"Millefeuille\":{\"value\":\"Millefeuille\"}},\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"$ref\":\"#/components/schemas/Pastry\"},\"examples\":{\"Eclair Cafe\":{\"value\":{\"name\":\"Eclair Cafe\",\"description\":\"Delicieux Eclair au Cafe pas calorique du tout\",\"size\":\"M\",\"price\":2.5,\"status\":\"available\"}},\"Millefeuille\":{\"value\":{\"name\":\"Millefeuille\",\"description\":\"Delicieux Millefeuille pas calorique du tout\",\"size\":\"L\",\"price\":4.4,\"status\":\"available\"}}}},\"text/xml\":{\"schema\":{\"$ref\":\"#/components/schemas/Pastry\"},\"examples\":{\"Eclair Cafe Xml\":{\"value\":\"<pastry>\\n"
+        + //
+        "    <name>Eclair Cafe</name>\\n" + //
+        "    <description>Delicieux Eclair au Cafe pas calorique du tout</description>\\n" + //
+        "    <size>M</size>\\n" + //
+        "    <price>2.5</price>\\n" + //
+        "    <status>available</status>\\n" + //
+        "</pastry>\"}}}},\"description\":\"Pastry with specified name\"}},\"operationId\":\"GetPastryByName\",\"summary\":\"Get Pastry by name\",\"description\":\"Get Pastry by name\",\"security\":[{\"clientSecret\":[],\"clientId\":[]}]},\"patch\":{\"requestBody\":{\"content\":{\"application/json\":{\"schema\":{\"$ref\":\"#/components/schemas/Pastry\"},\"examples\":{\"Eclair Cafe\":{\"value\":{\"price\":2.6}}}},\"text/xml\":{\"schema\":{\"$ref\":\"#/components/schemas/Pastry\"},\"examples\":{\"Eclair Cafe Xml\":{\"value\":\"<pastry>\\n"
+        + //
+        "\\t<price>2.6</price>\\n" + //
+        "</pastry>\"}}}},\"required\":true},\"parameters\":[{\"examples\":{\"Eclair Cafe\":{\"value\":\"Eclair Cafe\"},\"Eclair Cafe Xml\":{\"value\":\"Eclair Cafe\"}},\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"$ref\":\"#/components/schemas/Pastry\"},\"examples\":{\"Eclair Cafe\":{\"value\":{\"name\":\"Eclair Cafe\",\"description\":\"Delicieux Eclair au Cafe pas calorique du tout\",\"size\":\"M\",\"price\":2.6,\"status\":\"available\"}}}},\"text/xml\":{\"schema\":{\"$ref\":\"#/components/schemas/Pastry\"},\"examples\":{\"Eclair Cafe Xml\":{\"value\":\"<pastry>\\n"
+        + //
+        "    <name>Eclair Cafe</name>\\n" + //
+        "    <description>Delicieux Eclair au Cafe pas calorique du tout</description>\\n" + //
+        "    <size>M</size>\\n" + //
+        "    <price>2.6</price>\\n" + //
+        "    <status>available</status>\\n" + //
+        "</pastry>\"}}}},\"description\":\"Changed pastry\"}},\"operationId\":\"PatchPastry\",\"summary\":\"Patch existing pastry\"},\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}]}},\"components\":{\"schemas\":{\"Pastry\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}},\"example\":{\"name\":\"My Pastry\",\"description\":\"A short description os my pastry\",\"size\":\"M\",\"price\":4.5,\"status\":\"available\"}}},\"securitySchemes\":{\"clientId\":{\"type\":\"apiKey\",\"name\":\"Client-Id\",\"in\":\"header\"},\"clientSecret\":{\"type\":\"apiKey\",\"name\":\"Client-Secret\",\"in\":\"header\"}}},\"tags\":[{\"name\":\"pastry\",\"description\":\"Pastry resource\"}]}";
+
+    String jsonExpectedSpecNodeResult = "{\"openapi\":\"3.0.2\",\"info\":{\"title\":\"API Pastry - 2.0\",\"version\":\"2.0.0\",\"description\":\"API definition of API Pastry sample app\",\"contact\":{\"name\":\"Laurent Broudoux\",\"url\":\"http://github.com/lbroudoux\",\"email\":\"laurent.broudoux@gmail.com\"},\"license\":{\"name\":\"MIT License\",\"url\":\"https://opensource.org/licenses/MIT\"}},\"paths\":{\"/pastry\":{\"summary\":\"Global operations on pastries\",\"get\":{\"tags\":[\"pastry\"],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"type\":\"array\",\"items\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}}},\"description\":\"Get list of pastries\"}},\"operationId\":\"GetPastries\",\"summary\":\"Get list of pastries\"}},\"/pastry/{name}\":{\"summary\":\"Specific operation on pastry\",\"get\":{\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"text/xml\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}},\"description\":\"Pastry with specified name\"}},\"operationId\":\"GetPastryByName\",\"summary\":\"Get Pastry by name\",\"description\":\"Get Pastry by name\",\"security\":[{\"clientSecret\":[],\"clientId\":[]}]},\"patch\":{\"requestBody\":{\"content\":{\"application/json\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"text/xml\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}},\"required\":true},\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}],\"responses\":{\"200\":{\"content\":{\"application/json\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"text/xml\":{\"schema\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}}},\"description\":\"Changed pastry\"}},\"operationId\":\"PatchPastry\",\"summary\":\"Patch existing pastry\"},\"parameters\":[{\"name\":\"name\",\"description\":\"pastry name\",\"schema\":{\"type\":\"string\"},\"in\":\"path\",\"required\":true}]}},\"components\":{\"schemas\":{\"Pastry\":{\"title\":\"Root Type for Pastry\",\"description\":\"The root of the Pastry type's schema.\",\"type\":\"object\",\"properties\":{\"name\":{\"description\":\"Name of this pastry\",\"type\":\"string\"},\"description\":{\"description\":\"A short description of this pastry\",\"type\":\"string\"},\"size\":{\"description\":\"Size of pastry (S, M, L)\",\"type\":\"string\"},\"price\":{\"format\":\"double\",\"description\":\"Price (in USD) of this pastry\",\"type\":\"number\"},\"status\":{\"description\":\"Status in stock (available, out_of_stock)\",\"type\":\"string\"}}}},\"securitySchemes\":{\"clientId\":{\"type\":\"apiKey\",\"name\":\"Client-Id\",\"in\":\"header\"},\"clientSecret\":{\"type\":\"apiKey\",\"name\":\"Client-Secret\",\"in\":\"header\"}}},\"tags\":[{\"name\":\"pastry\",\"description\":\"Pastry resource\"}]}";
+
+    // Create a ObjectMapper
+    ObjectMapper mapper = new ObjectMapper();
+    // Create a test JsonNode with references and tags
+    JsonNode specNode = mapper.readTree(jsonSpecNode);
+    JsonNode expectedSpecNode = mapper.readTree(jsonExpectedSpecNodeResult);
+
+    // Call the resolveReferenceAndRemoveTagsInNode method
+    AICopilotHelper.resolveReferenceAndRemoveTagsInNode(specNode, specNode);
+
+    // Verify that the references and tags are removed correctly
+    assertEquals(expectedSpecNode, specNode);
+  }
+
+  @Test
+  public void testRemoveTagsFromOpenAPISpec() throws Exception {
+    // Create a sample specification
+    String specification = """
+        openapi: 3.0.2
+        info:
+          title: API Pastry - 2.0
+          version: 2.0.0
+          description: API definition of API Pastry sample app
+          contact:
+            name: Laurent Broudoux
+            url: http://github.com/lbroudoux
+            email: laurent.broudoux@gmail.com
+          license:
+            name: MIT License
+            url: https://opensource.org/licenses/MIT
+        paths:
+          /pastry:
+            summary: Global operations on pastries
+            get:
+              tags:
+                - pastry
+              responses:
+                '200':
+                  content:
+                    application/json:
+                      schema:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Pastry'
+                      examples:
+                        pastries_json:
+                          value:
+                            - name: Baba Rhum
+                              description: Delicieux Baba au Rhum pas calorique du tout
+                              size: L
+                              price: 3.2
+                              status: available
+                            - name: Divorces
+                              description: Delicieux Divorces pas calorique du tout
+                              size: M
+                              price: 2.8
+                              status: available
+                            - name: Tartelette Fraise
+                              description: Delicieuse Tartelette aux Fraises fraiches
+                              size: S
+                              price: 2
+                              status: available
+                  description: Get list of pastries
+              operationId: GetPastries
+              summary: Get list of pastries
+          /pastry/{name}:
+            summary: Specific operation on pastry
+            get:
+              parameters:
+                - examples:
+                    Eclair Cafe:
+                      value: Eclair Cafe
+                    Eclair Cafe Xml:
+                      value: Eclair Cafe
+                    Millefeuille:
+                      value: Millefeuille
+                  name: name
+                  description: pastry name
+                  schema:
+                    type: string
+                  in: path
+                  required: true
+              responses:
+                '200':
+                  content:
+                    application/json:
+                      schema:
+                        $ref: '#/components/schemas/Pastry'
+                      examples:
+                        Eclair Cafe:
+                          value:
+                            name: Eclair Cafe
+                            description: Delicieux Eclair au Cafe pas calorique du tout
+                            size: M
+                            price: 2.5
+                            status: available
+                        Millefeuille:
+                          value:
+                            name: Millefeuille
+                            description: Delicieux Millefeuille pas calorique du tout
+                            size: L
+                            price: 4.4
+                            status: available
+                    text/xml:
+                      schema:
+                        $ref: '#/components/schemas/Pastry'
+                      examples:
+                        Eclair Cafe Xml:
+                          value: |-
+                            <pastry>
+                                <name>Eclair Cafe</name>
+                                <description>Delicieux Eclair au Cafe pas calorique du tout</description>
+                                <size>M</size>
+                                <price>2.5</price>
+                                <status>available</status>
+                            </pastry>
+                  description: Pastry with specified name
+              operationId: GetPastryByName
+              summary: Get Pastry by name
+              description: Get Pastry by name
+              security:
+                - clientSecret: []
+                  clientId: []
+            patch:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/Pastry'
+                    examples:
+                      Eclair Cafe:
+                        value:
+                          price: 2.6
+                  text/xml:
+                    schema:
+                      $ref: '#/components/schemas/Pastry'
+                    examples:
+                      Eclair Cafe Xml:
+                        value: "<pastry>\n\t<price>2.6</price>\n</pastry>"
+                required: true
+              parameters:
+                - examples:
+                    Eclair Cafe:
+                      value: Eclair Cafe
+                    Eclair Cafe Xml:
+                      value: Eclair Cafe
+                  name: name
+                  description: pastry name
+                  schema:
+                    type: string
+                  in: path
+                  required: true
+              responses:
+                '200':
+                  content:
+                    application/json:
+                      schema:
+                        $ref: '#/components/schemas/Pastry'
+                      examples:
+                        Eclair Cafe:
+                          value:
+                            name: Eclair Cafe
+                            description: Delicieux Eclair au Cafe pas calorique du tout
+                            size: M
+                            price: 2.6
+                            status: available
+                    text/xml:
+                      schema:
+                        $ref: '#/components/schemas/Pastry'
+                      examples:
+                        Eclair Cafe Xml:
+                          value: |-
+                            <pastry>
+                                <name>Eclair Cafe</name>
+                                <description>Delicieux Eclair au Cafe pas calorique du tout</description>
+                                <size>M</size>
+                                <price>2.6</price>
+                                <status>available</status>
+                            </pastry>
+                  description: Changed pastry
+              operationId: PatchPastry
+              summary: Patch existing pastry
+            parameters:
+              - name: name
+                description: pastry name
+                schema:
+                  type: string
+                in: path
+                required: true
+        components:
+          schemas:
+            Pastry:
+              title: Root Type for Pastry
+              description: The root of the Pastry type's schema.
+              type: object
+              properties:
+                name:
+                  description: Name of this pastry
+                  type: string
+                description:
+                  description: A short description of this pastry
+                  type: string
+                size:
+                  description: Size of pastry (S, M, L)
+                  type: string
+                price:
+                  format: double
+                  description: Price (in USD) of this pastry
+                  type: number
+                status:
+                  description: Status in stock (available, out_of_stock)
+                  type: string
+              example:
+                name: My Pastry
+                description: A short description os my pastry
+                size: M
+                price: 4.5
+                status: available
+          securitySchemes:
+            clientId:
+              type: apiKey
+              name: Client-Id
+              in: header
+            clientSecret:
+              type: apiKey
+              name: Client-Secret
+              in: header
+        tags:
+          - name: pastry
+            description: Pastry resource
+          """;
+    ;
+
+    String operationName = "GET /pastry/{name}";
+
+    // Call the removeTagsFromOpenAPISpec method
+    String result = AICopilotHelper.removeTagsFromOpenAPISpec(specification, operationName);
+
+    // Expected result after removing tags
+    String expectedResult = """
+        ---
+        openapi: "3.0.2"
+        info:
+          title: "API Pastry - 2.0"
+          version: "2.0.0"
+          description: "API definition of API Pastry sample app"
+          contact:
+            name: "Laurent Broudoux"
+            url: "http://github.com/lbroudoux"
+            email: "laurent.broudoux@gmail.com"
+          license:
+            name: "MIT License"
+            url: "https://opensource.org/licenses/MIT"
+        paths:
+          /pastry/{name}:
+            get:
+              parameters:
+              - name: "name"
+                description: "pastry name"
+                schema:
+                  type: "string"
+                in: "path"
+                required: true
+              responses:
+                "200":
+                  content:
+                    application/json:
+                      schema:
+                        title: "Root Type for Pastry"
+                        description: "The root of the Pastry type's schema."
+                        type: "object"
+                        properties:
+                          name:
+                            description: "Name of this pastry"
+                            type: "string"
+                          description:
+                            description: "A short description of this pastry"
+                            type: "string"
+                          size:
+                            description: "Size of pastry (S, M, L)"
+                            type: "string"
+                          price:
+                            format: "double"
+                            description: "Price (in USD) of this pastry"
+                            type: "number"
+                          status:
+                            description: "Status in stock (available, out_of_stock)"
+                            type: "string"
+                    text/xml:
+                      schema:
+                        title: "Root Type for Pastry"
+                        description: "The root of the Pastry type's schema."
+                        type: "object"
+                        properties:
+                          name:
+                            description: "Name of this pastry"
+                            type: "string"
+                          description:
+                            description: "A short description of this pastry"
+                            type: "string"
+                          size:
+                            description: "Size of pastry (S, M, L)"
+                            type: "string"
+                          price:
+                            format: "double"
+                            description: "Price (in USD) of this pastry"
+                            type: "number"
+                          status:
+                            description: "Status in stock (available, out_of_stock)"
+                            type: "string"
+                  description: "Pastry with specified name"
+              operationId: "GetPastryByName"
+              summary: "Get Pastry by name"
+              description: "Get Pastry by name"
+          """;
+
+    // Verify the result
+    assertEquals(expectedResult, result);
+  }
 }
