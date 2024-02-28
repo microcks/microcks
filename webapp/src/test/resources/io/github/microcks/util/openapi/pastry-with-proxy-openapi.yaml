@@ -15,17 +15,14 @@ paths:
   /pastry:
     summary: Global operations on pastries
     get:
+      x-microcks-operation:
+        dispatcher: SCRIPT
+        dispatcherRules: |
+          return "microcks-calls: http://localhost/rest/pastry-proxy/1.0.0/real-pastry";
       tags:
       - pastry
       responses:
         "200":
-          headers:
-            x-microcks-proxy-to:
-              schema:
-                type: string
-              examples:
-                pastries_json:
-                  value: 'http://localhost/rest/pastry-proxy/1.0.0/real-pastry'
           content:
             application/json:
               schema:

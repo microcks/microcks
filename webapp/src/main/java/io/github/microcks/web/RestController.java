@@ -23,6 +23,7 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.*;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
@@ -36,7 +37,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -48,8 +48,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -69,11 +67,6 @@ public class RestController {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(RestController.class);
 
-   /** Proxy destination header name */
-   private static final String REMOTE_URL_HOLDER = "x-microcks-proxy-to";
-
-   private static final RestTemplate restTemplate = new RestTemplate();
-
    @Autowired
    private ServiceRepository serviceRepository;
 
@@ -82,6 +75,9 @@ public class RestController {
 
    @Autowired
    private ApplicationContext applicationContext;
+
+   @Autowired
+   private ProxyService proxyService;
 
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
@@ -194,6 +190,12 @@ public class RestController {
                getURIPattern(rOperation.getName()), UriUtils.decode(resourcePath, "UTF-8"), request, body);
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
+         // Call remote url if necessary
+         Optional<URI> externalUrl = proxyService.extractExternalUrl(dispatchContext.dispatchCriteria(), request);
+         if (externalUrl.isPresent()) {
+            return proxyService.callExternal(externalUrl.get(), method, headers, body);
+         }
+
          Response response = null;
 
          // Filter depending on requested media type.
@@ -269,14 +271,6 @@ public class RestController {
             // Publish an invocation event before returning if enabled.
             if (enableInvocationStats) {
                MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
-            }
-
-            // Call remote url if necessary
-            String remoteUrl = responseHeaders.getFirst(REMOTE_URL_HOLDER);
-            if (StringUtils.isNotEmpty(remoteUrl) && !remoteUrl.contentEquals(request.getRequestURL())) {
-               URI destination = UriComponentsBuilder.fromHttpUrl(remoteUrl).build().toUri();
-               headers.put("Host", List.of(destination.getHost()));
-               return restTemplate.exchange(destination, method, new HttpEntity<>(body, headers), byte[].class);
             }
 
             return new ResponseEntity<>(responseContent.getBytes(), responseHeaders, status);
