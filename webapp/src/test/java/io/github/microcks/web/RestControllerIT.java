@@ -25,11 +25,16 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 /**
  * Test case for all the Rest mock controller.
  * @author laurent
@@ -37,7 +42,10 @@ import static org.junit.Assert.fail;
 public class RestControllerIT extends AbstractBaseIT {
 
    @Autowired
-   ServiceRepository serviceRepository;
+   private ServiceRepository serviceRepository;
+
+   @SpyBean
+   private RestController restController;
 
    @Test
    public void testOpenAPIMocking() {
@@ -144,5 +152,36 @@ public class RestControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+   }
+
+   @Test
+   public void testProxyWithEqualsOriginAndExternalUrls() {
+      // Upload pastry-with-proxy spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+
+      // Set original URL to the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()).replaceFirst("real-pastry", "pastry"));
+      serviceRepository.save(service);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any());
+   }
+
+   @Test
+   public void testProxyWithHttpError() {
+      // Upload pastry-with-proxy spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+
+      // Broke external URL in the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()).replaceFirst("real-pastry", "not-found"));
+      serviceRepository.save(service);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry", String.class);
+      assertEquals(404, response.getStatusCode().value());
    }
 }
