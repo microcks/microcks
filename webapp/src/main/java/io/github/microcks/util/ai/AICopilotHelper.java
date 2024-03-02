@@ -93,7 +93,7 @@ public class AICopilotHelper {
          - example: %1$d
            message:
              headers:
-               header_1: <value 1>
+               <header_name>: <value 1>
              payload: <message payload>
          """;
 
@@ -133,45 +133,6 @@ public class AICopilotHelper {
          builder.append(String.format(UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
       }
       return builder.toString();
-   }
-
-   /** Some AI will reuse already present examples in the spec. This method cleans a specification from its examples. */
-   protected static String removeExamplesFromOpenAPISpec(String specification) throws Exception {
-      JsonNode specNode;
-      boolean isJson = specification.trim().startsWith("{");
-
-      if (isJson) {
-         specNode = JSON_MAPPER.readTree(specification);
-      } else {
-         specNode = YAML_MAPPER.readTree(specification);
-      }
-
-      // Remove examples recursively from the root.
-      removeExamplesInNode(specNode, specNode);
-
-      if (isJson) {
-         return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(specNode);
-      }
-      return YAML_MAPPER.writeValueAsString(specNode);
-   }
-
-   private static void removeExamplesInNode(JsonNode specNode, JsonNode node) {
-      JsonNode target = followRefIfAny(specNode, node);
-      if (target.getNodeType() == JsonNodeType.OBJECT) {
-         if (target.has("examples")) {
-            ((ObjectNode) node).remove("examples");
-         }
-         Iterator<Map.Entry<String, JsonNode>> fields = target.fields();
-         while (fields.hasNext()) {
-            removeExamplesInNode(specNode, fields.next().getValue());
-         }
-      }
-      if (target.getNodeType() == JsonNodeType.ARRAY) {
-         Iterator<JsonNode> elements = target.elements();
-         while (elements.hasNext()){
-            removeExamplesInNode(specNode, elements.next());
-         }
-      }
    }
 
    /** Transform the output respecting the {@code REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain exchanges. */
@@ -393,7 +354,7 @@ public class AICopilotHelper {
    * Some AI will reuse already present examples and x-microcks-operation in the
    * spec. This method cleans a specification from its examples.
    */
-  protected static String removeTagsFromOpenAPISpec(String specification, String operationName) throws Exception {
+  protected static String removeTokensFromSpec(String specification, String operationName) throws Exception {
     JsonNode specNode;
     boolean isJson = specification.trim().startsWith("{");
 
@@ -404,16 +365,25 @@ public class AICopilotHelper {
     }
 
     // Resolve schemas and Remove examples recursively from the root.
-    resolveReferenceAndRemoveTagsInNode(specNode, specNode);
-    reduceSpecSize(specNode, operationName);
+    resolveReferenceAndRemoveTokensInNode(specNode, specNode);
+
+    // Filter the spec
+    List<String> specTokenNames = getTokenNames(specNode);
+    if (specTokenNames.contains("openapi")) {
+      filterOpenAPISpec(specNode, operationName);
+    }
+    if (specTokenNames.contains("asyncapi")) {
+      filterAsyncAPISpec(specNode, operationName);
+    }
 
     if (isJson) {
       return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(specNode);
     }
+
     return YAML_MAPPER.writeValueAsString(specNode);
   }
 
-  protected static void resolveReferenceAndRemoveTagsInNode(JsonNode specNode, JsonNode node) {
+  protected static void resolveReferenceAndRemoveTokensInNode(JsonNode specNode, JsonNode node) {
     JsonNode target = followRefIfAny(specNode, node);
     if (target.getNodeType() == JsonNodeType.OBJECT) {
       if (node.has("$ref")) {
@@ -431,18 +401,18 @@ public class AICopilotHelper {
       }
       Iterator<Map.Entry<String, JsonNode>> fields = target.fields();
       while (fields.hasNext()) {
-        resolveReferenceAndRemoveTagsInNode(specNode, fields.next().getValue());
+        resolveReferenceAndRemoveTokensInNode(specNode, fields.next().getValue());
       }
     }
     if (target.getNodeType() == JsonNodeType.ARRAY) {
       Iterator<JsonNode> elements = target.elements();
       while (elements.hasNext()) {
-        resolveReferenceAndRemoveTagsInNode(specNode, elements.next());
+        resolveReferenceAndRemoveTokensInNode(specNode, elements.next());
       }
     }
   }
 
-  protected static void reduceSpecSize(JsonNode specNode, String operationName) throws Exception {
+  protected static void filterOpenAPISpec(JsonNode specNode, String operationName) throws Exception {
     String operationPathName[] = operationName.split(" ");
     String verb = operationPathName[0].toLowerCase();
     String path = operationPathName[1];
@@ -454,20 +424,33 @@ public class AICopilotHelper {
     List<String> keysToKeepInPaths = List.of(path);
     List<String> keysToKeepInPath = List.of(verb);
 
-    removeTagsInNode(specNode, keysToKeepInRoot);
-    removeTagsInNode(pathsSpec, keysToKeepInPaths);
-    removeTagsInNode(pathSpec, keysToKeepInPath);
-    removeSecurityTagInVerbNode(pathSpec, verb);
+    removeTokensInNode(specNode, keysToKeepInRoot);
+    removeTokensInNode(pathsSpec, keysToKeepInPaths);
+    removeTokensInNode(pathSpec, keysToKeepInPath);
+    removeSecurityTokenInNode(pathSpec, verb);
   }
 
-  protected static void removeSecurityTagInVerbNode(JsonNode pathSpec, String verb) throws Exception {
-    JsonNode verbSpec = ((ObjectNode) pathSpec).get(verb);
+  protected static void filterAsyncAPISpec(JsonNode specNode, String channelName) throws Exception {
+    String operationPathName[] = channelName.split(" ");
+    String channel = operationPathName[1];
+
+    JsonNode channelsSpec = ((ObjectNode) specNode).get("channels");
+
+    List<String> keysToKeepInRoot = List.of("asyncapi", "channels", "info");
+    List<String> keysToKeepInChannels = List.of(channel);
+
+    removeTokensInNode(specNode, keysToKeepInRoot);
+    removeTokensInNode(channelsSpec, keysToKeepInChannels);
+  }
+
+  protected static void removeSecurityTokenInNode(JsonNode specNode, String tokenName) throws Exception {
+    JsonNode verbSpec = ((ObjectNode) specNode).get(tokenName);
     if (verbSpec.has("security")) {
       ((ObjectNode) verbSpec).remove("security");
     }
   }
 
-  protected static List<String> getFieldNames(JsonNode specNode) {
+  protected static List<String> getTokenNames(JsonNode specNode) {
     List<String> fieldNames = new ArrayList<>();
     Iterator<String> specNodeFieldNames = specNode.fieldNames();
     while (specNodeFieldNames.hasNext()) {
@@ -476,8 +459,8 @@ public class AICopilotHelper {
     return fieldNames;
   }
 
-  protected static void removeTagsInNode(JsonNode specNode, List<String> keysToKeep) {
-    List<String> fieldNames = getFieldNames(specNode);
+  protected static void removeTokensInNode(JsonNode specNode, List<String> keysToKeep) {
+    List<String> fieldNames = getTokenNames(specNode);
     for (String fieldName : fieldNames) {
       if (!keysToKeep.contains(fieldName)) {
         ((ObjectNode) specNode).remove(fieldName);
