@@ -52,6 +52,15 @@ microcks:
   # Enabling/disabling mock invocation stats.
   mockInvocationStats: true
 
+  # Custom secret for Microcks
+  # It can be usec to deploy a keystore to add certificats to trust sso connection with keycloak.
+  # In this case: Use an existing secret with the provided keystore.
+  # Don't forget to add java options like that if your secret is a keystore:
+  # JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/deployments/config/custom/secret/KEYSTORE -Djavax.net.ssl.trustStorePassword=XXXXX"
+  #customSecretRef:
+  #  secret: microcks-keystore
+  #  key: cacerts
+
 postman:
   image: quay.io/microcks/microcks-postman-runtime:latest
   replicas: 1
