@@ -191,7 +191,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
       prompt.append(SECTION_DELIMITER);
-      prompt.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
+      prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(), operation.getName()));
 
       return prompt.toString();
    }
@@ -237,7 +237,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.getUnidirectionalEventExampleYamlFormattingDirective(1));
       prompt.append(SECTION_DELIMITER);
-      prompt.append(AICopilotHelper.removeExamplesFromOpenAPISpec(contract.getContent()));
+      prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(),operation.getName()));
 
       return prompt.toString();
    }
