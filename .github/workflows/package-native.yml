@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          ref: 1.9.x
 
       - name: Print latest commit sha
         run: echo ${{ github.sha }}
