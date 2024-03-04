@@ -71,18 +71,21 @@ public class URIBuilder{
       return pattern;
    }
 
-  /**
-   * Build a URI from a URI pattern (using {} or /: for marked variable parts) and using
-   * other query parameters
-   * @param pattern The URI pattern to use
-   * @param parameters The map of parameters K/V (whether template or query based)
-   * @return The instanciated URI from template and parameters
-   */
-  public static String buildURIFromPattern(String pattern, Map<String, String> parameters) {
-    Multimap<String, String> multimap = parameters.entrySet().stream()
-      .collect(ArrayListMultimap::create, (m, e) -> m.put(e.getKey(), e.getValue()), Multimap::putAll);
-    return buildURIFromPattern(pattern, multimap);
-  }
+   /**
+    * Build a URI from a URI pattern (using {} or /: for marked variable parts) and using
+    * other query parameters
+    * @param pattern The URI pattern to use
+    * @param parameters The map of parameters K/V (whether template or query based)
+    * @return The instanciated URI from template and parameters
+    */
+   public static String buildURIFromPattern(String pattern, Map<String, String> parameters) {
+      if (parameters != null) {
+         Multimap<String, String> multimap = parameters.entrySet().stream()
+               .collect(ArrayListMultimap::create, (m, e) -> m.put(e.getKey(), e.getValue()), Multimap::putAll);
+         return buildURIFromPattern(pattern, multimap);
+      }
+      return pattern;
+   }
 
    /**
     * Build a URI from a URI pattern (using {} or /: for marked variable parts) and using

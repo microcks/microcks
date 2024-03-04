@@ -337,17 +337,20 @@ public class DispatchCriteriaHelper {
       return result.toString();
    }
 
-  /**
-   * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
-   * @param partsRule The dispatch rules referencing parts to consider
-   * @param partsMap The Map containing parts (not necessarily sorted)
-   * @return A string representing dispatch criteria for the corresponding incoming request.
-   */
-  public static String buildFromPartsMap(String partsRule, Map<String, String> partsMap) {
-    Multimap<String, String> multimap = partsMap.entrySet().stream()
-      .collect(ArrayListMultimap::create, (m, e) -> m.put(e.getKey(), e.getValue()), Multimap::putAll);
-    return buildFromPartsMap(partsRule, multimap);
-  }
+   /**
+    * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
+    * @param partsRule The dispatch rules referencing parts to consider
+    * @param partsMap The Map containing parts (not necessarily sorted)
+    * @return A string representing dispatch criteria for the corresponding incoming request.
+    */
+   public static String buildFromPartsMap(String partsRule, Map<String, String> partsMap) {
+      if (partsMap != null && !partsMap.isEmpty()) {
+         Multimap<String, String> multimap = partsMap.entrySet().stream()
+               .collect(ArrayListMultimap::create, (m, e) -> m.put(e.getKey(), e.getValue()), Multimap::putAll);
+         return buildFromPartsMap(partsRule, multimap);
+      }
+      return "";
+   }
 
 
     /**
