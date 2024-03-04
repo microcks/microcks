@@ -73,6 +73,10 @@ public class AICopilotHelper {
          Given the AsyncAPI specification below, generate %2$d full examples for operation '%1$s' only.
          """;
 
+   protected static final String GRPC_OPERATION_PROMPT_TEMPLATE = """
+         Given the gRPC protobuf schema below, generate %3$d full examples (request and response) for operation '%2$s' of service '%1$s'.
+         """;
+
    protected static final String YAML_FORMATTING_PROMPT = """
          Use only this YAML format for output (no other text or markdown):
          """;
@@ -89,6 +93,7 @@ public class AICopilotHelper {
                content-type: application/json 
              body: <response body>
          """;
+
    protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE= """
          - example: %1$d
            message:
@@ -97,6 +102,15 @@ public class AICopilotHelper {
              payload: <message payload>
          """;
 
+   protected static final String GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
+         - example: %1$d
+           request:
+             body: <request body in JSON>
+           response:
+             body: <response body in JSON>
+         """;
+
+   private static final String QUERY_NODE = "query";
    private static final String HEADERS_NODE = "headers";
    private static final String VARIABLES_NODE = "variables";
 
@@ -115,8 +129,13 @@ public class AICopilotHelper {
    }
 
    /** Generate an AsyncAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
-   protected static String getAsyncAPIOperationPromptIntro(String operationName, int numerOfSamples) {
-      return String.format(ASYNCAPI_OPERATION_PROMPT_TEMPLATE, operationName, numerOfSamples);
+   protected static String getAsyncAPIOperationPromptIntro(String operationName, int numberOfSamples) {
+      return String.format(ASYNCAPI_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
+   }
+
+   /** Generate a GRPC prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   protected static String getGrpcOperationPromptIntro(String serviceName, String operationName, int numberOfSamples) {
+      return String.format(GRPC_OPERATION_PROMPT_TEMPLATE, serviceName, operationName, numberOfSamples);
    }
 
    protected static String getRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
@@ -131,6 +150,14 @@ public class AICopilotHelper {
       StringBuilder builder = new StringBuilder();
       for (int i=0; i<numberOfSamples; i++) {
          builder.append(String.format(UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
+      }
+      return builder.toString();
+   }
+
+   protected static String getGrpcRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
+      StringBuilder builder = new StringBuilder();
+      for (int i=0; i<numberOfSamples; i++) {
+         builder.append(String.format(GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
       }
       return builder.toString();
    }
@@ -297,8 +324,8 @@ public class AICopilotHelper {
    private static String getMessageContent(String contentType, JsonNode bodyNode) throws Exception {
       if (!bodyNode.isMissingNode()) {
 
-         if (!bodyNode.isTextual() && contentType != null && contentType.contains("application/json")
-               && !bodyNode.isEmpty()) {
+         if (!bodyNode.isTextual() && !bodyNode.isEmpty()
+               && (contentType == null || contentType.contains("application/json"))) {
             return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(bodyNode);
          } else if (bodyNode.isTextual()) {
             return bodyNode.asText();
@@ -326,12 +353,12 @@ public class AICopilotHelper {
 
    private static void adaptGraphQLRequestContent(Request request) throws Exception {
       JsonNode graphQL = JSON_MAPPER.readTree(request.getContent());
-      if (graphQL.has("query")) {
+      if (graphQL.has(QUERY_NODE)) {
          // GraphQL query may have \n we'd like to escape for better display.
-         String query = graphQL.path("query").asText();
+         String query = graphQL.path(QUERY_NODE).asText();
          if (query.contains("\n")) {
             query = query.replace("\n", "\\n");
-            ((ObjectNode) graphQL).put("query", query);
+            ((ObjectNode) graphQL).put(QUERY_NODE, query);
             request.setContent(JSON_MAPPER.writeValueAsString(graphQL));
          }
       }

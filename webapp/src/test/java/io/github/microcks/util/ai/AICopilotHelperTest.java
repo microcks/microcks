@@ -429,6 +429,52 @@ public class AICopilotHelperTest {
    }
 
    @Test
+   public void testParseGrpcRequestResponseOutputYamlWithMD() {
+      String aiResponse = """
+            ```yaml
+            - example: 1
+              request:
+                body: {"firstname": "John", "lastname": "Doe"}
+              response:
+                body: {"greeting": "Hello, John Doe!"}
+                        
+            - example: 2
+              request:
+                body: {"firstname": "Jane", "lastname": "Smith"}
+              response:
+                body: {"greeting": "Hello, Jane Smith!"}
+            ```
+            """;
+
+      Service service = new Service();
+      service.setType(ServiceType.GRPC);
+      Operation operation = new Operation();
+      operation.setName("greeting");
+      operation.setDispatcher(DispatchStyles.JSON_BODY);
+      operation.setDispatcherRules("");
+      List<RequestResponsePair> results = null;
+      try {
+         results = AICopilotHelper.parseRequestResponseTemplateOutput(service, operation, aiResponse);
+      } catch (Exception e) {
+         fail("Exception should not be thrown here");
+      }
+
+      assertNotNull(results);
+      assertEquals(2, results.size());
+
+      // Check that request 1 has been correctly parsed.
+      RequestResponsePair example1 = results.get(0);
+      assertNotNull(example1.getRequest().getContent());
+      assertFalse(example1.getRequest().getContent().contains("\\n"));
+      assertTrue(example1.getRequest().getContent().contains("John"));
+
+      // Check that response 1 has been correctly parsed.
+      assertNotNull(example1.getResponse().getContent());
+      assertFalse(example1.getResponse().getContent().contains("\\n"));
+      assertTrue(example1.getResponse().getContent().contains("Hello, John Doe!"));
+   }
+
+   @Test
    public void testRemoveTokensInNode() throws Exception {
      // Create an ObjectMapper and a test JsonNode
      ObjectMapper mapper = new ObjectMapper();

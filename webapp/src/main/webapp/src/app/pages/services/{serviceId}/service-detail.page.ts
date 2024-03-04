@@ -561,7 +561,8 @@ export class ServiceDetailPageComponent implements OnInit {
     return this.hasAICopilotEnabled() 
         && (this.resolvedServiceView.service.type === 'REST' 
             || this.resolvedServiceView.service.type === 'GRAPHQL'
-            || this.resolvedServiceView.service.type === 'EVENT');
+            || this.resolvedServiceView.service.type === 'EVENT'
+            || this.resolvedServiceView.service.type === 'GRPC');
   }
 
   public hasRepositoryTenancyFeatureEnabled(): boolean {

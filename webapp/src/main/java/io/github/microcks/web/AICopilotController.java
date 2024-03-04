@@ -32,10 +32,11 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -56,26 +57,28 @@ public class AICopilotController {
    @Autowired(required = false)
    private AICopilot copilot;
 
-   @Autowired
+   private ServiceService serviceService;
    private ServiceRepository serviceRepository;
-
-   @Autowired
    private ResourceRepository resourceRepository;
 
-   @Autowired
-   private ServiceService serviceService;
 
    /**
-    *
-    * @param serviceId
-    * @param operationName
-    * @return
+    * Build a AICopilotController with required dependencies.
+    * @param serviceService The service to managed Services objects
+    * @param serviceRepository The repository for Services
+    * @param resourceRepository The repository for Resources
     */
-   @RequestMapping(value = "/samples/{id:.+}", method = RequestMethod.GET)
+   public AICopilotController(ServiceService serviceService, ServiceRepository serviceRepository, ResourceRepository resourceRepository) {
+      this.serviceService = serviceService;
+      this.serviceRepository = serviceRepository;
+      this.resourceRepository = resourceRepository;
+   }
+
+   @GetMapping(value = "/samples/{id:.+}")
    public ResponseEntity<?> getSamplesSuggestions(
          @PathVariable("id") String serviceId,
          @RequestParam(value = "operation") String operationName
-      ) {
+   ) {
       log.debug("Retrieving service with id {}", serviceId);
 
       Service service = null;
@@ -102,6 +105,8 @@ public class AICopilotController {
             resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA);
          } else if (service.getType() == ServiceType.EVENT) {
             resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.ASYNC_API_SPEC);
+         } else if (service.getType() == ServiceType.GRPC) {
+            resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.PROTOBUF_SCHEMA);
          }
 
          // Find the matching operation on service.
@@ -109,13 +114,13 @@ public class AICopilotController {
                .filter(op -> operationName.equals(op.getName()))
                .findFirst();
 
-         if (!resources.isEmpty() && !operation.isEmpty()) {
+         if (resources != null && !resources.isEmpty() && operation.isPresent()) {
             try {
                List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation.get(), resources.get(0), 2);
                return new ResponseEntity<>(exchanges, HttpStatus.OK);
             } catch (Exception e) {
                log.error("Caught and exception while generating samples", e);
-               return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+               return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
          }
       }
@@ -123,7 +128,7 @@ public class AICopilotController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/samples/{id:.+}", method = RequestMethod.POST)
+   @PostMapping(value = "/samples/{id:.+}")
    public ResponseEntity<?> addSamplesSuggestions(
          @PathVariable("id") String serviceId,
          @RequestParam(value = "operation") String operationName,

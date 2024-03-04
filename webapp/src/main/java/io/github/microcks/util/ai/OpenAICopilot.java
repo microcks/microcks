@@ -148,6 +148,8 @@ public class OpenAICopilot implements AICopilot {
          prompt = preparePromptForGraphQL(operation, contract, number);
       } else if (service.getType() == ServiceType.EVENT) {
          prompt = preparePromptForAsyncAPI(operation, contract, number);
+      } else if (service.getType() == ServiceType.GRPC) {
+         prompt = preparePromptForGrpc(service, operation, contract, number);
       }
 
       log.debug("Asking OpenAI to suggest samples for this prompt: {}", prompt);
@@ -207,7 +209,7 @@ public class OpenAICopilot implements AICopilot {
             for (int i = 0; i < variables.length; i++) {
                String variable = variables[i];
                variablesList.append("$").append(variable.trim());
-               if (i < variables.length) {
+               if (i < variables.length - 1) {
                   variablesList.append(", ");
                }
             }
@@ -237,7 +239,21 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.getUnidirectionalEventExampleYamlFormattingDirective(1));
       prompt.append(SECTION_DELIMITER);
-      prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(),operation.getName()));
+      prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(), operation.getName()));
+
+      return prompt.toString();
+   }
+
+   private String preparePromptForGrpc(Service service, Operation operation, Resource contract, int number) throws Exception {
+      StringBuilder prompt = new StringBuilder(AICopilotHelper.getGrpcOperationPromptIntro(service.getName(), operation.getName(), number));
+
+      // Build a prompt reusing templates and elements from AICopilotHelper.
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
+      prompt.append("\n");
+      prompt.append(AICopilotHelper.getGrpcRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append(SECTION_DELIMITER);
+      prompt.append(contract.getContent());
 
       return prompt.toString();
    }
