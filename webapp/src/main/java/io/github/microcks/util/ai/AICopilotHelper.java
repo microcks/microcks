@@ -412,8 +412,8 @@ public class AICopilotHelper {
     }
   }
 
-  protected static void filterOpenAPISpec(JsonNode specNode, String operationName) throws Exception {
-    String operationPathName[] = operationName.split(" ");
+  protected static void filterOpenAPISpec(JsonNode specNode, String operationName) {
+    String[] operationPathName = operationName.split(" ");
     String verb = operationPathName[0].toLowerCase();
     String path = operationPathName[1];
 
@@ -430,8 +430,8 @@ public class AICopilotHelper {
     removeSecurityTokenInNode(pathSpec, verb);
   }
 
-  protected static void filterAsyncAPISpec(JsonNode specNode, String channelName) throws Exception {
-    String operationPathName[] = channelName.split(" ");
+  protected static void filterAsyncAPISpec(JsonNode specNode, String channelName) {
+    String[] operationPathName = channelName.split(" ");
     String channel = operationPathName[1];
 
     JsonNode channelsSpec = ((ObjectNode) specNode).get("channels");
@@ -443,7 +443,7 @@ public class AICopilotHelper {
     removeTokensInNode(channelsSpec, keysToKeepInChannels);
   }
 
-  protected static void removeSecurityTokenInNode(JsonNode specNode, String tokenName) throws Exception {
+  protected static void removeSecurityTokenInNode(JsonNode specNode, String tokenName) {
     JsonNode verbSpec = ((ObjectNode) specNode).get(tokenName);
     if (verbSpec.has("security")) {
       ((ObjectNode) verbSpec).remove("security");
