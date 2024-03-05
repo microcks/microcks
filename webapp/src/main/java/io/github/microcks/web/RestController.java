@@ -28,6 +28,9 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.el.EvaluableRequest;
+import io.github.microcks.util.el.TemplateEngine;
+import io.github.microcks.util.el.TemplateEngineFactory;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
 import org.apache.commons.lang3.StringUtils;
@@ -225,9 +228,17 @@ public class RestController {
 
             // Adding other generic headers (caching directives and so on...)
             if (response.getHeaders() != null) {
+               EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(body, resourcePath, request);
+               TemplateEngine templateEngine = TemplateEngineFactory.getTemplateEngine();
                for (Header header : response.getHeaders()) {
+                  // Render response header
+                  List<String> renderedHeader = new ArrayList<>();
+                  for (String val : header.getValues()) {
+                     renderedHeader.add(MockControllerCommons.renderResponseContent(evaluableRequest, templateEngine, val));
+                  }
+
                   if ("Location".equals(header.getName())) {
-                     String location = header.getValues().iterator().next();
+                     String location = renderedHeader.iterator().next();
                      if (!AbsoluteUrlMatcher.matches(location)) {
                         // We should process location in order to make relative URI specified an absolute one from
                         // the client perspective.
@@ -237,7 +248,7 @@ public class RestController {
                      responseHeaders.add(header.getName(), location);
                   } else {
                      if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
-                        responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
+                        responseHeaders.put(header.getName(), renderedHeader);
                      }
                   }
                }
