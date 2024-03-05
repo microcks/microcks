@@ -153,7 +153,16 @@ public abstract class AbstractJsonRepositoryImporter {
          if (referenceResource == null) {
             try {
                // Extract content using resolver.
-               String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
+               String content = "";
+               boolean isBinary = false;
+               try {
+                  content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
+               } catch (IOException ioe) {
+                  // If we have an IOException, it may be because we are trying to get a binary content.
+                  // Let's try to get it as binary content.
+                  content = referenceResolver.getHttpReferenceBase64Content(ref);
+                  isBinary = true;
+               }
 
                // Build resource name from short name.
                String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
@@ -171,17 +180,18 @@ public abstract class AbstractJsonRepositoryImporter {
                referenceResource.setName(resourceName);
                referenceResource.setPath(ref);
                referenceResource.setContent(content);
-               referenceResource.setType(guessResourceType(ref, content));
+               referenceResource.setType(isBinary ? ResourceType.BASE64_BINARY : guessResourceType(ref, content));
 
                // Keep track of this newly created resource.
                referenceResources.put(refUrl, referenceResource);
                externalResources.add(referenceResource);
-
+              if (!isBinary) {
                // Now go down the resource content and resolve its embedded references.
                // Also update the references bases to track the root url for this ref in order
                ObjectMapper mapper = getObjectMapper(!ref.endsWith(".json"));
                JsonNode refResourceSpecification = mapper.readTree(content);
                resolveExternalReferences(service, referenceResources, refUrl, referenceContext, refResourceSpecification);
+              }
             } catch (IOException ioe) {
                log.error("IOException while trying to resolve reference {}", ref, ioe);
                log.info("Ignoring the reference {} cause it could not be resolved", ref);
@@ -259,7 +269,12 @@ public abstract class AbstractJsonRepositoryImporter {
             }
             externalRefs.add(filePath);
          }
-      } else {
+      }
+      else if (node.has("externalValue")) {
+         String ref = node.path("externalValue").asText();
+         externalRefs.add(ref);
+      }
+      else {
          // Iterate on all other children.
          Iterator<JsonNode> children = node.elements();
          while (children.hasNext()) {
@@ -270,7 +285,7 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /** Get the JsonNode for reference within the specification. */
-   private JsonNode getNodeForRef(String reference) {
+   protected JsonNode getNodeForRef(String reference) {
       if (reference.startsWith("#/")) {
          return rootSpecification.at(reference.substring(1));
       }
@@ -278,7 +293,7 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /** Get the JsonNode for reference that is localed in external resource. */
-   private JsonNode getNodeForExternalRef(String externalReference) {
+   protected JsonNode getNodeForExternalRef(String externalReference) {
       String path = externalReference;
 
       // We may have a Json pointer to a specific place in external reference.

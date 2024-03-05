@@ -30,8 +30,8 @@ public abstract class Message {
    private String operationId;
    private String testCaseId;
    private String sourceArtifact;
-
    private Set<Header> headers;
+   private boolean isBinaryContent = false;
 
    public String getName() {
       return name;
@@ -87,4 +87,12 @@ public abstract class Message {
       }
       headers.add(header);
    }
+
+    public boolean isBinaryContent() {
+        return isBinaryContent;
+    }
+
+    public void setIsBinaryContent(boolean isBinaryContent) {
+        this.isBinaryContent = isBinaryContent;
+    }
 }

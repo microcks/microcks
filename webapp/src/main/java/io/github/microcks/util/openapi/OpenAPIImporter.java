@@ -27,12 +27,14 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.util.AbstractJsonRepositoryImporter;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.ReferenceResolver;
+import io.github.microcks.util.Sanitizer;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonMappingException;
@@ -205,14 +207,22 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                         Iterator<String> exampleNames = examplesNode.fieldNames();
                         while (exampleNames.hasNext()) {
                            String exampleName = exampleNames.next();
-                           JsonNode example = examplesNode.path(exampleName);
-
+                           JsonNode example = followRefIfAny(examplesNode.path(exampleName));
+                           String exampleContent = getSerializedExampleValue(example);
                            // We should have everything at hand to build response here.
                            Response response = new Response();
+                           if (example.has("externalValue")) {
+                               var node = getNodeForExternalRef(example.get("externalValue").asText());
+                               if (node != null){
+                                exampleContent = node.asText();
+                                response.setIsBinaryContent(true);
+                               }
+                           }
+
                            response.setName(exampleName);
                            response.setMediaType(contentValue);
                            response.setStatus(responseCode.getKey());
-                           response.setContent(getSerializedExampleValue(example));
+                           response.setContent(exampleContent);
                            if (!responseCode.getKey().startsWith("2")) {
                               response.setFault(true);
                            }
