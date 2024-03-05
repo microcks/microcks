@@ -21,7 +21,7 @@ jobs:
         name: Check latest commit is less than a day
         continue-on-error: true
         if: ${{ github.event_name == 'schedule' }}
-        run: test -z $(git rev-list --after="24 hours" ${{ github.sha }}) &amp;&amp; echo "::set-output name=should-run::false"
+        run: test -z $(git rev-list --after="24 hours" ${{ github.sha }}) && echo "::set-output name=should-run::false"
 
   build-native-images:
     runs-on: ubuntu-latest
