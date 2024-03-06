@@ -367,35 +367,43 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
             contentType = messageNode.path("contentType").asText();
          }
 
+         // Compute a short message name if examples have no name attribute.
+         String messageName = messageInChannelNode.path("$ref").textValue();
+         messageName = messageName.substring(messageName.lastIndexOf("/") + 1);
+
          if (messageNode.has(EXAMPLES_NODE)) {
-            eventMessages = buildEventMessageFromExamples(contentType, messageNode.get(EXAMPLES_NODE));
+            eventMessages = buildEventMessageFromExamples(messageName, contentType, messageNode.get(EXAMPLES_NODE));
          }
       }
       return eventMessages;
    }
 
    /** Build a list of EventMessages from a Message examples Json node. */
-   private List<EventMessage> buildEventMessageFromExamples(String contentType, JsonNode examplesNode) {
+   private List<EventMessage> buildEventMessageFromExamples(String messageName, String contentType, JsonNode examplesNode) {
       List<EventMessage> exchanges = new ArrayList<>();
 
       Iterator<JsonNode> examples = examplesNode.elements();
       while (examples.hasNext()) {
          JsonNode exampleNode = examples.next();
 
+         EventMessage eventMessage = new EventMessage();
+         // Use name attribute if present, otherwise generate from message name.
          if (exampleNode.has("name")) {
-            EventMessage eventMessage = new EventMessage();
             eventMessage.setName(exampleNode.get("name").asText());
-            eventMessage.setMediaType(contentType);
-            eventMessage.setContent(getExamplePayload(exampleNode));
-
-            // Now complete with specified headers.
-            List<Header> headers = AsyncAPICommons.getExampleHeaders(exampleNode);
-            for (Header header : headers) {
-               eventMessage.addHeader(header);
-            }
-
-            exchanges.add(eventMessage);
+         } else {
+            eventMessage.setName(messageName + "-" + (exchanges.size() + 1));
          }
+
+         eventMessage.setMediaType(contentType);
+         eventMessage.setContent(getExamplePayload(exampleNode));
+
+         // Now complete with specified headers.
+         List<Header> headers = AsyncAPICommons.getExampleHeaders(exampleNode);
+         for (Header header : headers) {
+            eventMessage.addHeader(header);
+         }
+
+         exchanges.add(eventMessage);
       }
       return exchanges;
    }
