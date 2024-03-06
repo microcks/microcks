@@ -46,6 +46,11 @@ import org.springframework.context.annotation.Profile;
 @Profile("uber")
 @ImportRuntimeHints(NativeConfiguration.NativeRuntimeHints.class)
 public class NativeConfiguration {
+
+   private NativeConfiguration() {
+      // Hide the implicit constructor as it's a utility class.
+   }
+
    static class NativeRuntimeHints implements RuntimeHintsRegistrar {
       @Override
       public void registerHints(RuntimeHints hints, ClassLoader classLoader) {

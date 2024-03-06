@@ -29,6 +29,10 @@ public class Sanitizer {
       .collect(Collectors.toSet());
    private static final Character REPLACE_CHAR = '-';
 
+   private Sanitizer() {
+      // Hide the implicit constructor as it's a utility class.
+   }
+
    /**
     * Sanitize a string to be used in a URL.
     * It replaces all characters that are not in the set of allowed characters by a dash.
