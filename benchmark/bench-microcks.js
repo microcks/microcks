@@ -1,6 +1,9 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
+// Define the wait time of browse scenario
+const WAIT_TIME = parseFloat(__ENV.WAIT_TIME) || 0.5;
+
 // Define the base URL of your API
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
@@ -55,13 +58,13 @@ export function browse() {
     });
 
     const services = servicesRes.json();
-    sleep(0.5);
+    sleep(WAIT_TIME);
 
     services.forEach(service => {
-        const serviceViewRes = http.get(`${BASE_URL}/api/services` + service.id + '?messages=true');
-        sleep(0.5);
+        const serviceViewRes = http.get(`${BASE_URL}/api/services/` + service.id + '?messages=true');
+        sleep(WAIT_TIME);
         const serviceTestsRes = http.get(`${BASE_URL}/api/tests/service/` + service.id + '?page=0&size=20');
-        sleep(0.5);
+        sleep(WAIT_TIME);
     });
 }
 
