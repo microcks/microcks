@@ -1,4 +1,4 @@
-# K6 load testing on Microcks instnace
+# K6 load testing on Microcks instance
 
 This benchmark tool provides you an easy way of validating/sizing/evaluating changes on your Microcks instance.
 It allows you to simulate Virtual Users on different usage scenarios and gather performance metrics of your instance.
