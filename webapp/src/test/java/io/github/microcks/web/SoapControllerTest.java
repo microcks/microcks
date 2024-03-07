@@ -28,8 +28,6 @@ public class SoapControllerTest {
 
    @Test
    public void testOriginalOperationParsing() {
-      SoapController soapController = new SoapController();
-
       String originalPayload = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
             "   <soapenv:Header/>\n" +
             "   <soapenv:Body>\n" +
@@ -39,15 +37,13 @@ public class SoapControllerTest {
             "   </soapenv:Body>\n" +
             "</soapenv:Envelope>";
 
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(originalPayload, "sayHello"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(originalPayload, "sayHello"));
 
-      assertEquals("sayHello", soapController.extractOperationName(originalPayload));
+      assertEquals("sayHello", SoapController.extractOperationName(originalPayload));
    }
 
    @Test
    public void testDashNamespaceOperationParsing() {
-      SoapController soapController = new SoapController();
-
       String dashNamespacePayload = "<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
             "   <soap-env:Header/>\n" +
             "   <soap-env:Body>\n" +
@@ -57,15 +53,13 @@ public class SoapControllerTest {
             "   </soap-env:Body>\n" +
             "</soap-env:Envelope>";
 
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(dashNamespacePayload, "sayHello"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(dashNamespacePayload, "sayHello"));
 
-      assertEquals("sayHello", soapController.extractOperationName(dashNamespacePayload));
+      assertEquals("sayHello", SoapController.extractOperationName(dashNamespacePayload));
    }
 
    @Test
    public void testOriginalOperationWithNSParsing() {
-      SoapController soapController = new SoapController();
-
       String originalPayloadOpWithNamespace = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
             "   <soapenv:Header/>\n" +
             "   <soapenv:Body>\n" +
@@ -75,15 +69,13 @@ public class SoapControllerTest {
             "   </soapenv:Body>\n" +
             "</soapenv:Envelope>";
 
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(originalPayloadOpWithNamespace, "sayHello"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(originalPayloadOpWithNamespace, "sayHello"));
 
-      assertEquals("sayHello", soapController.extractOperationName(originalPayloadOpWithNamespace));
+      assertEquals("sayHello", SoapController.extractOperationName(originalPayloadOpWithNamespace));
    }
 
    @Test
    public void testDashNamespaceOperationWithNSParsing() {
-      SoapController soapController = new SoapController();
-
       String dashNamespacePayloadOpWithNamespace = "<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
             "   <soap-env:Header/>\n" +
             "   <soap-env:Body>\n" +
@@ -93,15 +85,13 @@ public class SoapControllerTest {
             "   </soap-env:Body>\n" +
             "</soap-env:Envelope>";
 
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(dashNamespacePayloadOpWithNamespace, "sayHello"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(dashNamespacePayloadOpWithNamespace, "sayHello"));
 
-      assertEquals("sayHello", soapController.extractOperationName(dashNamespacePayloadOpWithNamespace));
+      assertEquals("sayHello", SoapController.extractOperationName(dashNamespacePayloadOpWithNamespace));
    }
 
    @Test
    public void testNegativeOperationMatching() {
-      SoapController soapController = new SoapController();
-
       String otherOperationPayload = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n" +
             "   <soapenv:Header/>\n" +
             "   <soapenv:Body>\n" +
@@ -111,16 +101,14 @@ public class SoapControllerTest {
             "   </soapenv:Body>\n" +
             "</soapenv:Envelope>";
 
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(otherOperationPayload, "sayHelloWorld"));
-      assertFalse(soapController.hasPayloadCorrectStructureForOperation(otherOperationPayload, "sayHello"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(otherOperationPayload, "sayHelloWorld"));
+      assertFalse(SoapController.hasPayloadCorrectStructureForOperation(otherOperationPayload, "sayHello"));
 
-      assertEquals("sayHelloWorld", soapController.extractOperationName(otherOperationPayload));
+      assertEquals("sayHelloWorld", SoapController.extractOperationName(otherOperationPayload));
    }
 
    @Test
    public void testNoArgOperationMatching() {
-      SoapController soapController = new SoapController();
-
       String noArgOperationPayload = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
             "   <soapenv:Header/>\n" +
             "   <soapenv:Body>\n" +
@@ -149,15 +137,15 @@ public class SoapControllerTest {
             "   </soapenv:Body>\n" +
             "</soapenv:Envelope>";
 
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(noArgOperationPayload, "sayHelloWorld"));
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(noArgFullOperationPayload, "sayHelloWorld"));
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(noArgOperationPayloadWithNamespace, "sayHelloWorld"));
-      assertTrue(soapController.hasPayloadCorrectStructureForOperation(noArgFullOperationPayloadWithNamespace, "sayHelloWorld"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(noArgOperationPayload, "sayHelloWorld"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(noArgFullOperationPayload, "sayHelloWorld"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(noArgOperationPayloadWithNamespace, "sayHelloWorld"));
+      assertTrue(SoapController.hasPayloadCorrectStructureForOperation(noArgFullOperationPayloadWithNamespace, "sayHelloWorld"));
 
-      assertEquals("sayHelloWorld", soapController.extractOperationName(noArgOperationPayload));
-      assertEquals("sayHelloWorld", soapController.extractOperationName(noArgFullOperationPayload));
-      assertEquals("sayHelloWorld", soapController.extractOperationName(noArgOperationPayloadWithNamespace));
-      assertEquals("sayHelloWorld", soapController.extractOperationName(noArgFullOperationPayloadWithNamespace));
+      assertEquals("sayHelloWorld", SoapController.extractOperationName(noArgOperationPayload));
+      assertEquals("sayHelloWorld", SoapController.extractOperationName(noArgFullOperationPayload));
+      assertEquals("sayHelloWorld", SoapController.extractOperationName(noArgOperationPayloadWithNamespace));
+      assertEquals("sayHelloWorld", SoapController.extractOperationName(noArgFullOperationPayloadWithNamespace));
    }
 
    @Test
