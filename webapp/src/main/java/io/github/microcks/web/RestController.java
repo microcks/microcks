@@ -33,7 +33,6 @@ import io.github.microcks.util.script.ScriptEngineBinder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -63,14 +62,11 @@ public class RestController {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(RestController.class);
 
-   @Autowired
-   private ServiceRepository serviceRepository;
+   private final ServiceRepository serviceRepository;
 
-   @Autowired
-   private ResponseRepository responseRepository;
+   private final ResponseRepository responseRepository;
 
-   @Autowired
-   private ApplicationContext applicationContext;
+   private final ApplicationContext applicationContext;
 
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
@@ -82,6 +78,19 @@ public class RestController {
 
    @Value("${mocks.rest.cors.allowCredentials}")
    private Boolean corsAllowCredentials;
+
+   /**
+    * Build a RestController with required dependencies.
+    * @param serviceRepository The repository to access services definitions
+    * @param responseRepository The repository to access responses definitions
+    * @param applicationContext The Spring application context
+    */
+   public RestController(ServiceRepository serviceRepository, ResponseRepository responseRepository, ApplicationContext applicationContext) {
+      this.serviceRepository = serviceRepository;
+      this.responseRepository = responseRepository;
+      this.applicationContext = applicationContext;
+   }
+
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
@@ -124,7 +133,13 @@ public class RestController {
          trimmedResourcePath = resourcePath.substring(0, resourcePath.length() - 1);
       }
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
+      if (service == null) {
+         return new ResponseEntity<>(
+               String.format("The service %s with version %s does not exist!", serviceName, version),
+               HttpStatus.NOT_FOUND);
+      }
       Operation rOperation = null;
+
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
@@ -163,7 +178,7 @@ public class RestController {
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
          String violationMsg = validateParameterConstraintsIfAny(rOperation, request);
          if (violationMsg != null) {
-            return new ResponseEntity<Object>(violationMsg + ". Check parameter constraints.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(violationMsg + ". Check parameter constraints.", HttpStatus.BAD_REQUEST);
          }
 
          // We must find dispatcher and its rules. Default to operation ones but
@@ -258,9 +273,9 @@ public class RestController {
                MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
             }
 
-            return new ResponseEntity<Object>(responseContent, responseHeaders, status);
+            return new ResponseEntity<>(responseContent, responseHeaders, status);
          }
-         return new ResponseEntity<Object>(HttpStatus.BAD_REQUEST);
+         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
       }
 
       // Handle OPTIONS request if CORS policy is enabled.
@@ -270,7 +285,7 @@ public class RestController {
       }
 
       log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
-      return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
    }
 
 
@@ -357,8 +372,10 @@ public class RestController {
    private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {
       if (!responses.isEmpty()) {
          String accept = request.getHeader("Accept");
-         return responses.stream().filter(r -> StringUtils.isNotEmpty(accept) ?
-               accept.equals(r.getMediaType()) : true).findFirst().orElse(responses.get(0));
+         return responses.stream()
+               .filter(r -> !StringUtils.isNotEmpty(accept) || accept.equals(r.getMediaType()))
+               .findFirst()
+               .orElse(responses.get(0));
       }
       return null;
    }
@@ -385,7 +402,7 @@ public class RestController {
       requestHeaders.setAccessControlExposeHeaders(accessControlHeaders);
 
       // Apply CORS headers to response with 204 response code.
-      ResponseEntity<Object> response = ResponseEntity.noContent()
+      return ResponseEntity.noContent()
                .header("Access-Control-Allow-Origin", corsAllowedOrigins)
                .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH")
                .headers(requestHeaders)
@@ -393,7 +410,5 @@ public class RestController {
                .header("Access-Control-Max-Age", "3600")
                .header("Vary", "Accept-Encoding, Origin")
                .build();
-
-      return response;
    }
 }
