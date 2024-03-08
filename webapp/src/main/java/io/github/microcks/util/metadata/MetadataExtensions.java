@@ -26,4 +26,7 @@ public class MetadataExtensions {
 
    /** Name of OpenAPI / AsyncAPI operation Microcks extension attribute. */
    public static final String MICROCKS_OPERATION_EXTENSION = "x-microcks-operation";
+
+   /** Name of OpenApi / AsyncAPI exemple Microcks extension attribute */
+   public static final String MICROCKS_EXAMPLE_EXTENSION = "x-microcks-example";
 }

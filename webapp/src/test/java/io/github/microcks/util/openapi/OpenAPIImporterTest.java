@@ -1819,4 +1819,64 @@ public class OpenAPIImporterTest {
          }
       }
    }
+
+
+   @Test
+    public void testDelayExtensionImport(){
+    OpenAPIImporter importer = null;
+    try {
+       importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/openapi-extensions-delay.yaml", null);
+    } catch (IOException ioe) {
+       ioe.printStackTrace();
+       fail("Exception should not be thrown");
+       return;
+    }
+
+    List<Service> services = null;
+    try {
+       services = importer.getServiceDefinitions();
+    } catch (MockRepositoryImportException e) {
+       fail("Exception should not be thrown");
+       return;
+    }
+
+    Service service = services.get(0);
+    Operation postOp = service.getOperations().stream()
+    .filter(operation -> operation.getName().equals("GET /owner/{owner}/car"))
+    .findFirst().get();
+    List<Exchange> exchanges = null;
+    try {
+      exchanges = importer.getMessageDefinitions(service, postOp);
+    } catch (Exception e) {
+      fail("No exception should be thrown when importing message definitions.");
+      return;
+    }
+    assertEquals(3, exchanges.size());
+    for (Exchange exchange : exchanges) {
+      if (exchange instanceof RequestResponsePair) {
+         RequestResponsePair entry = (RequestResponsePair) exchange;
+         Request request = entry.getRequest();
+         Response response = entry.getResponse();
+         assertNotNull(request);
+         assertNotNull(response);
+         switch (response.getName()) {
+          case "laurent_cars":
+            assertTrue(1000 == response.getDelay());
+            break;
+          case "maxime_cars":
+            assertTrue(5000 == response.getDelay());
+            break;
+          case "tom_cars":
+            assertTrue(0 == response.getDelay());
+            break;
+
+          default:
+            fail("Name not expected");
+         }
+      } else {
+         fail("Exchange has the wrong type. Expecting RequestResponsePair");
+      }
+   }
+
+   }
 }

@@ -33,6 +33,7 @@ public class Response extends Message {
    private String mediaType;
    private String dispatchCriteria;
    private boolean isFault = false;
+   private long delay = 0L;
 
    public String getId() {
       return id;
@@ -72,5 +73,11 @@ public class Response extends Message {
 
    public void setFault(boolean isFault) {
       this.isFault = isFault;
+   }
+   public long getDelay(){
+    return delay;
+   }
+   public void setDelay(long delay){
+    this.delay = delay;
    }
 }
