@@ -1146,7 +1146,6 @@ public class OpenAPIImporterTest {
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/examples-ref-openapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -1555,6 +1554,75 @@ public class OpenAPIImporterTest {
             }
          } else {
             fail("Unknown operation name: " + operation.getName());
+         }
+      }
+   }
+
+   @Test
+   public void testNoContentResponseOpenAPIImport() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent.yaml", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("Test API", service.getName());
+      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals("1.0.0", service.getVersion());
+
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(1, resources.size());
+
+      // Check that operations and input/output have been found.
+      assertEquals(3, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("DELETE /tests/{id}".equals(operation.getName())) {
+            assertEquals("DELETE", operation.getMethod());
+
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(2, exchanges.size());
+            assertEquals(2, operation.getResourcePaths().size());
+            assertTrue(operation.getResourcePaths().contains("/tests/66") || operation.getResourcePaths().contains("/tests/77"));
+
+            for (Exchange exchange : exchanges) {
+               if (exchange instanceof RequestResponsePair entry) {
+                  Request request = entry.getRequest();
+                  Response response = entry.getResponse();
+                  assertNotNull(request);
+                  assertNotNull(response);
+                  assertNull(response.getContent());
+
+                  if ("to-delete-1".equals(request.getName())) {
+                     assertEquals("204", response.getStatus());
+                     assertEquals("/id=66", response.getDispatchCriteria());
+                     assertFalse(response.isFault());
+                     assertEquals(1, request.getQueryParameters().size());
+                  } else if ("to-delete-2".equals(request.getName())) {
+                     assertEquals("418", response.getStatus());
+                     assertEquals("/id=77", response.getDispatchCriteria());
+                     assertTrue(response.isFault());
+                     assertEquals(1, request.getQueryParameters().size());
+                  } else {
+                     fail("Unknown request");
+                  }
+               }
+            }
          }
       }
    }
