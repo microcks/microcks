@@ -29,10 +29,20 @@ spec:
         checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
         {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
+      {{- with .Values.global.image.pullSecrets | default .Values.microcks.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 4 }}
+      {{- end }}
+      {{- if .Values.microcks.initContainers }}
+      initContainers:
+        {{- with .Values.microcks.initContainers }}
+        {{- toYaml . | nindent 4 }}
+        {{- end }}
+      {{- end }}
       containers:
       - name: spring
-        image: {{ .Values.microcks.image }}
-        imagePullPolicy: IfNotPresent
+        image: {{ .Values.global.image.registry | default .Values.microcks.image.registry }}/{{ .Values.microcks.image.repository }}{{ include "microcks.imageId" . }}
+        imagePullPolicy: {{ .Values.microcks.image.pullPolicy }}
         ports:
         - containerPort: 8080
           protocol: TCP
@@ -164,7 +174,13 @@ spec:
           - name: "{{ .Values.microcks.customSecretRef.secret }}"
             mountPath: "/deployments/config/custom/secret"
           {{- end}}
+          {{- with .Values.microcks.extraVolumeMounts }}
+          {{- toYaml . | nindent 12 }}
+          {{- end }}
         terminationMessagePath: "/dev/termination-log"
+        {{- with .Values.microcks.extraContainers }}
+          {{- toYaml . | nindent 4 }}
+        {{- end}}
       volumes:
         - name: "{{ .Values.appName }}-config"
           configMap:
@@ -191,418 +207,9 @@ spec:
           secret:
             secretName: "{{ .Values.microcks.customSecretRef.secret }}"
         {{- end }}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: "{{ .Values.appName }}-postman-runtime"
-  labels:
-    app: "{{ .Values.appName }}"
-    container: postman-runtime
-    group: microcks
-    {{- include "microcks-common-labels" . | nindent 4 }}
-  annotations:
-    {{- include "microcks-common-annotations" . | nindent 4 }}
-
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: "{{ .Values.appName }}"
-      deploymentconfig: "{{ .Values.appName }}-postman-runtime"
-      container: postman-runtime
-      group: microcks
-  template:
-    metadata:
-      labels:
-        app: "{{ .Values.appName }}"
-        deploymentconfig: "{{ .Values.appName }}-postman-runtime"
-        container: postman-runtime
-        group: microcks
-        {{- include "microcks-common-labels" . | nindent 8 }}
-      annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- include "microcks-common-annotations" . | nindent 8 }}
-    spec:
-      containers:
-      - name: postman-runtime
-        image: {{ .Values.postman.image }}
-        ports:
-        - containerPort: 3000
-          protocol: TCP
-        env:
-        - name: LOG_LEVEL
-          value: info
-        resources:
-          {{- toYaml .Values.postman.resources | nindent 10 }}
-        livenessProbe:
-          httpGet:
-            path: "/health"
-            port: 3000
-            scheme: HTTP
-          initialDelaySeconds: 4
-          timeoutSeconds: 3
-          periodSeconds: 20
-          successThreshold: 1
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: "/health"
-            port: 3000
-            scheme: HTTP
-          initialDelaySeconds: 5
-          timeoutSeconds: 3
-          periodSeconds: 20
-          successThreshold: 1
-          failureThreshold: 3
-        terminationMessagePath: "/dev/termination-log"
-        imagePullPolicy: IfNotPresent
-      restartPolicy: Always
-      terminationGracePeriodSeconds: 30
-      dnsPolicy: ClusterFirst
-{{- if and .Values.mongodb.install }}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: "{{ .Values.appName }}-mongodb"
-  labels:
-    app: "{{ .Values.appName }}"
-    container: mongodb
-    group: microcks
-    {{- include "microcks-common-labels" . | nindent 4 }}
-  annotations:
-    {{- include "microcks-common-annotations" . | nindent 4 }}
-
-  creationTimestamp:
-spec:
-  strategy:
-    type: Recreate
-  replicas: 1
-  selector:
-    matchLabels:
-      app: "{{ .Values.appName }}"
-      deploymentconfig: mongodb
-      container: mongodb
-      group: microcks
-  template:
-    metadata:
-      labels:
-        app: "{{ .Values.appName }}"
-        deploymentconfig: mongodb
-        container: mongodb
-        group: microcks
-        {{- include "microcks-common-labels" . | nindent 8 }}
-      annotations:
-        {{- include "microcks-common-annotations" . | nindent 8 }}
-    spec:
-      {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
-      securityContext:
-        runAsUser: 184
-        runAsGroup: 184
-        fsGroup: 184
-      {{- end }}
-      containers:
-      - name: mongodb
-        image: {{ .Values.mongodb.image }}
-        ports:
-        - containerPort: 27017
-          protocol: TCP
-        readinessProbe:
-          timeoutSeconds: 1
-          initialDelaySeconds: 3
-          exec:
-            command:
-            - "/bin/sh"
-            - "-i"
-            - "-c"
-            - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
-              --eval="quit()"
-        livenessProbe:
-          timeoutSeconds: 1
-          initialDelaySeconds: 30
-          tcpSocket:
-            port: 27017
-        env:
-        - name: MONGODB_USER
-          valueFrom:
-            secretKeyRef:
-              key: username
-              name: "{{ .Values.appName }}-mongodb-connection"
-        - name: MONGODB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: password
-              name: "{{ .Values.appName }}-mongodb-connection"
-        - name: MONGODB_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: adminPassword
-              name: "{{ .Values.appName }}-mongodb-connection"
-        - name: MONGODB_DATABASE
-          value: "{{ .Values.appName }}"
-        resources:
-          {{- toYaml .Values.mongodb.resources | nindent 10 }}
-        volumeMounts:
-        - name: "{{ .Values.appName }}-mongodb-data"
-          mountPath: "/var/lib/mongodb/data"
-        terminationMessagePath: "/dev/termination-log"
-        imagePullPolicy: IfNotPresent
-        securityContext:
-          capabilities: {}
-          privileged: false
-      volumes:
-      - name: "{{ .Values.appName }}-mongodb-data"
-        {{- if .Values.mongodb.persistent }}
-        persistentVolumeClaim:
-          claimName: "{{ .Values.appName }}-mongodb"
-        {{- else }}
-        emptyDir:
-          medium: ''
+        {{- if .Values.microcks.extraVolumes }}
+        {{- toYaml .Values.microcks.extraVolumes | nindent 4 }}
         {{- end }}
-      restartPolicy: Always
-      dnsPolicy: ClusterFirst
-{{- end }}
-{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: "{{ .Values.appName }}-keycloak"
-  labels:
-    app: "{{ .Values.appName }}"
-    container: keycloak
-    group: microcks
-    {{- include "microcks-common-labels" . | nindent 4 }}
-  annotations:
-    {{- include "microcks-common-annotations" . | nindent 4 }}
-spec:
-  strategy:
-    type: Recreate
-  replicas: 1
-  selector:
-    matchLabels:
-      app: "{{ .Values.appName }}"
-      deploymentconfig: keycloak
-      container: keycloak
-      group: microcks
-  template:
-    metadata:
-      labels:
-        app: "{{ .Values.appName }}"
-        deploymentconfig: keycloak
-        container: keycloak
-        group: microcks
-        {{- include "microcks-common-labels" . | nindent 8 }}
-      annotations:
-        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
-        {{- include "microcks-common-annotations" . | nindent 8 }}
-    spec:
-      containers:
-      - name: keycloak-server
-        image: {{ .Values.keycloak.image }}
-        resources:
-          {{- toYaml .Values.keycloak.resources | nindent 10 }}
-        ports:
-        - name: http
-          containerPort: 8080
-          protocol: TCP
-        - name: jolokia
-          containerPort: 8778
-          protocol: TCP
-        args:
-        - 'start'
-        - '--features=token-exchange'
-        - '--db=$(KC_DB)'
-        - '--db-url-host=$(KC_DB_URL_HOST)'
-        - '--db-username=$(KC_DB_USER)'
-        - '--db-password=$(KC_DB_PASSWORD)'
-        {{- if hasKey .Values.keycloak "privateUrl" }}
-        - '--hostname={{ .Values.keycloak.url }}'
-        - '--hostname-strict-backchannel=false'
-        {{- else }}
-        - '--hostname={{ .Values.keycloak.url }}'
-        {{- end }}
-        - '--health-enabled=true'
-        - '--import-realm'
-        env:
-        - name: INTERNAL_POD_IP
-          valueFrom:
-            fieldRef:
-              fieldPath: status.podIP
-        - name: KEYCLOAK_ADMIN
-          valueFrom:
-            secretKeyRef:
-              {{- if hasKey .Values.keycloak "secretRef" }}
-              key: {{ .Values.keycloak.secretRef.usernameKey | default "username" }}
-              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
-              {{- else }}
-              key: username
-              name: "{{ .Values.appName }}-keycloak-admin"
-              {{- end }}
-        - name: KEYCLOAK_ADMIN_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              {{- if hasKey .Values.keycloak "secretRef" }}
-              key: {{ .Values.keycloak.secretRef.passwordKey | default "password" }}
-              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
-              {{- else }}
-              key: password
-              name: "{{ .Values.appName }}-keycloak-admin"
-              {{- end }}
-        - name: OPERATING_MODE
-          value: clustered
-        - name: KC_DB
-          value: postgres
-        - name: KC_DB_USER
-          valueFrom:
-            secretKeyRef:
-              {{- if hasKey .Values.keycloak "secretRef" }}
-              key: {{ .Values.keycloak.secretRef.postgresUsernameKey | default "postgresUsername" }}
-              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
-              {{- else }}
-              key: postgresUsername
-              name: "{{ .Values.appName }}-keycloak-admin"
-              {{- end }}
-        - name: KC_DB_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              {{- if hasKey .Values.keycloak "secretRef" }}
-              key: {{ .Values.keycloak.secretRef.postgresPasswordKey | default "postgresPassword" }}
-              name: {{ .Values.keycloak.secretRef.secret | default (print .Values.appName "-keycloak-admin") }}
-              {{- else }}
-              key: postgresPassword
-              name: "{{ .Values.appName }}-keycloak-admin"
-              {{- end }}
-        - name: KC_DB_URL_DATABASE
-          value: root
-        - name: KC_DB_URL_HOST
-          value: "{{ .Values.appName }}-keycloak-postgresql"
-        - name: KC_PROXY
-          value: "edge"
-        livenessProbe:
-          httpGet:
-            path: "/health/live"
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 30
-          timeoutSeconds: 2
-          periodSeconds: 20
-          successThreshold: 1
-          failureThreshold: 5
-        readinessProbe:
-          httpGet:
-            path: "/health/ready"
-            port: 8080
-            scheme: HTTP
-          initialDelaySeconds: 10
-          timeoutSeconds: 2
-          periodSeconds: 10
-          successThreshold: 1
-          failureThreshold: 5
-        volumeMounts:
-        - name: {{ .Values.appName }}-keycloak-config
-          mountPath: "/opt/keycloak/data/import"
-        securityContext:
-          privileged: false
-      volumes:
-      - name: "{{ .Values.appName }}-keycloak-config"
-        configMap:
-          name: "{{ .Values.appName }}-keycloak-config"
-      restartPolicy: Always
-      dnsPolicy: ClusterFirst
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: "{{ .Values.appName }}-keycloak-postgresql"
-  labels:
-    app: "{{ .Values.appName }}"
-    container: keycloak-postgresql
-    group: microcks
-    {{- include "microcks-common-labels" . | nindent 4 }}
-  annotations:
-    {{- include "microcks-common-annotations" . | nindent 4 }}
-spec:
-  strategy:
-    type: Recreate
-  replicas: 1
-  selector:
-    matchLabels:
-      app: "{{ .Values.appName }}"
-      deploymentconfig: keycloak-postgresql
-      container: keycloak-postgresql
-      group: microcks
-  template:
-    metadata:
-      labels:
-        app: "{{ .Values.appName }}"
-        deploymentconfig: keycloak-postgresql
-        container: keycloak-postgresql
-        group: microcks
-        {{- include "microcks-common-labels" . | nindent 8 }}
-      annotations:
-        {{- include "microcks-common-annotations" . | nindent 8 }}
-    spec:
-      {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
-      securityContext:
-        runAsUser: 26
-        runAsGroup: 26
-        fsGroup: 26
-      {{- end }}
-      terminationGracePeriodSeconds: 60
-      containers:
-      - name: keycloak-postgresql
-        image: {{ .Values.keycloak.postgresImage }}
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 5432
-          protocol: TCP
-        readinessProbe:
-          timeoutSeconds: 1
-          initialDelaySeconds: 5
-          exec:
-            command:
-            - "/bin/sh"
-            - "-i"
-            - "-c"
-            - psql 127.0.0.1 -U ${POSTGRESQL_USER} -q -d ${POSTGRESQL_DATABASE}
-              -c 'SELECT 1'
-        livenessProbe:
-          timeoutSeconds: 1
-          initialDelaySeconds: 30
-          tcpSocket:
-            port: 5432
-        env:
-        - name: POSTGRESQL_USER
-          valueFrom:
-            secretKeyRef:
-              key: postgresUsername
-              name: "{{ .Values.appName }}-keycloak-admin"
-        - name: POSTGRESQL_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              key: postgresPassword
-              name: "{{ .Values.appName }}-keycloak-admin"
-        - name: POSTGRESQL_DATABASE
-          value: root
-        - name: POSTGRESQL_MAX_CONNECTIONS
-          value: '100'
-        - name: POSTGRESQL_SHARED_BUFFERS
-          value: 12MB
-        volumeMounts:
-          - name: "{{ .Values.appName }}-keycloak-postgresql-data"
-            mountPath: "/var/lib/pgsql/data"
-      volumes:
-      - name: "{{ .Values.appName }}-keycloak-postgresql-data"
-        {{- if .Values.keycloak.persistent }}
-        persistentVolumeClaim:
-          claimName: "{{ .Values.appName }}-keycloak-postgresql"
-        {{- else }}
-        emptyDir:
-          medium: ''
-        {{- end }}
-{{- end }}
 {{- if and .Values.features.async.enabled }}
 ---
 apiVersion: apps/v1
@@ -641,7 +248,8 @@ spec:
     spec:
       containers:
       - name: async-minion
-        image: {{ .Values.features.async.image }}
+        image: "{{ .Values.global.image.registry | default .Values.features.async.image.registry }}/{{ .Values.features.async.image.repository }}:{{ .Values.features.async.image.tag }}"
+        imagePullPolicy: {{ .Values.features.async.image.pullPolicy }}
         imagePullPolicy: IfNotPresent
         env:
           - name: QUARKUS_PROFILE

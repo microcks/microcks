@@ -1,0 +1,69 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.appName }}-postman-runtime"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: postman-runtime
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: "{{ .Values.appName }}-postman-runtime"
+      container: postman-runtime
+      group: microcks
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.appName }}"
+        deploymentconfig: "{{ .Values.appName }}-postman-runtime"
+        container: postman-runtime
+        group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
+    spec:
+      containers:
+        - name: postman-runtime
+          image: "{{ .Values.global.image.registry | default .Values.postman.image.registry }}/{{ .Values.postman.image.repository }}:{{ .Values.postman.image.tag }}"
+          imagePullPolicy: {{ .Values.postman.image.pullPolicy }}
+          ports:
+            - containerPort: 3000
+              protocol: TCP
+          env:
+            - name: LOG_LEVEL
+              value: info
+          resources:
+          {{- toYaml .Values.postman.resources | nindent 10 }}
+          livenessProbe:
+            httpGet:
+              path: "/health"
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 4
+            timeoutSeconds: 3
+            periodSeconds: 20
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: "/health"
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 20
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: "/dev/termination-log"
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst

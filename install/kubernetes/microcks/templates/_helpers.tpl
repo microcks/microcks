@@ -73,3 +73,19 @@ Generate common annotations
 {{- end -}}
 {{- end -}}
 
+{{/*
+Microcks image ID
+*/}}
+{{- define "microcks.imageId" -}}
+{{- if .Values.microcks.image.digest }}
+{{- $digest := .Values.microcks.image.digest }}
+{{- if not (hasPrefix "sha256:" $digest) }}
+{{- $digest = printf "sha256:%s" $digest }}
+{{- end }}
+{{- printf "@%s" $digest }}
+{{- else if .Values.microcks.image.tag }}
+{{- printf ":%s" .Values.microcks.image.tag }}
+{{- else }}
+{{- printf ":%s" .Chart.AppVersion }}
+{{- end }}
+{{- end }}
