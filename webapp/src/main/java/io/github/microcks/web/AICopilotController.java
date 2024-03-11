@@ -64,21 +64,20 @@ public class AICopilotController {
 
    /**
     * Build a AICopilotController with required dependencies.
-    * @param serviceService The service to managed Services objects
-    * @param serviceRepository The repository for Services
+    * @param serviceService     The service to managed Services objects
+    * @param serviceRepository  The repository for Services
     * @param resourceRepository The repository for Resources
     */
-   public AICopilotController(ServiceService serviceService, ServiceRepository serviceRepository, ResourceRepository resourceRepository) {
+   public AICopilotController(ServiceService serviceService, ServiceRepository serviceRepository,
+         ResourceRepository resourceRepository) {
       this.serviceService = serviceService;
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
    }
 
    @GetMapping(value = "/samples/{id:.+}")
-   public ResponseEntity<?> getSamplesSuggestions(
-         @PathVariable("id") String serviceId,
-         @RequestParam(value = "operation") String operationName
-   ) {
+   public ResponseEntity<?> getSamplesSuggestions(@PathVariable("id") String serviceId,
+         @RequestParam(value = "operation") String operationName) {
       log.debug("Retrieving service with id {}", serviceId);
 
       Service service = null;
@@ -111,12 +110,12 @@ public class AICopilotController {
 
          // Find the matching operation on service.
          Optional<Operation> operation = service.getOperations().stream()
-               .filter(op -> operationName.equals(op.getName()))
-               .findFirst();
+               .filter(op -> operationName.equals(op.getName())).findFirst();
 
          if (resources != null && !resources.isEmpty() && operation.isPresent()) {
             try {
-               List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation.get(), resources.get(0), 2);
+               List<? extends Exchange> exchanges = copilot.suggestSampleExchanges(service, operation.get(),
+                     resources.get(0), 2);
                return new ResponseEntity<>(exchanges, HttpStatus.OK);
             } catch (Exception e) {
                log.error("Caught and exception while generating samples", e);
@@ -129,15 +128,12 @@ public class AICopilotController {
    }
 
    @PostMapping(value = "/samples/{id:.+}")
-   public ResponseEntity<?> addSamplesSuggestions(
-         @PathVariable("id") String serviceId,
-         @RequestParam(value = "operation") String operationName,
-         @RequestBody List<Exchange> exchanges,
-         UserInfo userInfo
-      ) {
+   public ResponseEntity<?> addSamplesSuggestions(@PathVariable("id") String serviceId,
+         @RequestParam(value = "operation") String operationName, @RequestBody List<Exchange> exchanges,
+         UserInfo userInfo) {
       log.debug("Adding new AI samples to service {} and operation {}", serviceId, operationName);
       boolean result = serviceService.addExchangesToServiceOperation(serviceId, operationName, exchanges, userInfo);
-      if (result){
+      if (result) {
          return new ResponseEntity<>(HttpStatus.CREATED);
       }
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);

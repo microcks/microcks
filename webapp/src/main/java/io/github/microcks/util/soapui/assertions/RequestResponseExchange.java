@@ -21,10 +21,11 @@ import org.springframework.http.client.ClientHttpResponse;
 
 /**
  * Simple record for wrapping exchange elements of a test.
- * @param request The request that was issued to tested endpoint
- * @param response The response from Http client
+ * @param request         The request that was issued to tested endpoint
+ * @param response        The response from Http client
  * @param responseContent The body of the response
- * @param duration The duration of the exchange
+ * @param duration        The duration of the exchange
  */
-public record RequestResponseExchange(Request request, ClientHttpResponse response, String responseContent, long duration) {
+public record RequestResponseExchange(Request request, ClientHttpResponse response, String responseContent,
+      long duration) {
 }

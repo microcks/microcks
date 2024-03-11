@@ -80,7 +80,7 @@ public class GraphQLImporter implements MockRepositoryImporter {
 
          // Parse schema file to a dom.
          graphqlSchema = Parser.parse(specContent);
-      }  catch (Exception e) {
+      } catch (Exception e) {
          log.error("Exception while parsing GraphQL schema file " + graphqlFilePath, e);
          throw new IOException("GraphQL schema file parsing error");
       }
@@ -106,12 +106,14 @@ public class GraphQLImporter implements MockRepositoryImporter {
                break;
             }
             log.error("microcksId comment is malformed. Expecting \'microcksId: <API_name>:<API_version>\'");
-            throw new MockRepositoryImportException("microcksId comment is malformed. Expecting \'microcksId: <API_name>:<API_version>\'");
+            throw new MockRepositoryImportException(
+                  "microcksId comment is malformed. Expecting \'microcksId: <API_name>:<API_version>\'");
          }
       }
       if (service.getName() == null || service.getVersion() == null) {
          log.error("No microcksId: comment found into GraphQL schema to get API name and version");
-         throw new MockRepositoryImportException("No microcksId: comment found into GraphQL schema to get API name and version");
+         throw new MockRepositoryImportException(
+               "No microcksId: comment found into GraphQL schema to get API name and version");
       }
 
       // We found a service, build its operations.
@@ -136,7 +138,8 @@ public class GraphQLImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       List<Exchange> result = new ArrayList<>();
       return result;
    }

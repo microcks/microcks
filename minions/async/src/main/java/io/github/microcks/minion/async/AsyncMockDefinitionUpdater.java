@@ -44,7 +44,7 @@ public class AsyncMockDefinitionUpdater {
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
 
-   @ConfigProperty(name= "minion.restricted-frequencies")
+   @ConfigProperty(name = "minion.restricted-frequencies")
    Long[] restrictedFrequencies;
 
    @Inject
@@ -55,10 +55,8 @@ public class AsyncMockDefinitionUpdater {
 
    @Incoming("microcks-services-updates")
    public void onServiceUpdate(ServiceViewChangeEvent serviceViewChangeEvent) {
-      logger.infof("Received a new change event [%s] for '%s', at %d",
-            serviceViewChangeEvent.getChangeType(),
-            serviceViewChangeEvent.getServiceId(),
-            serviceViewChangeEvent.getTimestamp());
+      logger.infof("Received a new change event [%s] for '%s', at %d", serviceViewChangeEvent.getChangeType(),
+            serviceViewChangeEvent.getServiceId(), serviceViewChangeEvent.getTimestamp());
 
       applyServiceChangeEvent(serviceViewChangeEvent);
    }
@@ -71,14 +69,16 @@ public class AsyncMockDefinitionUpdater {
          schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
       } else {
          // Only deal with service of type EVENT...
-         if (serviceViewChangeEvent.getServiceView() != null && (serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.EVENT)
-               || serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.GENERIC_EVENT)) ) {
+         if (serviceViewChangeEvent.getServiceView() != null && (serviceViewChangeEvent.getServiceView().getService()
+               .getType().equals(ServiceType.EVENT)
+               || serviceViewChangeEvent.getServiceView().getService().getType().equals(ServiceType.GENERIC_EVENT))) {
 
             // Browse and check operation regarding restricted frequencies and supported bindings.
             boolean scheduled = scheduleOperations(serviceViewChangeEvent.getServiceView());
 
             if (!scheduled) {
-               logger.infof("Ensure to un-schedule %s on this minion. Removing definitions.", serviceViewChangeEvent.getServiceId());
+               logger.infof("Ensure to un-schedule %s on this minion. Removing definitions.",
+                     serviceViewChangeEvent.getServiceId());
                mockRepository.removeMockDefinitions(serviceViewChangeEvent.getServiceId());
                schemaRegistry.clearRegistryForService(serviceViewChangeEvent.getServiceId());
             }
@@ -98,9 +98,7 @@ public class AsyncMockDefinitionUpdater {
             AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(), operation,
                   serviceView.getMessagesMap().get(operation.getName()).stream()
                         .filter(UnidirectionalEvent.class::isInstance)
-                        .map(e -> ((UnidirectionalEvent)e).getEventMessage())
-                        .toList()
-            );
+                        .map(e -> ((UnidirectionalEvent) e).getEventMessage()).toList());
             mockRepository.storeMockDefinition(mockDefinition);
             schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
             scheduled = true;

@@ -38,14 +38,14 @@ import java.util.Map;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class CustomDailyStatisticRepositoryTest {
 
    @Autowired
    DailyStatisticRepository repository;
 
    @Before
-   public void setUp(){
+   public void setUp() {
       // Create a bunch of statistics...
       DailyStatistic stat = new DailyStatistic();
       stat.setDay("20140930");
@@ -65,26 +65,26 @@ public class CustomDailyStatisticRepositoryTest {
    }
 
    @Test
-   public void testAggregateDailyStatistics(){
+   public void testAggregateDailyStatistics() {
       try {
          DailyStatistic stat = repository.aggregateDailyStatistics("20140930");
-      } catch (ConverterNotFoundException cvnfe){
+      } catch (ConverterNotFoundException cvnfe) {
          // For now, mapReduce in Fongo is experimental. MapReduce execution is working
          // but SpringData cannot convert Fongo Rhino result into Java object
          // ("No converter found capable of converting from type org.mozilla.javascript.UniqueTag to type java.lang.Integer")
-      } catch (UncategorizedMongoDbException ume){
+      } catch (UncategorizedMongoDbException ume) {
          // For now, mapReduce in Fongo is experimental. MapReduce execution is not working
          // ("org.mozilla.javascript.EcmaError: TypeError: Cannot read property "0" from undefined")
-      } catch (RuntimeException re){
+      } catch (RuntimeException re) {
          // For now, mapReduce in Fongo is experimental. MapReduce execution is working
          // but SpringData cannot convert Fongo Rhino result into Java object
          // ("json can't serialize type : class org.mozilla.javascript.UniqueTag")
       }
    }
 
-   private Map<String, Integer> initializeHourlyMap(){
+   private Map<String, Integer> initializeHourlyMap() {
       Map<String, Integer> result = new HashMap<String, Integer>(24);
-      for (int i=0; i<24; i++){
+      for (int i = 0; i < 24; i++) {
          result.put(String.valueOf(i), 0);
       }
       return result;

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 /**
  * This is a test case for OpenAPISchemaValidator utility.
  * @author laurent
@@ -40,8 +41,8 @@ public class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -60,8 +61,8 @@ public class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -80,8 +81,8 @@ public class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -106,8 +107,7 @@ public class OpenAPISchemaValidatorTest {
    public void testValidateJsonUnknownNodeFailure() {
       boolean valid = true;
       String schemaText = null;
-      String jsonText = "{\"name\": \"307\", " +
-            "\"model\": \"Peugeot 307\", \"year\": 2003, \"energy\": \"GO\"}";
+      String jsonText = "{\"name\": \"307\", " + "\"model\": \"Peugeot 307\", \"year\": 2003, \"energy\": \"GO\"}";
 
       try {
          // Load schema from file.
@@ -130,21 +130,20 @@ public class OpenAPISchemaValidatorTest {
          fail("Exception should not be thrown");
       }
       assertEquals(1, errors.size());
-      assertEquals("object instance has properties which are not allowed by the schema: [\"energy\"]",
-            errors.get(0));
+      assertEquals("object instance has properties which are not allowed by the schema: [\"energy\"]", errors.get(0));
    }
 
    @Test
    public void testValidateJsonSchemaWithReferenceSuccess() {
       boolean valid = true;
       String schemaText = null;
-      String jsonText = "[{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}," +
-            "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveler\", \"year\": 2017}]";
+      String jsonText = "[{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003},"
+            + "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveler\", \"year\": 2017}]";
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"));
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -160,8 +159,8 @@ public class OpenAPISchemaValidatorTest {
    public void testValidateJsonWithExternalReferenceSuccess() {
       boolean valid = false;
       String schemaText = null;
-      String jsonText = "[{\"region\": \"north\", \"weather\": \"snowy\", \"temp\": -1.5, \"visibility\": 25}, " +
-            "{\"region\": \"west\", \"weather\": \"rainy\", \"temp\": 12.2, \"visibility\": 300}]";
+      String jsonText = "[{\"region\": \"north\", \"weather\": \"snowy\", \"temp\": -1.5, \"visibility\": 25}, "
+            + "{\"region\": \"west\", \"weather\": \"rainy\", \"temp\": 12.2, \"visibility\": 300}]";
 
       try {
          // Load schema from file.
@@ -182,13 +181,13 @@ public class OpenAPISchemaValidatorTest {
    public void testValidateJsonSchemaWithReferenceFailure() {
       boolean valid = true;
       String schemaText = null;
-      String jsonText = "[{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}," +
-            "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveler\", \"year\": \"2017\"}]";
+      String jsonText = "[{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003},"
+            + "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveler\", \"year\": \"2017\"}]";
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"));
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -208,8 +207,7 @@ public class OpenAPISchemaValidatorTest {
       // Don't know why but when a failure occurs, validator also complains
       // about components reference not being found.
       assertEquals(2, errors.size());
-      assertEquals("the following keywords are unknown and will be ignored: [components]",
-            errors.get(0));
+      assertEquals("the following keywords are unknown and will be ignored: [components]", errors.get(0));
       assertEquals("instance type (string) does not match any allowed primitive type (allowed: [\"integer\"])",
             errors.get(1));
    }
@@ -217,16 +215,14 @@ public class OpenAPISchemaValidatorTest {
    @Test
    public void testFullProcedureFromOpenAPIResource() {
       String openAPIText = null;
-      String jsonText = "[\n" +
-            "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n" +
-            "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" +
-            "]";
+      String jsonText = "[\n" + "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n"
+            + "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" + "]";
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
+         openAPIText = FileUtils.readFileToString(
                new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
@@ -259,18 +255,14 @@ public class OpenAPISchemaValidatorTest {
    @Test
    public void testFullProcedureFromOpenAPIResourceWithRef() {
       String openAPIText = null;
-      String jsonText = "{\n" +
-            "  \"region\": \"north\",\n" +
-            "  \"temp\": -1.5,\n" +
-            "  \"weather\": \"snowy\",\n" +
-            "  \"visibility\": 25\n" +
-            "}";
+      String jsonText = "{\n" + "  \"region\": \"north\",\n" + "  \"temp\": -1.5,\n" + "  \"weather\": \"snowy\",\n"
+            + "  \"visibility\": 25\n" + "}";
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
+         openAPIText = FileUtils.readFileToString(
                new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-local-ref.yaml"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
@@ -287,8 +279,8 @@ public class OpenAPISchemaValidatorTest {
       // Now try with an external absolute ref.
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml"));
+         openAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -304,8 +296,8 @@ public class OpenAPISchemaValidatorTest {
       // Now try with an external relative ref.
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
+         openAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -332,14 +324,14 @@ public class OpenAPISchemaValidatorTest {
       // Now test with a $ref at the items level of an array.
       // We cannot use relative notation here (eg. ./schema.json) but should use direct notation like schema.json
       // Check the com.github.fge.jsonschema.core.keyword.syntax.checkers.helpers.URISyntaxChercker class.
-      jsonText = "[{\"region\": \"north\", \"weather\": \"snowy\", \"temp\": -1.5, \"visibility\": 25}, " +
-            "{\"region\": \"west\", \"weather\": \"rainy\", \"temp\": 12.2, \"visibility\": 300}]";
+      jsonText = "[{\"region\": \"north\", \"weather\": \"snowy\", \"temp\": -1.5, \"visibility\": 25}, "
+            + "{\"region\": \"west\", \"weather\": \"rainy\", \"temp\": 12.2, \"visibility\": 300}]";
 
       // Now try with an external relative ref.
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
+         openAPIText = FileUtils.readFileToString(new File(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -358,16 +350,14 @@ public class OpenAPISchemaValidatorTest {
    @Test
    public void testFullProcedureFromOpenAPIResourceFailure() {
       String openAPIText = null;
-      String jsonText = "[\n" +
-            "  { \"resource\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\", \"id\": \"01\" },\n" +
-            "  { \"resource\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\", \"id\": \"01\" }\n" +
-            "]";
+      String jsonText = "[\n" + "  { \"resource\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\", \"id\": \"01\" },\n"
+            + "  { \"resource\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\", \"id\": \"01\" }\n" + "]";
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
+         openAPIText = FileUtils.readFileToString(
                new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
@@ -401,24 +391,18 @@ public class OpenAPISchemaValidatorTest {
    @Test
    public void testFullProcedureFromOpenAPIResourceWithStructures() {
       String openAPIText = null;
-      String jsonText = "{\n" +
-            "          \"id\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\",\n" +
-            "          \"realm_id\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\",\n" +
-            "          \"slug\": \"gore\",\n" +
-            "          \"tagline\": \"Blood! Blood! Blood!\",\n" +
-            "          \"avatar_url\": \"/gore.png\",\n" +
-            "          \"accent_color\": \"#f96680\",\n" +
-            "          \"delisted\": false,\n" +
-            "          \"logged_in_only\": false,\n" +
-            "          \"descriptions\": []\n" +
-            "        }";
+      String jsonText = "{\n" + "          \"id\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\",\n"
+            + "          \"realm_id\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\",\n" + "          \"slug\": \"gore\",\n"
+            + "          \"tagline\": \"Blood! Blood! Blood!\",\n" + "          \"avatar_url\": \"/gore.png\",\n"
+            + "          \"accent_color\": \"#f96680\",\n" + "          \"delisted\": false,\n"
+            + "          \"logged_in_only\": false,\n" + "          \"descriptions\": []\n" + "        }";
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/boba-openapi.json"));
+         openAPIText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/boba-openapi.json"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -434,49 +418,49 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testNullableFieldInComponentRef(){
-     String openAPIText = null;
-     String jsonText = """
-        [
-          {
-           "name": "Brian May",
-           "birthDate": "1947-07-19T00:00:00.0Z",
-           "deathDate": null
-          },
-          {
-           "name": "Roger Taylor",
-           "birthDate": "1949-07-26T00:00:00.0Z",
-           "deathDate": null
-          },
-          {
-           "name": "John Deacon",
-           "birthDate": "1951-08-19T00:00:00.0Z",
-           "deathDate": null
-          },
-          {
-            "name": "Freddy Mercury",
-            "birthDate": "1946-09-15T00:00:00.0Z",
-            "deathDate": "1946-11-24T00:00:00.0Z"
-          }
-        ]
-       """;
-     JsonNode openAPISpec = null;
-     JsonNode contentNode = null;
+   public void testNullableFieldInComponentRef() {
+      String openAPIText = null;
+      String jsonText = """
+             [
+               {
+                "name": "Brian May",
+                "birthDate": "1947-07-19T00:00:00.0Z",
+                "deathDate": null
+               },
+               {
+                "name": "Roger Taylor",
+                "birthDate": "1949-07-26T00:00:00.0Z",
+                "deathDate": null
+               },
+               {
+                "name": "John Deacon",
+                "birthDate": "1951-08-19T00:00:00.0Z",
+                "deathDate": null
+               },
+               {
+                 "name": "Freddy Mercury",
+                 "birthDate": "1946-09-15T00:00:00.0Z",
+                 "deathDate": "1946-11-24T00:00:00.0Z"
+               }
+             ]
+            """;
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
 
-     try {
-       // Load full specification from file.
-       openAPIText =  FileUtils.readFileToString(
-         new File("target/test-classes/io/github/microcks/util/openapi/nullable-fields-openapi.yaml"));
-       // Extract JSON nodes using OpenAPISchemaValidator methods.
-       openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
-       contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
-     } catch (Exception e) {
-       fail("Exception should not be thrown");
-     }
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/nullable-fields-openapi.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
 
-     // Validate the content for Get /accounts response message.
-     List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
-       "/paths/~1queen~1members/get/responses/200", "application/json");
-     assertTrue(errors.isEmpty());
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1queen~1members/get/responses/200", "application/json");
+      assertTrue(errors.isEmpty());
    }
 }

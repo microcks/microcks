@@ -40,8 +40,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Google Cloud PubSub.
- * Endpoint URL should be specified using the following form: <code>googlepubsub://{projectId}/{topic}[?option1=value1&amp;option2=value2]</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Google Cloud PubSub. Endpoint URL
+ * should be specified using the following form:
+ * <code>googlepubsub://{projectId}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTask {
@@ -107,9 +108,10 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       };
 
       // Create a new subscriber for subscription.
-      subscriber = Subscriber.newBuilder(ProjectSubscriptionName.of(subscriptionName.getProject(), subscriptionName.getSubscription()), receiver)
-            .setCredentialsProvider(credentialsProvider)
-            .build();
+      subscriber = Subscriber
+            .newBuilder(ProjectSubscriptionName.of(subscriptionName.getProject(), subscriptionName.getSubscription()),
+                  receiver)
+            .setCredentialsProvider(credentialsProvider).build();
       subscriber.startAsync().awaitRunning();
 
       // Wait and stop async receiver.
@@ -145,7 +147,8 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       if (specification.getSecret() != null && specification.getSecret().getToken() != null) {
          byte[] decode = Base64.getDecoder().decode(specification.getSecret().getToken());
          ByteArrayInputStream is = new ByteArrayInputStream(decode);
-         credentialsProvider = FixedCredentialsProvider.create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
+         credentialsProvider = FixedCredentialsProvider
+               .create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
       } else {
          credentialsProvider = NoCredentialsProvider.create();
       }
@@ -165,17 +168,12 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
 
          // Customize subscription to avoid retention and let google auto-cleanup it.
          // Put the durations to the minimum values accepted by Google cloud.
-         Subscription subscriptionRequest =  Subscription.newBuilder()
-               .setName(subscriptionName.toString())
-               .setTopic(topicName.toString())
-               .setPushConfig(PushConfig.getDefaultInstance())
-               .setAckDeadlineSeconds(10)
-               .setRetainAckedMessages(false)
-               .setMessageRetentionDuration(Duration.newBuilder().setSeconds(600).build())
-               .setExpirationPolicy(ExpirationPolicy.newBuilder().setTtl(Duration.newBuilder().setSeconds(24 * 3600L)).build())
-               .setEnableMessageOrdering(false)
-               .setEnableExactlyOnceDelivery(false)
-               .build();
+         Subscription subscriptionRequest = Subscription.newBuilder().setName(subscriptionName.toString())
+               .setTopic(topicName.toString()).setPushConfig(PushConfig.getDefaultInstance()).setAckDeadlineSeconds(10)
+               .setRetainAckedMessages(false).setMessageRetentionDuration(Duration.newBuilder().setSeconds(600).build())
+               .setExpirationPolicy(
+                     ExpirationPolicy.newBuilder().setTtl(Duration.newBuilder().setSeconds(24 * 3600L)).build())
+               .setEnableMessageOrdering(false).setEnableExactlyOnceDelivery(false).build();
          subscriptionAdminClient.createSubscription(subscriptionRequest);
       } finally {
          subscriptionAdminClient.close();

@@ -37,16 +37,17 @@ public class GrpcUtil {
    }
 
    /**
-    * Find a Protobuf method descriptor using a base64 encoded representation of the proto descriptor + service and method name.
+    * Find a Protobuf method descriptor using a base64 encoded representation of the proto descriptor + service and
+    * method name.
     * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
-    * @param serviceName The name of the service to get method for.
-    * @param methodName The name of the method.
+    * @param serviceName              The name of the service to get method for.
+    * @param methodName               The name of the method.
     * @return A Protobuf MethodDescriptor
-    * @throws InvalidProtocolBufferException If representation is not understood as protobuf descriptor.
+    * @throws InvalidProtocolBufferException            If representation is not understood as protobuf descriptor.
     * @throws Descriptors.DescriptorValidationException If included FileDescriptor cannot be validated.
     */
-   public static Descriptors.MethodDescriptor findMethodDescriptor(String base64ProtobufDescriptor, String serviceName, String methodName)
-         throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
+   public static Descriptors.MethodDescriptor findMethodDescriptor(String base64ProtobufDescriptor, String serviceName,
+         String methodName) throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
 
       // Now we may have serviceName as being the FQDN. We have to find short version to later findServiceByName().
       String shortServiceName = serviceName;
@@ -64,9 +65,10 @@ public class GrpcUtil {
    /**
     * Find a Protobuf file descriptor using a base64 encoded representation of the proto descriptor + symbol name.
     * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
-    * @param symbol The name of a symbol to get descriptor for (can be a service, a message type or an extension).
+    * @param symbol                   The name of a symbol to get descriptor for (can be a service, a message type or an
+    *                                 extension).
     * @return A Protobuf FileDescriptor
-    * @throws InvalidProtocolBufferException If representation is not understood as protobuf descriptor.
+    * @throws InvalidProtocolBufferException            If representation is not understood as protobuf descriptor.
     * @throws Descriptors.DescriptorValidationException If included FileDescriptor cannot be validated.
     */
    public static Descriptors.FileDescriptor findFileDescriptorBySymbol(String base64ProtobufDescriptor, String symbol)
@@ -80,7 +82,7 @@ public class GrpcUtil {
       if (fds.getFileCount() > 1) {
          // Build dependencies.
          List<Descriptors.FileDescriptor> dependencies = new ArrayList<>();
-         for (int i=0; i<fds.getFileCount(); i++) {
+         for (int i = 0; i < fds.getFileCount(); i++) {
             // Build descriptor and add to dependencies.
             Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(i),
                   dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
@@ -93,7 +95,7 @@ public class GrpcUtil {
             }
          }
       }
-      return Descriptors.FileDescriptor.buildFrom(fds.getFile(0), new Descriptors.FileDescriptor[]{}, true);
+      return Descriptors.FileDescriptor.buildFrom(fds.getFile(0), new Descriptors.FileDescriptor[] {}, true);
    }
 
    /**
@@ -103,8 +105,6 @@ public class GrpcUtil {
     */
    public static MethodDescriptor<byte[], byte[]> buildGenericUnaryMethodDescriptor(String fullMethodName) {
       return MethodDescriptor.newBuilder(BinaryLogProvider.BYTEARRAY_MARSHALLER, BinaryLogProvider.BYTEARRAY_MARSHALLER)
-            .setType(MethodDescriptor.MethodType.UNARY)
-            .setFullMethodName(fullMethodName)
-            .build();
+            .setType(MethodDescriptor.MethodType.UNARY).setFullMethodName(fullMethodName).build();
    }
 }

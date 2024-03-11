@@ -20,8 +20,8 @@ import io.github.microcks.util.el.EvaluationContext;
 import java.util.Random;
 
 /**
- * This is an implementation of ELFunction that generates random Alphanumeric string.
- * You may specify string length as first argument. Default length is 32.
+ * This is an implementation of ELFunction that generates random Alphanumeric string. You may specify string length as
+ * first argument. Default length is 32.
  * @author laurent
  */
 public class RandomStringELFunction extends AbstractRandomELFunction {
@@ -47,10 +47,8 @@ public class RandomStringELFunction extends AbstractRandomELFunction {
 
    private String generateString(Random random, int length) {
       // See https://www.baeldung.com/java-random-string for reference.
-      return random.ints(LEFT_LIMIT, RIGHT_LIMIT + 1)
-            .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
-            .limit(length)
-            .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+      return random.ints(LEFT_LIMIT, RIGHT_LIMIT + 1).filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+            .limit(length).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
             .toString();
    }
 }

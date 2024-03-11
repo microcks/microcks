@@ -62,10 +62,8 @@ public class DocumentationController {
    }
 
    @GetMapping(value = "/documentation/{name}/{resourceType}")
-   public ResponseEntity<byte[]> execute(
-         @PathVariable("name") String name,
-         @PathVariable("resourceType") String resourceType)
-   {
+   public ResponseEntity<byte[]> execute(@PathVariable("name") String name,
+         @PathVariable("resourceType") String resourceType) {
       log.info("Requesting {} documentation for resource {}", resourceType, name);
 
       // Prepare HttpHeaders.
@@ -74,10 +72,11 @@ public class DocumentationController {
       org.springframework.core.io.Resource template = null;
 
       // Get the correct template depending on resource type.
-      if (ResourceType.OPEN_API_SPEC.toString().equals(resourceType) || ResourceType.SWAGGER.toString().equals(resourceType)) {
+      if (ResourceType.OPEN_API_SPEC.toString().equals(resourceType)
+            || ResourceType.SWAGGER.toString().equals(resourceType)) {
          template = new ClassPathResource("templates/redoc.html");
          headers.setContentType(MediaType.TEXT_HTML);
-      }  else if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
+      } else if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
 
          Resource resource = resourceRepository.findByName(name);
          if (resource.getContent().contains("asyncapi: 3") || resource.getContent().contains("\"asyncapi\": \"3")

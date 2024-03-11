@@ -69,8 +69,8 @@ public class AsyncMockDefinition {
       if (o == null || getClass() != o.getClass())
          return false;
       AsyncMockDefinition that = (AsyncMockDefinition) o;
-      return ownerService.getId().equals(that.ownerService.getId()) &&
-            operation.getName().equals(that.operation.getName());
+      return ownerService.getId().equals(that.ownerService.getId())
+            && operation.getName().equals(that.operation.getName());
    }
 
    @Override

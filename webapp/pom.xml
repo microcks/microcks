@@ -12,6 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <multi-project.rootdir>..</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
     <java.version>17</java.version>
@@ -508,7 +509,8 @@
             <version>${spring-boot.version}</version>
             <configuration>
               <environmentVariables>
-                <JAVA_TOOL_OPTIONS>-javaagent:${user.home}/.m2/repository/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar</JAVA_TOOL_OPTIONS>
+                <!-- <JAVA_TOOL_OPTIONS>-javaagent:${user.home}/.m2/repository/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar</JAVA_TOOL_OPTIONS> -->
+                <JAVA_TOOL_OPTIONS>-javaagent:${user.home}/Development/repository/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar</JAVA_TOOL_OPTIONS>
                 <OTEL_JAVAAGENT_ENABLED>true</OTEL_JAVAAGENT_ENABLED>
                 <OTEL_METRICS_EXPORTER>otlp</OTEL_METRICS_EXPORTER>
                 <OTEL_LOGS_EXPORTER>otlp</OTEL_LOGS_EXPORTER>

@@ -36,22 +36,22 @@ import java.util.Vector;
 
 public class DynamicCorsFilterTest {
 
-  HttpServletRequest request;
-  HttpServletResponse response;
-  FilterChain chain;
+   HttpServletRequest request;
+   HttpServletResponse response;
+   FilterChain chain;
 
-  @BeforeEach
-  void setUp() {
-    // mock HttpServletRequest, HttpServletResponse, and FilterChain
-    request = mock(HttpServletRequest.class);
-    response = mock(HttpServletResponse.class);
-    chain = mock(FilterChain.class);
-  }
+   @BeforeEach
+   void setUp() {
+      // mock HttpServletRequest, HttpServletResponse, and FilterChain
+      request = mock(HttpServletRequest.class);
+      response = mock(HttpServletResponse.class);
+      chain = mock(FilterChain.class);
+   }
 
-  @Nested
-  class WithAllowCredentials {
+   @Nested
+   class WithAllowCredentials {
 
-    private final DynamicCorsFilter filter = new DynamicCorsFilter("http://allowed-origin.com", true);
+      private final DynamicCorsFilter filter = new DynamicCorsFilter("http://allowed-origin.com", true);
 
     @Test
     void shouldSetAllowCredentialsHeader() throws IOException, ServletException {
@@ -67,53 +67,53 @@ public class DynamicCorsFilterTest {
       verify(response).setHeader("Access-Control-Allow-Origin", "http://example.com");
     }
 
-    @Test
-    void shouldSetAccessControlAllowHeaders() throws IOException, ServletException {
-      Vector<String> headerNames = new Vector<>();
-      headerNames.add("Content-Type");
-      headerNames.add("Authorization");
-      Enumeration<String> headerNamesEnum = headerNames.elements();
-      when(request.getHeaderNames()).thenReturn(headerNamesEnum);
+      @Test
+      void shouldSetAccessControlAllowHeaders() throws IOException, ServletException {
+         Vector<String> headerNames = new Vector<>();
+         headerNames.add("Content-Type");
+         headerNames.add("Authorization");
+         Enumeration<String> headerNamesEnum = headerNames.elements();
+         when(request.getHeaderNames()).thenReturn(headerNamesEnum);
 
-      filter.doFilter(request, response, chain);
-      ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-      verify(response).setHeader(eq("Access-Control-Allow-Headers"), captor.capture());
-      String value = captor.getValue();
-      assert value.contains("Content-Type");
-      assert value.contains("Authorization");
-    }
+         filter.doFilter(request, response, chain);
+         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+         verify(response).setHeader(eq("Access-Control-Allow-Headers"), captor.capture());
+         String value = captor.getValue();
+         assert value.contains("Content-Type");
+         assert value.contains("Authorization");
+      }
 
-    @Test
-    void shouldAddRequestHeadersToAccessControlAllowHeaders() throws IOException, ServletException {
-      Vector<String> headerNames = new Vector<>();
-      headerNames.add("Content-Type");
-      headerNames.add("Authorization");
-      headerNames.add("X-Custom-Header");
-      headerNames.add("Access-Control-Request-Headers");
-      Enumeration<String> headerNamesEnum = headerNames.elements();
-      when(request.getHeaderNames()).thenReturn(headerNamesEnum);
+      @Test
+      void shouldAddRequestHeadersToAccessControlAllowHeaders() throws IOException, ServletException {
+         Vector<String> headerNames = new Vector<>();
+         headerNames.add("Content-Type");
+         headerNames.add("Authorization");
+         headerNames.add("X-Custom-Header");
+         headerNames.add("Access-Control-Request-Headers");
+         Enumeration<String> headerNamesEnum = headerNames.elements();
+         when(request.getHeaderNames()).thenReturn(headerNamesEnum);
 
-      when(request.getHeader("Access-Control-Request-Headers")).thenReturn("X-Custom-Header-1, X-Custom-Header-2");
+         when(request.getHeader("Access-Control-Request-Headers")).thenReturn("X-Custom-Header-1, X-Custom-Header-2");
 
-      filter.doFilter(request, response, chain);
+         filter.doFilter(request, response, chain);
 
-      ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+         ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
 
-      verify(response).setHeader(eq("Access-Control-Allow-Headers"), captor.capture());
-      String value = captor.getValue();
-      assert value.contains("Content-Type");
-      assert value.contains("Authorization");
-      assert value.contains("X-Custom-Header");
-      assert value.contains("X-Custom-Header-1");
-      assert value.contains("X-Custom-Header-2");
-      assert value.contains("Access-Control-Request-Headers");
-    }
-  }
+         verify(response).setHeader(eq("Access-Control-Allow-Headers"), captor.capture());
+         String value = captor.getValue();
+         assert value.contains("Content-Type");
+         assert value.contains("Authorization");
+         assert value.contains("X-Custom-Header");
+         assert value.contains("X-Custom-Header-1");
+         assert value.contains("X-Custom-Header-2");
+         assert value.contains("Access-Control-Request-Headers");
+      }
+   }
 
-  @Nested
-  class WithoutAllowCredentials {
+   @Nested
+   class WithoutAllowCredentials {
 
-    private final DynamicCorsFilter filter = new DynamicCorsFilter("http://allowed-origin.com", false);
+      private final DynamicCorsFilter filter = new DynamicCorsFilter("http://allowed-origin.com", false);
 
     @Test
     void shouldNotSetAllowCredentialsHeader() throws IOException, ServletException {
@@ -121,5 +121,5 @@ public class DynamicCorsFilterTest {
       filter.doFilter(request, response, chain);
       verify(response, never()).setHeader(eq("Access-Control-Allow-Credentials"), anyString());
     }
-  }
+   }
 }

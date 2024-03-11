@@ -43,11 +43,9 @@ public class GrpcServerCallHandlerIT extends AbstractBaseIT {
 
       try {
          grpcurl.start();
-         Container.ExecResult result = grpcurl.execInContainer(
-               "/bin/grpcurl", "-plaintext", "-d", """
-                     {"firstname": "Laurent", "lastname": "Broudoux"}
-                     """,
-               "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
+         Container.ExecResult result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext", "-d", """
+               {"firstname": "Laurent", "lastname": "Broudoux"}
+               """, "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
 
          assertTrue(result.getStdout().contains("\"greeting\": \"Hello Laurent Broudoux !\""));
       } catch (Exception e) {
@@ -69,17 +67,17 @@ public class GrpcServerCallHandlerIT extends AbstractBaseIT {
 
       try {
          grpcurl.start();
-         Container.ExecResult result = grpcurl.execInContainer(
-               "/bin/grpcurl", "-plaintext", "host.testcontainers.internal:9090", "list");
+         Container.ExecResult result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext",
+               "host.testcontainers.internal:9090", "list");
 
          assertTrue(result.getStdout().contains("io.github.microcks.grpc.hello.v1.HelloService"));
 
-         result = grpcurl.execInContainer(
-               "/bin/grpcurl", "-plaintext", "host.testcontainers.internal:9090",
-               "describe", "io.github.microcks.grpc.hello.v1.HelloService.greeting");
+         result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext", "host.testcontainers.internal:9090", "describe",
+               "io.github.microcks.grpc.hello.v1.HelloService.greeting");
 
          assertTrue(result.getStdout().contains("io.github.microcks.grpc.hello.v1.HelloService.greeting is a method:"));
-         assertTrue(result.getStdout().contains("rpc greeting ( .io.github.microcks.grpc.hello.v1.HelloRequest ) returns ( .io.github.microcks.grpc.hello.v1.HelloResponse );"));
+         assertTrue(result.getStdout().contains(
+               "rpc greeting ( .io.github.microcks.grpc.hello.v1.HelloRequest ) returns ( .io.github.microcks.grpc.hello.v1.HelloResponse );"));
       } catch (Exception e) {
          fail("No exception should be thrown");
       } finally {

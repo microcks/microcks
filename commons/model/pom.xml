@@ -29,6 +29,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <multi-project.rootdir>../..</multi-project.rootdir>
     <java.version>17</java.version>
   </properties>
 

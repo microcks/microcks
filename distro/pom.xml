@@ -11,6 +11,10 @@
   <artifactId>microcks-distro</artifactId>
   <packaging>pom</packaging>
 
+  <properties>
+    <multi-project.rootdir>..</multi-project.rootdir>
+  </properties>
+
   <modules>
     <module>uber</module>
     <module>uber-async-minion</module>

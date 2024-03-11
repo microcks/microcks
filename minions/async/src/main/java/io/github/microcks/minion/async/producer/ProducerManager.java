@@ -44,8 +44,8 @@ import java.util.Set;
 @Unremovable
 @ApplicationScoped
 /**
- * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached. 
- * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere 
+ * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached.
+ * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere
  * (this one is resolved using Arc.container().instance() method from ProducerScheduler).
  * @author laurent
  */
@@ -76,9 +76,11 @@ public class ProducerManager {
    @ConfigProperty(name = "minion.default-avro-encoding", defaultValue = "RAW")
    String defaultAvroEncoding;
 
-   public ProducerManager(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry, KafkaProducerManager kafkaProducerManager,
-                          MQTTProducerManager mqttProducerManager, NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
-                          GooglePubSubProducerManager googlePubSubProducerManager, AmazonSQSProducerManager amazonSQSProducerManager, AmazonSNSProducerManager amazonSNSProducerManager) {
+   public ProducerManager(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry,
+         KafkaProducerManager kafkaProducerManager, MQTTProducerManager mqttProducerManager,
+         NATSProducerManager natsProducerManager, AMQPProducerManager amqpProducerManager,
+         GooglePubSubProducerManager googlePubSubProducerManager, AmazonSQSProducerManager amazonSQSProducerManager,
+         AmazonSNSProducerManager amazonSNSProducerManager) {
       this.mockRepository = mockRepository;
       this.schemaRegistry = schemaRegistry;
       this.kafkaProducerManager = kafkaProducerManager;
@@ -99,7 +101,8 @@ public class ProducerManager {
 
       Set<AsyncMockDefinition> mockDefinitions = mockRepository.getMockDefinitionsByFrequency(frequency);
       for (AsyncMockDefinition definition : mockDefinitions) {
-         logger.debugf("Processing definition of service {%s}", definition.getOwnerService().getName() + ':' + definition.getOwnerService().getVersion());
+         logger.debugf("Processing definition of service {%s}",
+               definition.getOwnerService().getName() + ':' + definition.getOwnerService().getVersion());
 
          for (String binding : definition.getOperation().getBindings().keySet()) {
             // Ensure this minion supports this binding.
@@ -133,7 +136,7 @@ public class ProducerManager {
                      break;
                   default:
                      break;
-                }
+               }
             }
          }
       }
@@ -149,26 +152,30 @@ public class ProducerManager {
          // Check it Avro binary is expected, we should convert to bytes.
          if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
             // Build the name of expected schema.
-            List<SchemaRegistry.SchemaEntry> entries = schemaRegistry.getSchemaEntries(definition.getOwnerService()).stream()
-                  .filter(entry -> entry.getOperations() != null
+            List<SchemaRegistry.SchemaEntry> entries = schemaRegistry.getSchemaEntries(definition.getOwnerService())
+                  .stream().filter(entry -> entry.getOperations() != null
                         && entry.getOperations().contains(definition.getOperation().getName()))
                   .toList();
 
             if (!entries.isEmpty()) {
-               logger.debugf("Found an Avro schema '%s' for operation '%s'", entries.get(0).getName(), definition.getOperation().getName());
+               logger.debugf("Found an Avro schema '%s' for operation '%s'", entries.get(0).getName(),
+                     definition.getOperation().getName());
                String schemaContent = entries.get(0).getContent();
 
                try {
-                  if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding) && kafkaProducerManager.isRegistryEnabled()) {
+                  if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding)
+                        && kafkaProducerManager.isRegistryEnabled()) {
                      logger.debug("Using a registry and converting message to Avro record");
                      GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
-                     kafkaProducerManager.publishMessage(topic, key, avroRecord, kafkaProducerManager
-                           .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     kafkaProducerManager.publishMessage(topic, key, avroRecord,
+                           kafkaProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
+                                 eventMessage.getHeaders()));
                   } else {
                      logger.debug("Converting message to Avro bytes array");
                      byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
-                     kafkaProducerManager.publishMessage(topic, key, avroBinary, kafkaProducerManager
-                           .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+                     kafkaProducerManager.publishMessage(topic, key, avroBinary,
+                           kafkaProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
+                                 eventMessage.getHeaders()));
                   }
                } catch (Exception e) {
                   logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
@@ -217,9 +224,9 @@ public class ProducerManager {
       for (EventMessage eventMessage : definition.getEventMessages()) {
          String destinationName = amqpProducerManager.getDestinationName(definition, eventMessage);
          String message = renderEventMessageContent(eventMessage);
-         amqpProducerManager.publishMessage(bindingDef.getDestinationType(),
-               destinationName, message,
-               amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         amqpProducerManager.publishMessage(bindingDef.getDestinationType(), destinationName, message,
+               amqpProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
+                     eventMessage.getHeaders()));
       }
    }
 
@@ -228,8 +235,8 @@ public class ProducerManager {
       for (EventMessage eventMessage : definition.getEventMessages()) {
          String topicName = googlePubSubProducerManager.getTopicName(definition, eventMessage);
          String message = renderEventMessageContent(eventMessage);
-         googlePubSubProducerManager.publishMessage(topicName, message,
-               googlePubSubProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         googlePubSubProducerManager.publishMessage(topicName, message, googlePubSubProducerManager
+               .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
       }
    }
 
@@ -238,8 +245,8 @@ public class ProducerManager {
       for (EventMessage eventMessage : definition.getEventMessages()) {
          String queueName = amazonSQSProducerManager.getQueueName(definition, eventMessage);
          String message = renderEventMessageContent(eventMessage);
-         amazonSQSProducerManager.publishMessage(queueName, message,
-               amazonSQSProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         amazonSQSProducerManager.publishMessage(queueName, message, amazonSQSProducerManager
+               .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
       }
    }
 
@@ -248,15 +255,15 @@ public class ProducerManager {
       for (EventMessage eventMessage : definition.getEventMessages()) {
          String topicName = amazonSNSProducerManager.getTopicName(definition, eventMessage);
          String message = renderEventMessageContent(eventMessage);
-         amazonSNSProducerManager.publishMessage(topicName, message,
-               amazonSNSProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
+         amazonSNSProducerManager.publishMessage(topicName, message, amazonSNSProducerManager
+               .renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(), eventMessage.getHeaders()));
       }
    }
 
    /**
-    * Format the destination operation part by computing an address with optional dynamic parts.
-    * This doesn't include protocol specific sanitization (like replacing `/` with `-`, etc.)
-    * @param operation The operation to format a destination part for
+    * Format the destination operation part by computing an address with optional dynamic parts. This doesn't include
+    * protocol specific sanitization (like replacing `/` with `-`, etc.)
+    * @param operation    The operation to format a destination part for
     * @param eventMessage The message to format a destination part for
     * @return The operation part in a full destination name (usually service + version + operation)
     */

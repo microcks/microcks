@@ -36,9 +36,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 /**
- * Factory for building/retrieving mock repository importer implementations. For now, it implements
- * a very simple algorithm : if repository is a JSON file (guess on first lines content), it assume repository it
- * implemented as a Postman collection and then uses PostmanCollectionImporter; otherwise it uses SoapUIProjectImporter.
+ * Factory for building/retrieving mock repository importer implementations. For now, it implements a very simple
+ * algorithm : if repository is a JSON file (guess on first lines content), it assume repository it implemented as a
+ * Postman collection and then uses PostmanCollectionImporter; otherwise it uses SoapUIProjectImporter.
  * @author laurent
  */
 public class MockRepositoryImporterFactory {
@@ -64,13 +64,13 @@ public class MockRepositoryImporterFactory {
 
    /**
     * Create the right MockRepositoryImporter implementation depending on repository type.
-    * @param mockRepository The file representing the repository type
+    * @param mockRepository    The file representing the repository type
     * @param referenceResolver The Resolver to be used during import (may be null).
     * @return An instance of MockRepositoryImporter implementation
     * @throws IOException in case of file access
     */
-   public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository, ReferenceResolver referenceResolver)
-         throws IOException {
+   public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository,
+         ReferenceResolver referenceResolver) throws IOException {
       MockRepositoryImporter importer = null;
 
       // Analyse first lines of file content to guess repository type.
@@ -111,7 +111,8 @@ public class MockRepositoryImporterFactory {
       return null;
    }
 
-   private static MockRepositoryImporter checkOpenAPIImporters(String line, File mockRepository, ReferenceResolver referenceResolver) throws IOException {
+   private static MockRepositoryImporter checkOpenAPIImporters(String line, File mockRepository,
+         ReferenceResolver referenceResolver) throws IOException {
       if (line.matches(OPENAPI_3_REGEXP)) {
          log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
          return new OpenAPIImporter(mockRepository.getPath(), referenceResolver);
@@ -122,7 +123,8 @@ public class MockRepositoryImporterFactory {
       return null;
    }
 
-   private static MockRepositoryImporter checkOtherImporters(String line, File mockRepository, ReferenceResolver referenceResolver) throws IOException {
+   private static MockRepositoryImporter checkOtherImporters(String line, File mockRepository,
+         ReferenceResolver referenceResolver) throws IOException {
       if (line.startsWith("<?xml")) {
          log.info("Found a XML pragma in file so assuming it's a SoapUI Project to import");
          return new SoapUIProjectImporter(mockRepository.getPath());

@@ -30,7 +30,10 @@ public abstract class WildcardMatchingAssertion implements SoapUIAssertion {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(WildcardMatchingAssertion.class);
 
-   /** Allow wildcards configuration parameter. Value is expected to be parsed as boolean: "true" or "false". Default is false. */
+   /**
+    * Allow wildcards configuration parameter. Value is expected to be parsed as boolean: "true" or "false". Default is
+    * false.
+    */
    public static final String ALLOW_WILDCARDS = "allowWildcards";
 
    protected boolean allowWildcards = false;
@@ -45,7 +48,7 @@ public abstract class WildcardMatchingAssertion implements SoapUIAssertion {
    /**
     * Managed wildcards specified in expected content to check if real content is similar.
     * @param expectedContent Expected content with wildcards
-    * @param realContent Real content to match
+    * @param realContent     Real content to match
     * @return true if matching, false otherwise
     */
    protected boolean isSimilar(String expectedContent, String realContent) {
@@ -56,7 +59,7 @@ public abstract class WildcardMatchingAssertion implements SoapUIAssertion {
       }
       String[] tokens = expectedContent.split(Pattern.quote("*"));
       boolean first = true;
-      for (int i=0; i<tokens.length; ++i) {
+      for (int i = 0; i < tokens.length; ++i) {
          String token = tokens[i];
          if (!token.isEmpty()) {
             if (!first) {

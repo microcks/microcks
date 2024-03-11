@@ -68,6 +68,7 @@ public class VersionInfoController {
       public String getVersionId() {
          return versionId;
       }
+
       public String getBuildTimestamp() {
          return buildTimestamp;
       }

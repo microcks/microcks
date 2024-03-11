@@ -23,15 +23,14 @@ import io.github.microcks.domain.Operation;
 import java.util.List;
 
 /**
- * Interface definition for loading Microcks domain objects definitions from a
- * source repository. Source repositories may have different forms : SoapUI project
- * file, Postman collection v2 file, custom XML format, directory structure with naming conventions,
- * and so on ...<br>
+ * Interface definition for loading Microcks domain objects definitions from a source repository. Source repositories
+ * may have different forms : SoapUI project file, Postman collection v2 file, custom XML format, directory structure
+ * with naming conventions, and so on ...<br>
  * After usage of the companion factory, user should call the following methods in order :
  * <ul>
- *    <li><code>getServiceDefinitions()</code>,</li>
- *    <li><code>getResourceDefinitions()</code>,</li>
- *    <li><code>getMessageDefinitions()</code>,</li>
+ * <li><code>getServiceDefinitions()</code>,</li>
+ * <li><code>getResourceDefinitions()</code>,</li>
+ * <li><code>getMessageDefinitions()</code>,</li>
  * </ul>
  * in order to incrementally populate the domain objects.
  * @author laurent
@@ -39,17 +38,15 @@ import java.util.List;
 public interface MockRepositoryImporter {
 
    /**
-    * Just after repository importer initialization, this method
-    * should return the definitions of Service domain objects as found
-    * into the target imported repository.
+    * Just after repository importer initialization, this method should return the definitions of Service domain objects
+    * as found into the target imported repository.
     * @return The list of found Services into repository. May be empty.
     * @throws MockRepositoryImportException if something goes wrong during import
     */
    List<Service> getServiceDefinitions() throws MockRepositoryImportException;
 
    /**
-    * Once Service definition has been initialized, attahed resources may be
-    * identified and retrieved.
+    * Once Service definition has been initialized, attahed resources may be identified and retrieved.
     * @param service The service to get resources for
     * @return The list of found Resources into repository. May be empty.
     * @throws MockRepositoryImportException if something goes wrong during import
@@ -57,9 +54,9 @@ public interface MockRepositoryImporter {
    List<Resource> getResourceDefinitions(Service service) throws MockRepositoryImportException;
 
    /**
-    * For any operation of a service a map of associated Request and Response
-    * should be retrieve for full definition of a Service.
-    * @param service The service to get messages for
+    * For any operation of a service a map of associated Request and Response should be retrieve for full definition of
+    * a Service.
+    * @param service   The service to get messages for
     * @param operation The service operation/actions to get messages for
     * @return A list of Exchange messages
     * @throws MockRepositoryImportException if something goes wrong during import

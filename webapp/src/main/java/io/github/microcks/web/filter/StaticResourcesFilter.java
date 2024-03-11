@@ -29,8 +29,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 
 /**
- * Servlet filter for adapting static resources access path when in production mode
- * (cause everything is now into /dist directory !)
+ * Servlet filter for adapting static resources access path when in production mode (cause everything is now into /dist
+ * directory !)
  * @author laurent
  */
 public class StaticResourcesFilter implements Filter {

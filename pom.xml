@@ -59,6 +59,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <multi-project.rootdir>${project.basedir}</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
     <spring-boot.version>3.2.1</spring-boot.version>
     <sonar.organization>microcks</sonar.organization>
@@ -94,6 +95,31 @@
           <releaseProfiles>release</releaseProfiles>
           <goals>deploy</goals>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.39.0</version>
+        <configuration>
+          <!-- define Java language-specific format -->
+          <java>
+            <eclipse>
+              <file>${multi-project.rootdir}/eclipse-formatter.xml</file>
+            </eclipse>
+            <indent>
+              <spaces>true</spaces>
+              <spacesPerTab>3</spacesPerTab>
+            </indent>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>compile</phase>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>

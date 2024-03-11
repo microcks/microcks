@@ -49,7 +49,8 @@ class AsyncAPI3ImporterTest {
    void testSimpleAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
-         importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml", null);
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -82,7 +83,8 @@ class AsyncAPI3ImporterTest {
    void testSimpleNamelessAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
-         importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-nameless.yaml", null);
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-nameless.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -133,7 +135,8 @@ class AsyncAPI3ImporterTest {
    void testStaticParametersAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
-         importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-static.yaml", null);
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-static.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -169,7 +172,8 @@ class AsyncAPI3ImporterTest {
 
          if ("RECEIVE receiveLightMeasurement".equals(operation.getName())) {
             assertEquals("RECEIVE", operation.getMethod());
-            assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured"));
+            assertTrue(operation.getResourcePaths()
+                  .contains("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured"));
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -182,7 +186,8 @@ class AsyncAPI3ImporterTest {
 
             // Check resource paths have been discovered.
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.123.lighting.measured"));
+            assertTrue(
+                  operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.123.lighting.measured"));
 
             Exchange exchange = exchanges.get(0);
             assertTrue(exchange instanceof UnidirectionalEvent);
@@ -209,7 +214,8 @@ class AsyncAPI3ImporterTest {
    void testDynamicParametersAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
-         importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-dynamic.yaml", null);
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-dynamic.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -245,7 +251,8 @@ class AsyncAPI3ImporterTest {
 
          if ("RECEIVE receiveLightMeasurement".equals(operation.getName())) {
             assertEquals("RECEIVE", operation.getMethod());
-            assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured"));
+            assertTrue(operation.getResourcePaths()
+                  .contains("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured"));
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -258,7 +265,8 @@ class AsyncAPI3ImporterTest {
 
             // Check resource paths have been discovered.
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue(operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured"));
+            assertTrue(operation.getResourcePaths().contains(
+                  "smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured"));
 
             Exchange exchange = exchanges.get(0);
             assertTrue(exchange instanceof UnidirectionalEvent);
@@ -285,8 +293,11 @@ class AsyncAPI3ImporterTest {
    void testRemoteRelativeReferenceAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
-         importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-ref.yaml",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-ref.yaml", null, true));
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-ref.yaml",
+               new ReferenceResolver(
+                     "https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-ref.yaml",
+                     null, true));
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -315,10 +326,12 @@ class AsyncAPI3ImporterTest {
       assertNotNull(asyncAPISpec.getContent());
 
       // Check references have been denormalized and replaced in content.
-      assertTrue(asyncAPISpec.getContent().contains("User+signed-up+API-0.3.0--user-signedup-commons.yaml#/components/messageTraits/commonHeaders"));
-      assertTrue(asyncAPISpec.getContent().contains("User+signed-up+API-0.3.0--user-signedup-schemas.yaml#/components/schemas/UserInfo"));
+      assertTrue(asyncAPISpec.getContent()
+            .contains("User+signed-up+API-0.3.0--user-signedup-commons.yaml#/components/messageTraits/commonHeaders"));
+      assertTrue(asyncAPISpec.getContent()
+            .contains("User+signed-up+API-0.3.0--user-signedup-schemas.yaml#/components/schemas/UserInfo"));
 
-      for (int i=1; i<3; i++) {
+      for (int i = 1; i < 3; i++) {
          Resource refResource = resources.get(i);
          assertNotNull(refResource.getContent());
          if ("User signed-up API-0.3.0--user-signedup-commons.yaml".equals(refResource.getName())) {
@@ -347,8 +360,11 @@ class AsyncAPI3ImporterTest {
    void testRemoteRelativeAvroReferenceAsyncAPI3ImportYAML() {
       AsyncAPI3Importer importer = null;
       try {
-         importer = new AsyncAPI3Importer("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml", null, true));
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml",
+               new ReferenceResolver(
+                     "https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-ref.yaml",
+                     null, true));
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -377,10 +393,11 @@ class AsyncAPI3ImporterTest {
       assertNotNull(asyncAPISpec.getContent());
 
       // Check references have been denormalized and replaced in content.
-      assertTrue(asyncAPISpec.getContent().contains("User+signed-up+API-0.3.0--user-signedup-commons.yaml#/components/messageTraits/commonHeaders"));
+      assertTrue(asyncAPISpec.getContent()
+            .contains("User+signed-up+API-0.3.0--user-signedup-commons.yaml#/components/messageTraits/commonHeaders"));
       assertTrue(asyncAPISpec.getContent().contains("User+signed-up+API-0.3.0--user-signedup.avsc#/User"));
 
-      for (int i=1; i<3; i++) {
+      for (int i = 1; i < 3; i++) {
          Resource refResource = resources.get(i);
          assertNotNull(refResource.getContent());
          if ("User signed-up API-0.3.0--user-signedup-commons.yaml".equals(refResource.getName())) {
@@ -416,7 +433,7 @@ class AsyncAPI3ImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
-                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
+                  UnidirectionalEvent event = (UnidirectionalEvent) exchange;
                   EventMessage eventMessage = event.getEventMessage();
                   assertNotNull(eventMessage);
                   assertEquals(contentType, eventMessage.getMediaType());

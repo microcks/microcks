@@ -56,7 +56,7 @@ public class MetricsController {
    TestResultRepository testResultRepository;
 
    @RequestMapping(value = "/metrics/invocations/global", method = RequestMethod.GET)
-   public DailyStatistic getInvocationStatGlobal(@RequestParam(value="day", required=false) String day) {
+   public DailyStatistic getInvocationStatGlobal(@RequestParam(value = "day", required = false) String day) {
       log.debug("Getting invocations stats for day {}", day);
       if (day == null) {
          day = getTodaysDate();
@@ -65,10 +65,8 @@ public class MetricsController {
    }
 
    @RequestMapping(value = "/metrics/invocations/top", method = RequestMethod.GET)
-   public List<DailyStatistic> getInvocationTopStats(
-         @RequestParam(value="day", required=false) String day,
-         @RequestParam(value="limit", required=false, defaultValue="20") Integer limit
-   ) {
+   public List<DailyStatistic> getInvocationTopStats(@RequestParam(value = "day", required = false) String day,
+         @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
       log.debug("Getting top {} invocations stats for day {}", limit, day);
       if (day == null) {
          day = getTodaysDate();
@@ -77,16 +75,14 @@ public class MetricsController {
    }
 
    @RequestMapping(value = "/metrics/invocations/{service}/{version}", method = RequestMethod.GET)
-   public DailyStatistic getInvocationStatForService(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String serviceVersion,
-         @RequestParam(value="day", required=false) String day
-   ) {
+   public DailyStatistic getInvocationStatForService(@PathVariable("service") String serviceName,
+         @PathVariable("version") String serviceVersion, @RequestParam(value = "day", required = false) String day) {
       log.debug("Getting invocations stats for service [{}, {}] and day {}", serviceName, serviceVersion, day);
       if (day == null) {
          day = getTodaysDate();
       }
-      List<DailyStatistic> statistics = invocationsRepository.findByDayAndServiceNameAndServiceVersion(day, serviceName, serviceVersion);
+      List<DailyStatistic> statistics = invocationsRepository.findByDayAndServiceNameAndServiceVersion(day, serviceName,
+            serviceVersion);
       if (!statistics.isEmpty()) {
          return statistics.get(0);
       }
@@ -94,13 +90,15 @@ public class MetricsController {
    }
 
    @RequestMapping(value = "/metrics/invocations/global/latest", method = RequestMethod.GET)
-   public Map<String, Long> getLatestInvocationStatGlobal(@RequestParam(value="limit", required=false, defaultValue="20") Integer limit){
+   public Map<String, Long> getLatestInvocationStatGlobal(
+         @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
       log.debug("Getting invocations stats for last {} days", limit);
 
       String day = getTodaysDate();
       String dayBefore = getPastDateAsString(limit);
       Map<String, Long> invocations = new TreeMap<>();
-      List<CustomDailyStatisticRepository.InvocationCount> results = invocationsRepository.aggregateDailyStatistics(dayBefore, day);
+      List<CustomDailyStatisticRepository.InvocationCount> results = invocationsRepository
+            .aggregateDailyStatistics(dayBefore, day);
       for (CustomDailyStatisticRepository.InvocationCount count : results) {
          invocations.put(count.getDay(), count.getNumber());
       }
@@ -116,33 +114,31 @@ public class MetricsController {
    }
 
    @RequestMapping(value = "/metrics/conformance/service/{serviceId:.+}", method = RequestMethod.GET)
-   public TestConformanceMetric getTestConformanceMetric(
-         @PathVariable("serviceId") String serviceId) {
+   public TestConformanceMetric getTestConformanceMetric(@PathVariable("serviceId") String serviceId) {
       log.debug("Retrieving TestConformanceMetric for service with id {}", serviceId);
 
       return metricRepository.findByServiceId(serviceId);
    }
 
    @RequestMapping(value = "/metrics/tests/latest", method = RequestMethod.GET)
-   public List<TestResultSummary> getLatestTestResults(@RequestParam(value="limit", required=false, defaultValue="7") Integer limit) {
+   public List<TestResultSummary> getLatestTestResults(
+         @RequestParam(value = "limit", required = false, defaultValue = "7") Integer limit) {
       log.debug("Getting tests trend for last {} days", limit);
 
       // Compute last date and retrieve test results.
       Date lastDate = getPastDate(limit);
-      List<TestResultSummary> summaries = testResultRepository.findAllWithTestDateAfter(lastDate)
-            .stream()
-            .map(res -> new TestResultSummary(res.getId(), res.getTestDate(),
-                  res.getServiceId(), res.isSuccess()))
+      List<TestResultSummary> summaries = testResultRepository.findAllWithTestDateAfter(lastDate).stream()
+            .map(res -> new TestResultSummary(res.getId(), res.getTestDate(), res.getServiceId(), res.isSuccess()))
             .collect(Collectors.toList());
       return summaries;
    }
 
-   private String getTodaysDate(){
+   private String getTodaysDate() {
       Calendar calendar = Calendar.getInstance();
       int month = calendar.get(Calendar.MONTH) + 1;
-      String monthStr = (month<10 ? "0" : "") + String.valueOf(month);
+      String monthStr = (month < 10 ? "0" : "") + String.valueOf(month);
       int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-      String dayOfMonthStr = (dayOfMonth<10 ? "0" : "") + String.valueOf(dayOfMonth);
+      String dayOfMonthStr = (dayOfMonth < 10 ? "0" : "") + String.valueOf(dayOfMonth);
       return String.valueOf(calendar.get(Calendar.YEAR)) + monthStr + dayOfMonthStr;
    }
 
@@ -156,9 +152,9 @@ public class MetricsController {
       Calendar calendar = Calendar.getInstance();
       calendar.add(Calendar.DAY_OF_YEAR, -daysBack);
       int month = calendar.get(Calendar.MONTH) + 1;
-      String monthStr = (month<10 ? "0" : "") + (month);
+      String monthStr = (month < 10 ? "0" : "") + (month);
       int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-      String dayOfMonthStr = (dayOfMonth<10 ? "0" : "") + (dayOfMonth);
+      String dayOfMonthStr = (dayOfMonth < 10 ? "0" : "") + (dayOfMonth);
       return calendar.get(Calendar.YEAR) + monthStr + dayOfMonthStr;
    }
 
@@ -178,12 +174,15 @@ public class MetricsController {
       public String getId() {
          return id;
       }
+
       public Date getTestDate() {
          return testDate;
       }
+
       public String getServiceId() {
          return serviceId;
       }
+
       public boolean isSuccess() {
          return success;
       }

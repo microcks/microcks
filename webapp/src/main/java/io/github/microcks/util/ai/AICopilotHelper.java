@@ -45,12 +45,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This helper class holds general utility constants and methods for: <ul>
- *    <li>interacting with LLM (prompt template, formatting specifications</li>
- *    <li>parsing the output of LLM interaction (converting prompt templates to Microcks domain model)</li>
+ * This helper class holds general utility constants and methods for:
+ * <ul>
+ * <li>interacting with LLM (prompt template, formatting specifications</li>
+ * <li>parsing the output of LLM interaction (converting prompt templates to Microcks domain model)</li>
  * </ul>
- * It is intended to be use by {@code AICopilot} implementations so that they can focus on configuration, connection
- * and prompt refinement concerns.
+ * It is intended to be use by {@code AICopilot} implementations so that they can focus on configuration, connection and
+ * prompt refinement concerns.
  * @author laurent
  */
 public class AICopilotHelper {
@@ -90,11 +91,11 @@ public class AICopilotHelper {
            response:
              code: 200
              headers:
-               content-type: application/json 
+               content-type: application/json
              body: <response body>
          """;
 
-   protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE= """
+   protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
          - example: %1$d
            message:
              headers:
@@ -118,17 +119,23 @@ public class AICopilotHelper {
       // Hides the default implicit one as it's a utility class.
    }
 
-   /** Generate an OpenAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   /**
+    * Generate an OpenAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation.
+    */
    protected static String getOpenAPIOperationPromptIntro(String operationName, int numberOfSamples) {
       return String.format(OPENAPI_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
    }
 
-   /** Generate a GraphQL prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   /**
+    * Generate a GraphQL prompt introduction, asking for generation of {@code numberOfSamples} samples for operation.
+    */
    protected static String getGraphQLOperationPromptIntro(String operationName, int numberOfSamples) {
       return String.format(GRAPHQL_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
    }
 
-   /** Generate an AsyncAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   /**
+    * Generate an AsyncAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation.
+    */
    protected static String getAsyncAPIOperationPromptIntro(String operationName, int numberOfSamples) {
       return String.format(ASYNCAPI_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
    }
@@ -140,30 +147,34 @@ public class AICopilotHelper {
 
    protected static String getRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
       StringBuilder builder = new StringBuilder();
-      for (int i=0; i<numberOfSamples; i++) {
-         builder.append(String.format(REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
+      for (int i = 0; i < numberOfSamples; i++) {
+         builder.append(String.format(REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i + 1));
       }
       return builder.toString();
    }
 
    protected static String getUnidirectionalEventExampleYamlFormattingDirective(int numberOfSamples) {
       StringBuilder builder = new StringBuilder();
-      for (int i=0; i<numberOfSamples; i++) {
-         builder.append(String.format(UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
+      for (int i = 0; i < numberOfSamples; i++) {
+         builder.append(String.format(UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE, i + 1));
       }
       return builder.toString();
    }
 
    protected static String getGrpcRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
       StringBuilder builder = new StringBuilder();
-      for (int i=0; i<numberOfSamples; i++) {
-         builder.append(String.format(GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
+      for (int i = 0; i < numberOfSamples; i++) {
+         builder.append(String.format(GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i + 1));
       }
       return builder.toString();
    }
 
-   /** Transform the output respecting the {@code REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain exchanges. */
-   protected static List<RequestResponsePair> parseRequestResponseTemplateOutput(Service service, Operation operation, String content) throws Exception {
+   /**
+    * Transform the output respecting the {@code REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain
+    * exchanges.
+    */
+   protected static List<RequestResponsePair> parseRequestResponseTemplateOutput(Service service, Operation operation,
+         String content) throws Exception {
       List<RequestResponsePair> results = new ArrayList<>();
 
       JsonNode root = YAML_MAPPER.readTree(sanitizeYamlContent(content));
@@ -206,12 +217,14 @@ public class AICopilotHelper {
 
             if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
                String resourcePathPattern = operation.getName().split(" ")[1];
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), resourcePathPattern, url);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(),
+                     resourcePathPattern, url);
             } else if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
                dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
             } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
                String resourcePathPattern = operation.getName().split(" ")[1];
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), resourcePathPattern, url);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(),
+                     resourcePathPattern, url);
                dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
             } else if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
                // This dispatcher is used for GraphQL
@@ -230,7 +243,10 @@ public class AICopilotHelper {
       return results;
    }
 
-   /** Transform the output respecting the {@code UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain exchanges. */
+   /**
+    * Transform the output respecting the {@code UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks
+    * domain exchanges.
+    */
    protected static List<UnidirectionalEvent> parseUnidirectionalEventTemplateOutput(String content) throws Exception {
       List<UnidirectionalEvent> results = new ArrayList<>();
 
@@ -258,12 +274,12 @@ public class AICopilotHelper {
    private static String sanitizeYamlContent(String pseudoYaml) {
       pseudoYaml = pseudoYaml.trim();
       if (!pseudoYaml.startsWith("-")) {
-         boolean inYaml = false;        // Are we currently in Yaml content?
-         boolean nextIsYaml = false;    // May the next line be Yaml content?
-         boolean addPadding = false;    // Do we have to add padding?
+         boolean inYaml = false; // Are we currently in Yaml content?
+         boolean nextIsYaml = false; // May the next line be Yaml content?
+         boolean addPadding = false; // Do we have to add padding?
          StringBuilder yaml = new StringBuilder();
          String[] lines = pseudoYaml.split("\\r?\\n|\\r");
-         for (String line: lines) {
+         for (String line : lines) {
             if (line.startsWith("-")) {
                inYaml = true;
             }
@@ -288,7 +304,7 @@ public class AICopilotHelper {
                }
             }
             if (inYaml) {
-               yaml.append(addPadding ? "  ":"").append(line).append("\n");
+               yaml.append(addPadding ? "  " : "").append(line).append("\n");
                // We don't know what next is going to be...
                nextIsYaml = false;
             }
@@ -377,121 +393,121 @@ public class AICopilotHelper {
       return spec.at(reference.substring(1));
    }
 
-  /**
-   * Some AI will reuse already present examples and x-microcks-operation in the
-   * spec. This method cleans a specification from its examples.
-   */
-  protected static String removeTokensFromSpec(String specification, String operationName) throws Exception {
-    JsonNode specNode;
-    boolean isJson = specification.trim().startsWith("{");
+   /**
+    * Some AI will reuse already present examples and x-microcks-operation in the spec. This method cleans a
+    * specification from its examples.
+    */
+   protected static String removeTokensFromSpec(String specification, String operationName) throws Exception {
+      JsonNode specNode;
+      boolean isJson = specification.trim().startsWith("{");
 
-    if (isJson) {
-      specNode = JSON_MAPPER.readTree(specification);
-    } else {
-      specNode = YAML_MAPPER.readTree(specification);
-    }
-
-    // Resolve schemas and Remove examples recursively from the root.
-    resolveReferenceAndRemoveTokensInNode(specNode, specNode);
-
-    // Filter the spec
-    List<String> specTokenNames = getTokenNames(specNode);
-    if (specTokenNames.contains("openapi")) {
-      filterOpenAPISpec(specNode, operationName);
-    }
-    if (specTokenNames.contains("asyncapi")) {
-      filterAsyncAPISpec(specNode, operationName);
-    }
-
-    if (isJson) {
-      return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(specNode);
-    }
-
-    return YAML_MAPPER.writeValueAsString(specNode);
-  }
-
-  protected static void resolveReferenceAndRemoveTokensInNode(JsonNode specNode, JsonNode node) {
-    JsonNode target = followRefIfAny(specNode, node);
-    if (target.getNodeType() == JsonNodeType.OBJECT) {
-      if (node.has("$ref")) {
-        ((ObjectNode) node).setAll((ObjectNode) target);
-        ((ObjectNode) node).remove("$ref");
+      if (isJson) {
+         specNode = JSON_MAPPER.readTree(specification);
+      } else {
+         specNode = YAML_MAPPER.readTree(specification);
       }
-      if (target.has("examples")) {
-        ((ObjectNode) node).remove("examples");
+
+      // Resolve schemas and Remove examples recursively from the root.
+      resolveReferenceAndRemoveTokensInNode(specNode, specNode);
+
+      // Filter the spec
+      List<String> specTokenNames = getTokenNames(specNode);
+      if (specTokenNames.contains("openapi")) {
+         filterOpenAPISpec(specNode, operationName);
       }
-      if (target.has("example")) {
-        ((ObjectNode) node).remove("example");
+      if (specTokenNames.contains("asyncapi")) {
+         filterAsyncAPISpec(specNode, operationName);
       }
-      if (target.has("x-microcks-operation")) {
-        ((ObjectNode) node).remove("x-microcks-operation");
+
+      if (isJson) {
+         return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(specNode);
       }
-      Iterator<Map.Entry<String, JsonNode>> fields = target.fields();
-      while (fields.hasNext()) {
-        resolveReferenceAndRemoveTokensInNode(specNode, fields.next().getValue());
+
+      return YAML_MAPPER.writeValueAsString(specNode);
+   }
+
+   protected static void resolveReferenceAndRemoveTokensInNode(JsonNode specNode, JsonNode node) {
+      JsonNode target = followRefIfAny(specNode, node);
+      if (target.getNodeType() == JsonNodeType.OBJECT) {
+         if (node.has("$ref")) {
+            ((ObjectNode) node).setAll((ObjectNode) target);
+            ((ObjectNode) node).remove("$ref");
+         }
+         if (target.has("examples")) {
+            ((ObjectNode) node).remove("examples");
+         }
+         if (target.has("example")) {
+            ((ObjectNode) node).remove("example");
+         }
+         if (target.has("x-microcks-operation")) {
+            ((ObjectNode) node).remove("x-microcks-operation");
+         }
+         Iterator<Map.Entry<String, JsonNode>> fields = target.fields();
+         while (fields.hasNext()) {
+            resolveReferenceAndRemoveTokensInNode(specNode, fields.next().getValue());
+         }
       }
-    }
-    if (target.getNodeType() == JsonNodeType.ARRAY) {
-      Iterator<JsonNode> elements = target.elements();
-      while (elements.hasNext()) {
-        resolveReferenceAndRemoveTokensInNode(specNode, elements.next());
+      if (target.getNodeType() == JsonNodeType.ARRAY) {
+         Iterator<JsonNode> elements = target.elements();
+         while (elements.hasNext()) {
+            resolveReferenceAndRemoveTokensInNode(specNode, elements.next());
+         }
       }
-    }
-  }
+   }
 
-  protected static void filterOpenAPISpec(JsonNode specNode, String operationName) {
-    String[] operationPathName = operationName.split(" ");
-    String verb = operationPathName[0].toLowerCase();
-    String path = operationPathName[1];
+   protected static void filterOpenAPISpec(JsonNode specNode, String operationName) {
+      String[] operationPathName = operationName.split(" ");
+      String verb = operationPathName[0].toLowerCase();
+      String path = operationPathName[1];
 
-    JsonNode pathsSpec = ((ObjectNode) specNode).get("paths");
-    JsonNode pathSpec = ((ObjectNode) pathsSpec).get(path);
+      JsonNode pathsSpec = ((ObjectNode) specNode).get("paths");
+      JsonNode pathSpec = ((ObjectNode) pathsSpec).get(path);
 
-    List<String> keysToKeepInRoot = List.of("openapi", "paths", "info");
-    List<String> keysToKeepInPaths = List.of(path);
-    List<String> keysToKeepInPath = List.of(verb);
+      List<String> keysToKeepInRoot = List.of("openapi", "paths", "info");
+      List<String> keysToKeepInPaths = List.of(path);
+      List<String> keysToKeepInPath = List.of(verb);
 
-    removeTokensInNode(specNode, keysToKeepInRoot);
-    removeTokensInNode(pathsSpec, keysToKeepInPaths);
-    removeTokensInNode(pathSpec, keysToKeepInPath);
-    removeSecurityTokenInNode(pathSpec, verb);
-  }
+      removeTokensInNode(specNode, keysToKeepInRoot);
+      removeTokensInNode(pathsSpec, keysToKeepInPaths);
+      removeTokensInNode(pathSpec, keysToKeepInPath);
+      removeSecurityTokenInNode(pathSpec, verb);
+   }
 
-  protected static void filterAsyncAPISpec(JsonNode specNode, String channelName) {
-    String[] operationPathName = channelName.split(" ");
-    String channel = operationPathName[1];
+   protected static void filterAsyncAPISpec(JsonNode specNode, String channelName) {
+      String[] operationPathName = channelName.split(" ");
+      String channel = operationPathName[1];
 
-    JsonNode channelsSpec = ((ObjectNode) specNode).get("channels");
+      JsonNode channelsSpec = ((ObjectNode) specNode).get("channels");
 
-    List<String> keysToKeepInRoot = List.of("asyncapi", "channels", "info");
-    List<String> keysToKeepInChannels = List.of(channel);
+      List<String> keysToKeepInRoot = List.of("asyncapi", "channels", "info");
+      List<String> keysToKeepInChannels = List.of(channel);
 
-    removeTokensInNode(specNode, keysToKeepInRoot);
-    removeTokensInNode(channelsSpec, keysToKeepInChannels);
-  }
+      removeTokensInNode(specNode, keysToKeepInRoot);
+      removeTokensInNode(channelsSpec, keysToKeepInChannels);
+   }
 
-  protected static void removeSecurityTokenInNode(JsonNode specNode, String tokenName) {
-    JsonNode verbSpec = ((ObjectNode) specNode).get(tokenName);
-    if (verbSpec.has("security")) {
-      ((ObjectNode) verbSpec).remove("security");
-    }
-  }
-
-  protected static List<String> getTokenNames(JsonNode specNode) {
-    List<String> fieldNames = new ArrayList<>();
-    Iterator<String> specNodeFieldNames = specNode.fieldNames();
-    while (specNodeFieldNames.hasNext()) {
-      fieldNames.add(specNodeFieldNames.next());
-    }
-    return fieldNames;
-  }
-
-  protected static void removeTokensInNode(JsonNode specNode, List<String> keysToKeep) {
-    List<String> fieldNames = getTokenNames(specNode);
-    for (String fieldName : fieldNames) {
-      if (!keysToKeep.contains(fieldName)) {
-        ((ObjectNode) specNode).remove(fieldName);
+   protected static void removeSecurityTokenInNode(JsonNode specNode, String tokenName) {
+      JsonNode verbSpec = ((ObjectNode) specNode).get(tokenName);
+      if (verbSpec.has("security")) {
+         ((ObjectNode) verbSpec).remove("security");
       }
-    }
-  }
+   }
+
+   protected static List<String> getTokenNames(JsonNode specNode) {
+      List<String> fieldNames = new ArrayList<>();
+      Iterator<String> specNodeFieldNames = specNode.fieldNames();
+      while (specNodeFieldNames.hasNext()) {
+         fieldNames.add(specNodeFieldNames.next());
+      }
+      return fieldNames;
+   }
+
+   protected static void removeTokensInNode(JsonNode specNode, List<String> keysToKeep) {
+      List<String> fieldNames = getTokenNames(specNode);
+      for (String fieldName : fieldNames) {
+         if (!keysToKeep.contains(fieldName)) {
+            ((ObjectNode) specNode).remove(fieldName);
+         }
+      }
+   }
 }

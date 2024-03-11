@@ -72,9 +72,11 @@ public class SoapController {
    private static Logger log = LoggerFactory.getLogger(SoapController.class);
 
    /** Regular expression pattern for capturing Soap Operation name from body. */
-   private static final Pattern OPERATION_CAPTURE_PATTERN = Pattern.compile("(.*):Body>(\\s*)<((\\w+):|)(?<operation>\\w+)(.*)(/)?>(.*)", Pattern.DOTALL);
+   private static final Pattern OPERATION_CAPTURE_PATTERN = Pattern
+         .compile("(.*):Body>(\\s*)<((\\w+):|)(?<operation>\\w+)(.*)(/)?>(.*)", Pattern.DOTALL);
    /** Regular expression replacement pattern for chnging SoapUI {@code ${}} in Microcks {@code {{}}}. */
-   private static final Pattern SOAPUI_TEMPLATE_PARAMETER_REPLACE_PATTERN = Pattern.compile("\\$\\{\s*([a-zA-Z0-9-_]+)\s*\\}", Pattern.DOTALL);
+   private static final Pattern SOAPUI_TEMPLATE_PARAMETER_REPLACE_PATTERN = Pattern
+         .compile("\\$\\{\s*([a-zA-Z0-9-_]+)\s*\\}", Pattern.DOTALL);
 
    private final ServiceRepository serviceRepository;
    private final ResponseRepository responseRepository;
@@ -90,13 +92,13 @@ public class SoapController {
 
    /**
     * Build a SoapController with required dependencies.
-    * @param serviceRepository The repository to access services definitions
+    * @param serviceRepository  The repository to access services definitions
     * @param responseRepository The repository to access responses definitions
     * @param resourceRepository The repository to access resources artifacts
     * @param applicationContext The Spring application context
     */
    public SoapController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
-                         ResourceRepository resourceRepository, ApplicationContext applicationContext) {
+         ResourceRepository resourceRepository, ApplicationContext applicationContext) {
       this.serviceRepository = serviceRepository;
       this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
@@ -105,14 +107,10 @@ public class SoapController {
 
 
    @PostMapping(value = "/{service}/{version}/**")
-   public ResponseEntity<?> execute(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @RequestParam(value="validate", required=false) Boolean validate,
-         @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody String body,
-         HttpServletRequest request
-      ) {
+   public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @RequestParam(value = "validate", required = false) Boolean validate,
+         @RequestParam(value = "delay", required = false) Long delay, @RequestBody String body,
+         HttpServletRequest request) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
 
@@ -127,8 +125,8 @@ public class SoapController {
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       if (service == null) {
          return new ResponseEntity<>(
-            String.format("The service %s with version %s does not exist!", serviceName, version),
-            HttpStatus.NOT_FOUND);
+               String.format("The service %s with version %s does not exist!", serviceName, version),
+               HttpStatus.NOT_FOUND);
       }
       Operation rOperation = null;
 
@@ -173,15 +171,16 @@ public class SoapController {
          if (validate != null && validate) {
             log.debug("Soap message validation is turned on, validating...");
 
-            List<Resource> wsdlResources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL);
+            List<Resource> wsdlResources = resourceRepository.findByServiceIdAndType(service.getId(),
+                  ResourceType.WSDL);
             if (wsdlResources.isEmpty()) {
                return new ResponseEntity<>(
-                  String.format("The service %s with version %s does not have a wsdl!", serviceName, version),
-                  HttpStatus.PRECONDITION_FAILED);
+                     String.format("The service %s with version %s does not have a wsdl!", serviceName, version),
+                     HttpStatus.PRECONDITION_FAILED);
             }
             Resource wsdlResource = wsdlResources.get(0);
-            List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(), new QName(service.getXmlNS(), rOperation.getInputName()),
-                     body, resourceUrl);
+            List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(),
+                  new QName(service.getXmlNS(), rOperation.getInputName()), body, resourceUrl);
 
             log.debug("SoapBody validation errors: {}", errors.size());
 
@@ -213,9 +212,8 @@ public class SoapController {
             } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
                dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
             } else {
-               return new ResponseEntity<>(
-                  String.format("The dispatch %s is not supported!", dispatcher),
-                  HttpStatus.NOT_FOUND);
+               return new ResponseEntity<>(String.format("The dispatch %s is not supported!", dispatcher),
+                     HttpStatus.NOT_FOUND);
             }
          } catch (ResponseStatusException e) {
             return new ResponseEntity<>(e.getMessage(), e.getStatusCode());
@@ -227,7 +225,8 @@ public class SoapController {
 
          if (responses.isEmpty() && fallback != null) {
             // If we've found nothing and got a fallback, that's the moment!
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), fallback.getFallback());
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
+                  fallback.getFallback());
          }
 
          if (!responses.isEmpty()) {
@@ -235,8 +234,8 @@ public class SoapController {
             response = responses.get(idx);
          } else {
             return new ResponseEntity<>(
-               String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()),
-               HttpStatus.BAD_REQUEST);
+                  String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()),
+                  HttpStatus.BAD_REQUEST);
          }
 
          // Set Content-Type to "text/xml".
@@ -244,11 +243,11 @@ public class SoapController {
 
          // Check to see if we are processing a SOAP 1.2 request
          if (request.getContentType().startsWith("application/soap+xml")) {
-           // we are; set Content-Type to "application/soap+xml"
-           responseHeaders.setContentType(MediaType.valueOf("application/soap+xml;charset=UTF-8"));
+            // we are; set Content-Type to "application/soap+xml"
+            responseHeaders.setContentType(MediaType.valueOf("application/soap+xml;charset=UTF-8"));
          } else {
-           // Set Content-Type to "text/xml".
-           responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
+            // Set Content-Type to "text/xml".
+            responseHeaders.setContentType(MediaType.valueOf("text/xml;charset=UTF-8"));
          }
 
          // Render response content before waiting and returning.
@@ -274,14 +273,12 @@ public class SoapController {
          return new ResponseEntity<>(responseContent, responseHeaders, HttpStatus.OK);
       }
 
-      return new ResponseEntity<>(
-         String.format("The operation %s does not exist!", action),
-         HttpStatus.NOT_FOUND);
+      return new ResponseEntity<>(String.format("The operation %s does not exist!", action), HttpStatus.NOT_FOUND);
    }
 
    /**
     * Check if given SOAP payload has a correct structure for given operation name.
-    * @param payload SOAP payload to check structure
+    * @param payload       SOAP payload to check structure
     * @param operationName Name of operation to check structure against
     * @return True if payload is correct for operation, false otherwise.
     */
@@ -322,7 +319,7 @@ public class SoapController {
          action = contentType.substring(contentType.indexOf("action=") + 7);
          // Remove any other optional param in content-type if any.
          if (action.contains(";")) {
-            action= action.substring(0, action.indexOf(";"));
+            action = action.substring(0, action.indexOf(";"));
          }
       } else {
          // Else, SOAPAction is in dedicated header.
@@ -350,12 +347,14 @@ public class SoapController {
          return new DispatchContext(xpath.evaluate(new InputSource(new StringReader(body))), null);
       } catch (Exception e) {
          log.error("Error during Xpath evaluation", e);
-         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Xpath evaluation: " + e.getMessage());
+         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+               "Error during Xpath evaluation: " + e.getMessage());
       }
    }
 
    /** Build a dispatch context after a Groovy script evaluation coming from rules. */
-   private DispatchContext getDispatchCriteriaFromScriptEval(String dispatcherRules, String body, HttpServletRequest request) {
+   private DispatchContext getDispatchCriteriaFromScriptEval(String dispatcherRules, String body,
+         HttpServletRequest request) {
       ScriptEngineManager sem = new ScriptEngineManager();
       Map<String, Object> requestContext = new HashMap<>();
       try {
@@ -366,14 +365,15 @@ public class SoapController {
          return new DispatchContext((String) se.eval(script), requestContext);
       } catch (Exception e) {
          log.error("Error during Script evaluation", e);
-         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error during Script evaluation: " + e.getMessage());
+         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+               "Error during Script evaluation: " + e.getMessage());
       }
    }
 
    /**
-    * Convert a SoapUI template like {@code <something>${myParam}</something>} into a Microcks one that
-    * could be later rendered through the template engine. ie:  {@code <something>{{ myParam }}</something>}.
-    * Supports multi-lines and multi-parameters replacement.
+    * Convert a SoapUI template like {@code <something>${myParam}</something>} into a Microcks one that could be later
+    * rendered through the template engine. ie: {@code <something>{{ myParam }}</something>}. Supports multi-lines and
+    * multi-parameters replacement.
     * @param responseTemplate The SoapUI template to convert
     * @return The converted template or the original template if not recognized as a SoapUI one.
     */

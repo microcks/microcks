@@ -43,29 +43,22 @@ public class GraphQLSchemaValidatorTest {
    @Test
    public void testBuildResponseJsonSchema() {
       String schemaText;
-      String queryText = "{\n" +
-            "  hero {\n" +
-            "    name\n" +
-            "    email\n" +
-            "    family\n" +
-            "    affiliate\n" +
-            "    movies {\n" +
-            "      title\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
+      String queryText = "{\n" + "  hero {\n" + "    name\n" + "    email\n" + "    family\n" + "    affiliate\n"
+            + "    movies {\n" + "      title\n" + "    }\n" + "  }\n" + "}";
 
       JsonNode responseSchema = null;
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(new File("target/test-classes/io/github/microcks/util/graphql/basic-heroes.graphql"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/graphql/basic-heroes.graphql"));
          // Build JsonSchema for response.
          responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(schemaText, queryText);
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
 
-      assertFalse(responseSchema.path("properties").path("data").path("properties").path("hero") instanceof MissingNode);
+      assertFalse(
+            responseSchema.path("properties").path("data").path("properties").path("hero") instanceof MissingNode);
 
       ObjectNode heroNode = (ObjectNode) responseSchema.path("properties").path("data").path("properties").path("hero");
       assertEquals("object", heroNode.get("type").asText());
@@ -79,7 +72,8 @@ public class GraphQLSchemaValidatorTest {
       while (requiredHeroElements.hasNext()) {
          String requiredHeroField = requiredHeroElements.next().asText();
          assertTrue("name".equals(requiredHeroField) || "email".equals(requiredHeroField)
-               || "family".equals(requiredHeroField) || "affiliate".equals(requiredHeroField) || "movies".equals(requiredHeroField));
+               || "family".equals(requiredHeroField) || "affiliate".equals(requiredHeroField)
+               || "movies".equals(requiredHeroField));
       }
 
       ObjectNode moviesNode = (ObjectNode) heroNode.path("properties").path("movies");
@@ -99,46 +93,17 @@ public class GraphQLSchemaValidatorTest {
    @Test
    public void testValidateJson() {
       String schemaText;
-      String queryText = "{\n" +
-            "  hero {\n" +
-            "    name\n" +
-            "    email\n" +
-            "    family\n" +
-            "    affiliate\n" +
-            "    movies {\n" +
-            "      title\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
-      String responseText = "{\n" +
-            "  \"data\": {\n" +
-            "    \"hero\": {\n" +
-            "      \"name\": \"Iron Man\",\n" +
-            "      \"email\": \"tony@stark.inc\",\n" +
-            "      \"family\": \"MARVEL\",\n" +
-            "      \"affiliate\": \"DC\",\n" +
-            "      \"movies\": [\n" +
-            "        {\"title\": \"Iron Man 1\"},\n" +
-            "        {\"title\": \"Iron Man 2\"},\n" +
-            "        {\"title\": \"Iron Man 3\"}\n" +
-            "      ]\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
-      String badResponseText = "{\n" +
-            "  \"data\": {\n" +
-            "    \"hero\": {\n" +
-            "      \"name\": \"Iron Man\",\n" +
-            "      \"family\": \"MARVEL\",\n" +
-            "      \"affiliate\": \"DC\",\n" +
-            "      \"movies\": [\n" +
-            "        {\"title\": \"Iron Man 1\"},\n" +
-            "        {\"title\": \"Iron Man 2\"},\n" +
-            "        {\"title\": \"Iron Man 3\"}\n" +
-            "      ]\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
+      String queryText = "{\n" + "  hero {\n" + "    name\n" + "    email\n" + "    family\n" + "    affiliate\n"
+            + "    movies {\n" + "      title\n" + "    }\n" + "  }\n" + "}";
+      String responseText = "{\n" + "  \"data\": {\n" + "    \"hero\": {\n" + "      \"name\": \"Iron Man\",\n"
+            + "      \"email\": \"tony@stark.inc\",\n" + "      \"family\": \"MARVEL\",\n"
+            + "      \"affiliate\": \"DC\",\n" + "      \"movies\": [\n" + "        {\"title\": \"Iron Man 1\"},\n"
+            + "        {\"title\": \"Iron Man 2\"},\n" + "        {\"title\": \"Iron Man 3\"}\n" + "      ]\n"
+            + "    }\n" + "  }\n" + "}";
+      String badResponseText = "{\n" + "  \"data\": {\n" + "    \"hero\": {\n" + "      \"name\": \"Iron Man\",\n"
+            + "      \"family\": \"MARVEL\",\n" + "      \"affiliate\": \"DC\",\n" + "      \"movies\": [\n"
+            + "        {\"title\": \"Iron Man 1\"},\n" + "        {\"title\": \"Iron Man 2\"},\n"
+            + "        {\"title\": \"Iron Man 3\"}\n" + "      ]\n" + "    }\n" + "  }\n" + "}";
 
       ObjectMapper mapper = new ObjectMapper();
 
@@ -146,7 +111,8 @@ public class GraphQLSchemaValidatorTest {
       List<String> validationErrors = null;
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(new File("target/test-classes/io/github/microcks/util/graphql/basic-heroes.graphql"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/graphql/basic-heroes.graphql"));
          // Build JsonSchema for response.
          responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(schemaText, queryText);
          // Validate a correct response.
@@ -169,42 +135,17 @@ public class GraphQLSchemaValidatorTest {
    @Test
    public void testValidateJsonAdvanced() {
       String schemaText;
-      String queryText = "query allFilms {\n" +
-            "    allFilms {\n" +
-            "        films {\n" +
-            "            id\n" +
-            "            title\n" +
-            "            episodeID\n" +
-            "            director\n" +
-            "            starCount\n" +
-            "            rating\n" +
-            "        }\n" +
-            "    }\n" +
-            "}";
-      String responseText = "{\n" +
-            "  \"data\": {\n" +
-            "    \"allFilms\": {\n" +
-            "      \"films\": [\n" +
-            "        {\n" +
-            "          \"id\": \"ZmlsbXM6MQ==\",\n" +
-            "          \"title\": \"A New Hope\",\n" +
-            "          \"episodeID\": 4,\n" +
-            "          \"director\": \"George Lucas\",\n" +
-            "          \"starCount\": 432,\n" +
-            "          \"rating\": 4.3\n" +
-            "        },\n" +
-            "        {\n" +
-            "          \"id\": \"ZmlsbXM6Mg==\",\n" +
-            "          \"title\": \"The Empire Strikes Back\",\n" +
-            "          \"episodeID\": 5,\n" +
-            "          \"director\": \"Irvin Kershner\",\n" +
-            "          \"starCount\": 433,\n" +
-            "          \"rating\": 4.3\n" +
-            "        }\n" +
-            "      ]\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
+      String queryText = "query allFilms {\n" + "    allFilms {\n" + "        films {\n" + "            id\n"
+            + "            title\n" + "            episodeID\n" + "            director\n" + "            starCount\n"
+            + "            rating\n" + "        }\n" + "    }\n" + "}";
+      String responseText = "{\n" + "  \"data\": {\n" + "    \"allFilms\": {\n" + "      \"films\": [\n" + "        {\n"
+            + "          \"id\": \"ZmlsbXM6MQ==\",\n" + "          \"title\": \"A New Hope\",\n"
+            + "          \"episodeID\": 4,\n" + "          \"director\": \"George Lucas\",\n"
+            + "          \"starCount\": 432,\n" + "          \"rating\": 4.3\n" + "        },\n" + "        {\n"
+            + "          \"id\": \"ZmlsbXM6Mg==\",\n" + "          \"title\": \"The Empire Strikes Back\",\n"
+            + "          \"episodeID\": 5,\n" + "          \"director\": \"Irvin Kershner\",\n"
+            + "          \"starCount\": 433,\n" + "          \"rating\": 4.3\n" + "        }\n" + "      ]\n"
+            + "    }\n" + "  }\n" + "}";
 
       ObjectMapper mapper = new ObjectMapper();
 
@@ -212,7 +153,8 @@ public class GraphQLSchemaValidatorTest {
       List<String> validationErrors = null;
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(new File("target/test-classes/io/github/microcks/util/graphql/films.graphql"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/graphql/films.graphql"));
          // Build JsonSchema for response.
          responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(schemaText, queryText);
 

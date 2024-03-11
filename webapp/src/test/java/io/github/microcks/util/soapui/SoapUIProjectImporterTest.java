@@ -42,9 +42,10 @@ public class SoapUIProjectImporterTest {
    @Test
    public void testSimpleProjectImport() {
       SoapUIProjectImporter importer = null;
-      try{
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/RefTest-soapui-project.xml");
-      } catch (Exception e){
+      try {
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/RefTest-soapui-project.xml");
+      } catch (Exception e) {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
@@ -69,7 +70,8 @@ public class SoapUIProjectImporterTest {
 
       // Check mock dispatching rules.
       assertEquals("QUERY_MATCH", operation.getDispatcher());
-      assertTrue(operation.getDispatcherRules().contains("declare namespace ser='http://lbroudoux.github.com/test/service';"));
+      assertTrue(operation.getDispatcherRules()
+            .contains("declare namespace ser='http://lbroudoux.github.com/test/service';"));
       assertTrue(operation.getDispatcherRules().contains("//ser:sayHello/name"));
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -117,11 +119,12 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleScriptWithSOAPFaultProjectImport(){
+   public void testSimpleScriptWithSOAPFaultProjectImport() {
       SoapUIProjectImporter importer = null;
-      try{
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml");
-      } catch (Exception e){
+      try {
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml");
+      } catch (Exception e) {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
@@ -164,9 +167,9 @@ public class SoapUIProjectImporterTest {
 
       // Check that messages have been correctly found.
       List<Exchange> exchanges = null;
-      try{
+      try {
          exchanges = importer.getMessageDefinitions(service, operation);
-      } catch (Exception e){
+      } catch (Exception e) {
          fail("No exception should be thrown when importing message definitions.");
       }
       assertEquals(3, exchanges.size());
@@ -195,11 +198,12 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleScriptProjectImport(){
+   public void testSimpleScriptProjectImport() {
       SoapUIProjectImporter importer = null;
-      try{
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/RefTest-script-soapui-project.xml");
-      } catch (Exception e){
+      try {
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/RefTest-script-soapui-project.xml");
+      } catch (Exception e) {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
@@ -268,11 +272,12 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testComplexProjectImport(){
+   public void testComplexProjectImport() {
       SoapUIProjectImporter importer = null;
-      try{
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/RefTest-Product-GetProductElements-soapui-project.xml");
-      } catch (Exception e){
+      try {
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/RefTest-Product-GetProductElements-soapui-project.xml");
+      } catch (Exception e) {
          fail("Exception should not be thrown");
       }
       List<Service> services = null;
@@ -304,15 +309,17 @@ public class SoapUIProjectImporterTest {
       assertNotNull(resource.getContent());
       assertEquals("execute_pttBinding_GetProductElements MockService-1.0.0.wsdl", resource.getName());
       // Check that XSD path has been changed into WSDL.
-      assertTrue(resource.getContent().contains("<xsd:import namespace=\"http://lbroudoux.github.com/Product/Commun\" schemaLocation=\"./Product_Anomalie_v1.0.xsd\"/>"));
+      assertTrue(resource.getContent().contains(
+            "<xsd:import namespace=\"http://lbroudoux.github.com/Product/Commun\" schemaLocation=\"./Product_Anomalie_v1.0.xsd\"/>"));
    }
 
    @Test
-   public void testSimpleRestProjectImport(){
+   public void testSimpleRestProjectImport() {
       SoapUIProjectImporter importer = null;
-      try{
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/Test-REST-soapui-project.xml");
-      } catch (Exception e){
+      try {
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/Test-REST-soapui-project.xml");
+      } catch (Exception e) {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties are there.
@@ -333,15 +340,14 @@ public class SoapUIProjectImporterTest {
 
       // Check that operations and methods/resourcePaths have been found.
       assertEquals(3, service.getOperations().size());
-      for (Operation operation : service.getOperations().toArray(new Operation[2])){
+      for (Operation operation : service.getOperations().toArray(new Operation[2])) {
 
-         if ("/deployment".equals(operation.getName())){
+         if ("/deployment".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertTrue(operation.getResourcePaths().contains("/deployment"));
             assertEquals("SEQUENCE", operation.getDispatcher());
 
-         }
-         else if ("/deployment/byComponent/{component}/{version}.json".equals(operation.getName())){
+         } else if ("/deployment/byComponent/{component}/{version}.json".equals(operation.getName())) {
             assertEquals("GET", operation.getMethod());
             assertEquals(2, operation.getResourcePaths().size());
             assertTrue(operation.getResourcePaths().contains("/deployment/byComponent/testREST/1.2.json"));
@@ -380,8 +386,7 @@ public class SoapUIProjectImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("/deployment/byEnvironment/{environment}/{qualifier}.json".equals(operation.getName())){
+         } else if ("/deployment/byEnvironment/{environment}/{qualifier}.json".equals(operation.getName())) {
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
             assertTrue(operation.getResourcePaths().contains("/deployment/byEnvironment/QUALIF2/cdsm.json"));
@@ -425,8 +430,7 @@ public class SoapUIProjectImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else {
+         } else {
             fail("Operation has not an expected name");
          }
 
@@ -437,7 +441,8 @@ public class SoapUIProjectImporterTest {
    public void testSimpleProjectNoVersionImport() {
       SoapUIProjectImporter importer = null;
       try {
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/RefTest-no-version-soapui-project.xml");
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/RefTest-no-version-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -457,7 +462,8 @@ public class SoapUIProjectImporterTest {
    public void testHelloAPIProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/HelloAPI-soapui-project.xml");
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/HelloAPI-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -475,7 +481,8 @@ public class SoapUIProjectImporterTest {
    public void testMultipleInterfacesProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/GetDrivers-soapui-project.xml");
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/GetDrivers-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -511,7 +518,8 @@ public class SoapUIProjectImporterTest {
       // Initialized from https://github.com/microcks/microcks/issues/680.
       SoapUIProjectImporter importer = null;
       try {
-         importer = new SoapUIProjectImporter("target/test-classes/io/github/microcks/util/soapui/VIES-soapui-project.xml");
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/VIES-soapui-project.xml");
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }

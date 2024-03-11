@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 /**
  * Test case for all the Rest mock controller.
  * @author laurent
@@ -42,7 +43,8 @@ public class RestControllerIT extends AbstractBaseIT {
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("[4]", response.getBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
-         JSONAssert.assertEquals("[{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"},{\"id\":2,\"name\":\"Tigresse\",\"tag\":\"cat\"},{\"id\":3,\"name\":\"Maki\",\"tag\":\"cat\"},{\"id\":4,\"name\":\"Toufik\",\"tag\":\"cat\"}]",
+         JSONAssert.assertEquals(
+               "[{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"},{\"id\":2,\"name\":\"Tigresse\",\"tag\":\"cat\"},{\"id\":3,\"name\":\"Maki\",\"tag\":\"cat\"},{\"id\":4,\"name\":\"Toufik\",\"tag\":\"cat\"}]",
                response.getBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
@@ -51,8 +53,8 @@ public class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets/1", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"}",
-               response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"id\":1,\"name\":\"Zaza\",\"tag\":\"cat\"}", response.getBody(),
+               JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
@@ -65,7 +67,8 @@ public class RestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-collection.json", false);
 
       // Check its different mocked operations.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0", String.class);
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer?page=0",
+            String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("[3]", response.getBody(), new ArraySizeComparator(JSONCompareMode.LENIENT));
@@ -76,19 +79,14 @@ public class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/Beer+Catalog+API/0.9/beer/Weissbier", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{\n" +
-                     "    \"name\": \"Weissbier\",\n" +
-                     "    \"country\": \"Germany\",\n" +
-                     "    \"type\": \"Wheat\",\n" +
-                     "    \"rating\": 4.1,\n" +
-                     "    \"status\": \"out_of_stock\"\n" +
-                     "}",
+         JSONAssert.assertEquals("{\n" + "    \"name\": \"Weissbier\",\n" + "    \"country\": \"Germany\",\n"
+               + "    \"type\": \"Wheat\",\n" + "    \"rating\": 4.1,\n" + "    \"status\": \"out_of_stock\"\n" + "}",
                response.getBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
    }
-   
+
    @Test
    public void testFallbackMatchingWithRegex() {
       // Upload modified pastry spec
@@ -97,25 +95,26 @@ public class RestControllerIT extends AbstractBaseIT {
       ObjectMapper mapper = new ObjectMapper();
 
       // Check operation with a defined mock (name: 'Millefeuille')
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Millefeuille/details", String.class);
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/pastry-details/1.0.0/pastry/Millefeuille/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JsonNode details = mapper.readTree(response.getBody());
          String description = details.get("description").asText();
-         assertTrue(description.startsWith("Detail -"));   
+         assertTrue(description.startsWith("Detail -"));
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
-      
+
       // Check operation with an undefined defined mock (name: 'Dummy'), should use fallback dispatching based on regular expression matching
       response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JsonNode details = mapper.readTree(response.getBody());
          String description = details.get("description").asText();
-         assertTrue(description.startsWith("Detail -"));          
+         assertTrue(description.startsWith("Detail -"));
       } catch (Exception e) {
          fail("No Exception should be thrown here");
-      }      
+      }
    }
 }

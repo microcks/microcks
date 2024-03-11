@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a WebSocket endpoint.
- * Endpoint URL should be specified using the following form: <code>ws://{wsHost[:port]}/{channel}[?option1=value1&amp;option2=value2]</code>.
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a WebSocket endpoint. Endpoint URL should be
+ * specified using the following form: <code>ws://{wsHost[:port]}/{channel}[?option1=value1&amp;option2=value2]</code>.
  * Channel may be empty if connecting to the root context of the WebSocket server.
  * @author laurent
  */
@@ -79,8 +79,9 @@ public class WebSocketMessageConsumptionTask implements MessageConsumptionTask {
             // We neet to create a Truststore holding secret certificxate.
             trustStore = ConsumptionTaskCommons.installBrokerCertificate(specification);
 
-            SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(trustStore,
-                  ConsumptionTaskCommons.TRUSTSTORE_PASSWORD.toCharArray(), null).build();
+            SSLContext sslContext = SSLContexts.custom()
+                  .loadTrustMaterial(trustStore, ConsumptionTaskCommons.TRUSTSTORE_PASSWORD.toCharArray(), null)
+                  .build();
 
             // Then configure the Client Endpoint using a property specific to Undertow impl (from Quarkus).
             ClientEndpointConfig config = ClientEndpointConfig.Builder.create().build();
@@ -110,8 +111,8 @@ public class WebSocketMessageConsumptionTask implements MessageConsumptionTask {
    }
 
    /**
-    * Close the resources used by this task. Namely the WS client session and
-    * the optionally created truststore holding server client SSL credentials.
+    * Close the resources used by this task. Namely the WS client session and the optionally created truststore holding
+    * server client SSL credentials.
     * @throws IOException should not happen.
     */
    @Override

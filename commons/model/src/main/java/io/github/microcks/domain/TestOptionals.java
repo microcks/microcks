@@ -18,8 +18,8 @@ package io.github.microcks.domain;
 import java.util.List;
 
 /**
- * Simple bean representing the optional elements of a Test requests. Some of them are made
- * to be persisted into TestResult, some other are just volatile information for execution.
+ * Simple bean representing the optional elements of a Test requests. Some of them are made to be persisted into
+ * TestResult, some other are just volatile information for execution.
  * @author laurent
  */
 public class TestOptionals {
@@ -33,7 +33,8 @@ public class TestOptionals {
    public TestOptionals() {
    }
 
-   public TestOptionals(SecretRef secretRef, Long timeout, List<String> filteredOperations, OperationsHeaders operationsHeaders, OAuth2ClientContext oAuth2Context) {
+   public TestOptionals(SecretRef secretRef, Long timeout, List<String> filteredOperations,
+         OperationsHeaders operationsHeaders, OAuth2ClientContext oAuth2Context) {
       this.secretRef = secretRef;
       this.timeout = timeout;
       this.filteredOperations = filteredOperations;

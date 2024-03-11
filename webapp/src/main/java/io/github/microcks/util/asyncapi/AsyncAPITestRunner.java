@@ -45,9 +45,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This is an implementation of HttpTestRunner that deals with AsyncAPI schema testing.
- * It delegates the consumption of asynchronous messages and the actual validation to
- * the <b>microcks-async-minion</b> component, triggering it through an API call.
+ * This is an implementation of HttpTestRunner that deals with AsyncAPI schema testing. It delegates the consumption of
+ * asynchronous messages and the actual validation to the <b>microcks-async-minion</b> component, triggering it through
+ * an API call.
  * @author laurent
  */
 public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
@@ -68,7 +68,7 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
    /**
     * Build a new AsyncAPITestRunner using a resource repository for retrieving AsyncAPI specification.
     * @param resourceRepository The repository that contains AsyncAPI specification to validate
-    * @param secretRepository The repository for accessing secrets for connecting test endpoints
+    * @param secretRepository   The repository for accessing secrets for connecting test endpoints
     */
    public AsyncAPITestRunner(ResourceRepository resourceRepository, SecretRepository secretRepository) {
       this.resourceRepository = resourceRepository;
@@ -88,10 +88,10 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    @Override
-   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
-                                   List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
+   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult, List<Request> requests,
+         String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
 
-      if (log.isDebugEnabled()){
+      if (log.isDebugEnabled()) {
          log.debug("Launching test run on " + endpointUrl + " for ms");
       }
 
@@ -130,9 +130,9 @@ public class AsyncAPITestRunner extends AbstractTestRunner<HttpMethod> {
 
       // Actually execute request.
       ClientHttpResponse httpResponse = null;
-      try{
+      try {
          httpResponse = httpRequest.execute();
-      } catch (IOException ioe){
+      } catch (IOException ioe) {
          log.error("IOException while executing request ", ioe);
       } finally {
          if (httpResponse != null) {

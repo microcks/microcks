@@ -62,7 +62,8 @@ public class OAuth2AuthorizeClientProviderTest {
       }
 
       assertEquals("admin", authorizedClient.getPrincipalName());
-      assertEquals(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token", authorizedClient.getTokenUri());
+      assertEquals(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token",
+            authorizedClient.getTokenUri());
       assertEquals(OAuth2GrantType.PASSWORD, authorizedClient.getGrantType());
       assertNotNull(authorizedClient.getEncodedAccessToken());
    }
@@ -85,7 +86,8 @@ public class OAuth2AuthorizeClientProviderTest {
       }
 
       assertEquals("myrealm-serviceaccount", authorizedClient.getPrincipalName());
-      assertEquals(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token", authorizedClient.getTokenUri());
+      assertEquals(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token",
+            authorizedClient.getTokenUri());
       assertEquals(OAuth2GrantType.CLIENT_CREDENTIALS, authorizedClient.getGrantType());
       assertNotNull(authorizedClient.getEncodedAccessToken());
    }
@@ -108,13 +110,10 @@ public class OAuth2AuthorizeClientProviderTest {
       // First use standard Spring Security classes to authorize and retrieve a refresh token.
       DefaultPasswordTokenResponseClient client = new DefaultPasswordTokenResponseClient();
 
-      ClientRegistration registration = ClientRegistration.withRegistrationId("test-idp")
-            .clientId("myrealm-test")
+      ClientRegistration registration = ClientRegistration.withRegistrationId("test-idp").clientId("myrealm-test")
             .clientSecret("QAzrPEJJeDkjKtePKoXyzkqY6exkBauh")
             .tokenUri(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token")
-            .authorizationGrantType(AuthorizationGrantType.PASSWORD)
-            .scope("openid")
-            .build();
+            .authorizationGrantType(AuthorizationGrantType.PASSWORD).scope("openid").build();
 
       OAuth2PasswordGrantRequest request = new OAuth2PasswordGrantRequest(registration, "admin", "myrealm123");
       OAuth2AccessTokenResponse response = client.getTokenResponse(request);
@@ -137,7 +136,8 @@ public class OAuth2AuthorizeClientProviderTest {
       }
 
       assertEquals("myrealm-test", authorizedClient.getPrincipalName());
-      assertEquals(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token", authorizedClient.getTokenUri());
+      assertEquals(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token",
+            authorizedClient.getTokenUri());
       assertEquals(OAuth2GrantType.REFRESH_TOKEN, authorizedClient.getGrantType());
       assertNotNull(authorizedClient.getEncodedAccessToken());
    }

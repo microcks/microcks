@@ -45,8 +45,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
- * Provides a reflection service for GRPC services (excluding the reflection service itself)
- * registered into this Microcks instance.
+ * Provides a reflection service for GRPC services (excluding the reflection service itself) registered into this
+ * Microcks instance.
  * @author laurent
  */
 public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectionImplBase {
@@ -56,7 +56,7 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
 
    /**
     * Build a new ProtoReflectionService using application repositories.
-    * @param serviceRepository Repository to get access to the list of GRPC services.
+    * @param serviceRepository  Repository to get access to the list of GRPC services.
     * @param resourceRepository Repository to get access to the list of Protobuf resources for services.
     */
    public ProtoReflectionService(ServiceRepository serviceRepository, ResourceRepository resourceRepository) {
@@ -66,25 +66,27 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
 
    /**
     * Build a new ProtoReflectionService using application repositories.
-    * @param serviceRepository Repository to get access to the list of GRPC services.
+    * @param serviceRepository  Repository to get access to the list of GRPC services.
     * @param resourceRepository Repository to get access to the list of Protobuf resources for services.
     */
-   public static BindableService newInstance(ServiceRepository serviceRepository, ResourceRepository resourceRepository) {
+   public static BindableService newInstance(ServiceRepository serviceRepository,
+         ResourceRepository resourceRepository) {
       return new ProtoReflectionService(serviceRepository, resourceRepository);
    }
 
    @Override
-   public StreamObserver<ServerReflectionRequest> serverReflectionInfo(StreamObserver<ServerReflectionResponse> responseObserver) {
+   public StreamObserver<ServerReflectionRequest> serverReflectionInfo(
+         StreamObserver<ServerReflectionResponse> responseObserver) {
       final ServerCallStreamObserver<ServerReflectionResponse> serverCallStreamObserver = (ServerCallStreamObserver<ServerReflectionResponse>) responseObserver;
-      ProtoReflectionStreamObserver requestObserver = new ProtoReflectionStreamObserver(serviceRepository, resourceRepository, serverCallStreamObserver);
+      ProtoReflectionStreamObserver requestObserver = new ProtoReflectionStreamObserver(serviceRepository,
+            resourceRepository, serverCallStreamObserver);
       serverCallStreamObserver.setOnReadyHandler(requestObserver);
       serverCallStreamObserver.disableAutoRequest();
       serverCallStreamObserver.request(1);
       return requestObserver;
    }
 
-   private static class ProtoReflectionStreamObserver
-         implements Runnable, StreamObserver<ServerReflectionRequest> {
+   private static class ProtoReflectionStreamObserver implements Runnable, StreamObserver<ServerReflectionRequest> {
 
       private final ServiceRepository serviceRepository;
       private final ResourceRepository resourceRepository;
@@ -92,7 +94,8 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
       private boolean closeAfterSend = false;
       private ServerReflectionRequest request;
 
-      ProtoReflectionStreamObserver(ServiceRepository serviceRepository, ResourceRepository resourceRepository, ServerCallStreamObserver<ServerReflectionResponse> serverCallStreamObserver) {
+      ProtoReflectionStreamObserver(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
+            ServerCallStreamObserver<ServerReflectionResponse> serverCallStreamObserver) {
          this.serviceRepository = serviceRepository;
          this.resourceRepository = resourceRepository;
          this.serverCallStreamObserver = checkNotNull(serverCallStreamObserver, "observer");
@@ -158,8 +161,7 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
       }
 
       private void getFileByName(ServerReflectionRequest request) {
-         sendErrorResponse(request, Status.Code.UNIMPLEMENTED,
-               "not implemented " + request.getMessageRequestCase());
+         sendErrorResponse(request, Status.Code.UNIMPLEMENTED, "not implemented " + request.getMessageRequestCase());
       }
 
       private void getFileContainingSymbol(ServerReflectionRequest request) {
@@ -185,7 +187,8 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
       }
 
       private void sendFileDescriptorForService(Service service, ServerReflectionRequest request) {
-         List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.PROTOBUF_DESCRIPTOR);
+         List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
+               ResourceType.PROTOBUF_DESCRIPTOR);
          if (!resources.isEmpty()) {
             Resource resource = resources.get(0);
 
@@ -196,7 +199,8 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
             }
 
             try {
-               Descriptors.FileDescriptor fd = GrpcUtil.findFileDescriptorBySymbol(resource.getContent(), shortServiceName);
+               Descriptors.FileDescriptor fd = GrpcUtil.findFileDescriptorBySymbol(resource.getContent(),
+                     shortServiceName);
                serverCallStreamObserver.onNext(createServerReflectionResponse(request, fd));
             } catch (Exception e) {
                sendErrorResponse(request, Status.Code.INTERNAL, "Unreadable protobuf descriptor");
@@ -207,13 +211,11 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
       }
 
       private void getFileByExtension(ServerReflectionRequest request) {
-         sendErrorResponse(request, Status.Code.UNIMPLEMENTED,
-               "not implemented " + request.getMessageRequestCase());
+         sendErrorResponse(request, Status.Code.UNIMPLEMENTED, "not implemented " + request.getMessageRequestCase());
       }
 
       private void getAllExtensions(ServerReflectionRequest request) {
-         sendErrorResponse(request, Status.Code.UNIMPLEMENTED,
-               "not implemented " + request.getMessageRequestCase());
+         sendErrorResponse(request, Status.Code.UNIMPLEMENTED, "not implemented " + request.getMessageRequestCase());
       }
 
       private void listServices(ServerReflectionRequest request) {
@@ -224,25 +226,20 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
             builder.addService(ServiceResponse.newBuilder().setName(service.getName()));
          }
 
-         serverCallStreamObserver.onNext(ServerReflectionResponse.newBuilder()
-               .setValidHost(request.getHost())
-               .setOriginalRequest(request)
-               .setListServicesResponse(builder)
-               .build());
+         serverCallStreamObserver.onNext(ServerReflectionResponse.newBuilder().setValidHost(request.getHost())
+               .setOriginalRequest(request).setListServicesResponse(builder).build());
       }
 
       private void sendErrorResponse(ServerReflectionRequest request, Status.Code code, String message) {
-         ServerReflectionResponse response = ServerReflectionResponse.newBuilder()
-               .setValidHost(request.getHost())
+         ServerReflectionResponse response = ServerReflectionResponse.newBuilder().setValidHost(request.getHost())
                .setOriginalRequest(request)
-               .setErrorResponse(ErrorResponse.newBuilder()
-                     .setErrorCode(code.value())
-                     .setErrorMessage(message))
+               .setErrorResponse(ErrorResponse.newBuilder().setErrorCode(code.value()).setErrorMessage(message))
                .build();
          serverCallStreamObserver.onNext(response);
       }
 
-      private ServerReflectionResponse createServerReflectionResponse(ServerReflectionRequest request, Descriptors.FileDescriptor fd) {
+      private ServerReflectionResponse createServerReflectionResponse(ServerReflectionRequest request,
+            Descriptors.FileDescriptor fd) {
          FileDescriptorResponse.Builder fdRBuilder = FileDescriptorResponse.newBuilder();
 
          Set<String> seenFiles = new HashSet<>();
@@ -259,11 +256,8 @@ public class ProtoReflectionService extends ServerReflectionGrpc.ServerReflectio
                }
             }
          }
-         return ServerReflectionResponse.newBuilder()
-               .setValidHost(request.getHost())
-               .setOriginalRequest(request)
-               .setFileDescriptorResponse(fdRBuilder)
-               .build();
+         return ServerReflectionResponse.newBuilder().setValidHost(request.getHost()).setOriginalRequest(request)
+               .setFileDescriptorResponse(fdRBuilder).build();
       }
 
       private String getVersionFromServiceName(String serviceName) {

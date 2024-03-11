@@ -18,11 +18,9 @@ package io.github.microcks.domain;
 import org.springframework.data.annotation.Id;
 
 /**
- * Domain object representing a microservice operation / rest
- * action invocation response. Holds information wether it's a
- * fault or not and on status code and mediaType to use for return.
- * Responses are typically retrieved using dispatchCriteria
- * extracted from a corresponding request message.
+ * Domain object representing a microservice operation / rest action invocation response. Holds information wether it's
+ * a fault or not and on status code and mediaType to use for return. Responses are typically retrieved using
+ * dispatchCriteria extracted from a corresponding request message.
  * @author laurent
  */
 public class Response extends Message {

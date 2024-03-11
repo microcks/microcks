@@ -72,24 +72,23 @@ public class ServiceController {
 
    /**
     * Build a new ServiceController with its dependencies.
-    * @param serviceService to perform business logic on Services
+    * @param serviceService    to perform business logic on Services
     * @param serviceRepository to have access to Services definition
-    * @param messageService to have acces to Services messages
+    * @param messageService    to have acces to Services messages
     */
-   public ServiceController(ServiceService serviceService, ServiceRepository serviceRepository, MessageService messageService) {
+   public ServiceController(ServiceService serviceService, ServiceRepository serviceRepository,
+         MessageService messageService) {
       this.serviceService = serviceService;
       this.serviceRepository = serviceRepository;
       this.messageService = messageService;
    }
 
    @GetMapping(value = "/services")
-   public List<Service> listServices(
-         @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size
-      ) {
+   public List<Service> listServices(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+         @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
       log.debug("Getting service list for page {} and size {}", page, size);
-      return serviceRepository.findAll(PageRequest.of(page, size,
-            Sort.by(Sort.Direction.ASC, "name", "version"))).getContent();
+      return serviceRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name", "version")))
+            .getContent();
    }
 
    @GetMapping(value = "/services/search")
@@ -148,10 +147,8 @@ public class ServiceController {
    }
 
    @GetMapping(value = "/services/{id:.+}", produces = "application/json")
-   public ResponseEntity<?> getService(
-         @PathVariable("id") String serviceId,
-         @RequestParam(value = "messages", required = false, defaultValue = "true") boolean messages
-      ) {
+   public ResponseEntity<?> getService(@PathVariable("id") String serviceId,
+         @RequestParam(value = "messages", required = false, defaultValue = "true") boolean messages) {
       log.debug("Retrieving service with id {}", serviceId);
 
       Service service = null;
@@ -175,13 +172,13 @@ public class ServiceController {
          for (Operation operation : service.getOperations()) {
             if (service.getType() == ServiceType.EVENT || service.getType() == ServiceType.GENERIC_EVENT) {
                // If an event, we should explicitly retrieve event messages.
-               List<UnidirectionalEvent> events = messageService.getEventByOperation(
-                     IdBuilder.buildOperationId(service, operation));
+               List<UnidirectionalEvent> events = messageService
+                     .getEventByOperation(IdBuilder.buildOperationId(service, operation));
                messagesMap.put(operation.getName(), events);
             } else {
                // Otherwise we have traditional request / response pairs.
-               List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
-                     IdBuilder.buildOperationId(service, operation));
+               List<RequestResponsePair> pairs = messageService
+                     .getRequestResponseByOperation(IdBuilder.buildOperationId(service, operation));
                messagesMap.put(operation.getName(), pairs);
             }
          }
@@ -192,9 +189,10 @@ public class ServiceController {
 
    @PostMapping(value = "/services/generic")
    public ResponseEntity<Service> createGenericResourceService(@RequestBody GenericResourceServiceDTO serviceDTO) {
-      log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(), serviceDTO.getVersion(), serviceDTO.getResource());
+      log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(),
+            serviceDTO.getVersion(), serviceDTO.getResource());
 
-      try{
+      try {
          Service service = serviceService.createGenericResourceService(serviceDTO.getName(), serviceDTO.getVersion(),
                serviceDTO.getResource(), serviceDTO.getReferencePayload());
          return new ResponseEntity<>(service, HttpStatus.CREATED);
@@ -206,9 +204,10 @@ public class ServiceController {
 
    @PostMapping(value = "/services/generic/event")
    public ResponseEntity<Service> createGenericEventService(@RequestBody GenericResourceServiceDTO serviceDTO) {
-      log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(), serviceDTO.getVersion(), serviceDTO.getResource());
+      log.debug("Creating a new Service '{}-{}' for generic resource '{}'", serviceDTO.getName(),
+            serviceDTO.getVersion(), serviceDTO.getResource());
 
-      try{
+      try {
          Service service = serviceService.createGenericEventService(serviceDTO.getName(), serviceDTO.getVersion(),
                serviceDTO.getResource(), serviceDTO.getReferencePayload());
          return new ResponseEntity<>(service, HttpStatus.CREATED);
@@ -219,29 +218,26 @@ public class ServiceController {
    }
 
    @PutMapping(value = "/services/{id}/metadata")
-   public ResponseEntity<?> updateMetadata(@PathVariable("id") String serviceId,
-         @RequestBody Metadata metadata,
+   public ResponseEntity<?> updateMetadata(@PathVariable("id") String serviceId, @RequestBody Metadata metadata,
          UserInfo userInfo) {
       log.debug("Updating the metadata of service {}", serviceId);
       boolean result = serviceService.updateMetadata(serviceId, metadata, userInfo);
-      if (result){
+      if (result) {
          return new ResponseEntity<>(HttpStatus.OK);
       }
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
 
    @PutMapping(value = "/services/{id}/operation")
-   public ResponseEntity<?> overrideServiceOperation(
-         @PathVariable("id") String serviceId,
+   public ResponseEntity<?> overrideServiceOperation(@PathVariable("id") String serviceId,
          @RequestParam(value = "operationName") String operationName,
-         @RequestBody OperationOverrideDTO operationOverride,
-         UserInfo userInfo
-      ) {
+         @RequestBody OperationOverrideDTO operationOverride, UserInfo userInfo) {
       log.debug("Updating operation {} of service {}", operationName, serviceId);
       log.debug("ParameterConstraints?: {}", operationOverride.getParameterConstraints());
       boolean result = serviceService.updateOperation(serviceId, operationName, operationOverride.getDispatcher(),
-            operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(), operationOverride.getParameterConstraints(), userInfo);
-      if (result){
+            operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(),
+            operationOverride.getParameterConstraints(), userInfo);
+      if (result) {
          return new ResponseEntity<>(HttpStatus.OK);
       }
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);

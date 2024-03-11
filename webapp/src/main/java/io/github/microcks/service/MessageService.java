@@ -117,21 +117,21 @@ public class MessageService {
       // Retrieve requests and responses using testCase identifier.
       List<Request> requests = requestRepository.findByTestCaseId(testCaseId);
       List<Response> responses = responseRepository.findByTestCaseId(testCaseId);
-      if (log.isDebugEnabled()){
+      if (log.isDebugEnabled()) {
          log.debug("Found {} request(s) for testCase {}", requests.size(), testCaseId);
          log.debug("Found {} response(s) for testCase {}", responses.size(), testCaseId);
       }
 
       // Browse them to reassociate them.
       List<RequestResponsePair> results = associatePairs(requests, responses);
-      if (log.isDebugEnabled()){
+      if (log.isDebugEnabled()) {
          log.debug("Emitting {} request/response pair(s) as result", results.size());
       }
       return results;
    }
 
    /** */
-   private List<RequestResponsePair> associatePairs(List<Request> requests, List<Response> responses){
+   private List<RequestResponsePair> associatePairs(List<Request> requests, List<Response> responses) {
       List<RequestResponsePair> results = new ArrayList<RequestResponsePair>();
 
       // Browse them to reassociate them.

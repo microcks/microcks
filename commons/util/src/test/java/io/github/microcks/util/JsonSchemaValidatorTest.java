@@ -37,8 +37,8 @@ public class JsonSchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/car-schema.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema.json"));
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -57,8 +57,8 @@ public class JsonSchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/car-schema.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema.json"));
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -83,13 +83,12 @@ public class JsonSchemaValidatorTest {
    public void testValidateJsonUnknownNodeFailure() {
       boolean valid = true;
       String schemaText = null;
-      String jsonText = "{\"name\": \"307\", " +
-            "\"model\": \"Peugeot 307\", \"year\": 2003, \"energy\": \"GO\"}";
+      String jsonText = "{\"name\": \"307\", " + "\"model\": \"Peugeot 307\", \"year\": 2003, \"energy\": \"GO\"}";
 
       try {
          // Load schema from file.
-         schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/car-schema-no-addon.json"));
+         schemaText = FileUtils
+               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema-no-addon.json"));
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -107,7 +106,6 @@ public class JsonSchemaValidatorTest {
          fail("Exception should not be thrown");
       }
       assertEquals(1, errors.size());
-      assertEquals("object instance has properties which are not allowed by the schema: [\"energy\"]",
-            errors.get(0));
+      assertEquals("object instance has properties which are not allowed by the schema: [\"energy\"]", errors.get(0));
    }
 }

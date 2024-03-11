@@ -26,8 +26,7 @@ import java.util.Collections;
 import java.util.Map;
 
 /**
- * Utility class that holds methods for creating binding environments for
- * a JSR 233 ScriptEngine.
+ * Utility class that holds methods for creating binding environments for a JSR 233 ScriptEngine.
  * @author laurent
  */
 public class ScriptEngineBinder {
@@ -38,7 +37,7 @@ public class ScriptEngineBinder {
 
    /**
     * Create and bind a SoapUI environment for a ScriptEngine.
-    * @param engine The engine to enrich with binding environment.
+    * @param engine         The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
     * @param requestContext The execution context of this request
     */
@@ -49,12 +48,13 @@ public class ScriptEngineBinder {
 
    /**
     * Create and bind an environment from Http request for a ScriptEngine.
-    * @param engine The engine to enrich with binding environment.
+    * @param engine         The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
     * @param requestContext The execution context of this request
-    * @param request The wrapped incoming servlet request.
+    * @param request        The wrapped incoming servlet request.
     */
-   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext, HttpServletRequest request) {
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
+         HttpServletRequest request) {
       // Build a map of header values.
       StringToStringsMap headers = new HttpHeadersStringToStringsMap();
       if (request != null) {

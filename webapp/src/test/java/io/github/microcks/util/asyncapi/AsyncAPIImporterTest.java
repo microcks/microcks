@@ -41,7 +41,8 @@ public class AsyncAPIImporterTest {
    public void testSimpleAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -54,7 +55,8 @@ public class AsyncAPIImporterTest {
    public void testSimpleAsyncAPIImportJSON() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.json", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.json", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -103,7 +105,7 @@ public class AsyncAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
-                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
+                  UnidirectionalEvent event = (UnidirectionalEvent) exchange;
                   EventMessage eventMessage = event.getEventMessage();
                   assertNotNull(eventMessage);
                   assertEquals("application/json", eventMessage.getMediaType());
@@ -159,7 +161,8 @@ public class AsyncAPIImporterTest {
    public void testSimpleAsyncAPIImportYAMLWithExtensions() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -205,7 +208,8 @@ public class AsyncAPIImporterTest {
    public void testAsyncAPIImportGHMasterYAML() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-gh-master.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-gh-master.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -250,7 +254,7 @@ public class AsyncAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
-                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
+                  UnidirectionalEvent event = (UnidirectionalEvent) exchange;
                   EventMessage eventMessage = event.getEventMessage();
                   assertNotNull(eventMessage);
                   assertEquals("application/json", eventMessage.getMediaType());
@@ -306,7 +310,8 @@ public class AsyncAPIImporterTest {
    public void testAsyncAPI21ImportYAML() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-2.1.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-2.1.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -351,7 +356,7 @@ public class AsyncAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
-                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
+                  UnidirectionalEvent event = (UnidirectionalEvent) exchange;
                   EventMessage eventMessage = event.getEventMessage();
                   assertNotNull(eventMessage);
                   assertEquals("application/json", eventMessage.getMediaType());
@@ -407,7 +412,8 @@ public class AsyncAPIImporterTest {
    public void testAsyncAPI21RefImportYAML() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -459,7 +465,8 @@ public class AsyncAPIImporterTest {
    public void testAsyncAPI21MultiRefsImportYAML() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/user-events-asyncapi-2.1.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-events-asyncapi-2.1.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -511,7 +518,8 @@ public class AsyncAPIImporterTest {
    public void testReferenceAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -568,7 +576,9 @@ public class AsyncAPIImporterTest {
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-json-ref-asyncapi.yaml",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/1.7.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-json-ref-asyncapi.yaml", null, true));
+               new ReferenceResolver(
+                     "https://raw.githubusercontent.com/microcks/microcks/1.7.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-json-ref-asyncapi.yaml",
+                     null, true));
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -600,13 +610,14 @@ public class AsyncAPIImporterTest {
       assertEquals(ResourceType.JSON_SCHEMA, resources.get(1).getType());
       assertEquals("User signed-up API-0.1.0-user-signedup.json", resources.get(1).getName());
       assertNotNull(resources.get(1).getContent());
-  }
+   }
 
    @Test
    public void testAvroAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -651,7 +662,7 @@ public class AsyncAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
-                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
+                  UnidirectionalEvent event = (UnidirectionalEvent) exchange;
                   EventMessage eventMessage = event.getEventMessage();
                   assertNotNull(eventMessage);
                   assertEquals("avro/binary", eventMessage.getMediaType());
@@ -709,7 +720,9 @@ public class AsyncAPIImporterTest {
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/master/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml", null, true));
+               new ReferenceResolver(
+                     "https://raw.githubusercontent.com/microcks/microcks/master/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml",
+                     null, true));
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -762,7 +775,7 @@ public class AsyncAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
-                  UnidirectionalEvent event = (UnidirectionalEvent)exchange;
+                  UnidirectionalEvent event = (UnidirectionalEvent) exchange;
                   EventMessage eventMessage = event.getEventMessage();
                   assertNotNull(eventMessage);
                   assertEquals("avro/binary", eventMessage.getMediaType());
@@ -781,7 +794,8 @@ public class AsyncAPIImporterTest {
    public void testAsyncAPIImportWithParametrizedChannel() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/api-maintenance.async-api-spec.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/api-maintenance.async-api-spec.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -812,10 +826,12 @@ public class AsyncAPIImporterTest {
 
       for (Operation operation : service.getOperations()) {
 
-         if ("PUBLISH apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}".equals(operation.getName())) {
+         if ("PUBLISH apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}"
+               .equals(operation.getName())) {
             assertEquals("PUBLISH", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
-            assertEquals("resource_region_id && equipmentType && eventType && resourceType && resourceId", operation.getDispatcherRules());
+            assertEquals("resource_region_id && equipmentType && eventType && resourceType && resourceId",
+                  operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -826,8 +842,10 @@ public class AsyncAPIImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711"));
-            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815"));
+            assertTrue(operation.getResourcePaths()
+                  .contains("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711"));
+            assertTrue(operation.getResourcePaths()
+                  .contains("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
@@ -835,11 +853,15 @@ public class AsyncAPIImporterTest {
                   EventMessage eventMessage = event.getEventMessage();
 
                   if ("misalignment".equals(eventMessage.getName())) {
-                     assertEquals("/equipmentType=elevator/eventType=maintenance/resourceId=abc4711/resourceType=elev-make-1/resource_region_id=fr", eventMessage.getDispatchCriteria());
+                     assertEquals(
+                           "/equipmentType=elevator/eventType=maintenance/resourceId=abc4711/resourceType=elev-make-1/resource_region_id=fr",
+                           eventMessage.getDispatchCriteria());
                      assertEquals("application/json", eventMessage.getMediaType());
                      assertNotNull(eventMessage.getContent());
                   } else if ("doorfailure".equals(eventMessage.getName())) {
-                     assertEquals("/equipmentType=elevator/eventType=maintenance/resourceId=xyz0815/resourceType=elev-make-2/resource_region_id=de", eventMessage.getDispatchCriteria());
+                     assertEquals(
+                           "/equipmentType=elevator/eventType=maintenance/resourceId=xyz0815/resourceType=elev-make-2/resource_region_id=de",
+                           eventMessage.getDispatchCriteria());
                      assertEquals("application/json", eventMessage.getMediaType());
                      assertNotNull(eventMessage.getContent());
                   } else {
@@ -859,7 +881,9 @@ public class AsyncAPIImporterTest {
    public void testAsyncAPIImportWithParametrizedChannelGHMaster() {
       AsyncAPIImporter importer = null;
       try {
-         importer = new AsyncAPIImporter("target/test-classes/io/github/microcks/util/asyncapi/api-maintenance.async-api-spec-gh-master.yaml", null);
+         importer = new AsyncAPIImporter(
+               "target/test-classes/io/github/microcks/util/asyncapi/api-maintenance.async-api-spec-gh-master.yaml",
+               null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -890,10 +914,12 @@ public class AsyncAPIImporterTest {
 
       for (Operation operation : service.getOperations()) {
 
-         if ("PUBLISH apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}".equals(operation.getName())) {
+         if ("PUBLISH apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}"
+               .equals(operation.getName())) {
             assertEquals("PUBLISH", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
-            assertEquals("resource_region_id && equipmentType && eventType && resourceType && resourceId", operation.getDispatcherRules());
+            assertEquals("resource_region_id && equipmentType && eventType && resourceType && resourceId",
+                  operation.getDispatcherRules());
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
@@ -904,25 +930,33 @@ public class AsyncAPIImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711"));
-            assertTrue(operation.getResourcePaths().contains("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815"));
+            assertTrue(operation.getResourcePaths()
+                  .contains("apim/elevator-co/api/V1/json/fr/elevator/maintenance/elev-make-1/abc4711"));
+            assertTrue(operation.getResourcePaths()
+                  .contains("apim/elevator-co/api/V1/json/de/elevator/maintenance/elev-make-2/xyz0815"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent) {
                   UnidirectionalEvent event = (UnidirectionalEvent) exchange;
                   EventMessage eventMessage = event.getEventMessage();
 
-                  if ("apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-0".equals(eventMessage.getName())) {
-                     assertEquals("/equipmentType=elevator/eventType=maintenance/resourceId=abc4711/resourceType=elev-make-1/resource_region_id=fr", eventMessage.getDispatchCriteria());
+                  if ("apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-0"
+                        .equals(eventMessage.getName())) {
+                     assertEquals(
+                           "/equipmentType=elevator/eventType=maintenance/resourceId=abc4711/resourceType=elev-make-1/resource_region_id=fr",
+                           eventMessage.getDispatchCriteria());
                      assertEquals("application/json", eventMessage.getMediaType());
                      assertNotNull(eventMessage.getContent());
-                  } else if ("apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-1".equals(eventMessage.getName())) {
-                     assertEquals("/equipmentType=elevator/eventType=maintenance/resourceId=xyz0815/resourceType=elev-make-2/resource_region_id=de", eventMessage.getDispatchCriteria());
+                  } else if ("apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-1"
+                        .equals(eventMessage.getName())) {
+                     assertEquals(
+                           "/equipmentType=elevator/eventType=maintenance/resourceId=xyz0815/resourceType=elev-make-2/resource_region_id=de",
+                           eventMessage.getDispatchCriteria());
                      assertEquals("application/json", eventMessage.getMediaType());
                      assertNotNull(eventMessage.getContent());
                   } else {
-                     fail("Event has the wrong name. Expecting apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-0" +
-                           " or apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-1");
+                     fail("Event has the wrong name. Expecting apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-0"
+                           + " or apim/elevator-co/api/V1/json/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}-1");
                   }
                } else {
                   fail("Exchange has the wrong type. Expecting UnidirectionalEvent");

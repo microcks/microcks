@@ -23,10 +23,8 @@ import java.util.stream.Collectors;
  */
 public class Sanitizer {
    private static final String ALLOWED_CHARS = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$-_.+!*'(),";
-   private static final Set<Character> ALLOWED_CHARS_SET = ALLOWED_CHARS
-      .chars()
-      .mapToObj(c -> (char) c)
-      .collect(Collectors.toSet());
+   private static final Set<Character> ALLOWED_CHARS_SET = ALLOWED_CHARS.chars().mapToObj(c -> (char) c)
+         .collect(Collectors.toSet());
    private static final Character REPLACE_CHAR = '-';
 
    private Sanitizer() {
@@ -34,9 +32,8 @@ public class Sanitizer {
    }
 
    /**
-    * Sanitize a string to be used in a URL.
-    * It replaces all characters that are not in the set of allowed characters by a dash.
-    *
+    * Sanitize a string to be used in a URL. It replaces all characters that are not in the set of allowed characters by
+    * a dash.
     * @param string the string to sanitize
     * @return the sanitized string
     */

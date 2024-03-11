@@ -57,8 +57,8 @@ import java.util.Set;
 import static io.github.microcks.util.asyncapi.AsyncAPICommons.*;
 
 /**
- * An implementation of MockRepositoryImporter that deals with AsyncAPI v2.0.x
- * specification file ; whether encoding into JSON or YAML documents.
+ * An implementation of MockRepositoryImporter that deals with AsyncAPI v2.0.x specification file ; whether encoding
+ * into JSON or YAML documents.
  * @author laurent
  */
 public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
@@ -66,7 +66,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(AsyncAPIImporter.class);
 
-   private static final String[] MULTI_STRUCTURES = {"allOf", "anyOf", "oneOf"};
+   private static final String[] MULTI_STRUCTURES = { "allOf", "anyOf", "oneOf" };
    private static final List<String> VALID_VERBS = Arrays.asList("subscribe", "publish");
 
    /**
@@ -93,7 +93,8 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
       // Complete metadata if specified via extension.
       if (rootSpecification.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
          Metadata metadata = new Metadata();
-         MetadataExtractor.completeMetadata(metadata, rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         MetadataExtractor.completeMetadata(metadata,
+               rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
          service.setMetadata(metadata);
       }
 
@@ -457,8 +458,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
    }
 
    /**
-    * Get the value of an example. This can be direct value field or those of
-    * followed $ref.
+    * Get the value of an example. This can be direct value field or those of followed $ref.
     */
    private String getExamplePayload(JsonNode example) {
       if (example.has(EXAMPLE_PAYLOAD_NODE)) {
@@ -479,8 +479,8 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
    }
 
    /**
-    * Extract parameters within a channel node and organize them by example.
-    * Key of value map is param name. Value of value map is param value ;-)
+    * Extract parameters within a channel node and organize them by example. Key of value map is param name. Value of
+    * value map is param value ;-)
     */
    private Map<String, Map<String, String>> extractParametersByExample(JsonNode node) {
       Map<String, Map<String, String>> results = new HashMap<>();
@@ -519,8 +519,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
    }
 
    /**
-    * Get the value of an example. This can be direct value field or those of
-    * followed $ref
+    * Get the value of an example. This can be direct value field or those of followed $ref
     */
    private String getExampleValue(JsonNode example) {
       if (example.has(EXAMPLE_VALUE_NODE)) {

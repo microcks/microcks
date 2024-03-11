@@ -23,10 +23,11 @@ import java.util.List;
 
 /**
  * Simple record wrapping elements of an exchange context during a test
- * @param service The Service the test was issued for
- * @param operation The Operation the test was issued for
- * @param resources The Resources attached to Service
+ * @param service     The Service the test was issued for
+ * @param operation   The Operation the test was issued for
+ * @param resources   The Resources attached to Service
  * @param resourceUrl A base resource url to fetch relative dependencies that may be found in resources
  */
-public record ExchangeContext (Service service, Operation operation, List<Resource> resources, String resourceUrl) {}
+public record ExchangeContext(Service service, Operation operation, List<Resource> resources, String resourceUrl) {
+}
 

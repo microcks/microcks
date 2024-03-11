@@ -54,13 +54,12 @@ public class ConsumptionTaskCommons {
       String caCertPem = specification.getSecret().getCaCertPem();
 
       // First compute a stripped PEM certificate and decode it from base64.
-      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "")
-            .replaceAll(END_CERTIFICATE, "");
+      String strippedPem = caCertPem.replaceAll(BEGIN_CERTIFICATE, "").replaceAll(END_CERTIFICATE, "");
       InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
 
       // Generate a new x509 certificate from the stripped decoded pem.
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      X509Certificate caCert = (X509Certificate)cf.generateCertificate(is);
+      X509Certificate caCert = (X509Certificate) cf.generateCertificate(is);
 
       // Create a new TrustStore using KeyStore API.
       char[] password = TRUSTSTORE_PASSWORD.toCharArray();

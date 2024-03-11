@@ -52,51 +52,48 @@ public class NativeConfiguration {
       public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
          hints.reflection().registerType(TypeReference.of(Service.class));
 
-         hints.reflection().registerType(TypeReference.of(ServiceView.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(Message.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(Header.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(Request.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(Response.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(Parameter.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(EventMessage.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(Exchange.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(RequestResponsePair.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(UnidirectionalEvent.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(ServiceView.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(Message.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(Header.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(Request.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(Response.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(Parameter.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(EventMessage.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(Exchange.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(RequestResponsePair.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(UnidirectionalEvent.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
          hints.reflection().registerType(TypeReference.of(ServiceViewChangeEventSerializer.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(DispatchCases.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
+               MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(DispatchCases.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
          hints.reflection().registerType(TypeReference.of(JsonEvaluationSpecification.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
+               MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
-         hints.reflection()
-               .registerType(TypeReference.of(
-                     "org.springframework.security.web.access.HandlerMappingIntrospectorRequestTransformer"),
-                     MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection()
-               .registerType(TypeReference.of(
-                     "org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy"),
-                     MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection()
-               .registerType(TypeReference.of(
-                           "org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$HandlerMappingIntrospectorCachFilterFactoryBean"),
-                     MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(
+               TypeReference.of("org.springframework.security.web.access.HandlerMappingIntrospectorRequestTransformer"),
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(
+               "org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy"),
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(
+               "org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$HandlerMappingIntrospectorCachFilterFactoryBean"),
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
-         hints.reflection()
-               .registerType(TypeReference.of(
-                     "io.grpc.netty.shaded.io.netty.util.ReferenceCountUtil"),
-                     MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of("io.grpc.netty.shaded.io.netty.util.ReferenceCountUtil"),
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
       }
    }
 }

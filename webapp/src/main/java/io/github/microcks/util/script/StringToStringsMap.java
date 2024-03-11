@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A minimalist implementation of com.eviware.soapui.support.types.StringToStringsMap to ensure a
- * compatibility layer withe SoapUI scripting.
+ * A minimalist implementation of com.eviware.soapui.support.types.StringToStringsMap to ensure a compatibility layer
+ * withe SoapUI scripting.
  * @author laurent
  */
 public class StringToStringsMap extends HashMap<String, List<String>> {
@@ -45,7 +45,7 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
    }
 
    public boolean hasValues(String key) {
-      return this.containsKey(key) && ((List)this.get(key)).size() > 0;
+      return this.containsKey(key) && ((List) this.get(key)).size() > 0;
    }
 
    public void add(String key, boolean value) {
@@ -97,7 +97,7 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
    }
 
    public String[] getKeys() {
-      return (String[])this.keySet().toArray(new String[this.size()]);
+      return (String[]) this.keySet().toArray(new String[this.size()]);
    }
 
    public boolean containsKeyIgnoreCase(String string) {
@@ -109,7 +109,7 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
             return false;
          }
 
-         key = (String)var2.next();
+         key = (String) var2.next();
       } while (!key.equalsIgnoreCase(string));
 
       return true;
@@ -133,10 +133,11 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
             return defaultValue;
          }
 
-         stringListEntry = (Map.Entry)var3.next();
-      } while (!key.equalsIgnoreCase((String)stringListEntry.getKey()) || ((List)stringListEntry.getValue()).isEmpty());
+         stringListEntry = (Map.Entry) var3.next();
+      } while (!key.equalsIgnoreCase((String) stringListEntry.getKey())
+            || ((List) stringListEntry.getValue()).isEmpty());
 
-      return (String) ((List)stringListEntry.getValue()).get(0);
+      return (String) ((List) stringListEntry.getValue()).get(0);
    }
 
    public void replace(String key, String oldValue, String value) {
@@ -162,7 +163,7 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
 
       String key;
       for (Iterator var2 = this.keySet().iterator(); var2.hasNext(); result += ((List) this.get(key)).size()) {
-         key = (String)var2.next();
+         key = (String) var2.next();
       }
 
       return result;
@@ -173,11 +174,11 @@ public class StringToStringsMap extends HashMap<String, List<String>> {
       Iterator var2 = this.keySet().iterator();
 
       while (var2.hasNext()) {
-         String key = (String)var2.next();
+         String key = (String) var2.next();
          Iterator var4 = ((List) this.get(key)).iterator();
 
          while (var4.hasNext()) {
-            String value = (String)var4.next();
+            String value = (String) var4.next();
             result.append(key).append(" : ").append(value).append("\r\n");
          }
       }

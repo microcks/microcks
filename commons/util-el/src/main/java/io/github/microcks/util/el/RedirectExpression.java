@@ -18,9 +18,9 @@ package io.github.microcks.util.el;
 import java.util.Arrays;
 
 /**
- * An implementation of {@code Expression} that redirects the result of a first expression to
- * other ones among a list. If additional expressions are {@code FunctionExpression}, result is
- * appended to the list of arguments before expression invocation.
+ * An implementation of {@code Expression} that redirects the result of a first expression to other ones among a list.
+ * If additional expressions are {@code FunctionExpression}, result is appended to the list of arguments before
+ * expression invocation.
  * @author laurent
  */
 public class RedirectExpression implements Expression {
@@ -37,7 +37,7 @@ public class RedirectExpression implements Expression {
       if (expressions.length > 0) {
          // Execute first expression for getting result.
          result = expressions[0].getValue(context);
-         for (int i=1; i< expressions.length; i++) {
+         for (int i = 1; i < expressions.length; i++) {
             Expression exp = expressions[i];
             if (exp instanceof FunctionExpression) {
                // Clone this expression, enriching args with previous result.

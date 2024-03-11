@@ -35,10 +35,8 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/features")
-@PropertySources({
-   @PropertySource("features.properties"),
-   @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true)
-})
+@PropertySources({ @PropertySource("features.properties"),
+      @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true) })
 @ConfigurationProperties("features")
 public class FeaturesConfigController {
 

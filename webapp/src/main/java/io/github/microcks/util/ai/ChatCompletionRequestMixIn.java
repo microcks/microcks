@@ -20,10 +20,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 
 /**
- * This is a Jackson serialization MixIn coming from https://github.com/TheoKanning/openai-java.
- * This is an extract from https://github.com/TheoKanning/openai-java/blob/main/service/src/main/java/com/theokanning/openai/service/ChatCompletionRequestMixIn.java
- * to avoid pulling the whole 'service' package and its Http clients libraries.
- * Credits to <a href="https://github.com/TheoKanning">Theo Kanning</a>!
+ * This is a Jackson serialization MixIn coming from https://github.com/TheoKanning/openai-java. This is an extract from
+ * https://github.com/TheoKanning/openai-java/blob/main/service/src/main/java/com/theokanning/openai/service/ChatCompletionRequestMixIn.java
+ * to avoid pulling the whole 'service' package and its Http clients libraries. Credits to
+ * <a href="https://github.com/TheoKanning">Theo Kanning</a>!
  * @author laurent
  */
 public abstract class ChatCompletionRequestMixIn {

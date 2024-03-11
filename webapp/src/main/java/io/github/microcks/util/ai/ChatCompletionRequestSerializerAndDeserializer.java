@@ -26,17 +26,19 @@ import com.theokanning.openai.completion.chat.ChatCompletionRequest;
 import java.io.IOException;
 
 /**
- * This is a Jackson serializer/deserializer config coming from https://github.com/TheoKanning/openai-java.
- * This is an extract from https://github.com/TheoKanning/openai-java/blob/main/service/src/main/java/com/theokanning/openai/service/ChatCompletionRequestSerializerAndDeserializer.java
- * to avoid pulling the whole 'service' package and its Http clients libraries.
- * Credits to <a href="https://github.com/TheoKanning">Theo Kanning</a>!
+ * This is a Jackson serializer/deserializer config coming from https://github.com/TheoKanning/openai-java. This is an
+ * extract from
+ * https://github.com/TheoKanning/openai-java/blob/main/service/src/main/java/com/theokanning/openai/service/ChatCompletionRequestSerializerAndDeserializer.java
+ * to avoid pulling the whole 'service' package and its Http clients libraries. Credits to
+ * <a href="https://github.com/TheoKanning">Theo Kanning</a>!
  * @author laurent
  */
 public class ChatCompletionRequestSerializerAndDeserializer {
 
    public static class Serializer extends JsonSerializer<ChatCompletionRequest.ChatCompletionRequestFunctionCall> {
       @Override
-      public void serialize(ChatCompletionRequest.ChatCompletionRequestFunctionCall value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+      public void serialize(ChatCompletionRequest.ChatCompletionRequestFunctionCall value, JsonGenerator gen,
+            SerializerProvider serializers) throws IOException {
          if (value == null || value.getName() == null) {
             gen.writeNull();
          } else if ("none".equals(value.getName()) || "auto".equals(value.getName())) {
@@ -52,7 +54,8 @@ public class ChatCompletionRequestSerializerAndDeserializer {
 
    public static class Deserializer extends JsonDeserializer<ChatCompletionRequest.ChatCompletionRequestFunctionCall> {
       @Override
-      public ChatCompletionRequest.ChatCompletionRequestFunctionCall deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+      public ChatCompletionRequest.ChatCompletionRequestFunctionCall deserialize(JsonParser p,
+            DeserializationContext ctxt) throws IOException {
          if (p.getCurrentToken().isStructStart()) {
             p.nextToken(); //key
             p.nextToken(); //value

@@ -21,9 +21,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Domain object representing the test conformance metrics (current and configurable depth history) for
- * a Service objects. If classification is allowed then aggregation can be realized using the
- * {@code aggregationLabelValue} field.
+ * Domain object representing the test conformance metrics (current and configurable depth history) for a Service
+ * objects. If classification is allowed then aggregation can be realized using the {@code aggregationLabelValue} field.
  * @author laurent
  */
 public class TestConformanceMetric {

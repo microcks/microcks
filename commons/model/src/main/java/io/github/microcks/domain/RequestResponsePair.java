@@ -28,7 +28,7 @@ public class RequestResponsePair extends Exchange {
    private Response response;
 
    @JsonCreator
-   public RequestResponsePair(@JsonProperty("request") Request request, @JsonProperty("response") Response response){
+   public RequestResponsePair(@JsonProperty("request") Request request, @JsonProperty("response") Response response) {
       this.request = request;
       this.response = response;
    }

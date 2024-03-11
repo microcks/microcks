@@ -78,14 +78,15 @@ public class TestController {
 
    /**
     * Create a TestController with required dependencies.
-    * @param testService Service to launch tests and report results
-    * @param messageService Service to report new test messages
+    * @param testService          Service to launch tests and report results
+    * @param messageService       Service to report new test messages
     * @param testResultRepository Get access to test results
-    * @param serviceRepository Get access to Services
-    * @param secretRepository Get access to Secrets
+    * @param serviceRepository    Get access to Services
+    * @param secretRepository     Get access to Secrets
     */
-   public TestController(TestService testService, MessageService messageService, TestResultRepository testResultRepository,
-                         ServiceRepository serviceRepository, SecretRepository secretRepository) {
+   public TestController(TestService testService, MessageService messageService,
+         TestResultRepository testResultRepository, ServiceRepository serviceRepository,
+         SecretRepository secretRepository) {
       this.testService = testService;
       this.messageService = messageService;
       this.testResultRepository = testResultRepository;
@@ -94,20 +95,16 @@ public class TestController {
    }
 
    @GetMapping(value = "/tests/service/{serviceId}")
-   public List<TestResult> listTestsByService(
-         @PathVariable("serviceId") String serviceId,
+   public List<TestResult> listTestsByService(@PathVariable("serviceId") String serviceId,
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size
-      ) {
+         @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
       log.debug("Getting tests list for service {}, page {} and size {}", serviceId, page, size);
       return testResultRepository.findByServiceId(serviceId,
             PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "testNumber")));
    }
 
    @GetMapping(value = "/tests/service/{serviceId}/count")
-   public Map<String, Long> countTestsByService(
-         @PathVariable("serviceId") String serviceId
-      ) {
+   public Map<String, Long> countTestsByService(@PathVariable("serviceId") String serviceId) {
       log.debug("Counting tests for service...");
       Map<String, Long> counter = new HashMap<>();
       counter.put("counter", testResultRepository.countByServiceId(serviceId));
@@ -141,7 +138,8 @@ public class TestController {
          // TODO: should we return an error and refuse creating the test without secret ?
       }
 
-      TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(), operationsHeaders, test.getOAuth2Context());
+      TestOptionals testOptionals = new TestOptionals(secretRef, test.getTimeout(), test.getFilteredOperations(),
+            operationsHeaders, test.getOAuth2Context());
       TestResult testResult = testService.launchTests(service, test.getTestEndpoint(), testRunner, testOptionals);
       return new ResponseEntity<>(testResult, HttpStatus.CREATED);
    }
@@ -153,10 +151,8 @@ public class TestController {
    }
 
    @GetMapping(value = "tests/{id}/messages/{testCaseId}")
-   public List<RequestResponsePair> getMessagesForTestCase(
-         @PathVariable("id") String testResultId,
-         @PathVariable("testCaseId") String testCaseId
-      ) {
+   public List<RequestResponsePair> getMessagesForTestCase(@PathVariable("id") String testResultId,
+         @PathVariable("testCaseId") String testCaseId) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
       // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
       try {
@@ -170,10 +166,8 @@ public class TestController {
    }
 
    @GetMapping(value = "tests/{id}/events/{testCaseId}")
-   public List<UnidirectionalEvent> getEventMessagesForTestCase(
-         @PathVariable("id") String testResultId,
-         @PathVariable("testCaseId") String testCaseId
-   ) {
+   public List<UnidirectionalEvent> getEventMessagesForTestCase(@PathVariable("id") String testResultId,
+         @PathVariable("testCaseId") String testCaseId) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
       // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
       testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8);
@@ -183,13 +177,11 @@ public class TestController {
    }
 
    @PostMapping(value = "tests/{id}/testCaseResult")
-   public ResponseEntity<TestCaseResult> reportTestCaseResult(
-         @PathVariable("id") String testResultId,
-         @RequestBody TestCaseReturnDTO testCaseReturn
-         ) {
+   public ResponseEntity<TestCaseResult> reportTestCaseResult(@PathVariable("id") String testResultId,
+         @RequestBody TestCaseReturnDTO testCaseReturn) {
       log.debug("Reporting testCase results on test {}", testResultId);
-      TestCaseResult testCaseResult = testService.reportTestCaseResult(
-            testResultId, testCaseReturn.getOperationName(), testCaseReturn.getTestReturns());
+      TestCaseResult testCaseResult = testService.reportTestCaseResult(testResultId, testCaseReturn.getOperationName(),
+            testCaseReturn.getTestReturns());
       if (testCaseResult != null) {
          return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
       }
@@ -197,8 +189,8 @@ public class TestController {
    }
 
    /**
-    * Build OperationsHeaders domain object from basic Map. Key is operation name, Value is
-    * a header data transfer object.
+    * Build OperationsHeaders domain object from basic Map. Key is operation name, Value is a header data transfer
+    * object.
     */
    private OperationsHeaders buildOperationsHeaders(Map<String, List<HeaderDTO>> operationsHeaders) {
       OperationsHeaders result = new OperationsHeaders();

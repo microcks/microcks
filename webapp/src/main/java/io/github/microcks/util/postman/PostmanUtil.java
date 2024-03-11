@@ -37,9 +37,9 @@ public class PostmanUtil {
    }
 
    /**
-    * Tells if 2 operations may be equivalent giving their names. Useful when comparing OpenAPI operations
-    * (containing <code>{param}</code> in path) and Postman operations (containing <code>:param</code> in path).
-    * @param operationNameRef Reference operation name (typically the one coming from OpenAPI)
+    * Tells if 2 operations may be equivalent giving their names. Useful when comparing OpenAPI operations (containing
+    * <code>{param}</code> in path) and Postman operations (containing <code>:param</code> in path).
+    * @param operationNameRef       Reference operation name (typically the one coming from OpenAPI)
     * @param operationNameCandidate Candidate operatoin name (typically the one coming from Postman Collection)
     * @return True if both are equivalent, false otherwise.
     */

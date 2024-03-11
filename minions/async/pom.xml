@@ -12,6 +12,7 @@
   <artifactId>microcks-async-minion</artifactId>
 
   <properties>
+    <multi-project.rootdir>../..</multi-project.rootdir>
     <compiler-plugin.version>3.11.0</compiler-plugin.version>
     <maven.compiler.parameters>true</maven.compiler.parameters>
     <maven.compiler.source>17</maven.compiler.source>

@@ -33,7 +33,8 @@ public class SoapFaultAssertion implements SoapUIAssertion {
    private String errorMessage;
 
    @Override
-   public void configure(Map<String, String> configParams) {}
+   public void configure(Map<String, String> configParams) {
+   }
 
    @Override
    public AssertionStatus assertResponse(RequestResponseExchange exchange, ExchangeContext context) {

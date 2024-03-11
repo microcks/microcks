@@ -35,6 +35,7 @@ import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 
 import java.util.Arrays;
+
 /**
  * Process OAuth2 authorization flow and tries to authorize from a client context.
  * @author laurent
@@ -61,8 +62,10 @@ public class OAuth2AuthorizedClientProvider {
             case REFRESH_TOKEN -> accessToken = getRefreshTokenAccessToken(oAuth2ClientContext);
          }
       } catch (OAuth2AuthorizationException oAuth2AuthorizationException) {
-         log.error("Error during {} grant type fetching", oAuth2ClientContext.getGrantType(), oAuth2AuthorizationException);
-         throw new AuthorizationException("Error during " + oAuth2ClientContext.getGrantType() + " grant type fetching", oAuth2AuthorizationException);
+         log.error("Error during {} grant type fetching", oAuth2ClientContext.getGrantType(),
+               oAuth2AuthorizationException);
+         throw new AuthorizationException("Error during " + oAuth2ClientContext.getGrantType() + " grant type fetching",
+               oAuth2AuthorizationException);
       }
 
       String principalName = oAuth2ClientContext.getClientId();
@@ -70,18 +73,18 @@ public class OAuth2AuthorizedClientProvider {
          principalName = oAuth2ClientContext.getUsername();
       }
 
-      return new OAuth2AuthorizedClient(oAuth2ClientContext.getGrantType(), principalName, oAuth2ClientContext.getTokenUri(),
-            String.join(" ", accessToken.getScopes()), accessToken.getTokenValue());
+      return new OAuth2AuthorizedClient(oAuth2ClientContext.getGrantType(), principalName,
+            oAuth2ClientContext.getTokenUri(), String.join(" ", accessToken.getScopes()), accessToken.getTokenValue());
    }
 
    private OAuth2AccessToken getResourceOwnerPasswordAccessToken(OAuth2ClientContext oAuth2ClientContext) {
       // Build a ClientRegistration with PASSWORD grant type.
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
-            .authorizationGrantType(AuthorizationGrantType.PASSWORD)
-            .build();
+            .authorizationGrantType(AuthorizationGrantType.PASSWORD).build();
 
       DefaultPasswordTokenResponseClient client = new DefaultPasswordTokenResponseClient();
-      OAuth2PasswordGrantRequest request = new OAuth2PasswordGrantRequest(registration, oAuth2ClientContext.getUsername(), oAuth2ClientContext.getPassword());
+      OAuth2PasswordGrantRequest request = new OAuth2PasswordGrantRequest(registration,
+            oAuth2ClientContext.getUsername(), oAuth2ClientContext.getPassword());
       OAuth2AccessTokenResponse response = client.getTokenResponse(request);
 
       return response.getAccessToken();
@@ -90,8 +93,7 @@ public class OAuth2AuthorizedClientProvider {
    private OAuth2AccessToken getClientCredentialsAccessToken(OAuth2ClientContext oAuth2ClientContext) {
       // Build a ClientRegistration with CLIENT_CREDENTIALS grant type.
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
-            .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-            .build();
+            .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS).build();
 
       DefaultClientCredentialsTokenResponseClient client = new DefaultClientCredentialsTokenResponseClient();
       OAuth2ClientCredentialsGrantRequest request = new OAuth2ClientCredentialsGrantRequest(registration);
@@ -103,8 +105,7 @@ public class OAuth2AuthorizedClientProvider {
    private OAuth2AccessToken getRefreshTokenAccessToken(OAuth2ClientContext oAuth2ClientContext) {
       // Build a ClientRegistration with REFRESH_TOKEN grant type.
       ClientRegistration registration = initializeClientRegistration(oAuth2ClientContext)
-            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-            .build();
+            .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN).build();
 
       DefaultRefreshTokenTokenResponseClient clientRT = new DefaultRefreshTokenTokenResponseClient();
       OAuth2RefreshTokenGrantRequest requestRT = new OAuth2RefreshTokenGrantRequest(registration,
@@ -117,8 +118,7 @@ public class OAuth2AuthorizedClientProvider {
 
    private ClientRegistration.Builder initializeClientRegistration(OAuth2ClientContext oAuth2ClientContext) {
       ClientRegistration.Builder builder = ClientRegistration.withRegistrationId("microcks-test-idp")
-            .clientId(oAuth2ClientContext.getClientId())
-            .clientSecret(oAuth2ClientContext.getClientSecret())
+            .clientId(oAuth2ClientContext.getClientId()).clientSecret(oAuth2ClientContext.getClientSecret())
             .tokenUri(oAuth2ClientContext.getTokenUri());
 
       if (oAuth2ClientContext.getScopes() != null) {

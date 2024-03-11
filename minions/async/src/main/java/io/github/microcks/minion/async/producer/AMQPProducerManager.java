@@ -40,8 +40,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 /**
- * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event
- * messages.
+ * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event messages.
  * 
  * @author laurent
  */
@@ -89,8 +88,7 @@ public class AMQPProducerManager {
       ConnectionFactory factory = new ConnectionFactory();
       factory.setUri("amqp://" + amqpServer);
 
-      if (amqpUsername != null && amqpUsername.length() > 0
-            && amqpPassword != null && amqpPassword.length() > 0) {
+      if (amqpUsername != null && amqpUsername.length() > 0 && amqpPassword != null && amqpPassword.length() > 0) {
          logger.infof("Connecting to AMQP broker with user '%s'", amqpUsername);
          factory.setUsername(amqpUsername);
          factory.setPassword(amqpPassword);
@@ -146,9 +144,8 @@ public class AMQPProducerManager {
    /**
     * Render Microcks headers using the template engine.
     * 
-    * @param engine  The template engine to reuse (because we do not want to
-    *                initialize and manage a context at the KafkaProducerManager
-    *                level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
+    *                KafkaProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of rendered Microcks headers.
     */

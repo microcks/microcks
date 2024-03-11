@@ -28,9 +28,9 @@ import java.util.List;
 
 @ClientEndpoint
 /**
- * A simple WebSocket client that stores messages as <code>ConsumedMessage</code>s. It supports
- * both the {@class jakarta.websocket.ClientEndpoint} annotation and the generic {@class jakarta.websocket.Endpoint}
- * interface, registering itself as a new message handler.
+ * A simple WebSocket client that stores messages as <code>ConsumedMessage</code>s. It supports both the
+ * {@class jakarta.websocket.ClientEndpoint} annotation and the generic {@class jakarta.websocket.Endpoint} interface,
+ * registering itself as a new message handler.
  * @author laurent
  */
 public class WebSocketClient extends Endpoint {

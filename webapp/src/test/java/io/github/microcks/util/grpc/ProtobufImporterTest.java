@@ -96,7 +96,8 @@ public class ProtobufImporterTest {
    public void testProtobufWithOptionsImport() {
       ProtobufImporter importer = null;
       try {
-         importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1-option.proto", null);
+         importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1-option.proto",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -219,7 +220,8 @@ public class ProtobufImporterTest {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/remote/goodbye-v1.proto",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/grpc/base.proto",
+               new ReferenceResolver(
+                     "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/grpc/base.proto",
                      null, true));
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -251,8 +253,9 @@ public class ProtobufImporterTest {
       for (Resource resource : resources) {
          assertNotNull(resource.getContent());
          if (ResourceType.PROTOBUF_SCHEMA.equals(resource.getType())) {
-            assertTrue("io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1.proto".equals(resource.getName()) ||
-                  "io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1-shared~1uuid.proto".equals(resource.getName()));
+            assertTrue("io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1.proto".equals(resource.getName())
+                  || "io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1-shared~1uuid.proto"
+                        .equals(resource.getName()));
          } else if (ResourceType.PROTOBUF_DESCRIPTOR.equals(resource.getType())) {
             assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1.pbb", resource.getName());
             try {

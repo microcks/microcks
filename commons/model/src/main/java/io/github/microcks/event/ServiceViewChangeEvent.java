@@ -32,8 +32,9 @@ public class ServiceViewChangeEvent {
    private long timestamp;
 
    @JsonCreator
-   public ServiceViewChangeEvent(@JsonProperty("serviceId") String serviceId, @JsonProperty("serviceView") ServiceView serviceView,
-                                 @JsonProperty("changeType") ChangeType changeType, @JsonProperty("timestamp") long timestamp) {
+   public ServiceViewChangeEvent(@JsonProperty("serviceId") String serviceId,
+         @JsonProperty("serviceView") ServiceView serviceView, @JsonProperty("changeType") ChangeType changeType,
+         @JsonProperty("timestamp") long timestamp) {
       this.serviceId = serviceId;
       this.serviceView = serviceView;
       this.changeType = changeType;

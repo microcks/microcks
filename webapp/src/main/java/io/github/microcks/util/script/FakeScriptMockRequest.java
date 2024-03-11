@@ -18,12 +18,11 @@ package io.github.microcks.util.script;
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
- * This is a fake, lightweight implementation of mockRequest objects that are typically available
- * within SoapUI script context (see http://www.soapui.org/Service-Mocking/creating-dynamic-mockservices.html
- * for explanations on how they are used).
- * Such object should follow contract exposed by http://www.soapui.org/apidocs/com/eviware/soapui/impl/wsdl/mock/WsdlMockRequest.html,
- * and because it's Groovy dynamic stuff we do not have to implement a particular interface.
- * Groovy !! isn't it ??
+ * This is a fake, lightweight implementation of mockRequest objects that are typically available within SoapUI script
+ * context (see http://www.soapui.org/Service-Mocking/creating-dynamic-mockservices.html for explanations on how they
+ * are used). Such object should follow contract exposed by
+ * http://www.soapui.org/apidocs/com/eviware/soapui/impl/wsdl/mock/WsdlMockRequest.html, and because it's Groovy dynamic
+ * stuff we do not have to implement a particular interface. Groovy !! isn't it ??
  * @author laurent
  */
 public class FakeScriptMockRequest {
@@ -34,13 +33,13 @@ public class FakeScriptMockRequest {
    private String requestContent;
    /** The headers of mock Request (http headers most of time !) */
    private StringToStringsMap requestHeaders;
-   
+
    /**
     * Create a new fake request from content and headers.
     * @param requestContent The request content
     * @param requestHeaders The request headers
     */
-   public FakeScriptMockRequest(String requestContent, StringToStringsMap requestHeaders){
+   public FakeScriptMockRequest(String requestContent, StringToStringsMap requestHeaders) {
       this.requestContent = requestContent;
       this.requestHeaders = requestHeaders;
    }
@@ -48,13 +47,15 @@ public class FakeScriptMockRequest {
    public HttpServletRequest getRequest() {
       return request;
    }
+
    public void setRequest(HttpServletRequest request) {
       this.request = request;
    }
-   
+
    public String getRequestContent() {
       return requestContent;
    }
+
    public void setRequestContent(String requestContent) {
       this.requestContent = requestContent;
    }
@@ -62,6 +63,7 @@ public class FakeScriptMockRequest {
    public StringToStringsMap getRequestHeaders() {
       return requestHeaders;
    }
+
    public void setRequestHeaders(StringToStringsMap requestHeaders) {
       this.requestHeaders = requestHeaders;
    }

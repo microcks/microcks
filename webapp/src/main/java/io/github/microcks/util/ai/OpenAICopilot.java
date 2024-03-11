@@ -73,7 +73,7 @@ public class OpenAICopilot implements AICopilot {
    public static final String MAX_TOKENS_KEY_CONFIG = "maxTokens";
 
    /** The mandatory configuration keys required by this implementation. */
-   protected static final String[] MANDATORY_CONFIG_KEYS = {API_KEY_CONFIG};
+   protected static final String[] MANDATORY_CONFIG_KEYS = { API_KEY_CONFIG };
 
 
    /** Default online URL for OpenAI API. */
@@ -124,10 +124,8 @@ public class OpenAICopilot implements AICopilot {
 
       // Initialize a Rest template for interacting with OpenAI API.
       // We need to register a custom Jackson converter to handle serialization of name and function_call of messages.
-      restTemplate = new RestTemplateBuilder()
-            .setReadTimeout(timeout)
-            .additionalMessageConverters(mappingJacksonHttpMessageConverter())
-            .build();
+      restTemplate = new RestTemplateBuilder().setReadTimeout(timeout)
+            .additionalMessageConverters(mappingJacksonHttpMessageConverter()).build();
    }
 
    /**
@@ -139,7 +137,8 @@ public class OpenAICopilot implements AICopilot {
    }
 
    @Override
-   public List<? extends Exchange> suggestSampleExchanges(Service service, Operation operation, Resource contract, int number) throws Exception {
+   public List<? extends Exchange> suggestSampleExchanges(Service service, Operation operation, Resource contract,
+         int number) throws Exception {
       String prompt = "";
 
       if (service.getType() == ServiceType.REST) {
@@ -158,17 +157,14 @@ public class OpenAICopilot implements AICopilot {
       final ChatMessage assistantMessage = new ChatMessage(ChatMessageRole.ASSISTANT.value(), prompt);
       messages.add(assistantMessage);
 
-      ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder()
-            .model(model)
-            .messages(messages)
-            .n(1)
-            .maxTokens(maxTokens)
-            .logitBias(new HashMap<>()).build();
+      ChatCompletionRequest chatCompletionRequest = ChatCompletionRequest.builder().model(model).messages(messages).n(1)
+            .maxTokens(maxTokens).logitBias(new HashMap<>()).build();
 
       // Build a full HttpEntity as we need to specify authentication headers.
-      HttpEntity<ChatCompletionRequest> request = new HttpEntity<>(chatCompletionRequest, createAuthenticationHeaders());
-      ChatCompletionResult completionResult = restTemplate.exchange(apiUrl + "/v1/chat/completions",
-                  HttpMethod.POST, request, ChatCompletionResult.class).getBody();
+      HttpEntity<ChatCompletionRequest> request = new HttpEntity<>(chatCompletionRequest,
+            createAuthenticationHeaders());
+      ChatCompletionResult completionResult = restTemplate
+            .exchange(apiUrl + "/v1/chat/completions", HttpMethod.POST, request, ChatCompletionResult.class).getBody();
 
       if (completionResult != null) {
          ChatCompletionChoice choice = completionResult.getChoices().get(0);
@@ -177,7 +173,8 @@ public class OpenAICopilot implements AICopilot {
          if (service.getType() == ServiceType.EVENT) {
             return AICopilotHelper.parseUnidirectionalEventTemplateOutput(choice.getMessage().getContent());
          } else {
-            return AICopilotHelper.parseRequestResponseTemplateOutput(service, operation, choice.getMessage().getContent());
+            return AICopilotHelper.parseRequestResponseTemplateOutput(service, operation,
+                  choice.getMessage().getContent());
          }
       }
       // Return empty list.
@@ -185,7 +182,8 @@ public class OpenAICopilot implements AICopilot {
    }
 
    private String preparePromptForOpenAPI(Operation operation, Resource contract, int number) throws Exception {
-      StringBuilder prompt = new StringBuilder(AICopilotHelper.getOpenAPIOperationPromptIntro(operation.getName(), number));
+      StringBuilder prompt = new StringBuilder(
+            AICopilotHelper.getOpenAPIOperationPromptIntro(operation.getName(), number));
 
       // Build a prompt reusing templates and elements from AICopilotHelper.
       prompt.append("\n");
@@ -199,7 +197,8 @@ public class OpenAICopilot implements AICopilot {
    }
 
    private String preparePromptForGraphQL(Operation operation, Resource contract, int number) {
-      StringBuilder prompt = new StringBuilder(AICopilotHelper.getGraphQLOperationPromptIntro(operation.getName(), number));
+      StringBuilder prompt = new StringBuilder(
+            AICopilotHelper.getGraphQLOperationPromptIntro(operation.getName(), number));
 
       // We need to indicate the name or variables we want.
       if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
@@ -231,7 +230,8 @@ public class OpenAICopilot implements AICopilot {
    }
 
    private String preparePromptForAsyncAPI(Operation operation, Resource contract, int number) throws Exception {
-      StringBuilder prompt = new StringBuilder(AICopilotHelper.getAsyncAPIOperationPromptIntro(operation.getName(), number));
+      StringBuilder prompt = new StringBuilder(
+            AICopilotHelper.getAsyncAPIOperationPromptIntro(operation.getName(), number));
 
       // Build a prompt reusing templates and elements from AICopilotHelper.
       prompt.append("\n");
@@ -244,8 +244,10 @@ public class OpenAICopilot implements AICopilot {
       return prompt.toString();
    }
 
-   private String preparePromptForGrpc(Service service, Operation operation, Resource contract, int number) throws Exception {
-      StringBuilder prompt = new StringBuilder(AICopilotHelper.getGrpcOperationPromptIntro(service.getName(), operation.getName(), number));
+   private String preparePromptForGrpc(Service service, Operation operation, Resource contract, int number)
+         throws Exception {
+      StringBuilder prompt = new StringBuilder(
+            AICopilotHelper.getGrpcOperationPromptIntro(service.getName(), operation.getName(), number));
 
       // Build a prompt reusing templates and elements from AICopilotHelper.
       prompt.append("\n");
@@ -273,7 +275,7 @@ public class OpenAICopilot implements AICopilot {
       return mapper;
    }
 
-   private HttpHeaders createAuthenticationHeaders(){
+   private HttpHeaders createAuthenticationHeaders() {
       HttpHeaders headers = new HttpHeaders();
       headers.set("Authorization", "Bearer " + apiKey);
       return headers;

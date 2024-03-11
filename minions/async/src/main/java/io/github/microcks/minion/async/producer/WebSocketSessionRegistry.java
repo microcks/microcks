@@ -24,10 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
 /**
- * Simple registry for holding WebSocket sessions based on the requested channel path.
- * This registry is intended to be shared by the different WebSocket endpoints that allows
- * client registration. Root producer will then use the registry to select target sessions
- * when a mock get published on a channel path.
+ * Simple registry for holding WebSocket sessions based on the requested channel path. This registry is intended to be
+ * shared by the different WebSocket endpoints that allows client registration. Root producer will then use the registry
+ * to select target sessions when a mock get published on a channel path.
  * @author laurent
  */
 public class WebSocketSessionRegistry {

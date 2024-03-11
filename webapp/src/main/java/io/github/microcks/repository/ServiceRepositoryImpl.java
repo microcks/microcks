@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static org.springframework.data.domain.Sort.Direction.DESC;
 import static org.springframework.data.mongodb.core.aggregation.Aggregation.*;
+
 /**
  * Implementation for CustomServiceRepository.
  * @author laurent
@@ -45,13 +46,11 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
    public List<Service> findByIdIn(List<String> ids) {
       // Convert ids into BSON ObjectId.
       List<ObjectId> objIds = new ArrayList<ObjectId>();
-      for (String id : ids){
+      for (String id : ids) {
          objIds.add(new ObjectId(id));
       }
 
-      List<Service> results = template.find(
-            new Query(Criteria.where("_id").in(objIds)),
-            Service.class);
+      List<Service> results = template.find(new Query(Criteria.where("_id").in(objIds)), Service.class);
 
       return results;
    }
@@ -77,26 +76,16 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
    }
 
    public List<ServiceCount> countServicesByType() {
-      Aggregation aggregation = newAggregation(
-            project("type"),
-            group("type").count().as("number"),
-            project("number").and("type").previousOperation(),
-            sort(DESC, "number")
-      );
+      Aggregation aggregation = newAggregation(project("type"), group("type").count().as("number"),
+            project("number").and("type").previousOperation(), sort(DESC, "number"));
       AggregationResults<ServiceCount> results = template.aggregate(aggregation, Service.class, ServiceCount.class);
       return results.getMappedResults();
    }
 
    public List<LabelValues> listLabels() {
       ObjectOperators.ObjectToArray labels = ObjectOperators.ObjectToArray.valueOfToArray("metadata.labels");
-      Aggregation aggregation = newAggregation(
-            project().and(labels).as("labels"),
-            unwind("labels"),
-            sort(DESC, "labels.v"),
-            group("labels.k")
-                  .addToSet("labels.v").as("values")
-                  .first("labels.k").as("key")
-      );
+      Aggregation aggregation = newAggregation(project().and(labels).as("labels"), unwind("labels"),
+            sort(DESC, "labels.v"), group("labels.k").addToSet("labels.v").as("values").first("labels.k").as("key"));
       AggregationResults<LabelValues> results = template.aggregate(aggregation, Service.class, LabelValues.class);
       return results.getMappedResults();
    }

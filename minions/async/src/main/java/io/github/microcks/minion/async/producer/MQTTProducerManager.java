@@ -45,7 +45,7 @@ public class MQTTProducerManager {
    @ConfigProperty(name = "mqtt.server")
    String mqttServer;
 
-   @ConfigProperty(name = "mqtt.clientid", defaultValue="microcks-async-minion")
+   @ConfigProperty(name = "mqtt.clientid", defaultValue = "microcks-async-minion")
    String mqttClientId;
 
    @ConfigProperty(name = "mqtt.username")
@@ -76,8 +76,7 @@ public class MQTTProducerManager {
     */
    protected IMqttClient createClient() throws Exception {
       MqttConnectOptions options = new MqttConnectOptions();
-      if (mqttUsername != null && mqttUsername.length() > 0 
-            && mqttPassword != null && mqttPassword.length() > 0) {
+      if (mqttUsername != null && mqttUsername.length() > 0 && mqttPassword != null && mqttPassword.length() > 0) {
          logger.infof("Connecting to MQTT broker with user '%s'", mqttUsername);
          options.setUserName(mqttUsername);
          options.setPassword(mqttPassword.toCharArray());
@@ -110,7 +109,7 @@ public class MQTTProducerManager {
 
    /**
     * Get the MQTT topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
-    * @param definition The AsyncMockDefinition
+    * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic
     * @return The topic name for definition and event
     */

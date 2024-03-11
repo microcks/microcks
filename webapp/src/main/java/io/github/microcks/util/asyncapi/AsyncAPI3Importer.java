@@ -53,8 +53,8 @@ import java.util.Map.Entry;
 import static io.github.microcks.util.asyncapi.AsyncAPICommons.*;
 
 /**
- * An implementation of MockRepositoryImporter that deals with AsyncAPI v3.0.x
- * specification file ; whether encoding into JSON or YAML documents.
+ * An implementation of MockRepositoryImporter that deals with AsyncAPI v3.0.x specification file ; whether encoding
+ * into JSON or YAML documents.
  * @author laurent
  */
 public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
@@ -89,7 +89,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
       // Complete metadata if specified via extension.
       if (rootSpecification.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
          Metadata metadata = new Metadata();
-         MetadataExtractor.completeMetadata(metadata, rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         MetadataExtractor.completeMetadata(metadata,
+               rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
          service.setMetadata(metadata);
       }
 
@@ -130,7 +131,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       List<Exchange> messageDefs = new ArrayList<>();
 
       // Retrieve default content type, defaulting to application/json.
@@ -241,7 +243,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    }
 
    /** If necessary, complete an operation and its messages dispatch information. */
-   private void completeDispatchingCriteria(Operation operation, JsonNode operationNode, List<EventMessage> eventMessages) {
+   private void completeDispatchingCriteria(Operation operation, JsonNode operationNode,
+         List<EventMessage> eventMessages) {
       // Update dispatch information if necessary.
       if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
 
@@ -284,8 +287,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
             // UPdate operation resource paths and message dispatch criteria.
             String resourcePath = URIBuilder.buildURIFromPattern(address, parameterValues);
             operation.addResourcePath(resourcePath);
-            eventMessage.setDispatchCriteria(
-                  DispatchCriteriaHelper.buildFromPartsMap(address, parameterValues));
+            eventMessage.setDispatchCriteria(DispatchCriteriaHelper.buildFromPartsMap(address, parameterValues));
          }
       }
    }
@@ -315,8 +317,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    }
 
    /**
-    * Given a Channel Json node, get its static parameter values (those without a location), organized by message example name.
-    * Key of value map is parameter name. Value of value map is parameter value ;-)
+    * Given a Channel Json node, get its static parameter values (those without a location), organized by message
+    * example name. Key of value map is parameter name. Value of value map is parameter value ;-)
     */
    private Map<String, Map<String, String>> getParametersByMessage(JsonNode channelNode) {
       Map<String, Map<String, String>> results = new HashMap<>();
@@ -379,7 +381,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    }
 
    /** Build a list of EventMessages from a Message examples Json node. */
-   private List<EventMessage> buildEventMessageFromExamples(String messageName, String contentType, JsonNode examplesNode) {
+   private List<EventMessage> buildEventMessageFromExamples(String messageName, String contentType,
+         JsonNode examplesNode) {
       List<EventMessage> exchanges = new ArrayList<>();
 
       Iterator<JsonNode> examples = examplesNode.elements();
@@ -409,8 +412,7 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
    }
 
    /**
-    * Get the value of an example. This can be direct value field or those of
-    * followed $ref.
+    * Get the value of an example. This can be direct value field or those of followed $ref.
     */
    private String getExamplePayload(JsonNode example) {
       if (example.has(EXAMPLE_PAYLOAD_NODE)) {
@@ -425,5 +427,6 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
       return null;
    }
 
-   private record AsyncAPIParameter(String name, String location) {}
+   private record AsyncAPIParameter(String name, String location) {
+   }
 }

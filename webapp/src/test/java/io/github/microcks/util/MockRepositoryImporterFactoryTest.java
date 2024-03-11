@@ -33,6 +33,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 /**
  * This is a test case for MockRepositoryImporterFactory.
  * @author laurent
@@ -63,7 +64,8 @@ public class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof PostmanCollectionImporter);
 
       // Load a Postman Workspace file.
-      File postmanWorkspaceCollection = new File("target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
+      File postmanWorkspaceCollection = new File(
+            "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(postmanWorkspaceCollection, null);
@@ -113,7 +115,8 @@ public class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof AsyncAPIImporter);
 
       // Load an AsyncAPI JSON oneliner file.
-      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-oneliner.json");
+      asyncAPISpec = new File(
+            "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-oneliner.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);

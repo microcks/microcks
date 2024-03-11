@@ -34,8 +34,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Utility class that holds constants definition found in AsyncAPI v2 and v3 specifications as
- * well as utility methods for discovering bindings and examples.
+ * Utility class that holds constants definition found in AsyncAPI v2 and v3 specifications as well as utility methods
+ * for discovering bindings and examples.
  * @author laurent
  */
 public class AsyncAPICommons {
@@ -65,7 +65,7 @@ public class AsyncAPICommons {
    /**
     * Browse and complete an operation bindings with the bindings information at Channel level.
     * @param operation The operation whose bindings should be completed
-    * @param bindings The Channel level bindings node
+    * @param bindings  The Channel level bindings node
     */
    public static void completeChannelLevelBindings(Operation operation, JsonNode bindings) {
       Iterator<String> bindingNames = bindings.fieldNames();
@@ -106,7 +106,7 @@ public class AsyncAPICommons {
    /**
     * Browse and complete an operation bindings with the bindings information at Operation level.
     * @param operation The operation whose bindings should be completed
-    * @param bindings The Operation level bindings node
+    * @param bindings  The Operation level bindings node
     */
    public static void completeOperationLevelBindings(Operation operation, JsonNode bindings) {
       Iterator<String> bindingNames = bindings.fieldNames();
@@ -153,7 +153,7 @@ public class AsyncAPICommons {
    /**
     * Browse and complete an operation bindings with the bindings information at Message level.
     * @param operation The operation whose bindings should be completed
-    * @param bindings The Message level bindings node
+    * @param bindings  The Message level bindings node
     */
    public static void completeMessageLevelBindings(Operation operation, JsonNode bindings) {
       Iterator<String> bindingNames = bindings.fieldNames();
@@ -195,7 +195,8 @@ public class AsyncAPICommons {
                JsonNode headersNode = mapper.readTree(example.path(EXAMPLE_HEADERS_NODE).asText());
                headers = headersNode.fields();
             } catch (Exception e) {
-               log.warn("Headers value {} is a string but not JSON, skipping it", example.path(EXAMPLE_HEADERS_NODE).asText());
+               log.warn("Headers value {} is a string but not JSON, skipping it",
+                     example.path(EXAMPLE_HEADERS_NODE).asText());
             }
          }
 
@@ -206,8 +207,7 @@ public class AsyncAPICommons {
                Header header = new Header();
                header.setName(property.getKey());
                // Values may be multiple and CSV.
-               Set<String> headerValues = Arrays.stream(property.getValue().asText().split(","))
-                     .map(String::trim)
+               Set<String> headerValues = Arrays.stream(property.getValue().asText().split(",")).map(String::trim)
                      .collect(Collectors.toSet());
                header.setValues(headerValues);
                results.add(header);

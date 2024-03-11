@@ -28,11 +28,12 @@ public class IdBuilder {
    /**
     * Private Constructor. So that the utility class cannot be instanced
     */
-   private IdBuilder(){}
+   private IdBuilder() {
+   }
 
    /**
     * Build a unique operation Id from service and operation.
-    * @param service The domain service holding operation
+    * @param service   The domain service holding operation
     * @param operation A domain bean representing operation to build an id for
     * @return A unique identifier for operation.
     */
@@ -43,7 +44,7 @@ public class IdBuilder {
    /**
     * Build a unique TestCase Id from test result and operation.
     * @param testResult The domain testResult holding test case
-    * @param operation A domain bean representing operation matching case
+    * @param operation  A domain bean representing operation matching case
     * @return A unique identifier for test case.
     */
    public static String buildTestCaseId(TestResult testResult, Operation operation) {
@@ -52,7 +53,7 @@ public class IdBuilder {
 
    /**
     * Build a unique TestCase Id from test result and operation.
-    * @param testResult The domain testResult holding test case
+    * @param testResult    The domain testResult holding test case
     * @param operationName A string representing matching operation name case
     * @return A unique identifier for test case.
     */
@@ -61,9 +62,9 @@ public class IdBuilder {
    }
 
    /**
-    * Build the full name of a Resource dedicated to no particular operations of a Service. Such Resource is typically
-    * a global Schema dependency that defines shared data types, so that you'll be able to easily retrieve it later.
-    * @param service The domain service owning this resource
+    * Build the full name of a Resource dedicated to no particular operations of a Service. Such Resource is typically a
+    * global Schema dependency that defines shared data types, so that you'll be able to easily retrieve it later.
+    * @param service      The domain service owning this resource
     * @param resourceName The name of resource
     * @return A full name for this globally attached resource.
     */
@@ -72,17 +73,15 @@ public class IdBuilder {
    }
 
    /**
-    * Build the full name of a Resource dedicated to no particular operations of a Service. Such Resource is typically
-    * a global Schema dependency that defines shared data types, so that you'll be able to easily retrieve it later.
-    * @param service The domain service owning this resource
+    * Build the full name of a Resource dedicated to no particular operations of a Service. Such Resource is typically a
+    * global Schema dependency that defines shared data types, so that you'll be able to easily retrieve it later.
+    * @param service      The domain service owning this resource
     * @param resourceName The name of resource
-    * @param context The context this resource belongs to
+    * @param context      The context this resource belongs to
     * @return A full name for this globally attached resource.
     */
    public static String buildResourceFullName(Service service, String resourceName, String context) {
-      return service.getName()
-            + "-" + service.getVersion()
-            + "-" + Sanitizer.urlSanitize(context.replace(".", ""))
+      return service.getName() + "-" + service.getVersion() + "-" + Sanitizer.urlSanitize(context.replace(".", ""))
             + "-" + Sanitizer.urlSanitize(resourceName);
    }
 }

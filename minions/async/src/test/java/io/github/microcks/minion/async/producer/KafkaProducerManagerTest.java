@@ -70,8 +70,7 @@ class KafkaProducerManagerTest {
       operation.setMethod("RECEIVE");
       operation.setDispatcher("URI_PARTS");
       operation.setDispatcherRules("/streetlightId");
-      operation.setResourcePaths(Set.of(
-            "smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured",
+      operation.setResourcePaths(Set.of("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured",
             "smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured"));
       service.addOperation(operation);
 
@@ -83,6 +82,8 @@ class KafkaProducerManagerTest {
       AsyncMockDefinition definition = new AsyncMockDefinition(service, operation, eventsMessages);
 
       String topicName = producerManager.getTopicName(definition, eventMessage);
-      assertEquals("StreetlightsAPI-0.1.0-smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured", topicName);
+      assertEquals(
+            "StreetlightsAPI-0.1.0-smartylighting.streetlights.1.0.event.da059782-3ad0-4e45-88ce-ef3392bc7797.lighting.measured",
+            topicName);
    }
 }

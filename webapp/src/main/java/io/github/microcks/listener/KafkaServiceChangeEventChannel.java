@@ -23,13 +23,13 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * This is an implementation of {@code ServiceChangeEventChannel} that uses a Kafka topic as
- * a destination recipient for {@code ServiceViewChangeEvent}.
+ * This is an implementation of {@code ServiceChangeEventChannel} that uses a Kafka topic as a destination recipient for
+ * {@code ServiceViewChangeEvent}.
  * @author laurent
  */
 @Component
-@Profile({"default", "prod"})
-@ConditionalOnProperty(value="async-api.enabled", havingValue="true", matchIfMissing=true)
+@Profile({ "default", "prod" })
+@ConditionalOnProperty(value = "async-api.enabled", havingValue = "true", matchIfMissing = true)
 public class KafkaServiceChangeEventChannel implements ServiceChangeEventChannel {
 
    private final KafkaTemplate<String, ServiceViewChangeEvent> kafkaTemplate;

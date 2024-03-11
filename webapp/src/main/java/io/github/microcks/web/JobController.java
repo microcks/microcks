@@ -63,17 +63,14 @@ public class JobController {
 
 
    @RequestMapping(value = "/jobs", method = RequestMethod.GET)
-   public List<ImportJob> listJobs(
-         @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+   public List<ImportJob> listJobs(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
          @RequestParam(value = "size", required = false, defaultValue = "20") int size,
-         @RequestParam(value = "name", required = false) String name
-      ) {
+         @RequestParam(value = "name", required = false) String name) {
       log.debug("Getting job list for page {} and size {}", page, size);
       if (name != null) {
          return jobRepository.findByNameLike(name);
       }
-      return jobRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name")))
-            .getContent();
+      return jobRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))).getContent();
    }
 
    @RequestMapping(value = "/jobs/search", method = RequestMethod.GET)
@@ -81,7 +78,7 @@ public class JobController {
       // Parse params from queryMap.
       String name = null;
       Map<String, String> labels = new HashMap<>();
-      for (String paramKey: queryMap.keySet()) {
+      for (String paramKey : queryMap.keySet()) {
          if ("name".equals(paramKey)) {
             name = queryMap.get("name");
          }

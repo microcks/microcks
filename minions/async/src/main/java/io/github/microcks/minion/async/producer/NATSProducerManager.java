@@ -77,14 +77,11 @@ public class NATSProducerManager {
    /**
     * Create a NATS Connection and connect it to the server.
     * 
-    * @return A new NATS Connection implementation initialized with configuration
-    *         properties.
+    * @return A new NATS Connection implementation initialized with configuration properties.
     * @throws Exception in case of connection failure
     */
    protected Connection createClient() throws Exception {
-      Options.Builder optionsBuilder = new Options.Builder()
-            .server(natsServer)
-            .maxReconnects(10);
+      Options.Builder optionsBuilder = new Options.Builder().server(natsServer).maxReconnects(10);
       // Add authentication option.
       if (natsUsername != null && natsPassword != null) {
          optionsBuilder.userInfo(natsUsername, natsPassword);
@@ -103,10 +100,7 @@ public class NATSProducerManager {
     */
    public void publishMessage(String topic, String value, Headers headers) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
-      Message msg = NatsMessage.builder()
-            .subject(topic)
-            .data(value.getBytes(StandardCharsets.UTF_8))
-            .headers(headers)
+      Message msg = NatsMessage.builder().subject(topic).data(value.getBytes(StandardCharsets.UTF_8)).headers(headers)
             .build();
       client.publish(msg);
    }
@@ -114,9 +108,8 @@ public class NATSProducerManager {
    /**
     * Transform and render Microcks headers into NATS specific headers.
     * 
-    * @param engine  The template engine to reuse (because we do not want to
-    *                initialize and manage a context at the NATSProducerManager
-    *                level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
+    *                NATSProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of NATS headers.
     */
@@ -149,8 +142,7 @@ public class NATSProducerManager {
    }
 
    /**
-    * Get the NATS topic name corresponding to a AsyncMockDefinition, sanitizing
-    * all parameters.
+    * Get the NATS topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
     * 
     * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic

@@ -63,17 +63,17 @@ public class GooglePubSubProducerManager {
    private static final String CLOUD_OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
    /**
-    * As {@link Publisher} is bound to topic, default would be to create it at each invocation.
-    * We'll use this cache, that enforces only one {@link Publisher} per PubSub topic exists.
+    * As {@link Publisher} is bound to topic, default would be to create it at each invocation. We'll use this cache,
+    * that enforces only one {@link Publisher} per PubSub topic exists.
     */
    private final ConcurrentHashMap<String, Publisher> publishers = new ConcurrentHashMap<>();
 
    /**
-    * As {@link Publisher} is by default associated to its own executor, we have to override
-    * this to avoid wasting resources. As the push of mock messages is sequential, 1 thread is enough.
+    * As {@link Publisher} is by default associated to its own executor, we have to override this to avoid wasting
+    * resources. As the push of mock messages is sequential, 1 thread is enough.
     */
-   private final ExecutorProvider executorProvider = InstantiatingExecutorProvider
-         .newBuilder().setExecutorThreadCount(1).build();
+   private final ExecutorProvider executorProvider = InstantiatingExecutorProvider.newBuilder()
+         .setExecutorThreadCount(1).build();
 
    CredentialsProvider credentialsProvider;
 
@@ -92,7 +92,8 @@ public class GooglePubSubProducerManager {
       try {
          if (serviceAccountLocation != null && serviceAccountLocation.length() > 0) {
             FileInputStream is = new FileInputStream(serviceAccountLocation);
-            credentialsProvider = FixedCredentialsProvider.create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
+            credentialsProvider = FixedCredentialsProvider
+                  .create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
          } else {
             credentialsProvider = NoCredentialsProvider.create();
          }
@@ -104,8 +105,8 @@ public class GooglePubSubProducerManager {
 
    /**
     * Publish a message on specified PubSub topic.
-    * @param topic The short name of topic within the configured project
-    * @param value The message payload
+    * @param topic   The short name of topic within the configured project
+    * @param value   The message payload
     * @param headers The headers if any (as rendered by renderEventMessageHeaders() method)
     */
    public void publishMessage(String topic, String value, Map<String, String> headers) {
@@ -126,10 +127,7 @@ public class GooglePubSubProducerManager {
          // Build a message for corresponding publisher.
          Publisher publisher = getPublisher(topic);
          ByteString data = ByteString.copyFromUtf8(value);
-         PubsubMessage pubsubMessage = PubsubMessage.newBuilder()
-               .setData(data)
-               .putAllAttributes(headers)
-               .build();
+         PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).putAllAttributes(headers).build();
 
          // Publish the message.
          ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
@@ -138,6 +136,7 @@ public class GooglePubSubProducerManager {
             public void onSuccess(String messageId) {
                logger.debugv("Published with message id {0}", messageId);
             }
+
             public void onFailure(Throwable t) {
                logger.debugv("Failed to publish: {0}", t);
             }
@@ -149,33 +148,32 @@ public class GooglePubSubProducerManager {
 
    /**
     * Render Microcks headers using the template engine.
-    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the GooglePubSubProducerManager level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
+    *                GooglePubSubProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A map of rendered headers for GCP Publisher.
     */
    public Map<String, String> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
       if (headers != null && !headers.isEmpty()) {
-         return headers.stream().collect(Collectors.toMap(
-               Header::getName,
-               header -> {
-                  String firstValue = header.getValues().stream().findFirst().get();
-                  if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-                     try {
-                        return engine.getValue(firstValue);
-                     } catch (Exception e) {
-                        logger.error("Failing at evaluating template " + firstValue, e);
-                        return firstValue;
-                     }
-                  }
+         return headers.stream().collect(Collectors.toMap(Header::getName, header -> {
+            String firstValue = header.getValues().stream().findFirst().get();
+            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+               try {
+                  return engine.getValue(firstValue);
+               } catch (Exception e) {
+                  logger.error("Failing at evaluating template " + firstValue, e);
                   return firstValue;
-               }));
+               }
+            }
+            return firstValue;
+         }));
       }
       return Collections.emptyMap();
    }
 
    /**
     * Compute a topic name from async mock definition.
-    * @param definition The mock definition
+    * @param definition   The mock definition
     * @param eventMessage The event message to get dynamic part from
     * @return The short name of a PubSub topic
     */
@@ -214,10 +212,8 @@ public class GooglePubSubProducerManager {
 
    private Publisher createPublisher(String topic) {
       try {
-         return Publisher.newBuilder(TopicName.of(project, topic))
-               .setExecutorProvider(executorProvider)
-               .setCredentialsProvider(credentialsProvider)
-               .build();
+         return Publisher.newBuilder(TopicName.of(project, topic)).setExecutorProvider(executorProvider)
+               .setCredentialsProvider(credentialsProvider).build();
       } catch (IOException ioe) {
          logger.errorf("IOException while creating a Publisher for topic %s", topic);
          throw new RuntimeException("IOException while creating a Publisher for topic ", ioe);

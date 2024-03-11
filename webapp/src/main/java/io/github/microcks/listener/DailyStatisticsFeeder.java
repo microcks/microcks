@@ -34,7 +34,7 @@ import java.util.Map;
  * @author laurent
  */
 @Component
-public class DailyStatisticsFeeder implements ApplicationListener<MockInvocationEvent>{
+public class DailyStatisticsFeeder implements ApplicationListener<MockInvocationEvent> {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(DailyStatisticsFeeder.class);
@@ -48,30 +48,30 @@ public class DailyStatisticsFeeder implements ApplicationListener<MockInvocation
    public DailyStatisticsFeeder(DailyStatisticRepository statisticsRepository) {
       this.statisticsRepository = statisticsRepository;
    }
-   
+
    @Override
    @Async
-   public void onApplicationEvent(MockInvocationEvent event){
+   public void onApplicationEvent(MockInvocationEvent event) {
       log.debug("Received a MockInvocationEvent on {} - v{}", event.getServiceName(), event.getServiceVersion());
-      
+
       // Compute day string representation.
       Calendar calendar = Calendar.getInstance();
       calendar.setTime(event.getInvocationTimestamp());
-      
+
       // Computing keys based on invocation date.
       int month = calendar.get(Calendar.MONTH) + 1;
-      String monthStr = (month<10 ? "0" : "") + month;
+      String monthStr = (month < 10 ? "0" : "") + month;
       int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-      String dayOfMonthStr = (dayOfMonth<10 ? "0" : "") + dayOfMonth;
-      
+      String dayOfMonthStr = (dayOfMonth < 10 ? "0" : "") + dayOfMonth;
+
       String day = calendar.get(Calendar.YEAR) + monthStr + dayOfMonthStr;
       String hourKey = String.valueOf(calendar.get(Calendar.HOUR_OF_DAY));
       String minuteKey = String.valueOf((60 * calendar.get(Calendar.HOUR_OF_DAY)) + calendar.get(Calendar.MINUTE));
-      if (log.isDebugEnabled()){
+      if (log.isDebugEnabled()) {
          log.debug("hourKey for statistic is {}", hourKey);
          log.debug("minuteKey for statistic is {}", minuteKey);
       }
-      
+
       // First check if there's a statistic document for invocation day.
       DailyStatistic statistic = null;
       List<DailyStatistic> statistics = statisticsRepository.findByDayAndServiceNameAndServiceVersion(day,
@@ -79,8 +79,8 @@ public class DailyStatisticsFeeder implements ApplicationListener<MockInvocation
       if (!statistics.isEmpty()) {
          statistic = statistics.get(0);
       }
-      
-      if (statistic == null){
+
+      if (statistic == null) {
          // No statistic's yet...
          log.debug("There's no statistics for {} yet. Create one.", day);
          // Initialize a new 0 filled structure.
@@ -98,24 +98,24 @@ public class DailyStatisticsFeeder implements ApplicationListener<MockInvocation
       } else {
          // Already a statistic document for this day, increment fields.
          log.debug("Found an existing statistic document for {}", day);
-         statisticsRepository.incrementDailyStatistic(day, event.getServiceName(), event.getServiceVersion(),
-               hourKey, minuteKey);
+         statisticsRepository.incrementDailyStatistic(day, event.getServiceName(), event.getServiceVersion(), hourKey,
+               minuteKey);
       }
-      
+
       log.debug("Processing of MockInvocationEvent done !");
    }
-   
-   private Map<String, Integer> initializeHourlyMap(){
+
+   private Map<String, Integer> initializeHourlyMap() {
       Map<String, Integer> result = new HashMap<>(24);
-      for (int i=0; i<24; i++){
+      for (int i = 0; i < 24; i++) {
          result.put(String.valueOf(i), 0);
       }
       return result;
    }
-   
-   private Map<String, Integer> initializeMinuteMap(){
-      Map<String, Integer> result = new HashMap<>(24*60);
-      for (int i=0; i<24*60; i++){
+
+   private Map<String, Integer> initializeMinuteMap() {
+      Map<String, Integer> result = new HashMap<>(24 * 60);
+      for (int i = 0; i < 24 * 60; i++) {
          result.put(String.valueOf(i), 0);
       }
       return result;

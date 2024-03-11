@@ -39,6 +39,10 @@ public class OpenAPISchemaBuilder {
    public static final String JSON_SCHEMA_PROPERTIES = "properties";
 
 
+   private OpenAPISchemaBuilder() {
+      // Hide the implicit default constructor.
+   }
+
    /**
     * Build the Json schema for the type corresponding to given Json node provided as string.
     * @param jsonText The String representing Json node to introspect for building a Json schema
@@ -80,7 +84,7 @@ public class OpenAPISchemaBuilder {
             parentNodeSchemaNode.put(JSON_SCHEMA_TYPE, JSON_SCHEMA_ARRAY_TYPE);
             ObjectNode itemsNodeSchemaNode = parentNodeSchemaNode.putObject(JSON_SCHEMA_ITEMS);
 
-            JsonNode firstChild = ((ArrayNode)currentNode).elements().next();
+            JsonNode firstChild = ((ArrayNode) currentNode).elements().next();
             traverseNode(firstChild, itemsNodeSchemaNode, mapper);
             break;
          default:

@@ -144,8 +144,7 @@ public class KafkaProducerManager {
             props.put(SerdeConfig.REGISTRY_URL, schemaRegistryUrl.get());
             props.put(SerdeConfig.ENABLE_CONFLUENT_ID_HANDLER, true);
             // Get an existing schema or auto-register if not found.
-            props.put(SerdeConfig.SCHEMA_RESOLVER,
-                  io.apicurio.registry.resolver.DefaultSchemaResolver.class.getName());
+            props.put(SerdeConfig.SCHEMA_RESOLVER, io.apicurio.registry.resolver.DefaultSchemaResolver.class.getName());
             props.put(SerdeConfig.AUTO_REGISTER_ARTIFACT, true);
             // Set artifact strategy as the same as Confluent default subject strategy.
             props.put(SerdeConfig.ARTIFACT_RESOLVER_STRATEGY,
@@ -161,9 +160,9 @@ public class KafkaProducerManager {
 
    /**
     * Publish a message on specified topic.
-    * @param topic The destination topic for message
-    * @param key The message key
-    * @param value The message payload
+    * @param topic   The destination topic for message
+    * @param key     The message key
+    * @param value   The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
    public void publishMessage(String topic, String key, String value, Set<Header> headers) {
@@ -176,9 +175,9 @@ public class KafkaProducerManager {
 
    /**
     * Publish a raw byte array message on specified topic.
-    * @param topic The destination topic for message
-    * @param key The message key
-    * @param value The message payload
+    * @param topic   The destination topic for message
+    * @param key     The message key
+    * @param value   The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
    public void publishMessage(String topic, String key, byte[] value, Set<Header> headers) {
@@ -190,11 +189,10 @@ public class KafkaProducerManager {
    }
 
    /**
-    * Publish an Avro GenericRecord built with Schema onto specified topic and
-    * using underlying schema registry.
-    * @param topic The destination topic for message
-    * @param key The message key
-    * @param value The message payload
+    * Publish an Avro GenericRecord built with Schema onto specified topic and using underlying schema registry.
+    * @param topic   The destination topic for message
+    * @param key     The message key
+    * @param value   The message payload
     * @param headers A set of headers if any (maybe null or empty)
     */
    public void publishMessage(String topic, String key, GenericRecord value, Set<Header> headers) {
@@ -207,7 +205,8 @@ public class KafkaProducerManager {
 
    /**
     * Transform and render Microcks headers into Kafka specific headers.
-    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the KafkaProducerManager level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
+    *                KafkaProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of Kafka headers.
     */
@@ -236,7 +235,7 @@ public class KafkaProducerManager {
 
    /**
     * Get the Kafka topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
-    * @param definition The AsyncMockDefinition
+    * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic
     * @return The topic name for definition and event
     */
@@ -259,7 +258,7 @@ public class KafkaProducerManager {
    /**
     * Completing the ProducerRecord with the set of provided headers.
     * @param kafkaRecord The record to complete
-    * @param headers The set of headers
+    * @param headers     The set of headers
     */
    protected void addHeadersToRecord(ProducerRecord kafkaRecord, Set<Header> headers) {
       if (headers != null) {
@@ -276,13 +275,16 @@ public class KafkaProducerManager {
          props.put("security.protocol", securityProtocolValue);
 
          if (config.getOptionalValue("kafka.ssl.truststore.location", String.class).isPresent()) {
-            props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.truststore.location", String.class));
+            props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG,
+                  config.getValue("kafka.ssl.truststore.location", String.class));
          }
          if (config.getOptionalValue("kafka.ssl.truststore.password", String.class).isPresent()) {
-            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.truststore.password", String.class));
+            props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG,
+                  config.getValue("kafka.ssl.truststore.password", String.class));
          }
          if (config.getOptionalValue("kafka.ssl.truststore.type", String.class).isPresent()) {
-            props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.truststore.type", String.class));
+            props.put(SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG,
+                  config.getValue("kafka.ssl.truststore.type", String.class));
          }
 
          switch (securityProtocolValue) {
@@ -291,13 +293,16 @@ public class KafkaProducerManager {
                props.put(SaslConfigs.SASL_MECHANISM, config.getValue("kafka.sasl.mechanism", String.class));
                props.put(SaslConfigs.SASL_JAAS_CONFIG, config.getValue("kafka.sasl.jaas.config", String.class));
                if (config.getOptionalValue("kafka.sasl.login.callback.handler.class", String.class).isPresent()) {
-                 props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS, config.getValue("kafka.sasl.login.callback.handler.class", String.class));
+                  props.put(SaslConfigs.SASL_LOGIN_CALLBACK_HANDLER_CLASS,
+                        config.getValue("kafka.sasl.login.callback.handler.class", String.class));
                }
                break;
             case "SSL":
                logger.debug("Adding SSL specific connection properties");
-               props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.getValue("kafka.ssl.keystore.location", String.class));
-               props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.getValue("kafka.ssl.keystore.password", String.class));
+               props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG,
+                     config.getValue("kafka.ssl.keystore.location", String.class));
+               props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG,
+                     config.getValue("kafka.ssl.keystore.password", String.class));
                props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, config.getValue("kafka.ssl.keystore.type", String.class));
                break;
             default:

@@ -33,7 +33,7 @@ public interface SoapUIAssertion {
    /**
     * Assert validations on response at the end of an exchange.
     * @param exchange The raw data of this exchange (request/response, duration)
-    * @param context The context of this exchange (service, operation, resources)
+    * @param context  The context of this exchange (service, operation, resources)
     * @return The Assertion Status
     */
    AssertionStatus assertResponse(RequestResponseExchange exchange, ExchangeContext context);

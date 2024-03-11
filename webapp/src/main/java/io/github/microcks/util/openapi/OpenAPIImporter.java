@@ -59,8 +59,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of MockRepositoryImporter that deals with OpenAPI v3.x.x specification
- * file ; whether encoding into JSON or YAML documents.
+ * An implementation of MockRepositoryImporter that deals with OpenAPI v3.x.x specification file ; whether encoding into
+ * JSON or YAML documents.
  * @author laurent
  */
 public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
@@ -68,7 +68,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(OpenAPIImporter.class);
 
-   private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head", "patch", "trace");
+   private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head",
+         "patch", "trace");
 
    private static final String PARAMETERS_NODE = "parameters";
    private static final String PARAMETERS_QUERY_VALUE = "query";
@@ -79,7 +80,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local OpenAPI spec file
-    * @param referenceResolver An optional resolver for references present into the OpenAPI file
+    * @param referenceResolver     An optional resolver for references present into the OpenAPI file
     * @throws IOException if project file cannot be found or read.
     */
    public OpenAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
@@ -99,7 +100,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       // Complete metadata if specified via extension.
       if (rootSpecification.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
          Metadata metadata = new Metadata();
-         MetadataExtractor.completeMetadata(metadata, rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         MetadataExtractor.completeMetadata(metadata,
+               rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
          service.setMetadata(metadata);
       }
 
@@ -140,7 +142,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       Map<Request, Response> result = new HashMap<>();
 
       // Iterate on specification "paths" nodes.
@@ -151,7 +154,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          JsonNode pathValue = followRefIfAny(path.getValue());
 
          // Find examples fragments defined at the path level.
-         Map<String, Multimap<String, String>> pathPathParametersByExample = extractParametersByExample(pathValue, "path");
+         Map<String, Multimap<String, String>> pathPathParametersByExample = extractParametersByExample(pathValue,
+               "path");
 
          // Iterate on specification path, "verbs" nodes.
          Iterator<Entry<String, JsonNode>> verbs = pathValue.fields();
@@ -162,10 +166,13 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             // Find the correct operation.
             if (operation.getName().equals(verbName.toUpperCase() + " " + pathName.trim())) {
                // Find examples fragments defined at the verb level.
-               Map<String, Multimap<String, String>> pathParametersByExample = extractParametersByExample(verb.getValue(), "path");
+               Map<String, Multimap<String, String>> pathParametersByExample = extractParametersByExample(
+                     verb.getValue(), "path");
                pathParametersByExample.putAll(pathPathParametersByExample);
-               Map<String, Multimap<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue(), PARAMETERS_QUERY_VALUE);
-               Map<String, Multimap<String, String>> headerParametersByExample = extractParametersByExample(verb.getValue(), "header");
+               Map<String, Multimap<String, String>> queryParametersByExample = extractParametersByExample(
+                     verb.getValue(), PARAMETERS_QUERY_VALUE);
+               Map<String, Multimap<String, String>> headerParametersByExample = extractParametersByExample(
+                     verb.getValue(), "header");
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
 
                // No need to go further if no examples.
@@ -193,14 +200,14 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
                      if (!contents.hasNext() && responseCode.getValue().has("x-microcks-refs")) {
                         result.putAll(getNoContentRequestResponsePair(operation, rootDispatcher, rootDispatcherRules,
-                              requestBodiesByExample, pathParametersByExample, queryParametersByExample, headerParametersByExample,
-                              responseCode));
+                              requestBodiesByExample, pathParametersByExample, queryParametersByExample,
+                              headerParametersByExample, responseCode));
                      }
                      while (contents.hasNext()) {
                         Entry<String, JsonNode> content = contents.next();
                         result.putAll(getContentRequestResponsePairs(operation, rootDispatcher, rootDispatcherRules,
-                              requestBodiesByExample, pathParametersByExample, queryParametersByExample, headerParametersByExample,
-                              responseCode, content));
+                              requestBodiesByExample, pathParametersByExample, queryParametersByExample,
+                              headerParametersByExample, responseCode, content));
                      }
                   }
                }
@@ -209,8 +216,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       }
 
       // Adapt map to list of Exchanges.
-      return result.entrySet().stream()
-            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+      return result.entrySet().stream().map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
    }
 
@@ -250,8 +256,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                // Deal with dispatcher stuffs if needed.
                if (operation.getDispatcher() == null) {
                   if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE) && urlHasParts(pathName)) {
-                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName)
-                           + " ?? " + extractOperationParams(verb.getValue()));
+                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName) + " ?? "
+                           + extractOperationParams(verb.getValue()));
                      operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
                   } else if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE)) {
                      operation.setDispatcherRules(extractOperationParams(verb.getValue()));
@@ -277,8 +283,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    /**
     * Extract parameters within a specification node and organize them by example. Parameter can be of type 'path',
-    * 'query', 'header' or 'cookie'. Allow to filter them using parameterType. Key of returned map is example name.
-    * Key of value map is param name. Value of value map is param value ;-)
+    * 'query', 'header' or 'cookie'. Allow to filter them using parameterType. Key of returned map is example name. Key
+    * of value map is param name. Value of value map is param value ;-)
     */
    private Map<String, Multimap<String, String>> extractParametersByExample(JsonNode node, String parameterType) {
       Map<String, Multimap<String, String>> results = new HashMap<>();
@@ -296,26 +302,26 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                JsonNode example = parameter.path(EXAMPLES_NODE).path(exampleName);
                JsonNode exampleValue = getExampleValue(example);
 
-               if (exampleValue == null){
-                 log.warn("Couldn't find example value for example node: name: {}, data: {}", exampleName, example);
-                 continue;
+               if (exampleValue == null) {
+                  log.warn("Couldn't find example value for example node: name: {}, data: {}", exampleName, example);
+                  continue;
                }
 
                Multimap<String, String> exampleParams = results.get(exampleName);
 
-              if (exampleParams == null) {
-                exampleParams = ArrayListMultimap.create();
-                results.put(exampleName, exampleParams);
-              }
+               if (exampleParams == null) {
+                  exampleParams = ArrayListMultimap.create();
+                  results.put(exampleName, exampleParams);
+               }
 
-              if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isArray()) {
+               if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isArray()) {
                   // Array of query params.
                   for (JsonNode current : (ArrayNode) exampleValue) {
-                      exampleParams.put(parameterName, getValueString(current));
+                     exampleParams.put(parameterName, getValueString(current));
                   }
-              } else {
-                exampleParams.put(parameterName, getValueString(exampleValue));
-              }
+               } else {
+                  exampleParams.put(parameterName, getValueString(exampleValue));
+               }
             }
          }
       }
@@ -323,8 +329,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /**
-    * Extract request bodies within verb specification and organize them by example.
-    * Key of returned map is example name. Value is basic Microcks Request object (no query params, no headers)
+    * Extract request bodies within verb specification and organize them by example. Key of returned map is example
+    * name. Value is basic Microcks Request object (no query params, no headers)
     */
    private Map<String, Request> extractRequestBodies(JsonNode verbNode) {
       Map<String, Request> results = new HashMap<>();
@@ -363,8 +369,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /**
-    * Extract headers within a header specification node and organize them by example.
-    * Key of returned map is example name. Value is a list of Microcks Header objects.
+    * Extract headers within a header specification node and organize them by example. Key of returned map is example
+    * name. Value is a list of Microcks Header objects.
     */
    private Map<String, List<Header>> extractHeadersByExample(JsonNode responseNode) {
       Map<String, List<Header>> results = new HashMap<>();
@@ -385,8 +391,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   String exampleValue = getSerializedExampleValue(example);
 
                   // Example may be multiple CSV.
-                  Set<String> values = Arrays.stream(exampleValue.split(","))
-                        .map(String::trim)
+                  Set<String> values = Arrays.stream(exampleValue.split(",")).map(String::trim)
                         .collect(Collectors.toSet());
 
                   Header header = new Header();
@@ -413,10 +418,12 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /**
     * Get the request/response pairs for a response content.
     */
-   private Map<Request, Response> getContentRequestResponsePairs(Operation operation, String rootDispatcher, String rootDispatcherRules,
-                                                                 Map<String, Request> requestBodiesByExample, Map<String, Multimap<String, String>> pathParametersByExample,
-                                                                 Map<String, Multimap<String, String>> queryParametersByExample, Map<String, Multimap<String, String>> headerParametersByExample,
-                                                                 Entry<String, JsonNode> responseCode, Entry<String, JsonNode> content) {
+   private Map<Request, Response> getContentRequestResponsePairs(Operation operation, String rootDispatcher,
+         String rootDispatcherRules, Map<String, Request> requestBodiesByExample,
+         Map<String, Multimap<String, String>> pathParametersByExample,
+         Map<String, Multimap<String, String>> queryParametersByExample,
+         Map<String, Multimap<String, String>> headerParametersByExample, Entry<String, JsonNode> responseCode,
+         Entry<String, JsonNode> content) {
 
       Map<Request, Response> results = new HashMap<>();
 
@@ -489,13 +496,14 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /**
-    * Get the request/response pairs for a response without content.
-    * A response without content has a x-microcks-refs property to get bounds to requests.
+    * Get the request/response pairs for a response without content. A response without content has a x-microcks-refs
+    * property to get bounds to requests.
     */
-   private Map<Request, Response> getNoContentRequestResponsePair(Operation operation, String rootDispatcher, String rootDispatcherRules,
-                                                                  Map<String, Request> requestBodiesByExample, Map<String, Multimap<String, String>> pathParametersByExample,
-                                                                  Map<String, Multimap<String, String>> queryParametersByExample, Map<String, Multimap<String, String>> headerParametersByExample,
-                                                                  Entry<String, JsonNode> responseCode) {
+   private Map<Request, Response> getNoContentRequestResponsePair(Operation operation, String rootDispatcher,
+         String rootDispatcherRules, Map<String, Request> requestBodiesByExample,
+         Map<String, Multimap<String, String>> pathParametersByExample,
+         Map<String, Multimap<String, String>> queryParametersByExample,
+         Map<String, Multimap<String, String>> headerParametersByExample, Entry<String, JsonNode> responseCode) {
 
       Map<Request, Response> results = new HashMap<>();
       JsonNode requestRefs = responseCode.getValue().path("x-microcks-refs");
@@ -576,8 +584,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             Header header = new Header();
             header.setName(headerEntry.getKey());
             // Values may be multiple and CSV.
-            Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(","))
-                  .map(String::trim)
+            Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(",")).map(String::trim)
                   .collect(Collectors.toSet());
             header.setValues(headerValues);
             request.addHeader(header);
@@ -585,16 +592,15 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       }
    }
 
-   private void completeDispatchCriteriaAndResourcePaths(Operation operation, String rootDispatcher, String rootDispatcherRules,
-                                                         Map<String, Multimap<String, String>> pathParametersByExample, Map<String, Multimap<String, String>> queryParametersByExample,
-                                                         String exampleName, Response response) {
+   private void completeDispatchCriteriaAndResourcePaths(Operation operation, String rootDispatcher,
+         String rootDispatcherRules, Map<String, Multimap<String, String>> pathParametersByExample,
+         Map<String, Multimap<String, String>> queryParametersByExample, String exampleName, Response response) {
       String dispatchCriteria = null;
       String resourcePathPattern = operation.getName().split(" ")[1];
 
       if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
          Multimap<String, String> queryParams = queryParametersByExample.get(exampleName);
-         dispatchCriteria = DispatchCriteriaHelper
-               .buildFromParamsMap(rootDispatcherRules, queryParams);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParams);
          // We only need the pattern here.
          operation.addResourcePath(resourcePathPattern);
       } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
@@ -607,8 +613,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          Multimap<String, String> parts = pathParametersByExample.get(exampleName);
          Multimap<String, String> queryParams = queryParametersByExample.get(exampleName);
          dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
-         dispatchCriteria += DispatchCriteriaHelper
-               .buildFromParamsMap(rootDispatcherRules, queryParams);
+         dispatchCriteria += DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParams);
          // We should complete resourcePath here.
          String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
          operation.addResourcePath(resourcePath);
@@ -618,15 +623,15 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    /** Get the value of an example. This can be direct value field or those of followed $ref */
    private JsonNode getExampleValue(JsonNode example) {
-     if (example.has(EXAMPLE_VALUE_NODE)) {
-        return followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
-     }
-     if (example.has("$ref")) {
-        JsonNode component = followRefIfAny(example);
-        return getExampleValue(component);
-     }
-     return null;
-  }
+      if (example.has(EXAMPLE_VALUE_NODE)) {
+         return followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
+      }
+      if (example.has("$ref")) {
+         JsonNode component = followRefIfAny(example);
+         return getExampleValue(component);
+      }
+      return null;
+   }
 
    /** Get the serialized value of an example. This can be direct value field or those of followed $ref */
    private String getSerializedExampleValue(JsonNode example) {
@@ -643,7 +648,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       return response.path(CONTENT_NODE);
    }
 
-   /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2)*/
+   /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2) */
    private String extractOperationParams(JsonNode operation) {
       StringBuilder params = new StringBuilder();
       Iterator<JsonNode> parameters = operation.path(PARAMETERS_NODE).elements();

@@ -36,8 +36,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an NATS.
- * Endpoint URL should be specified using the following form: <code>nats://{brokerhost[:port]}</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an NATS. Endpoint URL should be
+ * specified using the following form: <code>nats://{brokerhost[:port]}</code>
  * @author laurent
  */
 public class NATSMessageConsumptionTask implements MessageConsumptionTask {
@@ -48,8 +48,7 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
    private final Logger logger = Logger.getLogger(getClass());
 
    /**
-    * The string for Regular Expression that helps validating acceptable
-    * endpoints.
+    * The string for Regular Expression that helps validating acceptable endpoints.
     */
    public static final String ENDPOINT_PATTERN_STRING = "nats://(?<brokerUrl>[^:]+(:\\d+)?)/(?<topic>.+)";
 
@@ -77,8 +76,7 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
    /**
     * Convenient static method for checking if this implementation will accept endpoint.
     * @param endpointUrl The endpoint URL to validate
-    * @return True if endpointUrl can be used for connecting and consuming on
-    * endpoint
+    * @return True if endpointUrl can be used for connecting and consuming on endpoint
     */
    public static boolean acceptEndpoint(String endpointUrl) {
       return endpointUrl != null && endpointUrl.matches(ENDPOINT_PATTERN_STRING);
@@ -149,13 +147,10 @@ public class NATSMessageConsumptionTask implements MessageConsumptionTask {
       String endpointBrokerUrl = matcher.group("brokerUrl");
       endpointTopic = matcher.group("topic");
 
-      Options.Builder optionsBuilder = new Options.Builder()
-            .server(endpointBrokerUrl)
-            .maxReconnects(10);
+      Options.Builder optionsBuilder = new Options.Builder().server(endpointBrokerUrl).maxReconnects(10);
 
       if (specification.getSecret() != null) {
-         if (specification.getSecret().getUsername() != null
-               && specification.getSecret().getPassword() != null) {
+         if (specification.getSecret().getUsername() != null && specification.getSecret().getPassword() != null) {
             logger.debug("Adding username/password authentication from secret " + specification.getSecret().getName());
             optionsBuilder.userInfo(specification.getSecret().getUsername(), specification.getSecret().getPassword());
          } else if (specification.getSecret().getToken() != null) {

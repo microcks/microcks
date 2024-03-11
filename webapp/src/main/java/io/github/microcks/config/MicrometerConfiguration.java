@@ -26,8 +26,8 @@ import io.micrometer.common.KeyValue;
 import io.micrometer.common.KeyValues;
 
 /**
- * Allows the configuration of the Micrometer observation, adding extra tags for
- * tracking service and version in metrics.
+ * Allows the configuration of the Micrometer observation, adding extra tags for tracking service and version in
+ * metrics.
  */
 @Component
 public class MicrometerConfiguration extends DefaultServerRequestObservationConvention {

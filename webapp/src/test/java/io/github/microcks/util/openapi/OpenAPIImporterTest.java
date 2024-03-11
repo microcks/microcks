@@ -82,7 +82,8 @@ public class OpenAPIImporterTest {
    public void testSimpleOpenAPIImportYAMLWithExtensions() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -95,7 +96,8 @@ public class OpenAPIImporterTest {
    public void testSimpleOpenAPIImportJSONWithExtensions() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.json", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.json", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -108,7 +110,8 @@ public class OpenAPIImporterTest {
    public void testSimpleOpenAPIImportYAMLWithQuotes() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-quoted.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-quoted.yaml",
+               null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -121,7 +124,8 @@ public class OpenAPIImporterTest {
    public void testApicurioPetstoreOpenAPI() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json",
+               null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -238,7 +242,8 @@ public class OpenAPIImporterTest {
    public void testSimpleOpenAPIImportYAMLNoDashesWithJSON() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-with-json.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-with-json.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -268,7 +273,8 @@ public class OpenAPIImporterTest {
    public void testOpenAPIWithOpsPathParameter() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/locations-openapi.json", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/locations-openapi.json",
+               null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -333,7 +339,8 @@ public class OpenAPIImporterTest {
    public void testOpenAPIImportYAMLWithSpacesOps() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-spacesops.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-spacesops.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -346,7 +353,8 @@ public class OpenAPIImporterTest {
    public void testOpenAPIImportYAMLWithHeaders() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-headers.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-headers.yaml",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -436,14 +444,15 @@ public class OpenAPIImporterTest {
    public void testOpenAPIJsonPointer() {
       try {
          ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-         byte[] bytes = Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml"));
+         byte[] bytes = Files
+               .readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml"));
          JsonNode openapiSpec = mapper.readTree(bytes);
 
          String verb = "get";
          String path = "/owner/{owner}/car";
 
-         String pointer = "/paths/" + path.replace("/", "~1") + "/" + verb
-               + "/responses/200/content/" + "application/json".replace("/", "~1");
+         String pointer = "/paths/" + path.replace("/", "~1") + "/" + verb + "/responses/200/content/"
+               + "application/json".replace("/", "~1");
 
          JsonNode responseNode = openapiSpec.at(pointer);
          assertNotNull(responseNode);
@@ -457,7 +466,8 @@ public class OpenAPIImporterTest {
    public void testCompleteOpenAPIImportYAML() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-complete.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-complete.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -504,7 +514,7 @@ public class OpenAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -519,8 +529,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("POST /owner/{owner}/car".equals(operation.getName())) {
+         } else if ("POST /owner/{owner}/car".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner", operation.getDispatcherRules());
@@ -539,7 +548,7 @@ public class OpenAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -554,8 +563,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
+         } else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
             assertEquals("GET", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner && car", operation.getDispatcherRules());
@@ -573,7 +581,7 @@ public class OpenAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -588,8 +596,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
+         } else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner && car", operation.getDispatcherRules());
@@ -612,7 +619,8 @@ public class OpenAPIImporterTest {
    public void testCompleteOpenAPI31ImportYAML() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-3.1-complete.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-3.1-complete.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -659,7 +667,7 @@ public class OpenAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -674,8 +682,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("POST /owner/{owner}/car".equals(operation.getName())) {
+         } else if ("POST /owner/{owner}/car".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner", operation.getDispatcherRules());
@@ -694,7 +701,7 @@ public class OpenAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -709,8 +716,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
+         } else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
             assertEquals("GET", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner && car", operation.getDispatcherRules());
@@ -728,7 +734,7 @@ public class OpenAPIImporterTest {
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair)exchange;
+                  RequestResponsePair entry = (RequestResponsePair) exchange;
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -743,8 +749,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
+         } else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner && car", operation.getDispatcherRules());
@@ -767,7 +772,8 @@ public class OpenAPIImporterTest {
    public void testUncompleteParamsOpenAPIImportYAML() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-uncomplete-params.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-uncomplete-params.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -810,8 +816,7 @@ public class OpenAPIImporterTest {
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(0, exchanges.size());
-         }
-         else if ("POST /owner/{owner}/car".equals(operation.getName())) {
+         } else if ("POST /owner/{owner}/car".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner", operation.getDispatcherRules());
@@ -844,8 +849,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
+         } else if ("GET /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
             assertEquals("GET", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner && car", operation.getDispatcherRules());
@@ -903,7 +907,8 @@ public class OpenAPIImporterTest {
    public void testExampleValueDeserializationYAMLYAML() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-yaml.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-yaml.yaml",
+               null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -929,7 +934,8 @@ public class OpenAPIImporterTest {
    public void testExampleValueDeserializationJSONJSON() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-json.json", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-json.json",
+               null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -942,7 +948,8 @@ public class OpenAPIImporterTest {
    public void testResponseRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-complex-refs.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-complex-refs.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -1027,7 +1034,8 @@ public class OpenAPIImporterTest {
    public void testParameterRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/param-refs-openapi.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/param-refs-openapi.yaml",
+               null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -1087,7 +1095,8 @@ public class OpenAPIImporterTest {
                      assertEquals("200", response.getStatus());
                      assertEquals("application/json", response.getMediaType());
                      assertNotNull(response.getContent());
-                     assertEquals("{\"account\":{\"resourceId\":\"f377afb3-5c62-40cc-8f07-1f4749a780eb\"}}", response.getContent());
+                     assertEquals("{\"account\":{\"resourceId\":\"f377afb3-5c62-40cc-8f07-1f4749a780eb\"}}",
+                           response.getContent());
                   }
                } else {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
@@ -1103,7 +1112,8 @@ public class OpenAPIImporterTest {
    public void testQueryParameterRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/query-param-refs-openapi.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/query-param-refs-openapi.yaml", null);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -1144,7 +1154,8 @@ public class OpenAPIImporterTest {
    public void testExamplesRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/examples-ref-openapi.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/examples-ref-openapi.yaml",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -1207,7 +1218,9 @@ public class OpenAPIImporterTest {
             "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml",
             null, true);
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml", resolver);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml",
+               resolver);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -1249,7 +1262,9 @@ public class OpenAPIImporterTest {
             "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml",
             null, true);
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml", resolver);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml",
+               resolver);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -1276,7 +1291,7 @@ public class OpenAPIImporterTest {
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
       assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0--weather-forecast-schema.yaml"));
 
-      for (int i=1; i<3; i++) {
+      for (int i = 1; i < 3; i++) {
          Resource refResource = resources.get(i);
          if ("WeatherForecast API-1.0.0--weather-examples.json".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
@@ -1339,7 +1354,9 @@ public class OpenAPIImporterTest {
             "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/",
             null, true);
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml", resolver);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml",
+               resolver);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -1369,7 +1386,9 @@ public class OpenAPIImporterTest {
       Resource refSchema = resources.get(1);
       assertEquals("WeatherForecast API-1.0.0-weather-forecast-schema.yaml", refSchema.getName());
       assertEquals(ResourceType.JSON_SCHEMA, refSchema.getType());
-      assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-schema.yaml", refSchema.getPath());
+      assertEquals(
+            "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-schema.yaml",
+            refSchema.getPath());
       assertNotNull(refSchema.getContent());
       assertTrue(refSchema.getContent().contains("A weather forecast for a requested region"));
    }
@@ -1381,7 +1400,9 @@ public class OpenAPIImporterTest {
             "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/",
             null, true);
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref-pointers.yaml", resolver);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref-pointers.yaml",
+               resolver);
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");
@@ -1408,16 +1429,20 @@ public class OpenAPIImporterTest {
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
       assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0-weather-forecast-schema.yaml"));
 
-      for (int i=1; i<3; i++) {
+      for (int i = 1; i < 3; i++) {
          Resource refResource = resources.get(i);
          if ("WeatherForecast API-1.0.0-weather-forecast-common.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
-            assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-common.yaml", refResource.getPath());
+            assertEquals(
+                  "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-common.yaml",
+                  refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("title: Common objects to reuse"));
          } else if ("WeatherForecast API-1.0.0-weather-forecast-schema.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
-            assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-schema.yaml", refResource.getPath());
+            assertEquals(
+                  "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-schema.yaml",
+                  refResource.getPath());
             assertNotNull(refResource.getContent());
             assertTrue(refResource.getContent().contains("A weather forecast for a requested region"));
          } else {
@@ -1471,7 +1496,9 @@ public class OpenAPIImporterTest {
             "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-recursive-ref.yaml",
             null, true);
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-recursive-ref.yaml", resolver);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-recursive-ref.yaml",
+               resolver);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -1497,7 +1524,7 @@ public class OpenAPIImporterTest {
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
       assertTrue(openAPISpec.getContent().contains("WeatherForecast+API-1.0.0--weather-forecast-schema.yaml"));
 
-      for (int i=1; i<4; i++) {
+      for (int i = 1; i < 4; i++) {
          Resource refResource = resources.get(i);
          if ("WeatherForecast API-1.0.0--weather-forecast-schema.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
@@ -1508,7 +1535,8 @@ public class OpenAPIImporterTest {
             assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
             assertEquals("./weather-forecast-examples.yaml", refResource.getPath());
             assertNotNull(refResource.getContent());
-            assertTrue(refResource.getContent().contains("$ref: 'WeatherForecast+API-1.0.0--weather-forecast-common-regions.yaml#/regions/north'"));
+            assertTrue(refResource.getContent()
+                  .contains("$ref: 'WeatherForecast+API-1.0.0--weather-forecast-common-regions.yaml#/regions/north'"));
          } else if ("WeatherForecast API-1.0.0--weather-forecast-common-regions.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_FRAGMENT, refResource.getType());
             assertEquals("./weather-forecast-common-regions.yaml", refResource.getPath());
@@ -1562,7 +1590,8 @@ public class OpenAPIImporterTest {
    public void testNoContentResponseOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent.yaml", null);
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/test-openapi-nocontent.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -1598,7 +1627,8 @@ public class OpenAPIImporterTest {
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());
-            assertTrue(operation.getResourcePaths().contains("/tests/66") || operation.getResourcePaths().contains("/tests/77"));
+            assertTrue(operation.getResourcePaths().contains("/tests/66")
+                  || operation.getResourcePaths().contains("/tests/77"));
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof RequestResponsePair entry) {
@@ -1685,8 +1715,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("POST /owner/{owner}/car".equals(operation.getName())) {
+         } else if ("POST /owner/{owner}/car".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner", operation.getDispatcherRules());
@@ -1719,8 +1748,7 @@ public class OpenAPIImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
+         } else if ("POST /owner/{owner}/car/{car}/passenger".equals(operation.getName())) {
             assertEquals("POST", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
             assertEquals("owner && car", operation.getDispatcherRules());
@@ -1773,8 +1801,7 @@ public class OpenAPIImporterTest {
          assertEquals("Team A", service.getMetadata().getLabels().get("team"));
 
          Operation postOp = service.getOperations().stream()
-               .filter(operation -> operation.getName().equals("POST /owner/{owner}/car"))
-               .findFirst().get();
+               .filter(operation -> operation.getName().equals("POST /owner/{owner}/car")).findFirst().get();
 
          assertEquals("POST", postOp.getMethod());
          assertEquals(100, postOp.getDefaultDelay().longValue());

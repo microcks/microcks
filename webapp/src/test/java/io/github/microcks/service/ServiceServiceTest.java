@@ -47,7 +47,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class ServiceServiceTest {
 
    @Autowired
@@ -102,16 +102,16 @@ public class ServiceServiceTest {
       assertEquals("weather-forecast-openapi.yaml", resource.getSourceArtifact());
 
       // Inspect and check requests.
-      List<Request> requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(5, requests.size());
       for (Request request : requests) {
          assertEquals("weather-forecast-openapi.yaml", request.getSourceArtifact());
       }
 
       // Inspect and check responses.
-      List<Response> responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(5, responses.size());
       for (Response response : responses) {
          assertEquals("weather-forecast-openapi.yaml", response.getSourceArtifact());
@@ -122,8 +122,9 @@ public class ServiceServiceTest {
    public void testImportServiceDefinitionFromGitLabURL() {
       List<Service> services = null;
       try {
-         services = service.importServiceDefinition("https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example%2Fopenapi.yaml/raw?head=main", null,
-               true, true);
+         services = service.importServiceDefinition(
+               "https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example%2Fopenapi.yaml/raw?head=main",
+               null, true, true);
       } catch (MockRepositoryImportException mrie) {
          fail("No MockRepositoryImportException should have be thrown");
       }
@@ -148,23 +149,24 @@ public class ServiceServiceTest {
       assertEquals(3, importedSvc.getOperations().get(0).getResourcePaths().size());
 
       // Inspect and check requests.
-      List<Request> requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(3, requests.size());
       for (Request request : requests) {
          assertEquals("openapi.yaml", request.getSourceArtifact());
       }
 
       // Inspect and check responses.
-      List<Response> responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(3, responses.size());
       for (Response response : responses) {
          assertEquals("openapi.yaml", response.getSourceArtifact());
          switch (response.getName()) {
             case "laurent":
                assertEquals("/owner=0", response.getDispatchCriteria());
-               assertEquals("[{\"model\":\"BMW X5\",\"year\":2018},{\"model\":\"Tesla Model 3\",\"year\":2020}]", response.getContent());
+               assertEquals("[{\"model\":\"BMW X5\",\"year\":2018},{\"model\":\"Tesla Model 3\",\"year\":2020}]",
+                     response.getContent());
                break;
             case "maxime":
                assertEquals("/owner=1", response.getDispatchCriteria());
@@ -201,8 +203,9 @@ public class ServiceServiceTest {
             "OpenAPI Car API-1.0.0-paths-owner--owner--car-get-200-examples-laurent.yaml");
       List<Service> services = null;
       try {
-         services = service.importServiceDefinition("https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example-2%2Fopenapi.yaml/raw?head=main", null,
-               true, true);
+         services = service.importServiceDefinition(
+               "https://gitlab.com/api/v4/projects/53583367/repository/files/complex-example-2%2Fopenapi.yaml/raw?head=main",
+               null, true, true);
       } catch (MockRepositoryImportException mrie) {
          fail("No MockRepositoryImportException should have be thrown");
       }
@@ -231,10 +234,10 @@ public class ServiceServiceTest {
          assertEquals(3, operation.getResourcePaths().size());
 
          // Inspect and check requests and responses.
-         List<Request> requests = requestRepository.findByOperationId(
-               IdBuilder.buildOperationId(importedSvc, operation));
-         List<Response> responses = responseRepository.findByOperationId(
-               IdBuilder.buildOperationId(importedSvc, operation));
+         List<Request> requests = requestRepository
+               .findByOperationId(IdBuilder.buildOperationId(importedSvc, operation));
+         List<Response> responses = responseRepository
+               .findByOperationId(IdBuilder.buildOperationId(importedSvc, operation));
 
          switch (operation.getName()) {
             case "GET /owner/{owner}":
@@ -264,7 +267,9 @@ public class ServiceServiceTest {
                   switch (response.getName()) {
                      case "laurent":
                         assertEquals("/owner=0", response.getDispatchCriteria());
-                        assertEquals("[{\"model\":\"BMW X5\",\"year\":2018},{\"model\":\"Tesla Model 3\",\"year\":2020}]", response.getContent());
+                        assertEquals(
+                              "[{\"model\":\"BMW X5\",\"year\":2018},{\"model\":\"Tesla Model 3\",\"year\":2020}]",
+                              response.getContent());
                         break;
                      case "maxime":
                         assertEquals("/owner=1", response.getDispatchCriteria());
@@ -290,7 +295,8 @@ public class ServiceServiceTest {
    public void testImportServiceDefinitionMainAndSecondary() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
+         File artifactFile = new File(
+               "target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
@@ -319,13 +325,13 @@ public class ServiceServiceTest {
       assertEquals("weather-forecast-raw-openapi.yaml", resource.getSourceArtifact());
 
       // Inspect and check requests.
-      List<Request> requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(0, requests.size());
 
       // Inspect and check responses.
-      List<Response> responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(0, responses.size());
 
       try {
@@ -367,16 +373,16 @@ public class ServiceServiceTest {
       }
 
       // Inspect and check requests.
-      requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(5, requests.size());
       for (Request request : requests) {
          assertEquals("weather-forecast-postman.json", request.getSourceArtifact());
       }
 
       // Inspect and check responses.
-      responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(5, requests.size());
       for (Response response : responses) {
          assertEquals("weather-forecast-postman.json", response.getSourceArtifact());
@@ -388,8 +394,7 @@ public class ServiceServiceTest {
       List<Service> services = null;
       try {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
-         services = service.importServiceDefinition(artifactFile, null,
-               new ArtifactInfo("films.graphql", true));
+         services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films.graphql", true));
       } catch (MockRepositoryImportException mrie) {
          mrie.printStackTrace();
          fail("No MockRepositoryImportException should have be thrown");
@@ -407,19 +412,18 @@ public class ServiceServiceTest {
       assertEquals(4, importedSvc.getOperations().size());
 
       // Inspect and check requests.
-      List<Request> requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(0, requests.size());
 
       // Inspect and check responses.
-      List<Response> responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(0, responses.size());
 
       try {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films-postman.json");
-         services = service.importServiceDefinition(artifactFile, null,
-               new ArtifactInfo("films-postman.json", false));
+         services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films-postman.json", false));
       } catch (MockRepositoryImportException mrie) {
          mrie.printStackTrace();
          fail("No MockRepositoryImportException should have be thrown");
@@ -434,16 +438,16 @@ public class ServiceServiceTest {
       assertEquals(4, importedSvc.getOperations().size());
 
       // Inspect and check requests.
-      requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(1, requests.size());
       for (Request request : requests) {
          assertEquals("films-postman.json", request.getSourceArtifact());
       }
 
       // Inspect and check responses.
-      responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
       assertEquals(1, requests.size());
       for (Response response : responses) {
          assertEquals("films-postman.json", response.getSourceArtifact());
@@ -454,7 +458,8 @@ public class ServiceServiceTest {
    public void testImportServiceDefinitionMainAndSecondariesWithAPIMetadata() {
       List<Service> services = null;
       try {
-         File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
+         File artifactFile = new File(
+               "target/test-classes/io/github/microcks/service/weather-forecast-raw-openapi.yaml");
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
@@ -504,8 +509,7 @@ public class ServiceServiceTest {
       List<Service> services = null;
       try {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
-         services = service.importServiceDefinition(artifactFile, null,
-               new ArtifactInfo("films.graphql", true));
+         services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films.graphql", true));
       } catch (MockRepositoryImportException mrie) {
          fail("No MockRepositoryImportException should have be thrown");
       }
@@ -519,21 +523,20 @@ public class ServiceServiceTest {
       assertEquals(4, importedSvc.getOperations().size());
 
       Optional<Operation> opFilmOperation = importedSvc.getOperations().stream()
-            .filter(op -> op.getName().equals("film"))
-            .findFirst();
+            .filter(op -> op.getName().equals("film")).findFirst();
       if (opFilmOperation.isEmpty()) {
          fail("film operation should have been discovered");
       }
       Operation filmOperation = opFilmOperation.get();
 
       // Inspect and check requests.
-      List<Request> requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, filmOperation));
       assertEquals(0, requests.size());
 
       // Inspect and check responses.
-      List<Response> responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, filmOperation));
       assertEquals(0, responses.size());
 
       try {
@@ -553,16 +556,14 @@ public class ServiceServiceTest {
       assertEquals(4, importedSvc.getOperations().size());
 
       // Inspect and check requests.
-      requests = requestRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      requests = requestRepository.findByOperationId(IdBuilder.buildOperationId(importedSvc, filmOperation));
       assertEquals(1, requests.size());
       for (Request request : requests) {
          assertEquals("movie-graph-api-1.0.har", request.getSourceArtifact());
       }
 
       // Inspect and check responses.
-      responses = responseRepository.findByOperationId(
-            IdBuilder.buildOperationId(importedSvc, filmOperation));
+      responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(importedSvc, filmOperation));
       assertEquals(1, requests.size());
       for (Response response : responses) {
          assertEquals("movie-graph-api-1.0.har", response.getSourceArtifact());

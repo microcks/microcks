@@ -74,14 +74,10 @@ public class DynamicMockRestController {
    private final Boolean enableInvocationStats = null;
 
    @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.POST, produces = "application/json")
-   public ResponseEntity<String> createResource(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @PathVariable("resource") String resource,
-         @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody(required=true) String body,
-         HttpServletRequest request
-   ) {
+   public ResponseEntity<String> createResource(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @PathVariable("resource") String resource,
+         @RequestParam(value = "delay", required = false) Long delay, @RequestBody(required = true) String body,
+         HttpServletRequest request) {
       log.debug("Creating a new resource '{}' for service '{}-{}'", resource, serviceName, version);
       long startTime = System.currentTimeMillis();
 
@@ -116,16 +112,12 @@ public class DynamicMockRestController {
    }
 
    @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.GET, produces = "application/json")
-   public ResponseEntity<String> findResources(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @PathVariable("resource") String resource,
-         @RequestParam(value="page", required=false, defaultValue="0") int page,
-         @RequestParam(value="size", required=false, defaultValue="20") int size,
-         @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody(required=false) String body,
-         HttpServletRequest request
-   ) {
+   public ResponseEntity<String> findResources(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @PathVariable("resource") String resource,
+         @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+         @RequestParam(value = "size", required = false, defaultValue = "20") int size,
+         @RequestParam(value = "delay", required = false) Long delay, @RequestBody(required = false) String body,
+         HttpServletRequest request) {
       log.debug("Find resources '{}' for service '{}-{}'", resource, serviceName, version);
       long startTime = System.currentTimeMillis();
 
@@ -141,7 +133,8 @@ public class DynamicMockRestController {
 
          List<GenericResource> genericResources = null;
          if (body == null) {
-            genericResources = genericResourceRepository.findByServiceId(mockContext.service.getId(), PageRequest.of(page, size));
+            genericResources = genericResourceRepository.findByServiceId(mockContext.service.getId(),
+                  PageRequest.of(page, size));
          } else {
             genericResources = genericResourceRepository.findByServiceIdAndJSONQuery(mockContext.service.getId(), body);
          }
@@ -151,11 +144,8 @@ public class DynamicMockRestController {
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
          // Transform and collect resources.
-         List<String> resources = genericResources.stream()
-               .map(genericResource -> MockControllerCommons.renderResponseContent(
-                     evaluableRequest, engine,
-                     transformToResourceJSON(genericResource)
-               ))
+         List<String> resources = genericResources.stream().map(genericResource -> MockControllerCommons
+               .renderResponseContent(evaluableRequest, engine, transformToResourceJSON(genericResource)))
                .collect(Collectors.toList());
 
          // Wait if specified before returning.
@@ -168,16 +158,11 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.GET,
-         produces = "application/json")
-   public ResponseEntity<String> getResource(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @PathVariable("resource") String resource,
-         @PathVariable("resourceId") String resourceId,
-         @RequestParam(value="delay", required=false) Long delay,
-         HttpServletRequest request
-   ) {
+   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.GET, produces = "application/json")
+   public ResponseEntity<String> getResource(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @PathVariable("resource") String resource,
+         @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay,
+         HttpServletRequest request) {
       log.debug("Get resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
 
@@ -198,12 +183,13 @@ public class DynamicMockRestController {
 
          if (genericResource != null) {
             // Prepare templating support with evaluable request and engine.
-            EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(null, resourcePath, request);
+            EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(null, resourcePath,
+                  request);
             TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
             // Return the resource as well as a 200 code.
-            return new ResponseEntity<>(MockControllerCommons.renderResponseContent(
-                  evaluableRequest, engine, transformToResourceJSON(genericResource)), HttpStatus.OK);
+            return new ResponseEntity<>(MockControllerCommons.renderResponseContent(evaluableRequest, engine,
+                  transformToResourceJSON(genericResource)), HttpStatus.OK);
          } else {
             // Return a 404 code : not found.
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -214,17 +200,11 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.PUT,
-         produces = "application/json")
-   public ResponseEntity<String> updateResource(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @PathVariable("resource") String resource,
-         @PathVariable("resourceId") String resourceId,
-         @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody(required=true) String body,
-         HttpServletRequest request
-   ) {
+   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.PUT, produces = "application/json")
+   public ResponseEntity<String> updateResource(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @PathVariable("resource") String resource,
+         @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay,
+         @RequestBody(required = true) String body, HttpServletRequest request) {
       log.debug("Update resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
 
@@ -270,13 +250,9 @@ public class DynamicMockRestController {
    }
 
    @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.DELETE)
-   public ResponseEntity<String> deleteResource(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @PathVariable("resource") String resource,
-         @PathVariable("resourceId") String resourceId,
-         @RequestParam(value="delay", required=false) Long delay
-   ) {
+   public ResponseEntity<String> deleteResource(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @PathVariable("resource") String resource,
+         @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay) {
       log.debug("Update resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
 
@@ -327,7 +303,7 @@ public class DynamicMockRestController {
 
    private String formatToJSONArray(List<String> resources) {
       StringBuilder builder = new StringBuilder("[");
-      for (int i=0; i<resources.size(); i++) {
+      for (int i = 0; i < resources.size(); i++) {
          builder.append(resources.get(i));
          if (i < resources.size() - 1) {
             builder.append(", ");
@@ -347,8 +323,8 @@ public class DynamicMockRestController {
       // Publish an invocation event before returning if enabled.
       if (enableInvocationStats) {
          MockInvocationEvent event = new MockInvocationEvent(this, mockContext.service.getName(),
-               mockContext.service.getVersion(), "DynamicMockRestController",
-               new Date(since), since - System.currentTimeMillis());
+               mockContext.service.getVersion(), "DynamicMockRestController", new Date(since),
+               since - System.currentTimeMillis());
          applicationContext.publishEvent(event);
          log.debug("Mock invocation event has been published");
       }

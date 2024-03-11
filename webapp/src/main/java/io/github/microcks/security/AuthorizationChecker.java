@@ -30,11 +30,9 @@ import java.util.Arrays;
  * @author laurent
  */
 @Component
-@PropertySources({
-      @PropertySource("features.properties"),
+@PropertySources({ @PropertySource("features.properties"),
       @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true),
-      @PropertySource("application.properties"),
-})
+      @PropertySource("application.properties"), })
 public class AuthorizationChecker {
 
    /** The Microcks user role name. */
@@ -59,7 +57,7 @@ public class AuthorizationChecker {
    /**
     * Check if provided user is having a specific role at the global level.
     * @param userInfo The information representing user to check access for.
-    * @param role The role the user should endorse.
+    * @param role     The role the user should endorse.
     * @return True if authorized, false otherwise.
     */
    public boolean hasRole(UserInfo userInfo, String role) {
@@ -72,8 +70,8 @@ public class AuthorizationChecker {
    /**
     * Check if provided user is having a specific role for given service.
     * @param userInfo The information representing user to check access for.
-    * @param role The role the user should endorse.
-    * @param service The service the user should be authorized with the role.
+    * @param role     The role the user should endorse.
+    * @param service  The service the user should be authorized with the role.
     * @return True if authorized, false otherwise.
     */
    public boolean hasRoleForService(UserInfo userInfo, String role, Service service) {
@@ -90,8 +88,8 @@ public class AuthorizationChecker {
    /**
     * Check if provided user is having a specific role for given import job.
     * @param userInfo The information representing user to check access for.
-    * @param role The role the user should endorse.
-    * @param job The import job the user should be authorized with the role.
+    * @param role     The role the user should endorse.
+    * @param job      The import job the user should be authorized with the role.
     * @return True if authorized, false otherwise.
     */
    public boolean hasRoleForImportJob(UserInfo userInfo, String role, ImportJob job) {

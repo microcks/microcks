@@ -54,7 +54,8 @@ public class GrpcMockHandlerRegistry extends HandlerRegistry {
     * Buidl a new GrpcMockHandlerRegistry with a callback handler.
     * @param serverCallHandler The server callback handler to use
     */
-   public GrpcMockHandlerRegistry(GrpcServerCallHandler serverCallHandler, ServiceRepository serviceRepository, ResourceRepository resourceRepository) {
+   public GrpcMockHandlerRegistry(GrpcServerCallHandler serverCallHandler, ServiceRepository serviceRepository,
+         ResourceRepository resourceRepository) {
       this.serverCallHandler = serverCallHandler;
       this.reflectionService = new ProtoReflectionService(serviceRepository, resourceRepository);
    }
@@ -74,12 +75,11 @@ public class GrpcMockHandlerRegistry extends HandlerRegistry {
    }
 
    protected MethodDescriptor<ServerReflectionRequest, ServerReflectionResponse> reflectionMethodDescriptor() {
-      return MethodDescriptor.newBuilder(ProtoUtils.marshaller(ServerReflectionRequest.getDefaultInstance()),
+      return MethodDescriptor
+            .newBuilder(ProtoUtils.marshaller(ServerReflectionRequest.getDefaultInstance()),
                   ProtoUtils.marshaller(ServerReflectionResponse.getDefaultInstance()))
-            .setType(MethodDescriptor.MethodType.BIDI_STREAMING)
-            .setFullMethodName(SERVER_REFLECTION_V1_METHOD)
-            .setSampledToLocalTracing(true)
-            .build();
+            .setType(MethodDescriptor.MethodType.BIDI_STREAMING).setFullMethodName(SERVER_REFLECTION_V1_METHOD)
+            .setSampledToLocalTracing(true).build();
    }
 
    protected ServerCallHandler<ServerReflectionRequest, ServerReflectionResponse> reflectionServerCallHandler() {

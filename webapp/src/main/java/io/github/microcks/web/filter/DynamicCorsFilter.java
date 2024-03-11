@@ -31,71 +31,67 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * Servlet filter that set the response CORS headers accordingly the
- * configuration
- * and incoming request.
+ * Servlet filter that set the response CORS headers accordingly the configuration and incoming request.
  */
 public class DynamicCorsFilter implements Filter {
-  private final String corsAllowedOrigins;
-  private final Boolean corsAllowCredentials;
+   private final String corsAllowedOrigins;
+   private final Boolean corsAllowCredentials;
 
-  /**
-   * Build a new DynamicCorsFilter.
-   *
-   * @param corsAllowedOrigins   Allowed origin forced if nothing found in
-   *                             incoming request
-   * @param corsAllowCredentials Whether to set allow credentials
-   */
-  public DynamicCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
-    this.corsAllowedOrigins = corsAllowedOrigins;
-    this.corsAllowCredentials = corsAllowCredentials;
-  }
+   /**
+    * Build a new DynamicCorsFilter.
+    *
+    * @param corsAllowedOrigins   Allowed origin forced if nothing found in incoming request
+    * @param corsAllowCredentials Whether to set allow credentials
+    */
+   public DynamicCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
+      this.corsAllowedOrigins = corsAllowedOrigins;
+      this.corsAllowCredentials = corsAllowCredentials;
+   }
 
-  @Override
-  public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
-      throws IOException, ServletException {
-    HttpServletResponse response = (HttpServletResponse) servletResponse;
-    HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
-    String origin = httpRequest.getHeader("Origin");
-    if (origin == null) {
-      origin = corsAllowedOrigins;
-    }
-    response.setHeader("Access-Control-Allow-Origin", origin);
-    response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
-    response.setHeader("Access-Control-Max-Age", "3600");
-    response.setHeader("Access-Control-Allow-Headers", getHeadersString(httpRequest));
-    if (Boolean.TRUE.equals(corsAllowCredentials)) {
-      response.setHeader("Access-Control-Allow-Credentials", "true");
-    }
-    chain.doFilter(servletRequest, servletResponse);
-  }
+   @Override
+   public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain)
+         throws IOException, ServletException {
+      HttpServletResponse response = (HttpServletResponse) servletResponse;
+      HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
+      String origin = httpRequest.getHeader("Origin");
+      if (origin == null) {
+         origin = corsAllowedOrigins;
+      }
+      response.setHeader("Access-Control-Allow-Origin", origin);
+      response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
+      response.setHeader("Access-Control-Max-Age", "3600");
+      response.setHeader("Access-Control-Allow-Headers", getHeadersString(httpRequest));
+      if (Boolean.TRUE.equals(corsAllowCredentials)) {
+         response.setHeader("Access-Control-Allow-Credentials", "true");
+      }
+      chain.doFilter(servletRequest, servletResponse);
+   }
 
-  /**
-   * Build a string with all the headers from the incoming request.
-   *
-   * This method will also add the headers from the
-   * "Access-Control-Request-Headers" header if present.
-   *
-   * @param httpRequest
-   * @return
-   */
-  private String getHeadersString(HttpServletRequest httpRequest) {
-    var headerNamesList = new HashSet<String>();
-    Enumeration<String> headerNamesEnumeration = httpRequest.getHeaderNames();
+   /**
+    * Build a string with all the headers from the incoming request.
+    *
+    * This method will also add the headers from the "Access-Control-Request-Headers" header if present.
+    *
+    * @param httpRequest
+    * @return
+    */
+   private String getHeadersString(HttpServletRequest httpRequest) {
+      var headerNamesList = new HashSet<String>();
+      Enumeration<String> headerNamesEnumeration = httpRequest.getHeaderNames();
 
-    if (headerNamesEnumeration != null) {
-      headerNamesList.addAll(Collections.list(headerNamesEnumeration));
-    }
+      if (headerNamesEnumeration != null) {
+         headerNamesList.addAll(Collections.list(headerNamesEnumeration));
+      }
 
-    String accessControlRequestHeaders = httpRequest.getHeader("Access-Control-Request-Headers");
-    if (accessControlRequestHeaders != null) {
-      List<String> headerNames = Arrays.stream(accessControlRequestHeaders.split(",")).map(String::trim).toList();
-      headerNamesList.addAll(headerNames);
-    }
+      String accessControlRequestHeaders = httpRequest.getHeader("Access-Control-Request-Headers");
+      if (accessControlRequestHeaders != null) {
+         List<String> headerNames = Arrays.stream(accessControlRequestHeaders.split(",")).map(String::trim).toList();
+         headerNamesList.addAll(headerNames);
+      }
 
-    if (headerNamesList.isEmpty()) {
-      return "*";
-    }
-    return String.join(", ", headerNamesList);
-  }
+      if (headerNamesList.isEmpty()) {
+         return "*";
+      }
+      return String.join(", ", headerNamesList);
+   }
 }
