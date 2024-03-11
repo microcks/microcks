@@ -7,6 +7,8 @@ const WAIT_TIME = parseFloat(__ENV.WAIT_TIME) || 0.5;
 // Define the base URL of your API
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
+const only500Callback = http.expectedStatuses(500);
+
 // Define the options for your test
 export let options = {
     /*
@@ -205,7 +207,8 @@ export function invokeSOAPMocks() {
                          </soapenv:Body>
                       </soapenv:Envelope>`;
 
-    let laurentCall = http.post(`${BASE_URL}/soap/HelloService+Mock/0.9`, laurentBody, { headers: laurentHeaders })
+    let laurentCall = http.post(`${BASE_URL}/soap/HelloService+Mock/0.9`, laurentBody, { headers: laurentHeaders, responseCallback: only500Callback })
+
     check(laurentCall, {
         'laurentCall status is 500': (r) => r.status === 500,
         'laurentCall body is fault': (r) => r.body.includes("<soapenv:Fault>")
