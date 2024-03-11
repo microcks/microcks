@@ -18,9 +18,10 @@ repository root that pull the correct versions and auto-configure them.
 If you chose to run [MongoDB](https://mongodb.com) and [Keycloak](https://keycloak.org) via containers, you'll
 need to open a first terminal and run:
 
-```
+```shell
 $ cd dev
-$ ./start-mongodb.sh
+$ ./start-mongodb-docker.sh
+# or ./start-mongodb-podman.sh if you prefer Podman
 ```
 
 MongoDB is started on port `27017`.
@@ -28,9 +29,10 @@ MongoDB is started on port `27017`.
 Keycloak is optional depending on your will to try out authentication and authorization features.
 If you need Keycloak, open a second terminal and run:
 
-```
+```shell
 $ cd dev
 $ ./start-keycloak.sh
+# or ./start-keycloak-podman.sh if you prefer Podman
 ```
 
 Keycloak is started on port `8180`.
@@ -39,9 +41,9 @@ Keycloak is started on port `8180`.
 
 In a terminal, start frontend GUI server using NG :
 
-```
+```shell
 $ cd src/main/webapp
-$ npm install
+$ npm install --force
 $ ng serve
 ```
 
@@ -49,14 +51,24 @@ Server is started on port `4200`. Open a new browser tab pointing to `http://loc
 
 with Keycloak:
 
-```
+```shell
 $ mvn spring-boot:run
 ```
 
 with Keycloak disabled:
 
-```
+```shell
 $ KEYCLOAK_ENABLED=false mvn spring-boot:run
 ```
 
 Server is started on port `8080` and will be used as API endpoints root by frontend GUI (URLs starting by `http://localhost:4200/api` will be in fact proxied to port `8080`).
+
+### Formatting and linting
+
+We use [Spotless](https://github.com/diffplug/spotless) to format our Java code. Spotless is configured using an Eclipse 
+code style file, which is located at `eclipse-formatter.xml` in the root folder of this repository. Spotless check is automatically
+triggered during the build process, but you can also run it manually using the following command:
+
+```shell
+$ mvn spotless:apply
+```
