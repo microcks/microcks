@@ -181,17 +181,17 @@ class AsyncAPI3ImporterTest {
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               fail("No exception should be thrown when importing message definitions.");
+               Assertions.fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(1, exchanges.size());
+            Assertions.assertEquals(1, exchanges.size());
 
             // Check resource paths have been discovered.
-            assertEquals(2, operation.getResourcePaths().size());
-            assertTrue(
+            Assertions.assertEquals(2, operation.getResourcePaths().size());
+            Assertions.assertTrue(
                   operation.getResourcePaths().contains("smartylighting.streetlights.1.0.event.123.lighting.measured"));
 
             Exchange exchange = exchanges.get(0);
-            assertTrue(exchange instanceof UnidirectionalEvent);
+            Assertions.assertTrue(exchange instanceof UnidirectionalEvent);
             EventMessage message = ((UnidirectionalEvent) exchange).getEventMessage();
 
             assertEquals("Sample", message.getName());
