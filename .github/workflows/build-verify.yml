@@ -138,3 +138,9 @@ jobs:
             --file src/main/docker/Dockerfile.jvm \
             --tag=quay.io/microcks/microcks-uber-async-minion:$IMAGE_TAG \
             --tag=docker.io/microcks/microcks-uber-async-minion:$IMAGE_TAG .
+
+      - name: Call the package-native workflow
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        uses: ./.github/workflows/package-native.yml
+        with:
+          image-tag: ${{ env.IMAGE_TAG }}
