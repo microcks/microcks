@@ -139,7 +139,7 @@ class AsyncAPI3ImporterTest {
          importer = new AsyncAPI3Importer(
                "target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi-3.0-static.yaml", null);
       } catch (IOException ioe) {
-         fail("Exception should not be thrown");
+         Assertions.fail("Exception should not be thrown");
       }
 
       // Check that basic service properties are there.
@@ -147,24 +147,24 @@ class AsyncAPI3ImporterTest {
       try {
          services = importer.getServiceDefinitions();
       } catch (MockRepositoryImportException e) {
-         fail("Exception should not be thrown");
+         Assertions.fail("Exception should not be thrown");
       }
 
-      assertEquals(1, services.size());
+      Assertions.assertEquals(1, services.size());
       Service service = services.get(0);
-      assertEquals("Streetlights Kafka API", service.getName());
-      assertEquals(ServiceType.EVENT, service.getType());
-      assertEquals("1.0.0", service.getVersion());
+      Assertions.assertEquals("Streetlights Kafka API", service.getName());
+      Assertions.assertEquals(ServiceType.EVENT, service.getType());
+      Assertions.assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
       List<Resource> resources = importer.getResourceDefinitions(service);
-      assertEquals(1, resources.size());
-      assertEquals(ResourceType.ASYNC_API_SPEC, resources.get(0).getType());
-      assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
-      assertNotNull(resources.get(0).getContent());
+      Assertions.assertEquals(1, resources.size());
+      Assertions.assertEquals(ResourceType.ASYNC_API_SPEC, resources.get(0).getType());
+      Assertions.assertTrue(resources.get(0).getName().startsWith(service.getName() + "-" + service.getVersion()));
+      Assertions.assertNotNull(resources.get(0).getContent());
 
       // Check operations.
-      assertEquals(4, service.getOperations().size());
+      Assertions.assertEquals(4, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
          assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
          assertEquals("streetlightId", operation.getDispatcherRules());
