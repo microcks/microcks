@@ -158,3 +158,8 @@ jobs:
     uses: ./.github/workflows/package-native.yml
     with:
       image-tag: ${{ needs.build-verify-package.outputs.image-tag }}
+    secrets:
+      QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
+      QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
