@@ -60,7 +60,7 @@ import static io.github.microcks.util.asyncapi.AsyncAPICommons.*;
 public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AsyncAPI3Importer.class);
+   private static final Logger log = LoggerFactory.getLogger(AsyncAPI3Importer.class);
 
    private static final List<String> VALID_VERBS = Arrays.asList("send", "receive");
 
