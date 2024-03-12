@@ -6,7 +6,6 @@ on:
         description: 'The tag to use for the images'
         type: string
         required: true
-    secrets: [ QUAY_USERNAME, QUAY_PASSWORD, DOCKERHUB_USERNAME, DOCKERHUB_TOKEN ]
 
 jobs:
   build-native-images:
