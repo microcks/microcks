@@ -150,4 +150,4 @@ jobs:
     if: github.repository_owner == 'microcks' && ${{ needs.build-verify-package.outputs.package-image }} == 'true'
     uses: ./.github/workflows/package-native.yml
     with:
-      image-tag: ${{ env.IMAGE_TAG }}
+      image-tag: ${{ needs.build-verify-package.outputs.image-tag }}
