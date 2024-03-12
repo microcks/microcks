@@ -360,7 +360,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
       List<EventMessage> eventMessages = null;
       Iterator<JsonNode> messages = operationNode.path(MESSAGES).elements();
       while (messages.hasNext()) {
-         JsonNode messageInChannelNode = followRefIfAny(messages.next());
+         JsonNode operationMessageNode = messages.next();
+         JsonNode messageInChannelNode = followRefIfAny(operationMessageNode);
          JsonNode messageNode = followRefIfAny(messageInChannelNode);
 
          // Get message content type.
@@ -369,8 +370,8 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
             contentType = messageNode.path("contentType").asText();
          }
 
-         // Retrieve the messageName from message ref found in channel.
-         String messageName = messageInChannelNode.path("$ref").textValue();
+         // Retrieve the messageName from message ref found in operation.
+         String messageName = operationMessageNode.path("$ref").textValue();
 
          if (messageName != null && messageNode.has(EXAMPLES_NODE)) {
             // Compute a short message name if examples have no name attribute.
