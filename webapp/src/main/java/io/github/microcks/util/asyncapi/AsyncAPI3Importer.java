@@ -369,11 +369,12 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
             contentType = messageNode.path("contentType").asText();
          }
 
-         // Compute a short message name if examples have no name attribute.
+         // Retrieve the messageName from message ref found in channel.
          String messageName = messageInChannelNode.path("$ref").textValue();
-         messageName = messageName.substring(messageName.lastIndexOf("/") + 1);
 
-         if (messageNode.has(EXAMPLES_NODE)) {
+         if (messageName != null && messageNode.has(EXAMPLES_NODE)) {
+            // Compute a short message name if examples have no name attribute.
+            messageName = messageName.substring(messageName.lastIndexOf("/") + 1);
             eventMessages = buildEventMessageFromExamples(messageName, contentType, messageNode.get(EXAMPLES_NODE));
          }
       }
