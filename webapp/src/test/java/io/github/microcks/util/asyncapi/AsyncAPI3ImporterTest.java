@@ -166,14 +166,14 @@ class AsyncAPI3ImporterTest {
       // Check operations.
       Assertions.assertEquals(4, service.getOperations().size());
       for (Operation operation : service.getOperations()) {
-         assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
-         assertEquals("streetlightId", operation.getDispatcherRules());
-         assertNotNull(operation.getResourcePaths());
-         assertEquals(1, operation.getResourcePaths().size());
+         Assertions.assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
+         Assertions.assertEquals("streetlightId", operation.getDispatcherRules());
+         Assertions.assertNotNull(operation.getResourcePaths());
+         Assertions.assertEquals(1, operation.getResourcePaths().size());
 
          if ("RECEIVE receiveLightMeasurement".equals(operation.getName())) {
-            assertEquals("RECEIVE", operation.getMethod());
-            assertTrue(operation.getResourcePaths()
+            Assertions.assertEquals("RECEIVE", operation.getMethod());
+            Assertions.assertTrue(operation.getResourcePaths()
                   .contains("smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured"));
 
             // Check that messages have been correctly found.
