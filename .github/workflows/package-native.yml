@@ -32,7 +32,8 @@ jobs:
 
       - name: Set IMAGE_TAG environment from input
         run: |
-          echo "IMAGE_TAG=${{inputs.image-tag}}-native" >> "$GITHUB_ENV"
+          set -x
+          echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
 
       - name: Set up QEMU
         if: matrix.arch == 'arm64'

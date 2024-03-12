@@ -64,8 +64,8 @@ jobs:
           else
             echo "PACKAGE_IMAGE=false" >> "$GITHUB_ENV"
           fi
-          echo "IMAGE_TAG=$IMAGE_TAG" >> "$GITHUB_OUTPUT"
-          echo "PACKAGE_IMAGE=$PACKAGE_IMAGE" >> "$GITHUB_OUTPUT"
+          echo "IMAGE_TAG=${{ env.IMAGE_TAG }}" >> "$GITHUB_OUTPUT"
+          echo "PACKAGE_IMAGE=${{ env.PACKAGE_IMAGE }}" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
