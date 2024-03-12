@@ -30,6 +30,7 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -86,7 +87,7 @@ class AsyncAPI3ImporterTest {
          importer = new AsyncAPI3Importer(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-nameless.yaml", null);
       } catch (IOException ioe) {
-         fail("Exception should not be thrown");
+         Assertions.fail("Exception should not be thrown");
       }
 
       // Check that basic service properties are there.
@@ -94,39 +95,39 @@ class AsyncAPI3ImporterTest {
       try {
          services = importer.getServiceDefinitions();
       } catch (MockRepositoryImportException e) {
-         fail("Exception should not be thrown");
+         Assertions.fail("Exception should not be thrown");
       }
 
-      assertEquals(1, services.size());
+      Assertions.assertEquals(1, services.size());
       Service service = services.get(0);
 
       // Check that operations and input/output have been found.
-      assertEquals(1, service.getOperations().size());
+      Assertions.assertEquals(1, service.getOperations().size());
 
       for (Operation operation : service.getOperations()) {
          if ("SEND publishUserSignedUps".equals(operation.getName())) {
-            assertEquals("SEND", operation.getMethod());
+            Assertions.assertEquals("SEND", operation.getMethod());
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               fail("No exception should be thrown when importing message definitions.");
+               Assertions.fail("No exception should be thrown when importing message definitions.");
             }
-            assertEquals(2, exchanges.size());
+            Assertions.assertEquals(2, exchanges.size());
 
             for (Exchange exchange : exchanges) {
                if (exchange instanceof UnidirectionalEvent event) {
                   EventMessage eventMessage = event.getEventMessage();
-                  assertNotNull(eventMessage);
+                  Assertions.assertNotNull(eventMessage);
 
-                  assertTrue("userSignedUp-1".equals(eventMessage.getName())
+                  Assertions.assertTrue("userSignedUp-1".equals(eventMessage.getName())
                         || "userSignedUp-2".equals(eventMessage.getName()));
                }
             }
          } else {
-            fail("Unknown operation name: " + operation.getName());
+            Assertions.fail("Unknown operation name: " + operation.getName());
          }
       }
    }
