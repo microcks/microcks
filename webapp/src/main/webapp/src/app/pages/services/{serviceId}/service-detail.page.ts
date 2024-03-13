@@ -483,9 +483,11 @@ export class ServiceDetailPageComponent implements OnInit {
     if (exchange.request.content != null && exchange.request.content != undefined) {
       cmd += " -d '" + exchange.request.content.replace(/\n/g, '') + "'";
     }
-    for (let i=0; i < exchange.request.headers.length; i++) {
-      let header = exchange.request.headers[i];
-      cmd += " -H '" + header.name + ": " + header.values.join(', ') + "'";
+    if (exchange.request.headers != null) {
+      for (let i=0; i < exchange.request.headers.length; i++) {
+        let header = exchange.request.headers[i];
+        cmd += " -H '" + header.name + ": " + header.values.join(', ') + "'";
+      }
     }
 
     // Add a content-type header if missing and obvious we need one.

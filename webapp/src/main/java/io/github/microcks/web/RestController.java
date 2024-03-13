@@ -75,7 +75,6 @@ public class RestController {
    private final Boolean enableCorsPolicy = null;
    @Value("${mocks.rest.cors.allowedOrigins}")
    private String corsAllowedOrigins;
-
    @Value("${mocks.rest.cors.allowCredentials}")
    private Boolean corsAllowCredentials;
 
@@ -280,7 +279,7 @@ public class RestController {
       }
 
       // Handle OPTIONS request if CORS policy is enabled.
-      else if (enableCorsPolicy && "OPTIONS".equals(request.getMethod().toUpperCase())) {
+      else if (enableCorsPolicy && "OPTIONS".equalsIgnoreCase(request.getMethod())) {
          log.debug("No valid operation found but Microcks configured to apply CORS policy");
          return handleCorsRequest(request);
       }

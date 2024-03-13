@@ -45,7 +45,14 @@ import java.util.Map;
 public class MockControllerCommons {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
+   private static final Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
+
+   private static final String RENDERING_MESSAGE = "Response contains dynamic EL expression, rendering it...";
+
+
+   /** Private constructor to avoid instantiation. */
+   private MockControllerCommons() {
+   }
 
    /**
     * Retrieve a fallback specification for this operation if one is defined.
@@ -74,9 +81,8 @@ public class MockControllerCommons {
     */
    public static String renderResponseContent(String requestBody, Map<String, Object> requestContext,
          Response response) {
-      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         log.debug("Response contains dynamic EL expression, rendering it...");
-         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+      if (response.getContent() != null && response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug(RENDERING_MESSAGE);
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
@@ -100,9 +106,8 @@ public class MockControllerCommons {
     */
    public static String renderResponseContent(String requestBody, Map<String, String> evaluableParams,
          Map<String, String> evaluableHeaders, Map<String, Object> requestContext, Response response) {
-      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         log.debug("Response contains dynamic EL expression, rendering it...");
-         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+      if (response.getContent() != null && response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug(RENDERING_MESSAGE);
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
@@ -129,8 +134,8 @@ public class MockControllerCommons {
     */
    public static String renderResponseContent(String requestBody, String requestResourcePath,
          HttpServletRequest request, Map<String, Object> requestContext, Response response) {
-      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         log.debug("Response contains dynamic EL expression, rendering it...");
+      if (response.getContent() != null && response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug(RENDERING_MESSAGE);
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = buildEvaluableRequest(requestBody, requestResourcePath, request);
@@ -150,7 +155,7 @@ public class MockControllerCommons {
     */
    public static String renderResponseContent(EvaluableRequest evaluableRequest, TemplateEngine engine,
          String responseContent) {
-      if (responseContent.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+      if (responseContent != null && responseContent.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          return unguardedRenderResponseContent(evaluableRequest, null, engine, responseContent);
       }
       return responseContent;
@@ -166,7 +171,7 @@ public class MockControllerCommons {
       try {
          return engine.getValue(responseContent);
       } catch (Throwable t) {
-         log.error("Failing at evaluating template " + responseContent, t);
+         log.error("Failing at evaluating template {}", responseContent, t);
       }
       return responseContent;
    }
