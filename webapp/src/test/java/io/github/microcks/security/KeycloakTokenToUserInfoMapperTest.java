@@ -34,47 +34,15 @@ import static org.junit.Assert.*;
 public class KeycloakTokenToUserInfoMapperTest {
 
    /**
-    * {
-    *   "alg": "RS256",
-    *   "typ": "JWT",
-    *   "kid": "bMWP9GYcT9PpSPKhkBWD9mOZeHq1YQKHq4JXTaxzd-o"
-    * }
-    * {
-    *   "exp": 1695715998,
-    *   "iat": 1695715698,
-    *   "auth_time": 1695715698,
-    *   "jti": "dda2e10f-f908-45c9-81a7-088fc80d9b02",
-    *   "iss": "http://localhost:8180/realms/microcks",
-    *   "aud": "microcks-app",
-    *   "sub": "e9a5e235-31ac-4bf8-943d-76df95d548a3",
-    *   "typ": "Bearer",
-    *   "azp": "microcks-app-js",
-    *   "nonce": "30f09cc0-3cdb-4afc-85b4-36dd9fd498da",
-    *   "session_state": "e892de3b-7054-4967-bbef-677b62c32aa0",
-    *   "acr": "1",
-    *   "allowed-origins": [
-    *     "http://localhost:8080",
-    *     "http://localhost:4200"
-    *   ],
-    *   "resource_access": {
-    *     "microcks-app": {
-    *       "roles": [
-    *         "manager",
-    *         "user"
-    *       ]
-    *     }
-    *   },
-    *   "scope": "openid profile email",
-    *   "sid": "e892de3b-7054-4967-bbef-677b62c32aa0",
-    *   "email_verified": false,
-    *   "name": "Pastry Manager",
-    *   "microcks-groups": [
-    *     "/microcks/manager/pastry"
-    *   ],
-    *   "preferred_username": "pastry-manager",
-    *   "given_name": "Pastry",
-    *   "family_name": "Manager"
-    * }
+    * { "alg": "RS256", "typ": "JWT", "kid": "bMWP9GYcT9PpSPKhkBWD9mOZeHq1YQKHq4JXTaxzd-o" } { "exp": 1695715998, "iat":
+    * 1695715698, "auth_time": 1695715698, "jti": "dda2e10f-f908-45c9-81a7-088fc80d9b02", "iss":
+    * "http://localhost:8180/realms/microcks", "aud": "microcks-app", "sub": "e9a5e235-31ac-4bf8-943d-76df95d548a3",
+    * "typ": "Bearer", "azp": "microcks-app-js", "nonce": "30f09cc0-3cdb-4afc-85b4-36dd9fd498da", "session_state":
+    * "e892de3b-7054-4967-bbef-677b62c32aa0", "acr": "1", "allowed-origins": [ "http://localhost:8080",
+    * "http://localhost:4200" ], "resource_access": { "microcks-app": { "roles": [ "manager", "user" ] } }, "scope":
+    * "openid profile email", "sid": "e892de3b-7054-4967-bbef-677b62c32aa0", "email_verified": false, "name": "Pastry
+    * Manager", "microcks-groups": [ "/microcks/manager/pastry" ], "preferred_username": "pastry-manager", "given_name":
+    * "Pastry", "family_name": "Manager" }
     */
    private static final String jwtBearer = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJiTVdQOUdZY1Q5UHBTUEtoa0JXRDltT1plSHExWVFLSHE0SlhUYXh6ZC1vIn0.eyJleHAiOjE2OTU3MTU5OTgsImlhdCI6MTY5NTcxNTY5OCwiYXV0aF90aW1lIjoxNjk1NzE1Njk4LCJqdGkiOiJkZGEyZTEwZi1mOTA4LTQ1YzktODFhNy0wODhmYzgwZDliMDIiLCJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgxODAvcmVhbG1zL21pY3JvY2tzIiwiYXVkIjoibWljcm9ja3MtYXBwIiwic3ViIjoiZTlhNWUyMzUtMzFhYy00YmY4LTk0M2QtNzZkZjk1ZDU0OGEzIiwidHlwIjoiQmVhcmVyIiwiYXpwIjoibWljcm9ja3MtYXBwLWpzIiwibm9uY2UiOiIzMGYwOWNjMC0zY2RiLTRhZmMtODViNC0zNmRkOWZkNDk4ZGEiLCJzZXNzaW9uX3N0YXRlIjoiZTg5MmRlM2ItNzA1NC00OTY3LWJiZWYtNjc3YjYyYzMyYWEwIiwiYWNyIjoiMSIsImFsbG93ZWQtb3JpZ2lucyI6WyJodHRwOi8vbG9jYWxob3N0OjgwODAiLCJodHRwOi8vbG9jYWxob3N0OjQyMDAiXSwicmVzb3VyY2VfYWNjZXNzIjp7Im1pY3JvY2tzLWFwcCI6eyJyb2xlcyI6WyJtYW5hZ2VyIiwidXNlciJdfX0sInNjb3BlIjoib3BlbmlkIHByb2ZpbGUgZW1haWwiLCJzaWQiOiJlODkyZGUzYi03MDU0LTQ5NjctYmJlZi02NzdiNjJjMzJhYTAiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsIm5hbWUiOiJQYXN0cnkgTWFuYWdlciIsIm1pY3JvY2tzLWdyb3VwcyI6WyIvbWljcm9ja3MvbWFuYWdlci9wYXN0cnkiXSwicHJlZmVycmVkX3VzZXJuYW1lIjoicGFzdHJ5LW1hbmFnZXIiLCJnaXZlbl9uYW1lIjoiUGFzdHJ5IiwiZmFtaWx5X25hbWUiOiJNYW5hZ2VyIn0.Z1F3OjBJl3ko4O4BzpKZ2rcy086_vtNqrHFGw10MZpXmumAk1Yww_gf2yz1KhgjZkxNLxfr_1kEefK223Pi3yYCFboXXWbAtFCb2TztOw9RgZU9Fs1Z4mNCCAkwYVLYG2iQr-TlOje9JMYliptHtm5FRRqF-bfsd0tKWhJRezk_DCxdCTVQ_Hx9fFHY1if9-OiRcKYU7F5XU_yFSDP-P0j6KKqX2lpMuWKOKsfWfdZkoBm02JbSAiCKqLKG8R14d3D-cYkxGnil-QSXIsQqSK8DL7RLKxLKCKykkDunbCx2JBw9MvV1TDmSrEszMF1jj46DpYO036gJV7F0PhKePdg";
 

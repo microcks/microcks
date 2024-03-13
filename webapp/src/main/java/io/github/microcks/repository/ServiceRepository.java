@@ -16,6 +16,8 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
+
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -29,6 +31,8 @@ import java.util.List;
 public interface ServiceRepository extends MongoRepository<Service, String>, CustomServiceRepository {
 
    Service findByNameAndVersion(String name, String version);
+
+   List<Service> findByType(ServiceType type);
 
    @Query("{'name' : {'$regex':?0, '$options':'i'}}")
    List<Service> findByNameLike(String name);

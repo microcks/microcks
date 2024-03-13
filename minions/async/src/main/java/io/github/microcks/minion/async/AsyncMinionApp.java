@@ -52,12 +52,12 @@ public class AsyncMinionApp {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   private final int SERVICES_FETCH_SIZE = 30;
+   private static final int SERVICES_FETCH_SIZE = 30;
 
    @ConfigProperty(name = "minion.supported-bindings")
    String[] supportedBindings;
 
-   @ConfigProperty(name= "minion.restricted-frequencies")
+   @ConfigProperty(name = "minion.restricted-frequencies")
    Long[] restrictedFrequencies;
 
    @ConfigProperty(name = "keycloak.auth.url", defaultValue = "")
@@ -87,7 +87,8 @@ public class AsyncMinionApp {
       KeycloakConfig config = microcksAPIConnector.getKeycloakConfig();
       logger.infof("Microcks Keycloak server url {%s} and realm {%s}", config.getAuthServerUrl(), config.getRealm());
 
-      String keycloakEndpoint = config.getAuthServerUrl() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
+      String keycloakEndpoint = config.getAuthServerUrl() + "/realms/" + config.getRealm()
+            + "/protocol/openid-connect/token";
       if (!keycloakAuthURL.isEmpty() && keycloakAuthURL.get().length() > 0) {
          logger.infof("Use locally defined Keycloak Auth URL: %s", keycloakAuthURL);
          keycloakEndpoint = keycloakAuthURL.get() + "/realms/" + config.getRealm() + "/protocol/openid-connect/token";
@@ -109,32 +110,31 @@ public class AsyncMinionApp {
          int page = 0;
          boolean fetchServices = true;
          while (fetchServices) {
-            List<Service> services = microcksAPIConnector.listServices("Bearer " + oauthToken, page, SERVICES_FETCH_SIZE);
+            List<Service> services = microcksAPIConnector.listServices("Bearer " + oauthToken, page,
+                  SERVICES_FETCH_SIZE);
             for (Service service : services) {
                logger.debug("Found service " + service.getName() + " - " + service.getVersion());
 
                if (service.getType().equals(ServiceType.EVENT) || service.getType().equals(ServiceType.GENERIC_EVENT)) {
                   // Find the operations matching this minion constraints..
                   List<Operation> operations = service.getOperations().stream()
-                        .filter(o -> Arrays.asList(restrictedFrequencies).contains(o.getDefaultDelay()))
-                        .filter(o -> o.getBindings()
-                                    .keySet()
-                                    .stream()
-                                    .anyMatch(Arrays.asList(supportedBindings)::contains)
-                        )
+                        .filter(o -> Arrays.asList(restrictedFrequencies).contains(o.getDefaultDelay())).filter(o -> o
+                              .getBindings().keySet().stream().anyMatch(Arrays.asList(supportedBindings)::contains))
                         .collect(Collectors.toList());
 
                   if (operations.size() > 0) {
-                     logger.info("Found " + operations.size() + " candidate operations in " + service.getName() + " - " + service.getVersion());
-                     ServiceView serviceView = microcksAPIConnector.getService("Bearer " + oauthToken, service.getId(), true);
+                     logger.info("Found " + operations.size() + " candidate operations in " + service.getName() + " - "
+                           + service.getVersion());
+                     ServiceView serviceView = microcksAPIConnector.getService("Bearer " + oauthToken, service.getId(),
+                           true);
 
                      for (Operation operation : operations) {
-                        AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(), operation,
+                        AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(),
+                              operation,
                               serviceView.getMessagesMap().get(operation.getName()).stream()
                                     .filter(e -> e instanceof UnidirectionalEvent)
-                                    .map(e -> ((UnidirectionalEvent)e).getEventMessage())
-                                    .collect(Collectors.toList())
-                              );
+                                    .map(e -> ((UnidirectionalEvent) e).getEventMessage())
+                                    .collect(Collectors.toList()));
                         mockRepository.storeMockDefinition(mockDefinition);
                         schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
                      }
@@ -151,8 +151,8 @@ public class AsyncMinionApp {
          producerScheduler.scheduleAllProducerJobs();
 
       } catch (ConnectorException ce) {
-         logger.error("Cannot authenticate to Keycloak server and thus enable to call Microcks API" +
-               " to get Async APIs to mocks...", ce);
+         logger.error("Cannot authenticate to Keycloak server and thus enable to call Microcks API"
+               + " to get Async APIs to mocks...", ce);
          throw new RuntimeException("Unable to start the Minion due to connection exception");
       } catch (IOException ioe) {
          logger.error("IOException while communicating with Keycloak or Microcks API", ioe);

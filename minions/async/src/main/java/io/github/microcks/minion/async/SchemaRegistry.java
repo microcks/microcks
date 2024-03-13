@@ -32,9 +32,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * This is a simple and local registry for Async APIs schemas. It is used as a local proxy
- * to Services Resources that are available within Microcks instance. This registry uses the
- * <code>MicrocksAPIConnector</code> to retrieve resources/schemas from instance.
+ * This is a simple and local registry for Async APIs schemas. It is used as a local proxy to Services Resources that
+ * are available within Microcks instance. This registry uses the <code>MicrocksAPIConnector</code> to retrieve
+ * resources/schemas from instance.
  * @author laurent
  */
 @ApplicationScoped
@@ -57,10 +57,10 @@ public class SchemaRegistry {
    public void updateRegistryForService(Service service) {
       clearRegistryForService(service);
       List<Resource> resources = microcksAPIConnector.getResources(service.getId());
-      logger.infof("Updating schema registry for '%s - %s' with %d entries", service.getName(), service.getVersion(), resources.size());
-      schemaEntries.put(service.getId(), resources.stream()
-            .map(resource -> new SchemaEntry(resource))
-            .collect(Collectors.toList()));
+      logger.infof("Updating schema registry for '%s - %s' with %d entries", service.getName(), service.getVersion(),
+            resources.size());
+      schemaEntries.put(service.getId(),
+            resources.stream().map(resource -> new SchemaEntry(resource)).collect(Collectors.toList()));
    }
 
    /**
@@ -71,9 +71,8 @@ public class SchemaRegistry {
       clearRegistryForService(serviceId);
       List<Resource> resources = microcksAPIConnector.getResources(serviceId);
       logger.infof("Updating schema registry for Service '%s' with %d entries", serviceId, resources.size());
-      schemaEntries.put(serviceId, resources.stream()
-            .map(resource -> new SchemaEntry(resource))
-            .collect(Collectors.toList()));
+      schemaEntries.put(serviceId,
+            resources.stream().map(resource -> new SchemaEntry(resource)).collect(Collectors.toList()));
    }
 
    /**
@@ -101,9 +100,8 @@ public class SchemaRegistry {
    }
 
    /**
-    * Get the content (ie. actual schema specification) of a Schema entry in the
-    * scope of a specified service.
-    * @param service The Service to get schema for
+    * Get the content (ie. actual schema specification) of a Schema entry in the scope of a specified service.
+    * @param service    The Service to get schema for
     * @param schemaName The name of the Schema entry to retrieve content for
     * @return The schema entry content or null if not found.
     */
@@ -146,9 +144,8 @@ public class SchemaRegistry {
    }
 
    /**
-    * SchemaEntry represents an image of remote resources and allow access to content.
-    * For now, content remains in-memory but a future direction for handling load could be
-    * to manage overflow to local files.
+    * SchemaEntry represents an image of remote resources and allow access to content. For now, content remains
+    * in-memory but a future direction for handling load could be to manage overflow to local files.
     */
    public class SchemaEntry {
       private String name;
@@ -170,18 +167,23 @@ public class SchemaRegistry {
       public String getName() {
          return name;
       }
+
       public String getServiceId() {
          return serviceId;
       }
+
       public String getPath() {
          return path;
       }
+
       public ResourceType getType() {
          return type;
       }
+
       public String getContent() {
          return content;
       }
+
       public Set<String> getOperations() {
          return operations;
       }

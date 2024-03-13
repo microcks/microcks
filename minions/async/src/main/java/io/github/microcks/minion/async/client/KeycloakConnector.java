@@ -38,8 +38,8 @@ import java.util.Base64;
 
 @ApplicationScoped
 /**
- * Connector to the Keycloak server configured for Microcks API server.
- * This connector allows to retrieved valid OAuth / JWT token for configured service account.
+ * Connector to the Keycloak server configured for Microcks API server. This connector allows to retrieved valid OAuth /
+ * JWT token for configured service account.
  * @author laurent
  */
 public class KeycloakConnector {
@@ -53,12 +53,13 @@ public class KeycloakConnector {
    String saCredentials;
 
    /**
-    * Connect to the given OIDC endpoint on a Keycloak server, realize a client_credentials grant type
-    * with configured account and credentials to finally return the OAuth accesc token.
+    * Connect to the given OIDC endpoint on a Keycloak server, realize a client_credentials grant type with configured
+    * account and credentials to finally return the OAuth accesc token.
     * @param tokenEndpoint The OIDC endpoint on which to authenticate
     * @return The OAuth access token after successful authentication
-    * @throws ConnectorException If connection faild (bad endpoint) or authentication failed (bad account or credentials)
-    * @throws IOException In case of communication exception
+    * @throws ConnectorException If connection faild (bad endpoint) or authentication failed (bad account or
+    *                            credentials)
+    * @throws IOException        In case of communication exception
     */
    public String connectAndGetOAuthToken(String tokenEndpoint) throws ConnectorException, IOException {
       CloseableHttpClient httpClient = null;
@@ -66,16 +67,12 @@ public class KeycloakConnector {
       try {
          // Start creating a SSL Context that accepts all because we may have self-signed certs.
          TrustStrategy acceptingTrustStrategy = (cert, authType) -> true;
-         SSLContext sslContext = SSLContexts.custom()
-               .loadTrustMaterial(null, acceptingTrustStrategy)
-               .build();
+         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
          SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(sslContext);
 
          // Configuring a httpClient that disables host name validation for certificates.
-         httpClient = HttpClients.custom()
-               .setSSLHostnameVerifier((String s, SSLSession sslSession) -> true)
-               .setSSLSocketFactory(sslsf)
-               .build();
+         httpClient = HttpClients.custom().setSSLHostnameVerifier((String s, SSLSession sslSession) -> true)
+               .setSSLSocketFactory(sslsf).build();
       } catch (GeneralSecurityException gse) {
          logger.error("Caught a SecurityException when building the SSL Context", gse);
          throw new ConnectorException("SSLContext cannot be created to reach Keycloak endpoint: " + gse.getMessage());
@@ -86,20 +83,20 @@ public class KeycloakConnector {
          HttpPost tokenRequest = new HttpPost(tokenEndpoint);
          tokenRequest.addHeader("Content-Type", "application/x-www-form-urlencoded");
          tokenRequest.addHeader("Accept", "application/json");
-         tokenRequest.addHeader("Authorization", "Basic "
-               + Base64.getEncoder().encodeToString(
-               (serviceAccount + ":" + saCredentials).getBytes("UTF-8")
-         ));
+         tokenRequest.addHeader("Authorization",
+               "Basic " + Base64.getEncoder().encodeToString((serviceAccount + ":" + saCredentials).getBytes("UTF-8")));
          tokenRequest.setEntity(new StringEntity("grant_type=client_credentials"));
 
          // Execute request and retrieve content as string.
          CloseableHttpResponse tokenResponse = httpClient.execute(tokenRequest);
 
          if (tokenResponse.getStatusLine().getStatusCode() != 200) {
-            logger.error("OAuth token cannot be retrieved for Keycloak server, check microcks.serviceaccount configuration");
+            logger.error(
+                  "OAuth token cannot be retrieved for Keycloak server, check microcks.serviceaccount configuration");
             logger.error("  tokenResponse.statusLine: " + tokenResponse.getStatusLine().toString());
             logger.error("  tokenResponse.statusCode: " + tokenResponse.getStatusLine().getStatusCode());
-            throw new ConnectorException("OAuth token cannot be retrieved for Microcks. Check microcks.serviceaccount.");
+            throw new ConnectorException(
+                  "OAuth token cannot be retrieved for Microcks. Check microcks.serviceaccount.");
          }
 
          String result = EntityUtils.toString(tokenResponse.getEntity());

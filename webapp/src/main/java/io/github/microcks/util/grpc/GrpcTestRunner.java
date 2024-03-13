@@ -54,8 +54,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An extension of AbstractTestRunner that deals with GRPC calls. Response is received as byte array
- * and then parsed as DynamicMessage to chack that is conforms with Service Protobuf description.
+ * An extension of AbstractTestRunner that deals with GRPC calls. Response is received as byte array and then parsed as
+ * DynamicMessage to chack that is conforms with Service Protobuf description.
  * @author laurent
  */
 public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
@@ -94,8 +94,8 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    @Override
-   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
-                                   List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
+   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult, List<Request> requests,
+         String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
 
       log.debug("Launching test run on {} for {} request(s)", endpointUrl, requests.size());
 
@@ -124,30 +124,30 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                   return null;
                }
+
                public void checkClientTrusted(X509Certificate[] certs, String authType) {
                }
+
                public void checkServerTrusted(X509Certificate[] certs, String authType) {
                }
-            }});
+            } });
          }
          // Build a Channel using the TLS Builder.
-         channel = Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), tlsBuilder.build())
-               .build();
+         channel = Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), tlsBuilder.build()).build();
       } else {
          // Build a simple Channel using plain text.
-         channel = Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), null)
-               .usePlaintext()
+         channel = Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), null).usePlaintext()
                .build();
       }
 
       // In order to produce outgoing byte array, we need the Protobuf binary descriptor that should
       // have been processed while importing the .proto schema for the service.
-      List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.PROTOBUF_DESCRIPTOR);
+      List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
+            ResourceType.PROTOBUF_DESCRIPTOR);
       if (resources == null || resources.size() != 1) {
          log.error("Could not found any pre-processed Protobuf binary descriptor...");
          results.add(new TestReturn(TestReturn.FAILURE_CODE, 0,
-               "Could not found any pre-processed Protobuf binary descriptor...",
-               null, null));
+               "Could not found any pre-processed Protobuf binary descriptor...", null, null));
          return results;
       }
       Resource pbResource = resources.get(0);
@@ -158,8 +158,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
       } catch (Exception e) {
          log.error("Protobuf descriptor cannot be read or parsed: " + e.getMessage());
          results.add(new TestReturn(TestReturn.FAILURE_CODE, 0,
-               "Protobuf descriptor cannot be read or parsed: " + e.getMessage(),
-               null, null));
+               "Protobuf descriptor cannot be read or parsed: " + e.getMessage(), null, null));
          return results;
       }
 
@@ -180,8 +179,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          parser.merge(request.getContent(), reqBuilder);
          byte[] requestBytes = reqBuilder.build().toByteArray();
 
-         CallOptions callOptions = CallOptions.DEFAULT
-               .withDeadline(Deadline.after(timeout, TimeUnit.MILLISECONDS));
+         CallOptions callOptions = CallOptions.DEFAULT.withDeadline(Deadline.after(timeout, TimeUnit.MILLISECONDS));
 
          if (secret != null && secret.getToken() != null) {
             log.debug("Secret contains token and maybe token header, adding them as call credentials");
@@ -190,8 +188,8 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
          // Actually execute request.
          long startTime = System.currentTimeMillis();
-         byte[] responseBytes = ClientCalls.blockingUnaryCall(channel, GrpcUtil.buildGenericUnaryMethodDescriptor(fullMethodName),
-               callOptions, requestBytes);
+         byte[] responseBytes = ClientCalls.blockingUnaryCall(channel,
+               GrpcUtil.buildGenericUnaryMethodDescriptor(fullMethodName), callOptions, requestBytes);
          long duration = System.currentTimeMillis() - startTime;
 
          // Create a Response object for returning.
@@ -211,8 +209,8 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
             results.add(new TestReturn(code, duration, message, request, response));
          } catch (InvalidProtocolBufferException ipbe) {
             log.error("Received bytes cannot be transformed in " + md.getOutputType().getFullName());
-            results.add(new TestReturn(TestReturn.FAILURE_CODE, duration,"Received bytes cannot be transformed in \" + md.getOutputType().getFullName()",
-                  request, response));
+            results.add(new TestReturn(TestReturn.FAILURE_CODE, duration,
+                  "Received bytes cannot be transformed in \" + md.getOutputType().getFullName()", request, response));
          }
       }
 
@@ -223,7 +221,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
     * Build the HttpMethod corresponding to string.
     */
    @Override
-   public HttpMethod buildMethod(String method){
+   public HttpMethod buildMethod(String method) {
       return HttpMethod.POST;
    }
 }

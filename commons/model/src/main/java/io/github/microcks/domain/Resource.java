@@ -21,9 +21,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Domain object representing a Resource : a contractualization companion
- * to microservices Service managed with this application.
- * These are typically retrieved using the serviceId.
+ * Domain object representing a Resource : a contractualization companion to microservices Service managed with this
+ * application. These are typically retrieved using the serviceId.
  * @author laurent
  */
 public class Resource {

@@ -18,8 +18,7 @@ package io.github.microcks.domain;
 import java.util.*;
 
 /**
- * This is a commodity object for holding metadata on any entity. This object is
- * inspired by Kubernetes metadata.
+ * This is a commodity object for holding metadata on any entity. This object is inspired by Kubernetes metadata.
  * @author laurent
  */
 public class Metadata {
@@ -28,7 +27,6 @@ public class Metadata {
    private Date lastUpdate = new Date();
    private Map<String, String> annotations;
    private Map<String, String> labels;
-
 
    /** Mark the related object of this metadata as updated. */
    public void objectUpdated() {
@@ -55,7 +53,7 @@ public class Metadata {
 
    /**
     * Add a new annotation or update an existing one within this metadata.
-    * @param key The key of the annotation to add / update
+    * @param key   The key of the annotation to add / update
     * @param value The value of the annotation to add / update.
     */
    public void setAnnotation(String key, String value) {
@@ -85,7 +83,7 @@ public class Metadata {
 
    /**
     * Add a new label or update an existing one within this metadata.
-    * @param key The key of the label to add / update
+    * @param key   The key of the label to add / update
     * @param value The value of the label to add / update.
     */
    public void setLabel(String key, String value) {

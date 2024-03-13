@@ -36,10 +36,16 @@ public class SimpleContainsAssertion implements SoapUIAssertion {
    /** Expected token configuration parameter. */
    public static final String TOKEN_PARAM = "token";
 
-   /** Ignore case configuration parameter. Value is expected to be parsed as boolean: "true" or "false". Default is false. */
+   /**
+    * Ignore case configuration parameter. Value is expected to be parsed as boolean: "true" or "false". Default is
+    * false.
+    */
    public static final String IGNORE_CASE_PARAM = "ignoreCase";
 
-   /** Consider token parameter as regular expression? Value is expected to be parsed as boolean: "true" or "false". Default is false. */
+   /**
+    * Consider token parameter as regular expression? Value is expected to be parsed as boolean: "true" or "false".
+    * Default is false.
+    */
    public static final String USE_REGEX_PARAM = "useRegEx";
 
 

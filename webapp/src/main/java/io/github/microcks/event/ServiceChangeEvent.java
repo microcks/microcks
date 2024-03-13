@@ -30,8 +30,8 @@ public class ServiceChangeEvent extends ApplicationEvent {
 
    /**
     * Creates a new {@code ServiceChangeEvent} with change type.
-    * @param source Source object for event
-    * @param serviceId Identifier of the updated Service
+    * @param source     Source object for event
+    * @param serviceId  Identifier of the updated Service
     * @param changeType Type of changes this event if representing
     */
    public ServiceChangeEvent(Object source, String serviceId, ChangeType changeType) {

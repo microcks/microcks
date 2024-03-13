@@ -16,9 +16,9 @@
 import { Component, ViewChild, Input } from '@angular/core';
 
 
-import { NotificationService, NotificationType } from 'patternfly-ng/notification';
+import { NotificationService } from 'patternfly-ng/notification';
 import { TabsetComponent } from 'ngx-bootstrap/tabs';
-import { ServiceView, Operation, ServiceType, Exchange, UnidirectionalEvent, RequestResponsePair, ParameterConstraint, EventMessage } from 'src/app/models/service.model';
+import { ServiceView, Operation } from 'src/app/models/service.model';
 import { ConfigService } from 'src/app/services/config.service';
 
 
@@ -29,11 +29,15 @@ import { ConfigService } from 'src/app/services/config.service';
 export class ExchangesTabsetComponent{
 
   readonly hlLang: string[] = ['json', 'xml', 'yaml'];
+
   @ViewChild('tabs', { static: true }) tabs?: TabsetComponent;
+
   @Input() public item: Operation;
   @Input() public view: ServiceView;
   @Input() public resolvedServiceView: ServiceView;
   @Input() public notificationService: NotificationService;
+  @Input() public config: ConfigService;
+
   @Input() public isEventTypeService: Function;
   @Input() public getExchangeName: Function;
   @Input() public getExchangeSourceArtifact: Function;
@@ -41,6 +45,7 @@ export class ExchangesTabsetComponent{
   @Input() public getBindingProperty: Function;
   @Input() public formatMockUrl: Function;
   @Input() public formatAsyncDestination: Function;
+  @Input() public getDestinationOperationPart: Function;
   @Input() public formatRequestContent: Function;
   @Input() public formatGraphQLVariables: Function;
   @Input() public prettyPrintIfJSON: Function;
@@ -49,14 +54,9 @@ export class ExchangesTabsetComponent{
   @Input() public encodeUrl: Function;
   @Input() public removeVerbInUrl: Function;
   @Input() public asyncAPIFeatureEndpoint: Function;
-  @Input() public config: ConfigService;
-
-
-
 
   public shouldRender(index: number){
-      const activeTab = this.tabs.tabs.filter((tab) =>  tab.active )[0]
-      return index == this.tabs.tabs.indexOf(activeTab);
+    const activeTab = this.tabs.tabs.filter((tab) =>  tab.active )[0]
+    return index == this.tabs.tabs.indexOf(activeTab);
   }
-
 }

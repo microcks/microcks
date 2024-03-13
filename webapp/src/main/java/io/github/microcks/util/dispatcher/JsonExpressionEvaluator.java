@@ -24,10 +24,11 @@ import java.io.StringReader;
 import java.util.regex.Pattern;
 
 /**
- * This utility class evaluates JSON against one or more evaluation specifications.
- * Specification may be represented that way and use to find a suitable response for an incoming
- * JSON request: <br>
- * <pre><code> {
+ * This utility class evaluates JSON against one or more evaluation specifications. Specification may be represented
+ * that way and use to find a suitable response for an incoming JSON request: <br>
+ * 
+ * <pre>
+ * <code> {
  *   "exp": "/country",							# JSONPointer expression
  *   "operator": "equals",
  *   "cases": {
@@ -35,7 +36,9 @@ import java.util.regex.Pattern;
  *     "Germany": "Forbidden Country Response", # Name of a Response for Germany
  *     "default": "Why not Response"			   # Name of default Response
  *   }
- * }</code></pre>
+ * }</code>
+ * </pre>
+ * 
  * @author laurent
  */
 public class JsonExpressionEvaluator {
@@ -44,14 +47,15 @@ public class JsonExpressionEvaluator {
    private static Logger log = LoggerFactory.getLogger(JsonExpressionEvaluator.class);
 
    /**
-    * Evaluate a Json payload regarding a specification. Basically, it checks if payload
-    * conforms to the given expression and then fond the suitable cases from within specification.
-    * @param jsonText The Json payload to evaluate
+    * Evaluate a Json payload regarding a specification. Basically, it checks if payload conforms to the given
+    * expression and then fond the suitable cases from within specification.
+    * @param jsonText      The Json payload to evaluate
     * @param specification The evaluation specification (JSONPointer expression + operator + cases)
     * @return The result of evaluation is whether one of the cases, whether
     * @throws JsonMappingException if incoming Json payload is malformed or invalid
     */
-   public static String evaluate(String jsonText, JsonEvaluationSpecification specification) throws JsonMappingException {
+   public static String evaluate(String jsonText, JsonEvaluationSpecification specification)
+         throws JsonMappingException {
       // Parse json text ang get root node.
       JsonNode rootNode;
       try {

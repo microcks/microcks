@@ -252,7 +252,8 @@ public class HARImporterTest {
    public void testComplexHARImportWithAPIPrefix() {
       HARImporter importer = null;
       try {
-         importer = new HARImporter("target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1-with-prefix.har");
+         importer = new HARImporter(
+               "target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1-with-prefix.har");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

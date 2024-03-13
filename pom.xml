@@ -5,7 +5,7 @@
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
   <packaging>pom</packaging>
-  <version>1.8.2-SNAPSHOT</version>
+  <version>1.9.0-SNAPSHOT</version>
   <modules>
     <module>commons/util</module>
     <module>commons/model</module>
@@ -59,8 +59,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <multi-project.rootdir>${project.basedir}</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>3.1.1</spring-boot.version>
+    <spring-boot.version>3.2.1</spring-boot.version>
     <sonar.organization>microcks</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
   </properties>
@@ -95,6 +96,31 @@
           <goals>deploy</goals>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.39.0</version>
+        <configuration>
+          <!-- define Java language-specific format -->
+          <java>
+            <eclipse>
+              <file>${multi-project.rootdir}/eclipse-formatter.xml</file>
+            </eclipse>
+            <indent>
+              <spaces>true</spaces>
+              <spacesPerTab>3</spacesPerTab>
+            </indent>
+          </java>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+            <phase>compile</phase>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
 
@@ -103,6 +129,17 @@
       <id>coverage</id>
       <build>
         <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.12.4</version>
+            <configuration>
+              <includes>
+                <include>**/*Test.java</include>
+                <include>**/*IT.java</include>
+              </includes>
+            </configuration>
+          </plugin>
           <plugin>
             <groupId>org.jacoco</groupId>
             <artifactId>jacoco-maven-plugin</artifactId>

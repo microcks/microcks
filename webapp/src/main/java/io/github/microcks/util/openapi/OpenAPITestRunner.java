@@ -35,8 +35,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * This is an implementation of HttpTestRunner that deals with OpenAPI schema validation.
- * This implementation now manages the 2 flavors of OpenAPI: OpenAPI v3.x and Swagger v2.x.
+ * This is an implementation of HttpTestRunner that deals with OpenAPI schema validation. This implementation now
+ * manages the 2 flavors of OpenAPI: OpenAPI v3.x and Swagger v2.x.
  * @author laurent
  */
 public class OpenAPITestRunner extends HttpTestRunner {
@@ -58,11 +58,12 @@ public class OpenAPITestRunner extends HttpTestRunner {
 
    /**
     * Build a new OpenAPITestRunner.
-    * @param resourceRepository Access to resources repository
-    * @param responseRepository Access to response repository
+    * @param resourceRepository   Access to resources repository
+    * @param responseRepository   Access to response repository
     * @param validateResponseCode whether to validate response code
     */
-   public OpenAPITestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository, boolean validateResponseCode) {
+   public OpenAPITestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository,
+         boolean validateResponseCode) {
       this.resourceRepository = resourceRepository;
       this.responseRepository = responseRepository;
       this.validateResponseCode = validateResponseCode;
@@ -72,7 +73,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
     * The URL of resources used for validation.
     * @return The URL of resources used for validation
     */
-   public String getResourceUrl(){
+   public String getResourceUrl() {
       return resourceUrl;
    }
 
@@ -80,7 +81,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
     * The URL of resources used for validation.
     * @param resourceUrl The URL of resources used for validation.
     */
-   public void setResourceUrl(String resourceUrl){
+   public void setResourceUrl(String resourceUrl) {
       this.resourceUrl = resourceUrl;
    }
 
@@ -88,13 +89,13 @@ public class OpenAPITestRunner extends HttpTestRunner {
     * Build the HttpMethod corresponding to string.
     */
    @Override
-   public HttpMethod buildMethod(String method){
+   public HttpMethod buildMethod(String method) {
       return HttpMethod.valueOf(method.toUpperCase());
    }
 
    @Override
    protected int extractTestReturnCode(Service service, Operation operation, Request request,
-                                       ClientHttpResponse httpResponse, String responseContent) {
+         ClientHttpResponse httpResponse, String responseContent) {
       int code = TestReturn.SUCCESS_CODE;
 
       int responseCode = 0;
@@ -124,19 +125,17 @@ public class OpenAPITestRunner extends HttpTestRunner {
             log.debug("Response expected status code: {}", expectedResponse.getStatus());
             if (!String.valueOf(responseCode).equals(expectedResponse.getStatus())) {
                log.debug("Response HttpStatus does not match expected one, returning failure");
-               lastValidationErrors = List.of(
-                     String.format("Response HttpStatus does not match expected one. Expecting %s but got %d",
-                           expectedResponse.getStatus(), responseCode)
-               );
+               lastValidationErrors = List
+                     .of(String.format("Response HttpStatus does not match expected one. Expecting %s but got %d",
+                           expectedResponse.getStatus(), responseCode));
                return TestReturn.FAILURE_CODE;
             }
 
             if (!expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
                log.debug("Response Content-Type does not match expected one, returning failure");
-               lastValidationErrors = List.of(
-                     String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
-                           expectedResponse.getMediaType(), contentType)
-               );
+               lastValidationErrors = List
+                     .of(String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
+                           expectedResponse.getMediaType(), contentType));
                return TestReturn.FAILURE_CODE;
             }
          }
@@ -162,7 +161,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
             }
          }
          if (openapiSpecResource == null) {
-            log.debug("Found no OpenAPI specification resource for service {} - {}, so failing validating", service.getId(), service.getName());
+            log.debug("Found no OpenAPI specification resource for service {} - {}, so failing validating",
+                  service.getId(), service.getName());
             return TestReturn.FAILURE_CODE;
          }
 
@@ -186,17 +186,19 @@ public class OpenAPITestRunner extends HttpTestRunner {
             log.debug("Response body cannot be accessed or transformed as Json, returning failure");
             return TestReturn.FAILURE_CODE;
          }
-         String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb
-               + "/responses/" + responseCode;
+         String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb + "/responses/" + responseCode;
 
          if (isOpenAPIv3) {
-            lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, contentType, resourceUrl);
+            lastValidationErrors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer,
+                  contentType, resourceUrl);
          } else {
-            lastValidationErrors = SwaggerSchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, resourceUrl);
+            lastValidationErrors = SwaggerSchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer,
+                  resourceUrl);
          }
 
          if (!lastValidationErrors.isEmpty()) {
-            log.debug("OpenAPI schema validation errors found {}, marking test as failed.", lastValidationErrors.size());
+            log.debug("OpenAPI schema validation errors found {}, marking test as failed.",
+                  lastValidationErrors.size());
             return TestReturn.FAILURE_CODE;
          }
          log.debug("OpenAPI schema validation of response is successful !");
@@ -205,7 +207,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
    }
 
    @Override
-   protected String extractTestReturnMessage(Service service, Operation operation, Request request, ClientHttpResponse httpResponse) {
+   protected String extractTestReturnMessage(Service service, Operation operation, Request request,
+         ClientHttpResponse httpResponse) {
       StringBuilder builder = new StringBuilder();
       if (lastValidationErrors != null && !lastValidationErrors.isEmpty()) {
          for (String error : lastValidationErrors) {

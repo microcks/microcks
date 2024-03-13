@@ -55,28 +55,28 @@ public interface MicrocksAPIConnector {
    /**
     * Retrieve a list of services from Microcks APIs.
     * @param authorization The Authorization header containing the OAuth access token for this API call
-    * @param page The page of service list to request
-    * @param size The size of the page to fetch
+    * @param page          The page of service list to request
+    * @param size          The size of the page to fetch
     * @return A list of Service
     */
    @GET
    @Path("/services")
    @Produces("application/json")
    List<Service> listServices(@HeaderParam("Authorization") String authorization, @QueryParam("page") int page,
-                              @QueryParam("size") int size);
+         @QueryParam("size") int size);
 
    /**
     * Retrieve the complete ServiceView for a Service that may contain messages definitions.
     * @param authorization The Authorization header containing the OAuth access token for this API call
-    * @param serviceId The unique identifier of Service to get the view for
-    * @param messages Whether to include full descriptions of operations messages
+    * @param serviceId     The unique identifier of Service to get the view for
+    * @param messages      Whether to include full descriptions of operations messages
     * @return The complete ServiceView for Service
     */
    @GET
    @Path("/services/{id}")
    @Produces("application/json")
    ServiceView getService(@HeaderParam("Authorization") String authorization, @PathParam("id") String serviceId,
-                                   @QueryParam("messages") boolean messages);
+         @QueryParam("messages") boolean messages);
 
    /**
     * Retrieve the list of contract resources for a Service.
@@ -90,7 +90,7 @@ public interface MicrocksAPIConnector {
 
    /**
     * Report a TestCaseResult associated to a TestResult.
-    * @param testResultId The unique identifier of TestResult we want to report a result for
+    * @param testResultId   The unique identifier of TestResult we want to report a result for
     * @param testCaseReturn A Test Case return data object for this TestResult
     * @return The created TestCaseResult following reporting
     */

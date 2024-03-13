@@ -62,7 +62,6 @@ import graphql.parser.Parser;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -96,35 +95,40 @@ public class GraphQLController {
 
    private static final String INTROSPECTION_SELECTION = "__schema";
 
-   @Autowired
-   private ServiceRepository serviceRepository;
-
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private ResourceRepository resourceRepository;
-
-   @Autowired
-   private ApplicationContext applicationContext;
+   private final ServiceRepository serviceRepository;
+   private final ResponseRepository responseRepository;
+   private final ResourceRepository resourceRepository;
+   private final ApplicationContext applicationContext;
 
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
 
-   private Parser requestParser = new Parser();
-   private SchemaParser schemaParser = new SchemaParser();
-   private SchemaGenerator schemaGenerator = new SchemaGenerator();
-   private ObjectMapper mapper = new ObjectMapper();
+   private final Parser requestParser = new Parser();
+   private final SchemaParser schemaParser = new SchemaParser();
+   private final SchemaGenerator schemaGenerator = new SchemaGenerator();
+   private final ObjectMapper mapper = new ObjectMapper();
+
+
+   /**
+    * Build a GraphQLController with required dependencies.
+    * @param serviceRepository  The repository to access services definitions
+    * @param responseRepository The repository to access responses definitions
+    * @param resourceRepository The repository to access resources artifacts
+    * @param applicationContext The Spring application context
+    */
+   public GraphQLController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
+         ResourceRepository resourceRepository, ApplicationContext applicationContext) {
+      this.serviceRepository = serviceRepository;
+      this.responseRepository = responseRepository;
+      this.resourceRepository = resourceRepository;
+      this.applicationContext = applicationContext;
+   }
 
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.GET, RequestMethod.POST })
-   public ResponseEntity<?> execute(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody(required=false) String body,
-         HttpServletRequest request
-   ) {
+   public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
+         @RequestBody(required = false) String body, HttpServletRequest request) {
 
       log.info("Servicing GraphQL mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
@@ -137,18 +141,23 @@ public class GraphQLController {
       }
 
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
+      if (service == null) {
+         return new ResponseEntity<>(
+               String.format("The service %s with version %s does not exist!", serviceName, version),
+               HttpStatus.NOT_FOUND);
+      }
 
-      GraphQLHttpRequest graphqlHttpReq ;
+      GraphQLHttpRequest graphqlHttpReq;
       Document graphqlRequest;
       try {
          graphqlHttpReq = GraphQLHttpRequest.from(body, request);
          graphqlRequest = requestParser.parseDocument(graphqlHttpReq.getQuery());
       } catch (Exception e) {
-         log.error("Error parsing GraphQL request: {}", e);
-         return new ResponseEntity<Object>("Error parsing GraphQL request: " + e.getMessage(), HttpStatus.BAD_REQUEST);
+         log.error("Error parsing GraphQL request: {}", e.getMessage());
+         return new ResponseEntity<>("Error parsing GraphQL request: " + e.getMessage(), HttpStatus.BAD_REQUEST);
       }
 
-      Definition graphqlDef = graphqlRequest.getDefinitions().get(0);
+      Definition<?> graphqlDef = graphqlRequest.getDefinitions().get(0);
       OperationDefinition graphqlOperation = (OperationDefinition) graphqlDef;
 
       log.debug("Got this graphqlOperation: {}", graphqlOperation);
@@ -157,13 +166,15 @@ public class GraphQLController {
       String operationType = graphqlOperation.getOperation().toString();
 
       // Check is it's an introspection query to handle first.
-      if ("QUERY".equals(operationType)
-            && INTROSPECTION_SELECTION.equals(((Field) graphqlOperation.getSelectionSet().getSelections().get(0)).getName())) {
+      if ("QUERY".equals(operationType) && INTROSPECTION_SELECTION
+            .equals(((Field) graphqlOperation.getSelectionSet().getSelections().get(0)).getName())) {
          log.info("Handling GraphQL schema introspection query...");
-         Resource graphqlSchema = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA).get(0);
+         Resource graphqlSchema = resourceRepository
+               .findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA).get(0);
 
          TypeDefinitionRegistry typeDefinitionRegistry = schemaParser.parse(graphqlSchema.getContent());
-         GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry, RuntimeWiring.MOCKED_WIRING);
+         GraphQLSchema graphQLSchema = schemaGenerator.makeExecutableSchema(typeDefinitionRegistry,
+               RuntimeWiring.MOCKED_WIRING);
 
          GraphQL graphQL = GraphQL.newGraphQL(graphQLSchema).build();
          ExecutionResult executionResult = graphQL.execute(graphqlHttpReq.getQuery());
@@ -175,14 +186,14 @@ public class GraphQLController {
             log.error("Unknown Json processing exception", jpe);
             return new ResponseEntity<>(jpe.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
          }
-         return new ResponseEntity<Object>(responseContent, HttpStatus.OK);
+         return new ResponseEntity<>(responseContent, HttpStatus.OK);
       }
 
       // Then deal with one or many regular GraphQL selection queries.
       List<GraphQLQueryResponse> graphqlResponses = new ArrayList<>();
-      final Long[] maxDelay = {(delay == null ? 0L : delay)};
+      final Long[] maxDelay = { (delay == null ? 0L : delay) };
 
-      for (Selection selection : graphqlOperation.getSelectionSet().getSelections()) {
+      for (Selection<?> selection : graphqlOperation.getSelectionSet().getSelections()) {
          GraphQLQueryResponse graphqlResponse = null;
          try {
             graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
@@ -193,25 +204,20 @@ public class GraphQLController {
             }
          } catch (GraphQLQueryProcessingException e) {
             log.error("Caught a GraphQL processing exception", e);
-            return new ResponseEntity<Object>(e.getMessage(), e.getStatus());
+            return new ResponseEntity<>(e.getMessage(), e.getStatus());
          }
       }
 
-      /* Optimized parallel version but need to better handle exception.
-      graphqlResponses = graphqlOperation.getSelectionSet().getSelections().stream().parallel().map(selection -> {
-         try {
-            GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
-                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request);
-            if (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
-               maxDelay[0] = graphqlResponse.getOperationDelay();
-            }
-            return graphqlResponse;
-         } catch (GraphQLQueryProcessingException e) {
-            log.error("Caught a GraphQL processing exception", e);
-            return null;
-         }
-      }).collect(Collectors.toList());
-      */
+      /*
+       * Optimized parallel version but need to better handle exception. graphqlResponses =
+       * graphqlOperation.getSelectionSet().getSelections().stream().parallel().map(selection -> { try {
+       * GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
+       * graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request); if
+       * (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
+       * maxDelay[0] = graphqlResponse.getOperationDelay(); } return graphqlResponse; } catch
+       * (GraphQLQueryProcessingException e) { log.error("Caught a GraphQL processing exception", e); return null; }
+       * }).collect(Collectors.toList());
+       */
 
       // Deal with response headers.
       HttpHeaders responseHeaders = new HttpHeaders();
@@ -245,10 +251,8 @@ public class GraphQLController {
          ObjectNode aggregated = mapper.createObjectNode();
          ObjectNode dataNode = aggregated.putObject("data");
          for (GraphQLQueryResponse response : graphqlResponses) {
-            dataNode.set(
-               StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
-               response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy()
-            );
+            dataNode.set(StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
+                  response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy());
          }
          responseNode = aggregated;
       }
@@ -258,25 +262,24 @@ public class GraphQLController {
          log.error("Unknown Json processing exception", e);
          return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
       }
-      return new ResponseEntity<Object>(responseContent, responseHeaders, HttpStatus.OK);
+      return new ResponseEntity<>(responseContent, responseHeaders, HttpStatus.OK);
    }
 
    /**
     * Process a GraphQL field selection query (an Http query may contain many field selection queries).
-    * @param service The Service this query is targeting
-    * @param operationType The type of GraphQL operation (QUERY or MUTATION)
-    * @param graphqlField The Field selection we should apply
+    * @param service             The Service this query is targeting
+    * @param operationType       The type of GraphQL operation (QUERY or MUTATION)
+    * @param graphqlField        The Field selection we should apply
     * @param fragmentDefinitions A list of fragment field selection
-    * @param body The Http request body
-    * @param graphqlHttpReq The Http GraphQL request wrapper
-    * @param request The bare Http Servlet request
+    * @param body                The Http request body
+    * @param graphqlHttpReq      The Http GraphQL request wrapper
+    * @param request             The bare Http Servlet request
     * @return A GraphQL query response wrapper with some elements from the Microcks domain matching Response
     * @throws GraphQLQueryProcessingException if incoming field selection query cannot be processed
     */
    protected GraphQLQueryResponse processGraphQLQuery(Service service, String operationType, Field graphqlField,
-                                                      List<FragmentDefinition> fragmentDefinitions, String body,
-                                                      GraphQLHttpRequest graphqlHttpReq, HttpServletRequest request)
-         throws GraphQLQueryProcessingException{
+         List<FragmentDefinition> fragmentDefinitions, String body, GraphQLHttpRequest graphqlHttpReq,
+         HttpServletRequest request) throws GraphQLQueryProcessingException {
 
       GraphQLQueryResponse result = new GraphQLQueryResponse();
       String operationName = graphqlField.getName();
@@ -302,7 +305,8 @@ public class GraphQLController {
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
          String violationMsg = validateParameterConstraintsIfAny(rOperation, request);
          if (violationMsg != null) {
-            throw new GraphQLQueryProcessingException(violationMsg + ". Check parameter constraints.", HttpStatus.BAD_REQUEST);
+            throw new GraphQLQueryProcessingException(violationMsg + ". Check parameter constraints.",
+                  HttpStatus.BAD_REQUEST);
          }
 
          // We must find dispatcher and its rules. Default to operation ones but
@@ -316,13 +320,14 @@ public class GraphQLController {
          }
 
          //
-         DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules,
-               graphqlField, graphqlHttpReq.getVariables(), request, body);
+         DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules, graphqlField,
+               graphqlHttpReq.getVariables(), request, body);
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
          // First try: using computed dispatchCriteria on main dispatcher.
          Response response = null;
-         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
+         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
+               IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
          if (!responses.isEmpty()) {
             response = responses.get(0);
          }
@@ -330,7 +335,8 @@ public class GraphQLController {
          if (response == null) {
             // When using the SCRIPT dispatcher, return of evaluation may be the name of response.
             log.debug("No responses with dispatch criteria, trying the name...");
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
+                  dispatchContext.dispatchCriteria());
             if (!responses.isEmpty()) {
                response = responses.get(0);
             }
@@ -339,7 +345,8 @@ public class GraphQLController {
          if (response == null && fallback != null) {
             // If we've found nothing and got a fallback, that's the moment!
             log.debug("No responses till now so far, applying the fallback...");
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), fallback.getFallback());
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
+                  fallback.getFallback());
             if (!responses.isEmpty()) {
                response = responses.get(0);
             }
@@ -368,16 +375,18 @@ public class GraphQLController {
             }
 
             // Render response content before waiting and returning.
-            String responseContent = MockControllerCommons.renderResponseContent(body, null,
-                  evaluableHeaders, dispatchContext.requestContext(), response);
+            String responseContent = MockControllerCommons.renderResponseContent(body, null, evaluableHeaders,
+                  dispatchContext.requestContext(), response);
 
             try {
                JsonNode responseJson = mapper.readTree(responseContent);
-               filterFieldSelection(graphqlField.getSelectionSet(), fragmentDefinitions, responseJson.get("data").get(operationName));
+               filterFieldSelection(graphqlField.getSelectionSet(), fragmentDefinitions,
+                     responseJson.get("data").get(operationName));
                result.setJsonResponse(responseJson);
             } catch (JsonProcessingException pe) {
                log.error("JsonProcessingException while filtering response according GraphQL field selection", pe);
-               throw new GraphQLQueryProcessingException("Exception while filtering response JSON", HttpStatus.INTERNAL_SERVER_ERROR);
+               throw new GraphQLQueryProcessingException("Exception while filtering response JSON",
+                     HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
             return result;
@@ -404,8 +413,7 @@ public class GraphQLController {
 
    /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
    private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules,
-                                          Selection graphqlSelection, JsonNode requestVariables,
-                                          HttpServletRequest request, String body) {
+         Selection<?> graphqlSelection, JsonNode requestVariables, HttpServletRequest request, String body) {
 
       String dispatchCriteria = null;
       Map<String, Object> requestContext = null;
@@ -429,18 +437,20 @@ public class GraphQLController {
                Field field = (Field) graphqlSelection;
                Map<String, String> queryParams = new HashMap<>();
                for (Argument arg : field.getArguments()) {
-                  if (arg.getValue() instanceof StringValue) {
-                     queryParams.put(arg.getName(), ((StringValue) arg.getValue()).getValue());
-                  } else if (arg.getValue() instanceof VariableReference && requestVariables != null) {
-                     queryParams.put(arg.getName(), requestVariables.path(((VariableReference) arg.getValue()).getName()).asText(""));
+                  if (arg.getValue() instanceof StringValue stringArg) {
+                     queryParams.put(arg.getName(), stringArg.getValue());
+                  } else if (arg.getValue() instanceof VariableReference varRef && requestVariables != null) {
+                     queryParams.put(arg.getName(), requestVariables.path(varRef.getName()).asText(""));
                   }
                }
                dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, queryParams);
                break;
             case DispatchStyles.JSON_BODY:
                try {
-                  JsonEvaluationSpecification specification = JsonEvaluationSpecification.buildFromJsonString(dispatcherRules);
-                  dispatchCriteria = JsonExpressionEvaluator.evaluate(mapper.writeValueAsString(requestVariables), specification);
+                  JsonEvaluationSpecification specification = JsonEvaluationSpecification
+                        .buildFromJsonString(dispatcherRules);
+                  dispatchCriteria = JsonExpressionEvaluator.evaluate(mapper.writeValueAsString(requestVariables),
+                        specification);
                } catch (JsonMappingException jme) {
                   log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
                } catch (JsonProcessingException jpe) {
@@ -454,11 +464,12 @@ public class GraphQLController {
 
    /**
     * Apply a FieldSelection filter on Json node.
-    * @param selectionSet The set of selections to apply
+    * @param selectionSet        The set of selections to apply
     * @param fragmentDefinitions A list of fragment field selection
-    * @param node The Json node to apply on
+    * @param node                The Json node to apply on
     */
-   protected void filterFieldSelection(SelectionSet selectionSet, List<FragmentDefinition> fragmentDefinitions, JsonNode node) {
+   protected void filterFieldSelection(SelectionSet selectionSet, List<FragmentDefinition> fragmentDefinitions,
+         JsonNode node) {
       // Stop condition: no more selection to apply.
       if (selectionSet == null || selectionSet.getSelections() == null || selectionSet.getSelections().isEmpty()) {
          return;
@@ -468,14 +479,13 @@ public class GraphQLController {
             // We must retain properties corresponding to field selection
             // and recurse on each retrained object property.
             List<String> properties = new ArrayList<>();
-            for (Selection selection : selectionSet.getSelections()) {
-               if (selection instanceof Field) {
-                  Field fieldSelection = (Field) selection;
-                  filterFieldSelection(fieldSelection.getSelectionSet(), fragmentDefinitions, node.get(fieldSelection.getName()));
+            for (Selection<?> selection : selectionSet.getSelections()) {
+               if (selection instanceof Field fieldSelection) {
+                  filterFieldSelection(fieldSelection.getSelectionSet(), fragmentDefinitions,
+                        node.get(fieldSelection.getName()));
                   properties.add(fieldSelection.getName());
-               } else if (selection instanceof FragmentSpread) {
+               } else if (selection instanceof FragmentSpread fragmentSpread) {
                   // FragmentSpread is an indirection to selection find in definitions.
-                  FragmentSpread fragmentSpread = (FragmentSpread) selection;
                   FragmentDefinition fragmentDef = fragmentDefinitions.stream()
                         .filter(def -> def.getName().equals(fragmentSpread.getName())).findFirst().orElse(null);
                   if (fragmentDef != null) {
@@ -494,6 +504,8 @@ public class GraphQLController {
             while (children.hasNext()) {
                filterFieldSelection(selectionSet, fragmentDefinitions, children.next());
             }
+            break;
+         default:
             break;
       }
    }
@@ -548,9 +560,9 @@ public class GraphQLController {
    }
 
    /** Simple exception wrapping a processing error. */
-   protected class GraphQLQueryProcessingException extends Exception {
+   protected static class GraphQLQueryProcessingException extends Exception {
 
-      HttpStatus status;
+      final HttpStatus status;
 
       public HttpStatus getStatus() {
          return status;

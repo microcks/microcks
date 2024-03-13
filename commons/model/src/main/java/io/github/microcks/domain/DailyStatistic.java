@@ -21,8 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Domain objects representing daily invocation stats of mocks
- * served by Microcks.
+ * Domain objects representing daily invocation stats of mocks served by Microcks.
  * @author laurent
  */
 public class DailyStatistic {

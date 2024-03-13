@@ -29,15 +29,16 @@ import java.util.List;
 public interface AICopilot {
 
    /**
-    * Suggest/generate sample exchanges for an operation of a Service, from a specification. Depending
-    * on contract type (OpenAPI, AsyncAPI, GraphQL, ...) the implementation may adapt the way it asks
-    * for generation and handle the result parsing.
-    * @param service The Service to generate sample exchanges for
+    * Suggest/generate sample exchanges for an operation of a Service, from a specification. Depending on contract type
+    * (OpenAPI, AsyncAPI, GraphQL, ...) the implementation may adapt the way it asks for generation and handle the
+    * result parsing.
+    * @param service   The Service to generate sample exchanges for
     * @param operation The Service operation to generate sample exchanges for
-    * @param contract The contract on which sample exchange will be based
-    * @param number The number of requested samples.
+    * @param contract  The contract on which sample exchange will be based
+    * @param number    The number of requested samples.
     * @return A list of exchanges, size of list may be equal of lower than number if generation is incomplete.
     * @throws Exception If generation cannot be done (parsing errors, timeout, connection issues, reached quotas, ...)
     */
-   List<? extends Exchange> suggestSampleExchanges(Service service, Operation operation, Resource contract, int number) throws Exception;
+   List<? extends Exchange> suggestSampleExchanges(Service service, Operation operation, Resource contract, int number)
+         throws Exception;
 }

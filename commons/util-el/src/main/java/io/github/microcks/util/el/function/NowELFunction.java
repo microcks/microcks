@@ -21,9 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 /**
- * Implementation of ELFunction that generates a date representation corresponding to current time
- * + an optional amount of time. String format and added time unit are specified using Java Date Format
- * patterns.
+ * Implementation of ELFunction that generates a date representation corresponding to current time + an optional amount
+ * of time. String format and added time unit are specified using Java Date Format patterns.
  * @author laurent
  */
 public class NowELFunction implements ELFunction {
@@ -61,7 +60,8 @@ public class NowELFunction implements ELFunction {
                      case "y":
                         now.add(Calendar.YEAR, amount);
                         break;
-                     default: break;
+                     default:
+                        break;
                   }
                }
                dateFormat = new SimpleDateFormat(args[0]);

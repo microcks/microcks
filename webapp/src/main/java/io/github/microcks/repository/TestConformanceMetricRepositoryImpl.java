@@ -41,13 +41,10 @@ public class TestConformanceMetricRepositoryImpl implements CustomTestConformanc
    public List<WeightedMetricValue> aggregateTestConformanceMetric() {
       // Match all but group by label (domain) and compute average and weight.
       Aggregation aggregation = newAggregation(
-            group("aggregationLabelValue")
-                  .avg("currentScore").as("value")
-                  .count().as("weight"),
-            project("value", "weight").and("_id").as("name"),
-            sort(Sort.Direction.DESC, "value")
-      );
-      AggregationResults<WeightedMetricValue> results = template.aggregate(aggregation, TestConformanceMetric.class, WeightedMetricValue.class);
+            group("aggregationLabelValue").avg("currentScore").as("value").count().as("weight"),
+            project("value", "weight").and("_id").as("name"), sort(Sort.Direction.DESC, "value"));
+      AggregationResults<WeightedMetricValue> results = template.aggregate(aggregation, TestConformanceMetric.class,
+            WeightedMetricValue.class);
       return results.getMappedResults();
    }
 }

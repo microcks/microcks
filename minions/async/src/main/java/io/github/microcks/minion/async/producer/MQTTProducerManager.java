@@ -45,7 +45,7 @@ public class MQTTProducerManager {
    @ConfigProperty(name = "mqtt.server")
    String mqttServer;
 
-   @ConfigProperty(name = "mqtt.clientid", defaultValue="microcks-async-minion")
+   @ConfigProperty(name = "mqtt.clientid", defaultValue = "microcks-async-minion")
    String mqttClientId;
 
    @ConfigProperty(name = "mqtt.username")
@@ -76,8 +76,7 @@ public class MQTTProducerManager {
     */
    protected IMqttClient createClient() throws Exception {
       MqttConnectOptions options = new MqttConnectOptions();
-      if (mqttUsername != null && mqttUsername.length() > 0 
-            && mqttPassword != null && mqttPassword.length() > 0) {
+      if (mqttUsername != null && mqttUsername.length() > 0 && mqttPassword != null && mqttPassword.length() > 0) {
          logger.infof("Connecting to MQTT broker with user '%s'", mqttUsername);
          options.setUserName(mqttUsername);
          options.setPassword(mqttPassword.toCharArray());
@@ -110,25 +109,20 @@ public class MQTTProducerManager {
 
    /**
     * Get the MQTT topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
-    * @param definition The AsyncMockDefinition
+    * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic
     * @return The topic name for definition and event
     */
    public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
+
       // Produce version name part of topic name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
 
-      // replace the parts
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      // Produce operation name part of topic name.
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;

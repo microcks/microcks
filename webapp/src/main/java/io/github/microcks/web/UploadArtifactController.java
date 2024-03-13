@@ -56,28 +56,32 @@ public class UploadArtifactController {
 
    @PostMapping(value = "/artifact/download")
    public ResponseEntity<?> importArtifact(@RequestParam(value = "url", required = true) String url,
-                                           @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
+         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!url.isEmpty()) {
          List<Service> services = null;
 
          try {
             // Download remote to local file before import.
-            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(url, null, true);
+            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(url, null,
+                  true);
             File localFile = fileAndHeaders.getLocalFile();
 
             // Now try importing services.
             services = serviceService.importServiceDefinition(localFile,
                   new ReferenceResolver(url, null, true,
-                        RelativeReferenceURLBuilderFactory.getRelativeReferenceURLBuilder(fileAndHeaders.getResponseHeaders())),
+                        RelativeReferenceURLBuilderFactory
+                              .getRelativeReferenceURLBuilder(fileAndHeaders.getResponseHeaders())),
                   new ArtifactInfo(url, mainArtifact));
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item " + url, ioe);
             return new ResponseEntity<>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
          } catch (MockRepositoryImportException mrie) {
-         return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          }
          if (services != null && !services.isEmpty()) {
-            return new ResponseEntity<>("{\"name\": \"" + services.get(0).getName() + ":" + services.get(0).getVersion() + "\"}", HttpStatus.CREATED);
+            return new ResponseEntity<>(
+                  "{\"name\": \"" + services.get(0).getName() + ":" + services.get(0).getVersion() + "\"}",
+                  HttpStatus.CREATED);
          }
       }
       return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -85,7 +89,7 @@ public class UploadArtifactController {
 
    @PostMapping(value = "/artifact/upload")
    public ResponseEntity<?> importArtifact(@RequestParam(value = "file") MultipartFile file,
-                                           @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
+         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!file.isEmpty()) {
          log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
 
@@ -93,7 +97,8 @@ public class UploadArtifactController {
 
          try {
             // Save upload to local file before import.
-            String localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis() + ".artifact";
+            String localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis()
+                  + ".artifact";
 
             ReadableByteChannel rbc = null;
             FileOutputStream fos = null;
@@ -102,8 +107,7 @@ public class UploadArtifactController {
                // Transfer file to local.
                fos = new FileOutputStream(localFile);
                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            }
-            finally {
+            } finally {
                if (fos != null)
                   fos.close();
                if (rbc != null)
@@ -111,7 +115,8 @@ public class UploadArtifactController {
             }
 
             // Now try importing services.
-            services = serviceService.importServiceDefinition(new File(localFile), null, new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
+            services = serviceService.importServiceDefinition(new File(localFile), null,
+                  new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
          } catch (IOException ioe) {
             log.error("Exception while writing uploaded item {}", file.getOriginalFilename(), ioe);
             return new ResponseEntity<>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -119,7 +124,8 @@ public class UploadArtifactController {
             return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          }
          if (services != null && !services.isEmpty()) {
-            return new ResponseEntity<>(services.get(0).getName() + ":" + services.get(0).getVersion(), HttpStatus.CREATED);
+            return new ResponseEntity<>(services.get(0).getName() + ":" + services.get(0).getVersion(),
+                  HttpStatus.CREATED);
          }
       }
       return new ResponseEntity<>(HttpStatus.NO_CONTENT);

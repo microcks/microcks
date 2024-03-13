@@ -15,6 +15,7 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.util.asyncapi.AsyncAPI3Importer;
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
@@ -35,9 +36,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 /**
- * Factory for building/retrieving mock repository importer implementations. For now, it implements
- * a very simple algorithm : if repository is a JSON file (guess on first lines content), it assume repository it
- * implemented as a Postman collection and then uses PostmanCollectionImporter; otherwise it uses SoapUIProjectImporter.
+ * Factory for building/retrieving mock repository importer implementations. For now, it implements a very simple
+ * algorithm : if repository is a JSON file (guess on first lines content), it assume repository it implemented as a
+ * Postman collection and then uses PostmanCollectionImporter; otherwise it uses SoapUIProjectImporter.
  * @author laurent
  */
 public class MockRepositoryImporterFactory {
@@ -51,6 +52,9 @@ public class MockRepositoryImporterFactory {
    /** A RegExp for detecting a line containing the asyncapi: 2 pragma. */
    public static final String ASYNCAPI_2_REGEXP = ".*['\\\"]?asyncapi['\\\"]?\\s*:\\s*['\\\"]?[2\\.].*";
 
+   /** A RegExp for detecting a line containing the asyncapi: 3 pragma. */
+   public static final String ASYNCAPI_3_REGEXP = ".*['\\\"]?asyncapi['\\\"]?\\s*:\\s*['\\\"]?[3\\.].*";
+
    /** A RegExp for detecting a line containing the swagger pragma. */
    public static final String SWAGGER_REGEXP = ".*['\\\"]?swagger['\\\"]?\\s*:\\s*.*";
 
@@ -60,13 +64,13 @@ public class MockRepositoryImporterFactory {
 
    /**
     * Create the right MockRepositoryImporter implementation depending on repository type.
-    * @param mockRepository The file representing the repository type
+    * @param mockRepository    The file representing the repository type
     * @param referenceResolver The Resolver to be used during import (may be null).
     * @return An instance of MockRepositoryImporter implementation
     * @throws IOException in case of file access
     */
-   public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository, ReferenceResolver referenceResolver)
-         throws IOException {
+   public static MockRepositoryImporter getMockRepositoryImporter(File mockRepository,
+         ReferenceResolver referenceResolver) throws IOException {
       MockRepositoryImporter importer = null;
 
       // Analyse first lines of file content to guess repository type.
@@ -107,7 +111,8 @@ public class MockRepositoryImporterFactory {
       return null;
    }
 
-   private static MockRepositoryImporter checkOpenAPIImporters(String line, File mockRepository, ReferenceResolver referenceResolver) throws IOException {
+   private static MockRepositoryImporter checkOpenAPIImporters(String line, File mockRepository,
+         ReferenceResolver referenceResolver) throws IOException {
       if (line.matches(OPENAPI_3_REGEXP)) {
          log.info("Found an openapi: 3 pragma in file so assuming it's an OpenAPI spec to import");
          return new OpenAPIImporter(mockRepository.getPath(), referenceResolver);
@@ -118,7 +123,8 @@ public class MockRepositoryImporterFactory {
       return null;
    }
 
-   private static MockRepositoryImporter checkOtherImporters(String line, File mockRepository, ReferenceResolver referenceResolver) throws IOException {
+   private static MockRepositoryImporter checkOtherImporters(String line, File mockRepository,
+         ReferenceResolver referenceResolver) throws IOException {
       if (line.startsWith("<?xml")) {
          log.info("Found a XML pragma in file so assuming it's a SoapUI Project to import");
          return new SoapUIProjectImporter(mockRepository.getPath());
@@ -128,6 +134,9 @@ public class MockRepositoryImporterFactory {
       } else if (line.matches(ASYNCAPI_2_REGEXP)) {
          log.info("Found an asyncapi: 2 pragma in file so assuming it's an AsyncAPI spec to import");
          return new AsyncAPIImporter(mockRepository.getPath(), referenceResolver);
+      } else if (line.matches(ASYNCAPI_3_REGEXP)) {
+         log.info("Found an asyncapi: 3 pragma in file so assuming it's an AsyncAPI spec to import");
+         return new AsyncAPI3Importer(mockRepository.getPath(), referenceResolver);
       } else if (line.startsWith("syntax = \"proto3\";") || line.startsWith("syntax=\"proto3\";")) {
          log.info("Found a syntax = proto3 pragma in file so assuming it's a GRPC Protobuf spec to import");
          return new ProtobufImporter(mockRepository.getPath(), referenceResolver);

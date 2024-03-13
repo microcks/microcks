@@ -29,10 +29,7 @@ public class RedirectExpressionTest {
 
    @Test
    public void testLiteralRedirect() {
-      Expression[] expressions = new Expression[] {
-            new LiteralExpression("hello"),
-            new LiteralExpression("world")
-      };
+      Expression[] expressions = new Expression[] { new LiteralExpression("hello"), new LiteralExpression("world") };
 
       RedirectExpression exp = new RedirectExpression(expressions);
       String result = exp.getValue(new EvaluationContext());
@@ -43,10 +40,8 @@ public class RedirectExpressionTest {
    public void testLiteralRedirectToContext() {
       EvaluationContext context = new EvaluationContext();
 
-      Expression[] expressions = new Expression[] {
-            new LiteralExpression("hello"),
-            new FunctionExpression(new PutInContextELFunction(), new String[] {"greeting"})
-      };
+      Expression[] expressions = new Expression[] { new LiteralExpression("hello"),
+            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting" }) };
 
       RedirectExpression exp = new RedirectExpression(expressions);
       String result = exp.getValue(context);
@@ -58,11 +53,9 @@ public class RedirectExpressionTest {
    public void testLiteralRedirectToMultiContext() {
       EvaluationContext context = new EvaluationContext();
 
-      Expression[] expressions = new Expression[] {
-            new LiteralExpression("hello"),
-            new FunctionExpression(new PutInContextELFunction(), new String[] {"greeting1"}),
-            new FunctionExpression(new PutInContextELFunction(), new String[] {"greeting2"})
-      };
+      Expression[] expressions = new Expression[] { new LiteralExpression("hello"),
+            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting1" }),
+            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting2" }) };
 
       RedirectExpression exp = new RedirectExpression(expressions);
       String result = exp.getValue(context);

@@ -26,8 +26,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 /**
- * Implement of MockRepositoryImporter that uses a Postman collection coming from a Postman Workspace
- * (see https://www.postman.com/postman/workspace/postman-public-workspace/request/12959542-a6a282df-907e-438b-8fe6-e5efaa60b8bf)
+ * Implement of MockRepositoryImporter that uses a Postman collection coming from a Postman Workspace (see
+ * https://www.postman.com/postman/workspace/postman-public-workspace/request/12959542-a6a282df-907e-438b-8fe6-e5efaa60b8bf)
  * for building domain objects. Only v2 collection format is supported.
  * @author laurent
  */

@@ -24,6 +24,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 
 import static io.github.microcks.security.KeycloakJwtToken.MICROCKS_GROUPS_TOKEN_CLAIM;
 import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
+
 /**
  * Simpler mappe for transforming KeyclaokSecurityContext token into UserInfo bean.
  * @author laurent
@@ -44,9 +45,9 @@ public class KeycloakTokenToUserInfoMapper {
       if (authentication instanceof JwtAuthenticationToken jwtToken) {
          Jwt jwt = jwtToken.getToken();
 
-         String[] microcksGroups = new String[]{};
+         String[] microcksGroups = new String[] {};
          if (jwt.hasClaim(MICROCKS_GROUPS_TOKEN_CLAIM)) {
-            microcksGroups = jwt.getClaimAsStringList(MICROCKS_GROUPS_TOKEN_CLAIM).toArray(String[] ::new);
+            microcksGroups = jwt.getClaimAsStringList(MICROCKS_GROUPS_TOKEN_CLAIM).toArray(String[]::new);
          }
 
          // Create and return UserInfo.

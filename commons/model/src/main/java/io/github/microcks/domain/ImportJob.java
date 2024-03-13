@@ -22,11 +22,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Domain object representing an import job within Microcks.
- * Import jobs are responsible of periodically checking tests &amp; mocks
- * repository in order to update their definitions with Microcks own repository.
- * They typically used the repositoryUrl attribute, associated with the etag
- * marker in order to easily see if something has been updated.
+ * Domain object representing an import job within Microcks. Import jobs are responsible of periodically checking tests
+ * &amp; mocks repository in order to update their definitions with Microcks own repository. They typically used the
+ * repositoryUrl attribute, associated with the etag marker in order to easily see if something has been updated.
  * @author laurent
  */
 public class ImportJob {

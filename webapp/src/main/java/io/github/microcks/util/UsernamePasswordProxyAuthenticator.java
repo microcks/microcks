@@ -26,7 +26,7 @@ import java.net.PasswordAuthentication;
  * A simple Authenticator for basic network authentication handling.
  * @author laurent
  */
-public class UsernamePasswordProxyAuthenticator extends Authenticator{
+public class UsernamePasswordProxyAuthenticator extends Authenticator {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(UsernamePasswordProxyAuthenticator.class);
@@ -34,7 +34,7 @@ public class UsernamePasswordProxyAuthenticator extends Authenticator{
    private final ProxySettings settings;
 
    private final PasswordAuthentication authentication;
-   
+
    /**
     * Constructor.
     * @param settings The proxy settings for network to reach out.
@@ -44,15 +44,14 @@ public class UsernamePasswordProxyAuthenticator extends Authenticator{
       this.authentication = new PasswordAuthentication(settings.getUsername(), settings.getPassword().toCharArray());
    }
 
-   protected PasswordAuthentication getPasswordAuthentication(){
+   protected PasswordAuthentication getPasswordAuthentication() {
       // Return authentication information only if requester is the identified proxy.
       log.debug("Handling proxy authentication for {}", getRequestingHost());
       if (getRequestorType() == RequestorType.PROXY) {
-         if (getRequestingHost().equalsIgnoreCase(settings.getHost())
-               && getRequestingPort() == settings.getPort()) {
+         if (getRequestingHost().equalsIgnoreCase(settings.getHost()) && getRequestingPort() == settings.getPort()) {
             return authentication;
          }
       }
       return null;
-  }
+   }
 }

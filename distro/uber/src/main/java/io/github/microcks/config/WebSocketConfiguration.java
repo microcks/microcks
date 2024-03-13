@@ -25,8 +25,8 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 
 /**
- * A configuration for enabling WebSocket and configuring CORS on our services changes notification endpoint.
- * Only activated when using the "uber" Spring profile.
+ * A configuration for enabling WebSocket and configuring CORS on our services changes notification endpoint. Only
+ * activated when using the "uber" Spring profile.
  * @author laurent
  */
 @Configuration
@@ -39,7 +39,6 @@ public class WebSocketConfiguration implements WebSocketConfigurer {
 
    @Override
    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-      registry.addHandler(channel, "/api/services-updates")
-            .setAllowedOrigins("*");
+      registry.addHandler(channel, "/api/services-updates").setAllowedOrigins("*");
    }
 }

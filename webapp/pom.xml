@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.8.2-SNAPSHOT</version>
+    <version>1.9.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -12,6 +12,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <multi-project.rootdir>..</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
     <java.version>17</java.version>
@@ -21,15 +22,16 @@
     <bouncycastle.version>1.70</bouncycastle.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <mongo-java-server.version>1.43.0</mongo-java-server.version>
-    <apache-httpclient.version>5.2.1</apache-httpclient.version>
-    <commons-lang3.version>3.13.0</commons-lang3.version>
-    <commons-io.version>2.13.0</commons-io.version>
+    <apache-httpclient.version>5.3</apache-httpclient.version>
+    <commons-lang3.version>3.14.0</commons-lang3.version>
+    <commons-io.version>2.15.1</commons-io.version>
     <commons-codec.version>1.16.0</commons-codec.version>
     <groovy.version>4.0.13</groovy.version>
-    <protobuf.version>3.23.3</protobuf.version>
-    <grpc.version>1.56.1</grpc.version>
+    <protobuf.version>3.25.2</protobuf.version>
+    <grpc.version>1.61.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.14.0</openai-gpt3-java.version>
+    <opentelemetry.version>1.32.0</opentelemetry.version>
   </properties>
 
   <dependencyManagement>
@@ -83,6 +85,20 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
+
+    <!-- observability with Otel -->
+    <dependency>
+      <groupId>io.opentelemetry.javaagent</groupId>
+      <artifactId>opentelemetry-javaagent</artifactId>
+      <version>${opentelemetry.version}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry.instrumentation</groupId>
+      <artifactId>opentelemetry-instrumentation-annotations</artifactId>
+      <version>${opentelemetry.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.springframework.kafka</groupId>
       <artifactId>spring-kafka</artifactId>
@@ -442,6 +458,13 @@
                 <argument>--spring.profiles.active=prod</argument>
               </arguments>
               <classifier>exec</classifier>
+              <excludes>
+                <!-- Otel agent should be provided at the bootstrap level within the container image -->
+                <exclude>
+                  <groupId>io.opentelemetry.javaagent</groupId>
+                  <artifactId>opentelemetry-javaagent</artifactId>
+                </exclude>
+              </excludes>
             </configuration>
             <executions>
               <execution>
@@ -475,6 +498,31 @@
         <!-- default Spring profiles -->
         <spring.profiles.active>prod</spring.profiles.active>
       </properties>
+    </profile>
+    <profile>
+      <id>dev-otel</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-maven-plugin</artifactId>
+            <version>${spring-boot.version}</version>
+            <configuration>
+              <environmentVariables>
+                <!-- <JAVA_TOOL_OPTIONS>-javaagent:${user.home}/.m2/repository/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar</JAVA_TOOL_OPTIONS> -->
+                <JAVA_TOOL_OPTIONS>-javaagent:${user.home}/Development/repository/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar</JAVA_TOOL_OPTIONS>
+                <OTEL_JAVAAGENT_ENABLED>true</OTEL_JAVAAGENT_ENABLED>
+                <OTEL_METRICS_EXPORTER>otlp</OTEL_METRICS_EXPORTER>
+                <OTEL_LOGS_EXPORTER>otlp</OTEL_LOGS_EXPORTER>
+                <OTEL_TRACES_EXPORTER>otlp</OTEL_TRACES_EXPORTER>
+                <OTEL_METRIC_EXPORT_INTERVAL>10000</OTEL_METRIC_EXPORT_INTERVAL>
+                <OTEL_EXPORTER_OTLP_TIMEOUT>7000</OTEL_EXPORTER_OTLP_TIMEOUT>
+                <OTEL_RESOURCE_ATTRIBUTES>service.name=${project.artifactId},service.namespace=${project.artifactId}-ns,service.instance.id=${project.artifactId}-dev,service.version=${project.version}</OTEL_RESOURCE_ATTRIBUTES>
+              </environmentVariables>          
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>

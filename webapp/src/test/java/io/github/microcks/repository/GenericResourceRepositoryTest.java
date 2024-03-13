@@ -37,7 +37,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class GenericResourceRepositoryTest {
 
    @Autowired
@@ -86,7 +86,8 @@ public class GenericResourceRepositoryTest {
       repository.save(resource2);
 
       // Query by example using 1 field.
-      List<GenericResource> dynaResources = repository.findByServiceIdAndJSONQuery(service.getId(), "{ \"foo\": 1234 }");
+      List<GenericResource> dynaResources = repository.findByServiceIdAndJSONQuery(service.getId(),
+            "{ \"foo\": 1234 }");
       assertEquals(2, dynaResources.size());
       for (GenericResource r : dynaResources) {
          assertTrue(resource.getId().equals(r.getId()) || resource1.getId().equals(r.getId()));
@@ -98,7 +99,8 @@ public class GenericResourceRepositoryTest {
       assertEquals(resource2.getId(), dynaResources.get(0).getId());
 
       // Query by example using 2 fields.
-      dynaResources = repository.findByServiceIdAndJSONQuery(service.getId(), "{ \"foo\": 1234, \"bar\": \"other value\"}");
+      dynaResources = repository.findByServiceIdAndJSONQuery(service.getId(),
+            "{ \"foo\": 1234, \"bar\": \"other value\"}");
       assertEquals(1, dynaResources.size());
       assertEquals(resource1.getId(), dynaResources.get(0).getId());
 

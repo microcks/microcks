@@ -20,7 +20,7 @@ import java.util.Map;
 /**
  * Simple record wrapping a request dispatch criteria and its possibly enabled invocation context
  * @param dispatchCriteria The dispatch criteria for a request (mandatory)
- * @param requestContext The associated invocation context (optional ; may be null)
+ * @param requestContext   The associated invocation context (optional ; may be null)
  */
 record DispatchContext(String dispatchCriteria, Map<String, Object> requestContext) {
 }

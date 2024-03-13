@@ -32,6 +32,7 @@ public interface TestResultRepository extends MongoRepository<TestResult, String
    List<TestResult> findByServiceId(String serviceId);
 
    List<TestResult> findByServiceId(String serviceId, Pageable page);
+
    @Query("{ 'testDate' : { $gt: ?0 } }")
    List<TestResult> findAllWithTestDateAfter(Date date);
 

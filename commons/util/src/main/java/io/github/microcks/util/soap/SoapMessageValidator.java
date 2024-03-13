@@ -47,8 +47,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Helper class for validating Soap messages objects against their WSDL/XSD schemas. Supported versions
- * of Soap are Soap 1.1 and Soap 1.2.
+ * Helper class for validating Soap messages objects against their WSDL/XSD schemas. Supported versions of Soap are Soap
+ * 1.1 and Soap 1.2.
  * @author laurent
  */
 public class SoapMessageValidator {
@@ -105,16 +105,17 @@ public class SoapMessageValidator {
    /**
     * Validate a complete Soap message: Soap envelope + payload included into Soap body against a WSDL content.
     * @param wsdlContent The reference WSDL as a String
-    * @param partQName The qualified name of the element that is expected into Soap body.
-    * @param message The Soap message as a String
+    * @param partQName   The qualified name of the element that is expected into Soap body.
+    * @param message     The Soap message as a String
     * @param resourceUrl AN optional resource url where includes in WSDL may be resolved
     * @return A list of validation error that's empty if everything's ok.
     */
-   public static List<String> validateSoapMessage(String wsdlContent, QName partQName, String message, String resourceUrl) {
+   public static List<String> validateSoapMessage(String wsdlContent, QName partQName, String message,
+         String resourceUrl) {
       List<String> errors = new ArrayList<>();
 
       // Start validating envelope.
-      errors.addAll(validateSoapEnvelope( message));
+      errors.addAll(validateSoapEnvelope(message));
 
       try {
          // First thing is to parse WSDL to extract types schema.
@@ -122,14 +123,15 @@ public class SoapMessageValidator {
          factory.setNamespaceAware(true);
          DocumentBuilder documentBuilder = factory.newDocumentBuilder();
 
-         Element wsdlElement = documentBuilder.parse(new InputSource(new StringReader(wsdlContent))).getDocumentElement();
+         Element wsdlElement = documentBuilder.parse(new InputSource(new StringReader(wsdlContent)))
+               .getDocumentElement();
          Element wsdlTypes = XmlUtil.getUniqueDirectChild(wsdlElement, XmlUtil.WSDL_NS, "types");
          Element xsSchema = XmlUtil.getUniqueDirectChild(wsdlTypes, XmlUtil.XML_SCHEMA_NS, "schema");
 
          // Schema may not contain all the needed xmlns declaration found at the definitions level.
          // We have to report it before extracting a standalone schema.
          NamedNodeMap definitionsAttributes = wsdlElement.getAttributes();
-         for (int i=0; i<definitionsAttributes.getLength(); i++) {
+         for (int i = 0; i < definitionsAttributes.getLength(); i++) {
             Node attribute = definitionsAttributes.item(i);
             String name = attribute.getNodeName();
             if (name.startsWith("xmlns:") && !xsSchema.hasAttribute(name)) {
@@ -176,7 +178,8 @@ public class SoapMessageValidator {
 
          // Check soap message if the expected part.
          String expectedStartTag = "<" + nsToPrefix.get(partQName.getNamespaceURI()) + ":" + partQName.getLocalPart();
-         String expectedEndTag = "</" + nsToPrefix.get(partQName.getNamespaceURI()) + ":" + partQName.getLocalPart() + ">";
+         String expectedEndTag = "</" + nsToPrefix.get(partQName.getNamespaceURI()) + ":" + partQName.getLocalPart()
+               + ">";
          if (!body.startsWith(expectedStartTag) || !body.endsWith(expectedEndTag)) {
             errors.add("Expecting a " + partQName + " element but got another one");
          }

@@ -1,0 +1,66 @@
+asyncapi: 3.0.0
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User signed-up API
+  version: 0.3.0
+  description: Sample AsyncAPI for user signedup events
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent@microcks.io
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+defaultContentType: application/json
+channels:
+  user-signedup:
+    description: The topic on which user signed up events may be consumed
+    messages:
+      userSignedUp:
+        $ref: '#/components/messages/userSignedUp'
+operations:
+  publishUserSignedUps:
+    action: 'send'
+    channel:
+      $ref: '#/channels/user-signedup'
+    summary: Receive information about user signed up
+    messages:
+      - $ref: '#/channels/user-signedup/messages/userSignedUp'
+components:
+  messages:
+    userSignedUp:
+      description: An event describing that a user just signed up
+      contentType: avro/binary
+      schemaFormat: application/vnd.apache.avro+json;version=1.9.0
+      traits:
+        - $ref: './user-signedup-commons.yaml#/components/messageTraits/commonHeaders'
+      headers:
+        type: object
+        properties:
+          sentAt:
+            type: string
+            format: date-time
+            description: Date and time when the event was sent
+      payload:
+        schemaFormat: "application/vnd.apache.avro+json;version=1.9.0"
+        schema:
+          $ref: "./user-signedup.avsc#/User"
+      examples:
+        - name: laurent
+          summary: Example for Laurent user
+          headers:
+            my-app-header: 23
+            sentAt: "2020-03-11T08:03:28Z"
+          payload:
+            fullName: Laurent Broudoux
+            email: "laurent@microcks.io"
+            age: 41
+        - name: john
+          summary: Example for John Doe user
+          headers:
+            my-app-header: 24
+            sentAt: "2020-03-11T08:03:38Z"
+          payload:
+            fullName: John Doe
+            email: john@microcks.io
+            age: 36

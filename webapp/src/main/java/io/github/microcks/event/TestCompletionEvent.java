@@ -18,6 +18,7 @@ package io.github.microcks.event;
 import io.github.microcks.domain.TestResult;
 
 import org.springframework.context.ApplicationEvent;
+
 /**
  * Event raised when a Service Test is completed.
  * @author laurent

@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class CustomTestConformanceMetricRepositoryTest {
 
    @Autowired

@@ -42,8 +42,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an Apache Kafka Broker.
- * Endpoint URL should be specified using the following form: <code>kafka://{brokerhost[:port]}/{topic}[?option1=value1&amp;option2=value2]</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an Apache Kafka Broker. Endpoint
+ * URL should be specified using the following form:
+ * <code>kafka://{brokerhost[:port]}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
@@ -119,8 +120,8 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    }
 
    /**
-    * Close the resources used by this task. Namely the Kafka consumer(s) and
-    * the optionally created truststore holding Kafka client SSL credentials.
+    * Close the resources used by this task. Namely the Kafka consumer(s) and the optionally created truststore holding
+    * Kafka client SSL credentials.
     * @throws IOException should not happen.
     */
    @Override
@@ -166,7 +167,8 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
          // Configure schema registry credentials if any.
          if (hasOption(REGISTRY_USERNAME_OPTION) || hasOption(REGISTRY_AUTH_CREDENTIALS_SOURCE)) {
             props.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, optionsMap.get(REGISTRY_USERNAME_OPTION));
-            props.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, optionsMap.get(REGISTRY_AUTH_CREDENTIALS_SOURCE));
+            props.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE,
+                  optionsMap.get(REGISTRY_AUTH_CREDENTIALS_SOURCE));
          }
       } else {
          props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class.getName());
@@ -234,12 +236,13 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
    }
 
    /** Consume simple byte[] on default consumer. Fill messages array. */
-   private void consumeByteArray(List<ConsumedMessage> messages){
+   private void consumeByteArray(List<ConsumedMessage> messages) {
       long startTime = System.currentTimeMillis();
       long timeoutTime = startTime + specification.getTimeoutMS();
 
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
-         ConsumerRecords<String, byte[]> records = consumer.poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
+         ConsumerRecords<String, byte[]> records = consumer
+               .poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
 
          boolean oufOfOffsetRange = false;
          for (ConsumerRecord<String, byte[]> consumerRecord : records) {
@@ -268,7 +271,8 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       long timeoutTime = startTime + specification.getTimeoutMS();
 
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
-         ConsumerRecords<String, GenericRecord> records = avroConsumer.poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
+         ConsumerRecords<String, GenericRecord> records = avroConsumer
+               .poll(Duration.ofMillis(timeoutTime - System.currentTimeMillis()));
 
          boolean oufOfOffsetRange = false;
          for (ConsumerRecord<String, GenericRecord> consumerRecord : records) {
@@ -313,6 +317,7 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
          // Nothing to do on revocation.
       }
+
       @Override
       public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
          if (startOffset != null) {

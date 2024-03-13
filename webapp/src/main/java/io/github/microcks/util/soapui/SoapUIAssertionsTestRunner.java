@@ -52,8 +52,7 @@ import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.getConfigU
 import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.hasConfigDirectChild;
 
 /**
- * This is a utility class for running Service tests using assertions defined under a corresponding SoapUI
- * project.
+ * This is a utility class for running Service tests using assertions defined under a corresponding SoapUI project.
  * @author laurent
  */
 public class SoapUIAssertionsTestRunner extends HttpTestRunner {
@@ -85,7 +84,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
     * The URL of resources used for validation.
     * @return The URL of resources used for validation
     */
-   public String getResourceUrl(){
+   public String getResourceUrl() {
       return resourceUrl;
    }
 
@@ -93,7 +92,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
     * The URL of resources used for validation.
     * @param resourceUrl The URL of resources used for validation.
     */
-   public void setResourceUrl(String resourceUrl){
+   public void setResourceUrl(String resourceUrl) {
       this.resourceUrl = resourceUrl;
    }
 
@@ -109,7 +108,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
 
    @Override
    protected int extractTestReturnCode(Service service, Operation operation, Request request,
-                                       ClientHttpResponse httpResponse, String responseContent) {
+         ClientHttpResponse httpResponse, String responseContent) {
       // Stop timer and initialize code.
       long duration = System.currentTimeMillis() - startTimestamp;
       int code = TestReturn.SUCCESS_CODE;
@@ -129,7 +128,8 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
             documentBuilder = factory.newDocumentBuilder();
-            projectElement = documentBuilder.parse(new InputSource(new StringReader(soapuiProject.getContent()))).getDocumentElement();
+            projectElement = documentBuilder.parse(new InputSource(new StringReader(soapuiProject.getContent())))
+                  .getDocumentElement();
          } catch (Exception e) {
             log.error("Exception while parsing SoapUI resource content {}", soapuiProject.getName(), e);
             return TestReturn.FAILURE_CODE;
@@ -147,7 +147,8 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
             Map<String, String> configParams = buildParamsMapFromConfiguration(assertion);
 
             SoapUIAssertion sAssertion = AssertionFactory.intializeAssertion(type, configParams);
-            AssertionStatus status = sAssertion.assertResponse(new RequestResponseExchange(request, httpResponse, responseContent, duration),
+            AssertionStatus status = sAssertion.assertResponse(
+                  new RequestResponseExchange(request, httpResponse, responseContent, duration),
                   new ExchangeContext(service, operation, List.copyOf(cachedResources.values()), resourceUrl));
 
             if (status == AssertionStatus.FAILED) {
@@ -167,7 +168,8 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
    }
 
    @Override
-   protected String extractTestReturnMessage(Service service, Operation operation, Request request, ClientHttpResponse httpResponse) {
+   protected String extractTestReturnMessage(Service service, Operation operation, Request request,
+         ClientHttpResponse httpResponse) {
       StringBuilder builder = new StringBuilder();
       if (lastValidationErrors != null && !lastValidationErrors.isEmpty()) {
          for (String error : lastValidationErrors) {
@@ -195,8 +197,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
                   // Soap/Wsdl test request with operation reference.
                   operationName = getConfigUniqueDirectChild(config, "operation").getTextContent();
                   if (operation.getName().equals(operationName)) {
-                     results.put(testStep.getAttribute("name"),
-                           getConfigUniqueDirectChild(config, "request"));
+                     results.put(testStep.getAttribute("name"), getConfigUniqueDirectChild(config, "request"));
                   }
                } else if (config.hasAttribute("resourcePath")) {
                   // Rest test request with resourcePath as operation reference.

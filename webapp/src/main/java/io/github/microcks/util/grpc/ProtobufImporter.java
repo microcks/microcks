@@ -34,7 +34,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
@@ -45,8 +44,7 @@ import java.util.Base64;
 import java.util.List;
 
 /**
- * An implementation of MockRepositoryImporter that deals with Protobuf v3 specification
- * documents.
+ * An implementation of MockRepositoryImporter that deals with Protobuf v3 specification documents.
  * @author laurent
  */
 public class ProtobufImporter implements MockRepositoryImporter {
@@ -66,7 +64,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
    /**
     * Build a new importer.
-    * @param protoFilePath The path to local proto spec file
+    * @param protoFilePath     The path to local proto spec file
     * @param referenceResolver An optional resolver for references present into the Protobuf file
     * @throws IOException if project file cannot be found or read.
     */
@@ -78,12 +76,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
       protoFileName = protoFile.getName();
 
       // Prepare protoc arguments.
-      String[] args = {"-v3.21.8",
-            "--include_std_types",
-            "--include_imports",
-            "--proto_path=" + protoDirectory,
-            "--descriptor_set_out=" + protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT,
-            protoFileName};
+      String[] args = { "-v3.21.8", "--include_std_types", "--include_imports", "--proto_path=" + protoDirectory,
+            "--descriptor_set_out=" + protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT, protoFileName };
 
       try {
          // Read spec bytes.
@@ -121,14 +115,14 @@ public class ProtobufImporter implements MockRepositoryImporter {
          // Retrieve version from package name.
          // org.acme package => org.acme version
          // org.acme.v1 package => v1 version
-         String packageName =  fdp.getPackage();
+         String packageName = fdp.getPackage();
          String[] parts = packageName.split("\\.");
          String version = (parts.length > 2 ? parts[parts.length - 1] : packageName);
 
          for (DescriptorProtos.ServiceDescriptorProto sdp : fdp.getServiceList()) {
             // Build a new service.
             Service service = new Service();
-            service.setName(sdp.getName());
+            service.setName(packageName + "." + sdp.getName());
             service.setVersion(version);
             service.setType(ServiceType.GRPC);
             service.setXmlNS(packageName);
@@ -187,9 +181,9 @@ public class ProtobufImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
-      List<Exchange> result = new ArrayList<>();
-      return result;
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
+      return new ArrayList<>();
    }
 
    /**
@@ -197,8 +191,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
     */
    private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles) {
       String line = null;
-      try {
-         BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8);
+      try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
          while ((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.startsWith("import ")) {
@@ -221,7 +214,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
                   Path importPath = protoFilePath.getParent().resolve(importStr);
                   if (!Files.exists(importPath)) {
                      // Not there, so resolve it remotely and write to local file for protoc.
-                     String importContent = referenceResolver.getHttpReferenceContent(importStr, StandardCharsets.UTF_8);
+                     String importContent = referenceResolver.getHttpReferenceContent(importStr,
+                           StandardCharsets.UTF_8);
                      try {
                         Files.createDirectories(importPath.getParent());
                         Files.createFile(importPath);

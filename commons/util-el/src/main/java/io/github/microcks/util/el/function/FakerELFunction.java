@@ -19,9 +19,9 @@ import net.datafaker.Faker;
 import io.github.microcks.util.el.EvaluationContext;
 
 /**
- * This is a base class for function that are using Datafaker
- * (see <a href="https://www.datafaker.net">Datafaker</a>). This base class provides a convenient method
- * for retrieving or lazy loading a Faker that will be put into {@code EvaluationContext}.
+ * This is a base class for function that are using Datafaker (see <a href="https://www.datafaker.net">Datafaker</a>).
+ * This base class provides a convenient method for retrieving or lazy loading a Faker that will be put into
+ * {@code EvaluationContext}.
  * @author laurent
  */
 public abstract class FakerELFunction implements ELFunction {

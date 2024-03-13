@@ -24,6 +24,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 /**
  * This is a test case for SwaggerSchemaValidator utility.
  * @author laurent
@@ -33,19 +34,14 @@ public class SwaggerSchemaValidatorTest {
    @Test
    public void testFullProcedureFromSwaggerResource() {
       String openAPIText = null;
-      String jsonText = "{\n" +
-            "  \"name\": \"Rodenbach\",\n" +
-            "  \"country\": \"Belgium\",\n" +
-            "  \"type\": \"Fruit\",\n" +
-            "  \"rating\": 4.3,\n" +
-            "  \"status\": \"available\"\n" +
-            "}";
+      String jsonText = "{\n" + "  \"name\": \"Rodenbach\",\n" + "  \"country\": \"Belgium\",\n"
+            + "  \"type\": \"Fruit\",\n" + "  \"rating\": 4.3,\n" + "  \"status\": \"available\"\n" + "}";
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
       try {
          // Load full specification from file.
-         openAPIText =  FileUtils.readFileToString(
+         openAPIText = FileUtils.readFileToString(
                new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml"));
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);

@@ -78,12 +78,14 @@ public class JsonPathContentAssertion extends WildcardMatchingAssertion {
 
          if (allowWildcards) {
             if (!isSimilar(expectedContent, result)) {
-               errorMessage = "Comparison failed for path [" + path + "], expecting [" + expectedContent + "], actual was [" + result + "]";
+               errorMessage = "Comparison failed for path [" + path + "], expecting [" + expectedContent
+                     + "], actual was [" + result + "]";
                return AssertionStatus.FAILED;
             }
          } else {
             if (!expectedContent.equals(result)) {
-               errorMessage = "Comparison failed for path [" + path + "], expecting [" + expectedContent + "], actual was [" + result + "]";
+               errorMessage = "Comparison failed for path [" + path + "], expecting [" + expectedContent
+                     + "], actual was [" + result + "]";
                return AssertionStatus.FAILED;
             }
          }

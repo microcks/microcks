@@ -25,8 +25,8 @@ import java.util.List;
  * Repository interface for DailyStatistic domain objects.
  * @author laurent
  */
-public interface DailyStatisticRepository extends MongoRepository<DailyStatistic, String>,
-      CustomDailyStatisticRepository {
+public interface DailyStatisticRepository
+      extends MongoRepository<DailyStatistic, String>, CustomDailyStatisticRepository {
 
    List<DailyStatistic> findByDayAndServiceNameAndServiceVersion(String day, String serviceName, String serviceVersion);
 }

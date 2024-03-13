@@ -16,10 +16,10 @@
 package io.github.microcks.util.el;
 
 /**
- * An engine that can evaluate String templates holding some Expression Language {@code Expression}.
- * Engine can be customized setting new expression delimiters (prefix and suffix). It embeds an
- * {@code EvaluationContext} that can also be customized with variables and function registration before
- * template evaluation using the {@code getValue()} method.
+ * An engine that can evaluate String templates holding some Expression Language {@code Expression}. Engine can be
+ * customized setting new expression delimiters (prefix and suffix). It embeds an {@code EvaluationContext} that can
+ * also be customized with variables and function registration before template evaluation using the {@code getValue()}
+ * method.
  * @author laurent
  */
 public class TemplateEngine {
@@ -32,11 +32,13 @@ public class TemplateEngine {
 
    private EvaluationContext context = new EvaluationContext();
 
-   protected TemplateEngine() {}
+   protected TemplateEngine() {
+   }
 
    public String getExpressionPrefix() {
       return expressionPrefix;
    }
+
    public void setExpressionPrefix(String expressionPrefix) {
       this.expressionPrefix = expressionPrefix;
    }
@@ -44,6 +46,7 @@ public class TemplateEngine {
    public String getExpressionSuffix() {
       return expressionSuffix;
    }
+
    public void setExpressionSuffix(String expressionSuffix) {
       this.expressionSuffix = expressionSuffix;
    }
@@ -61,7 +64,8 @@ public class TemplateEngine {
       StringBuilder builder = new StringBuilder();
 
       // Just delegate parsing stuffs to Expression parser to retrieve all the expressions ordered.
-      Expression[] expressions = ExpressionParser.parseExpressions(template, context, expressionPrefix, expressionSuffix);
+      Expression[] expressions = ExpressionParser.parseExpressions(template, context, expressionPrefix,
+            expressionSuffix);
 
       // Now just go through expressions and evaluate them.
       for (Expression expression : expressions) {

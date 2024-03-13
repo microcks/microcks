@@ -46,11 +46,11 @@ public class AvroUtil {
 
    /**
     * Convert a JSON string into an Avro binary representation using specified schema.
-    * @param json A JSON string to convert to Avro
+    * @param json       A JSON string to convert to Avro
     * @param avroSchema String representation of an Avro Schema to use for conversion
     * @return The Avro binary representation of JSON
     * @throws AvroTypeException if there's a mismatch between JSON string and Avro Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
    public static byte[] jsonToAvro(String json, String avroSchema) throws AvroTypeException, IOException {
       return jsonToAvro(json, new Schema.Parser().parse(avroSchema));
@@ -58,11 +58,11 @@ public class AvroUtil {
 
    /**
     * Convert a JSON string into an Avro binary representation using specified schema.
-    * @param json A JSON string to convert to Avro
+    * @param json       A JSON string to convert to Avro
     * @param avroSchema The Avro Schema to use for conversion
     * @return The Avro binary representation of JSON
     * @throws AvroTypeException if there's a mismatch between JSON string and Avro Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
    public static byte[] jsonToAvro(String json, Schema avroSchema) throws AvroTypeException, IOException {
       // Prepare reader an input stream from Json string.
@@ -91,25 +91,25 @@ public class AvroUtil {
 
    /**
     * Convert a JSON string into an Avro GenericRecord object using specified schema.
-    * @param json A JSON string to convert to Avro
+    * @param json       A JSON string to convert to Avro
     * @param avroSchema String representation of an Avro Schema to use for conversion
     * @return The GenericRecord representation of JSON
     * @throws AvroTypeException if there's a mismatch between JSON string and Avro Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
-   public static GenericRecord jsonToAvroRecord(String json, String avroSchema)  throws AvroTypeException, IOException {
+   public static GenericRecord jsonToAvroRecord(String json, String avroSchema) throws AvroTypeException, IOException {
       return jsonToAvroRecord(json, new Schema.Parser().parse(avroSchema));
    }
 
    /**
     * Convert a JSON string into an Avro GenericRecord object using specified schema.
-    * @param json A JSON string to convert to Avro
+    * @param json       A JSON string to convert to Avro
     * @param avroSchema The Avro Schema to use for conversion
     * @return The GenericRecord representation of JSON
     * @throws AvroTypeException if there's a mismatch between JSON string and Avro Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
-   public static GenericRecord jsonToAvroRecord(String json, Schema avroSchema)  throws AvroTypeException, IOException {
+   public static GenericRecord jsonToAvroRecord(String json, Schema avroSchema) throws AvroTypeException, IOException {
       // Prepare reader an input stream from Json string.
       GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
       InputStream input = new ByteArrayInputStream(json.getBytes("UTF-8"));
@@ -124,7 +124,7 @@ public class AvroUtil {
     * @param avroSchema The Avro Schema to use for conversion
     * @return The JSON string representing Avro binary
     * @throws AvroTypeException if there's a mismatch between Avro binary and Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
    public static String avroToJson(byte[] avroBinary, String avroSchema) throws AvroTypeException, IOException {
       return avroToJson(avroBinary, new Schema.Parser().parse(avroSchema));
@@ -136,7 +136,7 @@ public class AvroUtil {
     * @param avroSchema The Avro Schema to use for conversion
     * @return The JSON string representing Avro binary
     * @throws AvroTypeException if there's a mismatch between Avro binary and Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
    public static String avroToJson(byte[] avroBinary, Schema avroSchema) throws AvroTypeException, IOException {
       DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(avroSchema);
@@ -152,9 +152,10 @@ public class AvroUtil {
     * @param avroSchema The Avro Schema to use for conversion
     * @return The JSON string representing Avro binary
     * @throws AvroTypeException if there's a mismatch between Avro binary and Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
-   public static GenericRecord avroToAvroRecord(byte[] avroBinary, String avroSchema) throws AvroTypeException, IOException {
+   public static GenericRecord avroToAvroRecord(byte[] avroBinary, String avroSchema)
+         throws AvroTypeException, IOException {
       return avroToAvroRecord(avroBinary, new Schema.Parser().parse(avroSchema));
    }
 
@@ -164,9 +165,10 @@ public class AvroUtil {
     * @param avroSchema The Avro Schema to use for conversion
     * @return The JSON string representing Avro binary
     * @throws AvroTypeException if there's a mismatch between Avro binary and Schema
-    * @throws IOException if something goes wrong during conversion
+    * @throws IOException       if something goes wrong during conversion
     */
-   public static GenericRecord avroToAvroRecord(byte[] avroBinary, Schema avroSchema) throws AvroTypeException, IOException {
+   public static GenericRecord avroToAvroRecord(byte[] avroBinary, Schema avroSchema)
+         throws AvroTypeException, IOException {
       DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(avroSchema);
       Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
 
@@ -174,11 +176,10 @@ public class AvroUtil {
    }
 
    /**
-    * Validate that a datum object (typically a GenericRecord read somewhere but the method
-    * signature is loosely coupled to make it recursive friendly) is compliant with an Avro
-    * schema.
+    * Validate that a datum object (typically a GenericRecord read somewhere but the method signature is loosely coupled
+    * to make it recursive friendly) is compliant with an Avro schema.
     * @param schema The Avro Schema to validate datum against
-    * @param datum The Object datum to validate
+    * @param datum  The Object datum to validate
     * @return True if the object is compliant with supplied schema, false otherwise.
     */
    public static boolean validate(Schema schema, Object datum) {
@@ -201,8 +202,8 @@ public class AvroUtil {
 
    /**
     * Get validation errors of a datum object regarding Avro schema.
-    * @param schema The Schema to check datum object against
-    * @param datum The datum object to validate
+    * @param schema    The Schema to check datum object against
+    * @param datum     The datum object to validate
     * @param fieldName The name of the field we're currently validating
     * @return A list of String representing validation errors. List may be empty if no error found.
     */

@@ -55,8 +55,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Amazon Simple Notification Service (SNS).
- * Endpoint URL should be specified using the following form: <code>sns://{region}/{topic}[?option1=value1&amp;option2=value2]</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Amazon Simple Notification Service
+ * (SNS). Endpoint URL should be specified using the following form:
+ * <code>sns://{region}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
@@ -119,10 +120,8 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
       long timeoutTime = startTime + specification.getTimeoutMS();
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
          // Start polling/receiving messages with a max wait time and a max number.
-         ReceiveMessageRequest messageRequest = ReceiveMessageRequest.builder()
-               .queueUrl(queue.url())
-               .maxNumberOfMessages(10)
-               .waitTimeSeconds((int) (timeoutTime - System.currentTimeMillis()) / 1000)
+         ReceiveMessageRequest messageRequest = ReceiveMessageRequest.builder().queueUrl(queue.url())
+               .maxNumberOfMessages(10).waitTimeSeconds((int) (timeoutTime - System.currentTimeMillis()) / 1000)
                .build();
 
          List<Message> receivedMessages = sqsClient.receiveMessage(messageRequest).messages();
@@ -142,12 +141,8 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
    @Override
    public void close() throws IOException {
       // Remove subscription on SNS side, then delete SQS queue.
-      snsClient.unsubscribe(UnsubscribeRequest.builder()
-                  .subscriptionArn(subscriptionArn)
-                  .build());
-      sqsClient.deleteQueue(DeleteQueueRequest.builder()
-                  .queueUrl(queue.url())
-                  .build());
+      snsClient.unsubscribe(UnsubscribeRequest.builder().subscriptionArn(subscriptionArn).build());
+      sqsClient.deleteQueue(DeleteQueueRequest.builder().queueUrl(queue.url()).build());
       // Close both clients.
       if (snsClient != null) {
          snsClient.close();
@@ -177,21 +172,17 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
             && specification.getSecret().getPassword() != null) {
          String accessKeyId = specification.getSecret().getUsername();
          String secretKeyId = specification.getSecret().getPassword();
-         credentialsProvider = StaticCredentialsProvider.create(
-               AwsBasicCredentials.create(accessKeyId, secretKeyId)
-         );
+         credentialsProvider = StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretKeyId));
       } else {
          credentialsProvider = DefaultCredentialsProvider.create();
       }
 
       // Build the SNS client with provided region and credentials.
-      SnsClientBuilder snsClientBuilder = SnsClient.builder()
-            .region(Region.of(region))
+      SnsClientBuilder snsClientBuilder = SnsClient.builder().region(Region.of(region))
             .credentialsProvider(credentialsProvider);
 
       // Build the SQS client with provided region and credentials.
-      SqsClientBuilder sqsClientBuilder = SqsClient.builder()
-            .region(Region.of(region))
+      SqsClientBuilder sqsClientBuilder = SqsClient.builder().region(Region.of(region))
             .credentialsProvider(credentialsProvider);
 
       // Override endpoint urls if provided.
@@ -214,13 +205,8 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
       String subscriptionQueueName = topic + SUBSCRIPTION_PREFIX + "-" + specification.getTestResultId();
       queue = createQueue(subscriptionQueueName, topicArn);
 
-      SubscribeRequest subscribeRequest = SubscribeRequest.builder()
-            .protocol("sqs")
-            .endpoint(queue.arn())
-            .topicArn(topicArn)
-            .attributes(Map.of("RawMessageDelivery", "true"))
-            .returnSubscriptionArn(true)
-            .build();
+      SubscribeRequest subscribeRequest = SubscribeRequest.builder().protocol("sqs").endpoint(queue.arn())
+            .topicArn(topicArn).attributes(Map.of("RawMessageDelivery", "true")).returnSubscriptionArn(true).build();
 
       subscriptionArn = snsClient.subscribe(subscribeRequest).subscriptionArn();
    }
@@ -263,38 +249,22 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
     */
    private QueueCoordinates createQueue(String queueName, String topicArn) {
       // 3 steps operation: 1st create a queue.
-      CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-            .queueName(queueName)
-            .build();
+      CreateQueueRequest createQueueRequest = CreateQueueRequest.builder().queueName(queueName).build();
       String queueURL = sqsClient.createQueue(createQueueRequest).queueUrl();
 
       // Now read its attributes, requesting the ARN only.
       GetQueueAttributesResponse queueAttributes = sqsClient.getQueueAttributes(GetQueueAttributesRequest.builder()
-            .queueUrl(queueURL)
-            .attributeNames(QueueAttributeName.QUEUE_ARN)
-            .build());
+            .queueUrl(queueURL).attributeNames(QueueAttributeName.QUEUE_ARN).build());
       String queueArn = queueAttributes.attributes().get(QueueAttributeName.QUEUE_ARN);
 
       // Finally set the queue policy to allow SNS topic to fanout to queue.
-      sqsClient.setQueueAttributes(SetQueueAttributesRequest.builder()
-            .queueUrl(queueURL)
-            .attributes(Map.of(QueueAttributeName.POLICY, "{\n" +
-                  "  \"Statement\": [\n" +
-                  "    {\n" +
-                  "      \"Effect\": \"Allow\",\n" +
-                  "      \"Principal\": {\n" +
-                  "        \"Service\": \"sns.amazonaws.com\"\n" +
-                  "      },\n" +
-                  "      \"Action\": \"sqs:SendMessage\",\n" +
-                  "      \"Resource\": \"" + queueArn + "\",\n" +
-                  "      \"Condition\": {\n" +
-                  "        \"ArnEquals\": {\n" +
-                  "          \"aws:SourceArn\": \"" + topicArn + "\"\n" +
-                  "        }\n" +
-                  "      }\n" +
-                  "    }\n" +
-                  "  ]\n" +
-                  "}"))
+      sqsClient.setQueueAttributes(SetQueueAttributesRequest.builder().queueUrl(queueURL)
+            .attributes(Map.of(QueueAttributeName.POLICY,
+                  "{\n" + "  \"Statement\": [\n" + "    {\n" + "      \"Effect\": \"Allow\",\n"
+                        + "      \"Principal\": {\n" + "        \"Service\": \"sns.amazonaws.com\"\n" + "      },\n"
+                        + "      \"Action\": \"sqs:SendMessage\",\n" + "      \"Resource\": \"" + queueArn + "\",\n"
+                        + "      \"Condition\": {\n" + "        \"ArnEquals\": {\n" + "          \"aws:SourceArn\": \""
+                        + topicArn + "\"\n" + "        }\n" + "      }\n" + "    }\n" + "  ]\n" + "}"))
             .build());
 
       return new QueueCoordinates(queueName, queueURL, queueArn);
@@ -315,5 +285,6 @@ public class AmazonSNSMessageConsumptionTask implements MessageConsumptionTask {
       return results;
    }
 
-   protected record QueueCoordinates (String name, String url, String arn) {}
+   protected record QueueCoordinates(String name, String url, String arn) {
+   }
 }

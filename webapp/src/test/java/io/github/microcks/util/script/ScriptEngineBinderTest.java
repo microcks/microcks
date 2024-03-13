@@ -122,7 +122,7 @@ public class ScriptEngineBinderTest {
             import io.github.microcks.util.soapui.XmlHolder
             def holder = new XmlHolder( mockRequest.requestContent )
             def name = holder["//name"]
-                        
+
             if (name == "Andrew"){
                 return "Andrew Response"
             } else if (name == "Karla"){
@@ -165,7 +165,7 @@ public class ScriptEngineBinderTest {
             import com.eviware.soapui.support.XmlHolder
             def holder = new XmlHolder( mockRequest.requestContent )
             def name = holder["//name"]
-                        
+
             if (name == "Andrew"){
                 return "Andrew Response"
             } else if (name == "Karla"){

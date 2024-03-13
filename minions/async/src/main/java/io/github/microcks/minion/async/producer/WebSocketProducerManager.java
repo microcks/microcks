@@ -84,7 +84,8 @@ public class WebSocketProducerManager {
          version = version.replace('+', ' ');
       }
 
-      Set<AsyncMockDefinition> definitions = asyncMockRepository.getMockDefinitionsByServiceAndVersion(service, version);
+      Set<AsyncMockDefinition> definitions = asyncMockRepository.getMockDefinitionsByServiceAndVersion(service,
+            version);
       if (definitions != null && !definitions.isEmpty()) {
          sessionRegistry.putSession(session);
       } else {
@@ -93,7 +94,8 @@ public class WebSocketProducerManager {
             session.close(new CloseReason(CloseReason.CloseCodes.CANNOT_ACCEPT,
                   "No mock available on " + session.getRequestURI()));
          } catch (Exception e) {
-            logger.infof("Caught an exception while rejecting a WebSocket opening on unmanaged '%'", session.getRequestURI().toString());
+            logger.infof("Caught an exception while rejecting a WebSocket opening on unmanaged '%'",
+                  session.getRequestURI().toString());
          }
       }
    }
@@ -104,7 +106,8 @@ public class WebSocketProducerManager {
    }
 
    @OnError
-   public void onError(Session session, @PathParam("service") String service, @PathParam("version") String version, Throwable throwable) {
+   public void onError(Session session, @PathParam("service") String service, @PathParam("version") String version,
+         Throwable throwable) {
       sessionRegistry.removeSession(session);
    }
 
@@ -116,23 +119,19 @@ public class WebSocketProducerManager {
 
    /**
     * Get the Websocket endpoint URI corresponding to a AsyncMockDefinition, sanitizing all parameters.
-    * @param definition The AsyncMockDefinition
+    * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic
     * @return The request URI corresponding to def and message
     */
    public String getRequestURI(AsyncMockDefinition definition, EventMessage eventMessage) {
-
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "+");
+
       // Produce version name part of topic name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "+");
+
       // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-      // Replace the parts
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       return "/api/ws/" + serviceName + "/" + versionName + "/" + operationName;
    }

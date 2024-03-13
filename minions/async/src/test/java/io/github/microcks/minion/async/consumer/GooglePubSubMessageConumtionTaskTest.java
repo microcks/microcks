@@ -29,20 +29,16 @@ public class GooglePubSubMessageConumtionTaskTest {
    @Test
    public void testAcceptEndpoint() {
 
-      assertTrue(GooglePubSubMessageConsumptionTask
-            .acceptEndpoint("googlepubsub://my-own-project-id/my-topic"));
+      assertTrue(GooglePubSubMessageConsumptionTask.acceptEndpoint("googlepubsub://my-own-project-id/my-topic"));
    }
 
    @Test
    public void testAcceptEndpointFailures() {
 
-      assertFalse(GooglePubSubMessageConsumptionTask
-            .acceptEndpoint("googlepubsub:///my-own-project-id"));
+      assertFalse(GooglePubSubMessageConsumptionTask.acceptEndpoint("googlepubsub:///my-own-project-id"));
 
-      assertFalse(GooglePubSubMessageConsumptionTask
-            .acceptEndpoint("googlepubsub:///my-own-project-id/my/topic/name"));
+      assertFalse(GooglePubSubMessageConsumptionTask.acceptEndpoint("googlepubsub:///my-own-project-id/my/topic/name"));
 
-      assertFalse(GooglePubSubMessageConsumptionTask
-            .acceptEndpoint("rabbit://localhost/x/testChannel"));
+      assertFalse(GooglePubSubMessageConsumptionTask.acceptEndpoint("rabbit://localhost/x/testChannel"));
    }
 }

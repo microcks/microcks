@@ -136,31 +136,29 @@ public class SoapMessageValidatorTest {
    public void testValidateSoapMessage() {
       String wsdlContent = null;
       try {
-         wsdlContent = new String(Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/soap/HelloService.wsdl")), StandardCharsets.UTF_8);
+         wsdlContent = new String(
+               Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/soap/HelloService.wsdl")),
+               StandardCharsets.UTF_8);
       } catch (Exception e) {
          fail("No exception should not occur here");
       }
 
       List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
-            new QName("http://www.example.com/hello", "sayHelloResponse"),
-            validSoap, "http://localhost:8080");
+            new QName("http://www.example.com/hello", "sayHelloResponse"), validSoap, "http://localhost:8080");
       assertTrue(errors.isEmpty());
 
       errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
-            new QName("http://www.example.com/hello", "sayHelloResponse"),
-            validSoapNSOnBody, "http://localhost:8080");
+            new QName("http://www.example.com/hello", "sayHelloResponse"), validSoapNSOnBody, "http://localhost:8080");
       assertTrue(errors.isEmpty());
 
       errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
-            new QName("http://www.example.com/hello", "sayHelloResponse"),
-            validSoapRequest, "http://localhost:8080");
+            new QName("http://www.example.com/hello", "sayHelloResponse"), validSoapRequest, "http://localhost:8080");
       assertFalse(errors.isEmpty());
       assertEquals(1, errors.size());
       assertTrue(errors.get(0).contains("Expecting a {http://www.example.com/hello}sayHelloResponse element"));
 
       errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
-            new QName("http://www.example.com/hello", "sayHelloResponse"),
-            invalidSoapMessage, "http://localhost:8080");
+            new QName("http://www.example.com/hello", "sayHelloResponse"), invalidSoapMessage, "http://localhost:8080");
       assertFalse(errors.isEmpty());
       assertEquals(1, errors.size());
       assertTrue(errors.get(0).contains("foo"));
@@ -181,14 +179,15 @@ public class SoapMessageValidatorTest {
 
       String wsdlContent = null;
       try {
-         wsdlContent = new String(Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/soap/HelloService.wsdl")), StandardCharsets.UTF_8);
+         wsdlContent = new String(
+               Files.readAllBytes(Paths.get("target/test-classes/io/github/microcks/util/soap/HelloService.wsdl")),
+               StandardCharsets.UTF_8);
       } catch (Exception e) {
          fail("No exception should not occur here");
       }
 
       List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlContent,
-            new QName("http://www.example.com/hello", "sayHello"),
-            soapMessage, "http://localhost:8080");
+            new QName("http://www.example.com/hello", "sayHello"), soapMessage, "http://localhost:8080");
       assertTrue(errors.isEmpty());
    }
 }

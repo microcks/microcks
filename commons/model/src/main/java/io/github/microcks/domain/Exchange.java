@@ -18,13 +18,9 @@ package io.github.microcks.domain;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-      include = JsonTypeInfo.As.PROPERTY,
-      property = "type")
-@JsonSubTypes({
-      @JsonSubTypes.Type(value = RequestResponsePair.class, name = "reqRespPair"),
-      @JsonSubTypes.Type(value = UnidirectionalEvent.class, name = "unidirEvent")
-})
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
+@JsonSubTypes({ @JsonSubTypes.Type(value = RequestResponsePair.class, name = "reqRespPair"),
+      @JsonSubTypes.Type(value = UnidirectionalEvent.class, name = "unidirEvent") })
 /**
  * Abstract bean representing a Service or API Exchange..
  * @author laurent

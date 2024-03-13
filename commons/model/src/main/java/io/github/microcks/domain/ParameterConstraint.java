@@ -16,8 +16,7 @@
 package io.github.microcks.domain;
 
 /**
- * Companion object for Operation that may be used to express constraints on
- * request parameters.
+ * Companion object for Operation that may be used to express constraints on request parameters.
  * @author laurent
  */
 public class ParameterConstraint {

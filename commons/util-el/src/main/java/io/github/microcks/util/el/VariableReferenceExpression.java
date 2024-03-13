@@ -49,7 +49,7 @@ public class VariableReferenceExpression implements Expression {
    private static final Pattern ARRAY_INDEX_PATTERN = Pattern.compile(ARRAY_INDEX_REGEXP);
    private static final Pattern MAP_INDEX_PATTERN = Pattern.compile(MAP_INDEX_REGEXP);
 
-   private static final String[] PROPERTY_NAME_DELIMITERS = {"/", "["};
+   private static final String[] PROPERTY_NAME_DELIMITERS = { "/", "[" };
 
    private Object variable;
    private String pathExpression;
@@ -58,7 +58,7 @@ public class VariableReferenceExpression implements Expression {
 
    /**
     * Create a new expression with a variable and a path (property + sub-query expression).
-    * @param variable Bean from whom to extract value
+    * @param variable       Bean from whom to extract value
     * @param pathExpression Path expression to get value from root object (property name + path sub-query)
     */
    public VariableReferenceExpression(Object variable, String pathExpression) {
@@ -77,6 +77,7 @@ public class VariableReferenceExpression implements Expression {
    public Object getVariable() {
       return variable;
    }
+
    public void setVariable(Object variable) {
       this.variable = variable;
    }
@@ -84,6 +85,7 @@ public class VariableReferenceExpression implements Expression {
    public String getPathExpression() {
       return pathExpression;
    }
+
    public void setPathExpression(String pathExpression) {
       this.pathExpression = pathExpression;
    }
@@ -112,9 +114,9 @@ public class VariableReferenceExpression implements Expression {
       Object variableValue = getProperty(variable, propertyName);
 
       if (log.isDebugEnabled()) {
-         log.debug("propertyName: " + propertyName);
-         log.debug("propertyPath: " + propertyPath);
-         log.debug("variableValue: " + variableValue);
+         log.debug("propertyName: {}", propertyName);
+         log.debug("propertyPath: {}", propertyPath);
+         log.debug("variableValue: {}", variableValue);
       }
 
       if (propertyPath != null) {
@@ -137,11 +139,12 @@ public class VariableReferenceExpression implements Expression {
                Matcher m = ARRAY_INDEX_PATTERN.matcher(propertyPath);
                if (m.matches()) {
                   String arrayIndex = m.group(1);
-                  Object[] variableValues = (Object[])variableValue;
+                  Object[] variableValues = (Object[]) variableValue;
                   try {
                      variableValue = variableValues[Integer.parseInt(arrayIndex)];
                   } catch (ArrayIndexOutOfBoundsException ae) {
-                     log.warn("Expression asked for " + arrayIndex + " but array is smaller (" + variableValues.length + "). Returning null.");
+                     log.warn("Expression asked for " + arrayIndex + " but array is smaller (" + variableValues.length
+                           + "). Returning null.");
                      variableValue = null;
                   }
                }
@@ -151,7 +154,7 @@ public class VariableReferenceExpression implements Expression {
                Matcher m = MAP_INDEX_PATTERN.matcher(propertyPath);
                if (m.matches()) {
                   String mapKey = m.group(1);
-                  Map variableValues = (Map)variableValue;
+                  Map variableValues = (Map) variableValue;
                   variableValue = variableValues.get(mapKey);
                }
             }
@@ -162,9 +165,9 @@ public class VariableReferenceExpression implements Expression {
    }
 
    /**
-    * Fetch a property from an object. For example of you wanted to get the foo property on a bar
-    * object you would normally call {@code bar.getFoo()}.
-    * @param obj The object whose property you want to fetch
+    * Fetch a property from an object. For example of you wanted to get the foo property on a bar object you would
+    * normally call {@code bar.getFoo()}.
+    * @param obj      The object whose property you want to fetch
     * @param property The property name
     * @return The value of the property or null if it does not exist.
     */
@@ -176,8 +179,7 @@ public class VariableReferenceExpression implements Expression {
          Class<?> clazz = obj.getClass();
          Method method = clazz.getMethod(methodName);
          result = method.invoke(obj);
-      }
-      catch (Exception e) {
+      } catch (Exception e) {
          // Do nothing, we'll return the default value
          log.warn(property + " property was requested on " + obj.getClass() + " but cannot find a valid getter", e);
       }

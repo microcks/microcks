@@ -33,12 +33,14 @@ public class NotSoapFaultAssertion implements SoapUIAssertion {
    private static Logger log = LoggerFactory.getLogger(NotSoapFaultAssertion.class);
 
    /** Regular expression pattern for capturing Soap Fault name from body. */
-   private static final Pattern FAULT_CAPTURE_PATTERN = Pattern.compile("(.*):Body>(\\s*)<((\\w+):|)Fault(.*)(/)?>(.*)", Pattern.DOTALL);
+   private static final Pattern FAULT_CAPTURE_PATTERN = Pattern.compile("(.*):Body>(\\s*)<((\\w+):|)Fault(.*)(/)?>(.*)",
+         Pattern.DOTALL);
 
    private String errorMessage;
 
    @Override
-   public void configure(Map<String, String> configParams) {}
+   public void configure(Map<String, String> configParams) {
+   }
 
    @Override
    public AssertionStatus assertResponse(RequestResponseExchange exchange, ExchangeContext context) {

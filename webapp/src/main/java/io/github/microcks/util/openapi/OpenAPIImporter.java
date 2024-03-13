@@ -40,6 +40,9 @@ import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,8 +59,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * An implementation of MockRepositoryImporter that deals with OpenAPI v3.x.x specification
- * file ; whether encoding into JSON or YAML documents.
+ * An implementation of MockRepositoryImporter that deals with OpenAPI v3.x.x specification file ; whether encoding into
+ * JSON or YAML documents.
  * @author laurent
  */
 public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
@@ -65,7 +68,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(OpenAPIImporter.class);
 
-   private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head", "patch", "trace");
+   private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head",
+         "patch", "trace");
 
    private static final String PARAMETERS_NODE = "parameters";
    private static final String PARAMETERS_QUERY_VALUE = "query";
@@ -76,7 +80,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local OpenAPI spec file
-    * @param referenceResolver An optional resolver for references present into the OpenAPI file
+    * @param referenceResolver     An optional resolver for references present into the OpenAPI file
     * @throws IOException if project file cannot be found or read.
     */
    public OpenAPIImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
@@ -96,7 +100,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       // Complete metadata if specified via extension.
       if (rootSpecification.path("info").has(MetadataExtensions.MICROCKS_EXTENSION)) {
          Metadata metadata = new Metadata();
-         MetadataExtractor.completeMetadata(metadata, rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
+         MetadataExtractor.completeMetadata(metadata,
+               rootSpecification.path("info").path(MetadataExtensions.MICROCKS_EXTENSION));
          service.setMetadata(metadata);
       }
 
@@ -122,7 +127,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          name += ".json";
       }
 
-      // Build a brand new resource just with spec content.
+      // Build a brand-new resource just with spec content.
       Resource resource = new Resource();
       resource.setName(name);
       resource.setType(ResourceType.OPEN_API_SPEC);
@@ -137,7 +142,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       Map<Request, Response> result = new HashMap<>();
 
       // Iterate on specification "paths" nodes.
@@ -148,7 +154,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          JsonNode pathValue = followRefIfAny(path.getValue());
 
          // Find examples fragments defined at the path level.
-         Map<String, Map<String, String>> pathPathParametersByExample = extractParametersByExample(pathValue, "path");
+         Map<String, Multimap<String, String>> pathPathParametersByExample = extractParametersByExample(pathValue,
+               "path");
 
          // Iterate on specification path, "verbs" nodes.
          Iterator<Entry<String, JsonNode>> verbs = pathValue.fields();
@@ -159,10 +166,13 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             // Find the correct operation.
             if (operation.getName().equals(verbName.toUpperCase() + " " + pathName.trim())) {
                // Find examples fragments defined at the verb level.
-               Map<String, Map<String, String>> pathParametersByExample = extractParametersByExample(verb.getValue(), "path");
+               Map<String, Multimap<String, String>> pathParametersByExample = extractParametersByExample(
+                     verb.getValue(), "path");
                pathParametersByExample.putAll(pathPathParametersByExample);
-               Map<String, Map<String, String>> queryParametersByExample = extractParametersByExample(verb.getValue(), PARAMETERS_QUERY_VALUE);
-               Map<String, Map<String, String>> headerParametersByExample = extractParametersByExample(verb.getValue(), "header");
+               Map<String, Multimap<String, String>> queryParametersByExample = extractParametersByExample(
+                     verb.getValue(), PARAMETERS_QUERY_VALUE);
+               Map<String, Multimap<String, String>> headerParametersByExample = extractParametersByExample(
+                     verb.getValue(), "header");
                Map<String, Request> requestBodiesByExample = extractRequestBodies(verb.getValue());
 
                // No need to go further if no examples.
@@ -186,123 +196,18 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   Iterator<Entry<String, JsonNode>> responseCodes = verb.getValue().path("responses").fields();
                   while (responseCodes.hasNext()) {
                      Entry<String, JsonNode> responseCode = responseCodes.next();
-                     // Find here potential headers for output of this operation examples.
-                     Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue());
-
                      Iterator<Entry<String, JsonNode>> contents = getResponseContent(responseCode.getValue()).fields();
+
+                     if (!contents.hasNext() && responseCode.getValue().has("x-microcks-refs")) {
+                        result.putAll(getNoContentRequestResponsePair(operation, rootDispatcher, rootDispatcherRules,
+                              requestBodiesByExample, pathParametersByExample, queryParametersByExample,
+                              headerParametersByExample, responseCode));
+                     }
                      while (contents.hasNext()) {
                         Entry<String, JsonNode> content = contents.next();
-                        String contentValue = content.getKey();
-
-                        JsonNode examplesNode = content.getValue().path(EXAMPLES_NODE);
-                        if (examplesNode.has("$ref")) {
-                           examplesNode = followRefIfAny(examplesNode);
-                        }
-
-                        Iterator<String> exampleNames = examplesNode.fieldNames();
-                        while (exampleNames.hasNext()) {
-                           String exampleName = exampleNames.next();
-                           JsonNode example = examplesNode.path(exampleName);
-
-                           // We should have everything at hand to build response here.
-                           Response response = new Response();
-                           response.setName(exampleName);
-                           response.setMediaType(contentValue);
-                           response.setStatus(responseCode.getKey());
-                           response.setContent(getExampleValue(example));
-                           if (!responseCode.getKey().startsWith("2")) {
-                              response.setFault(true);
-                           }
-                           List<Header> responseHeaders = headersByExample.get(exampleName);
-                           if (responseHeaders != null) {
-                              responseHeaders.stream().forEach(response::addHeader);
-                           }
-
-                           // Do we have a request for this example?
-                           Request request = requestBodiesByExample.get(exampleName);
-                           if (request == null) {
-                              request = new Request();
-                              request.setName(exampleName);
-                           }
-
-                           // Complete request accept-type with response content-type.
-                           Header header = new Header();
-                           header.setName("Accept");
-                           HashSet<String> values = new HashSet<>();
-                           values.add(contentValue);
-                           header.setValues(values);
-                           request.addHeader(header);
-
-                           // Do we have to complete request with path parameters?
-                           Map<String, String> pathParameters = pathParametersByExample.get(exampleName);
-                           if (pathParameters != null) {
-                              for (Entry<String, String> paramEntry : pathParameters.entrySet()) {
-                                 Parameter param = new Parameter();
-                                 param.setName(paramEntry.getKey());
-                                 param.setValue(paramEntry.getValue());
-                                 request.addQueryParameter(param);
-                              }
-                           } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
-                                 || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
-                              // We've must have at least one path parameters but none...
-                              // Do not register this request / response pair.
-                              break;
-                           }
-                           // Do we have to complete request with query parameters?
-                           Map<String, String> queryParameters = queryParametersByExample.get(exampleName);
-                           if (queryParameters != null) {
-                              for (Entry<String, String> paramEntry : queryParameters.entrySet()) {
-                                 Parameter param = new Parameter();
-                                 param.setName(paramEntry.getKey());
-                                 param.setValue(paramEntry.getValue());
-                                 request.addQueryParameter(param);
-                              }
-                           }
-                           // Do we have to complete request with header parameters?
-                           Map<String, String> headerParameters = headerParametersByExample.get(exampleName);
-                           if (headerParameters != null) {
-                              for (Entry<String, String> headerEntry : headerParameters.entrySet()) {
-                                 header = new Header();
-                                 header.setName(headerEntry.getKey());
-                                 // Values may be multiple and CSV.
-                                 Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(","))
-                                       .map(String::trim)
-                                       .collect(Collectors.toSet());
-                                 header.setValues(headerValues);
-                                 request.addHeader(header);
-                              }
-                           }
-
-                           // Finally, take care about dispatchCriteria and complete operation resourcePaths.
-                           String dispatchCriteria = null;
-                           String resourcePathPattern = operation.getName().split(" ")[1];
-
-                           if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
-                              Map<String, String> queryParams = queryParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper
-                                    .buildFromParamsMap(rootDispatcherRules, queryParams);
-                              // We only need the pattern here.
-                              operation.addResourcePath(resourcePathPattern);
-                           } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
-                              Map<String, String> parts = pathParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
-                              // We should complete resourcePath here.
-                              String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
-                              operation.addResourcePath(resourcePath);
-                           } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
-                              Map<String, String> parts = pathParametersByExample.get(exampleName);
-                              Map<String, String> queryParams = queryParametersByExample.get(exampleName);
-                              dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
-                              dispatchCriteria += DispatchCriteriaHelper
-                                    .buildFromParamsMap(rootDispatcherRules, queryParams);
-                              // We should complete resourcePath here.
-                              String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
-                              operation.addResourcePath(resourcePath);
-                           }
-                           response.setDispatchCriteria(dispatchCriteria);
-
-                           result.put(request, response);
-                        }
+                        result.putAll(getContentRequestResponsePairs(operation, rootDispatcher, rootDispatcherRules,
+                              requestBodiesByExample, pathParametersByExample, queryParametersByExample,
+                              headerParametersByExample, responseCode, content));
                      }
                   }
                }
@@ -311,15 +216,14 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       }
 
       // Adapt map to list of Exchanges.
-      return result.entrySet().stream()
-            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+      return result.entrySet().stream().map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
    }
 
    /**
     * Extract the list of operations from Specification.
     */
-   private List<Operation> extractOperations() throws MockRepositoryImportException {
+   private List<Operation> extractOperations() {
       List<Operation> results = new ArrayList<>();
 
       // Iterate on specification "paths" nodes.
@@ -352,8 +256,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                // Deal with dispatcher stuffs if needed.
                if (operation.getDispatcher() == null) {
                   if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE) && urlHasParts(pathName)) {
-                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName)
-                           + " ?? " + extractOperationParams(verb.getValue()));
+                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName) + " ?? "
+                           + extractOperationParams(verb.getValue()));
                      operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
                   } else if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE)) {
                      operation.setDispatcherRules(extractOperationParams(verb.getValue()));
@@ -379,11 +283,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    /**
     * Extract parameters within a specification node and organize them by example. Parameter can be of type 'path',
-    * 'query', 'header' or 'cookie'. Allow to filter them using parameterType. Key of returned map is example name.
-    * Key of value map is param name. Value of value map is param value ;-)
+    * 'query', 'header' or 'cookie'. Allow to filter them using parameterType. Key of returned map is example name. Key
+    * of value map is param name. Value of value map is param value ;-)
     */
-   private Map<String, Map<String, String>> extractParametersByExample(JsonNode node, String parameterType) {
-      Map<String, Map<String, String>> results = new HashMap<>();
+   private Map<String, Multimap<String, String>> extractParametersByExample(JsonNode node, String parameterType) {
+      Map<String, Multimap<String, String>> results = new HashMap<>();
 
       Iterator<JsonNode> parameters = node.path(PARAMETERS_NODE).elements();
       while (parameters.hasNext()) {
@@ -396,14 +300,28 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
                JsonNode example = parameter.path(EXAMPLES_NODE).path(exampleName);
-               String exampleValue = getExampleValue(example);
+               JsonNode exampleValue = getExampleValue(example);
 
-               Map<String, String> exampleParams = results.get(exampleName);
+               if (exampleValue == null) {
+                  log.warn("Couldn't find example value for example node: name: {}, data: {}", exampleName, example);
+                  continue;
+               }
+
+               Multimap<String, String> exampleParams = results.get(exampleName);
+
                if (exampleParams == null) {
-                  exampleParams = new HashMap<>();
+                  exampleParams = ArrayListMultimap.create();
                   results.put(exampleName, exampleParams);
                }
-               exampleParams.put(parameterName, exampleValue);
+
+               if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isArray()) {
+                  // Array of query params.
+                  for (JsonNode current : (ArrayNode) exampleValue) {
+                     exampleParams.put(parameterName, getValueString(current));
+                  }
+               } else {
+                  exampleParams.put(parameterName, getValueString(exampleValue));
+               }
             }
          }
       }
@@ -411,8 +329,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /**
-    * Extract request bodies within verb specification and organize them by example.
-    * Key of returned map is example name. Value is basic Microcks Request object (no query params, no headers)
+    * Extract request bodies within verb specification and organize them by example. Key of returned map is example
+    * name. Value is basic Microcks Request object (no query params, no headers)
     */
    private Map<String, Request> extractRequestBodies(JsonNode verbNode) {
       Map<String, Request> results = new HashMap<>();
@@ -428,7 +346,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             while (exampleNames.hasNext()) {
                String exampleName = exampleNames.next();
                JsonNode example = contentType.path(EXAMPLES_NODE).path(exampleName);
-               String exampleValue = getExampleValue(example);
+               String exampleValue = getSerializedExampleValue(example);
 
                // Build and store a request object.
                Request request = new Request();
@@ -451,8 +369,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    }
 
    /**
-    * Extract headers within a header specification node and organize them by example.
-    * Key of returned map is example name. Value is a list of Microcks Header objects.
+    * Extract headers within a header specification node and organize them by example. Key of returned map is example
+    * name. Value is a list of Microcks Header objects.
     */
    private Map<String, List<Header>> extractHeadersByExample(JsonNode responseNode) {
       Map<String, List<Header>> results = new HashMap<>();
@@ -470,11 +388,10 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                while (exampleNames.hasNext()) {
                   String exampleName = exampleNames.next();
                   JsonNode example = headerNode.path(EXAMPLES_NODE).path(exampleName);
-                  String exampleValue = getExampleValue(example);
+                  String exampleValue = getSerializedExampleValue(example);
 
                   // Example may be multiple CSV.
-                  Set<String> values = Arrays.stream(exampleValue.split(","))
-                        .map(String::trim)
+                  Set<String> values = Arrays.stream(exampleValue.split(",")).map(String::trim)
                         .collect(Collectors.toSet());
 
                   Header header = new Header();
@@ -498,17 +415,228 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       return results;
    }
 
+   /**
+    * Get the request/response pairs for a response content.
+    */
+   private Map<Request, Response> getContentRequestResponsePairs(Operation operation, String rootDispatcher,
+         String rootDispatcherRules, Map<String, Request> requestBodiesByExample,
+         Map<String, Multimap<String, String>> pathParametersByExample,
+         Map<String, Multimap<String, String>> queryParametersByExample,
+         Map<String, Multimap<String, String>> headerParametersByExample, Entry<String, JsonNode> responseCode,
+         Entry<String, JsonNode> content) {
+
+      Map<Request, Response> results = new HashMap<>();
+
+      String contentValue = content.getKey();
+      // Find here potential headers for output of this operation examples.
+      Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue());
+
+      JsonNode examplesNode = content.getValue().path(EXAMPLES_NODE);
+      if (examplesNode.has("$ref")) {
+         examplesNode = followRefIfAny(examplesNode);
+      }
+
+      Iterator<String> exampleNames = examplesNode.fieldNames();
+      while (exampleNames.hasNext()) {
+         String exampleName = exampleNames.next();
+         JsonNode example = examplesNode.path(exampleName);
+
+         // We should have everything at hand to build response here.
+         Response response = new Response();
+         response.setName(exampleName);
+         response.setMediaType(contentValue);
+         response.setStatus(responseCode.getKey());
+         response.setContent(getSerializedExampleValue(example));
+         if (!responseCode.getKey().startsWith("2")) {
+            response.setFault(true);
+         }
+         List<Header> responseHeaders = headersByExample.get(exampleName);
+         if (responseHeaders != null) {
+            responseHeaders.stream().forEach(response::addHeader);
+         }
+
+         // Do we have a request for this example?
+         Request request = requestBodiesByExample.get(exampleName);
+         if (request == null) {
+            request = new Request();
+            request.setName(exampleName);
+         }
+
+         // Complete request accept-type with response content-type.
+         Header header = new Header();
+         header.setName("Accept");
+         HashSet<String> values = new HashSet<>();
+         values.add(contentValue);
+         header.setValues(values);
+         request.addHeader(header);
+
+         // Do we have to complete request with path parameters?
+         Multimap<String, String> pathParameters = pathParametersByExample.get(exampleName);
+         if (pathParameters != null) {
+            completeRequestWithPathParameters(request, pathParameters);
+         } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
+               || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+            // We must have at least one path parameters but none!
+            // Do not register this request / response pair.
+            break;
+         }
+
+         // Complete request with query parameters if any.
+         completeRequestWithQueryParameters(request, queryParametersByExample.get(exampleName));
+         // Complete request with header parameters if any.
+         completeRequestWithHeaderParameters(request, headerParametersByExample.get(exampleName));
+
+         // Finally, take care about dispatchCriteria and complete operation resourcePaths.
+         completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
+               pathParametersByExample, queryParametersByExample, exampleName, response);
+
+         results.put(request, response);
+      }
+      return results;
+   }
+
+   /**
+    * Get the request/response pairs for a response without content. A response without content has a x-microcks-refs
+    * property to get bounds to requests.
+    */
+   private Map<Request, Response> getNoContentRequestResponsePair(Operation operation, String rootDispatcher,
+         String rootDispatcherRules, Map<String, Request> requestBodiesByExample,
+         Map<String, Multimap<String, String>> pathParametersByExample,
+         Map<String, Multimap<String, String>> queryParametersByExample,
+         Map<String, Multimap<String, String>> headerParametersByExample, Entry<String, JsonNode> responseCode) {
+
+      Map<Request, Response> results = new HashMap<>();
+      JsonNode requestRefs = responseCode.getValue().path("x-microcks-refs");
+
+      if (requestRefs.isArray()) {
+         Iterator<JsonNode> requestRefsIterator = requestRefs.elements();
+         while (requestRefsIterator.hasNext()) {
+            String exampleName = requestRefsIterator.next().textValue();
+
+            // Do we have a request or path or query or header parameters?
+            Request request = requestBodiesByExample.get(exampleName);
+            Multimap<String, String> pathParameters = pathParametersByExample.get(exampleName);
+            Multimap<String, String> queryParameters = queryParametersByExample.get(exampleName);
+            Multimap<String, String> headerParameters = headerParametersByExample.get(exampleName);
+
+            if (request != null || pathParameters != null || queryParameters != null || headerParameters != null) {
+               if (request == null) {
+                  request = new Request();
+                  request.setName(exampleName);
+               }
+
+               if (pathParameters != null) {
+                  completeRequestWithPathParameters(request, pathParameters);
+               } else if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())
+                     || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+                  // We must have at least one path parameters but none!
+                  // Do not register this request / response pair.
+                  break;
+               }
+
+               // We should have everything at hand to build response here.
+               Response response = new Response();
+               response.setName(exampleName);
+               response.setStatus(responseCode.getKey());
+               if (!responseCode.getKey().startsWith("2")) {
+                  response.setFault(true);
+               }
+
+               // Complete request with query parameters if any.
+               completeRequestWithQueryParameters(request, queryParametersByExample.get(exampleName));
+               // Complete request with header parameters if any.
+               completeRequestWithHeaderParameters(request, headerParametersByExample.get(exampleName));
+
+               // Finally, take care about dispatchCriteria and complete operation resourcePaths.
+               completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
+                     pathParametersByExample, queryParametersByExample, exampleName, response);
+
+               results.put(request, response);
+            }
+         }
+      }
+      return results;
+   }
+
+   private void completeRequestWithPathParameters(Request request, Multimap<String, String> pathParameters) {
+      for (Entry<String, String> paramEntry : pathParameters.entries()) {
+         Parameter param = new Parameter();
+         param.setName(paramEntry.getKey());
+         param.setValue(paramEntry.getValue());
+         request.addQueryParameter(param);
+      }
+   }
+
+   private void completeRequestWithQueryParameters(Request request, Multimap<String, String> queryParameters) {
+      if (queryParameters != null) {
+         for (Entry<String, String> paramEntry : queryParameters.entries()) {
+            Parameter param = new Parameter();
+            param.setName(paramEntry.getKey());
+            param.setValue(paramEntry.getValue());
+            request.addQueryParameter(param);
+         }
+      }
+   }
+
+   private void completeRequestWithHeaderParameters(Request request, Multimap<String, String> headerParameters) {
+      if (headerParameters != null) {
+         for (Entry<String, String> headerEntry : headerParameters.entries()) {
+            Header header = new Header();
+            header.setName(headerEntry.getKey());
+            // Values may be multiple and CSV.
+            Set<String> headerValues = Arrays.stream(headerEntry.getValue().split(",")).map(String::trim)
+                  .collect(Collectors.toSet());
+            header.setValues(headerValues);
+            request.addHeader(header);
+         }
+      }
+   }
+
+   private void completeDispatchCriteriaAndResourcePaths(Operation operation, String rootDispatcher,
+         String rootDispatcherRules, Map<String, Multimap<String, String>> pathParametersByExample,
+         Map<String, Multimap<String, String>> queryParametersByExample, String exampleName, Response response) {
+      String dispatchCriteria = null;
+      String resourcePathPattern = operation.getName().split(" ")[1];
+
+      if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
+         Multimap<String, String> queryParams = queryParametersByExample.get(exampleName);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParams);
+         // We only need the pattern here.
+         operation.addResourcePath(resourcePathPattern);
+      } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
+         Multimap<String, String> parts = pathParametersByExample.get(exampleName);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
+         // We should complete resourcePath here.
+         String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
+         operation.addResourcePath(resourcePath);
+      } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
+         Multimap<String, String> parts = pathParametersByExample.get(exampleName);
+         Multimap<String, String> queryParams = queryParametersByExample.get(exampleName);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parts);
+         dispatchCriteria += DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParams);
+         // We should complete resourcePath here.
+         String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
+         operation.addResourcePath(resourcePath);
+      }
+      response.setDispatchCriteria(dispatchCriteria);
+   }
+
    /** Get the value of an example. This can be direct value field or those of followed $ref */
-   private String getExampleValue(JsonNode example) {
+   private JsonNode getExampleValue(JsonNode example) {
       if (example.has(EXAMPLE_VALUE_NODE)) {
-         JsonNode valueNode = followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
-         return getValueString(valueNode);
+         return followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
       }
       if (example.has("$ref")) {
          JsonNode component = followRefIfAny(example);
          return getExampleValue(component);
       }
       return null;
+   }
+
+   /** Get the serialized value of an example. This can be direct value field or those of followed $ref */
+   private String getSerializedExampleValue(JsonNode example) {
+      JsonNode exampleValue = getExampleValue(example);
+      return exampleValue != null ? getValueString(exampleValue) : null;
    }
 
    /** Get the content of a response. This can be direct content field or those of followed $ref */
@@ -520,7 +648,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       return response.path(CONTENT_NODE);
    }
 
-   /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2)*/
+   /** Build a string representing operation parameters as used in dispatcher rules (param1 && param2) */
    private String extractOperationParams(JsonNode operation) {
       StringBuilder params = new StringBuilder();
       Iterator<JsonNode> parameters = operation.path(PARAMETERS_NODE).elements();

@@ -19,8 +19,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Companion objects for all messages implementations instances.
- * Represent some transport headers for both requests and responses.
+ * Companion objects for all messages implementations instances. Represent some transport headers for both requests and
+ * responses.
  * @author laurent
  */
 public class Header {

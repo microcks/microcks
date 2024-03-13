@@ -21,7 +21,8 @@ package io.github.microcks.config;
  */
 public class ConfigurationConstants {
 
-   private ConfigurationConstants() {}
+   private ConfigurationConstants() {
+   }
 
    public static final String PROFILE_DEVELOPMENT = "dev";
    public static final String PROFILE_PRODUCTION = "prod";

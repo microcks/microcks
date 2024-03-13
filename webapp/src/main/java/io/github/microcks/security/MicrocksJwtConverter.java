@@ -38,7 +38,8 @@ public class MicrocksJwtConverter implements Converter<Jwt, AbstractAuthenticati
 
    @Override
    public JwtAuthenticationToken convert(Jwt jwt) {
-      Map<String, Map<String, Collection<String>>> resourceAccess = jwt.getClaim(KeycloakJwtToken.RESOURCE_ACCESS_TOKEN_CLAIM);
+      Map<String, Map<String, Collection<String>>> resourceAccess = jwt
+            .getClaim(KeycloakJwtToken.RESOURCE_ACCESS_TOKEN_CLAIM);
 
       if (resourceAccess != null) {
          Map<String, Collection<String>> microcksResource = resourceAccess.get(KeycloakJwtToken.MICROCKS_APP_RESOURCE);
@@ -47,9 +48,7 @@ public class MicrocksJwtConverter implements Converter<Jwt, AbstractAuthenticati
             Collection<String> roles = microcksResource.get("roles");
             log.trace("JWT extracted roles for microcks-app: {}", roles);
 
-            var grantedAuthorities = roles.stream()
-                  .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
-                  .toList();
+            var grantedAuthorities = roles.stream().map(role -> new SimpleGrantedAuthority("ROLE_" + role)).toList();
             return new JwtAuthenticationToken(jwt, grantedAuthorities);
          }
       }

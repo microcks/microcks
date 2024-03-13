@@ -37,7 +37,8 @@ public class DBAPICollectionImporterTest {
    public void testImportOriginal() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/DBAPI.postman_collection.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/DBAPI.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -65,8 +66,7 @@ public class DBAPICollectionImporterTest {
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(5, exchanges.size());
-         }
-         else if ("POST ".equals(operation.getName()) ){
+         } else if ("POST ".equals(operation.getName())) {
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
             try {
@@ -83,7 +83,8 @@ public class DBAPICollectionImporterTest {
    public void testImportReorganised() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/DBAPI.reorganised.postman_collection.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/DBAPI.reorganised.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

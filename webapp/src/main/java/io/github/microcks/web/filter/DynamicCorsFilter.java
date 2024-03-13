@@ -24,21 +24,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
 
 /**
- * Servlet filter that set the response CORS headers accordingly the configuration
- * and incoming request.
+ * Servlet filter that set the response CORS headers accordingly the configuration and incoming request.
  */
-public class DynamicOriginCorsFilter implements Filter {
+public class DynamicCorsFilter implements Filter {
    private final String corsAllowedOrigins;
    private final Boolean corsAllowCredentials;
 
-  /**
-   * Build a new DynamicOriginCorsFilter.
-   * @param corsAllowedOrigins Allowed origin forced if nothing found in incoming request
-   * @param corsAllowCredentials Whether to set allow credentials
-   */
-   public DynamicOriginCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
+   /**
+    * Build a new DynamicCorsFilter.
+    *
+    * @param corsAllowedOrigins   Allowed origin forced if nothing found in incoming request
+    * @param corsAllowCredentials Whether to set allow credentials
+    */
+   public DynamicCorsFilter(String corsAllowedOrigins, Boolean corsAllowCredentials) {
       this.corsAllowedOrigins = corsAllowedOrigins;
       this.corsAllowCredentials = corsAllowCredentials;
    }
@@ -55,10 +60,38 @@ public class DynamicOriginCorsFilter implements Filter {
       response.setHeader("Access-Control-Allow-Origin", origin);
       response.setHeader("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE");
       response.setHeader("Access-Control-Max-Age", "3600");
-      response.setHeader("Access-Control-Allow-Headers", "*");
+      response.setHeader("Access-Control-Allow-Headers", getHeadersString(httpRequest));
       if (Boolean.TRUE.equals(corsAllowCredentials)) {
          response.setHeader("Access-Control-Allow-Credentials", "true");
       }
       chain.doFilter(servletRequest, servletResponse);
+   }
+
+   /**
+    * Build a string with all the headers from the incoming request.
+    *
+    * This method will also add the headers from the "Access-Control-Request-Headers" header if present.
+    *
+    * @param httpRequest
+    * @return
+    */
+   private String getHeadersString(HttpServletRequest httpRequest) {
+      var headerNamesList = new HashSet<String>();
+      Enumeration<String> headerNamesEnumeration = httpRequest.getHeaderNames();
+
+      if (headerNamesEnumeration != null) {
+         headerNamesList.addAll(Collections.list(headerNamesEnumeration));
+      }
+
+      String accessControlRequestHeaders = httpRequest.getHeader("Access-Control-Request-Headers");
+      if (accessControlRequestHeaders != null) {
+         List<String> headerNames = Arrays.stream(accessControlRequestHeaders.split(",")).map(String::trim).toList();
+         headerNamesList.addAll(headerNames);
+      }
+
+      if (headerNamesList.isEmpty()) {
+         return "*";
+      }
+      return String.join(", ", headerNamesList);
    }
 }

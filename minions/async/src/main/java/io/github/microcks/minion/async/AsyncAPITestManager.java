@@ -51,8 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Manager that takes care of launching and running an AsyncAPI test from an
- * <code>AsyncTestSpecification</code>.
+ * Manager that takes care of launching and running an AsyncAPI test from an <code>AsyncTestSpecification</code>.
  * @author laurent
  */
 @ApplicationScoped
@@ -69,8 +68,8 @@ public class AsyncAPITestManager {
    String microcksUrl;
 
    /**
-    * Launch a new test using this specification. This is a fire and forget operation.
-    * Tests results will be reported later once finished using a <code>MicrocksAPIConnector</code>.
+    * Launch a new test using this specification. This is a fire and forget operation. Tests results will be reported
+    * later once finished using a <code>MicrocksAPIConnector</code>.
     * @param specification The specification of Async test to launch.
     */
    public void launchTest(AsyncTestSpecification specification) {
@@ -79,8 +78,8 @@ public class AsyncAPITestManager {
    }
 
    /**
-    * Actually run the Async test by instantiating a <code>MessageConsumptionTask</code>,
-    * gathering its outputs and validating them against an AsyncAPI schema.
+    * Actually run the Async test by instantiating a <code>MessageConsumptionTask</code>, gathering its outputs and
+    * validating them against an AsyncAPI schema.
     */
    class AsyncAPITestThread extends Thread {
 
@@ -103,8 +102,8 @@ public class AsyncAPITestManager {
 
       @Override
       public void run() {
-         logger.infof("Launching a new AsyncAPITestThread for {%s} on {%s}",
-               specification.getTestResultId(), specification.getEndpointUrl());
+         logger.infof("Launching a new AsyncAPITestThread for {%s} on {%s}", specification.getTestResultId(),
+               specification.getEndpointUrl());
 
          // Start initialising a TestCaseReturn and build the correct MessageConsumptionTasK.
          TestCaseReturnDTO testCaseReturn = new TestCaseReturnDTO(specification.getOperationName());
@@ -124,52 +123,42 @@ public class AsyncAPITestManager {
             } catch (InterruptedException e) {
                logger.infof("AsyncAPITestThread for {%s} was interrupted", specification.getTestResultId());
             } catch (ExecutionException e) {
-               logger.errorf(e, "AsyncAPITestThread for {%s} raise an ExecutionException", specification.getTestResultId());
-               testCaseReturn.addTestReturn(
-                     new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
-                           "ExecutionException: no message received in " + specification.getTimeoutMS() + " ms",
-                           null, null)
-               );
+               logger.errorf(e, "AsyncAPITestThread for {%s} raise an ExecutionException",
+                     specification.getTestResultId());
+               testCaseReturn.addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
+                     "ExecutionException: no message received in " + specification.getTimeoutMS() + " ms", null, null));
             } catch (TimeoutException e) {
                // Message consumption has timed-out, add an empty test return with failure and message.
                logger.infof("AsyncAPITestThread for {%s} was timed-out", specification.getTestResultId());
-               testCaseReturn.addTestReturn(
-                     new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
-                           "Timeout: no message received in " + specification.getTimeoutMS() + " ms",
-                           null, null)
-               );
+               testCaseReturn.addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, specification.getTimeoutMS(),
+                     "Timeout: no message received in " + specification.getTimeoutMS() + " ms", null, null));
             } catch (Throwable t) {
                // We faced a low-level issue... add an empty test return with failure and message.
                logger.error("Caught a low-level throwable", t);
-               testCaseReturn.addTestReturn(
-                     new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
-                           "Exception: low-level failure: " + t.getMessage(),
-                           null, null)
-               );
+               testCaseReturn
+                     .addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
+                           "Exception: low-level failure: " + t.getMessage(), null, null));
             } finally {
-               if (messageConsumptionTask != null) {
-                  try {
-                     messageConsumptionTask.close();
-                  } catch (Throwable t) {
-                     // This was best effort, just ignore the exception...
-                  }
+               try {
+                  messageConsumptionTask.close();
+               } catch (Throwable t) {
+                  // This was best effort, just ignore the exception...
                }
                executorService.shutdown();
             }
          } else {
-            logger.errorf("Found no suitable MessageConsumptionTask implementation. {%s} is not a supported endpoint", specification.getEndpointUrl());
-            testCaseReturn.addTestReturn(
-                  new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
-                        "Exception: found no suitable MessageConsumptionTask implementation for endpoint",
-                        null, null)
-            );
+            logger.errorf("Found no suitable MessageConsumptionTask implementation. {%s} is not a supported endpoint",
+                  specification.getEndpointUrl());
+            testCaseReturn.addTestReturn(new TestReturn(TestReturn.FAILURE_CODE, System.currentTimeMillis() - startTime,
+                  "Exception: found no suitable MessageConsumptionTask implementation for endpoint", null, null));
          }
 
          // Validate all the received outputs if any.
          if (outputs != null && !outputs.isEmpty()) {
             validateConsumedMessage(testCaseReturn, outputs);
          } else {
-            logger.infof("No consumed message to validate, test {%s} will be marked as timed-out", specification.getTestResultId());
+            logger.infof("No consumed message to validate, test {%s} will be marked as timed-out",
+                  specification.getTestResultId());
          }
 
          // Finally, report the testCase results using Microcks API.
@@ -179,25 +168,19 @@ public class AsyncAPITestManager {
       /**
        * Validate consumed messages and complete {@code testCaseReturn} with {@code TestReturn} objects.
        * @param testCaseReturn The TestCase to complete with schema validation results
-       * @param outputs The consumed messages from tested endpoint.
+       * @param outputs        The consumed messages from tested endpoint.
        */
       private void validateConsumedMessage(TestCaseReturnDTO testCaseReturn, List<ConsumedMessage> outputs) {
          JsonNode specificationNode = null;
          try {
             specificationNode = AsyncAPISchemaValidator.getJsonNodeForSchema(specification.getAsyncAPISpec());
          } catch (IOException e) {
-            logger.errorf("Retrieval of AsyncAPI schema for validation fails for {%s}", specification.getTestResultId());
+            logger.errorf("Retrieval of AsyncAPI schema for validation fails for {%s}",
+                  specification.getTestResultId());
          }
 
-         // Compute operation JSON pointer to navigate the spec.
-         String[] operationElements = specification.getOperationName().split(" ");
-         String operationNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
-         if ("SUBSCRIBE".equals(operationElements[0])) {
-            operationNamePtr += "/subscribe";
-         } else {
-            operationNamePtr += "/publish";
-         }
-         String messagePathPointer = operationNamePtr + "/message";
+         // Compute message JSON pointer to navigate the spec.
+         String messagePathPointer = findMessagePathPointer(specificationNode);
 
          // Retrieve expected content type from specification and produce a schema registry snapshot.
          String expectedContentType = null;
@@ -207,19 +190,19 @@ public class AsyncAPITestManager {
             if (expectedContentType.contains("avro")) {
                logger.debug("Expected content type is Avro so extracting service resources into a SchemaMap");
                schemaRegistry.updateRegistryForService(specification.getServiceId());
-               schemaRegistry.getSchemaEntries(specification.getServiceId())
-                     .stream().forEach(schemaEntry -> schemaMap.putSchemaEntry(schemaEntry.getPath(), schemaEntry.getContent()));
+               schemaRegistry.getSchemaEntries(specification.getServiceId()).stream()
+                     .forEach(schemaEntry -> schemaMap.putSchemaEntry(schemaEntry.getPath(), schemaEntry.getContent()));
             }
          }
 
-         for (int i=0; i<outputs.size(); i++) {
+         for (int i = 0; i < outputs.size(); i++) {
             // Treat each message and compute elapsed time of each.
             ConsumedMessage message = outputs.get(i);
             long elapsedTime = message.getReceivedAt() - startTime;
 
             // Initialize an EventMessage with message content.
-            String responseContent = (message.getPayload() != null) ?
-                  new String(message.getPayload()) : message.getPayloadRecord().toString();
+            String responseContent = (message.getPayload() != null) ? new String(message.getPayload())
+                  : message.getPayloadRecord().toString();
 
             EventMessage eventMessage = new EventMessage();
             eventMessage.setName(specification.getTestResultId() + "-" + specification.getOperationName() + "-" + i);
@@ -230,11 +213,13 @@ public class AsyncAPITestManager {
             TestReturn testReturn;
 
             if (specificationNode == null) {
-               logger.infof("AsyncAPI specification cannot be read, so test {%s} cannot be validated", specification.getTestResultId());
+               logger.infof("AsyncAPI specification cannot be read, so test {%s} cannot be validated",
+                     specification.getTestResultId());
                testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime,
                      "AsyncAPI specification cannot be read, thus message cannot be validated", eventMessage);
             } else if (expectedContentType == null) {
-               logger.infof("Expected content-type cannot be determined, so test {%s} cannot be validated", specification.getTestResultId());
+               logger.infof("Expected content-type cannot be determined, so test {%s} cannot be validated",
+                     specification.getTestResultId());
                testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime,
                      "Content-Type cannot be determined, thus message cannot be validated", eventMessage);
             } else {
@@ -245,8 +230,8 @@ public class AsyncAPITestManager {
                   if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(expectedContentType)) {
                      // Use the correct Avro message validation method depending on what has been read.
                      if (message.getPayloadRecord() != null) {
-                        errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayloadRecord(),
-                              messagePathPointer, schemaMap);
+                        errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode,
+                              message.getPayloadRecord(), messagePathPointer, schemaMap);
                      } else {
                         errors = AsyncAPISchemaValidator.validateAvroMessage(specificationNode, message.getPayload(),
                               messagePathPointer, schemaMap);
@@ -255,17 +240,21 @@ public class AsyncAPITestManager {
                      // Now parse the payloadNode and validate it according the operation message
                      // found in specificationNode.
                      JsonNode payloadNode = AsyncAPISchemaValidator.getJsonNode(responseContent);
-                     errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode, messagePathPointer, microcksUrl + "/api/resources/");
+                     errors = AsyncAPISchemaValidator.validateJsonMessage(specificationNode, payloadNode,
+                           messagePathPointer, microcksUrl + "/api/resources/");
                   }
 
                   if (errors == null || errors.isEmpty()) {
                      // This is a success.
-                     logger.infof("No errors found while validating message payload! Reporting a success for test {%s}", specification.getTestResultId());
+                     logger.infof("No errors found while validating message payload! Reporting a success for test {%s}",
+                           specification.getTestResultId());
                      testReturn = new TestReturn(TestReturn.SUCCESS_CODE, elapsedTime, eventMessage);
                   } else {
                      // This is a failure. Records all errors using \\n as delimiter.
-                     logger.infof("Validation errors found... Reporting a failure for test {%s}", specification.getTestResultId());
-                     testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime, String.join("\\n", errors), eventMessage);
+                     logger.infof("Validation errors found... Reporting a failure for test {%s}",
+                           specification.getTestResultId());
+                     testReturn = new TestReturn(TestReturn.FAILURE_CODE, elapsedTime, String.join("\\n", errors),
+                           eventMessage);
                   }
                } catch (IOException e) {
                   logger.error("Exception while parsing the output message", e);
@@ -275,6 +264,29 @@ public class AsyncAPITestManager {
             }
             testCaseReturn.addTestReturn(testReturn);
          }
+      }
+
+      /** Define the JSON pointer expression to access the operation messages. */
+      private String findMessagePathPointer(JsonNode specificationNode) {
+         String messagePathPointer = "";
+         String[] operationElements = specification.getOperationName().split(" ");
+
+         String asyncApi = specificationNode.path("asyncapi").asText("2");
+         if (asyncApi.startsWith("3")) {
+            // Assume we have an AsyncAPI v3 document.
+            String operationNamePtr = "/operations/" + operationElements[1].replaceAll("/", "~1");
+            messagePathPointer = operationNamePtr + "/messages";
+         } else {
+            // Assume we have an AsyncAPI v2 document.
+            String operationNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
+            if ("SUBSCRIBE".equals(operationElements[0])) {
+               operationNamePtr += "/subscribe";
+            } else {
+               operationNamePtr += "/publish";
+            }
+            messagePathPointer = operationNamePtr + "/message";
+         }
+         return messagePathPointer;
       }
 
       /** Retrieve the expected content type for an AsyncAPI message. */

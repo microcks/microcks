@@ -32,6 +32,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.List;
 
 import static org.junit.Assert.*;
+
 /**
  * Test case for TestResultRepository implementation.
  * @author laurent
@@ -39,56 +40,57 @@ import static org.junit.Assert.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class TestResultRepositoryTest {
 
-  @Autowired
-  ServiceRepository serviceRepository;
+   @Autowired
+   ServiceRepository serviceRepository;
 
-  @Autowired
-  TestResultRepository repository;
+   @Autowired
+   TestResultRepository repository;
 
-  String serviceId;
+   String serviceId;
 
-  @Before
-  public void setUp(){
-    // Create a service...
-    Service service = new Service();
-    service.setName("HelloWorld");
-    service.setVersion("1.0");
-    serviceRepository.save(service);
-    // Create a bunch of test results for this service.
-    TestResult testResult = new TestResult();
-    testResult.setInProgress(false);
-    testResult.setRunnerType(TestRunnerType.HTTP);
-    testResult.setTestNumber(1L);
-    testResult.setServiceId(service.getId());
-    testResult.setTestedEndpoint("http://localhost:8088/HelloWorld");
-    repository.save(testResult);
-    // ... another one.
-    testResult = new TestResult();
-    testResult.setInProgress(false);
-    testResult.setRunnerType(TestRunnerType.HTTP);
-    testResult.setTestNumber(2L);
-    testResult.setServiceId(service.getId());
-    testResult.setTestedEndpoint("http://localhost:8088/HelloWorld");
-    repository.save(testResult);
-    serviceId = service.getId();
-  }
+   @Before
+   public void setUp() {
+      // Create a service...
+      Service service = new Service();
+      service.setName("HelloWorld");
+      service.setVersion("1.0");
+      serviceRepository.save(service);
+      // Create a bunch of test results for this service.
+      TestResult testResult = new TestResult();
+      testResult.setInProgress(false);
+      testResult.setRunnerType(TestRunnerType.HTTP);
+      testResult.setTestNumber(1L);
+      testResult.setServiceId(service.getId());
+      testResult.setTestedEndpoint("http://localhost:8088/HelloWorld");
+      repository.save(testResult);
+      // ... another one.
+      testResult = new TestResult();
+      testResult.setInProgress(false);
+      testResult.setRunnerType(TestRunnerType.HTTP);
+      testResult.setTestNumber(2L);
+      testResult.setServiceId(service.getId());
+      testResult.setTestedEndpoint("http://localhost:8088/HelloWorld");
+      repository.save(testResult);
+      serviceId = service.getId();
+   }
 
-  @Test
-  public void testFindByService() {
-    long count = repository.countByServiceId(serviceId);
-    assertEquals(2, count);
-    List<TestResult> results = repository.findByServiceId(serviceId);
-    assertEquals(2, results.size());
-  }
+   @Test
+   public void testFindByService() {
+      long count = repository.countByServiceId(serviceId);
+      assertEquals(2, count);
+      List<TestResult> results = repository.findByServiceId(serviceId);
+      assertEquals(2, results.size());
+   }
 
-  @Test
-  public void testFindLastOnesForService() {
-    List<TestResult> older = repository.findByServiceId(serviceId, PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
-    assertEquals(2, older.size());
-    Long newTestNumber = older.get(0).getTestNumber() + 1L;
-    assertEquals(3L, newTestNumber.longValue());
-  }
+   @Test
+   public void testFindLastOnesForService() {
+      List<TestResult> older = repository.findByServiceId(serviceId,
+            PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
+      assertEquals(2, older.size());
+      Long newTestNumber = older.get(0).getTestNumber() + 1L;
+      assertEquals(3L, newTestNumber.longValue());
+   }
 }

@@ -16,6 +16,7 @@
 package io.github.microcks.util.el;
 
 import io.github.microcks.util.el.function.ELFunction;
+
 /**
  * An implementation of {@code Expression} that invokes an {@code ELFunction}
  * @author laurent
@@ -27,7 +28,7 @@ public class FunctionExpression implements Expression {
 
    /**
     * Build a new function expression with a function and its invocation arguments.
-    * @param function The ELFunction associated to this expression
+    * @param function     The ELFunction associated to this expression
     * @param functionArgs The invocation arguments of this function
     */
    public FunctionExpression(ELFunction function, String[] functionArgs) {
@@ -43,6 +44,7 @@ public class FunctionExpression implements Expression {
    public ELFunction getFunction() {
       return function;
    }
+
    public String[] getFunctionArgs() {
       return functionArgs;
    }

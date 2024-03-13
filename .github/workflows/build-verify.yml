@@ -19,10 +19,10 @@ jobs:
     environment: Build
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up JDK 17 for x64
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -45,23 +45,33 @@ jobs:
       - name: Verify Javadoc completion
         run: mvn -B javadoc:javadoc
 
-      - name: Set environment for branch
+      - id: set-environment
+        name: Set environment for branch
         run: |
           set -x
           if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
             echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=latest" >> "$GITHUB_OUTPUT"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
           elif [[ $GITHUB_REF == 'refs/heads/1.8.x' ]]; then
             echo "IMAGE_TAG=maintenance" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=maintenance" >> "$GITHUB_OUTPUT"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
           elif [[ $GITHUB_REF == 'refs/heads/1.9.x' ]]; then
             echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=nightly" >> "$GITHUB_OUTPUT"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
           elif [[ $GITHUB_REF == "refs/tags/$GITHUB_REF_NAME" ]]; then
             echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
           else
             echo "PACKAGE_IMAGE=false" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Set up QEMU
@@ -138,3 +148,14 @@ jobs:
             --file src/main/docker/Dockerfile.jvm \
             --tag=quay.io/microcks/microcks-uber-async-minion:$IMAGE_TAG \
             --tag=docker.io/microcks/microcks-uber-async-minion:$IMAGE_TAG .
+    outputs:
+      image-tag: ${{ steps.set-environment.outputs.IMAGE_TAG }}
+      package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
+
+  call-package-native:
+    needs: build-verify-package
+    if: github.repository_owner == 'microcks' && ${{ needs.build-verify-package.outputs.package-image }} == 'true'
+    uses: ./.github/workflows/package-native.yml
+    with:
+      image-tag: ${{ needs.build-verify-package.outputs.image-tag }}
+    secrets: inherit

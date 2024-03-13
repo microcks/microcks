@@ -33,8 +33,8 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Scheduled task responsible for periodically update Service definitions
- * if mock repository have changed since previous scan.
+ * Scheduled task responsible for periodically update Service definitions if mock repository have changed since previous
+ * scan.
  * @author laurent
  */
 @Component
@@ -58,7 +58,7 @@ public class ImportServiceDefinitionTask {
    private JobService jobService;
 
    @Scheduled(cron = "${services.update.interval}")
-   public void importServiceDefinition(){
+   public void importServiceDefinition() {
       // Prepare some flags.
       int updated = 0;
       long startTime = System.currentTimeMillis();
@@ -66,15 +66,15 @@ public class ImportServiceDefinitionTask {
       log.info("Starting scan of Service definitions update scheduled task...");
 
       long numJobs = jobRepository.count();
-      log.debug("Found {} jobs to check. Splitting in {} chunks.", numJobs, (numJobs/CHUNK_SIZE + 1));
+      log.debug("Found {} jobs to check. Splitting in {} chunks.", numJobs, (numJobs / CHUNK_SIZE + 1));
 
-      for (int i=0; i<numJobs/CHUNK_SIZE + 1; i++) {
+      for (int i = 0; i < numJobs / CHUNK_SIZE + 1; i++) {
          List<ImportJob> jobs = jobRepository.findAll(PageRequest.of(i, CHUNK_SIZE)).getContent();
          log.debug("Found {} jobs into chunk {}", jobs.size(), i);
 
-         for (ImportJob job : jobs){
+         for (ImportJob job : jobs) {
             log.debug("Dealing with job " + job.getName());
-            if (job.isActive()){
+            if (job.isActive()) {
 
                // Retrieve associated secret if any.
                Secret jobSecret = null;
@@ -87,13 +87,14 @@ public class ImportServiceDefinitionTask {
                String etag = job.getEtag();
                String freshEtag = null;
                try {
-                  freshEtag = HTTPDownloader.getURLEtag(job.getRepositoryUrl(), jobSecret, job.isRepositoryDisableSSLValidation());
+                  freshEtag = HTTPDownloader.getURLEtag(job.getRepositoryUrl(), jobSecret,
+                        job.isRepositoryDisableSSLValidation());
                } catch (IOException ioe) {
                   log.error("Got an IOException while checking ETag for {}, pursuing...", job.getRepositoryUrl());
                }
 
                // Test if we must update this service definition.
-               if (freshEtag == null || (freshEtag != null && !freshEtag.equals(etag)) ){
+               if (freshEtag == null || (freshEtag != null && !freshEtag.equals(etag))) {
                   log.debug("No Etag or fresher one found, updating service definition for " + job.getName());
 
                   job.setEtag(freshEtag);

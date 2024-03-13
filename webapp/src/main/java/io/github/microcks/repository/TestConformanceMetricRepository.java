@@ -24,8 +24,8 @@ import org.springframework.data.mongodb.repository.MongoRepository;
  * Repository interface for TestConformanceMetric domain objects.
  * @author laurent
  */
-public interface TestConformanceMetricRepository extends MongoRepository<TestConformanceMetric, String>,
-      CustomTestConformanceMetricRepository {
+public interface TestConformanceMetricRepository
+      extends MongoRepository<TestConformanceMetric, String>, CustomTestConformanceMetricRepository {
 
    TestConformanceMetric findByServiceId(String serviceId);
 }

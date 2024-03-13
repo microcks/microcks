@@ -33,8 +33,8 @@ import graphql.schema.idl.TypeInfo;
 import graphql.schema.idl.TypeUtil;
 
 /**
- * This is an implementation of GraphQL-Java QueryVisitor that takes care of
- * building a Json Schema that could be applied to the response of a GraphQL query.
+ * This is an implementation of GraphQL-Java QueryVisitor that takes care of building a Json Schema that could be
+ * applied to the response of a GraphQL query.
  * @author laurent
  */
 public class JsonSchemaBuilderQueryVisitor implements QueryVisitor {
@@ -55,8 +55,7 @@ public class JsonSchemaBuilderQueryVisitor implements QueryVisitor {
 
    /**
     * Build a new JsonSchemaBuilderQueryVisitor.
-    * @param jsonSchemaData The Json Schema to complete. This node must be the /properties/data path
-    *                       of schema object.
+    * @param jsonSchemaData The Json Schema to complete. This node must be the /properties/data path of schema object.
     */
    public JsonSchemaBuilderQueryVisitor(ObjectNode jsonSchemaData) {
       this.parentNode = jsonSchemaData;

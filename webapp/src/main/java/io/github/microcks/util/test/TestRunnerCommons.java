@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This class holds commons, utility handlers for different test runner implements
- * (whether it be Soap, OpenAPI, Async...)
+ * This class holds commons, utility handlers for different test runner implements (whether it be Soap, OpenAPI,
+ * Async...)
  * @author laurent
  */
 public class TestRunnerCommons {
@@ -40,8 +40,8 @@ public class TestRunnerCommons {
    private static Logger log = LoggerFactory.getLogger(TestRunnerCommons.class);
 
    /**
-    * Render the request content using the Expression Language compatible {@code TemplateEngine} if required.
-    * If rendering template fails, we just produce a log error message and stick to templatized content.
+    * Render the request content using the Expression Language compatible {@code TemplateEngine} if required. If
+    * rendering template fails, we just produce a log error message and stick to templatized content.
     * @param request The request that will be sent for test.
     * @param headers The set of computed headers to use for request body evaluation
     * @return The rendered response body payload.
@@ -52,10 +52,10 @@ public class TestRunnerCommons {
          TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
          // Create and fill an evaluable request object.
-         EvaluableRequest evaluableRequest = new EvaluableRequest(request.getContent(),null);
+         EvaluableRequest evaluableRequest = new EvaluableRequest(request.getContent(), null);
          // Adding query parameters...
          Map<String, String> evaluableParams = new HashMap<>();
-         for (Parameter parameter :  request.getQueryParameters()) {
+         for (Parameter parameter : request.getQueryParameters()) {
             evaluableParams.put(parameter.getName(), parameter.getValue());
          }
          evaluableRequest.setParams(evaluableParams);
