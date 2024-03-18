@@ -19,10 +19,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Represent the specification of a Proxy evaluation. <code>dispatcher</code> should
- * be the original dispatcher to apply with its <code>dispatcherRules</code> companion.
- * If no response actually found by mock controller, the original request will be forwarded
- * to the <code>proxyUrl</code>.
+ * Represent the specification of a Proxy evaluation. <code>dispatcher</code> should be the original dispatcher to apply
+ * with its <code>dispatcherRules</code> companion. If no response actually found by mock controller, the original
+ * request will be forwarded to the <code>proxyUrl</code>.
  */
 @JsonPropertyOrder({ "dispatcher", "dispatcherRules", "proxyUrl" })
 public class ProxySpecification {

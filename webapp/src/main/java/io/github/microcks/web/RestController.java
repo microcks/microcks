@@ -103,18 +103,13 @@ public class RestController {
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
-   public ResponseEntity<byte[]> execute(
-         @PathVariable("service") String serviceName,
-         @PathVariable("version") String version,
-         @RequestParam(value = "delay", required = false) Long delay,
-         @RequestBody(required = false) String body,
-         @RequestHeader HttpHeaders headers,
-         HttpServletRequest request,
-         HttpMethod method
-      ) {
+   public ResponseEntity<byte[]> execute(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
+         @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
+         HttpMethod method) {
 
-      log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}",
-            serviceName, version, request.getRequestURI(), method);
+      log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}", serviceName, version,
+            request.getRequestURI(), method);
       log.debug("Request body: {}", body);
 
       long startTime = System.currentTimeMillis();
@@ -189,7 +184,8 @@ public class RestController {
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
          String violationMsg = validateParameterConstraintsIfAny(rOperation, request);
          if (violationMsg != null) {
-            return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(), HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(),
+                  HttpStatus.BAD_REQUEST);
          }
 
          // We must find dispatcher and its rules. Default to operation ones but
@@ -237,10 +233,8 @@ public class RestController {
          if (response == null && proxy != null && proxy.getProxyUrl() != null) {
             // If we've found nothing and got a proxy, that's the moment!
             Optional<URI> externalUrl = proxyService.extractExternalUrl(MockControllerCommons.renderResponseContent(
-               MockControllerCommons.buildEvaluableRequest(body, resourcePath, request),
-               TemplateEngineFactory.getTemplateEngine(),
-               proxy.getProxyUrl()
-            ), request);
+                  MockControllerCommons.buildEvaluableRequest(body, resourcePath, request),
+                  TemplateEngineFactory.getTemplateEngine(), proxy.getProxyUrl()), request);
             if (externalUrl.isPresent()) {
                return proxyService.callExternal(externalUrl.get(), method, headers, body);
             }

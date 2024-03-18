@@ -140,11 +140,13 @@ public class RestControllerIT extends AbstractBaseIT {
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
-      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}")).findFirst().orElseThrow();
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut", String.class);
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+            String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
@@ -160,11 +162,14 @@ public class RestControllerIT extends AbstractBaseIT {
 
       // Set original URL to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
-      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}")).findFirst().orElseThrow();
-      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()).replaceFirst("real-pastry", "pastry"));
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
+            .replaceFirst("real-pastry", "pastry"));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut", String.class);
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+            String.class);
       assertEquals(200, response.getStatusCode().value());
       verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any());
    }
@@ -176,11 +181,14 @@ public class RestControllerIT extends AbstractBaseIT {
 
       // Broke external URL in the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
-      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}")).findFirst().orElseThrow();
-      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()).replaceFirst("real-pastry", "not-found"));
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
+            .replaceFirst("real-pastry", "not-found"));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut", String.class);
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+            String.class);
       assertEquals(404, response.getStatusCode().value());
    }
 }

@@ -473,7 +473,8 @@ public class DispatchCriteriaHelper {
 
       if (DispatchStyles.FALLBACK.equals(operation.getDispatcher())) {
          try {
-            FallbackSpecification fallbackSpec = FallbackSpecification.buildFromJsonString(operation.getDispatcherRules());
+            FallbackSpecification fallbackSpec = FallbackSpecification
+                  .buildFromJsonString(operation.getDispatcherRules());
             rootDispatcher = fallbackSpec.getDispatcher();
             rootDispatcherRules = fallbackSpec.getDispatcherRules();
          } catch (JsonMappingException e) {
@@ -493,7 +494,8 @@ public class DispatchCriteriaHelper {
       return new DispatcherDetails(rootDispatcher, rootDispatcherRules);
    }
 
-   public record DispatcherDetails(String rootDispatcher, String rootDispatcherRules) {}
+   public record DispatcherDetails(String rootDispatcher, String rootDispatcherRules) {
+   }
 
    private static String sanitizeURLForRegExp(String url) {
       return url.replace("+", " ");

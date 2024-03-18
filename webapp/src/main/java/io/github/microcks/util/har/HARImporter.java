@@ -188,7 +188,8 @@ public class HARImporter implements MockRepositoryImporter {
 
       if (opOperation.isPresent()) {
          // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
-         DispatchCriteriaHelper.DispatcherDetails details = DispatchCriteriaHelper.extractDispatcherWithRules(operation);
+         DispatchCriteriaHelper.DispatcherDetails details = DispatchCriteriaHelper
+               .extractDispatcherWithRules(operation);
          String rootDispatcher = details.rootDispatcher();
          String rootDispatcherRules = details.rootDispatcherRules();
 
