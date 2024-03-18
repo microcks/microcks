@@ -15,6 +15,13 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.domain.Operation;
+import io.github.microcks.util.dispatcher.FallbackSpecification;
+import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.dispatcher.ProxySpecification;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -31,6 +38,9 @@ import java.util.stream.Collectors;
  * @author laurent
  */
 public class DispatchCriteriaHelper{
+
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(DispatchCriteriaHelper.class);
 
    private DispatchCriteriaHelper() {
       // Hide default no argument constructor as it's a utility class.
@@ -417,6 +427,34 @@ public class DispatchCriteriaHelper{
       }
       return result.toString();
    }
+
+   public static DispatcherDetails extractDispatcherWithRules(Operation operation) {
+      String rootDispatcher = operation.getDispatcher();
+      String rootDispatcherRules = operation.getDispatcherRules();
+
+      if (DispatchStyles.FALLBACK.equals(operation.getDispatcher())) {
+         try {
+            FallbackSpecification fallbackSpec = FallbackSpecification.buildFromJsonString(operation.getDispatcherRules());
+            rootDispatcher = fallbackSpec.getDispatcher();
+            rootDispatcherRules = fallbackSpec.getDispatcherRules();
+         } catch (JsonMappingException e) {
+            log.warn("Operation '{}' has a malformed Fallback dispatcher rules", operation.getName());
+         }
+      }
+      if (DispatchStyles.PROXY.equals(operation.getDispatcher())) {
+         try {
+            ProxySpecification proxySpec = ProxySpecification.buildFromJsonString(operation.getDispatcherRules());
+            rootDispatcher = proxySpec.getDispatcher();
+            rootDispatcherRules = proxySpec.getDispatcherRules();
+         } catch (JsonMappingException e) {
+            log.warn("Operation '{}' has a malformed Proxy dispatcher rules", operation.getName());
+         }
+      }
+
+      return new DispatcherDetails(rootDispatcher, rootDispatcherRules);
+   }
+
+   public record DispatcherDetails(String rootDispatcher, String rootDispatcherRules) {}
 
    private static String sanitizeURLForRegExp(String url) {
      return url.replace("+", " ");

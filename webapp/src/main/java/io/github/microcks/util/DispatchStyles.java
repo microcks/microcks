@@ -48,6 +48,9 @@ public class DispatchStyles{
    /** Constant for FALLBACK dispatch style. */
    public static final String FALLBACK = "FALLBACK";
 
+   /** Constant for PROXY dispatch style. */
+   public static final String PROXY = "PROXY";
+
    /** Constant for RANDOM dispatch style. */
    public static final String RANDOM = "RANDOM";
 }

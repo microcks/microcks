@@ -29,6 +29,8 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.dispatcher.ProxySpecification;
+import io.github.microcks.util.el.TemplateEngineFactory;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
 import org.apache.commons.lang3.StringUtils;
@@ -176,7 +178,7 @@ public class RestController {
          }
 
          // We must find dispatcher and its rules. Default to operation ones but
-         // if we have a Fallback this is the one who is holding the first pass rules.
+         // if we have a Fallback or Proxy this is the one who is holding the first pass rules.
          String dispatcher = rOperation.getDispatcher();
          String dispatcherRules = rOperation.getDispatcherRules();
          FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(rOperation);
@@ -184,17 +186,16 @@ public class RestController {
             dispatcher = fallback.getDispatcher();
             dispatcherRules = fallback.getDispatcherRules();
          }
+         ProxySpecification proxy = MockControllerCommons.getProxyIfAny(rOperation);
+         if (proxy != null) {
+            dispatcher = proxy.getDispatcher();
+            dispatcherRules = proxy.getDispatcherRules();
+         }
 
          //
          DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules,
                getURIPattern(rOperation.getName()), UriUtils.decode(resourcePath, "UTF-8"), request, body);
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
-
-         // Call remote url if necessary
-         Optional<URI> externalUrl = proxyService.extractExternalUrl(dispatchContext.dispatchCriteria(), request);
-         if (externalUrl.isPresent()) {
-            return proxyService.callExternal(externalUrl.get(), method, headers, body);
-         }
 
          Response response = null;
 
@@ -213,6 +214,18 @@ public class RestController {
             // If we've found nothing and got a fallback, that's the moment!
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), fallback.getFallback());
             response = getResponseByMediaType(responses, request);
+         }
+
+         if (response == null && proxy != null && proxy.getProxyUrl() != null) {
+            // If we've found nothing and got a proxy, that's the moment!
+            Optional<URI> externalUrl = proxyService.extractExternalUrl(MockControllerCommons.renderResponseContent(
+               MockControllerCommons.buildEvaluableRequest(body, resourcePath, request),
+               TemplateEngineFactory.getTemplateEngine(),
+               proxy.getProxyUrl()
+            ), request);
+            if (externalUrl.isPresent()) {
+               return proxyService.callExternal(externalUrl.get(), method, headers, body);
+            }
          }
 
          if (response == null) {

@@ -21,8 +21,6 @@ public class ProxyService {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(ProxyService.class);
 
-   private static final String EXTERNAL_URL_PREFIX = "microcks-calls:";
-
    private static final RestTemplate restTemplate = new RestTemplate();
 
    public ResponseEntity<byte[]> callExternal(URI externalUrl, HttpMethod method, HttpHeaders headers, String body) {
@@ -34,15 +32,12 @@ public class ProxyService {
       }
    }
 
-   public Optional<URI> extractExternalUrl(String dispatchingCriteria, HttpServletRequest request) {
-      if (dispatchingCriteria != null && dispatchingCriteria.startsWith(EXTERNAL_URL_PREFIX)) {
-         String externalUrl = dispatchingCriteria.replaceFirst(EXTERNAL_URL_PREFIX, "").trim();
-         if (!externalUrl.contentEquals(request.getRequestURL())) {
-            try {
-               return Optional.of(UriComponentsBuilder.fromHttpUrl(externalUrl).build().toUri());
-            } catch (IllegalArgumentException ex) {
-               log.warn("Invalid external URL in the dispatcher - {}", externalUrl);
-            }
+   public Optional<URI> extractExternalUrl(String externalUrl, HttpServletRequest request) {
+      if (!externalUrl.contentEquals(request.getRequestURL())) {
+         try {
+            return Optional.of(UriComponentsBuilder.fromHttpUrl(externalUrl).build().toUri());
+         } catch (IllegalArgumentException ex) {
+            log.warn("Invalid external URL in the dispatcher - {}", externalUrl);
          }
       }
       return Optional.empty();

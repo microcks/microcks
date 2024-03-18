@@ -34,8 +34,6 @@ import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.URIBuilder;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.metadata.MetadataExtensions;
 import io.github.microcks.util.metadata.MetadataExtractor;
 
@@ -169,19 +167,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                if (verb.getValue().has("responses")) {
 
                   // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
-                  String rootDispatcher = operation.getDispatcher();
-                  String rootDispatcherRules = operation.getDispatcherRules();
-
-                  if (DispatchStyles.FALLBACK.equals(operation.getDispatcher())) {
-                     FallbackSpecification fallbackSpec = null;
-                     try {
-                        fallbackSpec = FallbackSpecification.buildFromJsonString(operation.getDispatcherRules());
-                        rootDispatcher = fallbackSpec.getDispatcher();
-                        rootDispatcherRules = fallbackSpec.getDispatcherRules();
-                     } catch (JsonMappingException e) {
-                        log.warn("Operation '{}' has a malformed Fallback dispatcher rules", operation.getName());
-                     }
-                  }
+                  DispatchCriteriaHelper.DispatcherDetails details = DispatchCriteriaHelper.extractDispatcherWithRules(operation);
+                  String rootDispatcher = details.rootDispatcher();
+                  String rootDispatcherRules = details.rootDispatcherRules();
 
                   Iterator<Entry<String, JsonNode>> responseCodes = verb.getValue().path("responses").fields();
                   while (responseCodes.hasNext()) {

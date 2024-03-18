@@ -22,6 +22,7 @@ import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.dispatcher.ProxySpecification;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
@@ -45,7 +46,11 @@ import java.util.Map;
 public class MockControllerCommons {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
+   private static final Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
+
+   private MockControllerCommons() {
+      // Hide default no argument constructor as it's a utility class.
+   }
 
    /**
     * Retrieve a fallback specification for this operation if one is defined.
@@ -62,6 +67,23 @@ public class MockControllerCommons {
          }
       }
       return fallback;
+   }
+
+   /**
+    * Retrieve a proxy specification for this operation if one is defined.
+    * @param rOperation The operation to get proxy specification
+    * @return A proxy specification or null if none defined
+    */
+   public static ProxySpecification getProxyIfAny(Operation rOperation) {
+      ProxySpecification proxy = null;
+      if (DispatchStyles.PROXY.equals(rOperation.getDispatcher())) {
+         try {
+            proxy = ProxySpecification.buildFromJsonString(rOperation.getDispatcherRules());
+         } catch (JsonMappingException jme) {
+            log.error("Dispatching rules of operation cannot be interpreted as ProxySpecification", jme);
+         }
+      }
+      return proxy;
    }
 
    /**
