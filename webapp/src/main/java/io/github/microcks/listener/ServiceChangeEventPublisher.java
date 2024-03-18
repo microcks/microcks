@@ -40,12 +40,13 @@ import org.springframework.stereotype.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 /**
  * Application event listener that send a message on Kafka topic on incoming ServiceUpdateEvent.
  * @author laurent
  */
 @Component
-@ConditionalOnProperty(value="async-api.enabled", havingValue="true", matchIfMissing=true)
+@ConditionalOnProperty(value = "async-api.enabled", havingValue = "true", matchIfMissing = true)
 public class ServiceChangeEventPublisher implements ApplicationListener<ServiceChangeEvent> {
 
    /** A simple logger for diagnostic messages. */
@@ -75,13 +76,13 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
             for (Operation operation : service.getOperations()) {
                if (service.getType() == ServiceType.EVENT || service.getType() == ServiceType.GENERIC_EVENT) {
                   // If an event, we should explicitly retrieve event messages.
-                  List<UnidirectionalEvent> events = messageService.getEventByOperation(
-                        IdBuilder.buildOperationId(service, operation));
+                  List<UnidirectionalEvent> events = messageService
+                        .getEventByOperation(IdBuilder.buildOperationId(service, operation));
                   messagesMap.put(operation.getName(), events);
                } else {
                   // Otherwise we have traditional request / response pairs.
-                  List<RequestResponsePair> pairs = messageService.getRequestResponseByOperation(
-                        IdBuilder.buildOperationId(service, operation));
+                  List<RequestResponsePair> pairs = messageService
+                        .getRequestResponseByOperation(IdBuilder.buildOperationId(service, operation));
                   messagesMap.put(operation.getName(), pairs);
                }
             }
@@ -91,7 +92,8 @@ public class ServiceChangeEventPublisher implements ApplicationListener<ServiceC
       }
 
       // Build and send a ServiceViewChangeEvent that wraps ServiceView.
-      ServiceViewChangeEvent serviceViewChangeEvent = new ServiceViewChangeEvent(event.getServiceId(), serviceView, event.getChangeType(), System.currentTimeMillis());
+      ServiceViewChangeEvent serviceViewChangeEvent = new ServiceViewChangeEvent(event.getServiceId(), serviceView,
+            event.getChangeType(), System.currentTimeMillis());
       try {
          channel.sendServiceViewChangeEvent(serviceViewChangeEvent);
          log.debug("Processing of ServiceChangeEvent done !");

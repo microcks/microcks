@@ -16,8 +16,8 @@
 package io.github.microcks.domain;
 
 /**
- * TestStepResult is an entity embedded within TestCaseResult. They are created
- * for each request or message associated with an operation / action of a microservice.
+ * TestStepResult is an entity embedded within TestCaseResult. They are created for each request or message associated
+ * with an operation / action of a microservice.
  * @author laurent
  */
 public class TestStepResult {

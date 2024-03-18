@@ -20,8 +20,8 @@ import io.github.microcks.util.el.EvaluationContext;
 import java.util.UUID;
 
 /**
- * Implementation of ELFunction that generates a UUID compliant with RFC 4122
- * (see https://www.cryptosys.net/pki/uuid-rfc4122.html).
+ * Implementation of ELFunction that generates a UUID compliant with RFC 4122 (see
+ * https://www.cryptosys.net/pki/uuid-rfc4122.html).
  * @author laurent
  */
 public class UUIDELFunction implements ELFunction {

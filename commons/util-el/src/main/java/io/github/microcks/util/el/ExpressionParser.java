@@ -25,13 +25,13 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Helper object for finding and parsing expressions present into a string template.
- * For example, following template: {@code Hello {{ request.body/name }} it's {{ now() }}} should be decomposed into
- * 4 expressions: <ul>
- *    <li>A LiteralExpression representing the "Hello " part</li>
- *    <li>A VariableReferenceExpression representing the "request.body/name part</li>
- *    <li>A LiteralExpression representing the " it's " part</li>
- *    <li>A ELFunctionExpression representing the "now()" part</li>
+ * Helper object for finding and parsing expressions present into a string template. For example, following template:
+ * {@code Hello {{ request.body/name }} it's {{ now() }}} should be decomposed into 4 expressions:
+ * <ul>
+ * <li>A LiteralExpression representing the "Hello " part</li>
+ * <li>A VariableReferenceExpression representing the "request.body/name part</li>
+ * <li>A LiteralExpression representing the " it's " part</li>
+ * <li>A ELFunctionExpression representing the "now()" part</li>
  * </ul>
  * @author laurent
  */
@@ -41,16 +41,16 @@ public class ExpressionParser {
    private static Logger log = LoggerFactory.getLogger(ExpressionParser.class);
 
    /**
-    * Navigate the template for finding expressions that can be evaluated into this template. Expressions
-    * are returned into an ordered array.
-    * @param template The string to browse
-    * @param context The EvaluationContext that may contains variable or function references
+    * Navigate the template for finding expressions that can be evaluated into this template. Expressions are returned
+    * into an ordered array.
+    * @param template         The string to browse
+    * @param context          The EvaluationContext that may contains variable or function references
     * @param expressionPrefix The prefix starting new expression (ex: "{{")
     * @param expressionSuffix The suffix closing expression (ex: "}}")
     * @return The array of found expressions when browsing template from left to right
     */
-   public static Expression[] parseExpressions(String template, EvaluationContext context,
-                                               String expressionPrefix, String expressionSuffix) throws ParseException {
+   public static Expression[] parseExpressions(String template, EvaluationContext context, String expressionPrefix,
+         String expressionSuffix) throws ParseException {
       // Prepare an array for results.
       List<Expression> expressions = new ArrayList<>();
       int startIdx = 0;
@@ -60,37 +60,35 @@ public class ExpressionParser {
          if (prefixIndex >= startIdx) {
             // an inner expression was found - this is a composite
             if (prefixIndex > startIdx) {
-               log.debug("Found a literal expression starting at " + startIdx);
+               log.debug("Found a literal expression starting at {}", startIdx);
                expressions.add(new LiteralExpression(template.substring(startIdx, prefixIndex)));
             }
             int afterPrefixIndex = prefixIndex + expressionPrefix.length();
             int suffixIndex = skipToCorrectEndSuffix(expressionSuffix, template, afterPrefixIndex);
             if (suffixIndex == -1) {
-               log.info("No ending suffix '" + expressionSuffix + "' for expression starting at character " +
-                     prefixIndex + ": " + template.substring(prefixIndex));
+               log.info("No ending suffix '{}' for expression starting at character {}: {}", expressionSuffix,
+                     prefixIndex, template.substring(prefixIndex));
                throw new ParseException(template, prefixIndex,
-                     "No ending suffix '" + expressionSuffix + "' for expression starting at character " +
-                           prefixIndex + ": " + template.substring(prefixIndex));
+                     "No ending suffix '" + expressionSuffix + "' for expression starting at character " + prefixIndex
+                           + ": " + template.substring(prefixIndex));
             }
             if (suffixIndex == afterPrefixIndex) {
-               log.info("No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                     "' at character " + prefixIndex);
-               throw new ParseException(template, prefixIndex,
-                     "No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                           "' at character " + prefixIndex);
+               log.info("No expression defined within delimiter '{}' at character {}",
+                     expressionPrefix + expressionSuffix, prefixIndex);
+               throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
+                     + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
             }
             String expr = template.substring(prefixIndex + expressionPrefix.length(), suffixIndex);
             expr = expr.trim();
             if (expr.isEmpty()) {
-               log.info("No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                     "' at character " + prefixIndex);
-               throw new ParseException(template, prefixIndex,
-                     "No expression defined within delimiter '" + expressionPrefix + expressionSuffix +
-                           "' at character " + prefixIndex);
+               log.info("No expression defined within delimiter '{}' at character {}",
+                     expressionPrefix + expressionSuffix, prefixIndex);
+               throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
+                     + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
             }
             expressions.add(doParseExpression(expr, context));
             startIdx = suffixIndex + expressionSuffix.length();
-            log.debug("Expression accumulated. Pursuing with index " + startIdx + " on " + template.length());
+            log.debug("Expression accumulated. Pursuing with index {} on {}", startIdx, template.length());
          } else {
             // no more expression. finalize with a literal.
             expressions.add(new LiteralExpression(template.substring(startIdx, template.length())));
@@ -109,7 +107,10 @@ public class ExpressionParser {
       return nextSuffix;
    }
 
-   /** Depending on expression string, try to guess if it's a Redirect, a Literal, a Function or a VariableReference expression. */
+   /**
+    * Depending on expression string, try to guess if it's a Redirect, a Literal, a Function or a VariableReference
+    * expression.
+    */
    private static Expression doParseExpression(String expressionString, EvaluationContext context) {
 
       boolean hasRedirect = expressionString.indexOf('>') != -1;
@@ -118,7 +119,7 @@ public class ExpressionParser {
       if (hasRedirect) {
          String[] parts = expressionString.split("\\>");
          Expression[] expressions = new Expression[parts.length];
-         for (int i=0; i < parts.length; i++) {
+         for (int i = 0; i < parts.length; i++) {
             expressions[i] = doParseSimpleExpression(parts[i].trim(), context);
          }
          return new RedirectExpression(expressions);
@@ -127,7 +128,9 @@ public class ExpressionParser {
       return doParseSimpleExpression(expressionString, context);
    }
 
-   /** Depending on expression string, try to guess if it's a Literal, a Function or a VariableReference expression. */
+   /**
+    * Depending on expression string, try to guess if it's a Literal, a Function or a VariableReference expression.
+    */
    private static Expression doParseSimpleExpression(String expressionString, EvaluationContext context) {
       int argsStart = expressionString.indexOf('(');
       int argsEnd = expressionString.indexOf(')');
@@ -138,11 +141,12 @@ public class ExpressionParser {
       boolean isPostmanFunction = expressionString.startsWith("$");
       boolean varBeforeArgs = (variableStart < argsStart) && !isPostmanFunction;
 
-      log.debug("hasVariable:{} hasArgs:{} isPostmanFunction:{} varBeforeArgs:{}", hasVariable, hasArgs, isPostmanFunction, varBeforeArgs);
+      log.debug("hasVariable:{} hasArgs:{} isPostmanFunction:{} varBeforeArgs:{}", hasVariable, hasArgs,
+            isPostmanFunction, varBeforeArgs);
 
       // Check if it's a VariableReferenceExpression.
       if (hasVariable && (!hasArgs || varBeforeArgs)) {
-         log.debug("Found a variable reference expression " + expressionString);
+         log.debug("Found a variable reference expression {}", expressionString);
          String variableName = expressionString.substring(0, expressionString.indexOf('.'));
          Object variable = context.lookupVariable(variableName);
          String pathExpression = expressionString.substring(expressionString.indexOf('.') + 1);
@@ -150,14 +154,14 @@ public class ExpressionParser {
          if (variable != null) {
             return new VariableReferenceExpression(variable, pathExpression);
          }
-         log.warn("Variable with name " + variableName + " cannot be found into EvaluationContext. " +
-               "Returning empty literal expression");
+         log.warn("Variable with name {} cannot be found into EvaluationContext. Returning empty literal expression",
+               variableName);
          return new LiteralExpression("");
       }
 
       // Check if it's a ELFunctionExpression
       if (hasArgs || isPostmanFunction) {
-         log.debug("Found a function expression " + expressionString);
+         log.debug("Found a function expression {}", expressionString);
 
          String functionName = null;
          String[] args = new String[0];
@@ -169,8 +173,7 @@ public class ExpressionParser {
             String argsString = expressionString.substring(argsStart + 1, argsEnd);
             // Parse arguments if non empty string.
             if (argsString.length() > 0) {
-               args = Arrays.stream(argsString.split(","))
-                     .map(arg -> arg.trim()).toArray(String[]::new);
+               args = Arrays.stream(argsString.split(",")).map(arg -> arg.trim()).toArray(String[]::new);
             }
          }
 

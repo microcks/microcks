@@ -27,8 +27,8 @@ import java.util.List;
  * 
  * @author laurent
  */
-public interface GenericResourceRepository extends MongoRepository<GenericResource, String>,
-      CustomGenericResourceRepository {
+public interface GenericResourceRepository
+      extends MongoRepository<GenericResource, String>, CustomGenericResourceRepository {
 
    List<GenericResource> findByServiceId(String serviceId, Pageable pageable);
 

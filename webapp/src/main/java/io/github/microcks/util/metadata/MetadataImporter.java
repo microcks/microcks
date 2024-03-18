@@ -102,7 +102,8 @@ public class MetadataImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       return new ArrayList<>();
    }
 

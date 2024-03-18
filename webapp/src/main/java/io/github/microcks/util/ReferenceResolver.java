@@ -28,11 +28,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Helper object that can be used to fully resolved references that are placed within
- * a specification or a schema (think of the $ref within OpenAPI or AsyncAPI documents).
- * A resolver is built with a base repository URL (that should point to a "folder") and
- * some security parameters on how to access this repository. It then takes care of
- * retrieving reference content using their relative path from base repository URL.
+ * Helper object that can be used to fully resolved references that are placed within a specification or a schema (think
+ * of the $ref within OpenAPI or AsyncAPI documents). A resolver is built with a base repository URL (that should point
+ * to a "folder") and some security parameters on how to access this repository. It then takes care of retrieving
+ * reference content using their relative path from base repository URL.
  * @author laurent
  */
 public class ReferenceResolver {
@@ -51,8 +50,8 @@ public class ReferenceResolver {
 
    /**
     * Build a new reference resolver.
-    * @param baseRepositoryUrl The root folder representing a remote repository we want to resolved references to
-    * @param repositorySecret An optional Secret containing connection credentials to the repository
+    * @param baseRepositoryUrl    The root folder representing a remote repository we want to resolved references to
+    * @param repositorySecret     An optional Secret containing connection credentials to the repository
     * @param disableSSLValidation Whether to disable or enable the SSL trusting of certificates
     */
    public ReferenceResolver(String baseRepositoryUrl, Secret repositorySecret, boolean disableSSLValidation) {
@@ -64,12 +63,12 @@ public class ReferenceResolver {
 
    /**
     * Build a new reference resolver.
-    * @param baseRepositoryUrl The root folder representing a remote repository we want to resolved references to
-    * @param repositorySecret An optional Secret containing connection credentials to the repository
+    * @param baseRepositoryUrl    The root folder representing a remote repository we want to resolved references to
+    * @param repositorySecret     An optional Secret containing connection credentials to the repository
     * @param disableSSLValidation Whether to disable or enable the SSL trusting of certificates
     */
    public ReferenceResolver(String baseRepositoryUrl, Secret repositorySecret, boolean disableSSLValidation,
-                            RelativeReferenceURLBuilder urlBuilder) {
+         RelativeReferenceURLBuilder urlBuilder) {
       this.setBaseRepositoryUrl(baseRepositoryUrl);
       this.repositorySecret = repositorySecret;
       this.disableSSLValidation = disableSSLValidation;
@@ -110,7 +109,7 @@ public class ReferenceResolver {
    /**
     * Retrieve a reference content from remote repository using its relative path?
     * @param relativePath The relative path of the reference to retrieve
-    * @param encoding The encoding to use for building a string representation of content.
+    * @param encoding     The encoding to use for building a string representation of content.
     * @return A string representation of reference content.
     * @throws IOException if access to remote reference fails (not found or connection issues)
     */

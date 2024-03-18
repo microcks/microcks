@@ -25,7 +25,6 @@ import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -60,21 +59,24 @@ public class GrpcServerStarter {
 
    private static final String END_RSA_PRIVATE_KEY = "-----END RSA PRIVATE KEY-----";
 
+   private final GrpcMockHandlerRegistry mockHandlerRegistry;
+
    @Value("${grpc.server.port:9090}")
-   private final Integer serverPort = 9090;
+   private Integer serverPort = 9090;
 
    @Value("${grpc.server.certChainFilePath:}")
-   private final String certChainFilePath = null;
+   private String certChainFilePath = null;
 
    @Value("${grpc.server.privateKeyFilePath:}")
-   private final String privateKeyFilePath = null;
-
-   @Autowired
-   private GrpcMockHandlerRegistry mockHandlerRegistry;
+   private String privateKeyFilePath = null;
 
    private AtomicBoolean isRunning = new AtomicBoolean(false);
 
    private CountDownLatch latch;
+
+   public GrpcServerStarter(GrpcMockHandlerRegistry mockHandlerRegistry) {
+      this.mockHandlerRegistry = mockHandlerRegistry;
+   }
 
    @PostConstruct
    public void startGrpcServer() {
@@ -83,15 +85,14 @@ public class GrpcServerStarter {
          Server grpcServer = null;
 
          // If cert and private key is provided, build a TLS capable server.
-         if (certChainFilePath != null && certChainFilePath.length() > 0
-               && privateKeyFilePath != null && privateKeyFilePath.length() > 0) {
+         if (certChainFilePath != null && certChainFilePath.length() > 0 && privateKeyFilePath != null
+               && privateKeyFilePath.length() > 0) {
             TlsServerCredentials.Builder tlsBuilder = TlsServerCredentials.newBuilder()
                   .keyManager(new File(certChainFilePath), new File(privateKeyFilePath));
 
             try {
                grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
-                     .fallbackHandlerRegistry(mockHandlerRegistry)
-                     .build();
+                     .fallbackHandlerRegistry(mockHandlerRegistry).build();
             } catch (IllegalArgumentException iae) {
                if (iae.getCause() instanceof NoSuchAlgorithmException
                      || iae.getCause() instanceof InvalidKeySpecException) {
@@ -103,23 +104,20 @@ public class GrpcServerStarter {
                   final byte[] privateKeyBytes = extractPrivateKeyIfAny(privateKeyFilePath);
                   if (privateKeyBytes != null) {
                      log.info("Building a GRPC server with converted key");
-                     tlsBuilder = TlsServerCredentials.newBuilder()
-                           .keyManager(new FileInputStream(certChainFilePath),
-                                 new ByteArrayInputStream(privateKeyBytes));
+                     tlsBuilder = TlsServerCredentials.newBuilder().keyManager(new FileInputStream(certChainFilePath),
+                           new ByteArrayInputStream(privateKeyBytes));
                      grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
-                           .fallbackHandlerRegistry(mockHandlerRegistry)
-                           .build();
+                           .addService(mockHandlerRegistry.getReflectionService())
+                           .fallbackHandlerRegistry(mockHandlerRegistry).build();
                   }
                }
             }
          } else {
             // Else build a "plain text" server.
-            grpcServer = ServerBuilder.forPort(serverPort)
-                  .fallbackHandlerRegistry(mockHandlerRegistry)
-                  .build();
+            grpcServer = ServerBuilder.forPort(serverPort).fallbackHandlerRegistry(mockHandlerRegistry).build();
          }
          grpcServer.start();
-         log.info("GRPC Server started on port " + serverPort);
+         log.info("GRPC Server started on port {}", serverPort);
 
          Server finalGrpcServer = grpcServer;
          Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -148,7 +146,7 @@ public class GrpcServerStarter {
             latch.await();
          } catch (InterruptedException e) {
             log.error("GRPC Server awaiter interrupted.", e);
-         }finally {
+         } finally {
             isRunning.set(false);
          }
       });
@@ -168,18 +166,18 @@ public class GrpcServerStarter {
          PrivateKey privatekey = null;
 
          log.debug("Parsed PrivateKey: {}", object);
-         if (object instanceof PEMKeyPair) {
-            privatekey = converter.getPrivateKey(((PEMKeyPair) object).getPrivateKeyInfo());
+         if (object instanceof PEMKeyPair pemKeyPair) {
+            privatekey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
          }
-         if (object instanceof PrivateKeyInfo) {
-            privatekey = converter.getPrivateKey((PrivateKeyInfo) object);
+         if (object instanceof PrivateKeyInfo privateKeyInfo) {
+            privatekey = converter.getPrivateKey(privateKeyInfo);
          }
          if (privatekey != null) {
             log.debug("Found PrivateKey Algorithm: {}", privatekey.getAlgorithm()); // ex. RSA
             log.debug("Found PrivateKey Format: {}", privatekey.getFormat()); // ex. PKCS#8
 
-            String privateKeyPem  = BEGIN_RSA_PRIVATE_KEY + "\n" +
-                  Base64.getEncoder().encodeToString(privatekey.getEncoded()) + "\n" + END_RSA_PRIVATE_KEY + "\n";
+            String privateKeyPem = BEGIN_RSA_PRIVATE_KEY + "\n"
+                  + Base64.getEncoder().encodeToString(privatekey.getEncoded()) + "\n" + END_RSA_PRIVATE_KEY + "\n";
             log.debug("New PrivateKey PEM is {}", privateKeyPem);
             return privateKeyPem.getBytes(StandardCharsets.UTF_8);
          }

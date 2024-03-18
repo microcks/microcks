@@ -27,8 +27,8 @@ import java.net.URL;
 import java.util.Map;
 
 /**
- * An implementation of LSResourceResolver that may use local cache for standard schemas (xml.xsd)
- * of an URL resolver for relative references to XSD that may be embedded into other XSD.
+ * An implementation of LSResourceResolver that may use local cache for standard schemas (xml.xsd) of an URL resolver
+ * for relative references to XSD that may be embedded into other XSD.
  * @author laurent
  */
 public class XmlSchemaURLResolver implements LSResourceResolver {
@@ -36,9 +36,7 @@ public class XmlSchemaURLResolver implements LSResourceResolver {
    /** A commons logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(XmlSchemaURLResolver.class);
 
-   private static final Map<String, String> LOCAL_RESOLUTIONS = Map.of(
-         "http://www.w3.org/2001/xml.xsd", "xml.xsd"
-   );
+   private static final Map<String, String> LOCAL_RESOLUTIONS = Map.of("http://www.w3.org/2001/xml.xsd", "xml.xsd");
 
    private String baseResourceURL;
 
@@ -65,7 +63,7 @@ public class XmlSchemaURLResolver implements LSResourceResolver {
             sanitizedSystemId = systemId.substring(2);
          }
          try {
-            URL resourceURL = new URL(baseResourceURL + (baseResourceURL.endsWith("/") ? "":"/") + sanitizedSystemId);
+            URL resourceURL = new URL(baseResourceURL + (baseResourceURL.endsWith("/") ? "" : "/") + sanitizedSystemId);
             resourceStream = resourceURL.openStream();
          } catch (Exception e) {
             log.error("Failed to open stream on {}/{}", baseResourceURL, sanitizedSystemId, e);

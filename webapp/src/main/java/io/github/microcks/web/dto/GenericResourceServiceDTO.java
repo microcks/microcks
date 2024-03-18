@@ -32,6 +32,7 @@ public class GenericResourceServiceDTO {
    public String getName() {
       return name;
    }
+
    public void setName(String name) {
       this.name = name;
    }
@@ -39,6 +40,7 @@ public class GenericResourceServiceDTO {
    public String getVersion() {
       return version;
    }
+
    public void setVersion(String version) {
       this.version = version;
    }
@@ -46,6 +48,7 @@ public class GenericResourceServiceDTO {
    public String getResource() {
       return resource;
    }
+
    public void setResource(String resource) {
       this.resource = resource;
    }

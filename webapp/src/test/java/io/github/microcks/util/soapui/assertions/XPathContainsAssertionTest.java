@@ -52,26 +52,20 @@ public class XPathContainsAssertionTest {
    @Test
    public void testExactMatch() {
       // Passing case.
-      Map<String, String> configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Hello Andrew !"
-      );
+      Map<String, String> configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Hello Andrew !");
       SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.XPATH_CONTAINS, configParams);
       AssertionStatus status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.VALID, status);
 
       // Failing case.
-      configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Andrew"
-      );
+      configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Andrew");
       assertion.configure(configParams);
       status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
@@ -81,83 +75,65 @@ public class XPathContainsAssertionTest {
    @Test
    public void testFuzzyMatch() {
       // Passing case with starting *.
-      Map<String, String> configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "*Andrew*",
-            XPathContainsAssertion.ALLOW_WILDCARDS, "true"
-      );
+      Map<String, String> configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "*Andrew*", XPathContainsAssertion.ALLOW_WILDCARDS,
+            "true");
       SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.XPATH_CONTAINS, configParams);
       AssertionStatus status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.VALID, status);
 
       // Passing case with middle *.
-      configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Hello*!",
-            XPathContainsAssertion.ALLOW_WILDCARDS, "true"
-      );
+      configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Hello*!", XPathContainsAssertion.ALLOW_WILDCARDS,
+            "true");
       assertion = AssertionFactory.intializeAssertion(AssertionFactory.XPATH_CONTAINS, configParams);
       status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.VALID, status);
 
       // Passing case with ending *.
-      configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Hello Andrew*",
-            XPathContainsAssertion.ALLOW_WILDCARDS, "true"
-      );
+      configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Hello Andrew*", XPathContainsAssertion.ALLOW_WILDCARDS,
+            "true");
       assertion = AssertionFactory.intializeAssertion(AssertionFactory.XPATH_CONTAINS, configParams);
       status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.VALID, status);
 
       // Passing case with * everywhere.
-      configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "*Hello*Andrew*",
-            XPathContainsAssertion.ALLOW_WILDCARDS, "true"
-      );
+      configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "*Hello*Andrew*",
+            XPathContainsAssertion.ALLOW_WILDCARDS, "true");
       assertion = AssertionFactory.intializeAssertion(AssertionFactory.XPATH_CONTAINS, configParams);
       status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.VALID, status);
 
       // Failing case.
-      configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "*Andrew",
-            XPathContainsAssertion.ALLOW_WILDCARDS, "true"
-      );
+      configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "*Andrew", XPathContainsAssertion.ALLOW_WILDCARDS,
+            "true");
       assertion.configure(configParams);
       status = assertion.assertResponse(new RequestResponseExchange(null, null, invalidSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.FAILED, status);
 
-      configParams = Map.of(
-            XPathContainsAssertion.PATH_PARAM, """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """,
-            XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Andrew*",
-            XPathContainsAssertion.ALLOW_WILDCARDS, "true"
-      );
+      configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """, XPathContainsAssertion.EXPECTED_CONTENT_PARAM, "Andrew*", XPathContainsAssertion.ALLOW_WILDCARDS,
+            "true");
       assertion.configure(configParams);
       status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));

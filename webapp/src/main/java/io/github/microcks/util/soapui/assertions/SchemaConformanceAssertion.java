@@ -70,12 +70,14 @@ public class SchemaConformanceAssertion implements SoapUIAssertion {
          }
       } else if (definition != null) {
          // Only managed Xml validation at the moment.
-         if (exchange.response().getHeaders().getConnection() != null && exchange.response().getHeaders().getConnection().contains("xml")) {
+         if (exchange.response().getHeaders().getConnection() != null
+               && exchange.response().getHeaders().getConnection().contains("xml")) {
             log.debug("Asserting Xml response is valid against local definition");
 
             try {
-               errorMessages = XmlSchemaValidator.validateXml(new ByteArrayInputStream(definition.getBytes(StandardCharsets.UTF_8)),
-                     exchange.responseContent(), context.resourceUrl());
+               errorMessages = XmlSchemaValidator.validateXml(
+                     new ByteArrayInputStream(definition.getBytes(StandardCharsets.UTF_8)), exchange.responseContent(),
+                     context.resourceUrl());
             } catch (Exception e) {
                log.warn("Xml schema validation failed with: {}", e.getMessage());
                errorMessages.add("Xml schema validation failed with: " + e.getMessage());

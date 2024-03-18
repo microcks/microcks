@@ -15,6 +15,7 @@
  */
 package io.github.microcks.util;
 
+import io.github.microcks.util.asyncapi.AsyncAPI3Importer;
 import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
@@ -32,6 +33,7 @@ import java.io.IOException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
 /**
  * This is a test case for MockRepositoryImporterFactory.
  * @author laurent
@@ -62,7 +64,8 @@ public class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof PostmanCollectionImporter);
 
       // Load a Postman Workspace file.
-      File postmanWorkspaceCollection = new File("target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
+      File postmanWorkspaceCollection = new File(
+            "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(postmanWorkspaceCollection, null);
@@ -112,7 +115,8 @@ public class MockRepositoryImporterFactoryTest {
       assertTrue(importer instanceof AsyncAPIImporter);
 
       // Load an AsyncAPI JSON oneliner file.
-      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-oneliner.json");
+      asyncAPISpec = new File(
+            "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-oneliner.json");
       importer = null;
       try {
          importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
@@ -130,6 +134,16 @@ public class MockRepositoryImporterFactoryTest {
          fail("Getting importer for AsyncAPI YAML should not fail!");
       }
       assertTrue(importer instanceof AsyncAPIImporter);
+
+      // Load an AsyncAPI v3 YAML file.
+      asyncAPISpec = new File("target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0.yaml");
+      importer = null;
+      try {
+         importer = MockRepositoryImporterFactory.getMockRepositoryImporter(asyncAPISpec, null);
+      } catch (Throwable t) {
+         fail("Getting importer for AsyncAPI v3 YAML should not fail!");
+      }
+      assertTrue(importer instanceof AsyncAPI3Importer);
 
       // Load a Protobuf schema file.
       File protobufSchema = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");

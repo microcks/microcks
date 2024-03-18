@@ -36,7 +36,6 @@ public class Secret {
 
    private String caCertPem;
 
-
    public String getId() {
       return id;
    }

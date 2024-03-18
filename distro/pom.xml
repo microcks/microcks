@@ -4,12 +4,16 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.8.2-SNAPSHOT</version>
+    <version>1.9.1-SNAPSHOT</version>
   </parent>
 
   <name>Microcks Distros</name>
   <artifactId>microcks-distro</artifactId>
   <packaging>pom</packaging>
+
+  <properties>
+    <multi-project.rootdir>..</multi-project.rootdir>
+  </properties>
 
   <modules>
     <module>uber</module>

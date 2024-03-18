@@ -39,8 +39,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * This class holds commons, utility handlers for different mock controller implements
- * (whether it be Soap, Rest, Async or whatever ...)
+ * This class holds commons, utility handlers for different mock controller implements (whether it be Soap, Rest, Async
+ * or whatever ...)
  * @author laurent
  */
 public class MockControllerCommons {
@@ -48,8 +48,11 @@ public class MockControllerCommons {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
 
+   private static final String RENDERING_MESSAGE = "Response contains dynamic EL expression, rendering it...";
+
+
+   /** Private constructor to avoid instantiation. */
    private MockControllerCommons() {
-      // Hide default no argument constructor as it's a utility class.
    }
 
    /**
@@ -87,42 +90,42 @@ public class MockControllerCommons {
    }
 
    /**
-    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
-    * If rendering template fails, we just produce a log error message and stick to templatized response.
-    * @param requestBody The body payload of incoming request.
+    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required. If
+    * rendering template fails, we just produce a log error message and stick to templatized response.
+    * @param requestBody    The body payload of incoming request.
     * @param requestContext The invocation context of the request
-    * @param response The response that was found by dispatcher
+    * @param response       The response that was found by dispatcher
     * @return The rendered response body payload.
     */
-   public static String renderResponseContent(String requestBody, Map<String, Object> requestContext, Response response) {
-      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         log.debug("Response contains dynamic EL expression, rendering it...");
-         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+   public static String renderResponseContent(String requestBody, Map<String, Object> requestContext,
+         Response response) {
+      if (response.getContent() != null && response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug(RENDERING_MESSAGE);
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
 
          // Evaluate the response.
-         return unguardedRenderResponseContent(evaluableRequest, requestContext, TemplateEngineFactory.getTemplateEngine(), response.getContent());
+         return unguardedRenderResponseContent(evaluableRequest, requestContext,
+               TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
 
    /**
-    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
-    * If rendering template fails, we just produce a log error message and stick to templatized response.
-    * @param requestBody The body payload of incoming request.
-    * @param evaluableParams A map of params for evaluation.
+    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required. If
+    * rendering template fails, we just produce a log error message and stick to templatized response.
+    * @param requestBody      The body payload of incoming request.
+    * @param evaluableParams  A map of params for evaluation.
     * @param evaluableHeaders A map of headers for evaluation.
-    * @param requestContext The invocation context of the request
-    * @param response The response that was found by dispatcher
+    * @param requestContext   The invocation context of the request
+    * @param response         The response that was found by dispatcher
     * @return The rendered response body payload.
     */
-   public static String renderResponseContent(String requestBody, Map<String, String> evaluableParams, Map<String, String> evaluableHeaders,
-                                              Map<String, Object> requestContext, Response response) {
-      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         log.debug("Response contains dynamic EL expression, rendering it...");
-         TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+   public static String renderResponseContent(String requestBody, Map<String, String> evaluableParams,
+         Map<String, String> evaluableHeaders, Map<String, Object> requestContext, Response response) {
+      if (response.getContent() != null && response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug(RENDERING_MESSAGE);
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody, null);
@@ -131,49 +134,53 @@ public class MockControllerCommons {
          evaluableRequest.setHeaders(evaluableHeaders);
 
          // Evaluate the response.
-         return unguardedRenderResponseContent(evaluableRequest, requestContext, TemplateEngineFactory.getTemplateEngine(), response.getContent());
+         return unguardedRenderResponseContent(evaluableRequest, requestContext,
+               TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
 
    /**
-    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
-    * If rendering template fails, we just produce a log error message and stick to templatized response.
-    * @param requestBody The body payload of incoming request.
+    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required. If
+    * rendering template fails, we just produce a log error message and stick to templatized response.
+    * @param requestBody         The body payload of incoming request.
     * @param requestResourcePath The resource path of mock request (if any, may be null)
-    * @param request The incoming servlet request
-    * @param requestContext The invocation context of the request
-    * @param response The response that was found by dispatcher
+    * @param request             The incoming servlet request
+    * @param requestContext      The invocation context of the request
+    * @param response            The response that was found by dispatcher
     * @return The rendered response body payload.
     */
-   public static String renderResponseContent(String requestBody, String requestResourcePath, HttpServletRequest request,
-                                              Map<String, Object> requestContext, Response response) {
-      if (response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-         log.debug("Response contains dynamic EL expression, rendering it...");
+   public static String renderResponseContent(String requestBody, String requestResourcePath,
+         HttpServletRequest request, Map<String, Object> requestContext, Response response) {
+      if (response.getContent() != null && response.getContent().contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+         log.debug(RENDERING_MESSAGE);
 
          // Create and fill an evaluable request object.
          EvaluableRequest evaluableRequest = buildEvaluableRequest(requestBody, requestResourcePath, request);
-         return unguardedRenderResponseContent(evaluableRequest, requestContext, TemplateEngineFactory.getTemplateEngine(), response.getContent());
+         return unguardedRenderResponseContent(evaluableRequest, requestContext,
+               TemplateEngineFactory.getTemplateEngine(), response.getContent());
       }
       return response.getContent();
    }
 
    /**
-    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required.
-    * If rendering template fails, we just produce a log error message and stick to templatized response.
+    * Render the response content using the Expression Language compatible {@code TemplateEngine} if required. If
+    * rendering template fails, we just produce a log error message and stick to templatized response.
     * @param evaluableRequest The request that can be evaluated in templating.
-    * @param engine The template engine to use for this rendering
-    * @param responseContent The response content found by dispatcher
+    * @param engine           The template engine to use for this rendering
+    * @param responseContent  The response content found by dispatcher
     * @return The rendered response body payload.
     */
-   public static String renderResponseContent(EvaluableRequest evaluableRequest, TemplateEngine engine, String responseContent) {
-      if (responseContent.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+   public static String renderResponseContent(EvaluableRequest evaluableRequest, TemplateEngine engine,
+         String responseContent) {
+      if (responseContent != null && responseContent.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
          return unguardedRenderResponseContent(evaluableRequest, null, engine, responseContent);
       }
       return responseContent;
    }
 
-   private static String unguardedRenderResponseContent(EvaluableRequest evaluableRequest, Map<String, Object> requestContext, TemplateEngine engine, String responseContent) {
+   private static String unguardedRenderResponseContent(EvaluableRequest evaluableRequest,
+         Map<String, Object> requestContext, TemplateEngine engine, String responseContent) {
       // Register the request variable and evaluate the response.
       engine.getContext().setVariable("request", evaluableRequest);
       if (requestContext != null) {
@@ -182,19 +189,20 @@ public class MockControllerCommons {
       try {
          return engine.getValue(responseContent);
       } catch (Throwable t) {
-         log.error("Failing at evaluating template " + responseContent, t);
+         log.error("Failing at evaluating template {}", responseContent, t);
       }
       return responseContent;
    }
 
    /**
     * Build an Evaluable request from various request elements.
-    * @param requestBody The body of request to evaluate
+    * @param requestBody         The body of request to evaluate
     * @param requestResourcePath The resource path this request is bound to
-    * @param request The underlying Http request
+    * @param request             The underlying Http request
     * @return The Evaluable request for later templating rendering
     */
-   public static EvaluableRequest buildEvaluableRequest(String requestBody, String requestResourcePath, HttpServletRequest request) {
+   public static EvaluableRequest buildEvaluableRequest(String requestBody, String requestResourcePath,
+         HttpServletRequest request) {
       // Create and fill an evaluable request object.
       EvaluableRequest evaluableRequest = new EvaluableRequest(requestBody,
             requestResourcePath != null ? requestResourcePath.split("/") : null);
@@ -219,7 +227,7 @@ public class MockControllerCommons {
    /**
     * Block current thread for specified delay (if not null) from @{code startTime}.
     * @param startTime The starting time of mock request invocation
-    * @param delay The delay to wait for
+    * @param delay     The delay to wait for
     */
    public static void waitForDelay(Long startTime, Long delay) {
       if (delay != null && delay > -1) {
@@ -242,12 +250,13 @@ public class MockControllerCommons {
    /**
     * Publish a mock invocation event on Spring ApplicationContext internal bus.
     * @param applicationContext The context to use for publication
-    * @param eventSource The source of this event
-    * @param service The mocked Service that was invoked
-    * @param response The response is has been dispatched to
-    * @param startTime The start time of the invocation
+    * @param eventSource        The source of this event
+    * @param service            The mocked Service that was invoked
+    * @param response           The response is has been dispatched to
+    * @param startTime          The start time of the invocation
     */
-   public static void publishMockInvocation(ApplicationContext applicationContext, Object eventSource, Service service, Response response, Long startTime) {
+   public static void publishMockInvocation(ApplicationContext applicationContext, Object eventSource, Service service,
+         Response response, Long startTime) {
       // Publish an invocation event before returning.
       MockInvocationEvent event = new MockInvocationEvent(eventSource, service.getName(), service.getVersion(),
             response.getName(), new Date(startTime), startTime - System.currentTimeMillis());

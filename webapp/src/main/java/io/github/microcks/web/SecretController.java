@@ -55,13 +55,10 @@ public class SecretController {
 
 
    @GetMapping(value = "/secrets")
-   public List<Secret> listSecrets(
-         @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size
-   ) {
+   public List<Secret> listSecrets(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
+         @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
       log.debug("Getting secrets list for page {} and size {}", page, size);
-      return secretRepository.findAll(PageRequest.of(page, size,
-            Sort.by(Sort.Direction.ASC, "name"))).getContent();
+      return secretRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))).getContent();
    }
 
    @GetMapping(value = "/secrets/search")

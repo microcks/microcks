@@ -23,11 +23,10 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Domain object representing the result of a microservice test run by Microcks.
- * Test are related to a service and made of multiple test cases corresponding
- * to every operations / actions composing service. Tests are run against a specific
- * endpoint named testedEndpoint. It holds global markers telling if test still ran,
- * is a success, how many times is has taken and so on ...
+ * Domain object representing the result of a microservice test run by Microcks. Test are related to a service and made
+ * of multiple test cases corresponding to every operations / actions composing service. Tests are run against a
+ * specific endpoint named testedEndpoint. It holds global markers telling if test still ran, is a success, how many
+ * times is has taken and so on ...
  * @author laurent
  */
 public class TestResult {

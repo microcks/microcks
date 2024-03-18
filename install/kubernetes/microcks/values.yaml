@@ -12,7 +12,7 @@ microcks:
   #grpcSecretRef: my-secret-for-microcks-grpc
   #grpcIngressClassName: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:1.8.1
+  image: quay.io/microcks/microcks:1.9.0
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
@@ -53,14 +53,13 @@ microcks:
   mockInvocationStats: true
 
   # Custom secret for Microcks
-  # it can use to deploy a keystore to add certificats to trust sso connection with keycloak.
-  # in this case: Use an existing secret with the provided keystore
-  # don't forget to add java options like that if your secret is a keystore:
+  # It can be usec to deploy a keystore to add certificats to trust sso connection with keycloak.
+  # In this case: Use an existing secret with the provided keystore.
+  # Don't forget to add java options like that if your secret is a keystore:
   # JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/deployments/config/custom/secret/KEYSTORE -Djavax.net.ssl.trustStorePassword=XXXXX"
   #customSecretRef:
-  #    secret: microcks-keystore
-  #    key: cacerts
-
+  #  secret: microcks-keystore
+  #  key: cacerts
 
 postman:
   image: quay.io/microcks/microcks-postman-runtime:latest
@@ -169,7 +168,7 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
 
-    image: quay.io/microcks/microcks-async-minion:1.8.1
+    image: quay.io/microcks/microcks-async-minion:1.9.0
 
     env:
       #- name: OAUTH_CLIENT_ID

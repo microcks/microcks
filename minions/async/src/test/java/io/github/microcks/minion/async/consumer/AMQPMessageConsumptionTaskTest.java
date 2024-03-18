@@ -37,26 +37,20 @@ public class AMQPMessageConsumptionTaskTest {
    @Test
    public void testAcceptEndpoint() {
 
-      assertTrue(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost/q/testQueue"));
+      assertTrue(AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost/q/testQueue"));
 
-      assertTrue(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost/vHost/q/testQueue"));
+      assertTrue(AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost/vHost/q/testQueue"));
 
-      assertTrue(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost:5671/q/testQueue"));
+      assertTrue(AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost:5671/q/testQueue"));
 
-      assertTrue(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost:5671/vHost/q/testQueue"));
+      assertTrue(AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost:5671/vHost/q/testQueue"));
 
-      assertTrue(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost:5671/q/testQueue/with/path/elements"));
+      assertTrue(AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost:5671/q/testQueue/with/path/elements"));
 
-      assertTrue(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost:5671/vHost/q/testQueue/with/path/elements"));
+      assertTrue(
+            AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost:5671/vHost/q/testQueue/with/path/elements"));
 
-      assertTrue(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost:5671/f/testExchange?durable=true"));
+      assertTrue(AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost:5671/f/testExchange?durable=true"));
 
       assertTrue(AMQPMessageConsumptionTask
             .acceptEndpoint("amqp://localhost:5671/t/testExchange?durable=true&routingKey=samples.*"));
@@ -68,11 +62,9 @@ public class AMQPMessageConsumptionTaskTest {
    @Test
    public void testAcceptEndpointFailures() {
 
-      assertFalse(AMQPMessageConsumptionTask
-            .acceptEndpoint("amqp://localhost/x/testQueue"));
+      assertFalse(AMQPMessageConsumptionTask.acceptEndpoint("amqp://localhost/x/testQueue"));
 
-      assertFalse(AMQPMessageConsumptionTask
-            .acceptEndpoint("rabbit://localhost/x/testQueue"));
+      assertFalse(AMQPMessageConsumptionTask.acceptEndpoint("rabbit://localhost/x/testQueue"));
    }
 
    //@Test
@@ -88,18 +80,14 @@ public class AMQPMessageConsumptionTaskTest {
 
          String queueName = "my-queue";
 
-         String consumerTag = channel.basicConsume(queueName, false,
-               new DefaultConsumer(channel) {
-                  @Override
-                  public void handleDelivery(String consumerTag,
-                                             Envelope envelope,
-                                             AMQP.BasicProperties properties,
-                                             byte[] body)
-                        throws IOException {
-                     System.err.println("Received a new AMQP Message: " + new String(body));
-                     channel.basicAck(envelope.getDeliveryTag(), false);
-                  }
-               });
+         String consumerTag = channel.basicConsume(queueName, false, new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
+                  byte[] body) throws IOException {
+               System.err.println("Received a new AMQP Message: " + new String(body));
+               channel.basicAck(envelope.getDeliveryTag(), false);
+            }
+         });
 
          Thread.sleep(10000L);
 
@@ -128,18 +116,14 @@ public class AMQPMessageConsumptionTaskTest {
          String queueName = channel.queueDeclare().getQueue();
          channel.queueBind(queueName, exchangeName, "");
 
-         String consumerTag = channel.basicConsume(queueName, false,
-               new DefaultConsumer(channel) {
-                  @Override
-                  public void handleDelivery(String consumerTag,
-                                             Envelope envelope,
-                                             AMQP.BasicProperties properties,
-                                             byte[] body)
-                        throws IOException {
-                     System.err.println("Received a new AMQP Message: " + new String(body));
-                     channel.basicAck(envelope.getDeliveryTag(), false);
-                  }
-               });
+         String consumerTag = channel.basicConsume(queueName, false, new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
+                  byte[] body) throws IOException {
+               System.err.println("Received a new AMQP Message: " + new String(body));
+               channel.basicAck(envelope.getDeliveryTag(), false);
+            }
+         });
 
          Thread.sleep(10000L);
 

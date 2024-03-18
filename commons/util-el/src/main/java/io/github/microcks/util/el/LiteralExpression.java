@@ -16,8 +16,7 @@
 package io.github.microcks.util.el;
 
 /**
- * A simple implementation of {@code Expression} that managed literals. The rendered value is
- * the given one, unchanged.
+ * A simple implementation of {@code Expression} that managed literals. The rendered value is the given one, unchanged.
  * @author laurent
  */
 public class LiteralExpression implements Expression {
@@ -33,7 +32,7 @@ public class LiteralExpression implements Expression {
    }
 
    @Override
-   public String getValue(EvaluationContext context){
+   public String getValue(EvaluationContext context) {
       return this.value;
    }
 }

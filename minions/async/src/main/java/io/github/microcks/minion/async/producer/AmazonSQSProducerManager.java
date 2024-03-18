@@ -34,7 +34,6 @@ import software.amazon.awssdk.services.sqs.model.CreateQueueRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesRequest;
 import software.amazon.awssdk.services.sqs.model.ListQueuesResponse;
 import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
-import software.amazon.awssdk.services.sqs.model.SendMessageResponse;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -90,15 +89,11 @@ public class AmazonSQSProducerManager {
                break;
             case PROFILE:
                if (credentialsProfileLocation != null && credentialsProfileLocation.length() > 0) {
-                  ProfileFile profileFile = ProfileFile.builder()
-                        .type(ProfileFile.Type.CREDENTIALS)
-                        .content(Paths.get(credentialsProfileLocation))
-                        .build();
+                  ProfileFile profileFile = ProfileFile.builder().type(ProfileFile.Type.CREDENTIALS)
+                        .content(Paths.get(credentialsProfileLocation)).build();
 
-                  credentialsProvider = ProfileCredentialsProvider.builder()
-                        .profileFile(profileFile)
-                        .profileName(credentialsProfileName)
-                        .build();
+                  credentialsProvider = ProfileCredentialsProvider.builder().profileFile(profileFile)
+                        .profileName(credentialsProfileName).build();
                }
                break;
          }
@@ -109,8 +104,7 @@ public class AmazonSQSProducerManager {
          }
 
          // Now create the SQS client with credential provider.
-         SqsClientBuilder sqsClientBuilder = SqsClient.builder()
-               .region(Region.of(region))
+         SqsClientBuilder sqsClientBuilder = SqsClient.builder().region(Region.of(region))
                .credentialsProvider(credentialsProvider);
 
          if (endpointOverride.filter(URI::isAbsolute).isPresent()) {
@@ -126,8 +120,8 @@ public class AmazonSQSProducerManager {
 
    /**
     * Publish a message on specified AWS SQS queue.
-    * @param queue The short name of queue within the configured region
-    * @param value The message payload
+    * @param queue   The short name of queue within the configured region
+    * @param value   The message payload
     * @param headers The headers if any (as rendered by renderEventMessageHeaders() method)
     */
    public void publishMessage(String queue, String value, Map<String, MessageAttributeValue> headers) {
@@ -136,8 +130,7 @@ public class AmazonSQSProducerManager {
       try {
          if (queueUrls.get(queue) == null) {
             // Ensure queue exists on AWS by trying to get it in the list.
-            ListQueuesRequest listRequest = ListQueuesRequest.builder()
-                  .queueNamePrefix(queue).maxResults(1).build();
+            ListQueuesRequest listRequest = ListQueuesRequest.builder().queueNamePrefix(queue).maxResults(1).build();
             ListQueuesResponse listResponse = sqsClient.listQueues(listRequest);
 
             if (listResponse.hasQueueUrls()) {
@@ -150,10 +143,7 @@ public class AmazonSQSProducerManager {
 
          // Retrieve queue URL from local defs and publish message.
          String queueUrl = queueUrls.get(queue);
-         sqsClient.sendMessage(mr -> mr.queueUrl(queueUrl)
-               .messageBody(value)
-               .messageAttributes(headers)
-               .build());
+         sqsClient.sendMessage(mr -> mr.queueUrl(queueUrl).messageBody(value).messageAttributes(headers).build());
       } catch (Throwable t) {
          logger.warnf("Message sending has thrown an exception", t);
          // As it may be relative to queue being deleted and recreated so having different id
@@ -165,42 +155,36 @@ public class AmazonSQSProducerManager {
 
    /**
     * Render Microcks headers using the template engine.
-    * @param engine The template engine to reuse (because we do not want to initialize and manage a context at the AmazonSQSProducerManager level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
+    *                AmazonSQSProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A map of rendered headers of Amazon SQS message sender.
     */
    public Map<String, MessageAttributeValue> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
       if (headers != null && !headers.isEmpty()) {
-         return headers.stream().collect(Collectors.toMap(
-               Header::getName,
-               header -> {
-                  String firstValue = header.getValues().stream().findFirst().get();
-                  String finaleValue = firstValue;
-                  if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
-                     try {
-                        finaleValue = engine.getValue(firstValue);
-                     } catch (Throwable t) {
-                        logger.error("Failing at evaluating template " + firstValue, t);
-                     }
-                  }
-                  return MessageAttributeValue.builder()
-                        .stringValue(finaleValue)
-                        .dataType("String")
-                        .build();
-               }));
+         return headers.stream().collect(Collectors.toMap(Header::getName, header -> {
+            String firstValue = header.getValues().stream().findFirst().get();
+            String finaleValue = firstValue;
+            if (firstValue.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+               try {
+                  finaleValue = engine.getValue(firstValue);
+               } catch (Throwable t) {
+                  logger.error("Failing at evaluating template " + firstValue, t);
+               }
+            }
+            return MessageAttributeValue.builder().stringValue(finaleValue).dataType("String").build();
+         }));
       }
       return null;
    }
 
    /**
     * Compute a queue name from async mock definition.
-    * @param definition The mock definition
+    * @param definition   The mock definition
     * @param eventMessage The event message to get dynamic part from
     * @return The short name of a SQS queue
     */
    public String getQueueName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
-
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
@@ -210,12 +194,7 @@ public class AmazonSQSProducerManager {
       versionName = versionName.replace(".", "");
 
       // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
-      operationName = operationName.replace('/', '-');
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '-' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
@@ -223,9 +202,7 @@ public class AmazonSQSProducerManager {
 
    private String createQueueAndGetURL(String queueName) {
       logger.infof("Creating new AWS SQS queue: %s", queueName);
-      CreateQueueRequest createQueueRequest = CreateQueueRequest.builder()
-            .queueName(queueName)
-            .build();
+      CreateQueueRequest createQueueRequest = CreateQueueRequest.builder().queueName(queueName).build();
       return sqsClient.createQueue(createQueueRequest).queueUrl();
    }
 }

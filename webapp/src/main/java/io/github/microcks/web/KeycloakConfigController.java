@@ -21,8 +21,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -37,16 +37,16 @@ public class KeycloakConfigController {
    private static Logger log = LoggerFactory.getLogger(KeycloakConfigController.class);
 
    @Value("${keycloak.enabled}")
-   private final Boolean keycloakEnabled = true;
+   private Boolean keycloakEnabled = true;
 
    @Value("${sso.public-url}")
-   private final String keycloakServerUrl = null;
+   private String keycloakServerUrl = null;
 
    @Value("${keycloak.realm}")
-   private final String keycloakRealmName = null;
+   private String keycloakRealmName = null;
 
-   @RequestMapping(value = "/config", method = RequestMethod.GET)
-   public ResponseEntity<?> getConfig() {
+   @GetMapping(value = "/config")
+   public ResponseEntity<Config> getConfig() {
       final Config config = new Config(keycloakEnabled, keycloakRealmName, keycloakServerUrl);
 
       log.debug("Returning '{}' realm config, for {}", keycloakRealmName, keycloakServerUrl);
@@ -55,7 +55,14 @@ public class KeycloakConfigController {
    }
 
 
-   private class Config{
+   private class Config {
+      @JsonProperty("ssl-required")
+      private static final String SSL_REQUIRED = "external";
+
+      @JsonProperty("public-client")
+      private static final boolean PUBLIC_CLIENT = true;
+
+      private static final String RESOURCE = "microcks-app-js";
 
       private boolean enabled = true;
 
@@ -63,15 +70,6 @@ public class KeycloakConfigController {
 
       @JsonProperty("auth-server-url")
       private String authServerUrl = "http://localhost:8180/auth";
-
-      @JsonProperty("ssl-required")
-      private final String sslRequired = "external";
-
-      @JsonProperty("public-client")
-      private final boolean publicClient = true;
-
-      private final String resource = "microcks-app-js";
-
 
       public Config(boolean enabled, String realmName, String authServerUrl) {
          this.enabled = enabled;
@@ -96,15 +94,15 @@ public class KeycloakConfigController {
       }
 
       public String getSslRequired() {
-         return sslRequired;
+         return SSL_REQUIRED;
       }
 
       public boolean isPublicClient() {
-         return publicClient;
+         return PUBLIC_CLIENT;
       }
 
       public String getResource() {
-         return resource;
+         return RESOURCE;
       }
    }
 }

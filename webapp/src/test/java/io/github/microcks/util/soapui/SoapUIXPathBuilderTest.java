@@ -23,6 +23,7 @@ import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
 
 import static org.junit.Assert.*;
+
 /**
  * This is a test case for class SoapUIXPathBuilder class.
  * @author laurent
@@ -32,16 +33,11 @@ public class SoapUIXPathBuilderTest {
    @Test
    public void testBuildXPathMatcherFromRulesSimple() {
 
-      String rules = "declare namespace ser='http://www.example.com/hello';\n" +
-            "//ser:sayHello/name";
-      String soap = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
-            "   <soapenv:Header/>\n" +
-            "   <soapenv:Body>\n" +
-            "      <hel:sayHello>\n" +
-            "         <name>Karla</name>\n" +
-            "      </hel:sayHello>\n" +
-            "   </soapenv:Body>\n" +
-            "</soapenv:Envelope>";
+      String rules = "declare namespace ser='http://www.example.com/hello';\n" + "//ser:sayHello/name";
+      String soap = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
+            + "   <soapenv:Header/>\n" + "   <soapenv:Body>\n" + "      <hel:sayHello>\n"
+            + "         <name>Karla</name>\n" + "      </hel:sayHello>\n" + "   </soapenv:Body>\n"
+            + "</soapenv:Envelope>";
 
       XPathExpression expression = null;
 
@@ -63,17 +59,12 @@ public class SoapUIXPathBuilderTest {
    @Test
    public void testBuildXPathMatcherFromRulesFunction() {
 
-      String rules = "declare namespace ser='http://www.example.com/hello';\n" +
-            "concat(//ser:sayHello/title/text(),' ',//ser:sayHello/name/text())";
-      String soap = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n" +
-            "   <soapenv:Header/>\n" +
-            "   <soapenv:Body>\n" +
-            "      <hel:sayHello>\n" +
-            "         <title>Ms.</title>\n" +
-            "         <name>Karla</name>\n" +
-            "      </hel:sayHello>\n" +
-            "   </soapenv:Body>\n" +
-            "</soapenv:Envelope>";
+      String rules = "declare namespace ser='http://www.example.com/hello';\n"
+            + "concat(//ser:sayHello/title/text(),' ',//ser:sayHello/name/text())";
+      String soap = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
+            + "   <soapenv:Header/>\n" + "   <soapenv:Body>\n" + "      <hel:sayHello>\n"
+            + "         <title>Ms.</title>\n" + "         <name>Karla</name>\n" + "      </hel:sayHello>\n"
+            + "   </soapenv:Body>\n" + "</soapenv:Envelope>";
 
       XPathExpression expression = null;
 

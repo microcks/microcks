@@ -18,11 +18,12 @@ package io.github.microcks.event;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.Date;
+
 /**
  * Simple bean representing an invocation event on a Mock.
  * @author laurent
  */
-public class MockInvocationEvent extends ApplicationEvent{
+public class MockInvocationEvent extends ApplicationEvent {
 
    /** */
    private final String serviceName;
@@ -37,15 +38,15 @@ public class MockInvocationEvent extends ApplicationEvent{
 
    /**
     * Create a new mock invocation event.
-    * @param source Source object for event
-    * @param serviceName Name of invoked service
-    * @param serviceVersion Version of invoked service
-    * @param mockResponse Mock response returned during invocation
+    * @param source              Source object for event
+    * @param serviceName         Name of invoked service
+    * @param serviceVersion      Version of invoked service
+    * @param mockResponse        Mock response returned during invocation
     * @param invocationTimestamp Timestamp of invocation
-    * @param duration Duration of invocation
+    * @param duration            Duration of invocation
     */
    public MockInvocationEvent(Object source, String serviceName, String serviceVersion, String mockResponse,
-         Date invocationTimestamp, long duration){
+         Date invocationTimestamp, long duration) {
       super(source);
       this.serviceName = serviceName;
       this.serviceVersion = serviceVersion;
@@ -53,7 +54,7 @@ public class MockInvocationEvent extends ApplicationEvent{
       this.invocationTimestamp = invocationTimestamp;
       this.duration = duration;
    }
-   
+
    public String getServiceName() {
       return serviceName;
    }
@@ -61,7 +62,7 @@ public class MockInvocationEvent extends ApplicationEvent{
    public String getServiceVersion() {
       return serviceVersion;
    }
-   
+
    public String getMockResponse() {
       return mockResponse;
    }
@@ -69,7 +70,7 @@ public class MockInvocationEvent extends ApplicationEvent{
    public Date getInvocationTimestamp() {
       return invocationTimestamp;
    }
-   
+
    public long getDuration() {
       return duration;
    }

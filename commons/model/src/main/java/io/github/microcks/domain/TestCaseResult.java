@@ -19,9 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Companion objects for TestResult. Each TestCaseResult correspond to a
- * particuliar service operation / action reference by the operationName field.
- * TestCaseResults owns a collection of TestStepResults (one for every request
+ * Companion objects for TestResult. Each TestCaseResult correspond to a particuliar service operation / action
+ * reference by the operationName field. TestCaseResults owns a collection of TestStepResults (one for every request
  * associated to service operation / action).
  * @author laurent
  */

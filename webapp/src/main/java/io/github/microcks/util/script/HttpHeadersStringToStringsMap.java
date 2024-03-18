@@ -21,8 +21,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An implementation of com.eviware.soapui.support.types.StringToStringsMap that implements the RFC 7230
- * regarding header name case-insensitiveness and to ensure a compatibility layer withe SoapUI scripting.
+ * An implementation of com.eviware.soapui.support.types.StringToStringsMap that implements the RFC 7230 regarding
+ * header name case-insensitiveness and to ensure a compatibility layer withe SoapUI scripting.
  * @author laurent
  */
 public class HttpHeadersStringToStringsMap extends StringToStringsMap {
@@ -52,7 +52,7 @@ public class HttpHeadersStringToStringsMap extends StringToStringsMap {
    }
 
    public boolean hasValues(String key) {
-      return this.containsKeyIgnoreCase(key) && ((List)this.get(key)).size() > 0;
+      return this.containsKeyIgnoreCase(key) && ((List) this.get(key)).size() > 0;
    }
 
    public void add(String key, String string) {

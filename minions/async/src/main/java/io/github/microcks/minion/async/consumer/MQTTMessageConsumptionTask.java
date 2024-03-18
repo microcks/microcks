@@ -32,8 +32,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an MQTT 3.1 Server.
- * Endpoint URL should be specified using the following form: <code>mqtt://{brokerhost[:port]}/{topic}[?option1=value1&amp;option2=value2]</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a topic on an MQTT 3.1 Server. Endpoint URL
+ * should be specified using the following form:
+ * <code>mqtt://{brokerhost[:port]}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
@@ -98,8 +99,8 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
    }
 
    /**
-    * Close the resources used by this task. Namely the MQTT subscriber and
-    * the optionally created truststore holding server client SSL credentials.
+    * Close the resources used by this task. Namely the MQTT subscriber and the optionally created truststore holding
+    * server client SSL credentials.
     * @throws IOException should not happen.
     */
    @Override
@@ -134,8 +135,7 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
       String protocolPragma = "tcp://";
 
       if (specification.getSecret() != null) {
-         if (specification.getSecret().getUsername() != null
-               && specification.getSecret().getPassword() != null) {
+         if (specification.getSecret().getUsername() != null && specification.getSecret().getPassword() != null) {
             logger.debug("Adding username/password authentication from secret " + specification.getSecret().getName());
             connectOptions.setUserName(specification.getSecret().getUsername());
             connectOptions.setPassword(specification.getSecret().getPassword().toCharArray());

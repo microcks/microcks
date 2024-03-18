@@ -39,18 +39,18 @@ public class XmlUtil {
 
    /**
     * Retrieve direct children elements of a parent having specified namespace and tag. Only includes level 1 children.
-    * @param parent The parent of children to find
+    * @param parent    The parent of children to find
     * @param namespace The namespace of children
-    * @param tag The tag of children
+    * @param tag       The tag of children
     * @return Children Elements as a list
     */
    public static List<Element> getDirectChildren(Element parent, String namespace, String tag) {
       List<Element> directChildren = new ArrayList<>();
       NodeList children = parent.getChildNodes();
-      for (int i=0; i<children.getLength(); i++) {
+      for (int i = 0; i < children.getLength(); i++) {
          Node child = children.item(i);
-         if (child.getNodeType() == Node.ELEMENT_NODE &&
-               namespace.equals(child.getNamespaceURI()) && tag.equals(child.getLocalName())) {
+         if (child.getNodeType() == Node.ELEMENT_NODE && namespace.equals(child.getNamespaceURI())
+               && tag.equals(child.getLocalName())) {
             directChildren.add((Element) child);
          }
       }
@@ -60,18 +60,19 @@ public class XmlUtil {
    /**
     * Retrieve a direct child that is expected to be unique under the parent. Throws a MalformedXmlException if no child
     * or more than one child present.
-    * @param parent The parent of child to find
+    * @param parent    The parent of child to find
     * @param namespace The namespace of child
-    * @param tag The tag of child
+    * @param tag       The tag of child
     * @return The child Element
     * @throws MalformedXmlException if no child or more than one child present.
     */
-   public static Element getUniqueDirectChild(Element parent, String namespace, String tag) throws MalformedXmlException {
+   public static Element getUniqueDirectChild(Element parent, String namespace, String tag)
+         throws MalformedXmlException {
       NodeList children = parent.getElementsByTagNameNS(namespace, tag);
       if (children.getLength() == 0) {
          throw new MalformedXmlException("Element " + tag + " is missing under " + parent.getTagName());
       }
-      for (int i=0; i<children.getLength(); i++) {
+      for (int i = 0; i < children.getLength(); i++) {
          Node child = children.item(i);
          if (child.getNodeType() == Node.ELEMENT_NODE && child.getParentNode() == parent) {
             return (Element) child;
@@ -82,14 +83,14 @@ public class XmlUtil {
 
    /**
     * Check if parent has at least one direct child having namespace and tag.
-    * @param parent The parent of children to find
+    * @param parent    The parent of children to find
     * @param namespace The namespace of children
-    * @param tag The tag of children
+    * @param tag       The tag of children
     * @return true if at least one child is present, false otherwise
     */
    public static boolean hasDirectChild(Element parent, String namespace, String tag) {
       NodeList children = parent.getElementsByTagNameNS(namespace, tag);
-      for (int i=0; i<children.getLength(); i++) {
+      for (int i = 0; i < children.getLength(); i++) {
          Node child = children.item(i);
          if (child.getNodeType() == Node.ELEMENT_NODE && child.getParentNode() == parent) {
             return true;

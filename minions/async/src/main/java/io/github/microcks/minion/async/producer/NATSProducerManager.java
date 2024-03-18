@@ -77,14 +77,11 @@ public class NATSProducerManager {
    /**
     * Create a NATS Connection and connect it to the server.
     * 
-    * @return A new NATS Connection implementation initialized with configuration
-    *         properties.
+    * @return A new NATS Connection implementation initialized with configuration properties.
     * @throws Exception in case of connection failure
     */
    protected Connection createClient() throws Exception {
-      Options.Builder optionsBuilder = new Options.Builder()
-            .server(natsServer)
-            .maxReconnects(10);
+      Options.Builder optionsBuilder = new Options.Builder().server(natsServer).maxReconnects(10);
       // Add authentication option.
       if (natsUsername != null && natsPassword != null) {
          optionsBuilder.userInfo(natsUsername, natsPassword);
@@ -103,10 +100,7 @@ public class NATSProducerManager {
     */
    public void publishMessage(String topic, String value, Headers headers) {
       logger.infof("Publishing on topic {%s}, message: %s ", topic, value);
-      Message msg = NatsMessage.builder()
-            .subject(topic)
-            .data(value.getBytes(StandardCharsets.UTF_8))
-            .headers(headers)
+      Message msg = NatsMessage.builder().subject(topic).data(value.getBytes(StandardCharsets.UTF_8)).headers(headers)
             .build();
       client.publish(msg);
    }
@@ -114,9 +108,8 @@ public class NATSProducerManager {
    /**
     * Transform and render Microcks headers into NATS specific headers.
     * 
-    * @param engine  The template engine to reuse (because we do not want to
-    *                initialize and manage a context at the NATSProducerManager
-    *                level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
+    *                NATSProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of NATS headers.
     */
@@ -149,28 +142,22 @@ public class NATSProducerManager {
    }
 
    /**
-    * Get the NATS topic name corresponding to a AsyncMockDefinition, sanitizing
-    * all parameters.
+    * Get the NATS topic name corresponding to a AsyncMockDefinition, sanitizing all parameters.
     * 
     * @param definition   The AsyncMockDefinition
     * @param eventMessage The message to get topic
     * @return The topic name for definition and event
     */
    public String getTopicName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
+
       // Produce version name part of topic name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
 
-      // replace the parts
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      // Produce operation name part of topic name.
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;

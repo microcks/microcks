@@ -156,13 +156,14 @@ export class ImporterWizardComponent implements OnInit {
     this.setNavAway(this.step1Config.nextEnabled);
     if (this.useSecret && this.job.secretRef == null) {
       this.job.secretRef = new SecretRef('none', '');
-    } else {
+    } else if (!this.useSecret) {
       this.job.secretRef = null;
     }
     if (this.job.metadata == undefined) {
       this.job.metadata = new Metadata();
       this.job.metadata.labels = {};
     }
+    console.log("Job at end: " + JSON.stringify(this.job));
   }
   updateMainArtifact(event: any): void {
     this.job.mainArtifact = !event;

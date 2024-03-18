@@ -26,7 +26,7 @@ public interface ELFunction {
    /**
     * Evaluate the function represented by the EL notation.
     * @param evaluationContext The context of evaluation (contextualized info, cached one, ...)
-    * @param args The arguments of the function evaluation
+    * @param args              The arguments of the function evaluation
     * @return The result as a String fo this function evaluation.
     */
    String evaluate(EvaluationContext evaluationContext, String... args);

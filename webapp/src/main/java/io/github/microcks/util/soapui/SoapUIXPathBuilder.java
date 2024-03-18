@@ -43,14 +43,13 @@ public class SoapUIXPathBuilder {
       // //ser:sayHello/name
       String xpathExpression = null;
       String lines[] = rules.split("\\r?\\n");
-      for (String line : lines){
+      for (String line : lines) {
          line = line.trim();
-         if (line.startsWith("declare namespace ")){
+         if (line.startsWith("declare namespace ")) {
             String prefix = line.substring(18, line.indexOf("="));
             String namespace = line.substring(line.indexOf("=") + 2, line.lastIndexOf("'"));
             nsContext.addNamespaceURI(prefix, namespace);
-         }
-         else {
+         } else {
             xpathExpression = line;
          }
       }

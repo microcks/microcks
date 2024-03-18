@@ -25,7 +25,8 @@ import java.util.List;
  */
 public interface CustomDailyStatisticRepository {
 
-   void incrementDailyStatistic(String day, String serviceName, String serviceVersion, String hourKey, String minuteKey);
+   void incrementDailyStatistic(String day, String serviceName, String serviceVersion, String hourKey,
+         String minuteKey);
 
    DailyStatistic aggregateDailyStatistics(String day);
 
@@ -34,21 +35,23 @@ public interface CustomDailyStatisticRepository {
    List<DailyStatistic> findTopStatistics(String day, int limit);
 
    class InvocationCount {
-    String day;
-    Long number;
+      String day;
+      Long number;
 
-    public String getDay() {
-       return day;
-    }
-    public void setDay(String day) {
-       this.day = day;
-    }
+      public String getDay() {
+         return day;
+      }
 
-    public Long getNumber() {
-       return number;
-    }
-    public void setNumber(Long number) {
-       this.number = number;
-    }
- }
+      public void setDay(String day) {
+         this.day = day;
+      }
+
+      public Long getNumber() {
+         return number;
+      }
+
+      public void setNumber(Long number) {
+         this.number = number;
+      }
+   }
 }

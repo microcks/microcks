@@ -19,8 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A simple implementation of <code>RelativeReferenceURLBuilder</code> that considers that base file name
- * and path are not encoded and are located at the end of remote URL of repository.
+ * A simple implementation of <code>RelativeReferenceURLBuilder</code> that considers that base file name and path are
+ * not encoded and are located at the end of remote URL of repository.
  * @author laurent
  */
 public class SimpleReferenceURLBuilder implements RelativeReferenceURLBuilder {

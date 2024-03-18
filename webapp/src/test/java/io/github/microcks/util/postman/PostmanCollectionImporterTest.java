@@ -49,7 +49,8 @@ public class PostmanCollectionImporterTest {
    public void testSimpleProjectImportV2() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_collection.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -82,9 +83,9 @@ public class PostmanCollectionImporterTest {
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
-            try{
+            try {
                exchanges = importer.getMessageDefinitions(service, operation);
-            } catch (Exception e){
+            } catch (Exception e) {
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
@@ -99,13 +100,13 @@ public class PostmanCollectionImporterTest {
                assertEquals(1, response.getHeaders().size());
                assertEquals("200", response.getStatus());
                assertEquals("application/json", response.getMediaType());
-               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+                     response.getDispatchCriteria());
                assertNotNull(response.getContent());
             } else {
                fail("Exchange has the wrong type. Expecting RequestResponsePair");
             }
-         }
-         else if ("GET /v2/pet/:petId".equals(operation.getName())) {
+         } else if ("GET /v2/pet/:petId".equals(operation.getName())) {
             // assertions for findById.
             assertEquals("GET", operation.getMethod());
             //assertEquals(2, operation.getResourcePaths().size());
@@ -156,7 +157,8 @@ public class PostmanCollectionImporterTest {
    public void testSimpleProjectImportV21() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_collection-2.1.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_collection-2.1.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -189,9 +191,9 @@ public class PostmanCollectionImporterTest {
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
-            try{
+            try {
                exchanges = importer.getMessageDefinitions(service, operation);
-            } catch (Exception e){
+            } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(1, exchanges.size());
@@ -205,13 +207,13 @@ public class PostmanCollectionImporterTest {
                assertEquals(1, response.getHeaders().size());
                assertEquals("200", response.getStatus());
                assertEquals("application/json", response.getMediaType());
-               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+                     response.getDispatchCriteria());
                assertNotNull(response.getContent());
             } else {
                fail("Exchange has the wrong type. Expecting RequestResponsePair");
             }
-         }
-         else if ("GET /v2/pet/:petId".equals(operation.getName())) {
+         } else if ("GET /v2/pet/:petId".equals(operation.getName())) {
             // assertions for findById.
             assertEquals("GET", operation.getMethod());
             //assertEquals(2, operation.getResourcePaths().size());
@@ -262,7 +264,8 @@ public class PostmanCollectionImporterTest {
    public void testTestAPIImport() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/Test API.postman_collection.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/Test API.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -293,9 +296,9 @@ public class PostmanCollectionImporterTest {
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
-            try{
+            try {
                exchanges = importer.getMessageDefinitions(service, operation);
-            } catch (Exception e){
+            } catch (Exception e) {
                fail("No exception should be thrown when importing message definitions.");
             }
             assertEquals(2, exchanges.size());
@@ -326,17 +329,16 @@ public class PostmanCollectionImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("GET /order".equals(operation.getName())) {
+         } else if ("GET /order".equals(operation.getName())) {
             // Assertions for listing.
             assertEquals("GET", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
-            try{
+            try {
                exchanges = importer.getMessageDefinitions(service, operation);
-            } catch (Exception e){
+            } catch (Exception e) {
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
@@ -370,17 +372,16 @@ public class PostmanCollectionImporterTest {
                   fail("Exchange has the wrong type. Expecting RequestResponsePair");
                }
             }
-         }
-         else if ("GET /order/:id".equals(operation.getName())) {
+         } else if ("GET /order/:id".equals(operation.getName())) {
             // Assertions for retrieval.
             assertEquals("GET", operation.getMethod());
             assertEquals(DispatchStyles.URI_PARTS, operation.getDispatcher());
 
             // Check that messages have been correctly found.
             List<Exchange> exchanges = null;
-            try{
+            try {
                exchanges = importer.getMessageDefinitions(service, operation);
-            } catch (Exception e){
+            } catch (Exception e) {
                e.printStackTrace();
                fail("No exception should be thrown when importing message definitions.");
             }
@@ -424,7 +425,8 @@ public class PostmanCollectionImporterTest {
    public void testTestAPINoVersionImport() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/Test API no version.postman_collection.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/Test API no version.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -444,7 +446,8 @@ public class PostmanCollectionImporterTest {
    public void testTestAPIMalformedVersionImport() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/Test API bad version.postman_collection.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/Test API bad version.postman_collection.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -464,7 +467,8 @@ public class PostmanCollectionImporterTest {
    public void testPetstoreWithTrailingDollarImport() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/PetstoreAPI-collection-sample-trailing-dollar.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/PetstoreAPI-collection-sample-trailing-dollar.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -531,7 +535,8 @@ public class PostmanCollectionImporterTest {
    public void testPetstoreWithTrailingSlashImport() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/postman/PetstoreAPI-collection-sample.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/PetstoreAPI-collection-sample.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -579,7 +584,8 @@ public class PostmanCollectionImporterTest {
    public void testGraphQLCollectionImport() {
       PostmanCollectionImporter importer = null;
       try {
-         importer = new PostmanCollectionImporter("target/test-classes/io/github/microcks/util/graphql/films-postman.json");
+         importer = new PostmanCollectionImporter(
+               "target/test-classes/io/github/microcks/util/graphql/films-postman.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -633,7 +639,7 @@ public class PostmanCollectionImporterTest {
 
                assertNotNull(pair.getRequest().getContent());
                assertTrue(pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6MQ==\"")
-                  || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6Mg==\""));
+                     || pair.getRequest().getContent().contains("\"id\": \"ZmlsbXM6Mg==\""));
                assertNotNull(pair.getResponse().getContent());
                assertEquals("200", pair.getResponse().getStatus());
             }
@@ -675,8 +681,7 @@ public class PostmanCollectionImporterTest {
             assertTrue(pair.getRequest().getContent().contains("\"variables\":"));
             assertTrue(pair.getRequest().getContent().contains("\"comment\":"));
             assertEquals("200", pair.getResponse().getStatus());
-         }
-         else {
+         } else {
             fail("Unknown operation name: " + operation.getName());
          }
       }

@@ -45,8 +45,7 @@ public class AICopilotConfiguration {
    private Map<String, String> openai;
 
    /**
-    * Enable the usage of AICopilot feature. Default is false. In that case, a null implementation
-    * will be provided.
+    * Enable the usage of AICopilot feature. Default is false. In that case, a null implementation will be provided.
     * @param enabled Flag telling if AICopilot is activated.
     */
    public void setEnabled(boolean enabled) {
@@ -84,7 +83,7 @@ public class AICopilotConfiguration {
                return new OpenAICopilot(openai);
             } else {
                log.warn("At least one mandatory configuration is missing for OpenAI AICopilot implementation");
-               log.warn("Mandatory configuration keys are: " + OpenAICopilot.getMandatoryConfigKeys());
+               log.warn("Mandatory configuration keys are: {}", OpenAICopilot.getMandatoryConfigKeys());
             }
          }
       }

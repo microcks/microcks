@@ -53,11 +53,10 @@ public class SimpleNotContainsAssertionTest {
    @Test
    public void testExactMatch() {
       // Passing case.
-      Map<String, String> configParams = Map.of(
-            SimpleNotContainsAssertion.TOKEN_PARAM, "Hello Andrew!",
-            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "false"
-      );
-      SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.SIMPLE_NOT_CONTAINS, configParams);
+      Map<String, String> configParams = Map.of(SimpleNotContainsAssertion.TOKEN_PARAM, "Hello Andrew!",
+            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "false");
+      SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.SIMPLE_NOT_CONTAINS,
+            configParams);
       AssertionStatus status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.FAILED, status);
@@ -73,11 +72,10 @@ public class SimpleNotContainsAssertionTest {
    @Test
    public void testCaseSensitiveness() {
       // Passing case.
-      Map<String, String> configParams = Map.of(
-            SimpleNotContainsAssertion.TOKEN_PARAM, "HeLlO AnDreW!",
-            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "true"
-      );
-      SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.SIMPLE_NOT_CONTAINS, configParams);
+      Map<String, String> configParams = Map.of(SimpleNotContainsAssertion.TOKEN_PARAM, "HeLlO AnDreW!",
+            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "true");
+      SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.SIMPLE_NOT_CONTAINS,
+            configParams);
       AssertionStatus status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.FAILED, status);
@@ -93,12 +91,10 @@ public class SimpleNotContainsAssertionTest {
    @Test
    public void testRegularExpression() {
       // Passing case.
-      Map<String, String> configParams = Map.of(
-            SimpleNotContainsAssertion.TOKEN_PARAM, "Hello\\s(.*)!",
-            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "false",
-            SimpleNotContainsAssertion.USE_REGEX_PARAM, "true"
-      );
-      SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.SIMPLE_NOT_CONTAINS, configParams);
+      Map<String, String> configParams = Map.of(SimpleNotContainsAssertion.TOKEN_PARAM, "Hello\\s(.*)!",
+            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "false", SimpleNotContainsAssertion.USE_REGEX_PARAM, "true");
+      SoapUIAssertion assertion = AssertionFactory.intializeAssertion(AssertionFactory.SIMPLE_NOT_CONTAINS,
+            configParams);
       AssertionStatus status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));
       assertEquals(AssertionStatus.FAILED, status);
@@ -111,11 +107,8 @@ public class SimpleNotContainsAssertionTest {
       assertEquals(AssertionStatus.VALID, status);
 
       // RegExp + case insensitive passing case.
-      configParams = Map.of(
-            SimpleNotContainsAssertion.TOKEN_PARAM, "HeLlO\\s(.*)!",
-            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "true",
-            SimpleNotContainsAssertion.USE_REGEX_PARAM, "true"
-      );
+      configParams = Map.of(SimpleNotContainsAssertion.TOKEN_PARAM, "HeLlO\\s(.*)!",
+            SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "true", SimpleNotContainsAssertion.USE_REGEX_PARAM, "true");
       assertion = AssertionFactory.intializeAssertion(AssertionFactory.SIMPLE_NOT_CONTAINS, configParams);
       status = assertion.assertResponse(new RequestResponseExchange(null, null, validSoap, 100L),
             new ExchangeContext(null, null, null, null));

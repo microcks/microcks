@@ -29,6 +29,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import java.util.List;
 
 import static org.junit.Assert.*;
+
 /**
  * Test case for ServiceRepository implementation.
  * @author laurent
@@ -36,7 +37,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class ServiceRepositoryTest {
 
    @Autowired
@@ -45,7 +46,7 @@ public class ServiceRepositoryTest {
    String serviceId;
 
    @Before
-   public void setUp(){
+   public void setUp() {
       // Create a bunch of services...
       Service service = new Service();
       service.setName("HelloWorld");
@@ -65,14 +66,15 @@ public class ServiceRepositoryTest {
    }
 
    @Test
-   public void testFindOne(){
+   public void testFindOne() {
       Service service = repository.findById(serviceId).orElse(null);
       assertNotNull(service);
       assertEquals("MyService-hello", service.getName());
       assertEquals("1.1", service.getVersion());
    }
+
    @Test
-   public void testFindByNameAndVersion(){
+   public void testFindByNameAndVersion() {
       Service service = repository.findByNameAndVersion("HelloWorld", "1.2");
       assertNotNull(service);
       assertEquals("HelloWorld", service.getName());
@@ -80,11 +82,11 @@ public class ServiceRepositoryTest {
    }
 
    @Test
-   public void testFindByNameLike(){
+   public void testFindByNameLike() {
       List<Service> services = repository.findByNameLike("world");
       assertTrue(!services.isEmpty());
       assertEquals(2, services.size());
-      for (Service service : services){
+      for (Service service : services) {
          assertEquals("HelloWorld", service.getName());
       }
 

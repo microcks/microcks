@@ -29,7 +29,7 @@ public class ParameterConstraintUtil {
 
    /**
     * Validate that a parameter constraint it respected or violated. Return a message if violated.
-    * @param request HttpServlet request holding parameters to validate
+    * @param request    HttpServlet request holding parameters to validate
     * @param constraint Constraint to apply to one request parameter.
     * @return A string representing constraint violation if any. null otherwise.
     */
@@ -44,12 +44,12 @@ public class ParameterConstraintUtil {
       if (value != null) {
          if (constraint.getMustMatchRegexp() != null) {
             if (!Pattern.matches(constraint.getMustMatchRegexp(), value)) {
-               return "Parameter " + constraint.getName() +  " should match " + constraint.getMustMatchRegexp();
+               return "Parameter " + constraint.getName() + " should match " + constraint.getMustMatchRegexp();
             }
          }
-      } else  {
+      } else {
          if (constraint.isRequired()) {
-            return "Parameter " + constraint.getName() +  " is required";
+            return "Parameter " + constraint.getName() + " is required";
          }
       }
       return null;

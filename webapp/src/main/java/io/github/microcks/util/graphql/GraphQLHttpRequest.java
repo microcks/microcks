@@ -44,7 +44,7 @@ public class GraphQLHttpRequest {
 
    /**
     * Build a GraphQLHttpRequest from Http servlet request and body content.
-    * @param body The content of Http request.
+    * @param body    The content of Http request.
     * @param request The servlet request
     * @return The wrapper object
     * @throws Exception if request is no valid Json as expected by GraphQL over Http spec.

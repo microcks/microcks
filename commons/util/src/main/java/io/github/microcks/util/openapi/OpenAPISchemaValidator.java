@@ -34,9 +34,10 @@ import java.util.Iterator;
 import java.util.List;
 
 import static io.github.microcks.util.JsonSchemaValidator.*;
+
 /**
- * Helper class for validating Json objects against their OpenAPI schema. Supported version
- * of OpenAPI schema is https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md.
+ * Helper class for validating Json objects against their OpenAPI schema. Supported version of OpenAPI schema is
+ * https://github.com/OAI/OpenAPI-Specification/blob/master/versions/3.0.1.md.
  * @author laurent
  */
 public class OpenAPISchemaValidator {
@@ -44,13 +45,10 @@ public class OpenAPISchemaValidator {
    /** A commons logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(OpenAPISchemaValidator.class);
 
-   private static final String[] STRUCTURES = {
-         "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties"
-   };
-   private static final String[] NOT_SUPPORTED_ATTRIBUTES = {
-         "nullable", "discriminator", "readOnly", "writeOnly",
-         "xml", "externalDocs", "example", "deprecated"
-   };
+   private static final String[] STRUCTURES = { "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties" };
+   private static final String[] NOT_SUPPORTED_ATTRIBUTES = { "nullable", "discriminator", "readOnly", "writeOnly",
+         "xml", "externalDocs", "example", "deprecated" };
+
 
    /** Private constructor to hide the implicit one. */
    private OpenAPISchemaValidator() {
@@ -59,7 +57,7 @@ public class OpenAPISchemaValidator {
    /**
     * Check if a Json object is valid against the given OpenAPI schema specification.
     * @param schemaText The OpenAPI schema specification as a string
-    * @param jsonText The Json object as a string
+    * @param jsonText   The Json object as a string
     * @return True if Json object is valid, false otherwise
     * @throws IOException if string representations cannot be parsed
     */
@@ -71,8 +69,8 @@ public class OpenAPISchemaValidator {
    /**
     * Check if a Json object is valid against the given OpenAPI schema specification.
     * @param schemaText The OpenAPI schema specification as a string
-    * @param jsonText The Json object as a string
-    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @param jsonText   The Json object as a string
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
     * @return True if Json object is valid, false otherwise
     * @throws IOException if string representations cannot be parsed
     */
@@ -86,13 +84,13 @@ public class OpenAPISchemaValidator {
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of OpenAPI schema
+    * spec semantics regarding additional or unknown attributes: schema must explicitly set
+    * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
+    * returns a list of validation error messages.
     * @param schemaText The OpenAPI schema specification as a string
-    * @param jsonText The Json object as a string
+    * @param jsonText   The Json object as a string
     * @return The list of validation failures. If empty, json object is valid !
     * @throws IOException if json string representations cannot be parsed
     */
@@ -101,14 +99,14 @@ public class OpenAPISchemaValidator {
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of OpenAPI schema
+    * spec semantics regarding additional or unknown attributes: schema must explicitly set
+    * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
+    * returns a list of validation error messages.
     * @param schemaText The OpenAPI schema specification as a string
-    * @param jsonText The Json object as a string
-    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @param jsonText   The Json object as a string
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
     * @return The list of validation failures. If empty, json object is valid !
     * @throws IOException if json string representations cannot be parsed
     */
@@ -117,13 +115,13 @@ public class OpenAPISchemaValidator {
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of OpenAPI schema
+    * spec semantics regarding additional or unknown attributes: schema must explicitly set
+    * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
+    * returns a list of validation error messages.
     * @param schemaNode The OpenAPI schema specification as a Jackson node
-    * @param jsonNode The Json object as a Jackson node
+    * @param jsonNode   The Json object as a Jackson node
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode) {
@@ -131,14 +129,14 @@ public class OpenAPISchemaValidator {
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of OpenAPI schema
+    * spec semantics regarding additional or unknown attributes: schema must explicitly set
+    * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
+    * returns a list of validation error messages.
     * @param schemaNode The OpenAPI schema specification as a Jackson node
-    * @param jsonNode The Json object as a Jackson node
-    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @param jsonNode   The Json object as a Jackson node
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
@@ -156,44 +154,46 @@ public class OpenAPISchemaValidator {
    }
 
    /**
-    * Validate a Json object representing an OpenAPI message (response or request) against a node representing
-    * a full OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
-    * for <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
-    * schema information. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitly set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
-    * @param specificationNode The OpenAPI full specification as a Jackson node
-    * @param jsonNode The Json object representing actual message as a Jackson node
+    * Validate a Json object representing an OpenAPI message (response or request) against a node representing a full
+    * OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer for
+    * <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
+    * schema information. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation is
+    * respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must explicitly set
+    * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
+    * returns a list of validation error messages.
+    * @param specificationNode  The OpenAPI full specification as a Jackson node
+    * @param jsonNode           The Json object representing actual message as a Jackson node
     * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
-    * @param contentType The Content-Type of the message to valid
+    * @param contentType        The Content-Type of the message to valid
     * @return The list of validation failures. If empty, json object is valid !
     */
-   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode, String messagePathPointer, String contentType) {
+   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode,
+         String messagePathPointer, String contentType) {
       return validateJsonMessage(specificationNode, jsonNode, messagePathPointer, contentType, null);
    }
 
    /**
-    * Validate a Json object representing an OpenAPI message (response or request) against a node representing
-    * a full OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
-    * for <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
-    * schema information. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitly set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
-    * @param specificationNode The OpenAPI full specification as a Jackson node
-    * @param jsonNode The Json object representing actual message as a Jackson node
+    * Validate a Json object representing an OpenAPI message (response or request) against a node representing a full
+    * OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer for
+    * <code>messagePathPointer</code> within specification and a <code>contentType</code> to allow finding the correct
+    * schema information. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation is
+    * respectful of OpenAPI schema spec semantics regarding additional or unknown attributes: schema must explicitly set
+    * <code>additionalProperties</code> to false if you want to consider unknown attributes as validation errors. It
+    * returns a list of validation error messages.
+    * @param specificationNode  The OpenAPI full specification as a Jackson node
+    * @param jsonNode           The Json object representing actual message as a Jackson node
     * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
-    * @param contentType The Content-Type of the message to valid
-    * @param namespace Namespace definition to resolve relative dependencies in OpenAPI schema
+    * @param contentType        The Content-Type of the message to valid
+    * @param namespace          Namespace definition to resolve relative dependencies in OpenAPI schema
     * @return The list of validation failures. If empty, json object is valid !
     */
-   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode, String messagePathPointer, String contentType, String namespace) {
+   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode,
+         String messagePathPointer, String contentType, String namespace) {
       // Extract specific content type node for message node.
       JsonNode messageNode = specificationNode.at(messagePathPointer);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
-         return Arrays.asList("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
+         return List.of("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
       }
       // Message node can be just a reference.
       if (messageNode.has("$ref")) {
@@ -204,13 +204,14 @@ public class OpenAPISchemaValidator {
       messageNode = messageNode.at("/content/" + contentType.replace("/", "~1"));
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("content for {} cannot be found into OpenAPI specification", contentType);
-         return Arrays.asList("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+         return List.of("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
       }
 
       // Build a schema object with responseNode schema as root and by importing
       // all the common parts that may be referenced by references.
       JsonNode schemaNode = messageNode.path("schema").deepCopy();
-      ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT, specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
+      ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT,
+            specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
       return validateJson(schemaNode, jsonNode, namespace);
    }
@@ -226,9 +227,8 @@ public class OpenAPISchemaValidator {
    }
 
    /**
-    * Get a Jackson JsonNode representation for OpenAPI schema text. This handles
-    * the fact that OpenAPI spec may be formatted in YAML. In that case, it handles the
-    * conversion.
+    * Get a Jackson JsonNode representation for OpenAPI schema text. This handles the fact that OpenAPI spec may be
+    * formatted in YAML. In that case, it handles the conversion.
     * @param schemaText The JSON or YAML string for OpenAPI schema
     * @return The Jackson JsonNode corresponding to OpenAPI schema string
     * @throws IOException if schema string representation cannot be parsed
@@ -268,14 +268,14 @@ public class OpenAPISchemaValidator {
    /** Entry point method for converting an OpenAPI schema node to Json schema. */
    private static JsonNode convertOpenAPISchemaToJsonSchema(JsonNode jsonNode) {
       // Convert components.
-      if (jsonNode.has(JSON_SCHEMA_COMPONENTS_ELEMENT)){
+      if (jsonNode.has(JSON_SCHEMA_COMPONENTS_ELEMENT)) {
          convertProperties(jsonNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).path("schemas").elements());
       }
       // Convert schema for all structures.
       for (String structure : STRUCTURES) {
          if (jsonNode.has(structure) && jsonNode.path(structure).isArray()) {
             ArrayNode arrayNode = (ArrayNode) jsonNode.path(structure);
-            for (int i=0; i<arrayNode.size(); i++) {
+            for (int i = 0; i < arrayNode.size(); i++) {
                JsonNode structureNode = arrayNode.get(i);
                structureNode = convertOpenAPISchemaToJsonSchema(structureNode);
             }

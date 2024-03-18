@@ -40,8 +40,7 @@ import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 /**
- * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event
- * messages.
+ * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event messages.
  * 
  * @author laurent
  */
@@ -89,8 +88,7 @@ public class AMQPProducerManager {
       ConnectionFactory factory = new ConnectionFactory();
       factory.setUri("amqp://" + amqpServer);
 
-      if (amqpUsername != null && amqpUsername.length() > 0
-            && amqpPassword != null && amqpPassword.length() > 0) {
+      if (amqpUsername != null && amqpUsername.length() > 0 && amqpPassword != null && amqpPassword.length() > 0) {
          logger.infof("Connecting to AMQP broker with user '%s'", amqpUsername);
          factory.setUsername(amqpUsername);
          factory.setPassword(amqpPassword);
@@ -122,7 +120,6 @@ public class AMQPProducerManager {
             properties = new AMQP.BasicProperties.Builder().headers(amqpHeaders).build();
          }
          channel.basicPublish(destinationName, "", properties, value.getBytes(StandardCharsets.UTF_8));
-         channel.close();
       } catch (IOException | TimeoutException ioe) {
          logger.warnf("Message %s sending has thrown an exception", ioe);
          ioe.printStackTrace();
@@ -130,21 +127,15 @@ public class AMQPProducerManager {
    }
 
    public String getDestinationName(AsyncMockDefinition definition, EventMessage eventMessage) {
-      logger.debugf("AsyncAPI Operation {%s}", definition.getOperation().getName());
-
       // Produce service name part of topic name.
       String serviceName = definition.getOwnerService().getName().replace(" ", "");
       serviceName = serviceName.replace("-", "");
+
       // Produce version name part of topic name.
       String versionName = definition.getOwnerService().getVersion().replace(" ", "");
-      // Produce operation name part of topic name.
-      String operationName = definition.getOperation().getName();
-      if (operationName.startsWith("SUBSCRIBE ") || operationName.startsWith("PUBLISH ")) {
-         operationName = operationName.substring(operationName.indexOf(" ") + 1);
-      }
 
-      // replace the parts
-      operationName = ProducerManager.replacePartPlaceholders(eventMessage, operationName);
+      // Produce operation name part of topic name.
+      String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
@@ -153,9 +144,8 @@ public class AMQPProducerManager {
    /**
     * Render Microcks headers using the template engine.
     * 
-    * @param engine  The template engine to reuse (because we do not want to
-    *                initialize and manage a context at the KafkaProducerManager
-    *                level.)
+    * @param engine  The template engine to reuse (because we do not want to initialize and manage a context at the
+    *                KafkaProducerManager level.)
     * @param headers The Microcks event message headers definition.
     * @return A set of rendered Microcks headers.
     */

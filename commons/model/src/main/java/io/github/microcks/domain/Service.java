@@ -19,9 +19,9 @@ import org.springframework.data.annotation.Id;
 
 import java.util.ArrayList;
 import java.util.List;
+
 /**
- * Domain class representing a MicroService and the operations /
- * actions it's holding.
+ * Domain class representing a MicroService and the operations / actions it's holding.
  * @author laurent
  */
 public class Service {
@@ -94,7 +94,7 @@ public class Service {
    }
 
    public void addOperation(Operation operation) {
-      if (this.operations == null){
+      if (this.operations == null) {
          this.operations = new ArrayList<>();
       }
       operations.add(operation);

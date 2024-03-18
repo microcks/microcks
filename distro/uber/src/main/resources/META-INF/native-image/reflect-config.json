@@ -1,0 +1,295 @@
+[
+  {
+    "name":"java.util.HashSet",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allDeclaredConstructors": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueProducerFields"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueProducerFields",
+    "fields": [
+      {
+        "name": "producerIndex"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueConsumerFields"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueConsumerFields",
+    "fields": [
+      {
+        "name": "consumerIndex"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueColdProducerFields"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueColdProducerFields",
+    "fields": [
+      {
+        "name": "producerLimit"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueue"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueue",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerIndexField"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerIndexField",
+    "fields": [
+      {
+        "name": "producerIndex"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueConsumerIndexField"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueConsumerIndexField",
+    "fields": [
+      {
+        "name": "consumerIndex"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerLimitField"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.MpscArrayQueueProducerLimitField",
+    "fields": [
+      {
+        "name": "producerLimit"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.buffer.AbstractByteBufAllocator"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.buffer.AbstractByteBufAllocator",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "name": "org.springframework.security.web.access.HandlerMappingIntrospectorRequestTransformer",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "name":"org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration",
+    "queryAllDeclaredMethods":true
+  },
+  {
+    "name":"org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration$MeterRegistryCloser",
+    "queryAllDeclaredMethods":true,
+    "methods":[{"name":"onApplicationEvent","parameterTypes":["org.springframework.context.ApplicationEvent"] }]
+  },
+  {
+    "name":"org.springframework.boot.actuate.autoconfigure.metrics.MetricsEndpointAutoConfiguration",
+    "queryAllDeclaredMethods":true
+  },
+  {
+    "name":"org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "methods":[{"name":"getDistribution","parameterTypes":[] }]
+  },
+  {
+    "name":"org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties$Distribution",
+    "allDeclaredFields":true,
+    "queryAllDeclaredMethods":true,
+    "queryAllDeclaredConstructors":true,
+    "methods":[{"name":"getPercentilesHistogram","parameterTypes":[] }, {"name":"getSlo","parameterTypes":[] }]
+  },
+  {
+    "name":"org.springframework.boot.actuate.autoconfigure.metrics.PropertiesMeterFilter",
+    "queryAllDeclaredMethods":true,
+    "methods":[{"name":"accept","parameterTypes":["io.micrometer.core.instrument.Meter$Id"] }, {"name":"configure","parameterTypes":["io.micrometer.core.instrument.Meter$Id","io.micrometer.core.instrument.distribution.DistributionStatisticConfig"] }, {"name":"map","parameterTypes":["io.micrometer.core.instrument.Meter$Id"] }]
+  },
+  {
+    "name":"org.springframework.boot.actuate.autoconfigure.metrics.ServiceLevelObjectiveBoundary",
+    "queryAllDeclaredMethods":true,
+    "methods":[{"name":"valueOf","parameterTypes":["java.lang.String"] }]
+  },
+  {
+    "name":"com.github.fge.jackson.jsonpointer.JsonPointerMessages",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.core.messages.JsonSchemaCoreMessageBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.core.messages.JsonSchemaSyntaxMessageBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.AdditionalItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.AdditionalPropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.DependenciesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.EnumValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MaxItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MaxLengthValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MaximumValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MinItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MinLengthValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MinimumValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.PatternValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.UniqueItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.DisallowKeywordValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.DivisibleByValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.DraftV3TypeValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.ExtendsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.PropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.AllOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.AnyOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.DraftV4TypeValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.MaxPropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.MinPropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.MultipleOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.NotValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.OneOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.RequiredKeywordValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.messages.JsonSchemaConfigurationBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.messages.JsonSchemaValidationBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  }
+]

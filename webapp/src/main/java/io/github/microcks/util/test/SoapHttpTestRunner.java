@@ -40,95 +40,86 @@ import javax.xml.namespace.QName;
 import java.util.List;
 
 /**
- * An extension of HttpTestRunner that checks that returned response is
- * valid according the SOAP contract definition.
+ * An extension of HttpTestRunner that checks that returned response is valid according the SOAP contract definition.
  * 
  * @see SoapMessageValidator
  * @author laurent
  */
-public class SoapHttpTestRunner extends HttpTestRunner{
-   
-	/** A simple logger for diagnostic messages. */
-	private static Logger log = LoggerFactory.getLogger(SoapHttpTestRunner.class);
+public class SoapHttpTestRunner extends HttpTestRunner {
 
-	/** The URL of resources used for validation. */
-	private String resourceUrl = null;
+   /** A simple logger for diagnostic messages. */
+   private static Logger log = LoggerFactory.getLogger(SoapHttpTestRunner.class);
 
-	private ResourceRepository resourceRepository;
+   /** The URL of resources used for validation. */
+   private String resourceUrl = null;
 
-	/**
-	 *
-	 * @param resourceRepository
-	 */
-	public SoapHttpTestRunner(ResourceRepository resourceRepository) {
-		this.resourceRepository = resourceRepository;
-	}
+   private ResourceRepository resourceRepository;
 
-	/**
-	 * The URL of resources used for validation. 
-	 * @return The URL of resources used for validation
-	 */
-	public String getResourceUrl(){
-		return resourceUrl;
-	}
+   /**
+    *
+    * @param resourceRepository
+    */
+   public SoapHttpTestRunner(ResourceRepository resourceRepository) {
+      this.resourceRepository = resourceRepository;
+   }
 
-	/**
-	 * The URL of resources used for validation.
-	 * @param resourceUrl The URL of resources used for validation.
-	 */
-	public void setResourceUrl(String resourceUrl){
-		this.resourceUrl = resourceUrl;
-	}
+   /**
+    * The URL of resources used for validation.
+    * @return The URL of resources used for validation
+    */
+   public String getResourceUrl() {
+      return resourceUrl;
+   }
 
-	/**
+   /**
+    * The URL of resources used for validation.
+    * @param resourceUrl The URL of resources used for validation.
+    */
+   public void setResourceUrl(String resourceUrl) {
+      this.resourceUrl = resourceUrl;
+   }
+
+   /**
     * Build the HttpMethod corresponding to string. Always POST for a SoapHttpTestRunner.
     */
    @Override
-   public HttpMethod buildMethod(String method){
+   public HttpMethod buildMethod(String method) {
       return HttpMethod.POST;
    }
-	
-	@Override
-	protected int extractTestReturnCode(Service service, Operation operation, Request request,
-													ClientHttpResponse httpResponse, String responseContent){
-		int code = TestReturn.SUCCESS_CODE;
 
-		// Checking HTTP return code: delegating to super class.
-		code = super.extractTestReturnCode(service, operation, request, httpResponse, responseContent);
-		// If test is already a failure (40x code), no need to pursue...
-		if (TestReturn.FAILURE_CODE == code){
-			return code;
-		}
+   @Override
+   protected int extractTestReturnCode(Service service, Operation operation, Request request,
+         ClientHttpResponse httpResponse, String responseContent) {
+      int code = TestReturn.SUCCESS_CODE;
 
-		Resource wsdlResource = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL).get(0);
-		List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(),
-				new QName(service.getXmlNS(), operation.getOutputName()),
-				responseContent, resourceUrl);
+      // Checking HTTP return code: delegating to super class.
+      code = super.extractTestReturnCode(service, operation, request, httpResponse, responseContent);
+      // If test is already a failure (40x code), no need to pursue...
+      if (TestReturn.FAILURE_CODE == code) {
+         return code;
+      }
 
-		log.debug("SoapBody validation errors: " + errors.size());
+      Resource wsdlResource = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.WSDL).get(0);
+      List<String> errors = SoapMessageValidator.validateSoapMessage(wsdlResource.getContent(),
+            new QName(service.getXmlNS(), operation.getOutputName()), responseContent, resourceUrl);
 
-		if (!errors.isEmpty()){
-			log.debug("Soap validation errors found " + errors.size() + ", marking test as failed.");
-			return TestReturn.FAILURE_CODE;
-		}
+      log.debug("SoapBody validation errors: " + errors.size());
 
-		/*
-		try{
-			// Validate Soap message body according to operation output part.
-			List<XmlError> errors = SoapMessageValidator.validateSoapMessage(
-               operation.getOutputName(), service.getXmlNS(), responseContent, resourceUrl
-                     +  UriUtils.encodeFragment(service.getName(), "UTF-8") + "-" + service.getVersion() + ".wsdl", true
-         );
+      if (!errors.isEmpty()) {
+         log.debug("Soap validation errors found " + errors.size() + ", marking test as failed.");
+         return TestReturn.FAILURE_CODE;
+      }
 
-			if (!errors.isEmpty()){
-				log.debug("Soap validation errors found " + errors.size() + ", marking test as failed.");
-				return TestReturn.FAILURE_CODE;
-			}
-		} catch (XmlException e) {
-			log.debug("XmlException while validating Soap response message", e);
-			return TestReturn.FAILURE_CODE;
-		}
-		*/
-		return code;
-	}
+      /*
+       * try{ // Validate Soap message body according to operation output part. List<XmlError> errors =
+       * SoapMessageValidator.validateSoapMessage( operation.getOutputName(), service.getXmlNS(), responseContent,
+       * resourceUrl + UriUtils.encodeFragment(service.getName(), "UTF-8") + "-" + service.getVersion() + ".wsdl", true
+       * );
+       * 
+       * if (!errors.isEmpty()){ log.debug("Soap validation errors found " + errors.size() +
+       * ", marking test as failed."); return TestReturn.FAILURE_CODE; } } catch (XmlException e) {
+       * log.debug("XmlException while validating Soap response message", e); return TestReturn.FAILURE_CODE; }
+       */
+      return code;
+   }
 }

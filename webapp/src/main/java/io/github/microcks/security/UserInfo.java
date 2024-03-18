@@ -33,15 +33,17 @@ public class UserInfo {
 
    /**
     * Create a new UserInfo with all required properties.
-    * @param name The full displayable name for this user (eg. Laurent Broudoux)
-    * @param username The system username for this user (eg. lbroudoux)
-    * @param givenName The user given name (eg. Laurent)
+    * @param name       The full displayable name for this user (eg. Laurent Broudoux)
+    * @param username   The system username for this user (eg. lbroudoux)
+    * @param givenName  The user given name (eg. Laurent)
     * @param familyName The user family name (eg. Broudoux)
-    * @param email The user email address (eg. laurent@microcks.io)
-    * @param roles The array of endorsed roles for this user (eg. [user, manager, admin])
-    * @param groups The array of groups this user is member of (eg. [/microcks/manager/authentication, /microcks/manager/greetings])
+    * @param email      The user email address (eg. laurent@microcks.io)
+    * @param roles      The array of endorsed roles for this user (eg. [user, manager, admin])
+    * @param groups     The array of groups this user is member of (eg. [/microcks/manager/authentication,
+    *                   /microcks/manager/greetings])
     */
-   public UserInfo(String name, String username, String givenName, String familyName, String email, String[] roles, String[] groups) {
+   public UserInfo(String name, String username, String givenName, String familyName, String email, String[] roles,
+         String[] groups) {
       this.name = name;
       this.username = username;
       this.givenName = givenName;
@@ -81,14 +83,8 @@ public class UserInfo {
 
    @Override
    public String toString() {
-      return "UserInfo{" +
-            "name='" + name + '\'' +
-            ", username='" + username + '\'' +
-            ", givenName='" + givenName + '\'' +
-            ", familyName='" + familyName + '\'' +
-            ", email='" + email + '\'' +
-            ", roles=" + Arrays.toString(roles) +
-            ", groups=" + Arrays.toString(groups) +
-            '}';
+      return "UserInfo{" + "name='" + name + '\'' + ", username='" + username + '\'' + ", givenName='" + givenName
+            + '\'' + ", familyName='" + familyName + '\'' + ", email='" + email + '\'' + ", roles="
+            + Arrays.toString(roles) + ", groups=" + Arrays.toString(groups) + '}';
    }
 }

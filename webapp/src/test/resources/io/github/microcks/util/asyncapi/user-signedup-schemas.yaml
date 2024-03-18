@@ -1,0 +1,14 @@
+components:
+  schemas:
+    UserInfo:
+      type: object
+      additionalProperties: false
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        age:
+          type: integer
+          minimum: 18

@@ -35,10 +35,11 @@ public class RelativeReferenceURLBuilderFactory {
     * @param baseFileProperties A map of properties (most of the time headers-like structure)
     * @return A RelativeReferenceURLBuilder that could be used to build URL for relative references in this base file.
     */
-   public static RelativeReferenceURLBuilder getRelativeReferenceURLBuilder(Map<String, List<String>> baseFileProperties) {
+   public static RelativeReferenceURLBuilder getRelativeReferenceURLBuilder(
+         Map<String, List<String>> baseFileProperties) {
       if (baseFileProperties != null) {
-         if (baseFileProperties.containsKey(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER) ||
-               baseFileProperties.containsKey(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER.toLowerCase())) {
+         if (baseFileProperties.containsKey(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER)
+               || baseFileProperties.containsKey(GitLabReferenceURLBuilder.GITLAB_FILE_NAME_HEADER.toLowerCase())) {
             log.debug("Found a GitLab File specific header, returning a GitLabReferenceURLBuilder");
             return new GitLabReferenceURLBuilder();
          }

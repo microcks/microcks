@@ -40,7 +40,6 @@ import java.util.List;
 
 /**
  * A Service for managing imports and exports of Microcks repository part.
- * 
  * @author laurent
  */
 @org.springframework.stereotype.Service
@@ -70,8 +69,7 @@ public class ImportExportService {
    /**
     * Import a repository from JSON definitions.
     * 
-    * @param json A String encoded into json and representing repository object
-    *             definitions.
+    * @param json A String encoded into json and representing repository object definitions.
     * @return A boolean indicating operation success.
     */
    public boolean importRepository(String json) {

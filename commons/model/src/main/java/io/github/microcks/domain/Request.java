@@ -21,8 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Domain object representing a Microservice operation / action
- * invocation request.
+ * Domain object representing a Microservice operation / action invocation request.
  * @author laurent
  */
 public class Request extends Message {

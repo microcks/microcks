@@ -36,7 +36,6 @@ import io.github.microcks.util.script.ScriptEngineBinder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -69,16 +68,12 @@ public class RestController {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(RestController.class);
 
-   @Autowired
-   private ServiceRepository serviceRepository;
+   private final ServiceRepository serviceRepository;
 
-   @Autowired
-   private ResponseRepository responseRepository;
+   private final ResponseRepository responseRepository;
 
-   @Autowired
-   private ApplicationContext applicationContext;
+   private final ApplicationContext applicationContext;
 
-   @Autowired
    private ProxyService proxyService;
 
    @Value("${mocks.enable-invocation-stats}")
@@ -88,17 +83,31 @@ public class RestController {
    private final Boolean enableCorsPolicy = null;
    @Value("${mocks.rest.cors.allowedOrigins}")
    private String corsAllowedOrigins;
-
    @Value("${mocks.rest.cors.allowCredentials}")
    private Boolean corsAllowCredentials;
+
+   /**
+    * Build a RestController with required dependencies.
+    * @param serviceRepository  The repository to access services definitions
+    * @param responseRepository The repository to access responses definitions
+    * @param applicationContext The Spring application context
+    */
+   public RestController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
+         ApplicationContext applicationContext, ProxyService proxyService) {
+      this.serviceRepository = serviceRepository;
+      this.responseRepository = responseRepository;
+      this.applicationContext = applicationContext;
+      this.proxyService = proxyService;
+   }
+
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
    public ResponseEntity<byte[]> execute(
          @PathVariable("service") String serviceName,
          @PathVariable("version") String version,
-         @RequestParam(value="delay", required=false) Long delay,
-         @RequestBody(required=false) String body,
+         @RequestParam(value = "delay", required = false) Long delay,
+         @RequestBody(required = false) String body,
          @RequestHeader HttpHeaders headers,
          HttpServletRequest request,
          HttpMethod method
@@ -135,13 +144,19 @@ public class RestController {
          trimmedResourcePath = resourcePath.substring(0, resourcePath.length() - 1);
       }
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
+      if (service == null) {
+         return new ResponseEntity<>(
+               String.format("The service %s with version %s does not exist!", serviceName, version).getBytes(),
+               HttpStatus.NOT_FOUND);
+      }
       Operation rOperation = null;
+
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
          if (operation.getMethod().equals(method.name())) {
             // ... then check is we have a matching resource path.
             if (operation.getResourcePaths() != null && (operation.getResourcePaths().contains(resourcePath)
-                  || operation.getResourcePaths().contains(trimmedResourcePath)) ) {
+                  || operation.getResourcePaths().contains(trimmedResourcePath))) {
                rOperation = operation;
                break;
             }
@@ -200,19 +215,22 @@ public class RestController {
          Response response = null;
 
          // Filter depending on requested media type.
-        // TODO: validate dispatchCriteria with dispatcherRules
-         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
+         // TODO: validate dispatchCriteria with dispatcherRules
+         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
+               IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
          response = getResponseByMediaType(responses, request);
 
          if (response == null) {
             // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
+                  dispatchContext.dispatchCriteria());
             response = getResponseByMediaType(responses, request);
          }
 
          if (response == null && fallback != null) {
             // If we've found nothing and got a fallback, that's the moment!
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation), fallback.getFallback());
+            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
+                  fallback.getFallback());
             response = getResponseByMediaType(responses, request);
          }
 
@@ -239,8 +257,9 @@ public class RestController {
          }
 
          if (response != null) {
-            HttpStatus status = (response.getStatus() != null ?
-                HttpStatus.valueOf(Integer.parseInt(response.getStatus())) : HttpStatus.OK);
+            HttpStatus status = (response.getStatus() != null
+                  ? HttpStatus.valueOf(Integer.parseInt(response.getStatus()))
+                  : HttpStatus.OK);
 
             // Deal with specific headers (content-type and redirect directive).
             HttpHeaders responseHeaders = new HttpHeaders();
@@ -260,7 +279,7 @@ public class RestController {
                         // We should process location in order to make relative URI specified an absolute one from
                         // the client perspective.
                         location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                            + request.getContextPath() + "/rest" + serviceAndVersion + location;
+                              + request.getContextPath() + "/rest" + serviceAndVersion + location;
                      }
                      responseHeaders.add(header.getName(), location);
                   } else {
@@ -317,7 +336,7 @@ public class RestController {
 
    /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
    private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules, String uriPattern,
-                                          String resourcePath, HttpServletRequest request, String body) {
+         String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
       Map<String, Object> requestContext = null;
 
@@ -325,7 +344,8 @@ public class RestController {
       if (dispatcher != null) {
          switch (dispatcher) {
             case DispatchStyles.SEQUENCE:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern, resourcePath);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
+                     resourcePath);
                break;
             case DispatchStyles.SCRIPT:
                ScriptEngineManager sem = new ScriptEngineManager();
@@ -345,17 +365,20 @@ public class RestController {
                dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
                break;
             case DispatchStyles.URI_PARTS:
-              // /tenantId?t1/userId=x
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern, resourcePath);
+               // /tenantId?t1/userId=x
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
+                     resourcePath);
                break;
             case DispatchStyles.URI_ELEMENTS:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern, resourcePath);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
+                     resourcePath);
                fullURI = request.getRequestURL() + "?" + request.getQueryString();
                dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
                break;
             case DispatchStyles.JSON_BODY:
                try {
-                  JsonEvaluationSpecification specification = JsonEvaluationSpecification.buildFromJsonString(dispatcherRules);
+                  JsonEvaluationSpecification specification = JsonEvaluationSpecification
+                        .buildFromJsonString(dispatcherRules);
                   dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
                } catch (JsonMappingException jme) {
                   log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
@@ -368,7 +391,8 @@ public class RestController {
    }
 
    /** Recopy headers defined with parameter constraints. */
-   private void recopyHeadersFromParameterConstraints(Operation rOperation, HttpServletRequest request, HttpHeaders responseHeaders) {
+   private void recopyHeadersFromParameterConstraints(Operation rOperation, HttpServletRequest request,
+         HttpHeaders responseHeaders) {
       if (rOperation.getParameterConstraints() != null) {
          for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
             if (ParameterLocation.header == constraint.getIn() && constraint.isRecopy()) {
@@ -381,21 +405,24 @@ public class RestController {
       }
    }
 
-   /** Filter responses using the Accept header for content-type, default to the first. Return null if no responses to filter. */
+   /**
+    * Filter responses using the Accept header for content-type, default to the first. Return null if no responses to
+    * filter.
+    */
    private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {
       if (!responses.isEmpty()) {
          String accept = request.getHeader("Accept");
-         return responses.stream().filter(r -> StringUtils.isNotEmpty(accept) ?
-               accept.equals(r.getMediaType()) : true).findFirst().orElse(responses.get(0));
+         return responses.stream().filter(r -> !StringUtils.isNotEmpty(accept) || accept.equals(r.getMediaType()))
+               .findFirst().orElse(responses.get(0));
       }
       return null;
    }
 
    /** Retrieve URI Pattern from operation name (remove starting verb name). */
    private String getURIPattern(String operationName) {
-      if (operationName.startsWith("GET ") || operationName.startsWith("POST ")
-            || operationName.startsWith("PUT ") || operationName.startsWith("DELETE ")
-            || operationName.startsWith("PATCH ") || operationName.startsWith("OPTIONS ")) {
+      if (operationName.startsWith("GET ") || operationName.startsWith("POST ") || operationName.startsWith("PUT ")
+            || operationName.startsWith("DELETE ") || operationName.startsWith("PATCH ")
+            || operationName.startsWith("OPTIONS ")) {
          return operationName.substring(operationName.indexOf(' ') + 1);
       }
       return operationName;
@@ -405,23 +432,16 @@ public class RestController {
    private ResponseEntity<byte[]> handleCorsRequest(HttpServletRequest request) {
       // Retrieve and set access control headers from those coming in request.
       List<String> accessControlHeaders = new ArrayList<>();
-      Collections.list(request.getHeaders("Access-Control-Request-Headers")).forEach(
-            header -> accessControlHeaders.add(header)
-      );
+      Collections.list(request.getHeaders("Access-Control-Request-Headers"))
+            .forEach(header -> accessControlHeaders.add(header));
       HttpHeaders requestHeaders = new HttpHeaders();
       requestHeaders.setAccessControlAllowHeaders(accessControlHeaders);
       requestHeaders.setAccessControlExposeHeaders(accessControlHeaders);
 
       // Apply CORS headers to response with 204 response code.
-      ResponseEntity<byte[]> response = ResponseEntity.noContent()
-               .header("Access-Control-Allow-Origin", corsAllowedOrigins)
-               .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH")
-               .headers(requestHeaders)
-               .header("Access-Allow-Credentials", String.valueOf(corsAllowCredentials))
-               .header("Access-Control-Max-Age", "3600")
-               .header("Vary", "Accept-Encoding, Origin")
-               .build();
-
-      return response;
+      return ResponseEntity.noContent().header("Access-Control-Allow-Origin", corsAllowedOrigins)
+            .header("Access-Control-Allow-Methods", "POST, PUT, GET, OPTIONS, DELETE, PATCH").headers(requestHeaders)
+            .header("Access-Allow-Credentials", String.valueOf(corsAllowCredentials))
+            .header("Access-Control-Max-Age", "3600").header("Vary", "Accept-Encoding, Origin").build();
    }
 }

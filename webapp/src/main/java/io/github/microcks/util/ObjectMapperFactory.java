@@ -19,9 +19,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.springframework.util.unit.DataSize;
 import org.yaml.snakeyaml.LoaderOptions;
+
 /**
- * Utility class that allow instantiation of ObjectMapper objects using common parameters
- * that can be overridden by the application at configuration time.
+ * Utility class that allow instantiation of ObjectMapper objects using common parameters that can be overridden by the
+ * application at configuration time.
  * @author laurent
  */
 public class ObjectMapperFactory {
@@ -54,9 +55,7 @@ public class ObjectMapperFactory {
    public static ObjectMapper getYamlObjectMapper() {
       LoaderOptions options = new LoaderOptions();
       options.setCodePointLimit(codePointLimit);
-      YAMLFactory yamlFactory = YAMLFactory.builder()
-            .loaderOptions(options)
-            .build();
+      YAMLFactory yamlFactory = YAMLFactory.builder().loaderOptions(options).build();
       return new ObjectMapper(yamlFactory);
    }
 }

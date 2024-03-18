@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.Set;
 
 /**
- * Specification of additional headers for a Service/API operations.
- * Keys are operation name or "globals" (if header applies to all), values are Header objects.
+ * Specification of additional headers for a Service/API operations. Keys are operation name or "globals" (if header
+ * applies to all), values are Header objects.
  * @author laurent
  */
 public class OperationsHeaders extends HashMap<String, Set<Header>> {

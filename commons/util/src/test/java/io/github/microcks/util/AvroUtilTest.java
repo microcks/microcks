@@ -52,7 +52,8 @@ public class AvroUtilTest {
 
       try {
          // Load schema from file.
-         schema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+         schema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
 
          GenericRecord user1 = new GenericData.Record(schema);
          user1.put("name", "Laurent");
@@ -111,7 +112,8 @@ public class AvroUtilTest {
 
       try {
          // Load schema from file.
-         Schema schema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+         Schema schema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
 
          // Convert back and forth to and from JSON.
          byte[] avroBinary = AvroUtil.jsonToAvro(jsonText, schema);
@@ -150,7 +152,8 @@ public class AvroUtilTest {
 
       try {
          // Load schema from file.
-         Schema schema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+         Schema schema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
 
          GenericRecord record = AvroUtil.jsonToAvroRecord(jsonText, schema);
          assertEquals("Laurent Broudoux", record.get("name").toString());
@@ -167,13 +170,15 @@ public class AvroUtilTest {
 
       try {
          // Load schema from file.
-         Schema writeSchema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
+         Schema writeSchema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
 
          // Convert back and forth to and from JSON.
          byte[] avroBinary = AvroUtil.jsonToAvro(jsonText, writeSchema);
          System.err.println("binaryEncoding: \n" + new String(avroBinary, "UTF-8"));
 
-         Schema readSchema = new Schema.Parser().parse(new File("target/test-classes/io/github/microcks/util/user-signedup.avsc"));
+         Schema readSchema = new Schema.Parser()
+               .parse(new File("target/test-classes/io/github/microcks/util/user-signedup.avsc"));
          String jsonRepresentation = AvroUtil.avroToJson(avroBinary, readSchema);
          System.err.println("\njsonRepresentation: \n" + jsonRepresentation);
 
@@ -187,15 +192,9 @@ public class AvroUtilTest {
 
    @Test
    public void testValidate() {
-      Schema v1Schema = SchemaBuilder.record("User").fields()
-            .requiredString("name")
-            .requiredInt("age")
-            .endRecord();
-      Schema v2Schema = SchemaBuilder.record("User").fields()
-            .requiredString("fullName")
-            .requiredInt("age")
-            .optionalString("email")
-            .endRecord();
+      Schema v1Schema = SchemaBuilder.record("User").fields().requiredString("name").requiredInt("age").endRecord();
+      Schema v2Schema = SchemaBuilder.record("User").fields().requiredString("fullName").requiredInt("age")
+            .optionalString("email").endRecord();
 
       GenericRecord userv1 = new GenericData.Record(v1Schema);
       userv1.put("name", "Laurent");
@@ -219,26 +218,19 @@ public class AvroUtilTest {
 
    @Test
    public void testAvroSchemaCompatibility() {
-      Schema v1Schema = SchemaBuilder.record("User").fields()
-            .requiredString("name")
-            .requiredInt("age")
-            .endRecord();
-      Schema v2Schema = SchemaBuilder.record("User").fields()
-            .requiredString("fullName")
-            .requiredInt("age")
-            .optionalString("email")
-            .endRecord();
+      Schema v1Schema = SchemaBuilder.record("User").fields().requiredString("name").requiredInt("age").endRecord();
+      Schema v2Schema = SchemaBuilder.record("User").fields().requiredString("fullName").requiredInt("age")
+            .optionalString("email").endRecord();
 
       GenericRecord userv1 = new GenericData.Record(v1Schema);
       userv1.put("name", "Laurent");
       userv1.put("age", 42);
 
-      SchemaCompatibility.SchemaPairCompatibility compatibility =
-            SchemaCompatibility.checkReaderWriterCompatibility(userv1.getSchema(),
-                  v2Schema);
-      SchemaCompatibility.checkReaderWriterCompatibility(userv1.getSchema(),
-            v2Schema).getResult().getIncompatibilities()
-            .stream().forEach(incompatibility -> System.err.println(incompatibility.getMessage()));
+      SchemaCompatibility.SchemaPairCompatibility compatibility = SchemaCompatibility
+            .checkReaderWriterCompatibility(userv1.getSchema(), v2Schema);
+      SchemaCompatibility.checkReaderWriterCompatibility(userv1.getSchema(), v2Schema).getResult()
+            .getIncompatibilities().stream()
+            .forEach(incompatibility -> System.err.println(incompatibility.getMessage()));
       assertEquals(SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
    }
 }

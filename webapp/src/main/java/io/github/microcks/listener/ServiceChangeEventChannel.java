@@ -18,8 +18,7 @@ package io.github.microcks.listener;
 import io.github.microcks.event.ServiceViewChangeEvent;
 
 /**
- * This represents a communication via the one me may publish events that relates
- * services changes.
+ * This represents a communication via the one me may publish events that relates services changes.
  * @author laurent
  */
 public interface ServiceChangeEventChannel {

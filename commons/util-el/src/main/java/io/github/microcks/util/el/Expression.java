@@ -16,8 +16,8 @@
 package io.github.microcks.util.el;
 
 /**
- * Simple interface representing an EL expression. Expression just render a value regarding
- * a specific {@code EvaluationContext}.
+ * Simple interface representing an EL expression. Expression just render a value regarding a specific
+ * {@code EvaluationContext}.
  * @author laurent
  */
 public interface Expression {

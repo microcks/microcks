@@ -1,0 +1,23 @@
+{
+  "resources":{
+    "includes":[{
+      "pattern":"\\Qcom/github/fge/jackson/jsonNodeReader.properties\\E"
+    }, {
+      "pattern":"\\Qcom/github/fge/jsonschema/core/syntax.properties\\E"
+    }, {
+      "pattern":"\\Qcom/github/fge/jsonschema/validator/validation.properties\\E"
+    }, {
+      "pattern":"\\Qdraftv3/schema\\E"
+    }, {
+      "pattern":"\\Qdraftv4/hyper-schema\\E"
+    }, {
+      "pattern":"\\Qdraftv4/schema\\E"
+    }, {
+      "pattern":"\\Qproto2/include/google/protobuf/descriptor.proto\\E"
+    }, {
+      "pattern":"proto3/include/google/protobuf/.*.proto"
+    }, {
+      "pattern":"\\Qproto3/include/google/protobuf/compiler/plugin.proto\\E"
+    }]
+  }
+}

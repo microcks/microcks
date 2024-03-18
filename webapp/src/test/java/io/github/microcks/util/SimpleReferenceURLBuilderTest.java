@@ -30,33 +30,22 @@ public class SimpleReferenceURLBuilderTest {
    @Test
    public void testGetFileName() {
       SimpleReferenceURLBuilder builder = new SimpleReferenceURLBuilder();
-      assertEquals("API_Pastry_1.0.0-openapi.yaml",
-            builder.getFileName(BASE_URL, null));
+      assertEquals("API_Pastry_1.0.0-openapi.yaml", builder.getFileName(BASE_URL, null));
    }
 
    @Test
    public void testBuildRemoteURL() {
 
       SimpleReferenceURLBuilder builder = new SimpleReferenceURLBuilder();
-      assertEquals(
-            "https://raw.githubusercontent.com/microcks/microcks/main/samples/schema-ref.yml",
-            builder.buildRemoteURL(BASE_URL, "schema-ref.yml")
-      );
-      assertEquals(
-            "https://raw.githubusercontent.com/microcks/microcks/main/samples/schema-ref.yml",
-            builder.buildRemoteURL(BASE_URL, "./schema-ref.yml")
-      );
-      assertEquals(
-            "https://raw.githubusercontent.com/microcks/microcks/main/refs/schema-ref.yml",
-            builder.buildRemoteURL(BASE_URL, "../refs/schema-ref.yml")
-      );
-      assertEquals(
-            "https://raw.githubusercontent.com/microcks/microcks/main/refs/sub/schema-ref.yml",
-            builder.buildRemoteURL(BASE_URL, "../refs/sub/schema-ref.yml")
-      );
-      assertEquals(
-            "https://raw.githubusercontent.com/microcks/microcks/refs/sub/schema-ref.yml",
-            builder.buildRemoteURL(BASE_URL, "../../refs/sub/schema-ref.yml")
-      );
+      assertEquals("https://raw.githubusercontent.com/microcks/microcks/main/samples/schema-ref.yml",
+            builder.buildRemoteURL(BASE_URL, "schema-ref.yml"));
+      assertEquals("https://raw.githubusercontent.com/microcks/microcks/main/samples/schema-ref.yml",
+            builder.buildRemoteURL(BASE_URL, "./schema-ref.yml"));
+      assertEquals("https://raw.githubusercontent.com/microcks/microcks/main/refs/schema-ref.yml",
+            builder.buildRemoteURL(BASE_URL, "../refs/schema-ref.yml"));
+      assertEquals("https://raw.githubusercontent.com/microcks/microcks/main/refs/sub/schema-ref.yml",
+            builder.buildRemoteURL(BASE_URL, "../refs/sub/schema-ref.yml"));
+      assertEquals("https://raw.githubusercontent.com/microcks/microcks/refs/sub/schema-ref.yml",
+            builder.buildRemoteURL(BASE_URL, "../../refs/sub/schema-ref.yml"));
    }
 }

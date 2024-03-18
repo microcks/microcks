@@ -57,9 +57,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * An implementation of MockRepositoryImporter that deals with HAR or HTTP Archive 1.2
- * files. See https://w3c.github.io/web-performance/specs/HAR/Overview.html and
- * http://www.softwareishard.com/blog/har-12-spec/ for explanations
+ * An implementation of MockRepositoryImporter that deals with HAR or HTTP Archive 1.2 files. See
+ * https://w3c.github.io/web-performance/specs/HAR/Overview.html and http://www.softwareishard.com/blog/har-12-spec/ for
+ * explanations
  * @author laurent
  */
 public class HARImporter implements MockRepositoryImporter {
@@ -89,8 +89,8 @@ public class HARImporter implements MockRepositoryImporter {
 
    private static final List<String> VALID_VERSIONS = List.of("1.1", "1.2");
 
-   private static final List<String> INVALID_ENTRY_EXTENSIONS = List.of(".ico", ".html", ".css",
-         ".js", ".png", ".jpg", ".ttf", ".woff2");
+   private static final List<String> INVALID_ENTRY_EXTENSIONS = List.of(".ico", ".html", ".css", ".js", ".png", ".jpg",
+         ".ttf", ".woff2");
 
    private static final List<String> UNWANTED_HEADERS = List.of("host", "sec-fetch-dest", "sec-fetch-mode",
          "sec-fetch-user", "sec-fetch-site", "sec-gpc", "sec-ch-ua", "sec-ch-ua-mobile", "sec-ch-ua-platform",
@@ -115,11 +115,13 @@ public class HARImporter implements MockRepositoryImporter {
       // Start checking version and comment.
       String version = spec.path("log").path("version").asText();
       if (!VALID_VERSIONS.contains(version)) {
-         throw new MockRepositoryImportException("HAR version is not supported. Currently supporting: " + VALID_VERSIONS);
+         throw new MockRepositoryImportException(
+               "HAR version is not supported. Currently supporting: " + VALID_VERSIONS);
       }
       String comment = spec.path("log").path("comment").asText();
       if (comment == null || comment.length() == 0) {
-         throw new MockRepositoryImportException("Expecting a comment in HAR log to specify Microcks service identifier");
+         throw new MockRepositoryImportException(
+               "Expecting a comment in HAR log to specify Microcks service identifier");
       }
 
       // We can start building something.
@@ -138,7 +140,8 @@ public class HARImporter implements MockRepositoryImporter {
                service.setVersion(serviceAndVersion[1].trim());
             } else {
                log.error("microcksId comment is malformed. Expecting \'microcksId: <API_name>:<API_version>\'");
-               throw new MockRepositoryImportException("microcksId comment is malformed. Expecting \'microcksId: <API_name>:<API_version>\'");
+               throw new MockRepositoryImportException(
+                     "microcksId comment is malformed. Expecting \'microcksId: <API_name>:<API_version>\'");
             }
          } else if (commentLine.trim().startsWith(API_PREFIX_STARTER)) {
             apiPrefix = commentLine.trim().substring(API_PREFIX_STARTER.length()).trim();
@@ -147,11 +150,13 @@ public class HARImporter implements MockRepositoryImporter {
       }
       if (service.getName() == null || service.getVersion() == null) {
          log.error("No microcksId: comment found into GraphQL schema to get API name and version");
-         throw new MockRepositoryImportException("No microcksId: comment found into GraphQL schema to get API name and version");
+         throw new MockRepositoryImportException(
+               "No microcksId: comment found into GraphQL schema to get API name and version");
       }
 
       // Inspect requests content to determine the most probable service type.
-      Map<ServiceType, Integer> requestsCounters = countRequestsByServiceType(spec.path("log").path("entries").elements());
+      Map<ServiceType, Integer> requestsCounters = countRequestsByServiceType(
+            spec.path("log").path("entries").elements());
       if ((requestsCounters.get(ServiceType.GRAPHQL) > requestsCounters.get(ServiceType.REST))
             && (requestsCounters.get(ServiceType.GRAPHQL) > requestsCounters.get(ServiceType.SOAP_HTTP))) {
          service.setType(ServiceType.GRAPHQL);
@@ -173,13 +178,13 @@ public class HARImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       Map<Request, Response> result = new HashMap<>();
 
       Optional<Operation> opOperation = operationToEntriesMap.keySet().stream()
             .filter(op -> op.getName().equals(operation.getName()))
-            .filter(op -> op.getMethod().equals(operation.getMethod()))
-            .findFirst();
+            .filter(op -> op.getMethod().equals(operation.getMethod())).findFirst();
 
       if (opOperation.isPresent()) {
          // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
@@ -243,8 +248,7 @@ public class HARImporter implements MockRepositoryImporter {
       }
 
       // Adapt map to list of Exchanges.
-      return result.entrySet().stream()
-            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+      return result.entrySet().stream().map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
    }
 
@@ -269,8 +273,8 @@ public class HARImporter implements MockRepositoryImporter {
                // Try to guess between REST and GRAPHQL...
                String requestText = entry.path(REQUEST_NODE).path("postData").path("text").asText();
 
-               if (responseText.contains("\"data\":") &&
-                     (requestText.contains(GRAPHQL_QUERY_NODE) || requestText.contains("mutation") || requestText.contains("fragment"))) {
+               if (responseText.contains("\"data\":") && (requestText.contains(GRAPHQL_QUERY_NODE)
+                     || requestText.contains("mutation") || requestText.contains("fragment"))) {
                   responseType = ServiceType.GRAPHQL;
                }
             } else if ("text/xml".equals(mimeType)) {
@@ -327,13 +331,11 @@ public class HARImporter implements MockRepositoryImporter {
             final String searchedMethod = requestMethod;
             List<Operation> similarOperations = discoveredOperations.values().stream()
                   .filter(op -> searchedMethod.equals(op.getMethod()))
-                  .filter(op -> newCandidatePaths.length == op.getName().split("/").length)
-                  .toList();
+                  .filter(op -> newCandidatePaths.length == op.getName().split("/").length).toList();
 
             Operation mostSimilarOperation = findMostSimilarOperation(operationName, similarOperations);
             if (mostSimilarOperation != null) {
-               List<String> uris = List.of(
-                     removeVerbFromURL(mostSimilarOperation.getName()),
+               List<String> uris = List.of(removeVerbFromURL(mostSimilarOperation.getName()),
                      removeVerbFromURL(operationName));
 
                String urlPart = DispatchCriteriaHelper.buildTemplateURLWithPartsFromURIs(uris);
@@ -379,23 +381,18 @@ public class HARImporter implements MockRepositoryImporter {
 
    /** Filter valid entries in HAR, removing static resources and calls not having the correct prefix if specified. */
    private List<JsonNode> filterValidEntries(Iterator<JsonNode> entries) {
-      return Stream.generate(() -> null)
-            .takeWhile(x -> entries.hasNext())
-            .map(next -> entries.next())
-            .filter(entry -> {
-               String url = entry.path(REQUEST_NODE).path("url").asText();
-               String extension = url.substring(url.lastIndexOf("."));
-               return !INVALID_ENTRY_EXTENSIONS.contains(extension);
-            })
-            .filter(entry -> {
-               if (apiPrefix != null) {
-                  // Filter by api prefix if provided.
-                  String url = entry.path(REQUEST_NODE).path("url").asText();
-                  return url.startsWith(apiPrefix) || removeProtocolAndHostPort(url).startsWith(apiPrefix);
-               }
-               return true;
-            })
-            .toList();
+      return Stream.generate(() -> null).takeWhile(x -> entries.hasNext()).map(next -> entries.next()).filter(entry -> {
+         String url = entry.path(REQUEST_NODE).path("url").asText();
+         String extension = url.substring(url.lastIndexOf("."));
+         return !INVALID_ENTRY_EXTENSIONS.contains(extension);
+      }).filter(entry -> {
+         if (apiPrefix != null) {
+            // Filter by api prefix if provided.
+            String url = entry.path(REQUEST_NODE).path("url").asText();
+            return url.startsWith(apiPrefix) || removeProtocolAndHostPort(url).startsWith(apiPrefix);
+         }
+         return true;
+      }).toList();
    }
 
    /** Find the most similar operation among candidates. */
@@ -423,7 +420,7 @@ public class HARImporter implements MockRepositoryImporter {
       int stepScore = 100 / basePaths.length;
       boolean stillCommon = true;
 
-      for (int i=0; i<basePaths.length; i++) {
+      for (int i = 0; i < basePaths.length; i++) {
          String basePath = basePaths[i];
          String candidatePath = candidatePaths[i];
          if (basePath.equals(candidatePath)) {
@@ -471,7 +468,7 @@ public class HARImporter implements MockRepositoryImporter {
       if (response.getHeaders() != null) {
          for (Header header : response.getHeaders()) {
             if (header.getName().equalsIgnoreCase("Content-Type")) {
-               response.setMediaType(header.getValues().toArray(new String[]{})[0]);
+               response.setMediaType(header.getValues().toArray(new String[] {})[0]);
             }
          }
       }
@@ -515,7 +512,7 @@ public class HARImporter implements MockRepositoryImporter {
       if (apiPrefix != null) {
          if (apiPrefix.startsWith("http://") || apiPrefix.startsWith("https://")) {
             // Prefix includes protocol and port, using it as is.
-            return url.substring(apiPrefix.length()  + 1);
+            return url.substring(apiPrefix.length() + 1);
          } else {
             // Start removing protocol and host and then the prefix.
             url = removeProtocolAndHostPort(url);
@@ -541,7 +538,8 @@ public class HARImporter implements MockRepositoryImporter {
          JsonNode requestNode = jsonMapper.readTree(requestContent);
          if (requestNode.has(GRAPHQL_VARIABLES_NODE)) {
             JsonNode variablesNode = requestNode.path(GRAPHQL_VARIABLES_NODE);
-            Map<String, String> paramsMap = jsonMapper.convertValue(variablesNode, TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
+            Map<String, String> paramsMap = jsonMapper.convertValue(variablesNode,
+                  TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
             dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
          }
       } catch (Exception e) {

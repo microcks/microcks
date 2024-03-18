@@ -57,7 +57,7 @@ public class ProducerScheduler {
    @Inject
    AsyncMockRepository mockRepository;
 
-   @ConfigProperty(name= "minion.restricted-frequencies")
+   @ConfigProperty(name = "minion.restricted-frequencies")
    Long[] restrictedFrequencies;
 
 
@@ -98,19 +98,12 @@ public class ProducerScheduler {
       logger.info("Scheduling a new Producer Job at frequency " + frequency);
 
       // Create a job detail which is holding its frequency as a param.
-      JobDetail jobDetail = JobBuilder.newJob(AsyncMockProducerJob.class)
-            .usingJobData("frequency", frequency).build();
+      JobDetail jobDetail = JobBuilder.newJob(AsyncMockProducerJob.class).usingJobData("frequency", frequency).build();
 
       // Create a trigger for this job, executing each 'frequency' seconds.
-      Trigger trigger = TriggerBuilder.newTrigger()
-            .forJob(jobDetail)
-            .withIdentity(String.valueOf(frequency))
-            .startNow()
+      Trigger trigger = TriggerBuilder.newTrigger().forJob(jobDetail).withIdentity(String.valueOf(frequency)).startNow()
             .withSchedule(
-                  SimpleScheduleBuilder.simpleSchedule()
-                        .withIntervalInSeconds((int)(long)frequency)
-                        .repeatForever()
-            )
+                  SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds((int) (long) frequency).repeatForever())
             .build();
 
       try {

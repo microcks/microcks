@@ -76,7 +76,7 @@ public class GraphQLTestRunner extends HttpTestRunner {
 
    @Override
    protected int extractTestReturnCode(Service service, Operation operation, Request request,
-                                       ClientHttpResponse httpResponse, String responseContent) {
+         ClientHttpResponse httpResponse, String responseContent) {
 
       int code = TestReturn.SUCCESS_CODE;
 
@@ -111,7 +111,8 @@ public class GraphQLTestRunner extends HttpTestRunner {
       if (responseCode != 204 && APPLICATION_JSON_TYPE.equals(contentType)) {
          // Retrieve the resource corresponding to OpenAPI specification if any.
          Resource graphqlSchemaResource = null;
-         List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.GRAPHQL_SCHEMA);
+         List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
+               ResourceType.GRAPHQL_SCHEMA);
          if (!resources.isEmpty()) {
             graphqlSchemaResource = resources.get(0);
          }
@@ -122,16 +123,19 @@ public class GraphQLTestRunner extends HttpTestRunner {
 
          JsonNode responseSchema = null;
          try {
-            responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(graphqlSchemaResource.getContent(), lastQueryContent);
+            responseSchema = GraphQLSchemaValidator.buildResponseJsonSchema(graphqlSchemaResource.getContent(),
+                  lastQueryContent);
             log.debug("responseSchema: {}", responseSchema);
-            lastValidationErrors = GraphQLSchemaValidator.validateJson(responseSchema, mapper.readTree(responseContent));
+            lastValidationErrors = GraphQLSchemaValidator.validateJson(responseSchema,
+                  mapper.readTree(responseContent));
          } catch (IOException ioe) {
             log.debug("Response body cannot be accessed or transformed as Json, returning failure");
             return TestReturn.FAILURE_CODE;
          }
 
          if (!lastValidationErrors.isEmpty()) {
-            log.debug("GraphQL schema validation errors found: {}, marking test as failed." + lastValidationErrors.size());
+            log.debug(
+                  "GraphQL schema validation errors found: {}, marking test as failed." + lastValidationErrors.size());
             return TestReturn.FAILURE_CODE;
          }
          log.debug("GraphQL schema validation of response is successful !");
@@ -140,7 +144,8 @@ public class GraphQLTestRunner extends HttpTestRunner {
    }
 
    @Override
-   protected String extractTestReturnMessage(Service service, Operation operation, Request request, ClientHttpResponse httpResponse) {
+   protected String extractTestReturnMessage(Service service, Operation operation, Request request,
+         ClientHttpResponse httpResponse) {
       StringBuilder builder = new StringBuilder();
       if (lastValidationErrors != null && !lastValidationErrors.isEmpty()) {
          for (String error : lastValidationErrors) {

@@ -59,7 +59,7 @@ public class ProtobufImporterTest {
       assertEquals(1, services.size());
 
       Service service = services.get(0);
-      assertEquals("HelloService", service.getName());
+      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", service.getName());
       assertEquals(ServiceType.GRPC, service.getType());
       assertEquals("v1", service.getVersion());
       assertEquals("io.github.microcks.grpc.hello.v1", service.getXmlNS());
@@ -75,9 +75,9 @@ public class ProtobufImporterTest {
       for (Resource resource : resources) {
          assertNotNull(resource.getContent());
          if (ResourceType.PROTOBUF_SCHEMA.equals(resource.getType())) {
-            assertEquals("HelloService-v1.proto", resource.getName());
+            assertEquals("io.github.microcks.grpc.hello.v1.HelloService-v1.proto", resource.getName());
          } else if (ResourceType.PROTOBUF_DESCRIPTOR.equals(resource.getType())) {
-            assertEquals("HelloService-v1.pbb", resource.getName());
+            assertEquals("io.github.microcks.grpc.hello.v1.HelloService-v1.pbb", resource.getName());
          } else {
             fail("Resource has not the expected type");
          }
@@ -96,7 +96,8 @@ public class ProtobufImporterTest {
    public void testProtobufWithOptionsImport() {
       ProtobufImporter importer = null;
       try {
-         importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1-option.proto", null);
+         importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1-option.proto",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -111,7 +112,7 @@ public class ProtobufImporterTest {
       assertEquals(1, services.size());
 
       Service service = services.get(0);
-      assertEquals("HelloService", service.getName());
+      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", service.getName());
       assertEquals(ServiceType.GRPC, service.getType());
       assertEquals("v1", service.getVersion());
       assertEquals("io.github.microcks.grpc.hello.v1", service.getXmlNS());
@@ -127,9 +128,9 @@ public class ProtobufImporterTest {
       for (Resource resource : resources) {
          assertNotNull(resource.getContent());
          if (ResourceType.PROTOBUF_SCHEMA.equals(resource.getType())) {
-            assertEquals("HelloService-v1.proto", resource.getName());
+            assertEquals("io.github.microcks.grpc.hello.v1.HelloService-v1.proto", resource.getName());
          } else if (ResourceType.PROTOBUF_DESCRIPTOR.equals(resource.getType())) {
-            assertEquals("HelloService-v1.pbb", resource.getName());
+            assertEquals("io.github.microcks.grpc.hello.v1.HelloService-v1.pbb", resource.getName());
 
             try {
                // Check Protobuf Descriptor.
@@ -177,7 +178,7 @@ public class ProtobufImporterTest {
       assertEquals(1, services.size());
 
       Service service = services.get(0);
-      assertEquals("GoodbyeService", service.getName());
+      assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService", service.getName());
       assertEquals(ServiceType.GRPC, service.getType());
       assertEquals("v1", service.getVersion());
       assertEquals("io.github.microcks.grpc.goodbye.v1", service.getXmlNS());
@@ -193,9 +194,9 @@ public class ProtobufImporterTest {
       for (Resource resource : resources) {
          assertNotNull(resource.getContent());
          if (ResourceType.PROTOBUF_SCHEMA.equals(resource.getType())) {
-            assertEquals("GoodbyeService-v1.proto", resource.getName());
+            assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1.proto", resource.getName());
          } else if (ResourceType.PROTOBUF_DESCRIPTOR.equals(resource.getType())) {
-            assertEquals("GoodbyeService-v1.pbb", resource.getName());
+            assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1.pbb", resource.getName());
 
             try {
                // Check Protobuf Descriptor.
@@ -219,7 +220,8 @@ public class ProtobufImporterTest {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/remote/goodbye-v1.proto",
-               new ReferenceResolver("https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/grpc/base.proto",
+               new ReferenceResolver(
+                     "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/grpc/base.proto",
                      null, true));
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
@@ -235,7 +237,7 @@ public class ProtobufImporterTest {
       assertEquals(1, services.size());
 
       Service service = services.get(0);
-      assertEquals("GoodbyeService", service.getName());
+      assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService", service.getName());
       assertEquals(ServiceType.GRPC, service.getType());
       assertEquals("v1", service.getVersion());
       assertEquals("io.github.microcks.grpc.goodbye.v1", service.getXmlNS());
@@ -251,10 +253,11 @@ public class ProtobufImporterTest {
       for (Resource resource : resources) {
          assertNotNull(resource.getContent());
          if (ResourceType.PROTOBUF_SCHEMA.equals(resource.getType())) {
-            assertTrue("GoodbyeService-v1.proto".equals(resource.getName()) ||
-                  "GoodbyeService-v1-shared~1uuid.proto".equals(resource.getName()));
+            assertTrue("io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1.proto".equals(resource.getName())
+                  || "io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1-shared~1uuid.proto"
+                        .equals(resource.getName()));
          } else if (ResourceType.PROTOBUF_DESCRIPTOR.equals(resource.getType())) {
-            assertEquals("GoodbyeService-v1.pbb", resource.getName());
+            assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService-v1.pbb", resource.getName());
             try {
                // Check Protobuf Descriptor.
                byte[] decodedBinaryPB = Base64.getDecoder().decode(resource.getContent().getBytes("UTF-8"));

@@ -124,17 +124,19 @@ public class TestRunnerService {
 
    /**
     * Launch tests using asynchronous/completable future pattern.
-    * @param testResult TestResults to aggregate results within
-    * @param service Service to test
-    * @param runnerType Type of runner for launching the tests
+    * @param testResult    TestResults to aggregate results within
+    * @param service       Service to test
+    * @param runnerType    Type of runner for launching the tests
     * @param oAuth2Context An optional OAuth2ClientContext that may complement Secret information
     * @return A Future wrapping test results
     */
    @Async
-   public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service, TestRunnerType runnerType, OAuth2ClientContext oAuth2Context){
+   public CompletableFuture<TestResult> launchTestsInternal(TestResult testResult, Service service,
+         TestRunnerType runnerType, OAuth2ClientContext oAuth2Context) {
       // Found next build number for this test.
-      List<TestResult> older = testResultRepository.findByServiceId(service.getId(), PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
-      if (older != null && !older.isEmpty() && older.get(0).getTestNumber() != null){
+      List<TestResult> older = testResultRepository.findByServiceId(service.getId(),
+            PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
+      if (older != null && !older.isEmpty() && older.get(0).getTestNumber() != null) {
          testResult.setTestNumber(older.get(0).getTestNumber() + 1L);
       } else {
          testResult.setTestNumber(1L);
@@ -161,7 +163,8 @@ public class TestRunnerService {
                secret.setToken(authorizedClient.getEncodedAccessToken());
             }
          } catch (AuthorizationException authorizationException) {
-            log.error("OAuth2 token flow '{}' failed with: {}", oAuth2Context.getGrantType(), authorizationException.getMessage());
+            log.error("OAuth2 token flow '{}' failed with: {}", oAuth2Context.getGrantType(),
+                  authorizationException.getMessage());
             log.error("Marking the test as a failure before cancelling it");
             // Set flags and add to results before exiting loop.
             testResult.setSuccess(false);
@@ -173,7 +176,8 @@ public class TestRunnerService {
       }
 
       // Initialize runner once as it is shared for each test.
-      AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, secret, testResult.getTimeout(), service.getId());
+      AbstractTestRunner<HttpMethod> testRunner = retrieveRunner(runnerType, secret, testResult.getTimeout(),
+            service.getId());
       if (testRunner == null) {
          // Set failure and stopped flags and save before exiting.
          testResult.setSuccess(false);
@@ -196,10 +200,10 @@ public class TestRunnerService {
          List<TestReturn> results = new ArrayList<>();
          try {
             HttpMethod method = testRunner.buildMethod(operation.getMethod());
-            results = testRunner.runTest(service, operation, testResult, requests, testResult.getTestedEndpoint(), method);
+            results = testRunner.runTest(service, operation, testResult, requests, testResult.getTestedEndpoint(),
+                  method);
          } catch (URISyntaxException use) {
-            log.error("URISyntaxException on endpoint {}, aborting current tests",
-                  testResult.getTestedEndpoint(), use);
+            log.error("URISyntaxException on endpoint {}, aborting current tests", testResult.getTestedEndpoint(), use);
             // Set flags and add to results before exiting loop.
             testCaseResult.setSuccess(false);
             testCaseResult.setElapsedTime(0);
@@ -231,8 +235,8 @@ public class TestRunnerService {
    /**
     *
     */
-   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult,
-                                                List<TestReturn> testReturns, String testCaseId) {
+   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult, List<TestReturn> testReturns,
+         String testCaseId) {
       // Prepare a bunch of flag we're going to complete.
       boolean successFlag = true;
       long caseElapsedTime = 0;
@@ -243,7 +247,7 @@ public class TestRunnerService {
          // Deal with elapsed time and success flag.
          caseElapsedTime += testReturn.getElapsedTime();
          TestStepResult testStepResult = testReturn.buildTestStepResult();
-         if (!testStepResult.isSuccess()){
+         if (!testStepResult.isSuccess()) {
             successFlag = false;
          }
 
@@ -261,7 +265,7 @@ public class TestRunnerService {
       responseRepository.saveAll(responses);
 
       // Associate responses to requests before saving requests.
-      for (int i=0; i<actualRequests.size(); i++){
+      for (int i = 0; i < actualRequests.size(); i++) {
          actualRequests.get(i).setResponseId(responses.get(i).getId());
       }
       log.debug("Saving {} requests with testCaseId {}", responses.size(), testCaseId);
@@ -284,9 +288,9 @@ public class TestRunnerService {
       boolean globalSuccessFlag = true;
       boolean globalProgressFlag = false;
       long totalElapsedTime = 0;
-      for (TestCaseResult testCaseResult : testResult.getTestCaseResults()){
+      for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
          totalElapsedTime += testCaseResult.getElapsedTime();
-         if (!testCaseResult.isSuccess()){
+         if (!testCaseResult.isSuccess()) {
             globalSuccessFlag = false;
          }
          // -1 is default elapsed time for testcase so its mean that still in
@@ -311,9 +315,9 @@ public class TestRunnerService {
    }
 
    /** Clone and prepare request for a test case usage. */
-   private List<Request> cloneRequestsForTestCase(List<Request> requests, String testCaseId){
+   private List<Request> cloneRequestsForTestCase(List<Request> requests, String testCaseId) {
       List<Request> result = new ArrayList<>();
-      for (Request request : requests){
+      for (Request request : requests) {
          Request clone = new Request();
          clone.setName(request.getName());
          clone.setContent(request.getContent());
@@ -328,7 +332,8 @@ public class TestRunnerService {
    }
 
    /** Retrieve correct test runner according given type. */
-   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, Secret secret, Long runnerTimeout, String serviceId){
+   private AbstractTestRunner<HttpMethod> retrieveRunner(TestRunnerType runnerType, Secret secret, Long runnerTimeout,
+         String serviceId) {
       // TODO: remove this ugly initialization later.
       // Initialize new HttpComponentsClientHttpRequestFactory that supports https connections.
       SSLContext sslContext = null;
@@ -336,14 +341,11 @@ public class TestRunnerService {
          // Initialize trusting material depending on Secret content.
          if (secret != null && secret.getCaCertPem() != null) {
             log.debug("Test Secret contains a CA Cert, installing certificate into SSLContext");
-            sslContext = SSLContexts.custom().loadTrustMaterial(
-                  buildCustomCaCertTruststore(secret.getCaCertPem()),
-                  null).build();
+            sslContext = SSLContexts.custom()
+                  .loadTrustMaterial(buildCustomCaCertTruststore(secret.getCaCertPem()), null).build();
          } else {
             log.debug("No Test Secret or no CA Cert found, installing accept everything strategy");
-            sslContext = SSLContexts.custom().loadTrustMaterial(
-                  null,
-                  (cert, authType) -> true).build();
+            sslContext = SSLContexts.custom().loadTrustMaterial(null, (cert, authType) -> true).build();
          }
       } catch (Exception e) {
          log.error("Exception while building SSLContext with acceptingTrustStrategy", e);
@@ -355,18 +357,17 @@ public class TestRunnerService {
       // BasicHttpClientConnectionManager was facing issues detecting close connections and re-creating new ones.
       // Switching to PoolingHttpClientConnectionManager for HC 5.2 solves this issue.
       final PoolingHttpClientConnectionManager connectionManager = PoolingHttpClientConnectionManagerBuilder.create()
-            .setSSLSocketFactory(sslsf)
-            .build();
+            .setSSLSocketFactory(sslsf).build();
 
-      CloseableHttpClient httpClient = HttpClients.custom()
-            .setConnectionManager(connectionManager)
-            .setDefaultRequestConfig(RequestConfig.custom().setResponseTimeout(Timeout.ofMilliseconds(runnerTimeout)).build())
+      CloseableHttpClient httpClient = HttpClients.custom().setConnectionManager(connectionManager)
+            .setDefaultRequestConfig(
+                  RequestConfig.custom().setResponseTimeout(Timeout.ofMilliseconds(runnerTimeout)).build())
             .build();
 
       HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory(httpClient);
       factory.setConnectTimeout(200);
 
-      switch (runnerType){
+      switch (runnerType) {
          case SOAP_HTTP:
             SoapHttpTestRunner soapRunner = new SoapHttpTestRunner(resourceRepository);
             soapRunner.setClientHttpRequestFactory(factory);
@@ -417,13 +418,12 @@ public class TestRunnerService {
    /** Build a customer truststore with provided certificate in PEM format. */
    private KeyStore buildCustomCaCertTruststore(String caCertPem) throws Exception {
       // First compute a stripped PEM certificate and decode it from base64.
-      String strippedPem = caCertPem.replace(BEGIN_CERTIFICATE, "")
-            .replace(END_CERTIFICATE, "");
+      String strippedPem = caCertPem.replace(BEGIN_CERTIFICATE, "").replace(END_CERTIFICATE, "");
       InputStream is = new ByteArrayInputStream(org.apache.commons.codec.binary.Base64.decodeBase64(strippedPem));
 
       // Generate a new x509 certificate from the stripped decoded pem.
       CertificateFactory cf = CertificateFactory.getInstance("X.509");
-      X509Certificate caCert = (X509Certificate)cf.generateCertificate(is);
+      X509Certificate caCert = (X509Certificate) cf.generateCertificate(is);
 
       KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
       ks.load(null); // You don't need the KeyStore instance to come from a file.

@@ -19,7 +19,7 @@ package io.github.microcks.util;
  * Handler for dispatch styles constants.
  * @author laurent
  */
-public class DispatchStyles{
+public class DispatchStyles {
 
    /** Constant for QUERY_MATCH dispatch style. */
    public static final String QUERY_MATCH = "QUERY_MATCH";

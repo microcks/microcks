@@ -1,0 +1,50 @@
+# config file version
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    uid: grafanacloud-prom
+    type: prometheus
+    access: proxy
+    url: http://o11y_prom:9090
+    jsonData:
+      exemplarTraceIdDestinations:
+        - datasourceUid: grafanacloud-traces
+          name: trace_id
+      httpMethod: POST
+      prometheusType: "Prometheus"
+      prometheusVersion: "2.48.0"
+    isDefault: true
+    editable: true
+
+
+  - name: Loki
+    uid: grafanacloud-logs
+    type: loki
+    access: proxy
+    url: http://o11y_loki:3100
+    editable: true
+    jsonData:
+      derivedFields:
+        - datasourceUid: grafanacloud-traces
+          matcherRegex: '[tT]race_?[iI][dD]"?[:=]"?(\w+)'
+          name: traceId
+          url: '$${__value.raw}'
+
+  - name: Tempo
+    type: tempo
+    access: proxy
+    uid: grafanacloud-traces
+    url: http://o11y_tempo:3200
+    editable: true
+    jsonData:
+      nodeGraph:
+        enabled: true
+      tracesToLogsV2:
+        datasourceUid: grafanacloud-logs
+        filterBySpanID: false
+        filterByTraceID: false
+        spanEndTimeShift: "5m"
+        spanStartTimeShift: "-5m"
+        customQuery: true
+        query: |
+          { job = "$${__span.tags['service.namespace']}/$${__span.tags['service.name']}"} |= "$${__trace.traceId}"

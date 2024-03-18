@@ -19,8 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This is a lightweight structure representing a Schema registry snapshot
- * dedicated for being used by message validators.
+ * This is a lightweight structure representing a Schema registry snapshot dedicated for being used by message
+ * validators.
  * @author laurent
  */
 public class SchemaMap {
@@ -44,7 +44,7 @@ public class SchemaMap {
    /**
     * Put a new schema entry in map.
     * @param schemaPath The path of this new entry.
-    * @param content The string representation of schema content
+    * @param content    The string representation of schema content
     */
    public void putSchemaEntry(String schemaPath, String content) {
       schemaEntries.put(schemaPath, content);

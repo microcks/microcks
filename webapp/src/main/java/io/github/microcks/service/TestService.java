@@ -63,13 +63,14 @@ public class TestService {
 
    /**
     * Launch tests for a Service on dedicated endpoint URI.
-    * @param service Service to launch tests for
-    * @param testEndpoint Endpoint URI for running the tests
-    * @param runnerType The type of runner fo tests
+    * @param service       Service to launch tests for
+    * @param testEndpoint  Endpoint URI for running the tests
+    * @param runnerType    The type of runner fo tests
     * @param testOptionals Additional / optionals elements for test
     * @return An initialized TestResults (mostly empty for now since tests run asynchronously)
     */
-   public TestResult launchTests(Service service, String testEndpoint, TestRunnerType runnerType, TestOptionals testOptionals) {
+   public TestResult launchTests(Service service, String testEndpoint, TestRunnerType runnerType,
+         TestOptionals testOptionals) {
       TestResult testResult = new TestResult();
       testResult.setTestDate(new Date());
       testResult.setTestedEndpoint(testEndpoint);
@@ -92,9 +93,9 @@ public class TestService {
 
    /**
     * Endpoint for reporting test case results
-    * @param testResultId Unique identifier of test results we report results for
+    * @param testResultId  Unique identifier of test results we report results for
     * @param operationName Name of operation to report a result for
-    * @param testReturns List of test returns to add to this test case.
+    * @param testReturns   List of test returns to add to this test case.
     * @return A completed TestCaseResult object
     */
    public TestCaseResult reportTestCaseResult(String testResultId, String operationName, List<TestReturn> testReturns) {
@@ -133,7 +134,8 @@ public class TestService {
                updatedTestCaseResult = testCaseResult;
                // If results we now update the success flag and elapsed time of testCase?
                if (testReturns == null || testReturns.isEmpty()) {
-                  log.info("testReturns are null or empty, setting elapsedTime to -1 and success to false for {}", operationName);
+                  log.info("testReturns are null or empty, setting elapsedTime to -1 and success to false for {}",
+                        operationName);
                   testCaseResult.setElapsedTime(-1);
                   testCaseResult.setSuccess(false);
                } else {
@@ -170,8 +172,7 @@ public class TestService {
    private void initializeTestCaseResults(TestResult testResult, Service service, TestOptionals testOptionals) {
       for (Operation operation : service.getOperations()) {
          // Pick operation if no filter or present in filtered operations.
-         if (testOptionals.getFilteredOperations() == null
-               || testOptionals.getFilteredOperations().isEmpty()
+         if (testOptionals.getFilteredOperations() == null || testOptionals.getFilteredOperations().isEmpty()
                || testOptionals.getFilteredOperations().contains(operation.getName())) {
             TestCaseResult testCaseResult = new TestCaseResult();
             testCaseResult.setOperationName(operation.getName());
@@ -219,11 +220,12 @@ public class TestService {
          eventMessageRepository.saveAll(eventMessages);
       }
    }
-   
+
    /**
     *
     */
-   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult, List<TestReturn> testReturns, boolean sumElapsedTimes, boolean findMaxElapsedTime) {
+   private void updateTestCaseResultWithReturns(TestCaseResult testCaseResult, List<TestReturn> testReturns,
+         boolean sumElapsedTimes, boolean findMaxElapsedTime) {
 
       // Prepare a bunch of flag we're going to complete.
       boolean successFlag = true;
@@ -239,7 +241,7 @@ public class TestService {
             }
          }
          TestStepResult testStepResult = testReturn.buildTestStepResult();
-         if (!testStepResult.isSuccess()){
+         if (!testStepResult.isSuccess()) {
             successFlag = false;
          }
 
@@ -267,7 +269,7 @@ public class TestService {
       long totalElapsedTime = 0;
       for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
          totalElapsedTime += testCaseResult.getElapsedTime();
-         if (!testCaseResult.isSuccess()){
+         if (!testCaseResult.isSuccess()) {
             globalSuccessFlag = false;
          }
          // -1 is default elapsed time for testcase so it means that still in
@@ -283,8 +285,8 @@ public class TestService {
       testResult.setInProgress(globalProgressFlag);
       testResult.setElapsedTime(totalElapsedTime);
 
-      log.debug("Trying to update testResult {} with {} elapsedTime and success flag to {}",
-            testResult.getId(), testResult.getElapsedTime(), testResult.isSuccess());
+      log.debug("Trying to update testResult {} with {} elapsedTime and success flag to {}", testResult.getId(),
+            testResult.getElapsedTime(), testResult.isSuccess());
       testResultRepository.save(testResult);
    }
 
