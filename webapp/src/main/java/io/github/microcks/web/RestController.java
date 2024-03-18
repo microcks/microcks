@@ -74,7 +74,7 @@ public class RestController {
 
    private final ApplicationContext applicationContext;
 
-   private ProxyService proxyService;
+   private final ProxyService proxyService;
 
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
