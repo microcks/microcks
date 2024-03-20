@@ -7,13 +7,30 @@
 [![Project Chat](https://img.shields.io/badge/discord-microcks-pink.svg?color=7289da&style=for-the-badge&logo=discord)](https://microcks.io/discord-invite/)
 
 
-# Microcks - Kubernetes native tool for API Mocking & Testing
+# Microcks - Open source cloud-native tool for API Mocking & Testing
 
 Microcks is a platform for turning your API and microservices assets - *OpenAPI specs*, *AsyncAPI specs*, *gRPC protobuf*, *GraphQL schema*, *Postman collections*, *SoapUI projects* - into live mocks in seconds.
 
 It also reuses these assets for running compliance and non-regression tests against your API implementation. We provide integrations with *Jenkins*, *GitHub Actions*, *Tekton* and many others through a simple CLI.
 
 ## Getting Started
+
+The simplest way to get started with Microcks is to launch the all-in-one uber container image with Podman or Docker.
+
+* Docker
+
+    ```sh
+    docker run -i -t -p 8080:8080 microcks/microcks-uber
+    ```
+* Podman
+
+    ```sh
+    podman run -i -t -p 8080:8080 quay.io/microcks/microcks-uber
+    ```
+
+Then, navigate to http://localhost:8080 to start using the web console.
+
+For more advanced use cases and configurations, please see the links below:
 
 * [Documentation](https://microcks.io/documentation/getting-started/)
 
