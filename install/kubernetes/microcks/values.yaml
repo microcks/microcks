@@ -12,7 +12,7 @@ microcks:
   #grpcSecretRef: my-secret-for-microcks-grpc
   #grpcIngressClassName: nginx
   generateCert: true
-  image: quay.io/microcks/microcks:nightly
+  image: quay.io/microcks/microcks:1.9.0
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
@@ -168,7 +168,7 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
 
-    image: quay.io/microcks/microcks-async-minion:nightly
+    image: quay.io/microcks/microcks-async-minion:1.9.0
 
     env:
       #- name: OAUTH_CLIENT_ID
