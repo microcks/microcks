@@ -21,7 +21,7 @@ To get involved with our community, please make sure you are familiar with the p
 
 ## Build Status
 
-The current development version is `1.9.0-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.9.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
+The current development version is `1.9.1-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.9.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
 #### Sonarcloud Quality metrics
 
@@ -37,11 +37,11 @@ The current development version is `1.9.0-SNAPSHOT`. [![GitHub Workflow Status](
 
 Here are the naming conventions we're using for current releases, ongoing development maintenance activities.
 
-| Status      | Version          | Branch   | Container images tags |
-| ----------- |------------------|----------|-----------------------|
-| Stable      | `1.8.1`          | `master` | `1.8.1`, `latest`     |
-| Dev         | `1.9.0-SNAPSHOT` | `1.9.x`  | `nightly`             |
-| Maintenance | `1.8.2-SNAPSHOT` | `1.8.x`  | `maintenance`         |
+| Status      | Version          | Branch   | Container images tags             |
+| ----------- |------------------|----------|-----------------------------------|
+| Stable      | `1.9.0`          | `master` | `1.9.0`, `1.9.0-fix-1`, `latest`  |
+| Dev         | `1.9.1-SNAPSHOT` | `1.9.x`  | `nightly`                         |
+| Maintenance | `1.8.2-SNAPSHOT` | `1.8.x`  | `maintenance`                     |
 
 
 ## How to build Microcks
