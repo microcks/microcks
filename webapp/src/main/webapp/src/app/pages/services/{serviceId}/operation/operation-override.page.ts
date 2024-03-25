@@ -46,18 +46,19 @@ export class OperationOverridePageComponent implements OnInit {
   }
 
   dispatchersByServiceType: any = {
-    'REST': [ 
+    'REST': [
       {"value": "SEQUENCE", "label": "SEQUENCE"},
-      {"value": "URI_PARAMS", "label": "URI PARAMS"}, 
-      {"value": "URI_PARTS", "label": "URI PARTS"}, 
-      {"value": "URI_ELEMENTS", "label": "URI ELEMENTS"}, 
-      {"value": "SCRIPT", "label": "SCRIPT"}, 
+      {"value": "URI_PARAMS", "label": "URI PARAMS"},
+      {"value": "URI_PARTS", "label": "URI PARTS"},
+      {"value": "URI_ELEMENTS", "label": "URI ELEMENTS"},
+      {"value": "SCRIPT", "label": "SCRIPT"},
       {"value": "JSON_BODY", "label": "JSON BODY"},
       {"value": "FALLBACK", "label": "FALLBACK"},
+      {"value": "PROXY", "label": "PROXY"}
     ],
-    'SOAP': [ 
+    'SOAP': [
       {"value": "QUERY_MATCH", "label": "QUERY MATCH"},
-      {"value": "SCRIPT", "label": "SCRIPT"}, 
+      {"value": "SCRIPT", "label": "SCRIPT"},
       {"value": "FALLBACK", "label": "FALLBACK"},
     ],
     'EVENT': [],
@@ -68,7 +69,7 @@ export class OperationOverridePageComponent implements OnInit {
     'GRAPHQL': [
       {"value": "QUERY_ARGS", "label": "QUERY_ARGS"},
       {"value": "JSON_BODY", "label": "JSON BODY"},
-      {"value": "SCRIPT", "label": "SCRIPT"}, 
+      {"value": "SCRIPT", "label": "SCRIPT"},
       {"value": "FALLBACK", "label": "FALLBACK"}
     ]
   }
@@ -78,6 +79,12 @@ export class OperationOverridePageComponent implements OnInit {
   "dispatcher": "URI_PARTS",
   "dispatcherRules": "name",
   "fallback": "John Doe"
+}`;
+
+  proxy = `{
+  "dispatcher": "URI_PARTS",
+  "dispatcherRules": "name",
+  "proxyUrl": "http://external.net/name/{{ request.path[2] }}"
 }`;
 
   examplePayload =  `{
@@ -144,7 +151,7 @@ export class OperationOverridePageComponent implements OnInit {
     this.notifications = this.notificationService.getNotifications();
     this.operationName = this.route.snapshot.paramMap.get('name');
     this.serviceView = this.route.paramMap.pipe(
-      switchMap((params: ParamMap) => 
+      switchMap((params: ParamMap) =>
         this.servicesSvc.getServiceView(params.get('serviceId')))
     );
     this.serviceView.subscribe( view => {
@@ -190,7 +197,7 @@ export class OperationOverridePageComponent implements OnInit {
     for (var i=0; i<this.paramConstraints.query.length; i++) {
       operationProperties.parameterConstraints.push(this.paramConstraints.query[i]);
     }
-    
+
     console.log("[saveOperationProperties] operationProperties: " + JSON.stringify(operationProperties));
     this.servicesSvc.updateServiceOperationProperties(this.resolvedServiceView.service,
       this.operationName, operationProperties).subscribe(
@@ -246,5 +253,5 @@ export class OperationOverridePageComponent implements OnInit {
 
   handleCloseNotification($event: NotificationEvent): void {
     this.notificationService.remove($event.notification);
-  }  
+  }
 }

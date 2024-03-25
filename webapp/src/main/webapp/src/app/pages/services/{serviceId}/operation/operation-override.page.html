@@ -1,9 +1,9 @@
 <div class="form-group pull-right">
-  <pfng-toast-notification-list [notifications]="notifications" 
+  <pfng-toast-notification-list [notifications]="notifications"
       (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
   </pfng-toast-notification-list>
 </div>
-  
+
 <div *ngIf="serviceView | async as view">
   <div class="container-fluid breadcrumb-bar">
     <div class="row">
@@ -24,7 +24,7 @@
 
       <div class="parameters-constraints" *ngIf="view.service.type === 'REST'">
         <h5 class="subsection">Query parameters</h5>
-        <div class="constraint-editor-entry constraint-editor-entry-header" 
+        <div class="constraint-editor-entry constraint-editor-entry-header"
                 *ngIf="paramConstraints['query'] != null && paramConstraints['query'].length > 0">
           <div class="constraint-editor-header name-header">Name</div>
           <div class="constraint-editor-header required-header text-center">Required?</div>
@@ -53,9 +53,9 @@
           </div>
         </div>
         <a (click)="addParameterConstraint('query')" role="button">Add Parameter Constraint</a>
-        
+
         <h5 class="subsection">Header parameters</h5>
-        <div class="constraint-editor-entry constraint-editor-entry-header" 
+        <div class="constraint-editor-entry constraint-editor-entry-header"
                 *ngIf="paramConstraints['header'] != null && paramConstraints['header'].length > 0">
           <div class="constraint-editor-header name-header">Name</div>
           <div class="constraint-editor-header required-header text-center">Required?</div>
@@ -92,7 +92,7 @@
       <br/><br/><br/>
 
       <h3 class="section-label">Current dispatching properties</h3>
-      
+
       <div class="row">
         <div class="col-md-6">
           <dl class="dl-horizontal left">
@@ -101,9 +101,9 @@
             <dd><code>{{ operation.action }}</code></dd>
           </span>
           <dt>Dispatcher:</dt>
-          <dd><code>{{ operation.dispatcher }}</code> &nbsp; 
+          <dd><code>{{ operation.dispatcher }}</code> &nbsp;
             <span class="learn-more-inline">
-              <a href="https://microcks.github.io">Learn More 
+              <a href="https://microcks.github.io">Learn More
                 <i class="fa fa-external-link" aria-hidden="true"></i>
               </a>
             </span>
@@ -147,7 +147,7 @@
         <div class="col-md-7">
           <div class="control-group form-inline">
             <span *ngIf="!isEventTypeService()">
-              <label class="control-label" for="defaultDelay">Default delay</label> 
+              <label class="control-label" for="defaultDelay">Default delay</label>
               <div class="controls">
                 <input class="form-control" id="defaultDelay" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay"/> ms
                 <p class="help-block">The delay to wait before returning response.</p>
@@ -219,7 +219,7 @@
         <li><code>recopy</code> incoming parameter value into an outgoing header (think of transaction propagation for example),</li>
         <li><code>match</code> parameter value using a `regular expression` (think of Authorization token validation for example)</li>
       </ul>
-    
+
       <div id="fallback-help" *ngIf="newOperation.dispatcher === 'FALLBACK'">
         <br/>
         <h4>Fallback Dispatcher</h4>
@@ -228,9 +228,9 @@
           match any existing dispatch criteria.
         </p>
         <p>
-          Consider the following case where you have a single <code>GET /user/:name</code> operation. You've have defined mocks responses called
+          Consider the following case where you have a single <code>GET /user/:name</code> operation. You've defined mocks responses called
           <code>Andrew</code>, <code>Anna</code> and <code>John Doe</code> that are matching with corresponding <code>:name</code> resource path.
-          What if name does not have one of theses values?
+          What if name does not have one of these values?
         </p>
         <p>
           By default Microcks will return a <code>404</code> error. But if you've defined a <code>FALLBACK</code> dispatcher, you'll default to
@@ -244,6 +244,30 @@
         <pre><code highlight>{{ fallback }}</code></pre>
       </div>
 
+      <div id="proxy-help" *ngIf="newOperation.dispatcher === 'PROXY'">
+        <br/>
+        <h4>Proxy Dispatcher</h4>
+        <p>
+          Proxy dispatcher allows you to forward the incoming request to a <code>proxyUrl</code> in case it do not match
+          any existing dispatch criteria.
+        </p>
+        <p>
+          Consider the following case where you have a single <code>GET /user/:name</code> operation. You've defined mocks responses called
+          <code>Andrew</code>, <code>Anna</code> and <code>John Doe</code> that are matching with corresponding <code>:name</code> resource path.
+          What if name does not have one of these values?
+        </p>
+        <p>
+          By default Microcks will return a <code>404</code> error. But if you've defined a <code>PROXY</code> dispatcher, Microcks will forward
+          the original request to the external URL, defined in <code>proxyUrl</code>:
+        </p>
+        <div style="position: absolute; right: 20px">
+          <button class="btn btn-default" (click)="copyDispatcherRules(proxy)">
+            <span class="fa fa-paste"></span> Copy
+          </button>
+        </div>
+        <pre><code highlight>{{ proxy }}</code></pre>
+      </div>
+
       <div id="json-body-help" *ngIf="newOperation.dispatcher === 'JSON_BODY'">
         <br/>
         <h4>JSON Body Dispatcher</h4>
@@ -255,7 +279,7 @@
           Consider the following JSON payload representing a request body for creating new Beer entity:
         </p>
         <pre><code highlight>{{ examplePayload }}</code></pre>
-    
+
         <p>
           Using the <code>JSON_BODY</code> dispatcher, you can select target response depending of the value of a payload element.
           Below we are checking for <code>country</code> with the <code>equals</code> operator. Note that you should always have a <code>default</code> case.
@@ -266,7 +290,7 @@
           </button>
         </div>
         <pre><code highlight>{{ equalsOperator }}</code></pre>
-    
+
         <p>
           You can also dispatch depending on a payload number value using the <code>range</code> operator. Note the orientation
           of brackets to include or exclude edge values. <code>default</code> is still required.
@@ -277,7 +301,7 @@
           </button>
         </div>
         <pre><code highlight>{{ rangeOperator }}</code></pre>
-    
+
         <p>
           The <code>size</code> operator allows you to define dispatching rules depending on the size of an array. Here we only accept
           beers that have at least 2 references and at most 100.
@@ -288,7 +312,7 @@
           </button>
         </div>
         <pre><code highlight>{{ sizeOperator }}</code></pre>
-    
+
         <p>
           For much more complex rules, you may use the <code>regexp</code> operator. There's no guarantee that cases will in the given
           order so regular expressions should be exclusives. Otherwise, it falls within the <code>default</code> case.
@@ -299,7 +323,7 @@
           </button>
         </div>
         <pre><code highlight>{{ regexpOperator }}</code></pre>
-    
+
         <p>
           Finally, you may want to dispatch according the presence of an element within JSON payload. For that, you'll use the <code>presence</code>
           operator that implies defining one <code>found</code> OR one <code>missing</code> case. Alternative falls into <code>default</code> case.

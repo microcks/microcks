@@ -23,11 +23,14 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.*;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.dispatcher.ProxySpecification;
+import io.github.microcks.util.el.TemplateEngineFactory;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
 import org.apache.commons.lang3.StringUtils;
@@ -36,11 +39,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,6 +54,7 @@ import org.springframework.web.util.UriUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.net.URI;
 import java.util.*;
 
 /**
@@ -68,6 +74,8 @@ public class RestController {
 
    private final ApplicationContext applicationContext;
 
+   private final ProxyService proxyService;
+
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
 
@@ -85,21 +93,23 @@ public class RestController {
     * @param applicationContext The Spring application context
     */
    public RestController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
-         ApplicationContext applicationContext) {
+         ApplicationContext applicationContext, ProxyService proxyService) {
       this.serviceRepository = serviceRepository;
       this.responseRepository = responseRepository;
       this.applicationContext = applicationContext;
+      this.proxyService = proxyService;
    }
 
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
-   public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
+   public ResponseEntity<byte[]> execute(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
-         @RequestBody(required = false) String body, HttpServletRequest request) {
+         @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
+         HttpMethod method) {
 
       log.info("Servicing mock response for service [{}, {}] on uri {} with verb {}", serviceName, version,
-            request.getRequestURI(), request.getMethod());
+            request.getRequestURI(), method);
       log.debug("Request body: {}", body);
 
       long startTime = System.currentTimeMillis();
@@ -131,14 +141,14 @@ public class RestController {
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       if (service == null) {
          return new ResponseEntity<>(
-               String.format("The service %s with version %s does not exist!", serviceName, version),
+               String.format("The service %s with version %s does not exist!", serviceName, version).getBytes(),
                HttpStatus.NOT_FOUND);
       }
       Operation rOperation = null;
 
       for (Operation operation : service.getOperations()) {
          // Select operation based onto Http verb (GET, POST, PUT, etc ...)
-         if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
+         if (operation.getMethod().equals(method.name())) {
             // ... then check is we have a matching resource path.
             if (operation.getResourcePaths() != null && (operation.getResourcePaths().contains(resourcePath)
                   || operation.getResourcePaths().contains(trimmedResourcePath))) {
@@ -153,7 +163,7 @@ public class RestController {
       if (rOperation == null) {
          for (Operation operation : service.getOperations()) {
             // Select operation based onto Http verb (GET, POST, PUT, etc ...)
-            if (operation.getMethod().equals(request.getMethod().toUpperCase())) {
+            if (operation.getMethod().equals(method.name())) {
                // ... then check is current resource path matches operation path pattern.
                if (operation.getResourcePaths() != null) {
                   // Produce a matching regexp removing {part} and :part from pattern.
@@ -174,17 +184,23 @@ public class RestController {
          log.debug("Found a valid operation {} with rules: {}", rOperation.getName(), rOperation.getDispatcherRules());
          String violationMsg = validateParameterConstraintsIfAny(rOperation, request);
          if (violationMsg != null) {
-            return new ResponseEntity<>(violationMsg + ". Check parameter constraints.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(),
+                  HttpStatus.BAD_REQUEST);
          }
 
          // We must find dispatcher and its rules. Default to operation ones but
-         // if we have a Fallback this is the one who is holding the first pass rules.
+         // if we have a Fallback or Proxy this is the one who is holding the first pass rules.
          String dispatcher = rOperation.getDispatcher();
          String dispatcherRules = rOperation.getDispatcherRules();
          FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(rOperation);
          if (fallback != null) {
             dispatcher = fallback.getDispatcher();
             dispatcherRules = fallback.getDispatcherRules();
+         }
+         ProxySpecification proxy = MockControllerCommons.getProxyIfAny(rOperation);
+         if (proxy != null) {
+            dispatcher = proxy.getDispatcher();
+            dispatcherRules = proxy.getDispatcherRules();
          }
 
          //
@@ -212,6 +228,16 @@ public class RestController {
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
                   fallback.getFallback());
             response = getResponseByMediaType(responses, request);
+         }
+
+         if (response == null && proxy != null && proxy.getProxyUrl() != null) {
+            // If we've found nothing and got a proxy, that's the moment!
+            Optional<URI> externalUrl = proxyService.extractExternalUrl(MockControllerCommons.renderResponseContent(
+                  MockControllerCommons.buildEvaluableRequest(body, resourcePath, request),
+                  TemplateEngineFactory.getTemplateEngine(), proxy.getProxyUrl()), request);
+            if (externalUrl.isPresent()) {
+               return proxyService.callExternal(externalUrl.get(), method, headers, body);
+            }
          }
 
          if (response == null) {
@@ -273,13 +299,13 @@ public class RestController {
                MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
             }
 
-            return new ResponseEntity<>(responseContent, responseHeaders, status);
+            return new ResponseEntity<>(responseContent.getBytes(), responseHeaders, status);
          }
          return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
       }
 
       // Handle OPTIONS request if CORS policy is enabled.
-      else if (enableCorsPolicy && "OPTIONS".equalsIgnoreCase(request.getMethod())) {
+      else if (enableCorsPolicy && HttpMethod.OPTIONS.equals(method)) {
          log.debug("No valid operation found but Microcks configured to apply CORS policy");
          return handleCorsRequest(request);
       }
@@ -397,7 +423,7 @@ public class RestController {
    }
 
    /** Handle a CORS request putting the correct headers in response entity. */
-   private ResponseEntity<Object> handleCorsRequest(HttpServletRequest request) {
+   private ResponseEntity<byte[]> handleCorsRequest(HttpServletRequest request) {
       // Retrieve and set access control headers from those coming in request.
       List<String> accessControlHeaders = new ArrayList<>();
       Collections.list(request.getHeaders("Access-Control-Request-Headers"))
