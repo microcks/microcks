@@ -37,11 +37,11 @@ The current development version is `1.9.1-SNAPSHOT`. [![GitHub Workflow Status](
 
 Here are the naming conventions we're using for current releases, ongoing development maintenance activities.
 
-| Status      | Version          | Branch   | Container images tags             |
-| ----------- |------------------|----------|-----------------------------------|
-| Stable      | `1.9.0`          | `master` | `1.9.0`, `1.9.0-fix-1`, `latest`  |
-| Dev         | `1.9.1-SNAPSHOT` | `1.9.x`  | `nightly`                         |
-| Maintenance | `1.8.2-SNAPSHOT` | `1.8.x`  | `maintenance`                     |
+| Status      | Version          | Branch   | Container images tags            |
+| ----------- |------------------|----------|----------------------------------|
+| Stable      | `1.9.0`          | `master` | `1.9.0`, `1.9.0-fix-2`, `latest` |
+| Dev         | `1.9.1-SNAPSHOT` | `1.9.x`  | `nightly`                        |
+| Maintenance | `1.8.2-SNAPSHOT` | `1.8.x`  | `maintenance`                    |
 
 
 ## How to build Microcks
