@@ -29,6 +29,22 @@ public class Header {
 
    private Set<String> values = new HashSet<>();
 
+   /**
+    * Default empty constructor.
+    */
+   public Header() {
+   }
+
+   /**
+    * Build a new Header with a name and a set of values.
+    * @param name   The header name
+    * @param values The set of values for this header
+    */
+   public Header(String name, Set<String> values) {
+      this.name = name;
+      this.values = values;
+   }
+
    public String getName() {
       return name;
    }

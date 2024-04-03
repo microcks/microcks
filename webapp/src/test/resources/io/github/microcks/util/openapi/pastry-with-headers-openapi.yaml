@@ -32,6 +32,12 @@ paths:
               examples:
                 pastries_json:
                   value: some-static-header
+            x-request-based-header:
+              schema:
+                type: string
+              examples:
+                pastries_json:
+                  value: '{{ request.params[size] }} size'
           content:
             application/json:
               schema:

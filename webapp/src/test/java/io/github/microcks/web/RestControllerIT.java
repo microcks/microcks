@@ -132,5 +132,9 @@ public class RestControllerIT extends AbstractBaseIT {
 
       String someGenericHeader = response.getHeaders().getFirst("x-some-generic-header");
       assertDoesNotThrow(() -> UUID.fromString(someGenericHeader));
+
+      response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry?size=XL", String.class);
+      String requestBasedHeader = response.getHeaders().getFirst("x-request-based-header");
+      assertEquals("XL size", requestBasedHeader);
    }
 }

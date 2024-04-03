@@ -243,27 +243,25 @@ public class RestController {
 
             // Adding other generic headers (caching directives and so on...)
             if (response.getHeaders() != null) {
-               EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(body, resourcePath, request);
-               TemplateEngine templateEngine = TemplateEngineFactory.getTemplateEngine();
-               for (Header header : response.getHeaders()) {
-                  // Render response header
-                  List<String> renderedHeader = new ArrayList<>();
-                  for (String val : header.getValues()) {
-                     renderedHeader.add(MockControllerCommons.renderResponseContent(evaluableRequest, templateEngine, val));
-                  }
+               // First check if they should be rendered.
+               EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(body, resourcePath,
+                     request);
+               Set<Header> renderedHeaders = MockControllerCommons.renderResponseHeaders(evaluableRequest,
+                     dispatchContext.requestContext(), response);
 
-                  if ("Location".equals(header.getName())) {
-                     String location = renderedHeader.iterator().next();
+               for (Header renderedHeader : renderedHeaders) {
+                  if ("Location".equals(renderedHeader.getName())) {
+                     String location = renderedHeader.getValues().iterator().next();
                      if (!AbsoluteUrlMatcher.matches(location)) {
                         // We should process location in order to make relative URI specified an absolute one from
                         // the client perspective.
                         location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
                               + request.getContextPath() + "/rest" + serviceAndVersion + location;
                      }
-                     responseHeaders.add(header.getName(), location);
+                     responseHeaders.add(renderedHeader.getName(), location);
                   } else {
-                     if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
-                        responseHeaders.put(header.getName(), renderedHeader);
+                     if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(renderedHeader.getName())) {
+                        responseHeaders.put(renderedHeader.getName(), new ArrayList<>(renderedHeader.getValues()));
                      }
                   }
                }
