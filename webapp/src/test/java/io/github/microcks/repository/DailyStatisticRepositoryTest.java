@@ -35,14 +35,14 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class DailyStatisticRepositoryTest {
 
    @Autowired
    DailyStatisticRepository repository;
 
    @Before
-   public void setUp(){
+   public void setUp() {
       // Create a bunch of statistics...
       DailyStatistic stat = new DailyStatistic();
       stat.setDay("20140319");
@@ -56,18 +56,20 @@ public class DailyStatisticRepositoryTest {
       stat.setServiceVersion("1.2");
       repository.save(stat);
    }
-   
+
    @Test
-   public void testFindByDayAndServiceNameAndServiceVersion(){
+   public void testFindByDayAndServiceNameAndServiceVersion() {
       // Retrieve a stat using theses 3 criteria.
-      DailyStatistic stat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.0").get(0);
+      DailyStatistic stat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.0")
+            .get(0);
       assertNotNull(stat);
       assertNotNull(stat.getId());
       assertEquals("20140319", stat.getDay());
       assertEquals("TestService1", stat.getServiceName());
       assertEquals("1.0", stat.getServiceVersion());
       // Retrieve another stat object.
-      DailyStatistic otherStat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.2").get(0);
+      DailyStatistic otherStat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.2")
+            .get(0);
       assertNotNull(otherStat);
       assertNotNull(otherStat.getId());
       assertNotEquals(stat.getId(), otherStat.getId());

@@ -55,8 +55,7 @@ public class NowELFunctionTest {
       int day = currentDate.get(Calendar.DAY_OF_MONTH);
       int month = currentDate.get(Calendar.MONTH);
       int year = currentDate.get(Calendar.YEAR);
-      String dateString = (day < 10 ? "0" + day : day) + "/"
-            + (++month < 10 ? "0" + month : month) + "/" + year;
+      String dateString = (day < 10 ? "0" + day : day) + "/" + (++month < 10 ? "0" + month : month) + "/" + year;
 
       assertTrue(result.startsWith(dateString));
    }

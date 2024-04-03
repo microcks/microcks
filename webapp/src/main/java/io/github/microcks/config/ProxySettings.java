@@ -28,8 +28,8 @@ public class ProxySettings {
 
    /**
     * Build a new proxy settings bean.
-    * @param host The network proxy host
-    * @param port The network proxy port
+    * @param host     The network proxy host
+    * @param port     The network proxy port
     * @param username The proxy username
     * @param password The proxy credentials
     */

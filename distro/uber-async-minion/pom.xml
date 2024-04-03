@@ -4,13 +4,15 @@
   <parent>
     <groupId>io.github.microcks</groupId>
     <artifactId>microcks-distro</artifactId>
-    <version>1.8.2-SNAPSHOT</version>
+    <version>1.9.1-SNAPSHOT</version>
   </parent>
 
   <name>Microcks Uber Async Minion</name>
   <artifactId>microcks-uber-async-minion</artifactId>
 
   <properties>
+    <multi-project.rootdir>../..</multi-project.rootdir>
+
     <compiler-plugin.version>3.11.0</compiler-plugin.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>

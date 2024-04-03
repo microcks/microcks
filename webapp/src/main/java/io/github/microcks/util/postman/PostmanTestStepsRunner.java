@@ -50,9 +50,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * An implementation of HttpTestRunner that deals with tests embedded into a Postman Collection.
- * It delegates the actual testing to the <code>microcks-postman-runner</code> component,
- * triggering it through an API call.
+ * An implementation of HttpTestRunner that deals with tests embedded into a Postman Collection. It delegates the actual
+ * testing to the <code>microcks-postman-runner</code> component, triggering it through an API call.
  * @author laurent
  */
 public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
@@ -75,7 +74,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
     * Build a new PostmanTestStepsRunner for a collection.
     * @param resourceRepository The repository that contains Postman Collection to test
     */
-   public PostmanTestStepsRunner(ResourceRepository resourceRepository){
+   public PostmanTestStepsRunner(ResourceRepository resourceRepository) {
       this.resourceRepository = resourceRepository;
    }
 
@@ -96,9 +95,9 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    @Override
-   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult,
-                                   List<Request> requests, String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
-      if (log.isDebugEnabled()){
+   public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult, List<Request> requests,
+         String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
+      if (log.isDebugEnabled()) {
          log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
       }
 
@@ -143,7 +142,8 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          ObjectNode jsonRequest = mapper.createObjectNode();
 
          String operationName = operation.getName().substring(operation.getName().indexOf(" ") + 1);
-         String customizedEndpointUrl = endpointUrl + URIBuilder.buildURIFromPattern(operationName, request.getQueryParameters());
+         String customizedEndpointUrl = endpointUrl
+               + URIBuilder.buildURIFromPattern(operationName, request.getQueryParameters());
          log.debug("Using customized endpoint url: " + customizedEndpointUrl);
 
          jsonRequest.put("endpointUrl", customizedEndpointUrl);
@@ -188,9 +188,9 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
       // Actually execute request.
       ClientHttpResponse httpResponse = null;
-      try{
+      try {
          httpResponse = httpRequest.execute();
-      } catch (IOException ioe){
+      } catch (IOException ioe) {
          log.error("IOException while executing request ", ioe);
       } finally {
          if (httpResponse != null) {
@@ -220,7 +220,8 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
       return null;
    }
 
-   private void extractTestScript(String operationNameRadix, JsonNode itemNode, Operation operation, List<JsonNode> collectedScripts) {
+   private void extractTestScript(String operationNameRadix, JsonNode itemNode, Operation operation,
+         List<JsonNode> collectedScripts) {
       String itemNodeName = itemNode.path("name").asText();
 
       // Item may be a folder or an operation description.
@@ -236,7 +237,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          String operationName = PostmanCollectionImporter.buildOperationName(itemNode, operationNameRadix);
          log.debug("Found operation '{}', comparing with '{}'", operationName, operation.getName());
          if (PostmanUtil.areOperationsEquivalent(operation.getName(), operationName)) {
-         //if (operationName.equals(operation.getName())) {
+            //if (operationName.equals(operation.getName())) {
             // We've got the correct operation.
             JsonNode events = itemNode.path("event");
             for (JsonNode event : events) {

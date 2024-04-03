@@ -46,7 +46,8 @@ public class PostmanWorkspaceCollectionImporterTest {
    public void testSimpleProjectImportV21() {
       PostmanWorkspaceCollectionImporter importer = null;
       try {
-         importer = new PostmanWorkspaceCollectionImporter("target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
+         importer = new PostmanWorkspaceCollectionImporter(
+               "target/test-classes/io/github/microcks/util/postman/Swagger Petstore.postman_workspace_collection-2.1.json");
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -97,7 +98,8 @@ public class PostmanWorkspaceCollectionImporterTest {
                assertEquals(1, response.getHeaders().size());
                assertEquals("200", response.getStatus());
                assertEquals("application/json", response.getMediaType());
-               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852", response.getDispatchCriteria());
+               assertEquals("?status=available?user_key=998bac0775b1d5f588e0a6ca7c11b852",
+                     response.getDispatchCriteria());
                assertNotNull(response.getContent());
             } else {
                fail("Exchange has the wrong type. Expecting RequestResponsePair");

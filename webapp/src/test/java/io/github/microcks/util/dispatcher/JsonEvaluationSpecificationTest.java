@@ -31,10 +31,8 @@ import static org.junit.Assert.fail;
  */
 public class JsonEvaluationSpecificationTest {
 
-   private final static String JSON_PAYLOAD = "{\"exp\": \"/type\", \"operator\": \"range\", \"cases\": {" +
-         "\".*[Aa][Ll][Ee].*\": \"OK\", " +
-         "\"default\": \"Bad\"" +
-         "}}";
+   private final static String JSON_PAYLOAD = "{\"exp\": \"/type\", \"operator\": \"range\", \"cases\": {"
+         + "\".*[Aa][Ll][Ee].*\": \"OK\", " + "\"default\": \"Bad\"" + "}}";
 
    @Test
    public void testJsonSerialization() {

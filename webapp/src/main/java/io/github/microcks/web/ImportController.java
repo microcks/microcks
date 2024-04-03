@@ -44,14 +44,14 @@ public class ImportController {
    @RequestMapping(value = "/import", method = RequestMethod.POST)
    public ResponseEntity<?> importRepository(@RequestParam(value = "file") MultipartFile file) {
       log.debug("Importing new services and resources definitions");
-      if (!file.isEmpty()){
+      if (!file.isEmpty()) {
          log.debug("Content type of " + file.getOriginalFilename() + " is " + file.getContentType());
-         if (MediaType.APPLICATION_JSON_VALUE.equals(file.getContentType())){
+         if (MediaType.APPLICATION_JSON_VALUE.equals(file.getContentType())) {
             try {
                byte[] bytes = file.getBytes();
                String json = new String(bytes);
                importExportService.importRepository(json);
-            } catch (Exception e){
+            } catch (Exception e) {
                log.error(e.getMessage());
             }
          }

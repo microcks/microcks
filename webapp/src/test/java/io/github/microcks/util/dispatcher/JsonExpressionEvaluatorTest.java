@@ -21,45 +21,44 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+
 /**
  * This is a test case for JsonExpressionEvaluator.
  * @author laurent
  */
 public class JsonExpressionEvaluatorTest {
 
-   private static final String BELGIUM_BEER = "{\"name\": \"Maredsous\"," +
-         "\"country\": \"Belgium\", \"type\": \"Brown ale\"," +
-         "\"rating\": 4.2, \"status\": \"available\"}";
+   private static final String BELGIUM_BEER = "{\"name\": \"Maredsous\","
+         + "\"country\": \"Belgium\", \"type\": \"Brown ale\"," + "\"rating\": 4.2, \"status\": \"available\"}";
 
-   private static final String GERMAN_BEER = "{\"name\": \"Weissbier\"," +
-         "\"country\": \"Germany\", \"type\": \"Wheat\"," +
-         "\"rating\": 3.5, \"status\": \"out_of_stock\", \"extra\": \"Extra Information\"}";
+   private static final String GERMAN_BEER = "{\"name\": \"Weissbier\","
+         + "\"country\": \"Germany\", \"type\": \"Wheat\","
+         + "\"rating\": 3.5, \"status\": \"out_of_stock\", \"extra\": \"Extra Information\"}";
 
-   private static final String EXTRA_GERMAN_BEER = "{\"name\": \"Weissbier\"," +
-         "\"country\": \"Germany\", \"type\": \"Wheat\"," +
-         "\"rating\": 3.5, \"status\": \"out_of_stock\", \"extra\": {\"value\": \"Extra Information\"}}";
+   private static final String EXTRA_GERMAN_BEER = "{\"name\": \"Weissbier\","
+         + "\"country\": \"Germany\", \"type\": \"Wheat\","
+         + "\"rating\": 3.5, \"status\": \"out_of_stock\", \"extra\": {\"value\": \"Extra Information\"}}";
 
-   private static final String ENGLISH_BEER = "{\"name\": \"Guinness\"," +
-         "\"country\": \"UK\", \"type\": \"Black\"," +
-         "\"rating\": 4.1, \"status\": \"available\"}";
+   private static final String ENGLISH_BEER = "{\"name\": \"Guinness\"," + "\"country\": \"UK\", \"type\": \"Black\","
+         + "\"rating\": 4.1, \"status\": \"available\"}";
 
-   private static final String LAURENT_CARS = "{\"driver\": \"Laurent\", \"cars\": ["  +
-         "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}, " +
-         "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveller\", \"year\": 2017}]}";
+   private static final String LAURENT_CARS = "{\"driver\": \"Laurent\", \"cars\": ["
+         + "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}, "
+         + "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveller\", \"year\": 2017}]}";
 
-   private static final String LOT_OF_CARS = "{\"driver\": \"Laurent\", \"cars\": ["  +
-         "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}, " +
-         "{\"name\": \"308\", \"model\": \"Peugeot 308\", \"year\": 2014}, " +
-         "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveller\", \"year\": 2017}]}";
+   private static final String LOT_OF_CARS = "{\"driver\": \"Laurent\", \"cars\": ["
+         + "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}, "
+         + "{\"name\": \"308\", \"model\": \"Peugeot 308\", \"year\": 2014}, "
+         + "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveller\", \"year\": 2017}]}";
 
-   private static final String HUGE_LIST_OF_CARS = "{\"driver\": \"Laurent\", \"cars\": ["  +
-         "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}, " +
-         "{\"name\": \"308\", \"model\": \"Peugeot 308\", \"year\": 2014}, " +
-         "{\"name\": \"508\", \"model\": \"Peugeot 508\", \"year\": 2015}, " +
-         "{\"name\": \"3008\", \"model\": \"Peugeot 3008\", \"year\": 2016}, " +
-         "{\"name\": \"5008\", \"model\": \"Peugeot 5008\", \"year\": 2017}, " +
-         "{\"name\": \"maurice\", \"model\": \"Peugeot 5008\", \"year\": 2017}, " +
-         "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveller\", \"year\": 2017}]}";
+   private static final String HUGE_LIST_OF_CARS = "{\"driver\": \"Laurent\", \"cars\": ["
+         + "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}, "
+         + "{\"name\": \"308\", \"model\": \"Peugeot 308\", \"year\": 2014}, "
+         + "{\"name\": \"508\", \"model\": \"Peugeot 508\", \"year\": 2015}, "
+         + "{\"name\": \"3008\", \"model\": \"Peugeot 3008\", \"year\": 2016}, "
+         + "{\"name\": \"5008\", \"model\": \"Peugeot 5008\", \"year\": 2017}, "
+         + "{\"name\": \"maurice\", \"model\": \"Peugeot 5008\", \"year\": 2017}, "
+         + "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveller\", \"year\": 2017}]}";
 
    @Test
    public void testEqualsOperatorDispatcher() throws Exception {

@@ -22,6 +22,6 @@ import org.springframework.context.annotation.Configuration;
  * @author laurent
  */
 @Configuration
-@ComponentScan(basePackages = {"io.github.microcks.listener"}, lazyInit = true)
+@ComponentScan(basePackages = { "io.github.microcks.listener" }, lazyInit = true)
 public class ListenerTestsConfiguration {
 }

@@ -14,7 +14,7 @@
 # docker run -i --rm -p 8080:8080 microcks/microcks-async-minion-legacy-jar
 #
 ###
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.2-691
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.3-1475
 
 ARG JAVA_PACKAGE=java-17-openjdk-headless
 ARG RUN_JAVA_VERSION=1.3.8
@@ -26,6 +26,7 @@ ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en'
 RUN microdnf install curl-minimal ca-certificates ${JAVA_PACKAGE} -y \
     && microdnf update -y \
     && microdnf clean all \
+    && rm /var/lib/rpm/rpmdb.sqlite \
     && mkdir /deployments \
     && chown 1001 /deployments \
     && chmod "g+rwX" /deployments \

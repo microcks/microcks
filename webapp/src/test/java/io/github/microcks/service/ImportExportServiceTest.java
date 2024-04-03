@@ -47,7 +47,7 @@ import static org.junit.Assert.*;
 @RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @ContextConfiguration(classes = RepositoryTestsConfiguration.class)
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class ImportExportServiceTest {
 
    @Autowired
@@ -62,7 +62,7 @@ public class ImportExportServiceTest {
    private List<String> ids = new ArrayList<>();
 
    @Before
-   public void setUp(){
+   public void setUp() {
       // Create a bunch of services...
       Service service = new Service();
       service.setName("HelloWorld");
@@ -92,7 +92,7 @@ public class ImportExportServiceTest {
    }
 
    @Test
-   public void testExportRepository(){
+   public void testExportRepository() {
       String result = service.exportRepository(ids, "json");
 
       ObjectMapper mapper = new ObjectMapper();
@@ -105,11 +105,11 @@ public class ImportExportServiceTest {
          fail("No exception should be thrown when parsing Json");
       }
 
-      try{
+      try {
          // Retrieve and assert on services part.
          ArrayNode services = (ArrayNode) jsonObj.get("services");
          assertEquals(3, services.size());
-         for (int i=0 ; i<services.size(); i++){
+         for (int i = 0; i < services.size(); i++) {
             JsonNode service = services.get(i);
             String name = service.get("name").asText();
             assertTrue("HelloWorld".equals(name) || "MyService-hello".equals(name));
@@ -118,7 +118,7 @@ public class ImportExportServiceTest {
          fail("Exception while getting services array");
       }
 
-      try{
+      try {
          // Retrieve and assert on resources part.
          ArrayNode resources = (ArrayNode) jsonObj.get("resources");
          assertEquals(1, resources.size());
@@ -131,7 +131,7 @@ public class ImportExportServiceTest {
    }
 
    @Test
-   public void testImportRepository(){
+   public void testImportRepository() {
       // Setup and export result.
       String json = "{\"services\":[{\"name\":\"Imp1\",\"version\":\"1.2\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":25638445759706201468670970602},"
             + "{\"name\":\"Imp2\",\"version\":\"1.1\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":25638445759706201468670970603}], "

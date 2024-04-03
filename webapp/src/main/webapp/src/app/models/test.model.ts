@@ -36,6 +36,7 @@ export class OAuth2AuthorizedClient {
   grantType: OAuth2GrantType;
   principalName: string;
   tokenUri: string;
+  scopes: string;
 }
 
 export class TestRequest {

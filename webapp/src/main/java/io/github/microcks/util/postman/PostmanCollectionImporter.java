@@ -56,8 +56,8 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * Implement of MockRepositoryImporter that uses a Postman collection for building
- * domain objects. Only v2 collection format is supported.
+ * Implement of MockRepositoryImporter that uses a Postman collection for building domain objects. Only v2 collection
+ * format is supported.
  * @author laurent
  */
 public class PostmanCollectionImporter implements MockRepositoryImporter {
@@ -100,6 +100,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    protected void setCollection(JsonNode collection) {
       this.collection = collection;
    }
+
    protected void setCollectionContent(String collectionContent) {
       this.collectionContent = collectionContent;
    }
@@ -154,8 +155,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          }
       }
 
-      if (version == null){
-         log.error("Version property is missing in Collection. Use either 'version' for v2.1 Collection or 'version=x.y - something' description syntax.");
+      if (version == null) {
+         log.error(
+               "Version property is missing in Collection. Use either 'version' for v2.1 Collection or 'version=x.y - something' description syntax.");
          throw new MockRepositoryImportException("Version property is missing in Collection description");
       }
       service.setVersion(version);
@@ -178,7 +180,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
 
       if (isV2Collection) {
          return getMessageDefinitionsV2(service, operation);
@@ -197,8 +200,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       }
 
       // Adapt map to list of Exchanges.
-      return result.entrySet().stream()
-            .map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
+      return result.entrySet().stream().map(entry -> new RequestResponsePair(entry.getKey(), entry.getValue()))
             .collect(Collectors.toList());
    }
 
@@ -245,7 +247,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                String requestUrl = requestNode.path("url").path("raw").asText();
 
                if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), requestUrl);
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(),
+                        requestUrl);
                   // We only need the pattern here.
                   operation.addResourcePath(extractResourcePath(requestUrl, null));
                } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
@@ -301,8 +304,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             String query = requestNode.path("body").path("graphql").path("query").asText();
             String variables = requestNode.path("body").path("graphql").path("variables").asText();
             // Initialize with query field.
-            StringBuilder requestContent = new StringBuilder("{\"query\": \"")
-                  .append(query.replace("\n", "\\n"))
+            StringBuilder requestContent = new StringBuilder("{\"query\": \"").append(query.replace("\n", "\\n"))
                   .append("\"");
 
             try {
@@ -312,7 +314,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   requestContent.append(", \"variables\": ").append(variables);
                }
             } catch (JsonProcessingException jpe) {
-               log.warn("Json processing excpetion while parsing GraphQL variables, ignoring them: {}", jpe.getMessage());
+               log.warn("Json processing excpetion while parsing GraphQL variables, ignoring them: {}",
+                     jpe.getMessage());
             }
             requestContent.append("}");
             request.setContent(requestContent.toString());
@@ -356,7 +359,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    private String extractGraphQLCriteria(String dispatcherRules, String variables) {
       String dispatchCriteria = "";
       try {
-         Map<String, String> paramsMap = mapper.readValue(variables, TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
+         Map<String, String> paramsMap = mapper.readValue(variables,
+               TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
          dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
       } catch (Exception e) {
          log.error("Exception while extracting dispatch criteria from GraphQL variables: {}", e.getMessage());
@@ -380,7 +384,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       if (response.getHeaders() != null) {
          for (Header header : response.getHeaders()) {
             if (header.getName().equalsIgnoreCase("Content-Type")) {
-               response.setMediaType(header.getValues().toArray(new String[]{})[0]);
+               response.setMediaType(header.getValues().toArray(new String[] {})[0]);
             }
          }
       }
@@ -485,8 +489,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
             // Deal with dispatcher stuffs.
             if (urlHasParameters(url) && urlHasParts(url)) {
-               operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url)
-                     + " ?? " + DispatchCriteriaHelper.extractParamsFromURI(url));
+               operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(url) + " ?? "
+                     + DispatchCriteriaHelper.extractParamsFromURI(url));
                operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
             } else if (urlHasParameters(url)) {
                operation.setDispatcherRules(DispatchCriteriaHelper.extractParamsFromURI(url));
@@ -507,11 +511,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    /**
-    * Build a coherent operation name from the JsonNode of collection representing operation (ie. having a
-    * request item) and an operationNameRadix (ie. a subcontext or nested subcontext folder where operation
-    * is stored).
+    * Build a coherent operation name from the JsonNode of collection representing operation (ie. having a request item)
+    * and an operationNameRadix (ie. a subcontext or nested subcontext folder where operation is stored).
     * @param operationNode JSON node for operation
-    * @param folderName String representing radix of operation name
+    * @param folderName    String representing radix of operation name
     * @return Operation name
     */
    public static String buildOperationName(JsonNode operationNode, String folderName) {
@@ -521,7 +524,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       }
 
       // New way of computing operation name.
-      if (url.indexOf('?') != - 1) {
+      if (url.indexOf('?') != -1) {
          // Remove query parameters.
          url = url.substring(0, url.indexOf('?'));
       }
@@ -533,8 +536,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    /**
     * Extract a resource path from a complete url and an optional operationName radix (context or subcontext).
     * https://petstore-api-2445581593402.apicast.io:443/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available
-    *    => /v2/pet/findByStatus if no operationNameRadix
-    *    => /pet/findByStatus if operationNameRadix=/pet
+    * => /v2/pet/findByStatus if no operationNameRadix => /pet/findByStatus if operationNameRadix=/pet
     */
    private String extractResourcePath(String url, String operationNameRadix) {
       // Remove protocol, host and port specification.
@@ -549,7 +551,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       }
       // Remove trailing / if present.
       if (result.endsWith("/")) {
-         result= result.substring(0, result.length() - 1);
+         result = result.substring(0, result.length() - 1);
       }
       return result;
    }

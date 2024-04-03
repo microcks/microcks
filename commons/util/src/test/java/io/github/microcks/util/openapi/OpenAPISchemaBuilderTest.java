@@ -34,10 +34,8 @@ public class OpenAPISchemaBuilderTest {
       JsonNode jsonNode = null;
       ObjectMapper mapper = new ObjectMapper();
 
-      String jsonText = "{\"foo\": \"bar\", \"flag\": true, " +
-            "\"list\": [1, 2], " +
-            "\"obj\": {\"fizz\": \"bar\"}, " +
-            "\"objList\": [{\"number\": 1}, {\"number\": 2}]}";
+      String jsonText = "{\"foo\": \"bar\", \"flag\": true, " + "\"list\": [1, 2], " + "\"obj\": {\"fizz\": \"bar\"}, "
+            + "\"objList\": [{\"number\": 1}, {\"number\": 2}]}";
 
       String expectedSchema = "{\"type\":\"object\",\"properties\":{\"foo\":{\"type\":\"string\"},\"flag\":{\"type\":\"boolean\"},\"list\":{\"type\":\"array\",\"items\":{\"type\":\"number\"}},\"obj\":{\"type\":\"object\",\"properties\":{\"fizz\":{\"type\":\"string\"}}},\"objList\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"number\":{\"type\":\"number\"}}}}}}";
       try {

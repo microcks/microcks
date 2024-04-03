@@ -27,7 +27,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 @Qualifier
 @Retention(RUNTIME)
-@Target({METHOD, FIELD, PARAMETER, TYPE})
+@Target({ METHOD, FIELD, PARAMETER, TYPE })
 /**
  * Qualifier annotation for the root WebSocketProducerManager of the hierarchy of endpoint.
  * @author laurent

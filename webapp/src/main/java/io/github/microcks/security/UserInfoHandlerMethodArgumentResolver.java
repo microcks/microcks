@@ -41,10 +41,8 @@ public class UserInfoHandlerMethodArgumentResolver implements HandlerMethodArgum
    }
 
    @Override
-   public Object resolveArgument(MethodParameter methodParameter,
-                                 ModelAndViewContainer modelAndViewContainer,
-                                 NativeWebRequest nativeWebRequest,
-                                 WebDataBinderFactory webDataBinderFactory) throws Exception {
+   public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer,
+         NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory) throws Exception {
 
       // Check if already present.
       Object userInfoObj = nativeWebRequest.getAttribute(UserInfo.class.getName(), RequestAttributes.SCOPE_REQUEST);

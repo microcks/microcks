@@ -41,8 +41,8 @@ import java.net.URISyntaxException;
 @Unremovable
 @ApplicationScoped
 /**
- * This is a connector to Microcks app WebScoket endpoints. It listens to /api/services-updates endpoint
- * for incoming {@code ServiceViewChangeEvent} and propagate them to the {@code AsyncMockDefinitionUpdater}.
+ * This is a connector to Microcks app WebScoket endpoints. It listens to /api/services-updates endpoint for incoming
+ * {@code ServiceViewChangeEvent} and propagate them to the {@code AsyncMockDefinitionUpdater}.
  * @author laurent
  */
 public class MicrocksWebSocketConnector {
@@ -95,10 +95,8 @@ public class MicrocksWebSocketConnector {
          logger.debugf("Received this WebSocket message: " + message);
          try {
             ServiceViewChangeEvent serviceViewChangeEvent = mapper.readValue(message, ServiceViewChangeEvent.class);
-            logger.infof("Received a new change event [%s] for '%s', at %d",
-                  serviceViewChangeEvent.getChangeType(),
-                  serviceViewChangeEvent.getServiceId(),
-                  serviceViewChangeEvent.getTimestamp());
+            logger.infof("Received a new change event [%s] for '%s', at %d", serviceViewChangeEvent.getChangeType(),
+                  serviceViewChangeEvent.getServiceId(), serviceViewChangeEvent.getTimestamp());
 
             definitionUpdater.applyServiceChangeEvent(serviceViewChangeEvent);
          } catch (Exception e) {

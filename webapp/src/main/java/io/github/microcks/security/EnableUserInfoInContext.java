@@ -12,7 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */package io.github.microcks.security;
+ */
+package io.github.microcks.security;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,11 +22,11 @@ import java.lang.annotation.Target;
 
 /**
  * Method level annotation marking methods that need injection of UserInfo bean into current execution context.
- * Depending on the component declaring the annotated method, context can be: HTTP request context, service execution context,
- * transaction context, etc...
+ * Depending on the component declaring the annotated method, context can be: HTTP request context, service execution
+ * context, transaction context, etc...
  * @author laurent
  */
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ ElementType.METHOD, ElementType.TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EnableUserInfoInContext {
 }

@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An implementation of <code>RelativeReferenceURLBuilder</code> that follows GitLab conventions for
- * encoding file path into remote URL.
+ * An implementation of <code>RelativeReferenceURLBuilder</code> that follows GitLab conventions for encoding file path
+ * into remote URL.
  * @author laurent
  */
 public class GitLabReferenceURLBuilder extends SimpleReferenceURLBuilder {
@@ -38,7 +38,7 @@ public class GitLabReferenceURLBuilder extends SimpleReferenceURLBuilder {
    public String getFileName(String baseRepositoryURL, Map<String, List<String>> headers) {
       if (headers != null) {
          for (String key : headers.keySet()) {
-            if (key!= null && key.equalsIgnoreCase(GITLAB_FILE_NAME_HEADER)) {
+            if (key != null && key.equalsIgnoreCase(GITLAB_FILE_NAME_HEADER)) {
                return headers.get(key).get(0);
             }
          }
@@ -78,10 +78,9 @@ public class GitLabReferenceURLBuilder extends SimpleReferenceURLBuilder {
 
       // Now do a simple reference url build. We need to ensure that there's a root
       // by adding a starting /. We'll remove it after the build when recomposing result.
-      String pathFragment = super.buildRemoteURL("/" + URLDecoder.decode(basePath, StandardCharsets.UTF_8), referencePath);
+      String pathFragment = super.buildRemoteURL("/" + URLDecoder.decode(basePath, StandardCharsets.UTF_8),
+            referencePath);
 
-      return rootURL + "/"
-            + URLEncoder.encode(pathFragment.substring(1), StandardCharsets.UTF_8) + "/"
-            + formatOptions;
+      return rootURL + "/" + URLEncoder.encode(pathFragment.substring(1), StandardCharsets.UTF_8) + "/" + formatOptions;
    }
 }

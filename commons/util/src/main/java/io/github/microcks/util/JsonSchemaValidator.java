@@ -33,8 +33,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Helper class for validating Json objects against their Json schema. Supported version
- * of Json schema is http://json-schema.org/draft-07/schema.
+ * Helper class for validating Json objects against their Json schema. Supported version of Json schema is
+ * http://json-schema.org/draft-07/schema.
  * @author laurent
  */
 public class JsonSchemaValidator {
@@ -50,10 +50,14 @@ public class JsonSchemaValidator {
    public static final String JSON_SCHEMA_COMPONENTS_ELEMENT = "components";
    public static final String JSON_SCHEMA_PROPERTIES_ELEMENT = "properties";
 
+   private JsonSchemaValidator() {
+      // Private constructor to hide the implicit public one.
+   }
+
    /**
     * Check if a Json object is valid against the given Json schema specification.
     * @param schemaText The Json schema specification as a string
-    * @param jsonText The Json object as a string
+    * @param jsonText   The Json object as a string
     * @return True if Json object is valid, false otherwise
     * @throws IOException if json string representations cannot be parsed
     */
@@ -64,14 +68,14 @@ public class JsonSchemaValidator {
    /**
     * Check if a Json object is valid against the given Json schema specification.
     * @param schemaText The Json schema specification as a string
-    * @param jsonText The Json object as a string
-    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @param jsonText   The Json object as a string
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
     * @return True if Json object is valid, false otherwise
     * @throws IOException if json string representations cannot be parsed
     */
    public static boolean isJsonValid(String schemaText, String jsonText, String namespace) throws IOException {
       try {
-         List<String> errors = validateJson(schemaText, jsonText);
+         List<String> errors = validateJson(schemaText, jsonText, namespace);
          if (!errors.isEmpty()) {
             log.debug("Get validation errors, returning false");
             return false;
@@ -84,15 +88,15 @@ public class JsonSchemaValidator {
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of Json schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of Json schema spec
+    * semantics regarding additional or unknown attributes: schema must explicitly set <code>additionalProperties</code>
+    * to false if you want to consider unknown attributes as validation errors. It returns a list of validation error
+    * messages.
     * @param schemaText The Json schema specification as a string
-    * @param jsonText The Json object as a string
+    * @param jsonText   The Json object as a string
     * @return The list of validation failures. If empty, json object is valid !
-    * @throws IOException if json string representations cannot be parsed
+    * @throws IOException         if json string representations cannot be parsed
     * @throws ProcessingException if json node does not represent valid Schema
     */
    public static List<String> validateJson(String schemaText, String jsonText) throws IOException, ProcessingException {
@@ -100,30 +104,31 @@ public class JsonSchemaValidator {
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of Json schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of Json schema spec
+    * semantics regarding additional or unknown attributes: schema must explicitly set <code>additionalProperties</code>
+    * to false if you want to consider unknown attributes as validation errors. It returns a list of validation error
+    * messages.
     * @param schemaText The Json schema specification as a string
-    * @param jsonText The Json object as a string
-    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @param jsonText   The Json object as a string
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
     * @return The list of validation failures. If empty, json object is valid !
-    * @throws IOException if json string representations cannot be parsed
+    * @throws IOException         if json string representations cannot be parsed
     * @throws ProcessingException if json node does not represent valid Schema
     */
-   public static List<String> validateJson(String schemaText, String jsonText, String namespace) throws IOException, ProcessingException {
+   public static List<String> validateJson(String schemaText, String jsonText, String namespace)
+         throws IOException, ProcessingException {
       return validateJson(getJsonNode(schemaText), getJsonNode(jsonText), namespace);
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of Json schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of Json schema spec
+    * semantics regarding additional or unknown attributes: schema must explicitly set <code>additionalProperties</code>
+    * to false if you want to consider unknown attributes as validation errors. It returns a list of validation error
+    * messages.
     * @param schemaNode The Json schema specification as a Jackson node
-    * @param jsonNode The Json object as a Jackson node
+    * @param jsonNode   The Json object as a Jackson node
     * @return The list of validation failures. If empty, json object is valid !
     * @throws ProcessingException if json node does not represent valid Schema
     */
@@ -132,18 +137,19 @@ public class JsonSchemaValidator {
    }
 
    /**
-    * Validate a Json object representing by its text against a schema object representing byt its
-    * text too. Validation is a deep one: its pursue checking children nodes on a failed parent. Validation
-    * is respectful of Json schema spec semantics regarding additional or unknown attributes: schema must
-    * explicitely set <code>additionalProperties</code> to false if you want to consider unknown attributes
-    * as validation errors. It returns a list of validation error messages.
+    * Validate a Json object representing by its text against a schema object representing byt its text too. Validation
+    * is a deep one: its pursue checking children nodes on a failed parent. Validation is respectful of Json schema spec
+    * semantics regarding additional or unknown attributes: schema must explicitly set <code>additionalProperties</code>
+    * to false if you want to consider unknown attributes as validation errors. It returns a list of validation error
+    * messages.
     * @param schemaNode The Json schema specification as a Jackson node
-    * @param jsonNode The Json object as a Jackson node
-    * @param namespace Namespace definition to resolve relative dependencies in Json schema
+    * @param jsonNode   The Json object as a Jackson node
+    * @param namespace  Namespace definition to resolve relative dependencies in Json schema
     * @return The list of validation failures. If empty, json object is valid !
     * @throws ProcessingException if json node does not represent valid Schema
     */
-   public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) throws ProcessingException {
+   public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace)
+         throws ProcessingException {
       List<String> errors = new ArrayList<>();
 
       final JsonSchema jsonSchemaNode = extractJsonSchemaNode(schemaNode, namespace);
@@ -173,7 +179,7 @@ public class JsonSchemaValidator {
     * Get a Jackson JsonNode representation for Json schema.
     * @param schemaText The Json schema specification as a string
     * @return The Jackson JsonSchema corresponding to json schema string
-    * @throws IOException if json string representation cannot be parsed
+    * @throws IOException         if json string representation cannot be parsed
     * @throws ProcessingException if json node does not represent valid Schema
     */
    public static JsonSchema getSchemaNode(String schemaText) throws IOException, ProcessingException {
@@ -183,23 +189,23 @@ public class JsonSchemaValidator {
 
    /**
     * Extract a Json SchemaNode from Jackson representation. Dependencies can be loaded using a namespace definition.
-    * See https://github.com/java-json-tools/json-schema-validator/blob/master/src/main/java/com/github/fge/jsonschema/examples/Example5.java
+    * See
+    * https://github.com/java-json-tools/json-schema-validator/blob/master/src/main/java/com/github/fge/jsonschema/examples/Example5.java
     * for example on how to use namespaces. Just provide null if no namespace.
     */
    private static JsonSchema extractJsonSchemaNode(JsonNode jsonNode, String namespace) throws ProcessingException {
       final JsonNode schemaIdentifier = jsonNode.get(JSON_SCHEMA_IDENTIFIER_ELEMENT);
-      if (schemaIdentifier == null){
+      if (schemaIdentifier == null) {
          ((ObjectNode) jsonNode).put(JSON_SCHEMA_IDENTIFIER_ELEMENT, JSON_V7_SCHEMA_IDENTIFIER);
       }
 
       final JsonSchemaFactory factory;
       if (namespace != null) {
-         log.debug("Setting namespace to " + namespace + " in Json schema loading configuration");
-         // Setup a loading configuration for provided namespace.
+         log.debug("Setting namespace to {} in Json schema loading configuration", namespace);
+         // Set up a loading configuration for provided namespace.
          final LoadingConfiguration cfg = LoadingConfiguration.newBuilder()
-               .setURITranslatorConfiguration(
-                     URITranslatorConfiguration.newBuilder().setNamespace(namespace).freeze()
-               ).freeze();
+               .setURITranslatorConfiguration(URITranslatorConfiguration.newBuilder().setNamespace(namespace).freeze())
+               .freeze();
          factory = JsonSchemaFactory.newBuilder().setLoadingConfiguration(cfg).freeze();
       } else {
          factory = JsonSchemaFactory.byDefault();

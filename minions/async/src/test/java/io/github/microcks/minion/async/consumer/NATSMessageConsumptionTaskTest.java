@@ -33,11 +33,9 @@ public class NATSMessageConsumptionTaskTest {
       AsyncTestSpecification specification = new AsyncTestSpecification();
       NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
 
-      assertTrue(NATSMessageConsumptionTask
-            .acceptEndpoint("nats://localhost:4222/testTopic"));
+      assertTrue(NATSMessageConsumptionTask.acceptEndpoint("nats://localhost:4222/testTopic"));
 
-      assertTrue(NATSMessageConsumptionTask
-            .acceptEndpoint("nats://mynats.acme.com/testTopic"));
+      assertTrue(NATSMessageConsumptionTask.acceptEndpoint("nats://mynats.acme.com/testTopic"));
    }
 
    @Test
@@ -45,13 +43,10 @@ public class NATSMessageConsumptionTaskTest {
       AsyncTestSpecification specification = new AsyncTestSpecification();
       NATSMessageConsumptionTask task = new NATSMessageConsumptionTask(specification);
 
-      assertFalse(NATSMessageConsumptionTask
-            .acceptEndpoint("ssl://localhost:1883/testTopic"));
+      assertFalse(NATSMessageConsumptionTask.acceptEndpoint("ssl://localhost:1883/testTopic"));
 
-      assertFalse(NATSMessageConsumptionTask
-            .acceptEndpoint("mqtt://localhost:1883"));
+      assertFalse(NATSMessageConsumptionTask.acceptEndpoint("mqtt://localhost:1883"));
 
-      assertFalse(NATSMessageConsumptionTask
-            .acceptEndpoint("nats://localhost:port/testTopic"));
+      assertFalse(NATSMessageConsumptionTask.acceptEndpoint("nats://localhost:port/testTopic"));
    }
 }

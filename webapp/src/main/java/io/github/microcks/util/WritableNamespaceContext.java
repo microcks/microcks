@@ -21,16 +21,17 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Does not implement reverse operations for now, but not necessary for XPath processing that is our main purpose.
- * Have to check Guava (http://guava-libraries.googlecode.com/svn/tags/release09/javadoc/com/google/common/collect/BiMap.html)
- * for Bidirectional map when looking for this ?
+ * Does not implement reverse operations for now, but not necessary for XPath processing that is our main purpose. Have
+ * to check Guava
+ * (http://guava-libraries.googlecode.com/svn/tags/release09/javadoc/com/google/common/collect/BiMap.html) for
+ * Bidirectional map when looking for this ?
  * @author laurent
  */
 public class WritableNamespaceContext implements NamespaceContext {
 
    private Map<String, String> prefixURIMap = new HashMap<>();
 
-   public void addNamespaceURI(String prefix, String namespaceURI){
+   public void addNamespaceURI(String prefix, String namespaceURI) {
       prefixURIMap.put(prefix, namespaceURI);
    }
 

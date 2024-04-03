@@ -41,7 +41,8 @@ public class SwaggerImporterTest {
    public void testSimpleSwaggerImportYAML() {
       SwaggerImporter importer = null;
       try {
-         importer = new SwaggerImporter("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml", null);
+         importer = new SwaggerImporter(
+               "target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -53,7 +54,8 @@ public class SwaggerImporterTest {
    public void testSimpleSwaggerImportJSON() {
       SwaggerImporter importer = null;
       try {
-         importer = new SwaggerImporter("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json", null);
+         importer = new SwaggerImporter(
+               "target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json", null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }

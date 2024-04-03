@@ -33,7 +33,7 @@ public class SoapUIProjectParserUtils {
    /**
     * Retrieve direct children elements of a parent in SoapUI config and tag. Only includes level 1 children.
     * @param parent The parent of children to find
-    * @param tag The tag of children
+    * @param tag    The tag of children
     * @return Children Elements as a list
     */
    public static List<Element> getConfigDirectChildren(Element parent, String tag) {
@@ -44,7 +44,7 @@ public class SoapUIProjectParserUtils {
     * Retrieve a direct child that is expected to be unique under the parent. Throws a MalformedXmlException if no child
     * or more than one child present.
     * @param parent The parent of child to find
-    * @param tag The tag of child
+    * @param tag    The tag of child
     * @return The child Element
     * @throws MalformedXmlException if no child or more than one child present.
     */
@@ -55,7 +55,7 @@ public class SoapUIProjectParserUtils {
    /**
     * Check if parent has at least one direct child having namespace and tag.
     * @param parent The parent of children to find
-    * @param tag The tag of children
+    * @param tag    The tag of children
     * @return true if at least one child is present, false otherwise
     */
    public static boolean hasConfigDirectChild(Element parent, String tag) {

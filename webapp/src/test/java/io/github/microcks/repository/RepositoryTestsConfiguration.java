@@ -32,8 +32,8 @@ import java.net.InetSocketAddress;
  * @author laurent
  */
 @TestConfiguration
-@ComponentScan(basePackages = {"io.github.microcks.security", "io.github.microcks.service"})
-@EnableMongoRepositories(basePackages = {"io.github.microcks.repository"})
+@ComponentScan(basePackages = { "io.github.microcks.security", "io.github.microcks.service" })
+@EnableMongoRepositories(basePackages = { "io.github.microcks.repository" })
 public class RepositoryTestsConfiguration extends AbstractMongoClientConfiguration {
 
    private MongoClient client;
@@ -59,7 +59,7 @@ public class RepositoryTestsConfiguration extends AbstractMongoClientConfigurati
    }
 
    @PreDestroy
-   public void shutdown(){
+   public void shutdown() {
       client.close();
       server.shutdown();
    }

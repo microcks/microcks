@@ -47,17 +47,11 @@ public class GitLabReferenceURLBuilderTest {
    public void testBuildRemoteURL() {
       GitLabReferenceURLBuilder builder = new GitLabReferenceURLBuilder();
 
-      assertEquals(
-            "https://gitlab.com/api/v4/projects/35980862/repository/files/pastry%2Fschema-ref.yml/raw?ref=main",
-            builder.buildRemoteURL(BASE_URL, "schema-ref.yml")
-      );
-      assertEquals(
-            "https://gitlab.com/api/v4/projects/35980862/repository/files/pastry%2Fschema-ref.yml/raw?ref=main",
-            builder.buildRemoteURL(BASE_URL, "./schema-ref.yml")
-      );
-      assertEquals(
-            "https://gitlab.com/api/v4/projects/35980862/repository/files/refs%2Fschema-ref.yml/raw?ref=main",
-            builder.buildRemoteURL(BASE_URL, "../refs/schema-ref.yml")
-      );
+      assertEquals("https://gitlab.com/api/v4/projects/35980862/repository/files/pastry%2Fschema-ref.yml/raw?ref=main",
+            builder.buildRemoteURL(BASE_URL, "schema-ref.yml"));
+      assertEquals("https://gitlab.com/api/v4/projects/35980862/repository/files/pastry%2Fschema-ref.yml/raw?ref=main",
+            builder.buildRemoteURL(BASE_URL, "./schema-ref.yml"));
+      assertEquals("https://gitlab.com/api/v4/projects/35980862/repository/files/refs%2Fschema-ref.yml/raw?ref=main",
+            builder.buildRemoteURL(BASE_URL, "../refs/schema-ref.yml"));
    }
 }

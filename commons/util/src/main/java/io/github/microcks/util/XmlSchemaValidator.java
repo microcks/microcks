@@ -38,7 +38,7 @@ public class XmlSchemaValidator {
    /**
     * Validation the Xml string with provided stream on its Xml schema.
     * @param schemaStream A stream on reference Xml Schema
-    * @param xmlString String representation of Xml to validate
+    * @param xmlString    String representation of Xml to validate
     * @return A list of validation errors that mey be empty if validation is ok
     * @throws Exception if validator cannot be initialized (in case of malformed schema stream)
     */
@@ -49,13 +49,14 @@ public class XmlSchemaValidator {
    /**
     * Validation the Xml string with provided stream on its Xml schema. A resource URL can be provided to resolved
     * relative includes found into Xml Schema stream.
-    * @param schemaStream A stream on reference Xml Schema
-    * @param xmlString String representation of Xml to validate
-    * @param baseResourceUrl
+    * @param schemaStream    A stream on reference Xml Schema
+    * @param xmlString       String representation of Xml to validate
+    * @param baseResourceUrl Base resource URL for resolving relative dependencies
     * @return A list of validation errors that mey be empty if validation is ok
     * @throws Exception if validator cannot be initialized (in case of malformed schema stream)
     */
-   public static List<String> validateXml(InputStream schemaStream, String xmlString, String baseResourceUrl) throws Exception {
+   public static List<String> validateXml(InputStream schemaStream, String xmlString, String baseResourceUrl)
+         throws Exception {
       SchemaFactory factory = SchemaFactory.newDefaultInstance();
       factory.setResourceResolver(new XmlSchemaURLResolver(baseResourceUrl));
 
@@ -68,8 +69,7 @@ public class XmlSchemaValidator {
 
       validator.validate(new StreamSource(new StringReader(xmlString)));
 
-      return errorHandler.getExceptions().stream()
-            .map(e -> "line " + e.getLineNumber() + ": " + e.getMessage())
+      return errorHandler.getExceptions().stream().map(e -> "line " + e.getLineNumber() + ": " + e.getMessage())
             .toList();
    }
 }

@@ -55,7 +55,7 @@ public class MessageService {
       // Retrieve event messages using operation identifier.
       List<EventMessage> eventMessages = eventMessageRepository.findByOperationId(operationId);
       if (log.isDebugEnabled()) {
-         log.debug("Found " + eventMessages.size() + " event(s) for operation " + operationId);
+         log.debug("Found {} event(s) for operation {}", eventMessages.size(), operationId);
       }
 
       // Just wrap then into an UnidirectionalEvent exchange.
@@ -75,15 +75,15 @@ public class MessageService {
       // Retrieve requests and responses using operation identifier.
       List<Request> requests = requestRepository.findByOperationId(operationId);
       List<Response> responses = responseRepository.findByOperationId(operationId);
-      if (log.isDebugEnabled()){
-         log.debug("Found " + requests.size() + " request(s) for operation " + operationId);
-         log.debug("Found " + responses.size() + " response(s) for operation " + operationId);
+      if (log.isDebugEnabled()) {
+         log.debug("Found {} request(s) for operation {}", requests.size(), operationId);
+         log.debug("Found {} response(s) for operation {}", responses.size(), operationId);
       }
 
       // Browse them to reassociate them.
       List<RequestResponsePair> results = associatePairs(requests, responses);
-      if (log.isDebugEnabled()){
-         log.debug("Emitting " + results.size() + " request/response pair(s) as result");
+      if (log.isDebugEnabled()) {
+         log.debug("Emitting {} request/response pair(s) as result", results.size());
       }
       return results;
    }
@@ -97,7 +97,7 @@ public class MessageService {
       // Retrieve events using testCase identifier.
       List<EventMessage> eventMessages = eventMessageRepository.findByTestCaseId(testCaseId);
       if (log.isDebugEnabled()) {
-         log.debug("Found " + eventMessages.size() + " event(s) for testCase " + testCaseId);
+         log.debug("Found {} event(s) for testCase {}", eventMessages.size(), testCaseId);
       }
 
       // Just wrap then into an UnidirectionalEvent exchange.
@@ -117,21 +117,21 @@ public class MessageService {
       // Retrieve requests and responses using testCase identifier.
       List<Request> requests = requestRepository.findByTestCaseId(testCaseId);
       List<Response> responses = responseRepository.findByTestCaseId(testCaseId);
-      if (log.isDebugEnabled()){
-         log.debug("Found " + requests.size() + " request(s) for testCase " + testCaseId);
-         log.debug("Found " + responses.size() + " response(s) for testCase " + testCaseId);
+      if (log.isDebugEnabled()) {
+         log.debug("Found {} request(s) for testCase {}", requests.size(), testCaseId);
+         log.debug("Found {} response(s) for testCase {}", responses.size(), testCaseId);
       }
 
       // Browse them to reassociate them.
       List<RequestResponsePair> results = associatePairs(requests, responses);
-      if (log.isDebugEnabled()){
-         log.debug("Emitting " + results.size() + " request/response pair(s) as result");
+      if (log.isDebugEnabled()) {
+         log.debug("Emitting {} request/response pair(s) as result", results.size());
       }
       return results;
    }
 
    /** */
-   private List<RequestResponsePair> associatePairs(List<Request> requests, List<Response> responses){
+   private List<RequestResponsePair> associatePairs(List<Request> requests, List<Response> responses) {
       List<RequestResponsePair> results = new ArrayList<RequestResponsePair>();
 
       // Browse them to reassociate them.

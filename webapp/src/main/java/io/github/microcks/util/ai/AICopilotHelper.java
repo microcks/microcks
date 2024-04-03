@@ -45,12 +45,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * This helper class holds general utility constants and methods for: <ul>
- *    <li>interacting with LLM (prompt template, formatting specifications</li>
- *    <li>parsing the output of LLM interaction (converting prompt templates to Microcks domain model)</li>
+ * This helper class holds general utility constants and methods for:
+ * <ul>
+ * <li>interacting with LLM (prompt template, formatting specifications</li>
+ * <li>parsing the output of LLM interaction (converting prompt templates to Microcks domain model)</li>
  * </ul>
- * It is intended to be use by {@code AICopilot} implementations so that they can focus on configuration, connection
- * and prompt refinement concerns.
+ * It is intended to be use by {@code AICopilot} implementations so that they can focus on configuration, connection and
+ * prompt refinement concerns.
  * @author laurent
  */
 public class AICopilotHelper {
@@ -73,6 +74,10 @@ public class AICopilotHelper {
          Given the AsyncAPI specification below, generate %2$d full examples for operation '%1$s' only.
          """;
 
+   protected static final String GRPC_OPERATION_PROMPT_TEMPLATE = """
+         Given the gRPC protobuf schema below, generate %3$d full examples (request and response) for operation '%2$s' of service '%1$s'.
+         """;
+
    protected static final String YAML_FORMATTING_PROMPT = """
          Use only this YAML format for output (no other text or markdown):
          """;
@@ -86,17 +91,27 @@ public class AICopilotHelper {
            response:
              code: 200
              headers:
-               content-type: application/json 
+               content-type: application/json
              body: <response body>
          """;
-   protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE= """
+
+   protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
          - example: %1$d
            message:
              headers:
-               header_1: <value 1>
+               <header_name>: <value 1>
              payload: <message payload>
          """;
 
+   protected static final String GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
+         - example: %1$d
+           request:
+             body: <request body in JSON>
+           response:
+             body: <response body in JSON>
+         """;
+
+   private static final String QUERY_NODE = "query";
    private static final String HEADERS_NODE = "headers";
    private static final String VARIABLES_NODE = "variables";
 
@@ -104,78 +119,62 @@ public class AICopilotHelper {
       // Hides the default implicit one as it's a utility class.
    }
 
-   /** Generate an OpenAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   /**
+    * Generate an OpenAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation.
+    */
    protected static String getOpenAPIOperationPromptIntro(String operationName, int numberOfSamples) {
       return String.format(OPENAPI_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
    }
 
-   /** Generate a GraphQL prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   /**
+    * Generate a GraphQL prompt introduction, asking for generation of {@code numberOfSamples} samples for operation.
+    */
    protected static String getGraphQLOperationPromptIntro(String operationName, int numberOfSamples) {
       return String.format(GRAPHQL_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
    }
 
-   /** Generate an AsyncAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
-   protected static String getAsyncAPIOperationPromptIntro(String operationName, int numerOfSamples) {
-      return String.format(ASYNCAPI_OPERATION_PROMPT_TEMPLATE, operationName, numerOfSamples);
+   /**
+    * Generate an AsyncAPI prompt introduction, asking for generation of {@code numberOfSamples} samples for operation.
+    */
+   protected static String getAsyncAPIOperationPromptIntro(String operationName, int numberOfSamples) {
+      return String.format(ASYNCAPI_OPERATION_PROMPT_TEMPLATE, operationName, numberOfSamples);
+   }
+
+   /** Generate a GRPC prompt introduction, asking for generation of {@code numberOfSamples} samples for operation. */
+   protected static String getGrpcOperationPromptIntro(String serviceName, String operationName, int numberOfSamples) {
+      return String.format(GRPC_OPERATION_PROMPT_TEMPLATE, serviceName, operationName, numberOfSamples);
    }
 
    protected static String getRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
       StringBuilder builder = new StringBuilder();
-      for (int i=0; i<numberOfSamples; i++) {
-         builder.append(String.format(REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
+      for (int i = 0; i < numberOfSamples; i++) {
+         builder.append(String.format(REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i + 1));
       }
       return builder.toString();
    }
 
    protected static String getUnidirectionalEventExampleYamlFormattingDirective(int numberOfSamples) {
       StringBuilder builder = new StringBuilder();
-      for (int i=0; i<numberOfSamples; i++) {
-         builder.append(String.format(UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE, i+1));
+      for (int i = 0; i < numberOfSamples; i++) {
+         builder.append(String.format(UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE, i + 1));
       }
       return builder.toString();
    }
 
-   /** Some AI will reuse already present examples in the spec. This method cleans a specification from its examples. */
-   protected static String removeExamplesFromOpenAPISpec(String specification) throws Exception {
-      JsonNode specNode;
-      boolean isJson = specification.trim().startsWith("{");
-
-      if (isJson) {
-         specNode = JSON_MAPPER.readTree(specification);
-      } else {
-         specNode = YAML_MAPPER.readTree(specification);
+   protected static String getGrpcRequestResponseExampleYamlFormattingDirective(int numberOfSamples) {
+      StringBuilder builder = new StringBuilder();
+      for (int i = 0; i < numberOfSamples; i++) {
+         builder.append(String.format(GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE, i + 1));
       }
-
-      // Remove examples recursively from the root.
-      removeExamplesInNode(specNode, specNode);
-
-      if (isJson) {
-         return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(specNode);
-      }
-      return YAML_MAPPER.writeValueAsString(specNode);
+      return builder.toString();
    }
 
-   private static void removeExamplesInNode(JsonNode specNode, JsonNode node) {
-      JsonNode target = followRefIfAny(specNode, node);
-      if (target.getNodeType() == JsonNodeType.OBJECT) {
-         if (target.has("examples")) {
-            ((ObjectNode) node).remove("examples");
-         }
-         Iterator<Map.Entry<String, JsonNode>> fields = target.fields();
-         while (fields.hasNext()) {
-            removeExamplesInNode(specNode, fields.next().getValue());
-         }
-      }
-      if (target.getNodeType() == JsonNodeType.ARRAY) {
-         Iterator<JsonNode> elements = target.elements();
-         while (elements.hasNext()){
-            removeExamplesInNode(specNode, elements.next());
-         }
-      }
-   }
-
-   /** Transform the output respecting the {@code REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain exchanges. */
-   protected static List<RequestResponsePair> parseRequestResponseTemplateOutput(Service service, Operation operation, String content) throws Exception {
+   /**
+    * Transform the output respecting the {@code REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain
+    * exchanges.
+    */
+   protected static List<RequestResponsePair> parseRequestResponseTemplateOutput(Service service, Operation operation,
+         String content) throws Exception {
       List<RequestResponsePair> results = new ArrayList<>();
 
       JsonNode root = YAML_MAPPER.readTree(sanitizeYamlContent(content));
@@ -218,12 +217,14 @@ public class AICopilotHelper {
 
             if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
                String resourcePathPattern = operation.getName().split(" ")[1];
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), resourcePathPattern, url);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(),
+                     resourcePathPattern, url);
             } else if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
                dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
             } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
                String resourcePathPattern = operation.getName().split(" ")[1];
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(), resourcePathPattern, url);
+               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(),
+                     resourcePathPattern, url);
                dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
             } else if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
                // This dispatcher is used for GraphQL
@@ -242,7 +243,10 @@ public class AICopilotHelper {
       return results;
    }
 
-   /** Transform the output respecting the {@code UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks domain exchanges. */
+   /**
+    * Transform the output respecting the {@code UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE} into Microcks
+    * domain exchanges.
+    */
    protected static List<UnidirectionalEvent> parseUnidirectionalEventTemplateOutput(String content) throws Exception {
       List<UnidirectionalEvent> results = new ArrayList<>();
 
@@ -270,12 +274,12 @@ public class AICopilotHelper {
    private static String sanitizeYamlContent(String pseudoYaml) {
       pseudoYaml = pseudoYaml.trim();
       if (!pseudoYaml.startsWith("-")) {
-         boolean inYaml = false;        // Are we currently in Yaml content?
-         boolean nextIsYaml = false;    // May the next line be Yaml content?
-         boolean addPadding = false;    // Do we have to add padding?
+         boolean inYaml = false; // Are we currently in Yaml content?
+         boolean nextIsYaml = false; // May the next line be Yaml content?
+         boolean addPadding = false; // Do we have to add padding?
          StringBuilder yaml = new StringBuilder();
          String[] lines = pseudoYaml.split("\\r?\\n|\\r");
-         for (String line: lines) {
+         for (String line : lines) {
             if (line.startsWith("-")) {
                inYaml = true;
             }
@@ -300,7 +304,7 @@ public class AICopilotHelper {
                }
             }
             if (inYaml) {
-               yaml.append(addPadding ? "  ":"").append(line).append("\n");
+               yaml.append(addPadding ? "  " : "").append(line).append("\n");
                // We don't know what next is going to be...
                nextIsYaml = false;
             }
@@ -336,8 +340,8 @@ public class AICopilotHelper {
    private static String getMessageContent(String contentType, JsonNode bodyNode) throws Exception {
       if (!bodyNode.isMissingNode()) {
 
-         if (!bodyNode.isTextual() && contentType != null && contentType.contains("application/json")
-               && !bodyNode.isEmpty()) {
+         if (!bodyNode.isTextual() && !bodyNode.isEmpty()
+               && (contentType == null || contentType.contains("application/json"))) {
             return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(bodyNode);
          } else if (bodyNode.isTextual()) {
             return bodyNode.asText();
@@ -365,12 +369,12 @@ public class AICopilotHelper {
 
    private static void adaptGraphQLRequestContent(Request request) throws Exception {
       JsonNode graphQL = JSON_MAPPER.readTree(request.getContent());
-      if (graphQL.has("query")) {
+      if (graphQL.has(QUERY_NODE)) {
          // GraphQL query may have \n we'd like to escape for better display.
-         String query = graphQL.path("query").asText();
+         String query = graphQL.path(QUERY_NODE).asText();
          if (query.contains("\n")) {
             query = query.replace("\n", "\\n");
-            ((ObjectNode) graphQL).put("query", query);
+            ((ObjectNode) graphQL).put(QUERY_NODE, query);
             request.setContent(JSON_MAPPER.writeValueAsString(graphQL));
          }
       }
@@ -387,5 +391,123 @@ public class AICopilotHelper {
 
    private static JsonNode getNodeForRef(JsonNode spec, String reference) {
       return spec.at(reference.substring(1));
+   }
+
+   /**
+    * Some AI will reuse already present examples and x-microcks-operation in the spec. This method cleans a
+    * specification from its examples.
+    */
+   protected static String removeTokensFromSpec(String specification, String operationName) throws Exception {
+      JsonNode specNode;
+      boolean isJson = specification.trim().startsWith("{");
+
+      if (isJson) {
+         specNode = JSON_MAPPER.readTree(specification);
+      } else {
+         specNode = YAML_MAPPER.readTree(specification);
+      }
+
+      // Resolve schemas and Remove examples recursively from the root.
+      resolveReferenceAndRemoveTokensInNode(specNode, specNode);
+
+      // Filter the spec
+      List<String> specTokenNames = getTokenNames(specNode);
+      if (specTokenNames.contains("openapi")) {
+         filterOpenAPISpec(specNode, operationName);
+      }
+      if (specTokenNames.contains("asyncapi")) {
+         filterAsyncAPISpec(specNode, operationName);
+      }
+
+      if (isJson) {
+         return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(specNode);
+      }
+
+      return YAML_MAPPER.writeValueAsString(specNode);
+   }
+
+   protected static void resolveReferenceAndRemoveTokensInNode(JsonNode specNode, JsonNode node) {
+      JsonNode target = followRefIfAny(specNode, node);
+      if (target.getNodeType() == JsonNodeType.OBJECT) {
+         if (node.has("$ref")) {
+            ((ObjectNode) node).setAll((ObjectNode) target);
+            ((ObjectNode) node).remove("$ref");
+         }
+         if (target.has("examples")) {
+            ((ObjectNode) node).remove("examples");
+         }
+         if (target.has("example")) {
+            ((ObjectNode) node).remove("example");
+         }
+         if (target.has("x-microcks-operation")) {
+            ((ObjectNode) node).remove("x-microcks-operation");
+         }
+         Iterator<Map.Entry<String, JsonNode>> fields = target.fields();
+         while (fields.hasNext()) {
+            resolveReferenceAndRemoveTokensInNode(specNode, fields.next().getValue());
+         }
+      }
+      if (target.getNodeType() == JsonNodeType.ARRAY) {
+         Iterator<JsonNode> elements = target.elements();
+         while (elements.hasNext()) {
+            resolveReferenceAndRemoveTokensInNode(specNode, elements.next());
+         }
+      }
+   }
+
+   protected static void filterOpenAPISpec(JsonNode specNode, String operationName) {
+      String[] operationPathName = operationName.split(" ");
+      String verb = operationPathName[0].toLowerCase();
+      String path = operationPathName[1];
+
+      JsonNode pathsSpec = ((ObjectNode) specNode).get("paths");
+      JsonNode pathSpec = ((ObjectNode) pathsSpec).get(path);
+
+      List<String> keysToKeepInRoot = List.of("openapi", "paths", "info");
+      List<String> keysToKeepInPaths = List.of(path);
+      List<String> keysToKeepInPath = List.of(verb);
+
+      removeTokensInNode(specNode, keysToKeepInRoot);
+      removeTokensInNode(pathsSpec, keysToKeepInPaths);
+      removeTokensInNode(pathSpec, keysToKeepInPath);
+      removeSecurityTokenInNode(pathSpec, verb);
+   }
+
+   protected static void filterAsyncAPISpec(JsonNode specNode, String channelName) {
+      String[] operationPathName = channelName.split(" ");
+      String channel = operationPathName[1];
+
+      JsonNode channelsSpec = ((ObjectNode) specNode).get("channels");
+
+      List<String> keysToKeepInRoot = List.of("asyncapi", "channels", "info");
+      List<String> keysToKeepInChannels = List.of(channel);
+
+      removeTokensInNode(specNode, keysToKeepInRoot);
+      removeTokensInNode(channelsSpec, keysToKeepInChannels);
+   }
+
+   protected static void removeSecurityTokenInNode(JsonNode specNode, String tokenName) {
+      JsonNode verbSpec = ((ObjectNode) specNode).get(tokenName);
+      if (verbSpec.has("security")) {
+         ((ObjectNode) verbSpec).remove("security");
+      }
+   }
+
+   protected static List<String> getTokenNames(JsonNode specNode) {
+      List<String> fieldNames = new ArrayList<>();
+      Iterator<String> specNodeFieldNames = specNode.fieldNames();
+      while (specNodeFieldNames.hasNext()) {
+         fieldNames.add(specNodeFieldNames.next());
+      }
+      return fieldNames;
+   }
+
+   protected static void removeTokensInNode(JsonNode specNode, List<String> keysToKeep) {
+      List<String> fieldNames = getTokenNames(specNode);
+      for (String fieldName : fieldNames) {
+         if (!keysToKeep.contains(fieldName)) {
+            ((ObjectNode) specNode).remove(fieldName);
+         }
+      }
    }
 }

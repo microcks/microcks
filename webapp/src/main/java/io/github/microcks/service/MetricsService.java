@@ -45,11 +45,9 @@ import java.util.stream.Collectors;
  * @author laurent
  */
 @org.springframework.stereotype.Service
-@PropertySources({
-      @PropertySource("features.properties"),
+@PropertySources({ @PropertySource("features.properties"),
       @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true),
-      @PropertySource("application.properties")
-})
+      @PropertySource("application.properties") })
 public class MetricsService {
 
    /** A simple logger for diagnostic messages. */
@@ -139,12 +137,10 @@ public class MetricsService {
          if (metric.getLatestScores().size() >= testConformanceTrendSize - 1) {
             // Start sorting the history map in reverse order (last days measure first)
             List<Map.Entry<String, Double>> latestReversedScores = metric.getLatestScores().entrySet().stream()
-                  .sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
-                  .collect(Collectors.toList());
+                  .sorted(Map.Entry.comparingByKey(Comparator.reverseOrder())).collect(Collectors.toList());
 
             // Get history average and last n days average.
-            double globalAvg = latestReversedScores.stream()
-                  .collect(Collectors.averagingDouble(Map.Entry::getValue));
+            double globalAvg = latestReversedScores.stream().collect(Collectors.averagingDouble(Map.Entry::getValue));
 
             double latestAvg = currentScore;
             for (int i = 0; i < testConformanceTrendSize - 1; i++) {
@@ -188,12 +184,10 @@ public class MetricsService {
          List exchanges;
          if (ServiceType.EVENT.equals(service.getType()) || ServiceType.GENERIC_EVENT.equals(service.getType())) {
             // If an event, we should explicitly retrieve event messages.
-            exchanges = messageService.getEventByOperation(
-                  IdBuilder.buildOperationId(service, operation));
+            exchanges = messageService.getEventByOperation(IdBuilder.buildOperationId(service, operation));
          } else {
             // Otherwise we have traditional request / response pairs.
-            exchanges = messageService.getRequestResponseByOperation(
-                  IdBuilder.buildOperationId(service, operation));
+            exchanges = messageService.getRequestResponseByOperation(IdBuilder.buildOperationId(service, operation));
          }
          if (exchanges != null) {
             if (exchanges.size() >= 2) {

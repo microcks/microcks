@@ -36,8 +36,8 @@ public class ParseException extends RuntimeException {
    /**
     * Create a new expression parsing exception.
     * @param expressionString the expression string that could not be parsed
-    * @param position the position in the expression string where the problem occurred
-    * @param message description of the problem that occurred
+    * @param position         the position in the expression string where the problem occurred
+    * @param message          description of the problem that occurred
     */
    public ParseException(String expressionString, int position, String message) {
       super(message);

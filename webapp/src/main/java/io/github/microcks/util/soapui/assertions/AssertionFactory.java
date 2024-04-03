@@ -41,7 +41,7 @@ public class AssertionFactory {
 
    /**
     * Build and configuration a new assertion for the given type.
-    * @param type The type of the assertion (see string constants for available values.)
+    * @param type         The type of the assertion (see string constants for available values.)
     * @param configParams The configuration parameters for this assertion
     * @return A ready-to-use assertion
     */

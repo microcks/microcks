@@ -42,9 +42,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An abstract class that may be used as a base for implementing MockRepositoryImporter that are using
- * JSON/YAML file as a repository. It provides utility methods for handling references and loading of external
- * resources, resolution of JSON pointers and so on...
+ * An abstract class that may be used as a base for implementing MockRepositoryImporter that are using JSON/YAML file as
+ * a repository. It provides utility methods for handling references and loading of external resources, resolution of
+ * JSON pointers and so on...
  * @author laurent
  */
 public abstract class AbstractJsonRepositoryImporter {
@@ -63,10 +63,11 @@ public abstract class AbstractJsonRepositoryImporter {
    /**
     * Build a new importer using the path of specification file and an optional reference resolver.
     * @param specificationFilePath The path to local JSON spec file
-    * @param referenceResolver An optional resolver for references present into the OpenAPI file
+    * @param referenceResolver     An optional resolver for references present into the OpenAPI file
     * @throws IOException if JSON spec file cannot be found or read.
     */
-   protected AbstractJsonRepositoryImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
+   protected AbstractJsonRepositoryImporter(String specificationFilePath, ReferenceResolver referenceResolver)
+         throws IOException {
       this.referenceResolver = referenceResolver;
       BufferedReader reader = null;
       try {
@@ -78,8 +79,8 @@ public abstract class AbstractJsonRepositoryImporter {
             // Check is we start with json object or array definition.
             if (line.startsWith("{") || line.startsWith("[")) {
                isYaml = false;
-            }  else if (line.startsWith("---") || line.startsWith("-")
-                  || line.startsWith("openapi: ") || line.startsWith("asyncapi: ")) {
+            } else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")
+                  || line.startsWith("asyncapi: ")) {
                isYaml = true;
             }
          }
@@ -102,9 +103,8 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /**
-    * Given a service, initialize all external references that may be found via
-    * `$ref` nodes pointing to absolute or relative pointers. This has the side effect
-    * to initialize the `externalResources` member.
+    * Given a service, initialize all external references that may be found via `$ref` nodes pointing to absolute or
+    * relative pointers. This has the side effect to initialize the `externalResources` member.
     * @param service The main service for naming discovered resources.
     */
    protected void initializeReferencedResources(Service service) throws MockRepositoryImportException {
@@ -139,9 +139,12 @@ public abstract class AbstractJsonRepositoryImporter {
       }
    }
 
-   /** Recursive method for browsing resource spec, finding $ref, downloading content and accumulating result in referenceResources. */
-   private void resolveExternalReferences(Service service, Map<String, Resource> referenceResources, String baseRepositoryUrl,
-                                          String baseContext, JsonNode resourceSpecification) {
+   /**
+    * Recursive method for browsing resource spec, finding $ref, downloading content and accumulating result in
+    * referenceResources.
+    */
+   private void resolveExternalReferences(Service service, Map<String, Resource> referenceResources,
+         String baseRepositoryUrl, String baseContext, JsonNode resourceSpecification) {
       Set<String> references = findAllExternalRefs(resourceSpecification);
       Resource currentResource = referenceResources.get(baseRepositoryUrl);
 
@@ -171,7 +174,7 @@ public abstract class AbstractJsonRepositoryImporter {
                referenceResource.setName(resourceName);
                referenceResource.setPath(ref);
                referenceResource.setContent(content);
-               referenceResource.setType(ResourceType.JSON_SCHEMA);
+               referenceResource.setType(guessResourceType(ref, content));
 
                // Keep track of this newly created resource.
                referenceResources.put(refUrl, referenceResource);
@@ -181,7 +184,8 @@ public abstract class AbstractJsonRepositoryImporter {
                // Also update the references bases to track the root url for this ref in order
                ObjectMapper mapper = getObjectMapper(!ref.endsWith(".json"));
                JsonNode refResourceSpecification = mapper.readTree(content);
-               resolveExternalReferences(service, referenceResources, refUrl, referenceContext, refResourceSpecification);
+               resolveExternalReferences(service, referenceResources, refUrl, referenceContext,
+                     refResourceSpecification);
             } catch (IOException ioe) {
                log.error("IOException while trying to resolve reference {}", ref, ioe);
                log.info("Ignoring the reference {} cause it could not be resolved", ref);
@@ -191,13 +195,17 @@ public abstract class AbstractJsonRepositoryImporter {
          if (!ref.startsWith("http") && referenceResource != null) {
             // If a relative resource, replace with new name in resource content.
             String refNewName = referenceResources.get(refUrl).getName();
-            String normalizedContent = currentResource.getContent().replace(ref, URLEncoder.encode(refNewName, StandardCharsets.UTF_8));
+            String normalizedContent = currentResource.getContent().replace(ref,
+                  URLEncoder.encode(refNewName, StandardCharsets.UTF_8));
             currentResource.setContent(normalizedContent);
          }
       }
    }
 
-   /** Build a context for resource name in order to avoid name collisions (resource having same short name in different folders. */
+   /**
+    * Build a context for resource name in order to avoid name collisions (resource having same short name in different
+    * folders.
+    */
    private String buildContext(String baseContext, String referencePath) {
       // Treat the obvious "." case.
       if (".".equals(referencePath)) {
@@ -206,7 +214,7 @@ public abstract class AbstractJsonRepositoryImporter {
       // Else recompose a path to append.
       String pathToAppend = referencePath;
       while (pathToAppend.startsWith("../")) {
-         if (baseContext.contains("/")){
+         if (baseContext.contains("/")) {
             baseContext = baseContext.substring(0, baseContext.lastIndexOf("/"));
          }
          pathToAppend = pathToAppend.substring(3);
@@ -241,7 +249,7 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /** Get appropriate Yaml or Json object mapper. */
-   private ObjectMapper getObjectMapper(boolean isYaml) {
+   protected ObjectMapper getObjectMapper(boolean isYaml) {
       return isYaml ? ObjectMapperFactory.getYamlObjectMapper() : ObjectMapperFactory.getJsonObjectMapper();
    }
 
@@ -291,13 +299,15 @@ public abstract class AbstractJsonRepositoryImporter {
       for (Resource resource : externalResources) {
          // Path direct equality is for absolute ref ("http://raw.githubusercontent.com/...")
          // Path equality with resource name if for relative refs that have been re-normalized ("Service name+Service version+...))
-         if (path.equals(resource.getPath()) || path.equals(URLEncoder.encode(resource.getName(), StandardCharsets.UTF_8))) {
+         if (path.equals(resource.getPath())
+               || path.equals(URLEncoder.encode(resource.getName(), StandardCharsets.UTF_8))) {
             JsonNode resourceNode = externalResourcesContent.computeIfAbsent(resource, k -> {
-                  try {
-                     return ObjectMapperFactory.getYamlObjectMapper().readTree(resource.getContent());
-                  } catch (JsonProcessingException e) {
-                     throw new JsonRepositoryParsingException("Get a JSON processing exception on " + externalReference, e);
-                  }
+               try {
+                  return ObjectMapperFactory.getYamlObjectMapper().readTree(resource.getContent());
+               } catch (JsonProcessingException e) {
+                  throw new JsonRepositoryParsingException("Get a JSON processing exception on " + externalReference,
+                        e);
+               }
             });
             if (pointerInFile != null) {
                return resourceNode.at(pointerInFile.substring(1));
@@ -309,11 +319,25 @@ public abstract class AbstractJsonRepositoryImporter {
       return null;
    }
 
+   /** Try to guess resource type from a reference name and its content. */
+   private ResourceType guessResourceType(String ref, String content) {
+      if (ref.endsWith(".avsc")) {
+         return ResourceType.AVRO_SCHEMA;
+      } else if (ref.endsWith(".proto")) {
+         return ResourceType.PROTOBUF_SCHEMA;
+      } else if (content.contains("$schema") || content.contains("properties:")
+            || content.contains("\"properties\":")) {
+         return ResourceType.JSON_SCHEMA;
+      }
+      return ResourceType.JSON_FRAGMENT;
+   }
+
    /** Custom runtime exception for Json repository parsing errors. */
    public class JsonRepositoryParsingException extends RuntimeException {
       public JsonRepositoryParsingException(String message) {
          super(message);
       }
+
       public JsonRepositoryParsingException(String message, Throwable cause) {
          super(message, cause);
       }

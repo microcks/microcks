@@ -16,6 +16,7 @@
 package io.github.microcks.domain;
 
 import java.io.Serializable;
+
 /**
  * Represents a volatile OAuth2 client context usually associated with a Test request.
  * @author laurent

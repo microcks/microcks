@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
+
 /**
  * Data Transfer object for grouping base information to launch a test (and thus create a TestResult).
  * @author laurent

@@ -42,8 +42,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on an RabbitMQ 3.x Server.
- * Endpoint URL should be specified using the following form: <code>amqp://{brokerhost[:port]}[/{virtualHost}]/{type}/{destination}[?option1=value1&amp;option2=value2]</code>
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on an RabbitMQ 3.x Server. Endpoint
+ * URL should be specified using the following form:
+ * <code>amqp://{brokerhost[:port]}[/{virtualHost}]/{type}/{destination}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
@@ -156,25 +157,21 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
          }
       }
 
-      String consumerTag = channel.basicConsume(queueName, false,
-            new DefaultConsumer(channel) {
-               @Override
-               public void handleDelivery(String consumerTag,
-                                          Envelope envelope,
-                                          AMQP.BasicProperties properties,
-                                          byte[] body)
-                     throws IOException {
-                  logger.info("Received a new AMQP Message: " + new String(body));
-                  // Build a ConsumedMessage from AMQP message.
-                  ConsumedMessage message = new ConsumedMessage();
-                  message.setReceivedAt(System.currentTimeMillis());
-                  message.setHeaders(buildHeaders(properties.getHeaders()));
-                  message.setPayload(body);
-                  messages.add(message);
+      String consumerTag = channel.basicConsume(queueName, false, new DefaultConsumer(channel) {
+         @Override
+         public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
+               throws IOException {
+            logger.info("Received a new AMQP Message: " + new String(body));
+            // Build a ConsumedMessage from AMQP message.
+            ConsumedMessage message = new ConsumedMessage();
+            message.setReceivedAt(System.currentTimeMillis());
+            message.setHeaders(buildHeaders(properties.getHeaders()));
+            message.setPayload(body);
+            messages.add(message);
 
-                  channel.basicAck(envelope.getDeliveryTag(), false);
-               }
-            });
+            channel.basicAck(envelope.getDeliveryTag(), false);
+         }
+      });
 
       Thread.sleep(specification.getTimeoutMS());
 
@@ -185,8 +182,8 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
    }
 
    /**
-    * Close the resources used by this task. Namely the AMQP connection and
-    * the optionally created truststore holding server client SSL credentials.
+    * Close the resources used by this task. Namely the AMQP connection and the optionally created truststore holding
+    * server client SSL credentials.
     * @throws IOException should not happen.
     */
    @Override
@@ -232,8 +229,7 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
       }
 
       if (specification.getSecret() != null) {
-         if (specification.getSecret().getUsername() != null
-               && specification.getSecret().getPassword() != null) {
+         if (specification.getSecret().getUsername() != null && specification.getSecret().getPassword() != null) {
             logger.debug("Adding username/password authentication from secret " + specification.getSecret().getName());
             factory.setUsername(specification.getSecret().getUsername());
             factory.setPassword(specification.getSecret().getPassword());

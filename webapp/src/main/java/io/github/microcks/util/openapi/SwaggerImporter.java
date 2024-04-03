@@ -28,8 +28,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * An implementation of MockRepositoryImporter that deals with Swagger v2.x.x specification
- * file ; whether encoding into JSON or YAML documents.
+ * An implementation of MockRepositoryImporter that deals with Swagger v2.x.x specification file ; whether encoding into
+ * JSON or YAML documents.
  * @author laurent
  */
 public class SwaggerImporter extends OpenAPIImporter {
@@ -37,7 +37,7 @@ public class SwaggerImporter extends OpenAPIImporter {
    /**
     * Build a new importer.
     * @param specificationFilePath The path to local OpenAPI spec file
-    * @param referenceResolver An optional resolver for references present into the OpenAPI file
+    * @param referenceResolver     An optional resolver for references present into the OpenAPI file
     * @throws IOException if project file cannot be found or read.
     */
    public SwaggerImporter(String specificationFilePath, ReferenceResolver referenceResolver) throws IOException {
@@ -54,7 +54,8 @@ public class SwaggerImporter extends OpenAPIImporter {
    }
 
    @Override
-   public List<Exchange> getMessageDefinitions(Service service, Operation operation) throws MockRepositoryImportException {
+   public List<Exchange> getMessageDefinitions(Service service, Operation operation)
+         throws MockRepositoryImportException {
       return Collections.emptyList();
    }
 }

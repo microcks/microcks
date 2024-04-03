@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+
 /**
  * This is a test case for VariableReferenceExpression class.
  * @author laurent
@@ -39,13 +40,9 @@ public class VariableReferenceExpressionTest {
 
    @Test
    public void testJSONPointerValue() {
-      String jsonString = "{\n" +
-            "    \"library\": \"My Personal Library\",\n" +
-            "    \"books\": [\n" +
-            "        { \"title\":\"Title 1\", \"author\":\"Jane Doe\" },\n" +
-            "        { \"title\":\"Title 2\", \"author\":\"John Doe\" }\n" +
-            "    ]\n" +
-            "}";
+      String jsonString = "{\n" + "    \"library\": \"My Personal Library\",\n" + "    \"books\": [\n"
+            + "        { \"title\":\"Title 1\", \"author\":\"Jane Doe\" },\n"
+            + "        { \"title\":\"Title 2\", \"author\":\"John Doe\" }\n" + "    ]\n" + "}";
       EvaluableRequest request = new EvaluableRequest(jsonString, null);
 
       // Create new expression evaluating JSON Pointer path.
@@ -72,13 +69,9 @@ public class VariableReferenceExpressionTest {
 
    @Test
    public void testXPathValue() {
-      String xmlString = "<library>\n" +
-            "  <name>My Personal Library</name>\n" +
-            "  <books>\n" +
-            "    <book><title>Title 1</title><author>Jane Doe</author></book>\n" +
-            "    <book><title>Title 2</title><author>John Doe</author></book>\n" +
-            "  </books>\n" +
-            "</library>";
+      String xmlString = "<library>\n" + "  <name>My Personal Library</name>\n" + "  <books>\n"
+            + "    <book><title>Title 1</title><author>Jane Doe</author></book>\n"
+            + "    <book><title>Title 2</title><author>John Doe</author></book>\n" + "  </books>\n" + "</library>";
       EvaluableRequest request = new EvaluableRequest(xmlString, null);
 
       // Create new expression evaluating XML XPath.
@@ -89,13 +82,11 @@ public class VariableReferenceExpressionTest {
 
    @Test
    public void testXPathWithNamespaceValue() {
-      String xmlString = "<ns:library xmlns:ns=\"https://microcks.io\">\n" +
-            "  <ns:name>My Personal Library</ns:name>\n" +
-            "  <ns:books>\n" +
-            "    <ns:book><ns:title>Title 1</ns:title><ns:author>Jane Doe</ns:author></ns:book>\n" +
-            "    <ns:book><ns:title>Title 2</ns:title><ns:author>John Doe</ns:author></ns:book>\n" +
-            "  </ns:books>\n" +
-            "</ns:library>";
+      String xmlString = "<ns:library xmlns:ns=\"https://microcks.io\">\n"
+            + "  <ns:name>My Personal Library</ns:name>\n" + "  <ns:books>\n"
+            + "    <ns:book><ns:title>Title 1</ns:title><ns:author>Jane Doe</ns:author></ns:book>\n"
+            + "    <ns:book><ns:title>Title 2</ns:title><ns:author>John Doe</ns:author></ns:book>\n" + "  </ns:books>\n"
+            + "</ns:library>";
       EvaluableRequest request = new EvaluableRequest(xmlString, null);
 
       // Create new expression evaluating XML XPath.
@@ -106,7 +97,7 @@ public class VariableReferenceExpressionTest {
 
    @Test
    public void testArrayValues() {
-      EvaluableRequest request = new EvaluableRequest(null, new String[]{"one", "two"});
+      EvaluableRequest request = new EvaluableRequest(null, new String[] { "one", "two" });
 
       // Create new expression evaluating array value.
       VariableReferenceExpression exp = new VariableReferenceExpression(request, "path[0]");

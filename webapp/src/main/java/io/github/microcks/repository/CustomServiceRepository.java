@@ -43,6 +43,7 @@ public interface CustomServiceRepository {
       public String getType() {
          return type;
       }
+
       public void setType(String type) {
          this.type = type;
       }
@@ -50,6 +51,7 @@ public interface CustomServiceRepository {
       public int getNumber() {
          return number;
       }
+
       public void setNumber(int number) {
          this.number = number;
       }
@@ -59,10 +61,20 @@ public interface CustomServiceRepository {
       String key;
       String[] values;
 
-      public String getKey() { return key; }
-      public void setKey(String key) { this.key = key; }
+      public String getKey() {
+         return key;
+      }
 
-      public String[] getValues() { return values; }
-      public void setValues(String[] values) { this.values = values; }
+      public void setKey(String key) {
+         this.key = key;
+      }
+
+      public String[] getValues() {
+         return values;
+      }
+
+      public void setValues(String[] values) {
+         this.values = values;
+      }
    }
 }

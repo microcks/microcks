@@ -33,15 +33,14 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * This is an implementation of {@code ServiceChangeEventChannel} that uses a WebSocket endpoint as
- * a destination recipient for {@code ServiceViewChangeEvent}.
+ * This is an implementation of {@code ServiceChangeEventChannel} that uses a WebSocket endpoint as a destination
+ * recipient for {@code ServiceViewChangeEvent}.
  * @author laurent
  */
 @Component
 @Primary
 @Profile("uber")
-public class WebSocketServiceChangeEventChannel extends TextWebSocketHandler
-      implements ServiceChangeEventChannel {
+public class WebSocketServiceChangeEventChannel extends TextWebSocketHandler implements ServiceChangeEventChannel {
 
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(WebSocketServiceChangeEventChannel.class);

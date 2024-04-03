@@ -15,8 +15,6 @@
  */
 package io.github.microcks.minion.async.producer;
 
-import org.jboss.logging.Logger;
-
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.websocket.Session;
 import java.util.ArrayList;
@@ -26,16 +24,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @ApplicationScoped
 /**
- * Simple registry for holding WebSocket sessions based on the requested channel path.
- * This registry is intended to be shared by the different WebSocket endpoints that allows
- * client registration. Root producer will then use the registry to select target sessions
- * when a mock get published on a channel path.
+ * Simple registry for holding WebSocket sessions based on the requested channel path. This registry is intended to be
+ * shared by the different WebSocket endpoints that allows client registration. Root producer will then use the registry
+ * to select target sessions when a mock get published on a channel path.
  * @author laurent
  */
 public class WebSocketSessionRegistry {
-
-   /** Get a JBoss logging logger. */
-   private final Logger logger = Logger.getLogger(getClass());
 
    private Map<String, List<Session>> sessions = new ConcurrentHashMap<>();
 

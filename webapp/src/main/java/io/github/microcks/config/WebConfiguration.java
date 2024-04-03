@@ -16,7 +16,7 @@
 package io.github.microcks.config;
 
 import io.github.microcks.web.filter.CorsFilter;
-import io.github.microcks.web.filter.DynamicOriginCorsFilter;
+import io.github.microcks.web.filter.DynamicCorsFilter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -71,8 +71,9 @@ public class WebConfiguration implements ServletContextInitializer {
       corsFilter.addMappingForUrlPatterns(disps, true, "/dynarest/*");
       corsFilter.setAsyncSupported(true);
       if (Boolean.TRUE.equals(enableCorsPolicy)) {
-         FilterRegistration.Dynamic dynamicOriginCorsFilter = servletContext.addFilter("dynamicOriginCorsFilter", new DynamicOriginCorsFilter(corsAllowedOrigins, corsAllowCredentials));
-         dynamicOriginCorsFilter.addMappingForUrlPatterns(disps, true, "/rest/*");
+         FilterRegistration.Dynamic dynamicCorsFilter = servletContext.addFilter("dynamicCorsFilter",
+               new DynamicCorsFilter(corsAllowedOrigins, corsAllowCredentials));
+         dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/rest/*");
       }
    }
 }

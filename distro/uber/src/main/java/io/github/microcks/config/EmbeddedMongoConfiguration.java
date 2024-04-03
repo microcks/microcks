@@ -31,8 +31,8 @@ import java.net.InetSocketAddress;
 import java.util.Optional;
 
 /**
- * A configuration for starting an embedded MongoDB server, thanks to mongo-java-server.
- * Only activated when using the "uber" Spring profile.
+ * A configuration for starting an embedded MongoDB server, thanks to mongo-java-server. Only activated when using the
+ * "uber" Spring profile.
  * @author laurent
  */
 @Configuration

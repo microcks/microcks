@@ -37,7 +37,8 @@ public class MetadataImporterTest {
    public void testAPIMetadataImport() {
       MetadataImporter importer = null;
       try {
-         importer = new MetadataImporter("target/test-classes/io/github/microcks/util/metadata/hello-grpc-v1-metadata.yml");
+         importer = new MetadataImporter(
+               "target/test-classes/io/github/microcks/util/metadata/hello-grpc-v1-metadata.yml");
       } catch (IOException ioe) {
          ioe.printStackTrace();
          fail("Exception should not be thrown");

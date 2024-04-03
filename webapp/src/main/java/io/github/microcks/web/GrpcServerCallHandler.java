@@ -41,7 +41,6 @@ import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -62,21 +61,28 @@ public class GrpcServerCallHandler {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(GrpcServerCallHandler.class);
 
-   @Autowired
-   private ServiceRepository serviceRepository;
-
-   @Autowired
-   private ResourceRepository resourceRepository;
-
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private ApplicationContext applicationContext;
+   private final ServiceRepository serviceRepository;
+   private final ResourceRepository resourceRepository;
+   private final ResponseRepository responseRepository;
+   private final ApplicationContext applicationContext;
 
    @Value("${mocks.enable-invocation-stats}")
-   private final Boolean enableInvocationStats = null;
+   private Boolean enableInvocationStats = null;
 
+   /**
+    * Build a new GrpcServerCallHandler with all the repositories it needs and application context.
+    * @param serviceRepository  Repository for getting service definitions
+    * @param resourceRepository Repository for getting service resources definitions
+    * @param responseRepository Repository for getting mock responses definitions
+    * @param applicationContext The Spring current application context
+    */
+   public GrpcServerCallHandler(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
+         ResponseRepository responseRepository, ApplicationContext applicationContext) {
+      this.serviceRepository = serviceRepository;
+      this.resourceRepository = resourceRepository;
+      this.responseRepository = responseRepository;
+      this.applicationContext = applicationContext;
+   }
 
    /**
     * Create an ServerCallHandler that uses Microcks mocks for unary calls.
@@ -88,9 +94,8 @@ public class GrpcServerCallHandler {
    }
 
    /**
-    * This internal class is handling UnaryMethod calls.
-    * It takes care of building a JSON representation from input, apply a dispatcher to
-    * find correct response and serialize response JSON content into binary back.
+    * This internal class is handling UnaryMethod calls. It takes care of building a JSON representation from input,
+    * apply a dispatcher to find correct response and serialize response JSON content into binary back.
     */
    protected class MockedUnaryMethod implements ServerCalls.UnaryMethod<byte[], byte[]> {
 
@@ -107,7 +112,7 @@ public class GrpcServerCallHandler {
          this.fullMethodName = fullMethodName;
          // Retrieve operation name, service name and version from fullMethodName.
          operationName = fullMethodName.substring(fullMethodName.indexOf("/") + 1);
-         serviceName = fullMethodName.substring(fullMethodName.lastIndexOf(".") + 1, fullMethodName.indexOf("/"));
+         serviceName = fullMethodName.substring(0, fullMethodName.indexOf("/"));
          String packageName = fullMethodName.substring(0, fullMethodName.lastIndexOf("."));
          String[] parts = packageName.split("\\.");
          serviceVersion = (parts.length > 2 ? parts[parts.length - 1] : packageName);
@@ -115,8 +120,8 @@ public class GrpcServerCallHandler {
 
       @Override
       public void invoke(byte[] bytes, StreamObserver<byte[]> streamObserver) {
-         log.info("Servicing mock response for service [{}, {}] and method {}",
-               serviceName, serviceVersion, operationName);
+         log.info("Servicing mock response for service [{}, {}] and method {}", serviceName, serviceVersion,
+               operationName);
 
          DynamicMessage outMsg = null;
          long startTime = System.currentTimeMillis();
@@ -127,7 +132,8 @@ public class GrpcServerCallHandler {
             if (service == null) {
                // No service found.
                log.debug("No GRPC Service def found for [{}, {}]", serviceName, serviceVersion);
-               streamObserver.onError(Status.UNIMPLEMENTED.withDescription("No GRPC Service def found for " + fullMethodName).asException());
+               streamObserver.onError(Status.UNIMPLEMENTED
+                     .withDescription("No GRPC Service def found for " + fullMethodName).asException());
                return;
             }
             Operation grpcOperation = null;
@@ -139,7 +145,8 @@ public class GrpcServerCallHandler {
             }
 
             if (grpcOperation != null) {
-               log.debug("Found a valid operation {} with rules: {}", grpcOperation.getName(), grpcOperation.getDispatcherRules());
+               log.debug("Found a valid operation {} with rules: {}", grpcOperation.getName(),
+                     grpcOperation.getDispatcherRules());
 
                // We must find dispatcher and its rules. Default to operation ones but
                // if we have a Fallback this is the one who is holding the first pass rules.
@@ -153,15 +160,18 @@ public class GrpcServerCallHandler {
 
                // In order to inspect incoming byte array, we need the Protobuf binary descriptor that should
                // have been processed while importing the .proto schema for the service.
-               List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.PROTOBUF_DESCRIPTOR);
+               List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
+                     ResourceType.PROTOBUF_DESCRIPTOR);
                if (resources == null || resources.size() != 1) {
                   log.error("Did not found any pre-processed Protobuf binary descriptor...");
-                  streamObserver.onError(Status.FAILED_PRECONDITION.withDescription("No pre-processed Protobuf binary descriptor found").asException());
+                  streamObserver.onError(Status.FAILED_PRECONDITION
+                        .withDescription("No pre-processed Protobuf binary descriptor found").asException());
                   return;
                }
                Resource pbResource = resources.get(0);
 
-               Descriptors.MethodDescriptor md = GrpcUtil.findMethodDescriptor(pbResource.getContent(), serviceName, operationName);
+               Descriptors.MethodDescriptor md = GrpcUtil.findMethodDescriptor(pbResource.getContent(), serviceName,
+                     operationName);
 
                // Now parse the incoming message.
                DynamicMessage inMsg = DynamicMessage.parseFrom(md.getInputType(), bytes);
@@ -173,10 +183,12 @@ public class GrpcServerCallHandler {
                log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
                // For now - regarding the available dispatchers - we only dealing with response names.
-               List<Response> responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), dispatchContext.dispatchCriteria());
+               List<Response> responses = responseRepository.findByOperationIdAndName(
+                     IdBuilder.buildOperationId(service, grpcOperation), dispatchContext.dispatchCriteria());
                if (responses.isEmpty() && fallback != null) {
                   // If we've found nothing and got a fallback, that's the moment!
-                  responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation), fallback.getFallback());
+                  responses = responseRepository.findByOperationIdAndName(
+                        IdBuilder.buildOperationId(service, grpcOperation), fallback.getFallback());
                }
 
                if (responses.isEmpty()) {
@@ -192,7 +204,8 @@ public class GrpcServerCallHandler {
                   DynamicMessage.Builder outBuilder = DynamicMessage.newBuilder(md.getOutputType());
 
                   // Render response content before.
-                  String responseContent = MockControllerCommons.renderResponseContent(jsonBody, dispatchContext.requestContext(), response);
+                  String responseContent = MockControllerCommons.renderResponseContent(jsonBody,
+                        dispatchContext.requestContext(), response);
 
                   JsonFormat.parser().merge(responseContent, outBuilder);
                   outMsg = outBuilder.build();
@@ -204,7 +217,8 @@ public class GrpcServerCallHandler {
 
                   // Publish an invocation event before returning if enabled.
                   if (enableInvocationStats) {
-                     MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+                     MockControllerCommons.publishMockInvocation(applicationContext, this, service, response,
+                           startTime);
                   }
 
                   // Send the output message and complete the stream.
@@ -213,16 +227,20 @@ public class GrpcServerCallHandler {
                } else {
                   // No response found.
                   log.info("No appropriate response found for this input {}, returning an error", jsonBody);
-                  streamObserver.onError(Status.NOT_FOUND.withDescription("No response found for the GRPC input request").asException());
+                  streamObserver.onError(
+                        Status.NOT_FOUND.withDescription("No response found for the GRPC input request").asException());
                }
             } else {
                // No operation found.
                log.debug("No valid operation found for [{}, {}] and {}", serviceName, serviceVersion, operationName);
-               streamObserver.onError(Status.UNIMPLEMENTED.withDescription("No valid operation found for " + fullMethodName).asException());
+               streamObserver.onError(Status.UNIMPLEMENTED
+                     .withDescription("No valid operation found for " + fullMethodName).asException());
             }
          } catch (Throwable t) {
             log.error("Unexpected throwable during GRPC input request processing", t);
-            streamObserver.onError(Status.UNKNOWN.withDescription("Unexpected throwable during GRPC input request processing").withCause(t).asException());
+            streamObserver
+                  .onError(Status.UNKNOWN.withDescription("Unexpected throwable during GRPC input request processing")
+                        .withCause(t).asException());
             t.printStackTrace();
          }
       }
@@ -237,10 +255,12 @@ public class GrpcServerCallHandler {
             switch (dispatcher) {
                case DispatchStyles.JSON_BODY:
                   try {
-                     JsonEvaluationSpecification specification = JsonEvaluationSpecification.buildFromJsonString(dispatcherRules);
+                     JsonEvaluationSpecification specification = JsonEvaluationSpecification
+                           .buildFromJsonString(dispatcherRules);
                      dispatchCriteria = JsonExpressionEvaluator.evaluate(jsonBody, specification);
                   } catch (JsonMappingException jme) {
-                     log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
+                     log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification",
+                           jme);
                   }
                   break;
                case DispatchStyles.SCRIPT:

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 import java.util.Map;
+
 /**
  * Aggregate bean for grouping a Service and its messages pairs.
  * @author laurent
@@ -30,7 +31,8 @@ public class ServiceView {
    private Map<String, List<? extends Exchange>> messagesMap;
 
    @JsonCreator
-   public ServiceView(@JsonProperty("service") Service service, @JsonProperty("messagesMap") Map<String, List<? extends Exchange>> messagesMap) {
+   public ServiceView(@JsonProperty("service") Service service,
+         @JsonProperty("messagesMap") Map<String, List<? extends Exchange>> messagesMap) {
       this.service = service;
       this.messagesMap = messagesMap;
    }

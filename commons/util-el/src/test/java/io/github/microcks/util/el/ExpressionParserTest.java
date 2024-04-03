@@ -47,8 +47,8 @@ public class ExpressionParserTest {
       assertTrue(expressions[2] instanceof LiteralExpression);
       assertTrue(expressions[3] instanceof FunctionExpression);
 
-      assertEquals("Hello ", ((LiteralExpression)expressions[0]).getValue(context));
-      assertEquals(" it's ", ((LiteralExpression)expressions[2]).getValue(context));
+      assertEquals("Hello ", ((LiteralExpression) expressions[0]).getValue(context));
+      assertEquals(" it's ", ((LiteralExpression) expressions[2]).getValue(context));
    }
 
    @Test
@@ -80,7 +80,8 @@ public class ExpressionParserTest {
       // Build a suitable context.
       EvaluationContext context = new EvaluationContext();
       context.registerFunction("now", NowELFunction.class);
-      context.setVariable("request", new EvaluableRequest("<ns:request xmlns:ns=\"http://example.com/ns\"><ns:name>Laurent</ns:name></ns:request>", null));
+      context.setVariable("request", new EvaluableRequest(
+            "<ns:request xmlns:ns=\"http://example.com/ns\"><ns:name>Laurent</ns:name></ns:request>", null));
 
       Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
 
@@ -90,7 +91,7 @@ public class ExpressionParserTest {
       assertTrue(expressions[2] instanceof LiteralExpression);
       assertTrue(expressions[3] instanceof FunctionExpression);
 
-      assertEquals("Laurent", ((VariableReferenceExpression)expressions[1]).getValue(context));
+      assertEquals("Laurent", ((VariableReferenceExpression) expressions[1]).getValue(context));
    }
 
    @Test
@@ -110,6 +111,6 @@ public class ExpressionParserTest {
       assertTrue(expressions[2] instanceof LiteralExpression);
       assertTrue(expressions[3] instanceof FunctionExpression);
 
-      assertEquals("Laurent", ((VariableReferenceExpression)expressions[1]).getValue(context));
+      assertEquals("Laurent", ((VariableReferenceExpression) expressions[1]).getValue(context));
    }
 }

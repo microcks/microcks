@@ -45,7 +45,8 @@ import java.util.regex.Pattern;
 
 /**
  * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Amazon Simple Queue Service (SQS).
- * Endpoint URL should be specified using the following form: <code>sqs://{region}/{queue}[?option1=value1&amp;option2=value2]</code>
+ * Endpoint URL should be specified using the following form:
+ * <code>sqs://{region}/{queue}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
 public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
@@ -107,10 +108,8 @@ public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
       long timeoutTime = startTime + specification.getTimeoutMS();
       while (System.currentTimeMillis() - startTime < specification.getTimeoutMS()) {
          // Start polling/receiving messages with a max wait time and a max number.
-         ReceiveMessageRequest messageRequest = ReceiveMessageRequest.builder()
-               .queueUrl(queueUrl)
-               .maxNumberOfMessages(10)
-               .waitTimeSeconds((int) (timeoutTime - System.currentTimeMillis()) / 1000)
+         ReceiveMessageRequest messageRequest = ReceiveMessageRequest.builder().queueUrl(queueUrl)
+               .maxNumberOfMessages(10).waitTimeSeconds((int) (timeoutTime - System.currentTimeMillis()) / 1000)
                .build();
 
          List<Message> receivedMessages = client.receiveMessage(messageRequest).messages();
@@ -155,17 +154,13 @@ public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
             && specification.getSecret().getPassword() != null) {
          String accessKeyId = specification.getSecret().getUsername();
          String secretKeyId = specification.getSecret().getPassword();
-         credentialsProvider = StaticCredentialsProvider.create(
-               AwsBasicCredentials.create(accessKeyId, secretKeyId)
-         );
+         credentialsProvider = StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKeyId, secretKeyId));
       } else {
          credentialsProvider = DefaultCredentialsProvider.create();
       }
 
       // Build the SQS client with provided region and credentials.
-      SqsClientBuilder builder = SqsClient.builder()
-            .region(Region.of(region))
-            .credentialsProvider(credentialsProvider);
+      SqsClientBuilder builder = SqsClient.builder().region(Region.of(region)).credentialsProvider(credentialsProvider);
 
       if (hasOption(OVERRIDE_URL_OPTION)) {
          String endpointOverride = optionsMap.get(OVERRIDE_URL_OPTION);
@@ -194,8 +189,7 @@ public class AmazonSQSMessageConsumptionTask implements MessageConsumptionTask {
     * @return The queue URL or null if not found.
     */
    private String retrieveQueueURL() {
-      ListQueuesRequest listRequest = ListQueuesRequest.builder()
-            .queueNamePrefix(queue).maxResults(1).build();
+      ListQueuesRequest listRequest = ListQueuesRequest.builder().queueNamePrefix(queue).maxResults(1).build();
       ListQueuesResponse listResponse = client.listQueues(listRequest);
 
       if (listResponse.hasQueueUrls()) {

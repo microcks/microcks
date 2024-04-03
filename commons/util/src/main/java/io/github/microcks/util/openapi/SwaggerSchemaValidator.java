@@ -24,8 +24,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Helper class for validating Json objects against their Swagger schema. Supported version
- * of Swagger schema is https://swagger.io/specification/v2/.
+ * Helper class for validating Json objects against their Swagger schema. Supported version of Swagger schema is
+ * https://swagger.io/specification/v2/.
  * @author laurent
  */
 public class SwaggerSchemaValidator {
@@ -33,41 +33,48 @@ public class SwaggerSchemaValidator {
    /** A commons logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(SwaggerSchemaValidator.class);
 
+
+   /** Private constructor to hide the implicit one. */
+   private SwaggerSchemaValidator() {
+   }
+
    /**
-    * Validate a Json object representing a Swagger message (response or request) against a node representing
-    * a full OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer
-    * for <code>messagePathPointer</code> within specification. Validation is a deep one: its pursue checking children
-    * nodes on a failed parent. Validation is respectful of Swagger schema spec semantics regarding additional or unknown
+    * Validate a Json object representing a Swagger message (response or request) against a node representing a full
+    * OpenAPI specification (and not just a schema node). Specify the message by providing a valid JSON pointer for
+    * <code>messagePathPointer</code> within specification. Validation is a deep one: its pursue checking children nodes
+    * on a failed parent. Validation is respectful of Swagger schema spec semantics regarding additional or unknown
     * attributes: schema must explicitly set <code>additionalProperties</code> to false if you want to consider unknown
     * attributes as validation errors. It returns a list of validation error messages.
-    * @param specificationNode The Swagger full specification as a Jackson node
-    * @param jsonNode The Json object representing actual message as a Jackson node
+    * @param specificationNode  The Swagger full specification as a Jackson node
+    * @param jsonNode           The Json object representing actual message as a Jackson node
     * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
     * @return The list of validation failures. If empty, json object is valid !
     */
-   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode, String messagePathPointer) {
+   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode,
+         String messagePathPointer) {
       return validateJsonMessage(specificationNode, jsonNode, messagePathPointer, null);
    }
 
    /**
-    * Validate a Json object representing a Swagger message (response or request) against a node representing
-    * a full Swagger specification (and not just a schema node). Specify the message by providing a valid JSON pointer
-    * for <code>messagePathPointer</code> within specification. Validation is a deep one: its pursue checking children
-    * nodes on a failed parent. Validation is respectful of Swagger schema spec semantics regarding additional or unknown
+    * Validate a Json object representing a Swagger message (response or request) against a node representing a full
+    * Swagger specification (and not just a schema node). Specify the message by providing a valid JSON pointer for
+    * <code>messagePathPointer</code> within specification. Validation is a deep one: its pursue checking children nodes
+    * on a failed parent. Validation is respectful of Swagger schema spec semantics regarding additional or unknown
     * attributes: schema must explicitly set <code>additionalProperties</code> to false if you want to consider unknown
     * attributes as validation errors. It returns a list of validation error messages.
-    * @param specificationNode The Swagger full specification as a Jackson node
-    * @param jsonNode The Json object representing actual message as a Jackson node
+    * @param specificationNode  The Swagger full specification as a Jackson node
+    * @param jsonNode           The Json object representing actual message as a Jackson node
     * @param messagePathPointer A JSON Pointer for accessing expected message definition within spec
-    * @param namespace Namespace definition to resolve relative dependencies in Swagger schema
+    * @param namespace          Namespace definition to resolve relative dependencies in Swagger schema
     * @return The list of validation failures. If empty, json object is valid !
     */
-   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode, String messagePathPointer, String namespace) {
+   public static List<String> validateJsonMessage(JsonNode specificationNode, JsonNode jsonNode,
+         String messagePathPointer, String namespace) {
       // Extract specific content type node for message node.
       JsonNode messageNode = specificationNode.at(messagePathPointer);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
-         return Arrays.asList("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
+         return List.of("messagePathPointer does not represent a valid JSON Pointer in OpenAPI specification");
       }
       // Message node can be just a reference.
       if (messageNode.has("$ref")) {
@@ -76,7 +83,7 @@ public class SwaggerSchemaValidator {
       }
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("Schema node for message cannot be found into Swagger specification");
-         return Arrays.asList("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+         return List.of("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
       }
 
       // Build a schema object with responseNode schema as root and by importing

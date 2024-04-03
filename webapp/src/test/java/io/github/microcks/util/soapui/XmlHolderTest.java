@@ -38,8 +38,8 @@ public class XmlHolderTest {
    @Test
    public void testWithoutNamespace() throws Exception {
       String xpathStr = """
-                  //hel:sayHelloResponse/sayHello
-                  """;
+            //hel:sayHelloResponse/sayHello
+            """;
       XmlHolder holder = new XmlHolder(validSoap);
       assertEquals("Hello Andrew !", holder.get(xpathStr));
    }
@@ -47,9 +47,9 @@ public class XmlHolderTest {
    @Test
    public void testWithNamespaceInXpath() throws Exception {
       String xpathStr = """
-                  declare namespace ser='http://www.example.com/hello';
-                  //ser:sayHelloResponse/sayHello
-                  """;
+            declare namespace ser='http://www.example.com/hello';
+            //ser:sayHelloResponse/sayHello
+            """;
       XmlHolder holder = new XmlHolder(validSoap);
       assertEquals("Hello Andrew !", holder.get(xpathStr));
    }
@@ -57,8 +57,8 @@ public class XmlHolderTest {
    @Test
    public void testWithNamespaceInHolder() throws Exception {
       String xpathStr = """
-                  //ser:sayHelloResponse/sayHello
-                  """;
+            //ser:sayHelloResponse/sayHello
+            """;
       XmlHolder holder = new XmlHolder(validSoap);
       holder.declareNamespace("ser", "http://www.example.com/hello");
       assertEquals("Hello Andrew !", holder.get(xpathStr));

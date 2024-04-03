@@ -33,8 +33,8 @@ import java.io.StringWriter;
 import java.util.stream.Stream;
 
 /**
- * Utility class to retrieve classpath resource and replace content in template resources
- * (like OpenAPI, AsyncAPI spec templates).
+ * Utility class to retrieve classpath resource and replace content in template resources (like OpenAPI, AsyncAPI spec
+ * templates).
  * @author laurent
  */
 public class ResourceUtil {
@@ -62,15 +62,15 @@ public class ResourceUtil {
    /**
     * Given a resource stream holding placeholder patterns (aka {placeholder}), replace the patterns with actual value
     * coming from Service, an API resource name, an API schema and a reference payload.
-    * @param stream The stream to scan for patterns and substitute in.
-    * @param service The Service corresponding to API
-    * @param resource The API resource
-    * @param referenceSchema An optional reference API schema
+    * @param stream           The stream to scan for patterns and substitute in.
+    * @param service          The Service corresponding to API
+    * @param resource         The API resource
+    * @param referenceSchema  An optional reference API schema
     * @param referencePayload An optional reference resource payload
     * @return
     */
    public static String replaceTemplatesInSpecStream(InputStream stream, Service service, String resource,
-                                                     JsonNode referenceSchema, String referencePayload) {
+         JsonNode referenceSchema, String referencePayload) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
       StringWriter writer = new StringWriter();
 
@@ -82,7 +82,8 @@ public class ResourceUtil {
    }
 
    /** Do the replacement within a given stream line. */
-   private static String replaceInLine(String line, Service service, String resource, JsonNode referenceSchema, String referencePayload) {
+   private static String replaceInLine(String line, Service service, String resource, JsonNode referenceSchema,
+         String referencePayload) {
       line = line.replaceAll(SERVICE_PATTERN, service.getName());
       line = line.replaceAll(VERSION_PATTERN, service.getVersion());
       line = line.replaceAll(RESOURCE_PATTERN, resource);
@@ -92,8 +93,7 @@ public class ResourceUtil {
             try {
                ObjectMapper mapper = new ObjectMapper(
                      new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-                           .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                           .disable(YAMLGenerator.Feature.INDENT_ARRAYS));
+                           .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).disable(YAMLGenerator.Feature.INDENT_ARRAYS));
                String schema = mapper.writeValueAsString(referenceSchema);
                log.debug("schema: " + schema);
                line = line.replaceAll(SCHEMA_PATTERN, schema.replaceAll("\\n", "\n      "));

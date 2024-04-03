@@ -44,14 +44,13 @@ import java.io.File;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Base class for Integration tests using Http layers as well as testcontainers for
- * MongoDB persistence.
+ * Base class for Integration tests using Http layers as well as testcontainers for MongoDB persistence.
  * @author laurent
  */
 @SpringBootTest(classes = MicrocksApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("it")
-@TestPropertySource(locations = {"classpath:/config/test.properties"})
+@TestPropertySource(locations = { "classpath:/config/test.properties" })
 public abstract class AbstractBaseIT {
 
    /** A simple logger for diagnostic messages. */
@@ -66,15 +65,13 @@ public abstract class AbstractBaseIT {
    private static final MongoDBContainer mongoDBContainer;
 
    static {
-      mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.4"))
-            .withReuse(true);
+      mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.4")).withReuse(true);
       mongoDBContainer.start();
    }
 
    @DynamicPropertySource
    public static void setDatasourceProperties(final DynamicPropertyRegistry registry) {
-      String url = "mongodb://" + mongoDBContainer.getHost()
-            + ":" + mongoDBContainer.getMappedPort(27017)
+      String url = "mongodb://" + mongoDBContainer.getHost() + ":" + mongoDBContainer.getMappedPort(27017)
             + "/microcksIT";
       registry.add("spring.data.mongodb.uri", () -> url);
    }

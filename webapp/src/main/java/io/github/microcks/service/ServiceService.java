@@ -114,23 +114,26 @@ public class ServiceService {
    private final Long defaultAsyncFrequency = 30l;
 
    /**
-    * Import definitions of services and bounded resources and messages into Microcks
-    * repository. This uses a MockRepositoryImporter underhood.
-    * @param repositoryUrl The String representing mock repository url.
-    * @param repositorySecret The authentication secret associated with the repository url. Can be set to null if none.
+    * Import definitions of services and bounded resources and messages into Microcks repository. This uses a
+    * MockRepositoryImporter underhood.
+    * @param repositoryUrl        The String representing mock repository url.
+    * @param repositorySecret     The authentication secret associated with the repository url. Can be set to null if
+    *                             none.
     * @param disableSSLValidation Whether SSL certificates validation should be turned off.
-    * @param mainArtifact Whether this repository should be considered as main artifact for Services to import.
+    * @param mainArtifact         Whether this repository should be considered as main artifact for Services to import.
     * @return The list of imported Services
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
-   public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret, boolean disableSSLValidation, boolean mainArtifact) throws MockRepositoryImportException {
+   public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret,
+         boolean disableSSLValidation, boolean mainArtifact) throws MockRepositoryImportException {
       log.info("Importing service definitions from {}", repositoryUrl);
       File localFile = null;
       Map<String, List<String>> fileProperties = null;
 
       if (repositoryUrl.startsWith("http")) {
          try {
-            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(repositoryUrl, repositorySecret, disableSSLValidation);
+            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader
+                  .handleHTTPDownloadToFileAndHeaders(repositoryUrl, repositorySecret, disableSSLValidation);
             localFile = fileAndHeaders.getLocalFile();
             fileProperties = fileAndHeaders.getResponseHeaders();
          } catch (IOException ioe) {
@@ -141,27 +144,28 @@ public class ServiceService {
          localFile = new File(repositoryUrl);
       }
 
-      RelativeReferenceURLBuilder referenceURLBuilder = RelativeReferenceURLBuilderFactory.getRelativeReferenceURLBuilder(fileProperties);
+      RelativeReferenceURLBuilder referenceURLBuilder = RelativeReferenceURLBuilderFactory
+            .getRelativeReferenceURLBuilder(fileProperties);
       String artifactName = referenceURLBuilder.getFileName(repositoryUrl, fileProperties);
 
       // Initialize a reference resolver to the folder of this repositoryUrl.
-      ReferenceResolver referenceResolver = new ReferenceResolver(repositoryUrl,
-            repositorySecret, disableSSLValidation, referenceURLBuilder);
-      return importServiceDefinition(localFile, referenceResolver,
-            new ArtifactInfo(artifactName, mainArtifact));
+      ReferenceResolver referenceResolver = new ReferenceResolver(repositoryUrl, repositorySecret, disableSSLValidation,
+            referenceURLBuilder);
+      return importServiceDefinition(localFile, referenceResolver, new ArtifactInfo(artifactName, mainArtifact));
    }
 
 
    /**
-    * Import definitions of services and bounded resources and messages into Microcks
-    * repository. This uses a MockRepositoryImporter under hood.
-    * @param repositoryFile The File for mock repository.
+    * Import definitions of services and bounded resources and messages into Microcks repository. This uses a
+    * MockRepositoryImporter under hood.
+    * @param repositoryFile    The File for mock repository.
     * @param referenceResolver The Resolver to be used during import (may be null).
-    * @param artifactInfo The essential information on Artifact to import.
+    * @param artifactInfo      The essential information on Artifact to import.
     * @return The list of imported Services
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
-   public List<Service> importServiceDefinition(File repositoryFile, ReferenceResolver referenceResolver, ArtifactInfo artifactInfo) throws MockRepositoryImportException {
+   public List<Service> importServiceDefinition(File repositoryFile, ReferenceResolver referenceResolver,
+         ArtifactInfo artifactInfo) throws MockRepositoryImportException {
       // Retrieve the correct importer based on file path.
       MockRepositoryImporter importer = null;
       try {
@@ -174,7 +178,7 @@ public class ServiceService {
       boolean serviceUpdate = false;
 
       List<Service> services = importer.getServiceDefinitions();
-      for (Service service : services){
+      for (Service service : services) {
          Service existingService = serviceRepository.findByNameAndVersion(service.getName(), service.getVersion());
          log.debug("Service [{}, {}] exists ? {}", service.getName(), service.getVersion(), existingService != null);
 
@@ -214,7 +218,8 @@ public class ServiceService {
          } else {
             // It's a secondary artifact just for messages or metadata. We'll have problems if not having an existing service...
             if (existingService == null) {
-               log.warn("Trying to import {} as a secondary artifact but there's no existing [{}, {}] Service. Just skipping.",
+               log.warn(
+                     "Trying to import {} as a secondary artifact but there's no existing [{}, {}] Service. Just skipping.",
                      artifactInfo.getArtifactName(), service.getName(), service.getVersion());
                break;
             }
@@ -227,8 +232,7 @@ public class ServiceService {
             }
             for (Operation operation : service.getOperations()) {
                Operation existingOp = existingService.getOperations().stream()
-                     .filter(op -> op.getName().equals(operation.getName()))
-                     .findFirst().orElse(null);
+                     .filter(op -> op.getName().equals(operation.getName())).findFirst().orElse(null);
                if (existingOp != null) {
                   if (operation.getDefaultDelay() != null) {
                      existingOp.setDefaultDelay(operation.getDefaultDelay());
@@ -251,30 +255,30 @@ public class ServiceService {
          }
 
          // Remove resources previously attached to service.
-         List<Resource> existingResources = resourceRepository.findByServiceIdAndSourceArtifact(
-               reference.getId(), artifactInfo.getArtifactName());
-         if (existingResources != null && !existingResources.isEmpty()){
+         List<Resource> existingResources = resourceRepository.findByServiceIdAndSourceArtifact(reference.getId(),
+               artifactInfo.getArtifactName());
+         if (existingResources != null && !existingResources.isEmpty()) {
             resourceRepository.deleteAll(existingResources);
          }
 
          // Save new resources.
          List<Resource> resources = importer.getResourceDefinitions(service);
-         for (Resource resource : resources){
+         for (Resource resource : resources) {
             resource.setServiceId(reference.getId());
             resource.setSourceArtifact(artifactInfo.getArtifactName());
          }
          resourceRepository.saveAll(resources);
 
-         for (Operation operation : reference.getOperations()){
+         for (Operation operation : reference.getOperations()) {
             String operationId = IdBuilder.buildOperationId(reference, operation);
 
             // Remove messages previously attached to service.
-            requestRepository.deleteAll(requestRepository.findByOperationIdAndSourceArtifact(
-                  operationId, artifactInfo.getArtifactName()));
-            responseRepository.deleteAll(responseRepository.findByOperationIdAndSourceArtifact(
-                  operationId, artifactInfo.getArtifactName()));
-            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationIdAndSourceArtifact(
-                  operationId, artifactInfo.getArtifactName()));
+            requestRepository.deleteAll(
+                  requestRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
+            responseRepository.deleteAll(
+                  responseRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
+            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationIdAndSourceArtifact(operationId,
+                  artifactInfo.getArtifactName()));
 
             List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
 
@@ -313,9 +317,9 @@ public class ServiceService {
 
    /**
     * Create a new Service concerning a GenericResource for dynamic mocking.
-    * @param name The name of the new Service to create
-    * @param version The version of the new Service to create
-    * @param resource The resource that will be exposed as CRUD operations for this service
+    * @param name             The name of the new Service to create
+    * @param version          The version of the new Service to create
+    * @param resource         The resource that will be exposed as CRUD operations for this service
     * @param referencePayload An optional reference payload if provided
     * @return The newly created Service object
     * @throws EntityAlreadyExistsException if a Service with same name and version is already present in store
@@ -328,7 +332,8 @@ public class ServiceService {
       Service existingService = serviceRepository.findByNameAndVersion(name, version);
       if (existingService != null) {
          log.warn("A Service '{}-{}' is already existing. Throwing an Exception", name, version);
-         throw new EntityAlreadyExistsException(String.format("Service '%s-%s' is already present in store", name, version));
+         throw new EntityAlreadyExistsException(
+               String.format("Service '%s-%s' is already present in store", name, version));
       }
       // Create new service with GENERIC_REST type.
       Service service = new Service();
@@ -396,9 +401,9 @@ public class ServiceService {
 
    /**
     * Create a new Service concerning a Generic Event for dynamic mocking.
-    * @param name The name of the new Service to create
-    * @param version The version of the new Service to create
-    * @param event The event that will be exposed through a SUBSCRIBE operation
+    * @param name             The name of the new Service to create
+    * @param version          The version of the new Service to create
+    * @param event            The event that will be exposed through a SUBSCRIBE operation
     * @param referencePayload An optional reference payload if provided
     * @return The newly created Service object
     * @throws EntityAlreadyExistsException if a Service with same name and version is already present in store
@@ -411,7 +416,8 @@ public class ServiceService {
       Service existingService = serviceRepository.findByNameAndVersion(name, version);
       if (existingService != null) {
          log.warn("A Service '{}-{}' is already existing. Throwing an Exception", name, version);
-         throw new EntityAlreadyExistsException(String.format("Service '%s-%s' is already present in store", name, version));
+         throw new EntityAlreadyExistsException(
+               String.format("Service '%s-%s' is already present in store", name, version));
       }
       // Create new service with GENERIC_EVENT type.
       Service service = new Service();
@@ -465,11 +471,11 @@ public class ServiceService {
 
    /**
     * Remove a Service and its bound documents using the service id.
-    * @param id The identifier of service to remove.
+    * @param id       The identifier of service to remove.
     * @param userInfo The current user information to check if authorized to delete
     * @return True if service has been found and updated, false otherwise.
     */
-   public Boolean deleteService(String id, UserInfo userInfo){
+   public Boolean deleteService(String id, UserInfo userInfo) {
       // Get service to remove.
       Service service = serviceRepository.findById(id).orElse(null);
 
@@ -501,16 +507,17 @@ public class ServiceService {
    }
 
    /**
-    * Update the metadata for a Service. Only deals with annotations and labels and
-    * takes care of updated the <b>lastUpdate</b> marker.
-    * @param id The identifier of service to update metadata for
+    * Update the metadata for a Service. Only deals with annotations and labels and takes care of updated the
+    * <b>lastUpdate</b> marker.
+    * @param id       The identifier of service to update metadata for
     * @param metadata The new metadata for this Service
     * @param userInfo The current user information to check if authorized to do the update
     * @return True if service has been found and updated, false otherwise.
     */
    public Boolean updateMetadata(String id, Metadata metadata, UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
-      if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+      if (service != null
+            && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          service.getMetadata().setLabels(metadata.getLabels());
          service.getMetadata().setAnnotations(metadata.getAnnotations());
          service.getMetadata().objectUpdated();
@@ -525,20 +532,22 @@ public class ServiceService {
 
    /**
     * Update the default delay of a Service operation
-    * @param id The identifier of service to update operation for
-    * @param operationName The name of operation to update delay for
-    * @param dispatcher The dispatcher to use for this operation
+    * @param id              The identifier of service to update operation for
+    * @param operationName   The name of operation to update delay for
+    * @param dispatcher      The dispatcher to use for this operation
     * @param dispatcherRules The dispatcher rules to use for this operation
-    * @param delay The new delay value for operation
-    * @param constraints Constraints for this operation parameters
-    * @param userInfo The current user information to check if authorized to do the update
+    * @param delay           The new delay value for operation
+    * @param constraints     Constraints for this operation parameters
+    * @param userInfo        The current user information to check if authorized to do the update
     * @return True if operation has been found and updated, false otherwise.
     */
-   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules, Long delay,
-                                  List<ParameterConstraint> constraints, UserInfo userInfo) {
+   public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules,
+         Long delay, List<ParameterConstraint> constraints, UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? {}",  authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
-      if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+      log.debug("Is user allowed? {}",
+            authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      if (service != null
+            && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
             if (operation.getName().equals(operationName)) {
                operation.setDispatcher(dispatcher);
@@ -559,16 +568,19 @@ public class ServiceService {
 
    /**
     * Add new sample exchanges to an existing service.
-    * @param id The identifier of service to add exchanges for
+    * @param id            The identifier of service to add exchanges for
     * @param operationName The name of operation to add exchanges for
-    * @param exchanges A list of exchanges to add to the corresponding service operation
-    * @param userInfo The current user information to check if authorized to do the update
+    * @param exchanges     A list of exchanges to add to the corresponding service operation
+    * @param userInfo      The current user information to check if authorized to do the update
     * @return True if service operation has been found and updated, false otherwise.
     */
-   public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,  UserInfo userInfo) {
+   public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,
+         UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? {}", authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
-      if (service != null && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+      log.debug("Is user allowed? {}",
+            authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      if (service != null
+            && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
             if (operation.getName().equals(operationName)) {
                String operationId = IdBuilder.buildOperationId(service, operation);

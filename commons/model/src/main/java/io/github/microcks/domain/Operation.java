@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An Operation / action of a micro service. Holds information on messages constitution
- * (inputName, outputName, bindings) and how dispatch request to them.
+ * An Operation / action of a micro service. Holds information on messages constitution (inputName, outputName,
+ * bindings) and how dispatch request to them.
  * @author laurent
  */
 public class Operation {

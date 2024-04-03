@@ -49,26 +49,22 @@ public class GenericResourceController {
    GenericResourceRepository genericResourceRepository;
 
    @RequestMapping(value = "/genericresources/service/{serviceId}", method = RequestMethod.GET)
-   public List<GenericResource> listResources(
-         @PathVariable("serviceId") String serviceId,
+   public List<GenericResource> listResources(@PathVariable("serviceId") String serviceId,
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "10") int size
-   ) {
+         @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
       log.debug("List resources for service '{}'", serviceId);
 
-      List<GenericResource> genericResources = genericResourceRepository.findByServiceId(serviceId, PageRequest.of(page, size));
+      List<GenericResource> genericResources = genericResourceRepository.findByServiceId(serviceId,
+            PageRequest.of(page, size));
       // Transform and collect resources.
       List<GenericResource> resources = genericResources.stream()
-            .map(genericResource -> addIdToPayload(genericResource))
-            .collect(Collectors.toList());
+            .map(genericResource -> addIdToPayload(genericResource)).collect(Collectors.toList());
 
       return resources;
    }
 
    @RequestMapping(value = "/genericresources/service/{serviceId}/count", method = RequestMethod.GET)
-   public Map<String, Long> countResources(
-         @PathVariable("serviceId") String serviceId
-   ) {
+   public Map<String, Long> countResources(@PathVariable("serviceId") String serviceId) {
       log.debug("Counting resources for service '{}'", serviceId);
 
       Map<String, Long> counter = new HashMap<>();

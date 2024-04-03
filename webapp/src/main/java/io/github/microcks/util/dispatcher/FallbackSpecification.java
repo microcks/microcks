@@ -19,10 +19,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Represent the specification of a Fallback evaluation. <code>dispatcher</code> should
- * be the original dispatcher to apply with its <code>dispatcherRules</code> companion.
- * If no response actually found by mock controller, the <code>fallback</code> will be used
- * as the name of response to return in any cases.
+ * Represent the specification of a Fallback evaluation. <code>dispatcher</code> should be the original dispatcher to
+ * apply with its <code>dispatcherRules</code> companion. If no response actually found by mock controller, the
+ * <code>fallback</code> will be used as the name of response to return in any cases.
  * @author laurent
  */
 @JsonPropertyOrder({ "dispatcher", "dispatcherRules", "fallback" })

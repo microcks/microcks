@@ -75,10 +75,7 @@ public class ResourceController {
 
 
    @RequestMapping(value = "/resources/{name}", method = RequestMethod.GET)
-   public ResponseEntity<?> execute(
-         @PathVariable("name") String name,
-         HttpServletRequest request
-   ) {
+   public ResponseEntity<?> execute(@PathVariable("name") String name, HttpServletRequest request) {
       String extension = request.getRequestURI().substring(request.getRequestURI().lastIndexOf('.'));
 
       try {
@@ -89,7 +86,7 @@ public class ResourceController {
       log.info("Requesting resource named " + name);
 
       Resource resource = resourceRepository.findByName(name);
-      if (resource != null){
+      if (resource != null) {
          HttpHeaders headers = new HttpHeaders();
 
          if (".json".equals(extension)) {
@@ -114,11 +111,8 @@ public class ResourceController {
    }
 
    @RequestMapping(value = "/resources/{serviceId}/{resourceType}", method = RequestMethod.GET)
-   public ResponseEntity<byte[]> getServiceResource(
-         @PathVariable("serviceId") String serviceId,
-         @PathVariable("resourceType") String resourceType,
-         HttpServletResponse response
-   ) {
+   public ResponseEntity<byte[]> getServiceResource(@PathVariable("serviceId") String serviceId,
+         @PathVariable("resourceType") String resourceType, HttpServletResponse response) {
       log.info("Requesting {} resource for service {}", resourceType, serviceId);
 
       Service service = serviceRepository.findById(serviceId).orElse(null);
@@ -159,8 +153,7 @@ public class ResourceController {
 
          // Now process the stream, replacing patterns by value.
          if (stream != null) {
-            String result = ResourceUtil.replaceTemplatesInSpecStream(stream, service,
-                  resource, referenceSchema, null);
+            String result = ResourceUtil.replaceTemplatesInSpecStream(stream, service, resource, referenceSchema, null);
 
             return new ResponseEntity<>(result.getBytes(), headers, HttpStatus.OK);
          }

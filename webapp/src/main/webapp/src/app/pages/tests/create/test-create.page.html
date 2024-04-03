@@ -51,7 +51,7 @@
               <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
                 <option *ngFor="let operation of service.operations" [value]="operation.name">{{ operation.name }}</option>
               </select>
-              <p class="help-block">Select the Asynchronous operation you want to test (only SUBSCRIBE is supported at the moment).</p>
+              <p class="help-block">Select the Asynchronous operation you want to test.</p>
             </div>
           </div>
           <div class="control-group">
@@ -136,6 +136,13 @@
                   <div class="controls">
                     <input type="password" id="clientSecret" name="clientSecret" class="form-control" [(ngModel)]="oAuth2ClientContext.clientSecret" (ngModelChange)="checkForm()"/>
                     <p class="help-block">Your OAuth2 client secret.</p>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="control-label" for="scopes">Scopes</label>
+                  <div class="controls">
+                    <input id="scopes" name="scopes" class="form-control" [(ngModel)]="oAuth2ClientContext.scopes" (ngModelChange)="checkForm()"/>
+                    <p class="help-block">Optional OAuth2 scopes (separated using space). <code>openid</code> is always included.</p>
                   </div>
                 </div>
               </div>

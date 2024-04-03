@@ -23,9 +23,8 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 /**
- * Repository for AsyncMockDefinitions. Used as a backend storage for jobs that have to publish event messages
- * at specified frequencies. Has to be initialized at application startup and regularly keep-in-sync with
- * Microcks server.
+ * Repository for AsyncMockDefinitions. Used as a backend storage for jobs that have to publish event messages at
+ * specified frequencies. Has to be initialized at application startup and regularly keep-in-sync with Microcks server.
  * @author laurent
  */
 public class AsyncMockRepository {
@@ -57,8 +56,7 @@ public class AsyncMockRepository {
     */
    public void removeMockDefinitions(String serviceId) {
       Set<AsyncMockDefinition> serviceDefs = mockDefinitions.stream()
-            .filter(d -> d.getOwnerService().getId().equals(serviceId))
-            .collect(Collectors.toSet());
+            .filter(d -> d.getOwnerService().getId().equals(serviceId)).collect(Collectors.toSet());
       mockDefinitions.removeAll(serviceDefs);
    }
 
@@ -67,9 +65,7 @@ public class AsyncMockRepository {
     * @return A set of frequencies for definitions operations
     */
    public Set<Long> getMockDefinitionsFrequencies() {
-      return mockDefinitions.stream()
-            .map(d -> d.getOperation().getDefaultDelay())
-            .collect(Collectors.toSet());
+      return mockDefinitions.stream().map(d -> d.getOperation().getDefaultDelay()).collect(Collectors.toSet());
    }
 
    /**
@@ -78,21 +74,19 @@ public class AsyncMockRepository {
     * @return A set of AsyncMockDefinition having specified operation frequency
     */
    public Set<AsyncMockDefinition> getMockDefinitionsByFrequency(Long frequency) {
-      return mockDefinitions.stream()
-            .filter(d -> d.getOperation().getDefaultDelay().equals(frequency))
+      return mockDefinitions.stream().filter(d -> d.getOperation().getDefaultDelay().equals(frequency))
             .collect(Collectors.toSet());
    }
 
    /**
     * Retrieve the AsyncMockDefinition corresponding to a specified service and version.
     * @param serviceName The service name to get definition for
-    * @param version The service version to get definition for
+    * @param version     The service version to get definition for
     * @return Should return an empty of 1 element set only.
     */
    public Set<AsyncMockDefinition> getMockDefinitionsByServiceAndVersion(String serviceName, String version) {
-      return mockDefinitions.stream()
-            .filter(d -> d.getOwnerService().getName().equals(serviceName)
-                  && d.getOwnerService().getVersion().equals(version))
+      return mockDefinitions.stream().filter(
+            d -> d.getOwnerService().getName().equals(serviceName) && d.getOwnerService().getVersion().equals(version))
             .collect(Collectors.toSet());
    }
 }

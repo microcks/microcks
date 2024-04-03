@@ -46,8 +46,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A minimalist implementation of com.eviware.soapui.support.XmlHolder to ensure a
- * compatibility layer withe SoapUI scripting.
+ * A minimalist implementation of com.eviware.soapui.support.XmlHolder to ensure a compatibility layer withe SoapUI
+ * scripting.
  * @author laurent
  */
 public class XmlHolder implements Map<String, Object> {
@@ -94,8 +94,7 @@ public class XmlHolder implements Map<String, Object> {
       if (attributes != null) {
          for (int i = 0; i < attributes.getLength(); i++) {
             Node attribute = attributes.item(i);
-            if (attribute.getNodeType() == Node.ATTRIBUTE_NODE
-               && attribute.getNamespaceURI() != null) {
+            if (attribute.getNodeType() == Node.ATTRIBUTE_NODE && attribute.getNamespaceURI() != null) {
                namespaces.put(getLocalPart(attribute.getNodeName()), attribute.getNodeValue());
             }
          }
@@ -149,7 +148,7 @@ public class XmlHolder implements Map<String, Object> {
    /**
     * Declare a new namespace to manage.
     * @param prefix Prefix for the namespace
-    * @param uri URI of this namespqce
+    * @param uri    URI of this namespqce
     */
    public void declareNamespace(String prefix, String uri) {
       if (declaredNamespaces == null) {
@@ -180,7 +179,7 @@ public class XmlHolder implements Map<String, Object> {
       XPathExpression expression = compileXPath(xpathExpression);
       NodeList nodeList = (NodeList) expression.evaluate(xmlObject, XPathConstants.NODESET);
       String[] results = new String[nodeList.getLength()];
-      for (int i=0; i<nodeList.getLength(); i++) {
+      for (int i = 0; i < nodeList.getLength(); i++) {
          Node node = nodeList.item(i);
          results[i] = node.getTextContent();
       }
