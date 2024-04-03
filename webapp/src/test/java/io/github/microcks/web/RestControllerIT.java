@@ -23,9 +23,12 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
 import org.springframework.http.ResponseEntity;
 
+import java.util.UUID;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 /**
  * Test case for all the Rest mock controller.
@@ -116,5 +119,18 @@ public class RestControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+   }
+
+   @Test
+   public void testHeadersTemplating() {
+      // Upload modified pastry-with-headers-openapi spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals("some-static-header", response.getHeaders().getFirst("x-some-static-header"));
+
+      String someGenericHeader = response.getHeaders().getFirst("x-some-generic-header");
+      assertDoesNotThrow(() -> UUID.fromString(someGenericHeader));
    }
 }
