@@ -135,7 +135,7 @@ public class RestControllerIT extends AbstractBaseIT {
 
    @Test
    public void testProxyFallback() {
-      // Upload pastry-with-proxy spec
+      // Upload pastry-with-proxy-fallback spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
 
@@ -158,7 +158,7 @@ public class RestControllerIT extends AbstractBaseIT {
 
    @Test
    public void testProxyFallbackWithEqualsOriginAndExternalUrls() {
-      // Upload pastry-with-proxy spec
+      // Upload pastry-with-proxy-fallback spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
 
@@ -178,7 +178,7 @@ public class RestControllerIT extends AbstractBaseIT {
 
    @Test
    public void testProxyFallbackWithHttpError() {
-      // Upload pastry-with-proxy spec
+      // Upload pastry-with-proxy-fallback spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
 
@@ -193,5 +193,27 @@ public class RestControllerIT extends AbstractBaseIT {
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
             String.class);
       assertEquals(404, response.getStatusCode().value());
+   }
+
+   @Test
+   public void testProxy() {
+      // Upload pastry-with-proxy spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+
+      // Set real port to the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
+      serviceRepository.save(service);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
+            String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
    }
 }

@@ -45,6 +45,9 @@ public class DispatchStyles {
    /** Constant for JSON_BODY dispatch style. */
    public static final String JSON_BODY = "JSON_BODY";
 
+   /** Constant for PROXY dispatch style. */
+   public static final String PROXY = "PROXY";
+
    /** Constant for FALLBACK dispatch style. */
    public static final String FALLBACK = "FALLBACK";
 

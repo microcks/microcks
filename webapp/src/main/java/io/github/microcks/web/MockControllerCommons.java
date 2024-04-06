@@ -37,6 +37,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * This class holds commons, utility handlers for different mock controller implements (whether it be Soap, Rest, Async
@@ -87,6 +88,25 @@ public class MockControllerCommons {
          }
       }
       return proxyFallback;
+   }
+
+   /**
+    * Check if proxy behavior is requested and extract proxyUrl.
+    * @param dispatcher      Original dispatcher for Proxy dispatcher checking.
+    * @param dispatcherRules Original dispatcherRules for url extracting.
+    * @param proxyFallback   ProxyFallbackSpecification for Proxy-Fallback dispatcher checking and url extracting.
+    * @param response        The response that was found(or not) by dispatcher
+    * @return The rendered response body payload.
+    */
+   public static Optional<String> getProxyUrlIfProxyIsNeeded(String dispatcher, String dispatcherRules,
+         ProxyFallbackSpecification proxyFallback, Response response) {
+      if (DispatchStyles.PROXY.equals(dispatcher)) {
+         return Optional.of(dispatcherRules);
+      }
+      if (response == null && proxyFallback != null) {
+         return Optional.of(proxyFallback.getProxyUrl());
+      }
+      return Optional.empty();
    }
 
    /**

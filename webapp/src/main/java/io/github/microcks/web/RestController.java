@@ -230,11 +230,13 @@ public class RestController {
             response = getResponseByMediaType(responses, request);
          }
 
-         if (response == null && proxyFallback != null && proxyFallback.getProxyUrl() != null) {
-            // If we've found nothing and got a proxyFallback, that's the moment!
+         Optional<String> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
+               proxyFallback, response);
+         if (proxyUrl.isPresent()) {
+            // If we've got a proxyUrl, that's the moment!
             Optional<URI> externalUrl = proxyService.extractExternalUrl(MockControllerCommons.renderResponseContent(
                   MockControllerCommons.buildEvaluableRequest(body, resourcePath, request),
-                  TemplateEngineFactory.getTemplateEngine(), proxyFallback.getProxyUrl()), request);
+                  TemplateEngineFactory.getTemplateEngine(), proxyUrl.get()), request);
             if (externalUrl.isPresent()) {
                return proxyService.callExternal(externalUrl.get(), method, headers, body);
             }

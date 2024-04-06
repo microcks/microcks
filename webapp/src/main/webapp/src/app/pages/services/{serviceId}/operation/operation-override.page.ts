@@ -53,6 +53,7 @@ export class OperationOverridePageComponent implements OnInit {
       {"value": "URI_ELEMENTS", "label": "URI ELEMENTS"},
       {"value": "SCRIPT", "label": "SCRIPT"},
       {"value": "JSON_BODY", "label": "JSON BODY"},
+      {"value": "PROXY", "label": "PROXY"},
       {"value": "FALLBACK", "label": "FALLBACK"},
       {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
     ],
