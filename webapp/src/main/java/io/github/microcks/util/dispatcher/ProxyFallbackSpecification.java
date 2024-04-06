@@ -19,12 +19,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Represent the specification of a Proxy evaluation. <code>dispatcher</code> should be the original dispatcher to apply
- * with its <code>dispatcherRules</code> companion. If no response actually found by mock controller, the original
- * request will be forwarded to the <code>proxyUrl</code>.
+ * Represent the specification of a Proxy-Fallback evaluation. <code>dispatcher</code> should be the original dispatcher
+ * to apply with its <code>dispatcherRules</code> companion. If no response actually found by mock controller, the
+ * original request will be forwarded to the <code>proxyUrl</code>.
  */
 @JsonPropertyOrder({ "dispatcher", "dispatcherRules", "proxyUrl" })
-public class ProxySpecification {
+public class ProxyFallbackSpecification {
    private static final ObjectMapper mapper = new ObjectMapper();
 
    private String dispatcher;
@@ -58,14 +58,14 @@ public class ProxySpecification {
    /**
     * Build a specification from a JSON string.
     * @param jsonPayload The JSON payload representing valid specification
-    * @return a newly built ProxySpecification
+    * @return a newly built ProxyFallbackSpecification
     * @throws JsonMappingException if given JSON string cannot be parsed as a ProxySpecification
     */
-   public static ProxySpecification buildFromJsonString(String jsonPayload) throws JsonMappingException {
+   public static ProxyFallbackSpecification buildFromJsonString(String jsonPayload) throws JsonMappingException {
       try {
-         return mapper.readValue(jsonPayload, ProxySpecification.class);
+         return mapper.readValue(jsonPayload, ProxyFallbackSpecification.class);
       } catch (Exception e) {
-         throw new JsonMappingException("Given JSON string cannot be interpreted as valid ProxySpecification");
+         throw new JsonMappingException("Given JSON string cannot be interpreted as valid ProxyFallbackSpecification");
       }
    }
 }

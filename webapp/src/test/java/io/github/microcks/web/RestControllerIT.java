@@ -134,9 +134,10 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxy() {
+   public void testProxyFallback() {
       // Upload pastry-with-proxy spec
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+            true);
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
@@ -156,9 +157,10 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxyWithEqualsOriginAndExternalUrls() {
+   public void testProxyFallbackWithEqualsOriginAndExternalUrls() {
       // Upload pastry-with-proxy spec
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+            true);
 
       // Set original URL to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
@@ -175,9 +177,10 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxyWithHttpError() {
+   public void testProxyFallbackWithHttpError() {
       // Upload pastry-with-proxy spec
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+            true);
 
       // Broke external URL in the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");

@@ -29,7 +29,7 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxySpecification;
+import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.TemplateEngineFactory;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
@@ -197,10 +197,10 @@ public class RestController {
             dispatcher = fallback.getDispatcher();
             dispatcherRules = fallback.getDispatcherRules();
          }
-         ProxySpecification proxy = MockControllerCommons.getProxyIfAny(rOperation);
-         if (proxy != null) {
-            dispatcher = proxy.getDispatcher();
-            dispatcherRules = proxy.getDispatcherRules();
+         ProxyFallbackSpecification proxyFallback = MockControllerCommons.getProxyFallbackIfAny(rOperation);
+         if (proxyFallback != null) {
+            dispatcher = proxyFallback.getDispatcher();
+            dispatcherRules = proxyFallback.getDispatcherRules();
          }
 
          //
@@ -230,11 +230,11 @@ public class RestController {
             response = getResponseByMediaType(responses, request);
          }
 
-         if (response == null && proxy != null && proxy.getProxyUrl() != null) {
-            // If we've found nothing and got a proxy, that's the moment!
+         if (response == null && proxyFallback != null && proxyFallback.getProxyUrl() != null) {
+            // If we've found nothing and got a proxyFallback, that's the moment!
             Optional<URI> externalUrl = proxyService.extractExternalUrl(MockControllerCommons.renderResponseContent(
                   MockControllerCommons.buildEvaluableRequest(body, resourcePath, request),
-                  TemplateEngineFactory.getTemplateEngine(), proxy.getProxyUrl()), request);
+                  TemplateEngineFactory.getTemplateEngine(), proxyFallback.getProxyUrl()), request);
             if (externalUrl.isPresent()) {
                return proxyService.callExternal(externalUrl.get(), method, headers, body);
             }

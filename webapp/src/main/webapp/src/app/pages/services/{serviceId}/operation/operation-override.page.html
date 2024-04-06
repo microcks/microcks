@@ -244,11 +244,11 @@
         <pre><code highlight>{{ fallback }}</code></pre>
       </div>
 
-      <div id="proxy-help" *ngIf="newOperation.dispatcher === 'PROXY'">
+      <div id="proxy-fallback-help" *ngIf="newOperation.dispatcher === 'PROXY_FALLBACK'">
         <br/>
-        <h4>Proxy Dispatcher</h4>
+        <h4>Proxy-Fallback Dispatcher</h4>
         <p>
-          Proxy dispatcher allows you to forward the incoming request to a <code>proxyUrl</code> in case it do not match
+          Proxy-Fallback dispatcher allows you to forward the incoming request to a <code>proxyUrl</code> in case it do not match
           any existing dispatch criteria.
         </p>
         <p>
@@ -261,11 +261,11 @@
           the original request to the external URL, defined in <code>proxyUrl</code>:
         </p>
         <div style="position: absolute; right: 20px">
-          <button class="btn btn-default" (click)="copyDispatcherRules(proxy)">
+          <button class="btn btn-default" (click)="copyDispatcherRules(proxyFallback)">
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ proxy }}</code></pre>
+        <pre><code highlight>{{ proxyFallback }}</code></pre>
       </div>
 
       <div id="json-body-help" *ngIf="newOperation.dispatcher === 'JSON_BODY'">

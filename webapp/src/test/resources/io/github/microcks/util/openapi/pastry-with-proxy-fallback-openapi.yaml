@@ -16,7 +16,7 @@ paths:
     summary: Global operations on pastries
     get:
       x-microcks-operation:
-        dispatcher: PROXY
+        dispatcher: PROXY_FALLBACK
         dispatcherRules: |
           {
             "dispatcher": "URI_PARTS",

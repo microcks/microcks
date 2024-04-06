@@ -54,7 +54,7 @@ export class OperationOverridePageComponent implements OnInit {
       {"value": "SCRIPT", "label": "SCRIPT"},
       {"value": "JSON_BODY", "label": "JSON BODY"},
       {"value": "FALLBACK", "label": "FALLBACK"},
-      {"value": "PROXY", "label": "PROXY"}
+      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
     ],
     'SOAP': [
       {"value": "QUERY_MATCH", "label": "QUERY MATCH"},
@@ -81,7 +81,7 @@ export class OperationOverridePageComponent implements OnInit {
   "fallback": "John Doe"
 }`;
 
-  proxy = `{
+  proxyFallback = `{
   "dispatcher": "URI_PARTS",
   "dispatcherRules": "name",
   "proxyUrl": "http://external.net/name/{{ request.path[2] }}"

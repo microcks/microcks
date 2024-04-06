@@ -22,7 +22,7 @@ import com.google.common.collect.TreeMultimap;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxySpecification;
+import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -481,13 +481,14 @@ public class DispatchCriteriaHelper {
             log.warn("Operation '{}' has a malformed Fallback dispatcher rules", operation.getName());
          }
       }
-      if (DispatchStyles.PROXY.equals(operation.getDispatcher())) {
+      if (DispatchStyles.PROXY_FALLBACK.equals(operation.getDispatcher())) {
          try {
-            ProxySpecification proxySpec = ProxySpecification.buildFromJsonString(operation.getDispatcherRules());
-            rootDispatcher = proxySpec.getDispatcher();
-            rootDispatcherRules = proxySpec.getDispatcherRules();
+            ProxyFallbackSpecification proxyFallbackSpec = ProxyFallbackSpecification
+                  .buildFromJsonString(operation.getDispatcherRules());
+            rootDispatcher = proxyFallbackSpec.getDispatcher();
+            rootDispatcherRules = proxyFallbackSpec.getDispatcherRules();
          } catch (JsonMappingException e) {
-            log.warn("Operation '{}' has a malformed Proxy dispatcher rules", operation.getName());
+            log.warn("Operation '{}' has a malformed Proxy-Fallback dispatcher rules", operation.getName());
          }
       }
 
