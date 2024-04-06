@@ -210,7 +210,7 @@ public class AmazonSNSProducerManager {
       String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
 
       // Aggregate the 3 parts using '-' as delimiter.
-      return serviceName + "-" + versionName + "-" + operationName;
+      return serviceName + "-" + versionName + "-" + operationName.replace("/", "-");
    }
 
    private String createTopicAndGetArn(String topicName) {

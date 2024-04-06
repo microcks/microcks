@@ -28,9 +28,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.ResponseEntity;
 
+import java.util.UUID;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -131,6 +134,23 @@ public class RestControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+   }
+
+   @Test
+   public void testHeadersTemplating() {
+      // Upload modified pastry-with-headers-openapi spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals("some-static-header", response.getHeaders().getFirst("x-some-static-header"));
+
+      String someGenericHeader = response.getHeaders().getFirst("x-some-generic-header");
+      assertDoesNotThrow(() -> UUID.fromString(someGenericHeader));
+
+      response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry?size=XL", String.class);
+      String requestBasedHeader = response.getHeaders().getFirst("x-request-based-header");
+      assertEquals("XL size", requestBasedHeader);
    }
 
    @Test

@@ -1,0 +1,99 @@
+---
+openapi: 3.0.2
+info:
+  title: pastry-headers
+  version: 1.0.0
+  description: API definition of API Pastry sample app
+  contact:
+    name: Laurent Broudoux
+    url: http://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+paths:
+  /pastry:
+    summary: Global operations on pastries
+    get:
+      tags:
+      - pastry
+      responses:
+        "200":
+          headers:
+            x-some-generic-header:
+              schema:
+                type: string
+              examples:
+                pastries_json:
+                  value: '{{ randomUUID() }}'
+            x-some-static-header:
+              schema:
+                type: string
+              examples:
+                pastries_json:
+                  value: some-static-header
+            x-request-based-header:
+              schema:
+                type: string
+              examples:
+                pastries_json:
+                  value: '{{ request.params[size] }} size'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pastry'
+              examples:
+                pastries_json:
+                  value:
+                  - name: Baba Rhum
+                    description: Delicieux Baba au Rhum pas calorique du tout
+                    size: L
+                    price: 3.2
+                    status: available
+                  - name: Divorces
+                    description: Delicieux Divorces pas calorique du tout
+                    size: M
+                    price: 2.8
+                    status: available
+                  - name: Tartelette Fraise
+                    description: Delicieuse Tartelette aux Fraises fraiches
+                    size: S
+                    price: 2
+                    status: available
+          description: Get list of pastries
+      operationId: GetPastries
+      summary: Get list of pastries
+components:
+  schemas:
+    Pastry:
+      title: Root Type for Pastry
+      description: The root of the Pastry type's schema.
+      type: object
+      properties:
+        name:
+          description: Name of this pastry
+          type: string
+        description:
+          description: A short description of this pastry
+          type: string
+        size:
+          description: Size of pastry (S, M, L)
+          type: string
+        price:
+          format: double
+          description: Price (in USD) of this pastry
+          type: number
+        status:
+          description: Status in stock (available, out_of_stock)
+          type: string
+      example:
+        name: My Pastry
+        description: A short description os my pastry
+        size: M
+        price: 4.5
+        status: available
+tags:
+- name: pastry
+  description: Pastry resource

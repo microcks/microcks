@@ -31,6 +31,8 @@ import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.TemplateEngineFactory;
+import io.github.microcks.util.el.EvaluableRequest;
+import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
 import org.apache.commons.lang3.StringUtils;
@@ -189,7 +191,7 @@ public class RestController {
          }
 
          // We must find dispatcher and its rules. Default to operation ones but
-         // if we have a Fallback or Proxy this is the one who is holding the first pass rules.
+         // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
          String dispatcher = rOperation.getDispatcher();
          String dispatcherRules = rOperation.getDispatcherRules();
          FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(rOperation);
@@ -268,19 +270,25 @@ public class RestController {
 
             // Adding other generic headers (caching directives and so on...)
             if (response.getHeaders() != null) {
-               for (Header header : response.getHeaders()) {
-                  if ("Location".equals(header.getName())) {
-                     String location = header.getValues().iterator().next();
+               // First check if they should be rendered.
+               EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(body, resourcePath,
+                     request);
+               Set<Header> renderedHeaders = MockControllerCommons.renderResponseHeaders(evaluableRequest,
+                     dispatchContext.requestContext(), response);
+
+               for (Header renderedHeader : renderedHeaders) {
+                  if ("Location".equals(renderedHeader.getName())) {
+                     String location = renderedHeader.getValues().iterator().next();
                      if (!AbsoluteUrlMatcher.matches(location)) {
                         // We should process location in order to make relative URI specified an absolute one from
                         // the client perspective.
                         location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
                               + request.getContextPath() + "/rest" + serviceAndVersion + location;
                      }
-                     responseHeaders.add(header.getName(), location);
+                     responseHeaders.add(renderedHeader.getName(), location);
                   } else {
-                     if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
-                        responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
+                     if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(renderedHeader.getName())) {
+                        responseHeaders.put(renderedHeader.getName(), new ArrayList<>(renderedHeader.getValues()));
                      }
                   }
                }

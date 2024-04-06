@@ -49,8 +49,31 @@ public class SecurityConfiguration {
    private final Boolean keycloakEnabled = true;
 
    @Bean
-   public SecurityFilterChain configureSecurityFilterChain(HttpSecurity http) throws Exception {
-      log.info("Starting security configuration");
+   public SecurityFilterChain configureMockSecurityFilterChain(HttpSecurity http) throws Exception {
+      log.info("Starting security configuration for mocks");
+
+      // State-less session (state in access-token only)
+      http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+
+      // Disable CSRF because of state-less session-management
+      http.csrf(csrf -> csrf.disable());
+
+      // Disable CORS as we already have a filter in WebConfiguration that does the job
+      http.cors(cors -> cors.disable());
+
+      http.securityMatcher("/rest/**", "/graphql/**", "/soap/**")
+            .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
+
+      // Disable the publication of X-Frame-Options to allow embedding the UI.
+      // See https://github.com/microcks/microcks/issues/952
+      http.headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
+
+      return http.build();
+   }
+
+   @Bean
+   public SecurityFilterChain configureAPISecurityFilterChain(HttpSecurity http) throws Exception {
+      log.info("Starting security configuration for APIs");
 
       // State-less session (state in access-token only)
       http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

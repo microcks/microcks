@@ -15,6 +15,7 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
@@ -32,11 +33,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import jakarta.servlet.http.HttpServletRequest;
+
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Optional;
 
 /**
@@ -107,6 +111,40 @@ public class MockControllerCommons {
          return Optional.of(proxyFallback.getProxyUrl());
       }
       return Optional.empty();
+   }
+
+   /**
+    * Render the response headers using the Expression Language compatible {@code TemplateEngine} if required. If
+    * rendering template fails, we just produce a log error message and stick to templatized values.
+    * @param evaluableRequest The request that can be evaluated in templating.
+    * @param requestContext   The invocation context of the request
+    * @param response         The response that was found by dispatcher
+    * @return The rendered response headers values.
+    */
+   public static Set<Header> renderResponseHeaders(EvaluableRequest evaluableRequest,
+         Map<String, Object> requestContext, Response response) {
+      TemplateEngine engine = null;
+      Set<Header> headers = new HashSet<>();
+
+      if (response.getHeaders() != null) {
+         for (Header header : response.getHeaders()) {
+            Set<String> renderedValues = new HashSet<>();
+            for (String value : header.getValues()) {
+               // Only render and build an engine if we have an expression.
+               if (value.contains(TemplateEngine.DEFAULT_EXPRESSION_PREFIX)) {
+                  // Evaluate the header value.
+                  if (engine == null) {
+                     engine = TemplateEngineFactory.getTemplateEngine();
+                  }
+                  renderedValues.add(unguardedRenderResponseContent(evaluableRequest, requestContext, engine, value));
+               } else {
+                  renderedValues.add(value);
+               }
+            }
+            headers.add(new Header(header.getName(), renderedValues));
+         }
+      }
+      return headers;
    }
 
    /**
@@ -272,7 +310,7 @@ public class MockControllerCommons {
     * @param applicationContext The context to use for publication
     * @param eventSource        The source of this event
     * @param service            The mocked Service that was invoked
-    * @param response           The response is has been dispatched to
+    * @param response           The response it has been dispatched to
     * @param startTime          The start time of the invocation
     */
    public static void publishMockInvocation(ApplicationContext applicationContext, Object eventSource, Service service,
