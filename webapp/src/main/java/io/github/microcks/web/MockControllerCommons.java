@@ -79,7 +79,7 @@ public class MockControllerCommons {
 
    /**
     * Retrieve a proxyFallback specification for this operation if one is defined.
-    * @param rOperation The operation to get proxy specification
+    * @param rOperation The operation to get proxyFallback specification
     * @return A proxy specification or null if none defined
     */
    public static ProxyFallbackSpecification getProxyFallbackIfAny(Operation rOperation) {

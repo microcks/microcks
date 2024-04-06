@@ -32,7 +32,6 @@ import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.TemplateEngineFactory;
 import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
 import org.apache.commons.lang3.StringUtils;
