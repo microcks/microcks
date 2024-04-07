@@ -46,7 +46,7 @@ public class AMQPMessageConsumptionTaskITest {
    private static final String RABBIT_MQ_3_7_25 = "rabbitmq:3.7.25-management-alpine";
 
    @Container
-   private final RabbitMQContainer rabbitMQContainer = new RabbitMQContainer();
+   private static final RabbitMQContainer rabbitMQContainer = new RabbitMQContainer();
 
    static class RabbitMQContainer extends org.testcontainers.containers.RabbitMQContainer {
       public RabbitMQContainer() {
