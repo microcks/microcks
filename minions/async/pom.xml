@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
@@ -39,6 +40,13 @@
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
         <version>${quarkus.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-bom</artifactId>
+        <version>1.19.7</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -106,14 +114,14 @@
       <artifactId>amqp-client</artifactId>
       <version>${rabbitmq.version}</version>
     </dependency>
-    
+
     <!-- NATS related dependencies -->
     <dependency>
-        <groupId>io.nats</groupId>
-        <artifactId>jnats</artifactId>
-        <version>${nats.version}</version>
+      <groupId>io.nats</groupId>
+      <artifactId>jnats</artifactId>
+      <version>${nats.version}</version>
     </dependency>
-    
+
     <dependency>
       <groupId>io.quarkiverse.googlecloudservices</groupId>
       <artifactId>quarkus-google-cloud-pubsub</artifactId>
@@ -183,6 +191,16 @@
     <dependency>
       <groupId>io.rest-assured</groupId>
       <artifactId>rest-assured</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>rabbitmq</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
