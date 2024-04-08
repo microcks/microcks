@@ -85,7 +85,7 @@ export class OperationOverridePageComponent implements OnInit {
   proxyFallback = `{
   "dispatcher": "URI_PARTS",
   "dispatcherRules": "name",
-  "proxyUrl": "http://external.net/name/{{ request.path[2] }}"
+  "proxyUrl": "http://external.net/"
 }`;
 
   examplePayload =  `{

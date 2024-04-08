@@ -1,7 +1,7 @@
 ---
 openapi: 3.0.2
 info:
-  title: pastry-proxy
+  title: pastry-real
   version: 1.0.0
   description: API definition of API Pastry sample app
   contact:
@@ -15,14 +15,6 @@ paths:
   /pastry/{name}:
     summary: Global operations on pastries
     get:
-      x-microcks-operation:
-        dispatcher: PROXY_FALLBACK
-        dispatcherRules: |
-          {
-            "dispatcher": "URI_PARTS",
-            "dispatcherRules": "name",
-            "proxyUrl": "http://localhost/rest/pastry-real/1.0.0/"
-          }
       parameters:
         - name: name
           in: path
@@ -42,7 +34,7 @@ paths:
               examples:
                 donut:
                   value:
-                    name: Mocked One
+                    name: Real One
           description: Get list of pastries
       operationId: GetPastries
       summary: Get list of pastries

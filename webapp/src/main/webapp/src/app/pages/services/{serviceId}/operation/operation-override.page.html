@@ -258,7 +258,7 @@
         </p>
         <p>
           By default Microcks will return a <code>404</code> error. But if you've defined a <code>PROXY</code> dispatcher, Microcks will forward
-          the original request to the external URL, defined in <code>proxyUrl</code>:
+          the original request to the external URL, the base URL of which was defined in <code>proxyUrl</code>:
         </p>
         <div style="position: absolute; right: 20px">
           <button class="btn btn-default" (click)="copyDispatcherRules(proxyFallback)">

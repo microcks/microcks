@@ -155,9 +155,10 @@ public class RestControllerIT extends AbstractBaseIT {
 
    @Test
    public void testProxyFallback() {
-      // Upload pastry-with-proxy-fallback spec
+      // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
@@ -178,16 +179,17 @@ public class RestControllerIT extends AbstractBaseIT {
 
    @Test
    public void testProxyFallbackWithEqualsOriginAndExternalUrls() {
-      // Upload pastry-with-proxy-fallback spec
+      // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Set original URL to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
       Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
             .findFirst().orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
-            .replaceFirst("real-pastry", "pastry"));
+            .replaceFirst("pastry-real", "pastry-proxy"));
       serviceRepository.save(service);
 
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
@@ -198,16 +200,17 @@ public class RestControllerIT extends AbstractBaseIT {
 
    @Test
    public void testProxyFallbackWithHttpError() {
-      // Upload pastry-with-proxy-fallback spec
+      // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Broke external URL in the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
       Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
             .findFirst().orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
-            .replaceFirst("real-pastry", "not-found"));
+            .replaceFirst("pastry-real", "not-found"));
       serviceRepository.save(service);
 
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
@@ -217,8 +220,9 @@ public class RestControllerIT extends AbstractBaseIT {
 
    @Test
    public void testProxy() {
-      // Upload pastry-with-proxy spec
+      // Upload pastry-with-proxy and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");

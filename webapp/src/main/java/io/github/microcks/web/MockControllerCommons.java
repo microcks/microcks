@@ -33,7 +33,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -96,19 +98,32 @@ public class MockControllerCommons {
 
    /**
     * Check if proxy behavior is requested and extract proxyUrl.
-    * @param dispatcher      Original dispatcher for Proxy dispatcher checking.
-    * @param dispatcherRules Original dispatcherRules for url extracting.
-    * @param proxyFallback   ProxyFallbackSpecification for Proxy-Fallback dispatcher checking and url extracting.
-    * @param response        The response that was found(or not) by dispatcher
-    * @return The rendered response body payload.
+    * @param dispatcher      The original dispatcher for the Proxy dispatcher checking.
+    * @param dispatcherRules The original dispatcherRules for URL extracting.
+    * @param resourcePath    The original resourcePath for URL compilation.
+    * @param proxyFallback   The proxyFallbackSpec for the Proxy-Fallback dispatcher checking and URL extracting.
+    * @param request         The original request for URL comparing on cycling.
+    * @param response        The response that was found(or not) by dispatcher.
+    * @return The optional container with URI for the proxy service if the request needs to be proxied.
     */
-   public static Optional<String> getProxyUrlIfProxyIsNeeded(String dispatcher, String dispatcherRules,
-         ProxyFallbackSpecification proxyFallback, Response response) {
+   public static Optional<URI> getProxyUrlIfProxyIsNeeded(String dispatcher, String dispatcherRules,
+         String resourcePath, ProxyFallbackSpecification proxyFallback, HttpServletRequest request, Response response) {
+      String externalUrl = null;
       if (DispatchStyles.PROXY.equals(dispatcher)) {
-         return Optional.of(dispatcherRules);
+         externalUrl = dispatcherRules;
       }
       if (response == null && proxyFallback != null) {
-         return Optional.of(proxyFallback.getProxyUrl());
+         externalUrl = proxyFallback.getProxyUrl();
+      }
+      if (externalUrl != null) {
+         externalUrl = externalUrl.replaceFirst("/$", "") + resourcePath;
+         if (!externalUrl.contentEquals(request.getRequestURL())) {
+            try {
+               return Optional.of(UriComponentsBuilder.fromHttpUrl(externalUrl).build().toUri());
+            } catch (IllegalArgumentException ex) {
+               log.warn("Invalid external URL in the dispatcher - {}", externalUrl);
+            }
+         }
       }
       return Optional.empty();
    }

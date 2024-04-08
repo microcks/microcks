@@ -30,7 +30,6 @@ import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
-import io.github.microcks.util.el.TemplateEngineFactory;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
@@ -231,16 +230,11 @@ public class RestController {
             response = getResponseByMediaType(responses, request);
          }
 
-         Optional<String> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
-               proxyFallback, response);
+         Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
+               resourcePath, proxyFallback, request, response);
          if (proxyUrl.isPresent()) {
             // If we've got a proxyUrl, that's the moment!
-            Optional<URI> externalUrl = proxyService.extractExternalUrl(MockControllerCommons.renderResponseContent(
-                  MockControllerCommons.buildEvaluableRequest(body, resourcePath, request),
-                  TemplateEngineFactory.getTemplateEngine(), proxyUrl.get()), request);
-            if (externalUrl.isPresent()) {
-               return proxyService.callExternal(externalUrl.get(), method, headers, body);
-            }
+            return proxyService.callExternal(proxyUrl.get(), method, headers, body);
          }
 
          if (response == null) {
