@@ -23,6 +23,7 @@ import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
@@ -32,7 +33,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -40,6 +43,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Optional;
 
 /**
  * This class holds commons, utility handlers for different mock controller implements (whether it be Soap, Rest, Async
@@ -73,6 +77,55 @@ public class MockControllerCommons {
          }
       }
       return fallback;
+   }
+
+   /**
+    * Retrieve a proxyFallback specification for this operation if one is defined.
+    * @param rOperation The operation to get proxyFallback specification
+    * @return A proxy specification or null if none defined
+    */
+   public static ProxyFallbackSpecification getProxyFallbackIfAny(Operation rOperation) {
+      ProxyFallbackSpecification proxyFallback = null;
+      if (DispatchStyles.PROXY_FALLBACK.equals(rOperation.getDispatcher())) {
+         try {
+            proxyFallback = ProxyFallbackSpecification.buildFromJsonString(rOperation.getDispatcherRules());
+         } catch (JsonMappingException jme) {
+            log.error("Dispatching rules of operation cannot be interpreted as ProxyFallbackSpecification", jme);
+         }
+      }
+      return proxyFallback;
+   }
+
+   /**
+    * Check if proxy behavior is requested and extract proxyUrl.
+    * @param dispatcher      The original dispatcher for the Proxy dispatcher checking.
+    * @param dispatcherRules The original dispatcherRules for URL extracting.
+    * @param resourcePath    The original resourcePath for URL compilation.
+    * @param proxyFallback   The proxyFallbackSpec for the Proxy-Fallback dispatcher checking and URL extracting.
+    * @param request         The original request for URL comparing on cycling.
+    * @param response        The response that was found(or not) by dispatcher.
+    * @return The optional container with URI for the proxy service if the request needs to be proxied.
+    */
+   public static Optional<URI> getProxyUrlIfProxyIsNeeded(String dispatcher, String dispatcherRules,
+         String resourcePath, ProxyFallbackSpecification proxyFallback, HttpServletRequest request, Response response) {
+      String externalUrl = null;
+      if (DispatchStyles.PROXY.equals(dispatcher)) {
+         externalUrl = dispatcherRules;
+      }
+      if (response == null && proxyFallback != null) {
+         externalUrl = proxyFallback.getProxyUrl();
+      }
+      if (externalUrl != null) {
+         externalUrl = externalUrl.replaceFirst("/$", "") + resourcePath;
+         if (!externalUrl.contentEquals(request.getRequestURL())) {
+            try {
+               return Optional.of(UriComponentsBuilder.fromHttpUrl(externalUrl).build().toUri());
+            } catch (IllegalArgumentException ex) {
+               log.warn("Invalid external URL in the dispatcher - {}", externalUrl);
+            }
+         }
+      }
+      return Optional.empty();
    }
 
    /**

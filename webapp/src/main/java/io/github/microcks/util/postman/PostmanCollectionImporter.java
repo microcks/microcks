@@ -31,8 +31,6 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
 import io.github.microcks.util.URIBuilder;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonMappingException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -223,19 +221,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          // Select item based onto operation name.
          if (PostmanUtil.areOperationsEquivalent(operation.getName(), operationName)) {
             // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
-            String rootDispatcher = operation.getDispatcher();
-            String rootDispatcherRules = operation.getDispatcherRules();
-
-            if (DispatchStyles.FALLBACK.equals(operation.getDispatcher())) {
-               FallbackSpecification fallbackSpec = null;
-               try {
-                  fallbackSpec = FallbackSpecification.buildFromJsonString(operation.getDispatcherRules());
-                  rootDispatcher = fallbackSpec.getDispatcher();
-                  rootDispatcherRules = fallbackSpec.getDispatcherRules();
-               } catch (JsonMappingException e) {
-                  log.warn("Operation '{}' has a malformed Fallback dispatcher rules", operation.getName());
-               }
-            }
+            DispatchCriteriaHelper.DispatcherDetails details = DispatchCriteriaHelper
+                  .extractDispatcherWithRules(operation);
+            String rootDispatcher = details.rootDispatcher();
+            String rootDispatcherRules = details.rootDispatcherRules();
 
             Iterator<JsonNode> responses = itemNode.path("response").elements();
             while (responses.hasNext()) {

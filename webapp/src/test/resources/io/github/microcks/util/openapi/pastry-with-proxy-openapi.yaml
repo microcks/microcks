@@ -1,0 +1,58 @@
+---
+openapi: 3.0.2
+info:
+  title: pastry-proxy
+  version: 1.0.0
+  description: API definition of API Pastry sample app
+  contact:
+    name: Laurent Broudoux
+    url: http://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+paths:
+  /pastry/{name}:
+    summary: Global operations on pastries
+    get:
+      x-microcks-operation:
+        dispatcher: PROXY
+        dispatcherRules: http://localhost/rest/pastry-real/1.0.0
+      parameters:
+        - name: name
+          in: path
+          schema:
+            type: string
+          examples:
+            donut:
+              value: 'donut'
+      tags:
+      - pastry
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                donut:
+                  value:
+                    name: Mocked One
+          description: Get list of pastries
+      operationId: GetPastries
+      summary: Get list of pastries
+components:
+  schemas:
+    Pastry:
+      title: Root Type for Pastry
+      description: The root of the Pastry type's schema.
+      type: object
+      properties:
+        name:
+          description: Name of this pastry
+          type: string
+      example:
+        name: My Pastry
+tags:
+- name: pastry
+  description: Pastry resource

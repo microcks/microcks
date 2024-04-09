@@ -17,10 +17,15 @@ package io.github.microcks.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Service;
+import io.github.microcks.repository.ServiceRepository;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
@@ -30,11 +35,21 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
 /**
  * Test case for all the Rest mock controller.
  * @author laurent
  */
 public class RestControllerIT extends AbstractBaseIT {
+
+   @Autowired
+   private ServiceRepository serviceRepository;
+
+   @SpyBean
+   private RestController restController;
 
    @Test
    public void testOpenAPIMocking() {
@@ -136,5 +151,93 @@ public class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry?size=XL", String.class);
       String requestBasedHeader = response.getHeaders().getFirst("x-request-based-header");
       assertEquals("XL size", requestBasedHeader);
+   }
+
+   @Test
+   public void testProxyFallback() {
+      // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+            true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+
+      // Set real port to the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
+      serviceRepository.save(service);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+            String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+   }
+
+   @Test
+   public void testProxyFallbackWithEqualsOriginAndExternalUrls() {
+      // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+            true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+
+      // Set original URL to the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
+            .replaceFirst("pastry-real", "pastry-proxy"));
+      serviceRepository.save(service);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+            String.class);
+      assertEquals(200, response.getStatusCode().value());
+      verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any());
+   }
+
+   @Test
+   public void testProxyFallbackWithHttpError() {
+      // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+            true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+
+      // Broke external URL in the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
+            .replaceFirst("pastry-real", "not-found"));
+      serviceRepository.save(service);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+            String.class);
+      assertEquals(404, response.getStatusCode().value());
+   }
+
+   @Test
+   public void testProxy() {
+      // Upload pastry-with-proxy and pastry-for-proxy specs
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+
+      // Set real port to the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
+      serviceRepository.save(service);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
+            String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
    }
 }
