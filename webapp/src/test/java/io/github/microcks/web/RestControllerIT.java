@@ -167,11 +167,21 @@ public class RestControllerIT extends AbstractBaseIT {
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+      // If we have the mock, we should get the response from the mock.
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
             String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
-         JSONAssert.assertEquals("{\"name\":\"Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // If we don't have the mock, we should get the response from real backend.
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
@@ -192,6 +202,7 @@ public class RestControllerIT extends AbstractBaseIT {
             .replaceFirst("pastry-real", "pastry-proxy"));
       serviceRepository.save(service);
 
+      // Check that we don't fall into infinite loop...
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
             String.class);
       assertEquals(200, response.getStatusCode().value());
@@ -231,6 +242,7 @@ public class RestControllerIT extends AbstractBaseIT {
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
       serviceRepository.save(service);
 
+      // Event if `donut` is defined on our mock, we should always have the response coming for real backend.
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
             String.class);
       assertEquals(200, response.getStatusCode().value());

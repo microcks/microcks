@@ -23,6 +23,8 @@ paths:
           examples:
             donut:
               value: 'donut'
+            croissant:
+              value: 'croissant'
       tags:
       - pastry
       responses:
@@ -35,6 +37,9 @@ paths:
                 donut:
                   value:
                     name: Real One
+                croissant:
+                  value:
+                    name: Croissant from Real One
           description: Get list of pastries
       operationId: GetPastries
       summary: Get list of pastries
