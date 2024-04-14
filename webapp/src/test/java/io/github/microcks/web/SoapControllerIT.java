@@ -15,6 +15,8 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Service;
 import org.junit.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -157,5 +159,37 @@ public class SoapControllerIT extends AbstractBaseIT {
                fail();
          }
       }
+   }
+
+   @Test
+   public void testProxy() {
+      // Upload SoapUI projects for proxy test.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-for-proxy-soapui-project.xml",
+            true);
+
+      // Override the dispatcher to PROXY
+      Service service = serviceRepository.findByNameAndVersion("HelloService Mock", "0.9");
+      Operation operation = service.getOperations().stream().findFirst().orElseThrow();
+      operation.setDispatcher("PROXY");
+      operation.setDispatcherRules(getServerUrl() + "/soap/HelloService+Real/0.9");
+      serviceRepository.save(service);
+
+      // Create SOAP 1.2 headers for sayHello operation.
+      HttpHeaders headers = new HttpHeaders();
+      headers.put("Content-type", Collections.singletonList("application/soap+xml;action=sayHello"));
+
+      // Build the request.
+      String request = """
+            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+               <soapenv:Header/><soapenv:Body><hel:sayHello><name>Andrew</name></hel:sayHello></soapenv:Body>
+            </soapenv:Envelope>""";
+      HttpEntity<String> entity = new HttpEntity<>(request, headers);
+
+      // Execute and assert.
+      ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().contains("<sayHello>Hello Real Andrew !</sayHello>"));
    }
 }
