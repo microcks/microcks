@@ -60,7 +60,9 @@ export class OperationOverridePageComponent implements OnInit {
     'SOAP': [
       {"value": "QUERY_MATCH", "label": "QUERY MATCH"},
       {"value": "SCRIPT", "label": "SCRIPT"},
+      {"value": "PROXY", "label": "PROXY"},
       {"value": "FALLBACK", "label": "FALLBACK"},
+      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
     ],
     'EVENT': [],
     'GRPC': [
