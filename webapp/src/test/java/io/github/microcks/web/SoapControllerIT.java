@@ -164,9 +164,10 @@ public class SoapControllerIT extends AbstractBaseIT {
    @Test
    public void testProxy() {
       // Upload SoapUI projects for proxy test.
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-for-proxy-soapui-project.xml",
-            true);
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
 
       // Override the dispatcher to PROXY
       Service service = serviceRepository.findByNameAndVersion("HelloService Mock", "0.9");
@@ -175,32 +176,21 @@ public class SoapControllerIT extends AbstractBaseIT {
       operation.setDispatcherRules(getServerUrl() + "/soap/HelloService+Real/0.9");
       serviceRepository.save(service);
 
-      // Create SOAP 1.2 headers for sayHello operation.
-      HttpHeaders headers = new HttpHeaders();
-      headers.put("Content-type", Collections.singletonList("application/soap+xml;action=sayHello"));
-
       // Build the request.
-      String request = """
-            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
-               <soapenv:Header/><soapenv:Body><hel:sayHello><name>Andrew</name></hel:sayHello></soapenv:Body>
-            </soapenv:Envelope>""";
-      HttpEntity<String> entity = new HttpEntity<>(request, headers);
+      HttpEntity<String> entity = createBaseEntityForName("Andrew");
 
       // Execute and assert.
       ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
-      assertTrue(response.getBody().contains("<sayHello>Hello Real Andrew !</sayHello>"));
+      assertResponseIsOkAndContains(response, "<sayHello>Hello Real Andrew !</sayHello>");
    }
 
    @Test
    public void testProxyFallback() {
       // Upload SoapUI projects for proxy test.
       uploadArtifactFile(
-            "target/test-classes/io/github/microcks/util/soapui/HelloService-for-proxy-fallback-soapui-project.xml",
-            true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-for-proxy-soapui-project.xml",
-            true);
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
 
       // Override the dispatcher to PROXY_FALLBACK
       Service service = serviceRepository.findByNameAndVersion("HelloService Mock", "0.9");
@@ -212,34 +202,36 @@ public class SoapControllerIT extends AbstractBaseIT {
             "proxyUrl": "%s/soap/HelloService+Real/0.9"}""", getServerUrl()));
       serviceRepository.save(service);
 
-      // Create SOAP 1.2 headers for sayHello operation.
-      HttpHeaders headers = new HttpHeaders();
-      headers.put("Content-type", Collections.singletonList("application/soap+xml;action=sayHello"));
-
       // Build the request that matches QUERY_MATCH.
-      String request = """
-            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
-               <soapenv:Header/><soapenv:Body><hel:sayHello><name>Andrew</name></hel:sayHello></soapenv:Body>
-            </soapenv:Envelope>""";
-      HttpEntity<String> entity = new HttpEntity<>(request, headers);
+      HttpEntity<String> entity = createBaseEntityForName("Andrew");
 
       // Execute and assert that it wasn't proxy.
       ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
-      assertTrue(response.getBody().contains("<sayHello>Hello Andrew !</sayHello>"));
+      assertResponseIsOkAndContains(response, "<sayHello>Hello Andrew !</sayHello>");
 
       // Build the request that doesn't match QUERY_MATCH.
-      request = """
-            <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
-               <soapenv:Header/><soapenv:Body><hel:sayHello><name>Garry</name></hel:sayHello></soapenv:Body>
-            </soapenv:Envelope>""";
-      entity = new HttpEntity<>(request, headers);
+      entity = createBaseEntityForName("Garry");
 
       // Execute and assert that it was proxy.
       response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      assertResponseIsOkAndContains(response, "<sayHello>Hello Real Garry !</sayHello>");
+   }
+
+   private HttpEntity<String> createBaseEntityForName(String name) {
+      HttpHeaders headers = new HttpHeaders();
+      headers.put("Content-type", Collections.singletonList("application/soap+xml;action=sayHello"));
+      String request = String.format(
+            """
+                  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+                     <soapenv:Header/><soapenv:Body><hel:sayHello><name>%s</name></hel:sayHello></soapenv:Body>
+                  </soapenv:Envelope>""",
+            name);
+      return new HttpEntity<>(request, headers);
+   }
+
+   private void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
       assertEquals(200, response.getStatusCode().value());
       assertNotNull(response.getBody());
-      assertTrue(response.getBody().contains("<sayHello>Hello Real Garry !</sayHello>"));
+      assertTrue(response.getBody().contains(substring));
    }
 }
