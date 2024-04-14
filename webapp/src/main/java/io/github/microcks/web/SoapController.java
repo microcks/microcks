@@ -248,7 +248,8 @@ public class SoapController {
          }
 
          Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
-               MockControllerCommons.extractResourcePath(request, serviceAndVersion), proxyFallback, request, response);
+               MockControllerCommons.extractResourcePath(request, serviceAndVersion), proxyFallback, request,
+               responses.isEmpty() ? null : responses.get(0));
          if (proxyUrl.isPresent()) {
             // If we've got a proxyUrl, that's the moment!
             return proxyService.callExternal(proxyUrl.get(), method, headers, body);
