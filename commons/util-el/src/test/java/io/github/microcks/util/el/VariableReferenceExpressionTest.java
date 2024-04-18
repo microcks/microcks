@@ -49,6 +49,16 @@ public class VariableReferenceExpressionTest {
       VariableReferenceExpression exp = new VariableReferenceExpression(request, "body/books/1/author");
       String result = exp.getValue(new EvaluationContext());
       assertEquals("John Doe", result);
+
+      // Test extraction of Array by JSON Pointer path
+     VariableReferenceExpression expArray = new VariableReferenceExpression(request, "body/books");
+     String resultArray = expArray.getValue(new EvaluationContext());
+     assertEquals("[{\"title\":\"Title 1\",\"author\":\"Jane Doe\"},{\"title\":\"Title 2\",\"author\":\"John Doe\"}]", resultArray);
+
+     // Test extraction of Object by JSON Pointer path
+     VariableReferenceExpression expObj = new VariableReferenceExpression(request, "body/books/1");
+     String resultObj = expObj.getValue(new EvaluationContext());
+     assertEquals("{\"title\":\"Title 2\",\"author\":\"John Doe\"}", resultObj);
    }
 
    @Test

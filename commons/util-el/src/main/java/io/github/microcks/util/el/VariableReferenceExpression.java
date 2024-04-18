@@ -193,14 +193,14 @@ public class VariableReferenceExpression implements Expression {
       try {
          ObjectMapper mapper = new ObjectMapper();
          rootNode = mapper.readTree(new StringReader(jsonText));
+         // Retrieve evaluated node within JSON tree.
+         JsonNode evaluatedNode = rootNode.at(jsonPointerExp);
+         // Return serialized array if array type node is referenced by JsonPointer, text value otherwise
+         return evaluatedNode.isArray() || evaluatedNode.isObject() ? mapper.writeValueAsString(evaluatedNode) : evaluatedNode.asText();
       } catch (Exception e) {
          log.warn("Exception while parsing Json text", e);
          return null;
       }
-
-      // Retrieve evaluated node within JSON tree.
-      JsonNode evaluatedNode = rootNode.at(jsonPointerExp);
-      return evaluatedNode.asText();
    }
 
    /** Extract a value from XML using a XPath expression. */
