@@ -131,7 +131,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
                return TestReturn.FAILURE_CODE;
             }
 
-            if (expectedResponse.getMediaType() != null && !expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
+            if (expectedResponse.getMediaType() != null
+                  && !expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
                log.debug("Response Content-Type does not match expected one, returning failure");
                lastValidationErrors = List
                      .of(String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
