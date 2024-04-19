@@ -1,0 +1,48 @@
+---
+openapi: 3.0.3
+info:
+  title: Object query param API
+  description: Description for Object query param API
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+  version: 1.0.0
+paths:
+  /messiah:
+    get:
+      summary: Get the messiah name for a given person
+      description: Use object in query param
+      operationId: getMessiah
+      parameters:
+        - in: query
+          name: irrelevantHere
+          schema:
+            $ref: '#/components/schemas/Person'
+          examples:
+            dune:
+              value:
+                lastName: Atreides
+                firstName: Paul
+      responses:
+        200:
+          description: The messiah name
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messiahName:
+                    type: string
+              examples:
+                dune:
+                  value:
+                    messiahName: Lisan Al Gaib
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        lastName:
+          type: string
+        firstName:
+          type: string
