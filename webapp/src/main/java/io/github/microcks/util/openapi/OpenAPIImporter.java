@@ -303,9 +303,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   for (JsonNode current : (ArrayNode) exampleValue) {
                      exampleParams.put(parameterName, getValueString(current));
                   }
-               } else if(PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isObject()){
+               } else if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isObject()) {
                   final var fieldsIterator = ((ObjectNode) exampleValue).fields();
-                  while(fieldsIterator.hasNext()){
+                  while (fieldsIterator.hasNext()) {
                      var current = fieldsIterator.next();
                      exampleParams.put(current.getKey(), getValueString(current.getValue()));
                   }
@@ -651,11 +651,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             if (params.length() > 0) {
                params.append(" && ");
             }
-            if(parameterType.equals("object")){
-               params.append(StreamSupport
-                       .stream(Spliterators.spliteratorUnknownSize(followRefIfAny(parameter.path("schema")).path("properties").fieldNames(),
-                               Spliterator.ORDERED), false).collect(Collectors.joining(" && ")));
-            }else{
+            if (parameterType.equals("object")) {
+               params.append(StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+                     followRefIfAny(parameter.path("schema")).path("properties").fieldNames(), Spliterator.ORDERED),
+                     false).collect(Collectors.joining(" && ")));
+            } else {
                params.append(parameter.path("name").asText());
             }
          }

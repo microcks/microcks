@@ -1914,11 +1914,13 @@ public class OpenAPIImporterTest {
          }
       }
    }
+
    @Test
    public void testSImpleOpenAPIWithObjectQUeryParam() {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/object-query-params.yaml", null);
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/object-query-params.yaml",
+               null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
