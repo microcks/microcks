@@ -19,12 +19,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
-import io.github.microcks.repository.ServiceRepository;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.ResponseEntity;
 
@@ -32,7 +30,6 @@ import java.util.UUID;
 
 import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -42,9 +39,6 @@ import static org.mockito.Mockito.verify;
  * @author laurent
  */
 public class RestControllerIT extends AbstractBaseIT {
-
-   @Autowired
-   private ServiceRepository serviceRepository;
 
    @SpyBean
    private RestController restController;

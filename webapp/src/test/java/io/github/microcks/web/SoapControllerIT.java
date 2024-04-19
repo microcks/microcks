@@ -15,6 +15,8 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Service;
 import org.junit.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -157,5 +159,79 @@ public class SoapControllerIT extends AbstractBaseIT {
                fail();
          }
       }
+   }
+
+   @Test
+   public void testProxy() {
+      // Upload SoapUI projects for proxy test.
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
+
+      // Override the dispatcher to PROXY
+      Service service = serviceRepository.findByNameAndVersion("HelloService Mock", "0.9");
+      Operation operation = service.getOperations().stream().findFirst().orElseThrow();
+      operation.setDispatcher("PROXY");
+      operation.setDispatcherRules(getServerUrl() + "/soap/HelloService+Real/0.9");
+      serviceRepository.save(service);
+
+      // Build the request.
+      HttpEntity<String> entity = createBaseEntityForName("Andrew");
+
+      // Execute and assert.
+      ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      assertResponseIsOkAndContains(response, "<sayHello>Hello Real Andrew !</sayHello>");
+   }
+
+   @Test
+   public void testProxyFallback() {
+      // Upload SoapUI projects for proxy test.
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);
+      uploadArtifactFile(
+            "target/test-classes/io/github/microcks/util/soapui/HelloService-to-test-proxy-soapui-project.xml", true);
+
+      // Override the dispatcher to PROXY_FALLBACK
+      Service service = serviceRepository.findByNameAndVersion("HelloService Mock", "0.9");
+      Operation operation = service.getOperations().stream().findFirst().orElseThrow();
+      operation.setDispatcher("PROXY_FALLBACK");
+      operation.setDispatcherRules(String.format("""
+            {"dispatcher": "QUERY_MATCH",
+            "dispatcherRules": "declare namespace ser='http://www.example.com/hello';\\n//ser:sayHello/name",
+            "proxyUrl": "%s/soap/HelloService+Real/0.9"}""", getServerUrl()));
+      serviceRepository.save(service);
+
+      // Build the request that matches QUERY_MATCH.
+      HttpEntity<String> entity = createBaseEntityForName("Andrew");
+
+      // Execute and assert that it wasn't proxy.
+      ResponseEntity<String> response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      assertResponseIsOkAndContains(response, "<sayHello>Hello Andrew !</sayHello>");
+
+      // Build the request that doesn't match QUERY_MATCH.
+      entity = createBaseEntityForName("Garry");
+
+      // Execute and assert that it was proxy.
+      response = restTemplate.postForEntity("/soap/HelloService+Mock/0.9", entity, String.class);
+      assertResponseIsOkAndContains(response, "<sayHello>Hello Real Garry !</sayHello>");
+   }
+
+   private HttpEntity<String> createBaseEntityForName(String name) {
+      HttpHeaders headers = new HttpHeaders();
+      headers.put("Content-type", Collections.singletonList("application/soap+xml;action=sayHello"));
+      String request = String.format(
+            """
+                  <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
+                     <soapenv:Header/><soapenv:Body><hel:sayHello><name>%s</name></hel:sayHello></soapenv:Body>
+                  </soapenv:Envelope>""",
+            name);
+      return new HttpEntity<>(request, headers);
+   }
+
+   private void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
+      assertEquals(200, response.getStatusCode().value());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().contains(substring));
    }
 }

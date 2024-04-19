@@ -114,24 +114,15 @@ public class RestController {
 
       long startTime = System.currentTimeMillis();
 
-      // Extract resourcePath for matching with correct operation.
-      String requestURI = request.getRequestURI();
-      String serviceAndVersion = null;
-      String resourcePath = null;
-
-      // Build the encoded URI fragment to retrieve simple resourcePath.
-      serviceAndVersion = "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
-      resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
+      // Extract resourcePath for matching with correct operation and build the encoded URI fragment to retrieve simple resourcePath.
+      String serviceAndVersion = MockControllerCommons.composeServiceAndVersion(serviceName, version);
+      String resourcePath = MockControllerCommons.extractResourcePath(request, serviceAndVersion);
       //resourcePath = UriUtils.decode(resourcePath, "UTF-8");
       log.debug("Found resourcePath: {}", resourcePath);
 
       // If serviceName was encoded with '+' instead of '%20', remove them.
       if (serviceName.contains("+")) {
          serviceName = serviceName.replace('+', ' ');
-      }
-      // If resourcePath was encoded with '+' instead of '%20', replace them .
-      if (resourcePath.contains("+")) {
-         resourcePath = resourcePath.replace("+", "%20");
       }
       // Remove trailing '/' if any.
       String trimmedResourcePath = resourcePath;

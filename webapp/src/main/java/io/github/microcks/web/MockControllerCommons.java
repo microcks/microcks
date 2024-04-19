@@ -34,6 +34,7 @@ import org.springframework.context.ApplicationContext;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.util.Collections;
@@ -335,5 +336,21 @@ public class MockControllerCommons {
             response.getName(), new Date(startTime), startTime - System.currentTimeMillis());
       applicationContext.publishEvent(event);
       log.debug("Mock invocation event has been published");
+   }
+
+   public static String composeServiceAndVersion(String serviceName, String version) {
+      return "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
+   }
+
+   public static String extractResourcePath(HttpServletRequest request, String serviceAndVersion) {
+      String requestURI = request.getRequestURI();
+      String resourcePath = requestURI.substring(requestURI.indexOf(serviceAndVersion) + serviceAndVersion.length());
+      log.debug("Found resourcePath: {}", resourcePath);
+
+      // If resourcePath was encoded with '+' instead of '%20', replace them .
+      if (resourcePath.contains("+")) {
+         resourcePath = resourcePath.replace("+", "%20");
+      }
+      return resourcePath;
    }
 }

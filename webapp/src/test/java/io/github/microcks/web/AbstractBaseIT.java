@@ -16,7 +16,7 @@
 package io.github.microcks.web;
 
 import io.github.microcks.MicrocksApplication;
-
+import io.github.microcks.repository.ServiceRepository;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,10 @@ public abstract class AbstractBaseIT {
    private int port;
 
    @Autowired
-   public TestRestTemplate restTemplate;
+   protected TestRestTemplate restTemplate;
+
+   @Autowired
+   protected ServiceRepository serviceRepository;
 
    private static final MongoDBContainer mongoDBContainer;
 

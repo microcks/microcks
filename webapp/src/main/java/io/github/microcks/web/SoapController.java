@@ -23,9 +23,11 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
+import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
@@ -36,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +46,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
@@ -54,9 +58,11 @@ import javax.script.ScriptEngineManager;
 import javax.xml.namespace.QName;
 import javax.xml.xpath.XPathExpression;
 import java.io.StringReader;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -82,6 +88,7 @@ public class SoapController {
    private final ResponseRepository responseRepository;
    private final ResourceRepository resourceRepository;
    private final ApplicationContext applicationContext;
+   private final ProxyService proxyService;
 
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
@@ -98,11 +105,12 @@ public class SoapController {
     * @param applicationContext The Spring application context
     */
    public SoapController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
-         ResourceRepository resourceRepository, ApplicationContext applicationContext) {
+         ResourceRepository resourceRepository, ApplicationContext applicationContext, ProxyService proxyService) {
       this.serviceRepository = serviceRepository;
       this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
       this.applicationContext = applicationContext;
+      this.proxyService = proxyService;
    }
 
 
@@ -110,11 +118,14 @@ public class SoapController {
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "validate", required = false) Boolean validate,
          @RequestParam(value = "delay", required = false) Long delay, @RequestBody String body,
-         HttpServletRequest request) {
+         @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
 
       long startTime = System.currentTimeMillis();
+
+      // Setup serviceAndVersion for proxy dispatchers
+      String serviceAndVersion = MockControllerCommons.composeServiceAndVersion(serviceName, version);
 
       // If serviceName was encoded with '+' instead of '%20', replace them.
       if (serviceName.contains("+")) {
@@ -199,6 +210,11 @@ public class SoapController {
             dispatcher = fallback.getDispatcher();
             dispatcherRules = fallback.getDispatcherRules();
          }
+         ProxyFallbackSpecification proxyFallback = MockControllerCommons.getProxyFallbackIfAny(rOperation);
+         if (proxyFallback != null) {
+            dispatcher = proxyFallback.getDispatcher();
+            dispatcherRules = proxyFallback.getDispatcherRules();
+         }
 
          Response response = null;
          DispatchContext dispatchContext = null;
@@ -211,6 +227,8 @@ public class SoapController {
                dispatchContext = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
             } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
                dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
+            } else if (DispatchStyles.PROXY.equals(dispatcher)) {
+               dispatchContext = new DispatchContext(DispatchStyles.PROXY, null);
             } else {
                return new ResponseEntity<>(String.format("The dispatch %s is not supported!", dispatcher),
                      HttpStatus.NOT_FOUND);
@@ -227,6 +245,14 @@ public class SoapController {
             // If we've found nothing and got a fallback, that's the moment!
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
                   fallback.getFallback());
+         }
+
+         Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
+               MockControllerCommons.extractResourcePath(request, serviceAndVersion), proxyFallback, request,
+               responses.isEmpty() ? null : responses.get(0));
+         if (proxyUrl.isPresent()) {
+            // If we've got a proxyUrl, that's the moment!
+            return proxyService.callExternal(proxyUrl.get(), method, headers, body);
          }
 
          if (!responses.isEmpty()) {
