@@ -66,7 +66,7 @@ import java.util.*;
 public class RestController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(RestController.class);
+   private static final Logger log = LoggerFactory.getLogger(RestController.class);
 
    private final ServiceRepository serviceRepository;
 
@@ -302,7 +302,11 @@ public class RestController {
                MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
             }
 
-            return new ResponseEntity<>(responseContent.getBytes(), responseHeaders, status);
+            // Return response content or just headers.
+            if (responseContent != null) {
+               return new ResponseEntity<>(responseContent.getBytes(), responseHeaders, status);
+            }
+            return new ResponseEntity<>(responseHeaders, status);
          }
          return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
       }

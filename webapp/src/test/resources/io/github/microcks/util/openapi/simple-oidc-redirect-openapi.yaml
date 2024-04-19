@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: Simple OIDC
+  description: Specification of a simple OpenID Connect identity provider.
+  version: 1.0
+paths:
+  /login/oauth/authorize:
+    get:
+      summary:
+      description:
+      parameters:
+        - name: response_type
+          in: query
+          description: Expected response type
+          schema:
+            type: string
+          examples:
+            generic:
+              value: code
+        - name: client_id
+          in: query
+          description: The client identifier for the OAuth 2.0 client that the token was issued to.
+          schema:
+            type: string
+          examples:
+            generic:
+              value: GHCLIENT
+        - name: scope
+          in: query
+          description: String containing a plus-separated list of scope values
+          schema:
+            type: string
+          examples:
+            generic:
+              value: openid+user:email
+        - name: state
+          in: query
+          description: Client state that should appear in redirect directive
+          schema:
+            type: string
+          examples:
+            generic:
+              value: e956e017-5e13-4c9d-b83b-6dd6337a6a86
+        - name: redirect_uri
+          in: query
+          description: Redirect to this URI after successfull authorization
+          schema:
+            type: string
+            format: uri
+          examples:
+            generic:
+              value: http://localhost:8080/Login/githubLoginSuccess
+      responses:
+        '302':
+          description: Redirect
+          x-microcks-refs:
+            - generic
+          headers:
+            'Location':
+              schema:
+                type: string
+              examples:
+                generic:
+                  value: "{{ request.params[redirect_uri] }}?state={{ request.params[state] }}&code={{ uuid() }}"

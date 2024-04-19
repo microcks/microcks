@@ -30,9 +30,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -151,6 +149,25 @@ public class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/pastry-headers/1.0.0/pastry?size=XL", String.class);
       String requestBasedHeader = response.getHeaders().getFirst("x-request-based-header");
       assertEquals("XL size", requestBasedHeader);
+   }
+
+   @Test
+   public void testHeadersOnlyResponse() {
+      // Upload simple-oidc-redirect-openapi spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
+
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
+            + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
+            String.class);
+      assertEquals(302, response.getStatusCode().value());
+
+      String content = response.getBody();
+      assertNull(content);
+
+      String location = response.getHeaders().getFirst("location");
+      assertNotNull(location);
+      assertTrue(location.startsWith("http://localhost:8080/Login/githubLoginSuccess?"));
+      assertTrue(location.contains("state=e956e017-5e13-4c9d-b83b-6dd6337a6a86"));
    }
 
    @Test

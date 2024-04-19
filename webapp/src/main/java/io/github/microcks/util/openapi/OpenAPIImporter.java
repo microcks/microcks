@@ -64,7 +64,7 @@ import java.util.stream.Collectors;
 public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(OpenAPIImporter.class);
+   private static final Logger log = LoggerFactory.getLogger(OpenAPIImporter.class);
 
    private static final List<String> VALID_VERBS = Arrays.asList("get", "put", "post", "delete", "options", "head",
          "patch", "trace");
@@ -72,6 +72,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    private static final String PARAMETERS_NODE = "parameters";
    private static final String PARAMETERS_QUERY_VALUE = "query";
    private static final String CONTENT_NODE = "content";
+   private static final String HEADERS_NODE = "headers";
    private static final String EXAMPLES_NODE = "examples";
    private static final String EXAMPLE_VALUE_NODE = "value";
 
@@ -364,8 +365,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    private Map<String, List<Header>> extractHeadersByExample(JsonNode responseNode) {
       Map<String, List<Header>> results = new HashMap<>();
 
-      if (responseNode.has("headers")) {
-         JsonNode headersNode = responseNode.path("headers");
+      if (responseNode.has(HEADERS_NODE)) {
+         JsonNode headersNode = responseNode.path(HEADERS_NODE);
          Iterator<String> headerNames = headersNode.fieldNames();
 
          while (headerNames.hasNext()) {
@@ -498,6 +499,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       JsonNode requestRefs = responseCode.getValue().path("x-microcks-refs");
 
       if (requestRefs.isArray()) {
+         // Find here potential headers for output of this operation examples.
+         Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue());
+
          Iterator<JsonNode> requestRefsIterator = requestRefs.elements();
          while (requestRefsIterator.hasNext()) {
             String exampleName = requestRefsIterator.next().textValue();
@@ -529,6 +533,10 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                response.setStatus(responseCode.getKey());
                if (!responseCode.getKey().startsWith("2")) {
                   response.setFault(true);
+               }
+               List<Header> responseHeaders = headersByExample.get(exampleName);
+               if (responseHeaders != null) {
+                  responseHeaders.stream().forEach(response::addHeader);
                }
 
                // Complete request with query parameters if any.
