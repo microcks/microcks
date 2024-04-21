@@ -42,6 +42,8 @@ import org.testcontainers.utility.DockerImageName;
 import java.io.File;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Base class for Integration tests using Http layers as well as testcontainers for MongoDB persistence.
@@ -102,5 +104,11 @@ public abstract class AbstractBaseIT {
 
       assertEquals(201, response.getStatusCode().value());
       log.info("Just uploaded: " + response.getBody());
+   }
+
+   protected void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
+      assertEquals(200, response.getStatusCode().value());
+      assertNotNull(response.getBody());
+      assertTrue(response.getBody().contains(substring));
    }
 }
