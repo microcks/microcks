@@ -103,6 +103,7 @@ public class SoapController {
     * @param responseRepository The repository to access responses definitions
     * @param resourceRepository The repository to access resources artifacts
     * @param applicationContext The Spring application context
+    * @param proxyService       The proxy to external URLs or services
     */
    public SoapController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
          ResourceRepository resourceRepository, ApplicationContext applicationContext, ProxyService proxyService) {
