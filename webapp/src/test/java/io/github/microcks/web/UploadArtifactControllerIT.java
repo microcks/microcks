@@ -1,32 +1,28 @@
 package io.github.microcks.web;
 
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@AutoConfigureMockMvc
-class UploadArtifactControllerIT extends AbstractBaseIT {
+public class UploadArtifactControllerIT extends AbstractBaseIT {
 
 
    @Autowired
-   MockMvc mockMvc;
+   public MockMvc mockMvc;
 
 
    @Test
-   @DisplayName("Should return 204 when the url is empty")
-   void shouldNotCreateWhenUrlIsEmpty() throws Exception {
+   public void shouldNotCreateWhenUrlIsEmpty() throws Exception {
       mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", ""))
-            .andExpect(MockMvcResultMatchers.status().is(204));
+            .andExpect(MockMvcResultMatchers.status().is(HttpStatus.NO_CONTENT.value()));
    }
 
    @Test
-   @DisplayName("Should return 201 when the Service is created from OpenAPI")
-   void shouldCreateServiceFromOpenAPIImporter() throws Exception {
+   public void shouldCreateServiceFromOpenAPIImporter() throws Exception {
       String apiPastry = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
       mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", apiPastry))
             .andExpect(MockMvcResultMatchers.status().isCreated())
@@ -34,8 +30,7 @@ class UploadArtifactControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   @DisplayName("Should return 201 when the Service is created from Postman")
-   void shouldCreateServiceFromPostmanCorrectly() throws Exception {
+   public void shouldCreateServiceFromPostmanCorrectly() throws Exception {
       String beerCatalogAPI = "https://raw.githubusercontent.com/microcks/microcks/master/samples/BeerCatalogAPI-collection.json";
       mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", beerCatalogAPI))
             .andExpect(MockMvcResultMatchers.status().isCreated())

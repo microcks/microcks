@@ -21,6 +21,7 @@ import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -51,6 +52,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("it")
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
+@AutoConfigureMockMvc
 public abstract class AbstractBaseIT {
 
    /** A simple logger for diagnostic messages. */
