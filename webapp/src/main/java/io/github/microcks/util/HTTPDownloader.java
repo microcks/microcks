@@ -46,7 +46,7 @@ import java.util.Map;
 /**
  * This is a utility class for accessing HTTP content using diverse security authentication mechanisms and output
  * formats
- * 
+ *
  * @author laurent
  */
 public class HTTPDownloader {
@@ -68,7 +68,7 @@ public class HTTPDownloader {
     * for handling proxy username/password, target service authentication (through basic and bearer authorization or
     * customer request header), remote SSL connection through installation of CA certificate or disabling SSL validation
     * (ie. accepting all certificate and hostname verifications).
-    * 
+    *
     * @param remoteUrl            The remote URL to check
     * @param secret               The secret associated with this remote URL (if any. Can be null)
     * @param disableSSLValidation Whether to disable SSL validation. If true, all SSL related information from secret
@@ -106,7 +106,7 @@ public class HTTPDownloader {
     * connection is prepared for handling proxy username/password, target service authentication (through basic and
     * bearer authorization or customer request header), remote SSL connection through installation of CA certificate or
     * disabling SSL validation (ie. accepting all certificate and hostname verifications).
-    * 
+    *
     * @param remoteUrl            The remote URL to download and transfer into resulting file
     * @param secret               The secret associated with this remote URL (if any. Can be null)
     * @param disableSSLValidation Whether to disable SSL validation. If true, all SSL related information from secret
@@ -134,7 +134,7 @@ public class HTTPDownloader {
     * connection is prepared for handling proxy username/password, target service authentication (through basic and
     * bearer authorization or customer request header), remote SSL connection through installation of CA certificate or
     * disabling SSL validation (ie. accepting all certificate and hostname verifications).
-    * 
+    *
     * @param remoteUrl            The remote URL to download and transfer into resulting file
     * @param secret               The secret associated with this remote URL (if any. Can be null)
     * @param disableSSLValidation Whether to disable SSL validation. If true, all SSL related information from secret
@@ -266,6 +266,7 @@ public class HTTPDownloader {
       sslContext.init(null, tmf.getTrustManagers(), null);
       ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
    }
+
 
    /** Simple wrapper around a downloaded local file and the header we received during the download. */
    public static class FileAndHeaders {

@@ -36,4 +36,12 @@ public class UploadArtifactControllerIT extends AbstractBaseIT {
             .andExpect(MockMvcResultMatchers.status().isCreated())
             .andExpect(MockMvcResultMatchers.jsonPath("$.name", Matchers.is("Beer Catalog API:0.99")));
    }
+
+   @Test
+   public void shouldNotCreateServiceWhenTheUrlIsWrong() throws Exception {
+      String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/wrong-collection.json";
+      mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", wrongUrl))
+            .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andExpect(MockMvcResultMatchers.content()
+                  .string(Matchers.containsString("Exception while retrieving remote item")));
+   }
 }

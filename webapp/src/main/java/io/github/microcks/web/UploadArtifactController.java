@@ -58,7 +58,7 @@ public class UploadArtifactController {
    }
 
    @PostMapping(value = "/artifact/download")
-   public ResponseEntity<?> importArtifact(@RequestParam(value = "url", required = true) String url,
+   public ResponseEntity<String> importArtifact(@RequestParam(value = "url", required = true) String url,
          @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!url.isEmpty()) {
          List<Service> services = null;
