@@ -3,13 +3,14 @@ package io.github.microcks.web;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
+@AutoConfigureMockMvc
 public class UploadArtifactControllerIT extends AbstractBaseIT {
-
 
    @Autowired
    public MockMvc mockMvc;
@@ -43,5 +44,11 @@ public class UploadArtifactControllerIT extends AbstractBaseIT {
       mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download").param("url", wrongUrl))
             .andExpect(MockMvcResultMatchers.status().isInternalServerError()).andExpect(MockMvcResultMatchers.content()
                   .string(Matchers.containsString("Exception while retrieving remote item")));
+   }
+
+   @Test
+   public void shouldNotCreateServiceWithoutUrl() throws Exception {
+      mockMvc.perform(MockMvcRequestBuilders.post("/api/artifact/download"))
+            .andExpect(MockMvcResultMatchers.status().isBadRequest());
    }
 }
