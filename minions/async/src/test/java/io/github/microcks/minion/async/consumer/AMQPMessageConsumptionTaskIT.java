@@ -38,7 +38,7 @@ import java.util.concurrent.TimeoutException;
  * @author mcruzdev
  */
 @Testcontainers
-public class AMQPMessageConsumptionTaskITest {
+public class AMQPMessageConsumptionTaskIT {
 
    private static final String RABBIT_MQ_PORT = "5672";
    private static final String QUEUE_NAME = "logs";
