@@ -51,11 +51,14 @@ public class UploadArtifactController {
    /** A simple logger for diagnostic messages. */
    private static Logger log = LoggerFactory.getLogger(UploadArtifactController.class);
 
-   @Autowired
    private ServiceService serviceService;
 
+   public UploadArtifactController(ServiceService serviceService) {
+      this.serviceService = serviceService;
+   }
+
    @PostMapping(value = "/artifact/download")
-   public ResponseEntity<?> importArtifact(@RequestParam(value = "url", required = true) String url,
+   public ResponseEntity<String> importArtifact(@RequestParam(value = "url", required = true) String url,
          @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!url.isEmpty()) {
          List<Service> services = null;
