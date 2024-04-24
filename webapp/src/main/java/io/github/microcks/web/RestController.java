@@ -91,6 +91,7 @@ public class RestController {
     * @param serviceRepository  The repository to access services definitions
     * @param responseRepository The repository to access responses definitions
     * @param applicationContext The Spring application context
+    * @param proxyService       The proxy to external URLs or services
     */
    public RestController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
          ApplicationContext applicationContext, ProxyService proxyService) {

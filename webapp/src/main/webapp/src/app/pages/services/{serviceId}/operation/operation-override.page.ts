@@ -73,7 +73,9 @@ export class OperationOverridePageComponent implements OnInit {
       {"value": "QUERY_ARGS", "label": "QUERY_ARGS"},
       {"value": "JSON_BODY", "label": "JSON BODY"},
       {"value": "SCRIPT", "label": "SCRIPT"},
-      {"value": "FALLBACK", "label": "FALLBACK"}
+      {"value": "PROXY", "label": "PROXY"},
+      {"value": "FALLBACK", "label": "FALLBACK"},
+      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
     ]
   }
 

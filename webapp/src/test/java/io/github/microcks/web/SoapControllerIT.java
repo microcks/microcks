@@ -228,10 +228,4 @@ public class SoapControllerIT extends AbstractBaseIT {
             name);
       return new HttpEntity<>(request, headers);
    }
-
-   private void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
-      assertEquals(200, response.getStatusCode().value());
-      assertNotNull(response.getBody());
-      assertTrue(response.getBody().contains(substring));
-   }
 }

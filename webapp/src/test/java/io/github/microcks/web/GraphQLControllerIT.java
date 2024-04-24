@@ -15,12 +15,17 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Service;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.http.ResponseEntity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -140,5 +145,64 @@ public class GraphQLControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+   }
+
+   @Test
+   public void testProxy() {
+      // Upload the required reference artifacts.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy.graphql", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy-postman.json", false);
+
+      // Override the dispatcher to PROXY
+      Service service = serviceRepository.findByNameAndVersion("Movie Graph API", "1.0");
+      Operation operation = service.getOperations().stream().filter((o) -> "film".equals(o.getName())).findFirst()
+            .orElseThrow();
+      operation.setDispatcher("PROXY");
+      operation.setDispatcherRules(getServerUrl() + "/graphql/Movie+Graph+Original+API/1.0");
+      serviceRepository.save(service);
+
+      // Execute and assert that it was proxy.
+      String query = """
+            {"query": "query film($id: String) {film(id: \\"ZmlsbXM6Mg==\\") {id title episodeID starCount comment}}"}""";
+      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertResponseIsOkAndContains(response, "\"comment\":\"Original!!!\"");
+   }
+
+   @Test
+   public void testProxyFallback() {
+      // Upload the required reference artifacts.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
+
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy.graphql", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-to-test-proxy-postman.json", false);
+
+      // Override the dispatcher to PROXY
+      Service service = serviceRepository.findByNameAndVersion("Movie Graph API", "1.0");
+      Operation operation = service.getOperations().stream().filter((o) -> "film".equals(o.getName())).findFirst()
+            .orElseThrow();
+      operation.setDispatcher("PROXY_FALLBACK");
+      operation.setDispatcherRules(String.format("""
+            {"dispatcher": "QUERY_ARGS",
+            "dispatcherRules": "id",
+            "proxyUrl": "%s/graphql/Movie+Graph+Original+API/1.0"}""", getServerUrl()));
+      serviceRepository.save(service);
+
+      // Execute and assert that it wasn't proxy.
+      String query = """
+            {"query": "query film($id: String) {film(id: \\"ZmlsbXM6Mg==\\") {id title episodeID starCount comment}}"}""";
+      ResponseEntity<String> response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertNotNull(response.getBody());
+      assertFalse(response.getBody().contains("\"comment\":\"Original!!!\""));
+
+      // Execute and assert that it was proxy.
+      query = """
+            {"query": "query film($id: String) {film(id: \\"ZmlsbXM6MA==\\") {id title episodeID starCount comment}}"}""";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertResponseIsOkAndContains(response, "\"comment\":\"Original!!!\"");
    }
 }

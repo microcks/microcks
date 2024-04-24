@@ -25,6 +25,7 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
@@ -33,6 +34,7 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
+import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.graphql.GraphQLHttpRequest;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
@@ -65,10 +67,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -76,11 +80,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.servlet.http.HttpServletRequest;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * A controller for mocking GraphQL responses.
@@ -99,6 +105,7 @@ public class GraphQLController {
    private final ResponseRepository responseRepository;
    private final ResourceRepository resourceRepository;
    private final ApplicationContext applicationContext;
+   private final ProxyService proxyService;
 
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
@@ -115,25 +122,31 @@ public class GraphQLController {
     * @param responseRepository The repository to access responses definitions
     * @param resourceRepository The repository to access resources artifacts
     * @param applicationContext The Spring application context
+    * @param proxyService       The proxy to external URLs or services
     */
    public GraphQLController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
-         ResourceRepository resourceRepository, ApplicationContext applicationContext) {
+         ResourceRepository resourceRepository, ApplicationContext applicationContext, ProxyService proxyService) {
       this.serviceRepository = serviceRepository;
       this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
       this.applicationContext = applicationContext;
+      this.proxyService = proxyService;
    }
 
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.GET, RequestMethod.POST })
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
-         @RequestBody(required = false) String body, HttpServletRequest request) {
+         @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
+         HttpMethod method) {
 
       log.info("Servicing GraphQL mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
 
       long startTime = System.currentTimeMillis();
+
+      // Setup serviceAndVersion for proxy dispatchers
+      String serviceAndVersion = MockControllerCommons.composeServiceAndVersion(serviceName, version);
 
       // If serviceName was encoded with '+' instead of '%20', remove them.
       if (serviceName.contains("+")) {
@@ -194,10 +207,14 @@ public class GraphQLController {
       final Long[] maxDelay = { (delay == null ? 0L : delay) };
 
       for (Selection<?> selection : graphqlOperation.getSelectionSet().getSelections()) {
-         GraphQLQueryResponse graphqlResponse = null;
          try {
-            graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
-                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request);
+            GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
+                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request,
+                  serviceAndVersion);
+            if (graphqlResponse.getProxyUrl() != null) {
+               // If we've got a proxyUrl, that's the moment!
+               return proxyService.callExternal(graphqlResponse.getProxyUrl(), method, headers, body);
+            }
             graphqlResponses.add(graphqlResponse);
             if (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
                maxDelay[0] = graphqlResponse.getOperationDelay();
@@ -274,12 +291,13 @@ public class GraphQLController {
     * @param body                The Http request body
     * @param graphqlHttpReq      The Http GraphQL request wrapper
     * @param request             The bare Http Servlet request
+    * @param serviceAndVersion   The composed serviceAndVersion string for the proxy checking
     * @return A GraphQL query response wrapper with some elements from the Microcks domain matching Response
     * @throws GraphQLQueryProcessingException if incoming field selection query cannot be processed
     */
    protected GraphQLQueryResponse processGraphQLQuery(Service service, String operationType, Field graphqlField,
          List<FragmentDefinition> fragmentDefinitions, String body, GraphQLHttpRequest graphqlHttpReq,
-         HttpServletRequest request) throws GraphQLQueryProcessingException {
+         HttpServletRequest request, String serviceAndVersion) throws GraphQLQueryProcessingException {
 
       GraphQLQueryResponse result = new GraphQLQueryResponse();
       String operationName = graphqlField.getName();
@@ -318,6 +336,11 @@ public class GraphQLController {
             dispatcher = fallback.getDispatcher();
             dispatcherRules = fallback.getDispatcherRules();
          }
+         ProxyFallbackSpecification proxyFallback = MockControllerCommons.getProxyFallbackIfAny(rOperation);
+         if (proxyFallback != null) {
+            dispatcher = proxyFallback.getDispatcher();
+            dispatcherRules = proxyFallback.getDispatcherRules();
+         }
 
          //
          DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules, graphqlField,
@@ -350,6 +373,14 @@ public class GraphQLController {
             if (!responses.isEmpty()) {
                response = responses.get(0);
             }
+         }
+
+         Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
+               MockControllerCommons.extractResourcePath(request, serviceAndVersion), proxyFallback, request, response);
+         if (proxyUrl.isPresent()) {
+            // If we've got a proxyUrl, that's the moment to tell about it!
+            result.setProxyUrl(proxyUrl.get());
+            return result;
          }
 
          if (response == null) {
@@ -517,6 +548,7 @@ public class GraphQLController {
       Long operationDelay;
       Response response;
       JsonNode jsonResponse;
+      URI proxyUrl;
 
       public String getOperationName() {
          return operationName;
@@ -556,6 +588,14 @@ public class GraphQLController {
 
       public void setResponse(Response response) {
          this.response = response;
+      }
+
+      public URI getProxyUrl() {
+         return proxyUrl;
+      }
+
+      public void setProxyUrl(URI proxyUrl) {
+         this.proxyUrl = proxyUrl;
       }
    }
 
