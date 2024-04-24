@@ -1916,7 +1916,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testSImpleOpenAPIWithObjectQUeryParam() {
+   public void testSimpleOpenAPIWithObjectQueryParam() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/object-query-params.yaml",
