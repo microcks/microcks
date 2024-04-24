@@ -15,6 +15,7 @@
  */
 package io.github.microcks.util.openapi;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Metadata;
@@ -45,16 +46,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * An implementation of MockRepositoryImporter that deals with OpenAPI v3.x.x specification file ; whether encoding into
@@ -309,6 +304,13 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   for (JsonNode current : (ArrayNode) exampleValue) {
                      exampleParams.put(parameterName, getValueString(current));
                   }
+               } else if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isObject()) {
+                  final var fieldsIterator = ((ObjectNode) exampleValue).fields();
+                  while (fieldsIterator.hasNext()) {
+                     var current = fieldsIterator.next();
+                     exampleParams.put(current.getKey(), getValueString(current.getValue()));
+                  }
+
                } else {
                   exampleParams.put(parameterName, getValueString(exampleValue));
                }
@@ -651,13 +653,19 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       Iterator<JsonNode> parameters = operation.path(PARAMETERS_NODE).elements();
       while (parameters.hasNext()) {
          JsonNode parameter = followRefIfAny(parameters.next());
-
          String parameterIn = parameter.path("in").asText();
+         String parameterType = followRefIfAny(parameter.path("schema")).path("type").asText();
          if (!"path".equals(parameterIn)) {
             if (params.length() > 0) {
                params.append(" && ");
             }
-            params.append(parameter.path("name").asText());
+            if (parameterType.equals("object")) {
+               params.append(StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+                     followRefIfAny(parameter.path("schema")).path("properties").fieldNames(), Spliterator.ORDERED),
+                     false).collect(Collectors.joining(" && ")));
+            } else {
+               params.append(parameter.path("name").asText());
+            }
          }
       }
       return params.toString();

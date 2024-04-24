@@ -1914,4 +1914,43 @@ public class OpenAPIImporterTest {
          }
       }
    }
+
+   @Test
+   public void testSImpleOpenAPIWithObjectQUeryParam() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/object-query-params.yaml",
+               null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+
+      // Check that operations and input/output have been found.
+      assertEquals(1, service.getOperations().size());
+      for (Operation operation : service.getOperations()) {
+         if ("GET /messiah".equals(operation.getName())) {
+            // Check that messages have been correctly found.
+            List<Exchange> exchanges = null;
+            try {
+               exchanges = importer.getMessageDefinitions(service, operation);
+            } catch (Exception e) {
+               fail("No exception should be thrown when importing message definitions.");
+            }
+            assertEquals(1, exchanges.size());
+            assertEquals("GET", operation.getMethod());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals("lastName && firstName", operation.getDispatcherRules());
+         }
+      }
+   }
 }
