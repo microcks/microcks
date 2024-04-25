@@ -98,7 +98,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testFallbackMatchingWithRegex() {
+   public void testNoFallbackMatchingWithRegex() {
       // Upload modified pastry spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
 
@@ -116,16 +116,10 @@ public class RestControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
 
-      // Check operation with an undefined defined mock (name: 'Dummy'), should use fallback dispatching based on regular expression matching
+      // Check operation with an undefined defined mock (name: 'Dummy'), should now return a 400 error as
+      // per issue #819 and #1132 to have a consistent behaviour, allow proxying support and this kind of stuff.
       response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry/Dummy/details", String.class);
-      assertEquals(200, response.getStatusCode().value());
-      try {
-         JsonNode details = mapper.readTree(response.getBody());
-         String description = details.get("description").asText();
-         assertTrue(description.startsWith("Detail -"));
-      } catch (Exception e) {
-         fail("No Exception should be thrown here");
-      }
+      assertEquals(400, response.getStatusCode().value());
    }
 
    @Test
@@ -213,10 +207,10 @@ public class RestControllerIT extends AbstractBaseIT {
             .replaceFirst("pastry-real", "pastry-proxy"));
       serviceRepository.save(service);
 
-      // Check that we don't fall into infinite loop...
+      // Check that we don't fall into infinite loop and that we can't locally handle the call (error 400)
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
             String.class);
-      assertEquals(200, response.getStatusCode().value());
+      assertEquals(400, response.getStatusCode().value());
       verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any());
    }
 

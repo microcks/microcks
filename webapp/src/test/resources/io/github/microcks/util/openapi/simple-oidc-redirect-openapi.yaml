@@ -6,8 +6,14 @@ info:
 paths:
   /login/oauth/authorize:
     get:
-      summary:
-      description:
+      x-microcks-operation:
+        dispatcher: FALLBACK
+        dispatcherRules: |-
+          {
+            "dispatcher": "URI_PARAMS",
+            "dispatcherRules": "response_type",
+            "fallback": "generic"
+          }
       parameters:
         - name: response_type
           in: query
