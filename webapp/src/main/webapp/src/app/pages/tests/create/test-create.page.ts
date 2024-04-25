@@ -24,7 +24,7 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { SecretsService } from '../../../services/secrets.service';
-import { Service } from '../../../models/service.model';
+import { Operation, Service } from '../../../models/service.model';
 import { TestRunnerType, OAuth2ClientContext } from "../../../models/test.model";
 import { Secret } from '../../../models/secret.model';
 
@@ -166,6 +166,13 @@ export class TestCreatePageComponent implements OnInit {
     } else {
       this.removedOperationsNames.push(operationName);
     }
+  }
+
+  public resetOperations(
+    operations: Operation[] = this.resolvedService &&
+      this.resolvedService.operations
+  ): void {
+    this.removedOperationsNames = operations.map((op) => op.name);
   }
 
   public addHeaderValue(operationName: string) {
