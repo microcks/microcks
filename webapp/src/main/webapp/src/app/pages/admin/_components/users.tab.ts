@@ -93,10 +93,23 @@ export class UsersTabComponent implements OnInit {
         next: results => {
           // Flatten the groups.
           this.groups = results.filter(group => group.path === '/microcks').flatMap(group => group.subGroups);
+
+          // We may a direct array of subGroups because of using the new populateHierarchy=false flag.
+          if (this.groups.length == 1 && this.groups[0].subGroups.length == 0) {
+            this.groups = results.filter(group => group.path.startsWith('/microcks/manager'));
+          }
           this.groups.forEach(group => {
             if (group.path === '/microcks/manager') { this.managerGroup = group; }
           });
-          this.groups = this.groups.flatMap(group => group.subGroups);
+
+          // Flatten once again if necessary.
+          this.groups = this.groups.flatMap(group => {
+            if (group.subGroups.length > 0) {
+              return group.subGroups;
+            } else {
+              return group;
+            }
+          });
           this.checkGroupsCompleteness();
         },
         error: err => {
@@ -234,7 +247,7 @@ export class UsersTabComponent implements OnInit {
     this.usersSvc.getUserGroups(user.id).subscribe(userGroups => {
       const initialState = {
         user: user,
-        userGroups: userGroups,
+        userGroups: userGroups.filter(group => group.path.startsWith('/microcks/manager/')),
         groups: this.groups
       };
       this.modalRef = this.modalService.show(GroupsManagementDialogComponent, {initialState});

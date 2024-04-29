@@ -67,6 +67,7 @@ export class UsersService {
     // 'search' for Pre-Keycloak-X, 'q' for 'Keycloak-X'
     const options = {
       params: new HttpParams().set('search', 'microcks').set('q', 'microcks')
+        .set('populateHierarchy', 'false')
     };
     return this.http.get<any[]>(this.rootUrl + '/groups', options);
   }
@@ -104,8 +105,7 @@ export class UsersService {
     return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId);
   }
   getUserGroups(userId: string): Observable<any[]> {
-    const options = { params: new HttpParams().set('search', 'microcks') };
-    return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/groups', options);
+    return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/groups');
   }
 
   assignRoleToUser(userId: string, role: string): Observable<any> { 
