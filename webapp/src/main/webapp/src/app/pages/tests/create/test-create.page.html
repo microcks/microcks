@@ -175,6 +175,10 @@
             <div class="control-group" *ngIf="service.type != 'EVENT'">
               <label class="control-label required-pf" for="filteredOperationsNames">Operations</label>
               <div class="controls">
+                <div class="filter-toolbar">
+                  <button class="btn btn-link" (click)="resetOperations([])">Select All</button>
+                  <button class="btn btn-link" (click)="resetOperations()">Delesect All</button>
+                </div>
                 <ul>
                   <li *ngFor="let operation of service.operations">
                     <label class="checkbox">

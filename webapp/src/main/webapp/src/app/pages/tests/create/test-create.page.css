@@ -56,3 +56,8 @@
   padding-bottom: 5px;
   color: #333;
 }
+
+.filter-toolbar {
+  display: flex;
+  gap: 5px;
+}
