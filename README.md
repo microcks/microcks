@@ -32,6 +32,7 @@ The current development version is `1.9.1-SNAPSHOT`. [![GitHub Workflow Status](
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_shield)
 
 ## Versions
 
@@ -52,3 +53,7 @@ The build instructions are available in the [contribution guide](CONTRIBUTING.md
 
 [![Stargazers repo roster for @microcks/microcks](http://reporoster.com/stars/microcks/microcks)](http://github.com/microcks/microcks/stargazers)
 [![Forkers repo roster for @microcks/microcks](http://reporoster.com/forks/microcks/microcks)](http://github.com/microcks/microcks/network/members)
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_large)
