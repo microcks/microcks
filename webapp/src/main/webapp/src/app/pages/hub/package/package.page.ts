@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, ParamMap } from "@angular/router";
+import { ActivatedRoute, ParamMap } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -35,16 +35,16 @@ export class HubPackagePageComponent implements OnInit {
   packageAPIVersions: Observable<APIVersion[]>;
   resolvedPackage: APIPackage;
   resolvedAPIVersions: APIVersion[];
-  
+
   constructor(private packagesSvc: HubService, private route: ActivatedRoute) { }
 
   ngOnInit() {
     this.package = this.route.paramMap.pipe(
-      switchMap((params: ParamMap) => 
+      switchMap((params: ParamMap) =>
         this.packagesSvc.getPackage(params.get('packageId')))
     );
     this.packageAPIVersions = this.route.paramMap.pipe(
-      switchMap((params: ParamMap) => 
+      switchMap((params: ParamMap) =>
         this.packagesSvc.getLatestAPIVersions(params.get('packageId')))
     );
 
@@ -56,7 +56,7 @@ export class HubPackagePageComponent implements OnInit {
     });
   }
 
-  renderLongDescription() : string {
+  renderLongDescription(): string {
     return markdownConverter.makeHtml(this.resolvedPackage.longDescription);
   }
 }

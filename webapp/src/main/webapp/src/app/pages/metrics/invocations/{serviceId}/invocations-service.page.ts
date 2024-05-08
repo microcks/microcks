@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -32,14 +32,14 @@ export class InvocationsServicePageComponent implements OnInit {
 
   serviceName: string;
   serviceVersion: string;
-  dailyInvocations: Observable<DailyInvocations>
+  dailyInvocations: Observable<DailyInvocations>;
 
   day: Date = null;
-  hour: number = 0;
+  hour = 0;
   serviceNameAndVersion: string;
-  
-  constructor(private metricsSvc: MetricsService, 
-    private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
+
+  constructor(private metricsSvc: MetricsService,
+              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
   }
 
   ngOnInit() {
@@ -48,7 +48,7 @@ export class InvocationsServicePageComponent implements OnInit {
         this.serviceName = params.get('serviceName');
         this.serviceVersion = params.get('serviceVersion');
         this.serviceNameAndVersion = this.serviceName + ':' + this.serviceVersion;
-        return this.metricsSvc.getServiceInvocationStats(params.get('serviceName'), params.get('serviceVersion'), new Date())
+        return this.metricsSvc.getServiceInvocationStats(params.get('serviceName'), params.get('serviceVersion'), new Date());
       })
     );
   }

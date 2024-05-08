@@ -36,9 +36,9 @@ export class GenericResourcesDialogComponent implements OnInit {
 
   resources: GenericResource[];
   resourcesCount: number;
-  
+
   constructor(private servicesSvc: ServicesService, public bsModalRef: BsModalRef) {}
- 
+
   ngOnInit() {
     this.getGenericResources();
     this.countGenericResources();
@@ -51,7 +51,7 @@ export class GenericResourcesDialogComponent implements OnInit {
     } as PaginationConfig;
   }
 
-  getGenericResources(page: number = 1):void {
+  getGenericResources(page: number = 1): void {
     this.servicesSvc.getGenericResources(this.service).subscribe(results => this.resources = results);
   }
 
@@ -63,17 +63,17 @@ export class GenericResourcesDialogComponent implements OnInit {
   }
 
   handlePageSize($event: PaginationEvent) {
-    //this.updateItems();
+    // this.updateItems();
   }
 
   handlePageNumber($event: PaginationEvent) {
-    this.getGenericResources($event.pageNumber)
+    this.getGenericResources($event.pageNumber);
   }
 
   public printPaylaod(payload: any): string {
     if (payload != undefined && payload != null) {
       return JSON.stringify(payload);
     }
-    return "Cannot render payload as string !";
+    return 'Cannot render payload as string !';
   }
 }

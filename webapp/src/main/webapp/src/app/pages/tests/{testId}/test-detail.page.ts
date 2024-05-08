@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, ParamMap } from "@angular/router";
+import { ActivatedRoute, ParamMap } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -23,7 +23,7 @@ import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
 import { ListConfig } from 'patternfly-ng/list';
 
-import { ServicesService } from '../../../services/services.service'
+import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { Service, ServiceType } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
@@ -49,8 +49,8 @@ export class TestDetailPageComponent implements OnInit {
   resolvedService: Service;
   modalRef: BsModalRef;
 
-  constructor(private servicesSvc: ServicesService, private testsSvc: TestsService, 
-    private modalService: BsModalService, private route: ActivatedRoute) {
+  constructor(private servicesSvc: ServicesService, private testsSvc: TestsService,
+              private modalService: BsModalService, private route: ActivatedRoute) {
   }
 
   ngOnInit() {
@@ -66,14 +66,14 @@ export class TestDetailPageComponent implements OnInit {
         this.resolvedService = svc;
         if (svc.type != ServiceType.EVENT) {
           res.testCaseResults.forEach(testCase => {
-            var opName = this.encode(testCase.operationName);
+            const opName = this.encode(testCase.operationName);
             this.testsSvc.getMessages(res, testCase.operationName).subscribe(pairs => {
               this.testMessages[opName] = pairs;
             });
           });
         } else {
           res.testCaseResults.forEach(testCase => {
-            var opName = this.encode(testCase.operationName);
+            const opName = this.encode(testCase.operationName);
             this.testsSvc.getEventMessages(res, testCase.operationName).subscribe(pairs => {
               this.testMessages[opName] = pairs;
             });
@@ -105,22 +105,22 @@ export class TestDetailPageComponent implements OnInit {
   }
 
   public messagePairFor(operationName: string, requestName: string): any {
-    var pairs = this.testMessages[this.encode(operationName)];
+    const pairs = this.testMessages[this.encode(operationName)];
     if (pairs == undefined) {
       return undefined;
     }
-    var result = pairs.filter(function(item, index, array) {
-      return item.request.name == requestName; 
+    const result = pairs.filter(function(item, index, array) {
+      return item.request.name == requestName;
     })[0];
     return result;
   }
   public eventMessageFor(operationName: string, eventMessageName: string): any {
-    var events = this.testMessages[this.encode(operationName)];
+    const events = this.testMessages[this.encode(operationName)];
     if (events == undefined) {
       return undefined;
     }
-    var result = events.filter(function(item, index, array) {
-      return item.eventMessage.name == eventMessageName; 
+    const result = events.filter(function(item, index, array) {
+      return item.eventMessage.name == eventMessageName;
     })[0];
     return result;
   }
@@ -136,10 +136,10 @@ export class TestDetailPageComponent implements OnInit {
 
   public formatErrorMessage(message: string): string {
     if (message != undefined) {
-      var result = message.replace(/\\n/g, '\n');
+      const result = message.replace(/\\n/g, '\n');
       return result.replace(/<br\/>/g, '\n');
     }
-    return "";
+    return '';
   }
 
   public timedOut(test: TestResult): boolean {

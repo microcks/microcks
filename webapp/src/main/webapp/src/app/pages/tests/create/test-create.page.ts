@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit} from "@angular/core";
-import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+import { Component, OnInit} from '@angular/core';
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -25,13 +25,13 @@ import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { SecretsService } from '../../../services/secrets.service';
 import { Operation, Service } from '../../../models/service.model';
-import { TestRunnerType, OAuth2ClientContext } from "../../../models/test.model";
+import { TestRunnerType, OAuth2ClientContext } from '../../../models/test.model';
 import { Secret } from '../../../models/secret.model';
 
 @Component({
-  selector: "test-create-page",
-  templateUrl: "test-create.page.html",
-  styleUrls: ["test-create.page.css"]
+  selector: 'test-create-page',
+  templateUrl: 'test-create.page.html',
+  styleUrls: ['test-create.page.css']
 })
 export class TestCreatePageComponent implements OnInit {
 
@@ -40,14 +40,14 @@ export class TestCreatePageComponent implements OnInit {
   serviceId: string;
   testEndpoint: string;
   runnerType: TestRunnerType;
-  showAdvanced: boolean = false;
-  submitEnabled: boolean = false;
+  showAdvanced = false;
+  submitEnabled = false;
   notifications: Notification[];
-  timeout: number = 10000;
+  timeout = 10000;
   secretId: string;
   secretName: string;
   operationsHeaders: any = {
-    'globals': []
+    globals: []
   };
   secrets: Secret[];
   oAuth2ClientContext: OAuth2ClientContext = new OAuth2ClientContext();
@@ -56,7 +56,7 @@ export class TestCreatePageComponent implements OnInit {
   removedOperationsNames: string[] = [];
 
   constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private secretsSvc: SecretsService,
-    private notificationService: NotificationService, private route: ActivatedRoute, private router: Router) {
+              private notificationService: NotificationService, private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit() {
@@ -89,7 +89,7 @@ export class TestCreatePageComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              "New Test", "Test has been initialized from " + testId, false, null, null);
+              'New Test', 'Test has been initialized from ' + testId, false, null, null);
           this.testEndpoint = res.testedEndpoint;
           this.runnerType = res.runnerType;
           // Complete with optional properties.
@@ -111,12 +111,12 @@ export class TestCreatePageComponent implements OnInit {
             }
           }
           // Finalize with filtered operations.
-          if (this.resolvedService.type === "EVENT" && res.testCaseResults.length == 1) {
+          if (this.resolvedService.type === 'EVENT' && res.testCaseResults.length == 1) {
             this.filteredOperation = res.testCaseResults[0].operationName;
           } else {
-            for (var i=0; i<this.resolvedService.operations.length; i++) {
-              var operation = this.resolvedService.operations[i];
-              var foundOperation = res.testCaseResults.find(tc => tc.operationName === operation.name);
+            for (let i = 0; i < this.resolvedService.operations.length; i++) {
+              const operation = this.resolvedService.operations[i];
+              const foundOperation = res.testCaseResults.find(tc => tc.operationName === operation.name);
               if (foundOperation == undefined || foundOperation == null) {
                 this.removedOperationsNames.push(operation.name);
               }
@@ -126,7 +126,7 @@ export class TestCreatePageComponent implements OnInit {
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              "New Test", "Test cannot be initialized from " + testId, false, null, null);
+              'New Test', 'Test cannot be initialized from ' + testId, false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
@@ -140,27 +140,27 @@ export class TestCreatePageComponent implements OnInit {
     this.showAdvanced = show;
   }
   public updateSecretProperties(event: any): void {
-    var secretId = event.target.value;
+    const secretId = event.target.value;
     if ('undefined' != event.target.value) {
-      for (var i=0; i<this.secrets.length; i++) {
-        var secret = this.secrets[i];
+      for (let i = 0; i < this.secrets.length; i++) {
+        const secret = this.secrets[i];
         if (secretId === secret.id) {
           this.secretName = secret.name;
           break;
         }
-      };
+      }
     } else {
       this.secretName = null;
     }
   }
   public updateGrantType(event: any): void {
-      var secretId = event.target.value;
+      const secretId = event.target.value;
       if ('undefined' === event.target.value) {
         this.oAuth2ClientContext.grantType = undefined;
         this.checkForm();
       }
     }
-  public filterOperation(operationName: string) : void {
+  public filterOperation(operationName: string): void {
     if (this.removedOperationsNames.includes(operationName)) {
       this.removedOperationsNames.splice(this.removedOperationsNames.indexOf(operationName), 1);
     } else {
@@ -176,18 +176,18 @@ export class TestCreatePageComponent implements OnInit {
   }
 
   public addHeaderValue(operationName: string) {
-    var operationHeaders = this.operationsHeaders[operationName];
+    const operationHeaders = this.operationsHeaders[operationName];
     if (operationHeaders == null) {
       this.operationsHeaders[operationName] = [
-        { 'name': "", 'values': "" }
+        { name: '', values: '' }
       ];
     } else {
-      this.operationsHeaders[operationName].push({ 'name': "", 'values': "" });
+      this.operationsHeaders[operationName].push({ name: '', values: '' });
     }
   }
 
   public removeHeaderValue(operationName: string, headerIndex: number) {
-    var operationHeaders = this.operationsHeaders[operationName];
+    const operationHeaders = this.operationsHeaders[operationName];
     if (operationHeaders != null) {
       operationHeaders.splice(headerIndex, 1);
     }
@@ -195,14 +195,14 @@ export class TestCreatePageComponent implements OnInit {
 
   public checkForm(): void {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
-        && (this.resolvedService.type != "EVENT" || (this.filteredOperation !== undefined));
+        && (this.resolvedService.type != 'EVENT' || (this.filteredOperation !== undefined));
     // Check also the OAuth2 parameters.
     if (this.submitEnabled && this.oAuth2ClientContext.grantType !== undefined) {
       this.submitEnabled = (this.oAuth2ClientContext.tokenUri !== undefined && this.oAuth2ClientContext.tokenUri.length > 0
           && this.oAuth2ClientContext.clientId !== undefined && this.oAuth2ClientContext.clientId.length > 0
           && this.oAuth2ClientContext.clientSecret !== undefined && this.oAuth2ClientContext.clientSecret.length > 0);
     }
-    console.log("[createTest] submitEnabled: " + this.submitEnabled);
+    console.log('[createTest] submitEnabled: ' + this.submitEnabled);
   }
 
   public cancel(): void {
@@ -211,14 +211,14 @@ export class TestCreatePageComponent implements OnInit {
 
   public createTest(): void {
     // Build filtered operations array first.
-    let filteredOperations = [];
+    const filteredOperations = [];
     if (this.filteredOperation !== undefined) {
-      filteredOperations.push(this.filteredOperation)
+      filteredOperations.push(this.filteredOperation);
     } else {
       if (this.removedOperationsNames.length > 0) {
         this.resolvedService.operations.forEach(op => {
           if (!this.removedOperationsNames.includes(op.name)) {
-            filteredOperations.push(op.name)
+            filteredOperations.push(op.name);
           }
         });
       }
@@ -228,21 +228,21 @@ export class TestCreatePageComponent implements OnInit {
       this.oAuth2ClientContext = undefined;
     }
     // Then, create thee test invoking the API.
-    var test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType, 
+    const test = {serviceId: this.serviceId, testEndpoint: this.testEndpoint, runnerType: this.runnerType,
         timeout: this.timeout, secretName: this.secretName,
-        filteredOperations: filteredOperations, operationsHeaders: this.operationsHeaders,
+        filteredOperations, operationsHeaders: this.operationsHeaders,
         oAuth2Context: this.oAuth2ClientContext};
-    console.log("[createTest] test: " + JSON.stringify(test));
+    console.log('[createTest] test: ' + JSON.stringify(test));
     this.testsSvc.create(test).subscribe(
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              String(res.id), "Test #" + res.id + " has been launched", false, null, null);
+              String(res.id), 'Test #' + res.id + ' has been launched', false, null, null);
           this.router.navigate(['/tests/runner', res.id]);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              "New test", "New test cannot be launched (" + err.message + ")", false, null, null);
+              'New test', 'New test cannot be launched (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification')
       }

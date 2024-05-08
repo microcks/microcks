@@ -31,10 +31,10 @@ export class EditLabelsDialogComponent implements OnInit {
   labels: any;
   closeBtnName: string;
 
-  labelKV: string = "";
+  labelKV = '';
 
   constructor(public bsModalRef: BsModalRef) {}
- 
+
   ngOnInit() {
     if (this.labels == null) {
       this.labels = new Map();
@@ -42,7 +42,7 @@ export class EditLabelsDialogComponent implements OnInit {
   }
 
   saveLabels(): void {
-    //console.log("[EditLabelsDialogComponent saveLabels] with " + JSON.stringify(this.labels));
+    // console.log("[EditLabelsDialogComponent saveLabels] with " + JSON.stringify(this.labels));
     this.saveLabelsAction.emit(this.labels);
     this.bsModalRef.hide();
   }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 
@@ -46,17 +46,17 @@ export class HubAPIVersionPageComponent implements OnInit {
   discoveredService: string;
 
   constructor(private packagesSvc: HubService, private importersSvc: ImportersService, private route: ActivatedRoute,
-    private notificationService: NotificationService) { }
+              private notificationService: NotificationService) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
 
     this.package = this.route.paramMap.pipe(
-      switchMap((params: ParamMap) => 
+      switchMap((params: ParamMap) =>
         this.packagesSvc.getPackage(params.get('packageId')))
     );
     this.packageAPIVersion = this.route.paramMap.pipe(
-      switchMap((params: ParamMap) => 
+      switchMap((params: ParamMap) =>
         this.packagesSvc.getAPIVersion(params.get('packageId'), params.get('apiVersionId')))
     );
 
@@ -80,12 +80,12 @@ export class HubAPIVersionPageComponent implements OnInit {
   }
 
   renderCapabilityLevel(): string {
-    if ("Full Mocks" === this.resolvedAPIVersion.capabilityLevel) {
-      return "/assets/images/mocks-level-2.svg"
-    } else if ("Mocks + Assertions" === this.resolvedAPIVersion.capabilityLevel) {
-      return "/assets/images/mocks-level-2.svg"
+    if ('Full Mocks' === this.resolvedAPIVersion.capabilityLevel) {
+      return '/assets/images/mocks-level-2.svg';
+    } else if ('Mocks + Assertions' === this.resolvedAPIVersion.capabilityLevel) {
+      return '/assets/images/mocks-level-2.svg';
     }
-    return "/assets/images/mocks-level-1.svg"
+    return '/assets/images/mocks-level-1.svg';
   }
 
   onModalEnter(): void {
@@ -97,10 +97,10 @@ export class HubAPIVersionPageComponent implements OnInit {
   }
 
   installByDirectUpload(): void {
-    this.notificationService.message(NotificationType.INFO, this.resolvedAPIVersion.name, "Starting install in Microcks. Hold on...", false, null, null);
+    this.notificationService.message(NotificationType.INFO, this.resolvedAPIVersion.name, 'Starting install in Microcks. Hold on...', false, null, null);
 
-    let uploadBatch = [];
-    for (let i=0; i<this.resolvedAPIVersion.contracts.length; i++) {
+    const uploadBatch = [];
+    for (let i = 0; i < this.resolvedAPIVersion.contracts.length; i++) {
       uploadBatch.push(this.packagesSvc.importAPIVersionContractContent(this.resolvedAPIVersion.contracts[i].url, (i == 0)));
     }
 
@@ -108,13 +108,13 @@ export class HubAPIVersionPageComponent implements OnInit {
     concat(...uploadBatch).subscribe(
       {
         next: res => {
-          this.discoveredService = res['name'];
+          this.discoveredService = res.name;
           this.notificationService.message(NotificationType.SUCCESS,
-            this.discoveredService, "Import and discovery of service has been done", false, null, null);
+            this.discoveredService, 'Import and discovery of service has been done', false, null, null);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-            this.resolvedAPIVersion.name, "Importation error on server side (" + err.error.text + ")", false, null, null);
+            this.resolvedAPIVersion.name, 'Importation error on server side (' + err.error.text + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
@@ -122,9 +122,9 @@ export class HubAPIVersionPageComponent implements OnInit {
   }
 
   installByImporterCreation(): void {
-    for (let i=0; i<this.resolvedAPIVersion.contracts.length; i++) {
-      var job = new ImportJob();
-      job.name = this.resolvedAPIVersion.id + " - v. " + this.resolvedAPIVersion.version + " [" + i + "]";
+    for (let i = 0; i < this.resolvedAPIVersion.contracts.length; i++) {
+      const job = new ImportJob();
+      job.name = this.resolvedAPIVersion.id + ' - v. ' + this.resolvedAPIVersion.version + ' [' + i + ']';
       job.repositoryUrl = this.resolvedAPIVersion.contracts[i].url;
       // Mark is as secondary artifact if not the first.
       if (i > 0) {
@@ -134,7 +134,7 @@ export class HubAPIVersionPageComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-                job.name, "Import job has been created", false, null, null);
+                job.name, 'Import job has been created', false, null, null);
             // Retrieve job id before activating.
             job.id = res.id;
             this.importJobId = job.id;
@@ -142,7 +142,7 @@ export class HubAPIVersionPageComponent implements OnInit {
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-                job.name, "Import job cannot be created (" + err.message + ")", false, null, null);
+                job.name, 'Import job cannot be created (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -156,12 +156,12 @@ export class HubAPIVersionPageComponent implements OnInit {
         next: res => {
           job.active = true;
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, "Import job has been started/activated", false, null, null);
+              job.name, 'Import job has been started/activated', false, null, null);
           this.startImportJob(job);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, "Import job cannot be started/activated (" + err.message + ")", false, null, null);
+              job.name, 'Import job cannot be started/activated (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
@@ -173,11 +173,11 @@ export class HubAPIVersionPageComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, "Import job has been forced", false, null, null);
+              job.name, 'Import job has been forced', false, null, null);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, "Import job cannot be forced now", false, null, null);
+              job.name, 'Import job cannot be forced now', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }

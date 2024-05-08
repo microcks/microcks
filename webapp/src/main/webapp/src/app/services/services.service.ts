@@ -23,7 +23,7 @@ import { Service, ServiceView, Api, GenericResource, OperationMutableProperties 
 @Injectable({ providedIn: 'root' })
 export class ServicesService {
 
-  private rootUrl: string = '/api';
+  private rootUrl = '/api';
 
   constructor(private http: HttpClient) { }
 
@@ -38,16 +38,16 @@ export class ServicesService {
       httpParams = httpParams.set('name', nameFilter);
     }
     if (labelsFilter != null) {
-      for (let key of Array.from( labelsFilter.keys() )) {
+      for (const key of Array.from( labelsFilter.keys() )) {
         httpParams = httpParams.set('labels.' + key, labelsFilter.get(key));
       }
     }
-    
+
     const options = { params: httpParams };
     return this.http.get<Service[]>(this.rootUrl + '/services/search', options);
   }
 
-  public countServices(): Observable<any> { 
+  public countServices(): Observable<any> {
     return this.http.get<any>(this.rootUrl + '/services/count');
   }
 

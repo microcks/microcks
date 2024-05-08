@@ -23,7 +23,7 @@ import { ImportJob } from '../models/importer.model';
 @Injectable({ providedIn: 'root' })
 export class ImportersService {
 
-  private rootUrl: string = '/api';
+  private rootUrl = '/api';
 
   constructor(private http: HttpClient) { }
 
@@ -38,7 +38,7 @@ export class ImportersService {
       httpParams = httpParams.set('name', nameFilter);
     }
     if (labelsFilter != null) {
-      for (let key of Array.from( labelsFilter.keys() )) {
+      for (const key of Array.from( labelsFilter.keys() )) {
         httpParams = httpParams.set('labels.' + key, labelsFilter.get(key));
       }
     }
@@ -47,7 +47,7 @@ export class ImportersService {
     return this.http.get<ImportJob[]>(this.rootUrl + '/jobs/search', options);
   }
 
-  countImportJobs(): Observable<any> { 
+  countImportJobs(): Observable<any> {
     return this.http.get<any>(this.rootUrl + '/jobs/count');
   }
 

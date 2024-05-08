@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { IAuthenticationService } from "./auth.service";
-import { Observable, of } from "rxjs";
-import { User } from "../models/user.model";
-import { ConfigService } from "./config.service";
-import { HttpClient } from "@angular/common/http";
+import { IAuthenticationService } from './auth.service';
+import { Observable, of } from 'rxjs';
+import { User } from '../models/user.model';
+import { ConfigService } from './config.service';
+import { HttpClient } from '@angular/common/http';
 
 /**
  * A version of the authentication service that uses keycloak.js to provide
@@ -68,7 +68,7 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
    * @param credential
    */
   public login(user: string, credential: any): Promise<User> {
-    throw new Error("Not supported.");
+    throw new Error('Not supported.');
   }
 
   /**
@@ -79,7 +79,7 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
     return true;
   }
 
-/**
+  /**
    * Called to check that user can endorse role for at least one resource.
    * @param role
    */
@@ -122,20 +122,20 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
    * Return the Keycloak realm name.
    */
   public getRealmName(): string {
-    return 'microcks'
+    return 'microcks';
   }
 
   /**
    * Return the Keycloak realm url.
    */
   public getRealmUrl(): string {
-    throw new Error("Not supported.");
+    throw new Error('Not supported.');
   }
 
   /**
    * Return the Keycloak administration realm url.
    */
   public getAdminRealmUrl(): string {
-    throw new Error("Not supported.");
+    throw new Error('Not supported.');
   }
 }

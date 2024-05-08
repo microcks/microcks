@@ -24,7 +24,7 @@ import { ToolbarConfig } from 'patternfly-ng/toolbar';
 import { FilterConfig, FilterEvent, FilterField, FilterType, Filter } from 'patternfly-ng/filter';
 
 import { Api, Service, ServiceType } from '../../models/service.model';
-import { IAuthenticationService } from "../../services/auth.service";
+import { IAuthenticationService } from '../../services/auth.service';
 import { ServicesService } from '../../services/services.service';
 import { ConfigService } from '../../services/config.service';
 
@@ -47,16 +47,16 @@ export class ServicesPageComponent implements OnInit {
   repositoryFilter: string = null;
   notifications: Notification[];
 
-  html:string = '';
+  html = '';
 
-  constructor(private servicesSvc: ServicesService, private modalService: BsModalService, 
-    private notificationService: NotificationService, protected authService: IAuthenticationService, private config: ConfigService,
-    private route: ActivatedRoute, private router: Router) { }
+  constructor(private servicesSvc: ServicesService, private modalService: BsModalService,
+              private notificationService: NotificationService, protected authService: IAuthenticationService, private config: ConfigService,
+              private route: ActivatedRoute, private router: Router) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
-    
-    var filterFieldsConfig = [];
+
+    const filterFieldsConfig = [];
     if (this.hasRepositoryFilterFeatureEnabled()) {
       this.getServicesLabels();
       filterFieldsConfig.push({
@@ -85,7 +85,7 @@ export class ServicesPageComponent implements OnInit {
       fields: filterFieldsConfig as FilterField[],
       resultsCount: 20,
       appliedFilters: []
-    } as FilterConfig
+    } as FilterConfig;
 
     this.toolbarConfig = {
       actionConfig: undefined,
@@ -97,8 +97,8 @@ export class ServicesPageComponent implements OnInit {
     this.route.queryParams.subscribe(queryParams => {
       // Look at query parameters to apply filters.
       this.filterConfig.appliedFilters = [];
-      if (queryParams['name']) {
-        this.nameFilterTerm = queryParams['name'];
+      if (queryParams.name) {
+        this.nameFilterTerm = queryParams.name;
         this.filterConfig.appliedFilters.push({
           field: {title: 'Name'} as FilterField,
           value: this.nameFilterTerm
@@ -127,7 +127,7 @@ export class ServicesPageComponent implements OnInit {
     this.router.navigate([], {relativeTo: this.route, queryParams: {} as Params});
   }
   filterServices(repositoryFilter: string, nameFilterTerm: string): void {
-    var labelsFilter = new Map<string, string>();
+    const labelsFilter = new Map<string, string>();
     if (repositoryFilter != null) {
       labelsFilter.set(this.repositoryFilterFeatureLabelKey(), repositoryFilter);
     }
@@ -136,8 +136,8 @@ export class ServicesPageComponent implements OnInit {
       this.filterConfig.resultsCount = results.length;
     });
     // Update browser URL to make the page bookmarkable.
-    var queryParams = { name: nameFilterTerm };
-    for (let key of Array.from( labelsFilter.keys() )) {
+    const queryParams = { name: nameFilterTerm };
+    for (const key of Array.from( labelsFilter.keys() )) {
       queryParams['labels.' + key] = labelsFilter.get(key);
     }
     this.router.navigate([], {relativeTo: this.route, queryParams: queryParams as Params, queryParamsHandling: 'merge'});
@@ -153,7 +153,7 @@ export class ServicesPageComponent implements OnInit {
   getServicesLabels(): void {
     this.servicesSvc.getServicesLabels().subscribe(results => {
       this.servicesLabels = results;
-      var queries = [];
+      const queries = [];
       // Get only the label values corresponding to key used for filtering, then transform them for Patternfly.
       if (this.servicesLabels[this.repositoryFilterFeatureLabelKey()] != undefined) {
         this.servicesLabels[this.repositoryFilterFeatureLabelKey()].map(label => queries.push({id: label, value: label}));
@@ -163,18 +163,18 @@ export class ServicesPageComponent implements OnInit {
   }
 
   deleteService(service: Service) {
-    console.log("[deleteService]: " + JSON.stringify(service));
+    console.log('[deleteService]: ' + JSON.stringify(service));
     this.servicesSvc.deleteService(service).subscribe(
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              service.name, "Service has been fully deleted", false, null, null);
+              service.name, 'Service has been fully deleted', false, null, null);
           this.getServices();
           this.servicesCount--;
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              service.name, "Service cannot be deleted (" + err.message + ")", false, null, null);
+              service.name, 'Service cannot be deleted (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
@@ -190,11 +190,11 @@ export class ServicesPageComponent implements OnInit {
   }
 
   handlePageSize($event: PaginationEvent) {
-    //this.updateItems();
+    // this.updateItems();
   }
 
   handlePageNumber($event: PaginationEvent) {
-    this.getServices($event.pageNumber)
+    this.getServices($event.pageNumber);
   }
 
   handleFilter($event: FilterEvent): void {
@@ -272,7 +272,7 @@ export class ServicesPageComponent implements OnInit {
 
   public hasRoleForService(role: string, service: Service): boolean {
     if (this.hasRepositoryTenancyFeatureEnabled() && service.metadata.labels) {
-      let tenant = service.metadata.labels[this.repositoryFilterFeatureLabelKey()];
+      const tenant = service.metadata.labels[this.repositoryFilterFeatureLabelKey()];
       if (tenant !== undefined && this.authService.hasRoleForResource(role, tenant)) {
         return true;
       }

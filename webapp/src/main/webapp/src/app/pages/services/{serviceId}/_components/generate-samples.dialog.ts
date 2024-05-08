@@ -34,7 +34,7 @@ export class GenerateSamplesDialogComponent implements OnInit {
 
   infoMessage: string;
   errorMessage: string;
-  saveEnabled: boolean = false;
+  saveEnabled = false;
 
   exchanges: Exchange[] = [];
   selectedExchanges: Exchange[] = [];
@@ -62,12 +62,12 @@ export class GenerateSamplesDialogComponent implements OnInit {
           {
             next: res => {
               if (res.length == 0) {
-                this.infoMessage = 'AI Copilot was not able to analyse your specification and provide samples in specified delay. Please retry later...'
+                this.infoMessage = 'AI Copilot was not able to analyse your specification and provide samples in specified delay. Please retry later...';
               } else {
                 res.forEach(exchange => {
-                  if (exchange['eventMessage'] != undefined) {
-                    exchange['type'] = "unidirEvent"
-                  } else exchange['type'] = "reqRespPair";
+                  if (exchange.eventMessage != undefined) {
+                    exchange.type = 'unidirEvent';
+                  } else { exchange.type = 'reqRespPair'; }
                 });
                 this.exchanges.push(...res);
                 this.selectedExchanges.push(...res);
@@ -93,12 +93,12 @@ export class GenerateSamplesDialogComponent implements OnInit {
           {
             next: res => {
               if (res.length == 0) {
-                this.infoMessage = 'AI Copilot was not able to analyse your specification and provide samples in specified delay. Please retry later...'
+                this.infoMessage = 'AI Copilot was not able to analyse your specification and provide samples in specified delay. Please retry later...';
               } else {
                 res.forEach(exchange => {
-                  if (exchange['eventMessage'] != undefined) {
-                    exchange['type'] = "unidirEvent"
-                  } else exchange['type'] = "reqRespPair";
+                  if (exchange.eventMessage != undefined) {
+                    exchange.type = 'unidirEvent';
+                  } else { exchange.type = 'reqRespPair'; }
                 });
                 this.exchanges.push(...res);
                 this.selectedExchanges.push(...res);
@@ -134,7 +134,7 @@ export class GenerateSamplesDialogComponent implements OnInit {
 
   updateSampleName($event: Event, index: number): void {
     this.exchangesNames[index] = String($event);
-    if (this.exchanges[index]["eventMessage"] == undefined) {
+    if (this.exchanges[index].eventMessage == undefined) {
       // Dissociate request/response pair...
       (this.exchanges[index] as RequestResponsePair).request.name = String($event);
       (this.exchanges[index] as RequestResponsePair).response.name = String($event);
@@ -149,7 +149,7 @@ export class GenerateSamplesDialogComponent implements OnInit {
   }
 
   isSavingEnabled(): void {
-    var missingSomething = false;
+    let missingSomething = false;
     this.selectedExchanges.forEach((exchange, index) => {
       if (exchange != undefined) {
         if (this.exchangesNames[index] == undefined) {

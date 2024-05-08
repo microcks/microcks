@@ -27,7 +27,7 @@ export class EditLabelsComponent implements OnInit {
   @Input('resourceName') resourceName: string;
   @Input('labels') labels: any;
 
-  labelKV: string = "";
+  labelKV = '';
 
   ngOnInit() {
     if (this.labels == null) {
@@ -35,27 +35,27 @@ export class EditLabelsComponent implements OnInit {
     }
   }
 
-  getKeys(map){
+  getKeys(map) {
     return Object.keys(map);
   }
 
   removeLabel(labelK: string): void {
     delete this.labels[labelK];
-    this.labelKV = "";
+    this.labelKV = '';
   }
 
   addLabel(): void {
     if (this.labelKV.indexOf('=') != -1) {
-      var kv: string[] = this.labelKV.split('=');
+      let kv: string[] = this.labelKV.split('=');
       if (kv.length == 2) {
         this.labels[kv[0]] = kv[1];
       }
     }
-    this.labelKV = "";
+    this.labelKV = '';
   }
 
   saveLabels(): void {
-    //console.log("[EditLabelsComponent saveLabels] with " + JSON.stringify(this.labels)");
+    // console.log("[EditLabelsComponent saveLabels] with " + JSON.stringify(this.labels)");
     this.onSave.emit(this.labels);
   }
 }

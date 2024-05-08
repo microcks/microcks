@@ -13,22 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Output, EventEmitter, ViewChildren, QueryList } from "@angular/core";
+import { Component, Output, EventEmitter, ViewChildren, QueryList } from '@angular/core';
 
-import { ModalDirective } from "ngx-bootstrap/modal";
+import { ModalDirective } from 'ngx-bootstrap/modal';
 
 @Component({
-  selector: "confirm-delete-dialog",
-  templateUrl: "confirm-delete.component.html"
+  selector: 'confirm-delete-dialog',
+  templateUrl: 'confirm-delete.component.html'
 })
 export class ConfirmDeleteDialogComponent {
 
   @Output() onDelete: EventEmitter<any> = new EventEmitter<any>();
 
-  @ViewChildren("confirmDeleteModal") confirmDeleteModal: QueryList<ModalDirective>;
+  @ViewChildren('confirmDeleteModal') confirmDeleteModal: QueryList<ModalDirective>;
 
   private objectToDelete: any;
-  protected _isOpen: boolean = false;
+  protected _isOpen = false;
 
   /**
    * Called to open the dialog.

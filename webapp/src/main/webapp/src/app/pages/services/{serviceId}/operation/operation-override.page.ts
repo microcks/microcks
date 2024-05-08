@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -33,7 +33,7 @@ import { ConfigService } from '../../../../services/config.service';
 export class OperationOverridePageComponent implements OnInit {
 
   serviceId: string;
-  operationName: string
+  operationName: string;
   serviceView: Observable<ServiceView>;
   resolvedServiceView: ServiceView;
   operation: Operation;
@@ -41,43 +41,43 @@ export class OperationOverridePageComponent implements OnInit {
   notifications: Notification[];
   frequencies: string[];
   paramConstraints: any = {
-    'header': [],
-    'query': []
-  }
+    header: [],
+    query: []
+  };
 
   dispatchersByServiceType: any = {
-    'REST': [
-      {"value": "SEQUENCE", "label": "SEQUENCE"},
-      {"value": "URI_PARAMS", "label": "URI PARAMS"},
-      {"value": "URI_PARTS", "label": "URI PARTS"},
-      {"value": "URI_ELEMENTS", "label": "URI ELEMENTS"},
-      {"value": "SCRIPT", "label": "SCRIPT"},
-      {"value": "JSON_BODY", "label": "JSON BODY"},
-      {"value": "PROXY", "label": "PROXY"},
-      {"value": "FALLBACK", "label": "FALLBACK"},
-      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
+    REST: [
+      {value: 'SEQUENCE', label: 'SEQUENCE'},
+      {value: 'URI_PARAMS', label: 'URI PARAMS'},
+      {value: 'URI_PARTS', label: 'URI PARTS'},
+      {value: 'URI_ELEMENTS', label: 'URI ELEMENTS'},
+      {value: 'SCRIPT', label: 'SCRIPT'},
+      {value: 'JSON_BODY', label: 'JSON BODY'},
+      {value: 'PROXY', label: 'PROXY'},
+      {value: 'FALLBACK', label: 'FALLBACK'},
+      {value: 'PROXY_FALLBACK', label: 'PROXY FALLBACK'}
     ],
-    'SOAP': [
-      {"value": "QUERY_MATCH", "label": "QUERY MATCH"},
-      {"value": "SCRIPT", "label": "SCRIPT"},
-      {"value": "PROXY", "label": "PROXY"},
-      {"value": "FALLBACK", "label": "FALLBACK"},
-      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
+    SOAP: [
+      {value: 'QUERY_MATCH', label: 'QUERY MATCH'},
+      {value: 'SCRIPT', label: 'SCRIPT'},
+      {value: 'PROXY', label: 'PROXY'},
+      {value: 'FALLBACK', label: 'FALLBACK'},
+      {value: 'PROXY_FALLBACK', label: 'PROXY FALLBACK'}
     ],
-    'EVENT': [],
-    'GRPC': [
-      {"value": "JSON_BODY", "label": "JSON BODY"},
-      {"value": "FALLBACK", "label": "FALLBACK"}
+    EVENT: [],
+    GRPC: [
+      {value: 'JSON_BODY', label: 'JSON BODY'},
+      {value: 'FALLBACK', label: 'FALLBACK'}
     ],
-    'GRAPHQL': [
-      {"value": "QUERY_ARGS", "label": "QUERY_ARGS"},
-      {"value": "JSON_BODY", "label": "JSON BODY"},
-      {"value": "SCRIPT", "label": "SCRIPT"},
-      {"value": "PROXY", "label": "PROXY"},
-      {"value": "FALLBACK", "label": "FALLBACK"},
-      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
+    GRAPHQL: [
+      {value: 'QUERY_ARGS', label: 'QUERY_ARGS'},
+      {value: 'JSON_BODY', label: 'JSON BODY'},
+      {value: 'SCRIPT', label: 'SCRIPT'},
+      {value: 'PROXY', label: 'PROXY'},
+      {value: 'FALLBACK', label: 'FALLBACK'},
+      {value: 'PROXY_FALLBACK', label: 'PROXY FALLBACK'}
     ]
-  }
+  };
 
 
   fallback = `{
@@ -150,7 +150,7 @@ export class OperationOverridePageComponent implements OnInit {
 }`;
 
   constructor(private servicesSvc: ServicesService, private config: ConfigService, private notificationService: NotificationService,
-    private route: ActivatedRoute, private router: Router) {}
+              private route: ActivatedRoute, private router: Router) {}
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
@@ -162,7 +162,7 @@ export class OperationOverridePageComponent implements OnInit {
     this.serviceView.subscribe( view => {
       this.serviceId = view.service.id;
       this.resolvedServiceView = view;
-      for (var i=0; i<this.resolvedServiceView.service.operations.length; i++) {
+      for (let i = 0; i < this.resolvedServiceView.service.operations.length; i++) {
         if (this.operationName === this.resolvedServiceView.service.operations[i].name) {
           this.operation = this.resolvedServiceView.service.operations[i];
           // Clone mutable properties from operation.
@@ -172,7 +172,7 @@ export class OperationOverridePageComponent implements OnInit {
           this.newOperation.dispatcherRules = this.operation.dispatcherRules;
           this.newOperation.parameterConstraints = this.operation.parameterConstraints;
           if (this.newOperation.parameterConstraints) {
-            for (var j=0; j<this.newOperation.parameterConstraints.length; j++) {
+            for (let j = 0; j < this.newOperation.parameterConstraints.length; j++) {
               this.paramConstraints[this.newOperation.parameterConstraints[j].in].push(this.newOperation.parameterConstraints[j]);
             }
           }
@@ -180,7 +180,7 @@ export class OperationOverridePageComponent implements OnInit {
         }
       }
     });
-    this.frequencies = this.config.getFeatureProperty('async-api', 'frequencies').split(",");
+    this.frequencies = this.config.getFeatureProperty('async-api', 'frequencies').split(',');
   }
 
   public resetOperationProperties() {
@@ -190,30 +190,30 @@ export class OperationOverridePageComponent implements OnInit {
     this.newOperation.dispatcherRules = this.operation.dispatcherRules;
   }
   public saveOperationProperties() {
-    var operationProperties = new OperationMutableProperties();
-    operationProperties.defaultDelay = this.newOperation.defaultDelay
+    const operationProperties = new OperationMutableProperties();
+    operationProperties.defaultDelay = this.newOperation.defaultDelay;
     operationProperties.dispatcher = this.newOperation.dispatcher;
     operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
     operationProperties.parameterConstraints = [];
     // Now recopy parameter constraints.
-    for (var i=0; i<this.paramConstraints.header.length; i++) {
+    for (let i = 0; i < this.paramConstraints.header.length; i++) {
       operationProperties.parameterConstraints.push(this.paramConstraints.header[i]);
     }
-    for (var i=0; i<this.paramConstraints.query.length; i++) {
+    for (let i = 0; i < this.paramConstraints.query.length; i++) {
       operationProperties.parameterConstraints.push(this.paramConstraints.query[i]);
     }
 
-    console.log("[saveOperationProperties] operationProperties: " + JSON.stringify(operationProperties));
+    console.log('[saveOperationProperties] operationProperties: ' + JSON.stringify(operationProperties));
     this.servicesSvc.updateServiceOperationProperties(this.resolvedServiceView.service,
       this.operationName, operationProperties).subscribe(
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-              this.operationName, "Dispatch properies have been updated", false, null, null);
+              this.operationName, 'Dispatch properies have been updated', false, null, null);
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-              this.operationName, "Dispatch properties cannot be updated (" + err.message + ")", false, null, null);
+              this.operationName, 'Dispatch properties cannot be updated (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -225,18 +225,18 @@ export class OperationOverridePageComponent implements OnInit {
   }
 
   public addParameterConstraint(location: string): void {
-    var parameterConstraints = this.paramConstraints[location];
+    const parameterConstraints = this.paramConstraints[location];
     if (parameterConstraints == null) {
       this.paramConstraints[location] = [
-        { 'name': "my-header", 'in': location, 'required': false, 'recopy': false, 'mustMatchRegexp': null}
+        { name: 'my-header', in: location, required: false, recopy: false, mustMatchRegexp: null}
       ];
     } else {
-      this.paramConstraints[location].push({ 'name': "my-header", 'in': location, 'required': false, 'recopy': false, 'mustMatchRegexp': null});
+      this.paramConstraints[location].push({ name: 'my-header', in: location, required: false, recopy: false, mustMatchRegexp: null});
     }
   }
 
   public removeParameterConstraint(location: string, index: number): void {
-    var parameterConstraints = this.paramConstraints[location];
+    const parameterConstraints = this.paramConstraints[location];
     if (parameterConstraints != null) {
       parameterConstraints.splice(index, 1);
     }

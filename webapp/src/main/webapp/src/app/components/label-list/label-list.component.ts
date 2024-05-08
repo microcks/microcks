@@ -26,9 +26,9 @@ import { Metadata } from '../../../app/models/commons.model';
 })
 export class LabelListComponent implements OnInit {
 
-  @Input('metadata') metadata: Metadata
+  @Input('metadata') metadata: Metadata;
 
-  @Input('filter') filter: string
+  @Input('filter') filter: string;
 
   private labels: any = null;
 
@@ -41,7 +41,7 @@ export class LabelListComponent implements OnInit {
     if (this.metadata) {
       if (this.filter) {
         this.labels = {};
-        var filteredLabels = this.filter.split(',');
+        let filteredLabels = this.filter.split(',');
         filteredLabels.forEach(label => {
           if (this.metadata.labels && this.metadata.labels[label]) {
             this.labels[label] = this.metadata.labels[label];
@@ -57,7 +57,7 @@ export class LabelListComponent implements OnInit {
     if (this.metadata) {
       if (this.filter) {
         this.labels = {};
-        var filteredLabels = this.filter.split(',');
+        let filteredLabels = this.filter.split(',');
         filteredLabels.forEach(label => {
           if (this.metadata.labels && this.metadata.labels[label]) {
             this.labels[label] = this.metadata.labels[label];

@@ -48,8 +48,8 @@ import { ConfigService } from './services/config.service';
 
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
 import { DayInvocationsBarChartComponent } from './components/day-invocations-bar-chart/day-invocations-bar-chart-component';
-import { EditLabelsComponent } from './components/edit-labels/edit-labels.component'
-import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
+import { EditLabelsComponent } from './components/edit-labels/edit-labels.component';
+import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component';
 import { GradeIndexComponent } from './components/grade-index/grade-index.component';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { HourInvocationsBarChartComponent } from './components/hour-invocations-bar-chart/hour-invocations-bar-chart.component';
@@ -65,7 +65,7 @@ import { UsersTabComponent } from './pages/admin/_components/users.tab';
 import { GroupsManagementDialogComponent } from './pages/admin/_components/_components/groups-management.dialog';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { ServicesPageComponent } from './pages/services/services.page';
-import { DirectAPIWizardComponent } from './pages/services/_components/direct-api.wizard'
+import { DirectAPIWizardComponent } from './pages/services/_components/direct-api.wizard';
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
 import { GenerateSamplesDialogComponent } from './pages/services/{serviceId}/_components/generate-samples.dialog';

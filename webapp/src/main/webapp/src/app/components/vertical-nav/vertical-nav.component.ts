@@ -24,14 +24,14 @@ import { AboutModalConfig } from 'patternfly-ng/modal/about-modal/about-modal-co
 import { AboutModalEvent } from 'patternfly-ng/modal/about-modal/about-modal-event';
 
 import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
-import { IAuthenticationService } from "../../services/auth.service";
+import { IAuthenticationService } from '../../services/auth.service';
 import { VersionInfoService } from '../../services/versioninfo.service';
-import { User } from "../../models/user.model";
+import { User } from '../../models/user.model';
 import { ConfigService } from 'src/app/services/config.service';
 
 
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
-//import * as $ from 'jquery';
+// import * as $ from 'jquery';
 declare let $: any;
 
 @Component({
@@ -46,7 +46,7 @@ export class VerticalNavComponent implements OnInit {
   modalRef: BsModalRef;
 
   constructor(protected authService: IAuthenticationService, private modalService: BsModalService,
-    private versionInfoSvc: VersionInfoService, private config: ConfigService, private router: Router) {
+              private versionInfoSvc: VersionInfoService, private config: ConfigService, private router: Router) {
   }
 
   ngOnInit() {
@@ -69,17 +69,17 @@ export class VerticalNavComponent implements OnInit {
 
     this.router.events.pipe(filter(event => event instanceof NavigationStart)).subscribe((event: NavigationStart) => {
       // Do something with the NavigationStart event object.
-      console.log("Navigation start event: " + JSON.stringify(event));
+      console.log('Navigation start event: ' + JSON.stringify(event));
       const navigationEvent = { type: 'navigationEvent', url: event.url };
       try {
         window.parent.postMessage(JSON.stringify(navigationEvent), '*');
       } catch (error) {
-        console.warn("Error while posting navigationEvent to parent", error);
+        console.warn('Error while posting navigationEvent to parent', error);
       }
 
       // Navigation between sections may happen outside vertical navigation (ex: when we move from Hub to
       // freshly installed API or Service). We then have to refresh the active class on the correct section.
-      var section = '/';
+      let section = '/';
       if (event.url != '/') {
         if (event.url.substring(1).indexOf('/') > 0) {
           section += event.url.substring(1, event.url.substring(1).indexOf('/') + 1);
@@ -123,13 +123,13 @@ export class VerticalNavComponent implements OnInit {
 
   public canUseMicrocksHub(): boolean {
     if (this.hasFeatureEnabled('microcks-hub')) {
-      let rolesStr = this.config.getFeatureProperty('microcks-hub', 'allowed-roles');
+      const rolesStr = this.config.getFeatureProperty('microcks-hub', 'allowed-roles');
       if (rolesStr == undefined || rolesStr === '') {
         return true;
       }
       // If roles specified, check if any is endorsed.
-      let roles = rolesStr.split(',');
-      for (let i=0; i<roles.length; i++) {
+      const roles = rolesStr.split(',');
+      for (let i = 0; i < roles.length; i++) {
         if (this.hasRole(roles[i])) {
           return true;
         }

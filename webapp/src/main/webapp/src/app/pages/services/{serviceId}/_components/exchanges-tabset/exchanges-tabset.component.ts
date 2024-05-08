@@ -26,7 +26,7 @@ import { ConfigService } from 'src/app/services/config.service';
   selector: 'app-exchanges-tabset',
   templateUrl: './exchanges-tabset.component.html',
 })
-export class ExchangesTabsetComponent{
+export class ExchangesTabsetComponent {
 
   readonly hlLang: string[] = ['json', 'xml', 'yaml'];
 
@@ -55,8 +55,8 @@ export class ExchangesTabsetComponent{
   @Input() public removeVerbInUrl: Function;
   @Input() public asyncAPIFeatureEndpoint: Function;
 
-  public shouldRender(index: number){
-    const activeTab = this.tabs.tabs.filter((tab) =>  tab.active )[0]
+  public shouldRender(index: number) {
+    const activeTab = this.tabs.tabs.filter((tab) =>  tab.active )[0];
     return index == this.tabs.tabs.indexOf(activeTab);
   }
 }

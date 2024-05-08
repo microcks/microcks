@@ -26,7 +26,7 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 export class AdminPageComponent implements OnInit {
 
   notifications: Notification[];
-  
+
   constructor(private notificationService: NotificationService) {}
 
   ngOnInit() {

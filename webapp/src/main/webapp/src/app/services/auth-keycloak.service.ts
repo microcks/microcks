@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { IAuthenticationService } from "./auth.service";
-import { Observable, BehaviorSubject } from "rxjs";
-import { User } from "../models/user.model";
-import { ConfigService } from "./config.service";
-import { HttpClient } from "@angular/common/http";
+import { IAuthenticationService } from './auth.service';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { User } from '../models/user.model';
+import { ConfigService } from './config.service';
+import { HttpClient } from '@angular/common/http';
 
 /**
  * A version of the authentication service that uses keycloak.js to provide
@@ -40,14 +40,14 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    */
   constructor(private http: HttpClient, private config: ConfigService) {
     super();
-    let w: any = window;
-    this.keycloak = w["keycloak"];
+    const w: any = window;
+    this.keycloak = w.keycloak;
 
-    //console.info("Token: %s", JSON.stringify(this.keycloak.tokenParsed, null, 2));
-    //console.info("ID Token: %s", JSON.stringify(this.keycloak.idTokenParsed, null, 2));
-    //console.info("Access Token: %s", this.keycloak.token);
+    // console.info("Token: %s", JSON.stringify(this.keycloak.tokenParsed, null, 2));
+    // console.info("ID Token: %s", JSON.stringify(this.keycloak.idTokenParsed, null, 2));
+    // console.info("Access Token: %s", this.keycloak.token);
 
-    let user: User = new User();
+    const user: User = new User();
     user.name = this.keycloak.tokenParsed.name;
     user.login = this.keycloak.tokenParsed.preferred_username;
     user.email = this.keycloak.tokenParsed.email;
@@ -89,22 +89,22 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    * @param credential
    */
   public login(user: string, credential: any): Promise<User> {
-    throw new Error("Not supported.");
+    throw new Error('Not supported.');
   }
 
   /**
    * Called to check that user can endorse a role.
-   * @param role 
+   * @param role
    */
   public hasRole(role: string): boolean {
-    //console.log("[KeycloakAuthenticationService] hasRole called with " + role);
+    // console.log("[KeycloakAuthenticationService] hasRole called with " + role);
     // Now default to a resource role for 'microcks-app'
-    //return this.keycloak.hasRealmRole(role);
+    // return this.keycloak.hasRealmRole(role);
 
     if (!this.keycloak.resourceAccess) {
       return false;
     }
-    var access = this.keycloak.resourceAccess['microcks-app' || this.keycloak.clientId];
+    const access = this.keycloak.resourceAccess['microcks-app' || this.keycloak.clientId];
     return !!access && access.roles.indexOf(role) >= 0;
 
     // Don't know why but this fail as the code above is just copy-pasted from implementations...
@@ -116,20 +116,20 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    * @param role
    */
   public hasRoleForAnyResource(role: string): boolean {
-    var rolePathPrefix = "/microcks/" + role + "/";
-    var groups = this.keycloak.tokenParsed['microcks-groups'];
+    const rolePathPrefix = '/microcks/' + role + '/';
+    const groups = this.keycloak.tokenParsed['microcks-groups'];
 
     return !!groups && groups.filter(element => element.startsWith(rolePathPrefix)).length > 0;
   }
 
   /**
    * Called to check that user can endorse role for a specific resource.
-   * @param role 
-   * @param resource 
+   * @param role
+   * @param resource
    */
   public hasRoleForResource(role: string, resource: string): boolean {
-    var rolePath = "/microcks/" + role + "/" + resource;
-    var groups = this.keycloak.tokenParsed['microcks-groups'];
+    const rolePath = '/microcks/' + role + '/' + resource;
+    const groups = this.keycloak.tokenParsed['microcks-groups'];
 
     return !!groups && groups.indexOf(rolePath) >= 0;
   }
@@ -146,8 +146,8 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    * @param headers
    */
   public injectAuthHeaders(headers: { [header: string]: string }): void {
-    let authHeader: string = "Bearer " + this.keycloak.token;
-    headers["Authorization"] = authHeader;
+    const authHeader: string = 'Bearer ' + this.keycloak.token;
+    headers.Authorization = authHeader;
   }
 
   /**
@@ -168,15 +168,15 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    * Return the Keycloak realm url.
    */
   public getRealmUrl(): string {
-    var realmUrl = this.keycloak.createLogoutUrl();
-    return realmUrl.slice(0, realmUrl.indexOf("/protocol/"));
+    const realmUrl = this.keycloak.createLogoutUrl();
+    return realmUrl.slice(0, realmUrl.indexOf('/protocol/'));
   }
 
   /**
    * Return the Keycloak administration realm url.
    */
   public getAdminRealmUrl(): string {
-    var realmUrl = this.getRealmUrl()
+    const realmUrl = this.getRealmUrl();
     if (realmUrl.indexOf('/auth/') != -1) {
       // Pre-Keycloak-X url scheme.
       return realmUrl.replace('/auth/', '/auth/admin/');

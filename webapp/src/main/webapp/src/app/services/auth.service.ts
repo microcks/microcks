@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Observable } from "rxjs";
+import { Observable } from 'rxjs';
 
-import { User } from "../models/user.model";
+import { User } from '../models/user.model';
 
 
 export abstract class IAuthenticationService {
@@ -45,7 +45,7 @@ export abstract class IAuthenticationService {
 
   /**
    * Called to check that user can endorse a role.
-   * @param role 
+   * @param role
    */
   abstract hasRole(role: string): boolean;
 
@@ -57,8 +57,8 @@ export abstract class IAuthenticationService {
 
   /**
    * Called to check that user can endorse role for a specific resource.
-   * @param role 
-   * @param resource 
+   * @param role
+   * @param resource
    */
   abstract hasRoleForResource(role: string, resource: string): boolean;
 

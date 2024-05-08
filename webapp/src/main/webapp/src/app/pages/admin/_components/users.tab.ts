@@ -37,7 +37,7 @@ import { GroupsManagementDialogComponent } from './_components/groups-management
 export class UsersTabComponent implements OnInit {
 
   modalRef: BsModalRef;
-  allowedToManageUsers: boolean = true;
+  allowedToManageUsers = true;
   users: User[];
   usersCount: number;
   usersRoles: {};
@@ -48,11 +48,11 @@ export class UsersTabComponent implements OnInit {
   filterConfig: FilterConfig;
   paginationConfig: PaginationConfig;
   filterTerm: string = null;
-  filtersText: string = '';
+  filtersText = '';
 
   constructor(private usersSvc: UsersService, protected authService: IAuthenticationService,
-      private config: ConfigService, private servicesSvc: ServicesService,
-      private modalService: BsModalService, private notificationService: NotificationService) {
+              private config: ConfigService, private servicesSvc: ServicesService,
+              private modalService: BsModalService, private notificationService: NotificationService) {
   }
 
   ngOnInit() {
@@ -77,7 +77,7 @@ export class UsersTabComponent implements OnInit {
       }] as FilterField[],
       resultsCount: 20,
       appliedFilters: []
-    } as FilterConfig
+    } as FilterConfig;
 
     this.toolbarConfig = {
       actionConfig: undefined,
@@ -115,10 +115,10 @@ export class UsersTabComponent implements OnInit {
         error: err => {
           if (err.status == 403) {
             this.notificationService.message(NotificationType.DANGER,
-              "Authorization Error", "Current user does not appear to have the **manage-groups** role from **realm-management** client. Please contact your administrator to setup correct role.", false, null, null);
+              'Authorization Error', 'Current user does not appear to have the **manage-groups** role from **realm-management** client. Please contact your administrator to setup correct role.', false, null, null);
           } else {
             this.notificationService.message(NotificationType.WARNING,
-              "Unknown Error", err.message, false, null, null);
+              'Unknown Error', err.message, false, null, null);
           }
         }
       }
@@ -129,7 +129,7 @@ export class UsersTabComponent implements OnInit {
       this.tenants = results[this.repositoryFilterFeatureLabelKey()];
       // Check that each tenant has correct groups, otherwise create them.
       this.tenants.forEach(tenant => {
-        let mGroup = this.groups.find(g => g.path === '/microcks/manager/' + tenant)
+        const mGroup = this.groups.find(g => g.path === '/microcks/manager/' + tenant);
         if (mGroup == null) {
           this.usersSvc.createGroup(this.managerGroup.id, tenant).subscribe();
         }
@@ -147,10 +147,10 @@ export class UsersTabComponent implements OnInit {
         error: err => {
           if (err.status == 403) {
             this.notificationService.message(NotificationType.DANGER,
-              "Authorization Error", "Current user does not appear to have the **manage-users** role from **realm-management** client. Please contact your administrator to setup correct role.", false, null, null);
+              'Authorization Error', 'Current user does not appear to have the **manage-users** role from **realm-management** client. Please contact your administrator to setup correct role.', false, null, null);
           } else {
             this.notificationService.message(NotificationType.WARNING,
-              "Unknown Error", err.message, false, null, null);
+              'Unknown Error', err.message, false, null, null);
           }
         }
       }
@@ -172,8 +172,8 @@ export class UsersTabComponent implements OnInit {
   }
 
   getUserRoles(userId: string): void {
-    let userRoles = this.usersSvc.getUserRoles(userId);
-    let userRealmRoles = this.usersSvc.getUserRealmRoles(userId);
+    const userRoles = this.usersSvc.getUserRoles(userId);
+    const userRealmRoles = this.usersSvc.getUserRealmRoles(userId);
 
     forkJoin([userRoles, userRealmRoles]).subscribe(
       {
@@ -185,10 +185,10 @@ export class UsersTabComponent implements OnInit {
         error: err => {
           if (err.status == 403) {
             this.notificationService.message(NotificationType.DANGER,
-              "Authorization Error", "Current user does not appear to have the **manage-clients** role from **realm-management** client. Please contact your administrator to setup correct role.", false, null, null);
+              'Authorization Error', 'Current user does not appear to have the **manage-clients** role from **realm-management** client. Please contact your administrator to setup correct role.', false, null, null);
           } else {
             this.notificationService.message(NotificationType.WARNING,
-              "Unknown Error", err.message, false, null, null);
+              'Unknown Error', err.message, false, null, null);
           }
         }
       }
@@ -215,12 +215,12 @@ export class UsersTabComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-            userName, userName + " is now " + role, false, null, null);
+            userName, userName + ' is now ' + role, false, null, null);
           this.getUserRoles(userId);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-            userName, userName + " cannot be made " + role + " (" + err.message + ")", false, null, null);
+            userName, userName + ' cannot be made ' + role + ' (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
@@ -231,12 +231,12 @@ export class UsersTabComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-            userName, userName + " is no more " + role, false, null, null);
+            userName, userName + ' is no more ' + role, false, null, null);
           this.getUserRoles(userId);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-            userName, userName + " cannot be downgraded " + role + " (" + err.message + ")", false, null, null);
+            userName, userName + ' cannot be downgraded ' + role + ' (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
@@ -246,7 +246,7 @@ export class UsersTabComponent implements OnInit {
   openGroupsManagementDialog(user: User): void {
     this.usersSvc.getUserGroups(user.id).subscribe(userGroups => {
       const initialState = {
-        user: user,
+        user,
         userGroups: userGroups.filter(group => group.path.startsWith('/microcks/manager/')),
         groups: this.groups
       };
@@ -256,11 +256,11 @@ export class UsersTabComponent implements OnInit {
   }
 
   handlePageSize($event: PaginationEvent) {
-    //this.updateItems();
+    // this.updateItems();
   }
 
   handlePageNumber($event: PaginationEvent) {
-    this.getUsers($event.pageNumber)
+    this.getUsers($event.pageNumber);
   }
 
   handleFilter($event: FilterEvent): void {
