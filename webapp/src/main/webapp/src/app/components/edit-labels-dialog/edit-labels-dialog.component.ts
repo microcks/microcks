@@ -18,7 +18,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
 @Component({
-  selector: 'edit-labels-dialog',
+  selector: 'app-edit-labels-dialog',
   templateUrl: './edit-labels-dialog.component.html',
   styleUrls: ['./edit-labels-dialog.component.css']
 })

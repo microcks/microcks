@@ -40,13 +40,10 @@ export class UsersService {
     this.http.get<any[]>(this.rootUrl + '/clients?clientId=microcks-app&max=2&search=true').subscribe(
       {
         next: res => {
-          for (let i = 0; i < res.length; i++) {
-            const client = res[i];
-            if (client.clientId === 'microcks-app') {
-              this.microcksAppClientId = client.id;
-              break;
+            const client = res.find(c => c.clientId === 'microcks-app');
+            if (client) {
+            this.microcksAppClientId = client.id;
             }
-          }
         },
         error: err => {
           console.warn('Unable to retrieve microcksAppClientId from Keycloak. Maybe you do not have correct roles?');
@@ -108,15 +105,15 @@ export class UsersService {
     return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/groups');
   }
 
-  assignRoleToUser(userId: string, role: string): Observable<any> {
-    return this.getRoleByName(role).pipe(
+  assignRoleToUser(userId: string, roleName: string): Observable<any> {
+    return this.getRoleByName(roleName).pipe(
       switchMap((role: any) => {
         return this.http.post<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, [ role ]);
       })
     );
   }
-  removeRoleFromUser(userId: string, role: string): Observable<any> {
-    return this.getRoleByName(role).pipe(
+  removeRoleFromUser(userId: string, roleName: string): Observable<any> {
+    return this.getRoleByName(roleName).pipe(
       switchMap((role: any) => {
         return this.http.request<any[]>('delete',
           this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, { body: [ role ] });

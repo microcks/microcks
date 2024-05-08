@@ -38,7 +38,7 @@ const sanitizeProviderValue = value => {
 };
 
 @Component({
-  selector: 'hub-page',
+  selector: 'app-hub-page',
   templateUrl: './hub.page.html',
   styleUrls: ['./hub.page.css']
 })
@@ -141,7 +141,7 @@ export class HubPageComponent implements OnInit {
     const unsortedCategories = {};
     this.packages.forEach((apiPackage, index, packs) => {
       if (apiPackage.categories.length > 0) {
-        apiPackage.categories.forEach((category, index, cats) => {
+        apiPackage.categories.forEach((category, packageIndex, cats) => {
           if (!unsortedCategories[category]) {
             unsortedCategories[category] = [];
           }

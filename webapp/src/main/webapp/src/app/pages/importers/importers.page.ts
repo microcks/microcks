@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute, Router, Params } from '@angular/router';
+import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 
-import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { Filter, FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-ng/filter';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 import { ToolbarConfig } from 'patternfly-ng/toolbar';
-import { FilterConfig, FilterEvent, FilterField, FilterType, Filter } from 'patternfly-ng/filter';
 
 import { ImportJob, ServiceRef } from '../../models/importer.model';
+import { IAuthenticationService } from '../../services/auth.service';
+import { ConfigService } from '../../services/config.service';
 import { ImportersService } from '../../services/importers.service';
 import { ServicesService } from '../../services/services.service';
 import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
-import { IAuthenticationService } from '../../services/auth.service';
-import { ConfigService } from '../../services/config.service';
+import { ServiceRefsDialogComponent } from './service-refs.dialog';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
-  selector: 'importers-page',
+  selector: 'app-importers-page',
   templateUrl: './importers.page.html',
   styleUrls: ['./importers.page.css']
 })
@@ -124,9 +125,6 @@ export class ImportersPageComponent implements OnInit {
         this.countImportJobs();
       }
     });
-  }
-
-  ngAfterViewInit() {
   }
 
   getImportJobs(page: number = 1): void {
@@ -347,14 +345,14 @@ export class ImportersPageComponent implements OnInit {
       }
       // If roles specified, check if any is endorsed.
       const roles = rolesStr.split(',');
-      for (let i = 0; i < roles.length; i++) {
-        if (this.hasRole(roles[i])) {
+      for (const role of roles) {
+        if (this.hasRole(role)) {
           return true;
         }
-        if (roles[i] === 'manager-any') {
+        if (role === 'manager-any') {
           const managerOfAny = this.hasRoleForAny('manager');
           if (managerOfAny) {
-            return true;
+             return true;
           }
         }
       }
@@ -395,37 +393,5 @@ export class ImportersPageComponent implements OnInit {
   }
   public repositoryFilterFeatureLabelList(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-list');
-  }
-}
-
-@Component({
-  selector: 'servicerefs-dialog',
-  template: `
-    <div class="modal-header">
-      <h4 class="modal-title pull-left">Services</h4>
-      <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-    <div class="modal-body">
-      <ul *ngIf="serviceRefs.length">
-        <li *ngFor="let serviceRef of serviceRefs">
-        <a [routerLink]="['/services', serviceRef.serviceId]">{{ serviceRef.name }} - {{ serviceRef.version }}</a>
-        </li>
-      </ul>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
-    </div>
-  `
-})
-export class ServiceRefsDialogComponent implements OnInit {
-  title: string;
-  closeBtnName: string;
-  serviceRefs: ServiceRef[] = [];
-
-  constructor(public bsModalRef: BsModalRef) {}
-
-  ngOnInit() {
   }
 }

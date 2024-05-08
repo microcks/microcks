@@ -19,7 +19,7 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 
 
 @Component({
-  selector: 'admin-page',
+  selector: 'app-admin-page',
   templateUrl: './admin.page.html',
   styleUrls: ['./admin.page.css']
 })

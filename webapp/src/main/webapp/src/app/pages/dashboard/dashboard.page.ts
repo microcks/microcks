@@ -13,11 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+} from '@angular/core';
 
 import { DonutChartConfig } from 'patternfly-ng/chart';
-import { CardAction, CardConfig, CardFilter, CardFilterPosition } from 'patternfly-ng/card';
-import { SparklineChartConfig, SparklineChartData } from 'patternfly-ng/chart/sparkline-chart';
+import {
+  CardAction,
+  CardConfig,
+  CardFilter,
+  CardFilterPosition,
+} from 'patternfly-ng/card';
+import {
+  SparklineChartConfig,
+  SparklineChartData,
+} from 'patternfly-ng/chart/sparkline-chart';
 
 import { ConfigService } from '../../services/config.service';
 import { MetricsService } from '../../services/metrics.service';
@@ -25,14 +38,13 @@ import { ServicesService } from '../../services/services.service';
 import { DailyInvocations } from '../../models/metric.model';
 
 @Component({
-  selector: 'dashboard-page',
+  selector: 'app-dashboard-page',
   templateUrl: 'dashboard.page.html',
   styleUrls: ['dashboard.page.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardPageComponent implements OnInit {
-
-  aDayLong: number = (1000 * 60 * 60 * 24);
+  aDayLong: number = 1000 * 60 * 60 * 24;
   today = new Date();
   todayStr: string = this.metricsSvc.formatDayDate(new Date());
 
@@ -50,13 +62,13 @@ export class DashboardPageComponent implements OnInit {
   chartConfig: SparklineChartConfig = {
     chartId: 'invocationsSparkline',
     chartHeight: 150,
-    tooltipType: 'default'
+    tooltipType: 'default',
   };
   chartData: SparklineChartData = {
     dataAvailable: false,
     total: 100,
     xData: this.chartDates,
-    yData: ['used']
+    yData: ['used'],
   };
 
   repositoryDonutChartData: any[] = [
@@ -65,7 +77,7 @@ export class DashboardPageComponent implements OnInit {
     ['SOAP', 0],
     ['EVENT', 0],
     ['GRAPH', 0],
-    ['GRPC', 0]
+    ['GRPC', 0],
   ];
   repositoryDonutChargConfig: DonutChartConfig = {
     chartId: 'repositoryDonut',
@@ -76,7 +88,7 @@ export class DashboardPageComponent implements OnInit {
       SOAP: '#39a5dc',
       EVENT: '#ec7a08',
       GRAPH: '#e10098',
-      GRPC: '#379c9c'
+      GRPC: '#379c9c',
     },
     /*
     data: {
@@ -86,29 +98,33 @@ export class DashboardPageComponent implements OnInit {
     },
     */
     donut: { title: 'APIs & Services' },
-    legend: { show: true }
+    legend: { show: true },
   };
 
   testResultsDonutChartData: any[] = [
     ['SUCCESS', 3],
-    ['FAILURE', 5]
+    ['FAILURE', 5],
   ];
   testResultsDonutChartConfig: DonutChartConfig = {
     chartId: 'testsDonut',
     chartHeight: 220,
     colors: {
       SUCCESS: '#7bb33d',
-      FAILURE: '#d1d1d1'
+      FAILURE: '#d1d1d1',
     },
     donut: { title: 'Tests' },
-    legend: { show: true }
+    legend: { show: true },
   };
 
   topInvocations: DailyInvocations[];
   conformanceScores: any;
 
-
-  constructor(private servicesSvc: ServicesService, private config: ConfigService, private metricsSvc: MetricsService, private ref: ChangeDetectorRef) { }
+  constructor(
+    private servicesSvc: ServicesService,
+    private config: ConfigService,
+    private metricsSvc: MetricsService,
+    private ref: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this.getServicesMap();
@@ -120,31 +136,38 @@ export class DashboardPageComponent implements OnInit {
     this.chartCardConfig = {
       action: {
         hypertext: 'View All Events',
-        iconStyleClass: 'fa fa-flag'
+        iconStyleClass: 'fa fa-flag',
       },
-      filters: [{
-        title: 'Last 50 Days',
-        value: '50'
-      }, {
-        default: true,
-        title: 'Last 20 Days',
-        value: '20'
-      }, {
-        title: 'Last 10 Days',
-        value: '10'
-      }],
+      filters: [
+        {
+          title: 'Last 50 Days',
+          value: '50',
+        },
+        {
+          default: true,
+          title: 'Last 20 Days',
+          value: '20',
+        },
+        {
+          title: 'Last 10 Days',
+          value: '10',
+        },
+      ],
       title: 'APIs | Services Mocks Invocations',
     } as CardConfig;
 
     this.topCardConfig = {
-      filters: [{
-        default: true,
-        title: 'Today',
-        value: 'today'
-      }, {
-        title: 'Yesterday',
-        value: 'yesterday'
-      }],
+      filters: [
+        {
+          default: true,
+          title: 'Today',
+          value: 'today',
+        },
+        {
+          title: 'Yesterday',
+          value: 'yesterday',
+        },
+      ],
       title: 'Most Used APIs | Services',
     } as CardConfig;
 
@@ -157,15 +180,18 @@ export class DashboardPageComponent implements OnInit {
     } as CardConfig;
 
     this.testResultsCardConfig = {
-      filters: [{
-        default: true,
-        title: 'Last 7 Days',
-        value: '7'
-      }, {
-        title: 'Last 15 Days',
-        value: '15'
-      }],
-      title: 'API | Services Tests'
+      filters: [
+        {
+          default: true,
+          title: 'Last 7 Days',
+          value: '7',
+        },
+        {
+          title: 'Last 15 Days',
+          value: '15',
+        },
+      ],
+      title: 'API | Services Tests',
     } as CardConfig;
   }
 
@@ -177,89 +203,88 @@ export class DashboardPageComponent implements OnInit {
   }
 
   getServicesMap(): void {
-    this.servicesSvc.getServicesMap().subscribe(
-      results => {
-        this.servicesCount = Object.keys(results).length;
-        this.repositoryDonutChartData = [
-          ['REST', 0],
-          ['DIRECT', 0],
-          ['SOAP', 0],
-          ['EVENT', 0],
-          ['GRPC', 0],
-          ['GRAPH', 0]
-        ];
-        let directCount = 0;
-        for (const key in results) {
-          if (key === 'GENERIC_REST' || key === 'GENERIC_EVENT') {
-            directCount += results[key];
-            this.repositoryDonutChartData.push(['DIRECT', directCount]);
-          } else if (key === 'SOAP_HTTP') {
-            this.repositoryDonutChartData.push(['SOAP', results[key]]);
-          } else if (key === 'GRAPHQL') {
-            this.repositoryDonutChartData.push(['GRAPH', results[key]]);
-          } else {
-            this.repositoryDonutChartData.push([key, results[key]]);
-          }
+    this.servicesSvc.getServicesMap().subscribe((results) => {
+      this.servicesCount = Object.keys(results).length;
+      this.repositoryDonutChartData = [
+        ['REST', 0],
+        ['DIRECT', 0],
+        ['SOAP', 0],
+        ['EVENT', 0],
+        ['GRPC', 0],
+        ['GRAPH', 0],
+      ];
+      let directCount = 0;
+      for (const key in results) {
+        if (key === 'GENERIC_REST' || key === 'GENERIC_EVENT') {
+          directCount += results[key];
+          this.repositoryDonutChartData.push(['DIRECT', directCount]);
+        } else if (key === 'SOAP_HTTP') {
+          this.repositoryDonutChartData.push(['SOAP', results[key]]);
+        } else if (key === 'GRAPHQL') {
+          this.repositoryDonutChartData.push(['GRAPH', results[key]]);
+        } else {
+          this.repositoryDonutChartData.push([key, results[key]]);
         }
-        this.ref.detectChanges();
       }
-    );
+      this.ref.detectChanges();
+    });
   }
 
   getTopInvocations(day: Date = this.today): void {
-    this.metricsSvc.getTopInvocations(day).subscribe(results => {
+    this.metricsSvc.getTopInvocations(day).subscribe((results) => {
       this.topInvocations = results.slice(0, 3);
       this.ref.detectChanges();
     });
   }
 
   getInvocationsTrend(limit: number = 20): void {
-    this.metricsSvc.getInvocationsStatsTrend(limit).subscribe(
-      results => {
-        this.chartData.dataAvailable = false;
-        this.chartData.xData = ['dates'];
-        this.chartData.yData = ['hits'];
-        for (let i = limit - 1; i >= 0; i--) {
-          const pastDate: Date = new Date(this.today.getTime() - (i * this.aDayLong));
-          this.chartData.xData.push(pastDate);
-          const pastDateStr = this.metricsSvc.formatDayDate(pastDate);
-          const result = results[pastDateStr];
-          if (result == null || result == undefined) {
-            this.chartData.yData.push(0);
-          } else {
-            this.chartData.yData.push(result);
-          }
+    this.metricsSvc.getInvocationsStatsTrend(limit).subscribe((results) => {
+      this.chartData.dataAvailable = false;
+      this.chartData.xData = ['dates'];
+      this.chartData.yData = ['hits'];
+      for (let i = limit - 1; i >= 0; i--) {
+        const pastDate: Date = new Date(
+          this.today.getTime() - i * this.aDayLong
+        );
+        this.chartData.xData.push(pastDate);
+        const pastDateStr = this.metricsSvc.formatDayDate(pastDate);
+        const result = results[pastDateStr];
+        if (result == null || result == undefined) {
+          this.chartData.yData.push(0);
+        } else {
+          this.chartData.yData.push(result);
         }
-        this.chartData.dataAvailable = true;
-        this.ref.detectChanges();
-      });
-  }
-
-  getAggregatedTestConformanceMetrics(): void {
-    this.metricsSvc.getAggregatedTestConformanceMetrics().subscribe(results => {
-      this.aggregatesCount = results.length;
-      const children = results.map( function(metric) {
-        return {
-          name: metric.name,
-          value: metric.weight,
-          score: metric.value
-        };
-      });
-      this.conformanceScores = {
-        name: 'root',
-        children: [
-          {name: 'domains', children, score: 1}
-        ]
-      };
+      }
+      this.chartData.dataAvailable = true;
       this.ref.detectChanges();
     });
   }
 
+  getAggregatedTestConformanceMetrics(): void {
+    this.metricsSvc
+      .getAggregatedTestConformanceMetrics()
+      .subscribe((results) => {
+        this.aggregatesCount = results.length;
+        const children = results.map(function(metric) {
+          return {
+            name: metric.name,
+            value: metric.weight,
+            score: metric.value,
+          };
+        });
+        this.conformanceScores = {
+          name: 'root',
+          children: [{ name: 'domains', children, score: 1 }],
+        };
+        this.ref.detectChanges();
+      });
+  }
+
   getLatestTestsTrend(limit: number = 7): void {
-    this.metricsSvc.getLatestTestsTrend(limit).subscribe(results => {
+    this.metricsSvc.getLatestTestsTrend(limit).subscribe((results) => {
       let successCount = 0;
       let failureCount = 0;
-      results.forEach(result => {
+      results.forEach((result) => {
         result.success ? successCount++ : failureCount++;
       });
       const ratio = successCount / results.length;
@@ -272,7 +297,7 @@ export class DashboardPageComponent implements OnInit {
       }
       this.testResultsDonutChartData = [
         ['SUCCESS', successCount],
-        ['FAILURE', failureCount]
+        ['FAILURE', failureCount],
       ];
       this.ref.detectChanges();
     });

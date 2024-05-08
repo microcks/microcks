@@ -25,18 +25,16 @@ import { HttpClient } from '@angular/common/http';
  */
 export class KeycloakAuthenticationService extends IAuthenticationService {
 
-  private _authenticated: BehaviorSubject<boolean> = new BehaviorSubject(false);
-  public authenticated: Observable<boolean> = this._authenticated.asObservable();
+  private authenticated: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  public authenticated$: Observable<boolean> = this.authenticated.asObservable();
 
-  private _authenticatedUser: BehaviorSubject<User> = new BehaviorSubject(null);
-  public authenticatedUser: Observable<User> = this._authenticatedUser.asObservable();
+  private authenticatedUser: BehaviorSubject<User> = new BehaviorSubject(null);
+  public authenticatedUser$: Observable<User> = this.authenticatedUser.asObservable();
 
   private keycloak: any;
 
   /**
    * Constructor.
-   * @param http
-   * @param config
    */
   constructor(private http: HttpClient, private config: ConfigService) {
     super();
@@ -52,8 +50,8 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
     user.login = this.keycloak.tokenParsed.preferred_username;
     user.email = this.keycloak.tokenParsed.email;
 
-    this._authenticated.next(true);
-    this._authenticatedUser.next(user);
+    this.authenticated.next(true);
+    this.authenticatedUser.next(user);
 
     // Periodically refresh
     // TODO run this outsize NgZone using zone.runOutsideAngular() : https://angular.io/api/core/NgZone
@@ -66,27 +64,25 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    * Returns the observable for is/isnot authenticated.
    */
   public isAuthenticated(): Observable<boolean> {
-    return this.authenticated;
+    return this.authenticated$;
   }
 
   /**
    * Returns an observable over the currently authenticated User (or null if not logged in).
    */
   public getAuthenticatedUser(): Observable<User> {
-    return this.authenticatedUser;
+    return this.authenticatedUser$;
   }
 
   /**
    * Returns the currently authenticated user.
    */
   public getAuthenticatedUserNow(): User {
-    return this._authenticatedUser.getValue();
+    return this.authenticatedUser.getValue();
   }
 
   /**
    * Not supported.
-   * @param user
-   * @param credential
    */
   public login(user: string, credential: any): Promise<User> {
     throw new Error('Not supported.');
@@ -94,7 +90,6 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to check that user can endorse a role.
-   * @param role
    */
   public hasRole(role: string): boolean {
     // console.log("[KeycloakAuthenticationService] hasRole called with " + role);
@@ -111,9 +106,8 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
     // return this.keycloak.hasResourceRole('microcks-app', role);
   }
 
-/**
+  /**
    * Called to check that user can endorse role for at least one resource.
-   * @param role
    */
   public hasRoleForAnyResource(role: string): boolean {
     const rolePathPrefix = '/microcks/' + role + '/';
@@ -124,8 +118,6 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to check that user can endorse role for a specific resource.
-   * @param role
-   * @param resource
    */
   public hasRoleForResource(role: string, resource: string): boolean {
     const rolePath = '/microcks/' + role + '/' + resource;
@@ -143,7 +135,6 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to inject authentication headers into a remote API call.
-   * @param headers
    */
   public injectAuthHeaders(headers: { [header: string]: string }): void {
     const authHeader: string = 'Bearer ' + this.keycloak.token;

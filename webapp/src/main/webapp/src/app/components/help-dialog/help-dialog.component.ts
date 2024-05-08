@@ -18,15 +18,12 @@ import { Component } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
 @Component({
-  selector: 'help-dialog',
+  selector: 'app-help-dialog',
   templateUrl: 'help-dialog.component.html'
 })
 export class HelpDialogComponent {
 
-  protected _isOpen = false;
+  protected isOpenBF = false;
 
   constructor(public bsModalRef: BsModalRef) {}
-
-  ngOnInit() {
-  }
 }

@@ -29,8 +29,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Constructor.
-   * @param http
-   * @param config
    */
   constructor(private http: HttpClient, private config: ConfigService) {
     super();
@@ -64,8 +62,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Not supported.
-   * @param user
-   * @param credential
    */
   public login(user: string, credential: any): Promise<User> {
     throw new Error('Not supported.');
@@ -73,7 +69,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to check that user can endorse a role.
-   * @param role
    */
   public hasRole(role: string): boolean {
     return true;
@@ -81,7 +76,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to check that user can endorse role for at least one resource.
-   * @param role
    */
   public hasRoleForAnyResource(role: string): boolean {
     return true;
@@ -89,8 +83,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to check that user can endorse role for a specific resource.
-   * @param role
-   * @param resource
    */
   public hasRoleForResource(role: string, resource: string): boolean {
     return true;
@@ -105,7 +97,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to inject authentication headers into a remote API call.
-   * @param headers
    */
   public injectAuthHeaders(headers: { [header: string]: string }): void {
     // Nothing to do here.

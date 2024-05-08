@@ -38,16 +38,16 @@ getKeycloakConfig(function(err, datums) {
     throw err;
   }
 
-  if (keycloakConfig.enabled) {
+  if (keycloakConfig && keycloakConfig.enabled) {
     console.log('[Microcks launch] Keycloak is enabled, launching OIDC login flow...');
 
     // Build keycloak-js adapter from config.
-    const keycloak = window.Keycloak({
+    const keycloak = (window as any).Keycloak({
       url: keycloakConfig['auth-server-url'],
       realm: keycloakConfig.realm,
       clientId: keycloakConfig.resource
     });
-    const loginOptions = {onLoad: 'login-required'};
+    const loginOptions = {onLoad: 'login-required', checkLoginIframe: undefined};
 
     if (location.origin.indexOf('/localhost:') != -1) {
       console.log('[Microcks launch] Running locally so disabling Keycloak checkLogin Iframe to respect modern browser restrictions');
@@ -56,7 +56,7 @@ getKeycloakConfig(function(err, datums) {
 
     keycloak.init(loginOptions).then(function(authenticated) {
       if (authenticated) {
-          window.keycloak = keycloak;
+          (window as any).keycloak = keycloak;
           platformBrowserDynamic().bootstrapModule(AppModule)
               .catch(err => console.log(err));
       }

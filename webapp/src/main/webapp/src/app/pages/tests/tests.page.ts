@@ -27,7 +27,7 @@ import { Service } from '../../models/service.model';
 import { TestResult } from '../../models/test.model';
 
 @Component({
-  selector: 'tests-page',
+  selector: 'app-tests-page',
   templateUrl: './tests.page.html',
   styleUrls: ['./tests.page.css']
 })

@@ -22,7 +22,7 @@ import { Service } from '../../../models/service.model';
 import { ServicesService } from '../../../services/services.service';
 
 @Component({
-  selector: 'snapshots-tab',
+  selector: 'app-snapshots-tab',
   templateUrl: './snapshots.tab.html',
   styleUrls: ['./snapshots.tab.css']
 })

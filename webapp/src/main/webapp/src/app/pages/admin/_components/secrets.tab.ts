@@ -25,7 +25,7 @@ import { SecretsService } from '../../../services/secrets.service';
 
 
 @Component({
-  selector: 'secrets-tab',
+  selector: 'app-secrets-tab',
   templateUrl: './secrets.tab.html',
   styleUrls: ['./secrets.tab.css']
 })

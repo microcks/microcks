@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Observable } from 'rxjs';
@@ -21,13 +26,28 @@ import { switchMap } from 'rxjs/operators';
 
 import { BsModalService } from 'ngx-bootstrap/modal';
 import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  NotificationType,
+} from 'patternfly-ng/notification';
 import { ListConfig, ListEvent } from 'patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
 import { GenerateSamplesDialogComponent } from './_components/generate-samples.dialog';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
-import { Operation, ServiceType, ServiceView, Contract, ParameterConstraint, Exchange, UnidirectionalEvent, RequestResponsePair, EventMessage } from '../../../models/service.model';
+import {
+  Operation,
+  ServiceType,
+  ServiceView,
+  Contract,
+  ParameterConstraint,
+  Exchange,
+  UnidirectionalEvent,
+  RequestResponsePair,
+  EventMessage,
+} from '../../../models/service.model';
 import { TestConformanceMetric } from 'src/app/models/metric.model';
 import { AICopilotService } from '../../../services/aicopilot.service';
 import { IAuthenticationService } from '../../../services/auth.service';
@@ -37,13 +57,12 @@ import { MetricsService } from 'src/app/services/metrics.service';
 import { ServicesService } from '../../../services/services.service';
 
 @Component({
-  selector: 'service-detail-page',
+  selector: 'app-service-detail-page',
   templateUrl: './service-detail.page.html',
   styleUrls: ['./service-detail.page.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ServiceDetailPageComponent implements OnInit {
-
   readonly hlLang: string[] = ['json', 'xml', 'yaml'];
 
   modalRef: BsModalRef;
@@ -57,27 +76,38 @@ export class ServiceDetailPageComponent implements OnInit {
   operationsListConfig: ListConfig;
   notifications: Notification[];
 
-  constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService,
-              private metricsSvc: MetricsService, private authService: IAuthenticationService, private config: ConfigService,
-              private copilotSvc: AICopilotService, private modalService: BsModalService, private notificationService: NotificationService,
-              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
-  }
+  constructor(
+    private servicesSvc: ServicesService,
+    private contractsSvc: ContractsService,
+    private metricsSvc: MetricsService,
+    private authService: IAuthenticationService,
+    private config: ConfigService,
+    private copilotSvc: AICopilotService,
+    private modalService: BsModalService,
+    private notificationService: NotificationService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private ref: ChangeDetectorRef
+  ) {}
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
     this.serviceView = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.servicesSvc.getServiceView(params.get('serviceId')))
+        this.servicesSvc.getServiceView(params.get('serviceId'))
+      )
     );
     this.contracts = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.contractsSvc.listByServiceId(params.get('serviceId')))
+        this.contractsSvc.listByServiceId(params.get('serviceId'))
+      )
     );
     this.serviceTestConformanceMetric = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.metricsSvc.getServiceTestConformanceMetric(params.get('serviceId')))
+        this.metricsSvc.getServiceTestConformanceMetric(params.get('serviceId'))
+      )
     );
-    this.serviceView.subscribe( view => {
+    this.serviceView.subscribe((view) => {
       this.serviceId = view.service.id;
       this.resolvedServiceView = view;
       this.operations = view.service.operations;
@@ -93,10 +123,11 @@ export class ServiceDetailPageComponent implements OnInit {
       // of service. Relaunch everything here.
       const idParam = params.get('serviceId');
       if (idParam.includes(':')) {
-        this.serviceView.subscribe( view => {
+        this.serviceView.subscribe((view) => {
           console.log('Got serviceId for ' + idParam + ': ' + view.service.id);
           this.contracts = this.contractsSvc.listByServiceId(view.service.id);
-          this.serviceTestConformanceMetric = this.metricsSvc.getServiceTestConformanceMetric(view.service.id);
+          this.serviceTestConformanceMetric =
+            this.metricsSvc.getServiceTestConformanceMetric(view.service.id);
         });
       }
     });
@@ -109,7 +140,7 @@ export class ServiceDetailPageComponent implements OnInit {
       selectionMatchProp: 'name',
       showCheckbox: false,
       showRadioButton: false,
-      useExpandItems: true
+      useExpandItems: true,
     } as ListConfig;
   }
 
@@ -129,7 +160,10 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public isEventTypeService(): boolean {
-    return this.resolvedServiceView.service.type === ServiceType.EVENT || this.resolvedServiceView.service.type === ServiceType.GENERIC_EVENT;
+    return (
+      this.resolvedServiceView.service.type === ServiceType.EVENT ||
+      this.resolvedServiceView.service.type === ServiceType.GENERIC_EVENT
+    );
   }
 
   public gotoCreateTest(): void {
@@ -139,61 +173,94 @@ export class ServiceDetailPageComponent implements OnInit {
   public openEditLabels(): void {
     const initialState = {
       closeBtnName: 'Cancel',
-      resourceName: this.resolvedServiceView.service.name + ' - ' + this.resolvedServiceView.service.version,
+      resourceName:
+        this.resolvedServiceView.service.name +
+        ' - ' +
+        this.resolvedServiceView.service.version,
       resourceType: 'Service',
-      labels: {}
+      labels: {},
     };
     if (this.resolvedServiceView.service.metadata.labels != undefined) {
-      initialState.labels = JSON.parse(JSON.stringify(this.resolvedServiceView.service.metadata.labels));
+      initialState.labels = JSON.parse(
+        JSON.stringify(this.resolvedServiceView.service.metadata.labels)
+      );
     }
-    this.modalRef = this.modalService.show(EditLabelsDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(EditLabelsDialogComponent, {
+      initialState,
+    });
     this.modalRef.content.saveLabelsAction.subscribe((labels) => {
       this.resolvedServiceView.service.metadata.labels = labels;
-      this.servicesSvc.updateServiceMetadata(this.resolvedServiceView.service, this.resolvedServiceView.service.metadata).subscribe(
-        {
-          next: res => {
+      this.servicesSvc
+        .updateServiceMetadata(
+          this.resolvedServiceView.service,
+          this.resolvedServiceView.service.metadata
+        )
+        .subscribe({
+          next: (res) => {
             // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
             // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
             // When done multiple times, serviceView re-assignation is not detected... So we have to force
             // null, redetect and then re-assign a new Observable...
             this.serviceView = null;
             this.ref.detectChanges();
-            this.serviceView = new Observable<ServiceView>(observer => { observer.next(this.resolvedServiceView); });
-            this.notificationService.message(NotificationType.SUCCESS,
-              this.resolvedServiceView.service.name, 'Labels have been updated', false, null, null);
+            this.serviceView = new Observable<ServiceView>((observer) => {
+              observer.next(this.resolvedServiceView);
+            });
+            this.notificationService.message(
+              NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name,
+              'Labels have been updated',
+              false,
+              null,
+              null
+            );
             // Then trigger view reevaluation to update the label list component and the notifications toaster.
             this.ref.detectChanges();
           },
-          error: err => {
-            this.notificationService.message(NotificationType.DANGER,
-              this.resolvedServiceView.service.name, 'Labels cannot be updated (' + err.message + ')', false, null, null);
+          error: (err) => {
+            this.notificationService.message(
+              NotificationType.DANGER,
+              this.resolvedServiceView.service.name,
+              'Labels cannot be updated (' + err.message + ')',
+              false,
+              null,
+              null
+            );
           },
           complete: () => console.log('Observer got a complete notification'),
-        }
-      );
+        });
     });
   }
 
   public openResources(): void {
     const initialState = {
       closeBtnName: 'Close',
-      service: this.resolvedServiceView.service
+      service: this.resolvedServiceView.service,
     };
-    this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(GenericResourcesDialogComponent, {
+      initialState,
+    });
   }
 
   public openGenerateSamples(operationName: string): void {
     const initialState = {
       closeBtnName: 'Cancel',
       service: this.resolvedServiceView.service,
-      operationName
+      operationName,
     };
-    this.modalRef = this.modalService.show(GenerateSamplesDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(GenerateSamplesDialogComponent, {
+      initialState,
+    });
     this.modalRef.setClass('modal-lg');
     this.modalRef.content.saveSamplesAction.subscribe((exchanges) => {
-      this.copilotSvc.addSamplesSuggestions(this.resolvedServiceView.service, operationName, exchanges).subscribe(
-        {
-          next: res => {
+      this.copilotSvc
+        .addSamplesSuggestions(
+          this.resolvedServiceView.service,
+          operationName,
+          exchanges
+        )
+        .subscribe({
+          next: (res) => {
             // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
             // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
             // When done multiple times, serviceView re-assignation is not detected... So we have to force
@@ -201,18 +268,29 @@ export class ServiceDetailPageComponent implements OnInit {
             this.serviceView = null;
             this.ref.detectChanges();
             this.serviceView = this.servicesSvc.getServiceView(this.serviceId);
-            this.notificationService.message(NotificationType.SUCCESS,
-              this.resolvedServiceView.service.name, 'Samples have been added to ' + operationName, false, null, null);
+            this.notificationService.message(
+              NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name,
+              'Samples have been added to ' + operationName,
+              false,
+              null,
+              null
+            );
             // Then trigger view reevaluation to update the samples list and the notifications toaster.
             this.ref.detectChanges();
           },
-          error: err => {
-            this.notificationService.message(NotificationType.DANGER,
-              this.resolvedServiceView.service.name, 'Samples cannot be added (' + err.message + ')', false, null, null);
+          error: (err) => {
+            this.notificationService.message(
+              NotificationType.DANGER,
+              this.resolvedServiceView.service.name,
+              'Samples cannot be added (' + err.message + ')',
+              false,
+              null,
+              null
+            );
           },
           complete: () => console.log('Observer got a complete notification'),
-        }
-      );
+        });
     });
   }
 
@@ -237,12 +315,19 @@ export class ServiceDetailPageComponent implements OnInit {
       result += ' is <code>required</code>';
     }
     if (constraint.recopy) {
-      if (result != 'Parameter ') { result += ', '; }
+      if (result != 'Parameter ') {
+        result += ', ';
+      }
       result += ' will be <code>recopied</code> as response header';
     }
     if (constraint.mustMatchRegexp) {
-      if (result != 'Parameter ') { result += ', '; }
-      result += ' must match the <code>' + constraint.mustMatchRegexp + '</code> regular expression';
+      if (result != 'Parameter ') {
+        result += ', ';
+      }
+      result +=
+        ' must match the <code>' +
+        constraint.mustMatchRegexp +
+        '</code> regular expression';
     }
     return result;
   }
@@ -297,7 +382,11 @@ export class ServiceDetailPageComponent implements OnInit {
     }
     return false;
   }
-  public getBindingProperty(operation: Operation, binding: string, property: string): string {
+  public getBindingProperty(
+    operation: Operation,
+    binding: string,
+    property: string
+  ): string {
     // console.log("[ServiceDetailPageComponent.getBindingProperty()]");
     if (operation.bindings != null) {
       const b = operation.bindings[binding];
@@ -319,29 +408,41 @@ export class ServiceDetailPageComponent implements OnInit {
 
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
       result += '/rest/';
-      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
+      result +=
+        this.encodeUrl(this.resolvedServiceView.service.name) +
+        '/' +
+        this.resolvedServiceView.service.version;
 
       const parts = {};
       const params = {};
       let operationName = operation.name;
 
       if (dispatchCriteria != null) {
-        let partsCriteria = (dispatchCriteria.indexOf('?') == -1 ? dispatchCriteria : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?')));
-        const paramsCriteria = (dispatchCriteria.indexOf('?') == -1 ? null : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1));
+        let partsCriteria =
+          dispatchCriteria.indexOf('?') == -1
+            ? dispatchCriteria
+            : dispatchCriteria.substring(0, dispatchCriteria.indexOf('?'));
+        const paramsCriteria =
+          dispatchCriteria.indexOf('?') == -1
+            ? null
+            : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1);
 
         partsCriteria = this.encodeUrl(partsCriteria);
-        partsCriteria.split('/').forEach(function(element, index, array) {
+        partsCriteria.split('/').forEach((element, index, array) => {
           if (element) {
             parts[element.split('=')[0]] = element.split('=')[1];
           }
         });
 
         // operationName = operationName.replace(/{(\w+)}/g, function(match, p1, string) {
-        operationName = operationName.replace(/{([a-zA-Z0-9-_]+)}/g, function(match, p1, string) {
-          return parts[p1];
-        });
+        operationName = operationName.replace(
+          /{([a-zA-Z0-9-_]+)}/g,
+          (_, p1) => {
+            return parts[p1];
+          }
+        );
         // Support also Postman syntax with /:part
-        operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, function(match, p1, string) {
+        operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, (_, p1) => {
           return parts[p1];
         });
         if (paramsCriteria != null) {
@@ -354,14 +455,28 @@ export class ServiceDetailPageComponent implements OnInit {
       result += operationName;
     } else if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
       result += '/graphql/';
-      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
-    } else if (this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP) {
+      result +=
+        this.encodeUrl(this.resolvedServiceView.service.name) +
+        '/' +
+        this.resolvedServiceView.service.version;
+    } else if (
+      this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP
+    ) {
       result += '/soap/';
-      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version;
-    } else if (this.resolvedServiceView.service.type === ServiceType.GENERIC_REST) {
+      result +=
+        this.encodeUrl(this.resolvedServiceView.service.name) +
+        '/' +
+        this.resolvedServiceView.service.version;
+    } else if (
+      this.resolvedServiceView.service.type === ServiceType.GENERIC_REST
+    ) {
       result += '/dynarest/';
       const resourceName = this.removeVerbInUrl(operation.name);
-      result += this.encodeUrl(this.resolvedServiceView.service.name) + '/' + this.resolvedServiceView.service.version + resourceName;
+      result +=
+        this.encodeUrl(this.resolvedServiceView.service.name) +
+        '/' +
+        this.resolvedServiceView.service.version +
+        resourceName;
     } else if (this.resolvedServiceView.service.type === ServiceType.GRPC) {
       // Change port in Dev mode of add '-grpc' service name suffix.
       if (result === 'http://localhost:8080') {
@@ -374,7 +489,11 @@ export class ServiceDetailPageComponent implements OnInit {
     return result;
   }
 
-  public formatAsyncDestination(operation: Operation, eventMessage: EventMessage, binding: string): string {
+  public formatAsyncDestination(
+    operation: Operation,
+    eventMessage: EventMessage,
+    binding: string
+  ): string {
     let serviceName = this.resolvedServiceView.service.name;
     let versionName = this.resolvedServiceView.service.version;
     let operationName = operation.name;
@@ -387,7 +506,15 @@ export class ServiceDetailPageComponent implements OnInit {
       // Remove verb and templatized part if any.
       operationName = this.getDestinationOperationPart(operation, eventMessage);
 
-      return this.asyncAPIFeatureEndpoint('WS') + '/api/ws/' + serviceName + '/' + versionName + '/' + operationName;
+      return (
+        this.asyncAPIFeatureEndpoint('WS') +
+        '/api/ws/' +
+        serviceName +
+        '/' +
+        versionName +
+        '/' +
+        operationName
+      );
     }
 
     // Remove ' ', '-' in service name.
@@ -398,7 +525,12 @@ export class ServiceDetailPageComponent implements OnInit {
     operationName = this.getDestinationOperationPart(operation, eventMessage);
 
     // Sanitize operation name depending on protocol.
-    if ('KAFKA' === binding || 'GOOGLEPUBSUB' === binding || 'SQS' === binding || 'SNS' === binding) {
+    if (
+      'KAFKA' === binding ||
+      'GOOGLEPUBSUB' === binding ||
+      'SQS' === binding ||
+      'SNS' === binding
+    ) {
       operationName = operationName.replace(/\//g, '-');
     }
     if ('SQS' === binding || 'SNS' === binding) {
@@ -408,15 +540,17 @@ export class ServiceDetailPageComponent implements OnInit {
     return serviceName + '-' + versionName + '-' + operationName;
   }
 
-  private getDestinationOperationPart(operation: Operation, eventMessage: EventMessage): string {
+  private getDestinationOperationPart(
+    operation: Operation,
+    eventMessage: EventMessage
+  ): string {
     // In AsyncAPI v2, channel address is directly the operation name.
     let operationPart = this.removeVerbInUrl(operation.name);
 
     // Take care of templatized address for URI_PART dispatcher style.
     if (operation.dispatcher === 'URI_PARTS') {
       // In AsyncAPI v3, operation is different from channel and channel templatized address may be in resourcePaths.
-      for (let i = 0; i < operation.resourcePaths.length; i++) {
-        const resourcePath = operation.resourcePaths[i];
+      for (const resourcePath of operation.resourcePaths) {
         if (resourcePath.indexOf('{') != -1) {
           operationPart = resourcePath;
           break;
@@ -427,14 +561,17 @@ export class ServiceDetailPageComponent implements OnInit {
       if (eventMessage.dispatchCriteria != null) {
         const parts = {};
         const partsCriteria = this.encodeUrl(eventMessage.dispatchCriteria);
-        partsCriteria.split('/').forEach(function(element, index, array) {
+        partsCriteria.split('/').forEach((element) => {
           if (element) {
             parts[element.split('=')[0]] = element.split('=')[1];
           }
         });
-        operationPart = operationPart.replace(/{([a-zA-Z0-9-_]+)}/g, function(match, p1, string) {
-          return (parts[p1] != null) ? parts[p1] : match;
-        });
+        operationPart = operationPart.replace(
+          /{([a-zA-Z0-9-_]+)}/g,
+          (match, p1) => {
+            return parts[p1] != null ? parts[p1] : match;
+          }
+        );
       }
     }
     return operationPart;
@@ -446,7 +583,9 @@ export class ServiceDetailPageComponent implements OnInit {
         const request = JSON.parse(requestContent);
         return request.query;
       } catch (error) {
-        console.log('Error while parsing GraphQL request content: ' + error.message);
+        console.log(
+          'Error while parsing GraphQL request content: ' + error.message
+        );
         return requestContent;
       }
     }
@@ -459,20 +598,31 @@ export class ServiceDetailPageComponent implements OnInit {
         return JSON.stringify(request.variables, null, 2);
       }
     } catch (error) {
-      console.log('Error while parsing GraphQL request content: ' + error.message);
+      console.log(
+        'Error while parsing GraphQL request content: ' + error.message
+      );
     }
     return '';
   }
   public prettyPrintIfJSON(content: string): string {
-    if ((content.startsWith('[') || content.startsWith('{')) && content.indexOf('\n') == -1) {
+    if (
+      (content.startsWith('[') || content.startsWith('{')) &&
+      content.indexOf('\n') == -1
+    ) {
       const jsonContent = JSON.parse(content);
       return JSON.stringify(jsonContent, null, 2);
     }
     return content;
   }
 
-  public formatCurlCmd(operation: Operation, exchange: RequestResponsePair): string {
-    const mockUrl = this.formatMockUrl(operation, exchange.response.dispatchCriteria);
+  public formatCurlCmd(
+    operation: Operation,
+    exchange: RequestResponsePair
+  ): string {
+    const mockUrl = this.formatMockUrl(
+      operation,
+      exchange.response.dispatchCriteria
+    );
 
     let verb = operation.method.toUpperCase();
     if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
@@ -480,19 +630,27 @@ export class ServiceDetailPageComponent implements OnInit {
     }
 
     let cmd = 'curl -X ' + verb + ' \'' + mockUrl + '\'';
-    if (exchange.request.content != null && exchange.request.content != undefined) {
+    if (
+      exchange.request.content != null &&
+      exchange.request.content != undefined
+    ) {
       cmd += ' -d \'' + exchange.request.content.replace(/\n/g, '') + '\'';
     }
     if (exchange.request.headers != null) {
-      for (let i = 0; i < exchange.request.headers.length; i++) {
-        const header = exchange.request.headers[i];
-        cmd += ' -H \'' + header.name + ': ' + header.values.join(', ') + '\'';
+      for (const header of exchange.request.headers) {
+        cmd += ` -H '${header.name}: ${header.values.join(', ')}'`;
       }
     }
 
     // Add a content-type header if missing and obvious we need one.
-    if (exchange.request.content != null && !cmd.toLowerCase().includes('-h \'content-type:')) {
-      if (exchange.request.content.startsWith('[') || exchange.request.content.startsWith('{')) {
+    if (
+      exchange.request.content != null &&
+      !cmd.toLowerCase().includes('-h \'content-type:')
+    ) {
+      if (
+        exchange.request.content.startsWith('[') ||
+        exchange.request.content.startsWith('{')
+      ) {
         cmd += ' -H \'Content-Type: application/json\'';
       }
     }
@@ -512,17 +670,31 @@ export class ServiceDetailPageComponent implements OnInit {
     selBox.select();
     document.execCommand('copy');
     document.body.removeChild(selBox);
-    this.notificationService.message(NotificationType.INFO,
-      this.resolvedServiceView.service.name, 'Mock URL has been copied to clipboard', false, null, null);
+    this.notificationService.message(
+      NotificationType.INFO,
+      this.resolvedServiceView.service.name,
+      'Mock URL has been copied to clipboard',
+      false,
+      null,
+      null
+    );
   }
 
   private removeVerbInUrl(operationName: string): string {
-    if (operationName.startsWith('GET ') || operationName.startsWith('PUT ')
-        || operationName.startsWith('POST ') || operationName.startsWith('DELETE ')
-        || operationName.startsWith('OPTIONS ') || operationName.startsWith('PATCH ')
-        || operationName.startsWith('HEAD ') || operationName.startsWith('TRACE ')
-        || operationName.startsWith('SUBSCRIBE ') || operationName.startsWith('PUBLISH ')
-        || operationName.startsWith('SEND ') || operationName.startsWith('RECEIVE ')) {
+    if (
+      operationName.startsWith('GET ') ||
+      operationName.startsWith('PUT ') ||
+      operationName.startsWith('POST ') ||
+      operationName.startsWith('DELETE ') ||
+      operationName.startsWith('OPTIONS ') ||
+      operationName.startsWith('PATCH ') ||
+      operationName.startsWith('HEAD ') ||
+      operationName.startsWith('TRACE ') ||
+      operationName.startsWith('SUBSCRIBE ') ||
+      operationName.startsWith('PUBLISH ') ||
+      operationName.startsWith('SEND ') ||
+      operationName.startsWith('RECEIVE ')
+    ) {
       operationName = operationName.slice(operationName.indexOf(' ') + 1);
     }
     return operationName;
@@ -540,9 +712,15 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public hasRoleForService(role: string): boolean {
-    if (this.hasRepositoryTenancyFeatureEnabled() && this.resolvedServiceView.service.metadata.labels) {
+    if (
+      this.hasRepositoryTenancyFeatureEnabled() &&
+      this.resolvedServiceView.service.metadata.labels
+    ) {
       console.log('hasRepositoryTenancyFeatureEnabled');
-      const tenant = this.resolvedServiceView.service.metadata.labels[this.repositoryTenantLabel()];
+      const tenant =
+        this.resolvedServiceView.service.metadata.labels[
+          this.repositoryTenantLabel()
+        ];
       if (tenant !== undefined) {
         return this.authService.hasRoleForResource(role, tenant);
       }
@@ -551,20 +729,25 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public allowOperationsPropertiesEdit(): boolean {
-    return (this.hasRoleForService('manager') || this.hasRole('admin'))
-        && (this.resolvedServiceView.service.type === 'REST'
-            || this.resolvedServiceView.service.type === 'GRPC'
-            || this.resolvedServiceView.service.type === 'GRAPHQL'
-            || ((this.resolvedServiceView.service.type === 'EVENT' || this.resolvedServiceView.service.type === 'GENERIC_EVENT')
-                && this.hasAsyncAPIFeatureEnabled()));
+    return (
+      (this.hasRoleForService('manager') || this.hasRole('admin')) &&
+      (this.resolvedServiceView.service.type === 'REST' ||
+        this.resolvedServiceView.service.type === 'GRPC' ||
+        this.resolvedServiceView.service.type === 'GRAPHQL' ||
+        ((this.resolvedServiceView.service.type === 'EVENT' ||
+          this.resolvedServiceView.service.type === 'GENERIC_EVENT') &&
+          this.hasAsyncAPIFeatureEnabled()))
+    );
   }
 
   public allowAICopilotOnSamples(): boolean {
-    return this.hasAICopilotEnabled()
-        && (this.resolvedServiceView.service.type === 'REST'
-            || this.resolvedServiceView.service.type === 'GRAPHQL'
-            || this.resolvedServiceView.service.type === 'EVENT'
-            || this.resolvedServiceView.service.type === 'GRPC');
+    return (
+      this.hasAICopilotEnabled() &&
+      (this.resolvedServiceView.service.type === 'REST' ||
+        this.resolvedServiceView.service.type === 'GRAPHQL' ||
+        this.resolvedServiceView.service.type === 'EVENT' ||
+        this.resolvedServiceView.service.type === 'GRPC')
+    );
   }
 
   public hasRepositoryTenancyFeatureEnabled(): boolean {
@@ -572,7 +755,9 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public repositoryTenantLabel(): string {
-    return this.config.getFeatureProperty('repository-filter', 'label-key').toLowerCase();
+    return this.config
+      .getFeatureProperty('repository-filter', 'label-key')
+      .toLowerCase();
   }
 
   public hasAsyncAPIFeatureEnabled(): boolean {

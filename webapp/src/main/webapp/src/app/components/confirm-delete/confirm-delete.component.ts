@@ -18,23 +18,34 @@ import { Component, Output, EventEmitter, ViewChildren, QueryList } from '@angul
 import { ModalDirective } from 'ngx-bootstrap/modal';
 
 @Component({
-  selector: 'confirm-delete-dialog',
+  selector: 'app-confirm-delete-dialog',
   templateUrl: 'confirm-delete.component.html'
 })
 export class ConfirmDeleteDialogComponent {
 
-  @Output() onDelete: EventEmitter<any> = new EventEmitter<any>();
+  @Output() delete: EventEmitter<any> = new EventEmitter<any>();
 
   @ViewChildren('confirmDeleteModal') confirmDeleteModal: QueryList<ModalDirective>;
 
   private objectToDelete: any;
-  protected _isOpen = false;
+  protected isOpenBF = false;
+
+  set isOpen(isOpen: boolean) {
+    this.isOpenBF = isOpen;
+  }
+
+  /**
+   * Returns true if the dialog is open.
+   */
+  get isOpen() {
+    return this.isOpenBF;
+  }
 
   /**
    * Called to open the dialog.
    */
   public open(objectToDelete: any): void {
-    this._isOpen = true;
+    this.isOpen = true;
     this.objectToDelete = objectToDelete;
     this.confirmDeleteModal.changes.subscribe(thing => {
       if (this.confirmDeleteModal.first) {
@@ -47,14 +58,14 @@ export class ConfirmDeleteDialogComponent {
    * Called to close the dialog.
    */
   public close(): void {
-    this._isOpen = false;
+    this.isOpen = false;
   }
 
   /**
    * Called when the user clicks "Yes".
    */
-  public delete(): void {
-    this.onDelete.emit(this.objectToDelete);
+  public handleDelete(): void {
+    this.delete.emit(this.objectToDelete);
     this.cancel();
   }
 
@@ -64,12 +75,5 @@ export class ConfirmDeleteDialogComponent {
   public cancel(): void {
     this.objectToDelete = false;
     this.confirmDeleteModal.first.hide();
-  }
-
-  /**
-   * Returns true if the dialog is open.
-   */
-  public isOpen(): boolean {
-    return this._isOpen;
   }
 }

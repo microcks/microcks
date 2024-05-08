@@ -38,22 +38,22 @@ export class ExchangesTabsetComponent {
   @Input() public notificationService: NotificationService;
   @Input() public config: ConfigService;
 
-  @Input() public isEventTypeService: Function;
-  @Input() public getExchangeName: Function;
-  @Input() public getExchangeSourceArtifact: Function;
-  @Input() public hasBinding: Function;
-  @Input() public getBindingProperty: Function;
-  @Input() public formatMockUrl: Function;
-  @Input() public formatAsyncDestination: Function;
-  @Input() public getDestinationOperationPart: Function;
-  @Input() public formatRequestContent: Function;
-  @Input() public formatGraphQLVariables: Function;
-  @Input() public prettyPrintIfJSON: Function;
-  @Input() public formatCurlCmd: Function;
-  @Input() public copyToClipboard: Function;
-  @Input() public encodeUrl: Function;
-  @Input() public removeVerbInUrl: Function;
-  @Input() public asyncAPIFeatureEndpoint: Function;
+  @Input() public isEventTypeService: () => void;
+  @Input() public getExchangeName: () => void;
+  @Input() public getExchangeSourceArtifact: () => void;
+  @Input() public hasBinding: () => void;
+  @Input() public getBindingProperty: () => void;
+  @Input() public formatMockUrl: () => void;
+  @Input() public formatAsyncDestination: () => void;
+  @Input() public getDestinationOperationPart: () => void;
+  @Input() public formatRequestContent: () => void;
+  @Input() public formatGraphQLVariables: () => void;
+  @Input() public prettyPrintIfJSON: () => void;
+  @Input() public formatCurlCmd: () => void;
+  @Input() public copyToClipboard: () => void;
+  @Input() public encodeUrl: () => void;
+  @Input() public removeVerbInUrl: () => void;
+  @Input() public asyncAPIFeatureEndpoint: () => void;
 
   public shouldRender(index: number) {
     const activeTab = this.tabs.tabs.filter((tab) =>  tab.active )[0];

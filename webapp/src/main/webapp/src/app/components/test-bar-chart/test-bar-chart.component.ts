@@ -21,14 +21,14 @@ import { TestResult } from '../../models/test.model';
 import * as d3 from 'd3';
 
 @Component({
-  selector: 'test-bar-chart',
+  selector: 'app-test-bar-chart',
   styleUrls: ['./test-bar-chart.component.css'],
   template: `
     <div id="testBarChart"></div>
   `
 })
 export class TestBarChartComponent implements OnInit {
-  @Input('data')
+  @Input()
   data: TestResult[];
 
   minValues = 10;
@@ -45,7 +45,7 @@ export class TestBarChartComponent implements OnInit {
     let maxval = 0;
     let quinte = 0;
     let minval = Number.MAX_VALUE;
-    let chartData = this.data.slice(0, this.data.length).reverse()
+    const chartData = this.data.slice(0, this.data.length).reverse()
       .map(function(item) {
         maxval = Math.max(maxval, item.elapsedTime);
         quinte = Math.max(maxval / 5, item.elapsedTime);
@@ -75,11 +75,11 @@ export class TestBarChartComponent implements OnInit {
       }
     }
 
-    let height = this.height;
-    let width = parseInt(d3.select('#testBarChart').style('width'))
+    const height = this.height;
+    const width = parseInt(d3.select('#testBarChart').style('width'))
       - (chartData.length * (this.margin.left + this.margin.right));
 
-    let vis = d3.select('#testBarChart').selectAll('div').data(chartData);
+    const vis = d3.select('#testBarChart').selectAll('div').data(chartData);
     vis.enter()
       .append('div').attr('class', 'test-box-container')
         .append('div').attr('class', function(d) {
@@ -106,7 +106,7 @@ export class TestBarChartComponent implements OnInit {
         })
         .style('width', function(d) {
           // console.log('width: ' + width);
-          let w = width / chartData.length as number;
+          const w = width / chartData.length as number;
           // console.log('w: ' + w);
           return w + 'px';
         })
@@ -119,7 +119,7 @@ export class TestBarChartComponent implements OnInit {
         });
 
     d3.selectAll('#testBarChart > .test-box-container > .bar').each(function(d) {
-      let div = document.createElement('div');
+      const div = document.createElement('div');
       div.setAttribute('class', 'text-center');
       if (d.testNumber != 0) {
         div.innerText = 'Test #' + d.testNumber;

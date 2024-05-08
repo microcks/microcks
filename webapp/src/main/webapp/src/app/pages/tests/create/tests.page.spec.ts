@@ -56,6 +56,7 @@ describe('ServicesPageComponent', () => {
         has: () => false,
       }) as Partial<Params> as Params,
     } as Partial<ActivatedRoute> as ActivatedRoute;
+    routerMock = jasmine.createSpyObj('RouterMock', []);
 
     TestBed.configureTestingModule({
       imports: [

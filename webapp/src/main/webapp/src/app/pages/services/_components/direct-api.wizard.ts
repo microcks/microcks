@@ -22,7 +22,7 @@ import { ServicesPageComponent } from '../services.page';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
-  selector: 'direct-api-wizard',
+  selector: 'app-direct-api-wizard',
   templateUrl: './direct-api.wizard.html',
   styleUrls: ['./direct-api.wizard.css']
 })
@@ -110,9 +110,9 @@ export class DirectAPIWizardComponent implements OnInit {
     }
     if ($event.step.config.id === 'step1') {
       this.updateApiType();
-    } if ($event.step.config.id === 'step2') {
+    } else if ($event.step.config.id === 'step2') {
       this.updateApiProperties();
-    } if ($event.step.config.id === 'step3') {
+    } else if ($event.step.config.id === 'step3') {
       this.updateApiReference();
     } else {
       this.wizardConfig.nextTitle = 'Next >';

@@ -76,7 +76,7 @@ import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page
 import { AddToCIDialogComponent } from './pages/tests/{testId}/_components/add-to-ci.dialog';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { InvocationsServicePageComponent } from './pages/metrics/invocations/{serviceId}/invocations-service.page';
-import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
+import { ImportersPageComponent } from './pages/importers/importers.page';
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
 import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
 import { HubPageComponent } from './pages/hub/hub.page';
@@ -86,6 +86,7 @@ import { ExchangesTabsetComponent } from './pages/services/{serviceId}/_componen
 import json from 'highlight.js/lib/languages/json';
 import xml from 'highlight.js/lib/languages/xml';
 import yaml from 'highlight.js/lib/languages/yaml';
+import { ServiceRefsDialogComponent } from './pages/importers/service-refs.dialog';
 
 /**
  * Import specific languages to avoid importing everything

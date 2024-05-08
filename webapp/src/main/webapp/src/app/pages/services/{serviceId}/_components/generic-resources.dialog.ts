@@ -23,7 +23,7 @@ import { Service, GenericResource } from '../../../../models/service.model';
 
 
 @Component({
-  selector: 'generic-resources-dialog',
+  selector: 'app-generic-resources-dialog',
   templateUrl: './generic-resources.dialog.html',
   styleUrls: ['./generic-resources.dialog.css']
 })

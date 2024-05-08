@@ -16,25 +16,33 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  NotificationType,
+} from 'patternfly-ng/notification';
 
 import { Observable, concat } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { HubService } from '../../../../services/hub.service';
 import { ImportersService } from '../../../../services/importers.service';
-import { APIPackage, APIVersion, APISummary } from '../../../../models/hub.model';
+import {
+  APIPackage,
+  APIVersion,
+  APISummary,
+} from '../../../../models/hub.model';
 import { ImportJob } from '../../../../models/importer.model';
 
 import { markdownConverter } from '../../../../components/markdown';
 
 @Component({
-  selector: 'hub-apiVersion-page',
+  selector: 'app-hub-api-version-page',
   templateUrl: './apiVersion.page.html',
-  styleUrls: ['./apiVersion.page.css']
+  styleUrls: ['./apiVersion.page.css'],
 })
 export class HubAPIVersionPageComponent implements OnInit {
-
   package: Observable<APIPackage>;
   packageAPIVersion: Observable<APIVersion>;
   resolvedPackage: APIPackage;
@@ -45,32 +53,41 @@ export class HubAPIVersionPageComponent implements OnInit {
   importJobId: string;
   discoveredService: string;
 
-  constructor(private packagesSvc: HubService, private importersSvc: ImportersService, private route: ActivatedRoute,
-              private notificationService: NotificationService) { }
+  constructor(
+    private packagesSvc: HubService,
+    private importersSvc: ImportersService,
+    private route: ActivatedRoute,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
 
     this.package = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.packagesSvc.getPackage(params.get('packageId')))
+        this.packagesSvc.getPackage(params.get('packageId'))
+      )
     );
     this.packageAPIVersion = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.packagesSvc.getAPIVersion(params.get('packageId'), params.get('apiVersionId')))
+        this.packagesSvc.getAPIVersion(
+          params.get('packageId'),
+          params.get('apiVersionId')
+        )
+      )
     );
 
-    this.package.subscribe( result => {
+    this.package.subscribe((result) => {
       this.resolvedPackage = result;
-      this.packageAPIVersion.subscribe( apiVersion => {
-        this.resolvedPackage.apis.forEach(api => {
+      this.packageAPIVersion.subscribe((apiVersion) => {
+        this.resolvedPackage.apis.forEach((api) => {
           if (api.name === apiVersion.id) {
             this.resolvedPackageAPI = api;
           }
         });
       });
     });
-    this.packageAPIVersion.subscribe (result => {
+    this.packageAPIVersion.subscribe((result) => {
       this.resolvedAPIVersion = result;
     });
   }
@@ -82,7 +99,9 @@ export class HubAPIVersionPageComponent implements OnInit {
   renderCapabilityLevel(): string {
     if ('Full Mocks' === this.resolvedAPIVersion.capabilityLevel) {
       return '/assets/images/mocks-level-2.svg';
-    } else if ('Mocks + Assertions' === this.resolvedAPIVersion.capabilityLevel) {
+    } else if (
+      'Mocks + Assertions' === this.resolvedAPIVersion.capabilityLevel
+    ) {
       return '/assets/images/mocks-level-2.svg';
     }
     return '/assets/images/mocks-level-1.svg';
@@ -97,90 +116,148 @@ export class HubAPIVersionPageComponent implements OnInit {
   }
 
   installByDirectUpload(): void {
-    this.notificationService.message(NotificationType.INFO, this.resolvedAPIVersion.name, 'Starting install in Microcks. Hold on...', false, null, null);
+    this.notificationService.message(
+      NotificationType.INFO,
+      this.resolvedAPIVersion.name,
+      'Starting install in Microcks. Hold on...',
+      false,
+      null,
+      null
+    );
 
     const uploadBatch = [];
     for (let i = 0; i < this.resolvedAPIVersion.contracts.length; i++) {
-      uploadBatch.push(this.packagesSvc.importAPIVersionContractContent(this.resolvedAPIVersion.contracts[i].url, (i == 0)));
+      uploadBatch.push(
+        this.packagesSvc.importAPIVersionContractContent(
+          this.resolvedAPIVersion.contracts[i].url,
+          i == 0
+        )
+      );
     }
 
     // Concat all the observables to run them in sequence.
-    concat(...uploadBatch).subscribe(
-      {
-        next: res => {
-          this.discoveredService = res.name;
-          this.notificationService.message(NotificationType.SUCCESS,
-            this.discoveredService, 'Import and discovery of service has been done', false, null, null);
-        },
-        error: err => {
-          this.notificationService.message(NotificationType.DANGER,
-            this.resolvedAPIVersion.name, 'Importation error on server side (' + err.error.text + ')', false, null, null);
-        },
-        complete: () => console.log('Observer got a complete notification'),
-      }
-    );
+    concat.apply(null, uploadBatch).subscribe({
+      next: (res) => {
+        this.discoveredService = res.name;
+        this.notificationService.message(
+          NotificationType.SUCCESS,
+          this.discoveredService,
+          'Import and discovery of service has been done',
+          false,
+          null,
+          null
+        );
+      },
+      error: (err) => {
+        this.notificationService.message(
+          NotificationType.DANGER,
+          this.resolvedAPIVersion.name,
+          'Importation error on server side (' + err.error.text + ')',
+          false,
+          null,
+          null
+        );
+      },
+      complete: () => console.log('Observer got a complete notification'),
+    });
   }
 
   installByImporterCreation(): void {
     for (let i = 0; i < this.resolvedAPIVersion.contracts.length; i++) {
       const job = new ImportJob();
-      job.name = this.resolvedAPIVersion.id + ' - v. ' + this.resolvedAPIVersion.version + ' [' + i + ']';
+      job.name =
+        this.resolvedAPIVersion.id +
+        ' - v. ' +
+        this.resolvedAPIVersion.version +
+        ' [' +
+        i +
+        ']';
       job.repositoryUrl = this.resolvedAPIVersion.contracts[i].url;
       // Mark is as secondary artifact if not the first.
       if (i > 0) {
         job.mainArtifact = false;
       }
-      this.importersSvc.createImportJob(job).subscribe(
-        {
-          next: res => {
-            this.notificationService.message(NotificationType.SUCCESS,
-                job.name, 'Import job has been created', false, null, null);
-            // Retrieve job id before activating.
-            job.id = res.id;
-            this.importJobId = job.id;
-            this.activateImportJob(job);
-          },
-          error: err => {
-            this.notificationService.message(NotificationType.DANGER,
-                job.name, 'Import job cannot be created (' + err.message + ')', false, null, null);
-          },
-          complete: () => console.log('Observer got a complete notification'),
-        }
-      );
+      this.importersSvc.createImportJob(job).subscribe({
+        next: (res) => {
+          this.notificationService.message(
+            NotificationType.SUCCESS,
+            job.name,
+            'Import job has been created',
+            false,
+            null,
+            null
+          );
+          // Retrieve job id before activating.
+          job.id = res.id;
+          this.importJobId = job.id;
+          this.activateImportJob(job);
+        },
+        error: (err) => {
+          this.notificationService.message(
+            NotificationType.DANGER,
+            job.name,
+            'Import job cannot be created (' + err.message + ')',
+            false,
+            null,
+            null
+          );
+        },
+        complete: () => console.log('Observer got a complete notification'),
+      });
     }
   }
 
   activateImportJob(job: ImportJob): void {
-    this.importersSvc.activateImportJob(job).subscribe(
-      {
-        next: res => {
-          job.active = true;
-          this.notificationService.message(NotificationType.SUCCESS,
-              job.name, 'Import job has been started/activated', false, null, null);
-          this.startImportJob(job);
-        },
-        error: err => {
-          this.notificationService.message(NotificationType.DANGER,
-              job.name, 'Import job cannot be started/activated (' + err.message + ')', false, null, null);
-        },
-        complete: () => console.log('Observer got a complete notification'),
-      }
-    );
+    this.importersSvc.activateImportJob(job).subscribe({
+      next: (res) => {
+        job.active = true;
+        this.notificationService.message(
+          NotificationType.SUCCESS,
+          job.name,
+          'Import job has been started/activated',
+          false,
+          null,
+          null
+        );
+        this.startImportJob(job);
+      },
+      error: (err) => {
+        this.notificationService.message(
+          NotificationType.DANGER,
+          job.name,
+          'Import job cannot be started/activated (' + err.message + ')',
+          false,
+          null,
+          null
+        );
+      },
+      complete: () => console.log('Observer got a complete notification'),
+    });
   }
 
   startImportJob(job: ImportJob): void {
-    this.importersSvc.startImportJob(job).subscribe(
-      {
-        next: res => {
-          this.notificationService.message(NotificationType.SUCCESS,
-              job.name, 'Import job has been forced', false, null, null);
-        },
-        error: err => {
-          this.notificationService.message(NotificationType.DANGER,
-              job.name, 'Import job cannot be forced now', false, null, null);
-        },
-        complete: () => console.log('Observer got a complete notification'),
-      }
-    );
+    this.importersSvc.startImportJob(job).subscribe({
+      next: (res) => {
+        this.notificationService.message(
+          NotificationType.SUCCESS,
+          job.name,
+          'Import job has been forced',
+          false,
+          null,
+          null
+        );
+      },
+      error: (err) => {
+        this.notificationService.message(
+          NotificationType.DANGER,
+          job.name,
+          'Import job cannot be forced now',
+          false,
+          null,
+          null
+        );
+      },
+      complete: () => console.log('Observer got a complete notification'),
+    });
   }
 }

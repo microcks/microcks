@@ -13,7 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, TemplateRef, ViewEncapsulation, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  TemplateRef,
+  ViewEncapsulation,
+  ChangeDetectionStrategy,
+  AfterViewInit,
+} from '@angular/core';
 import { Router, NavigationStart } from '@angular/router';
 import { Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -29,31 +36,35 @@ import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from '../../models/user.model';
 import { ConfigService } from 'src/app/services/config.service';
 
-
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
 // import * as $ from 'jquery';
 declare let $: any;
 
 @Component({
-  selector: 'vertical-nav',
+  selector: 'app-vertical-nav',
   encapsulation: ViewEncapsulation.None,
   templateUrl: './vertical-nav.component.html',
   styleUrls: ['./vertical-nav.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class VerticalNavComponent implements OnInit {
+export class VerticalNavComponent implements OnInit, AfterViewInit {
   aboutConfig: AboutModalConfig;
   modalRef: BsModalRef;
 
-  constructor(protected authService: IAuthenticationService, private modalService: BsModalService,
-              private versionInfoSvc: VersionInfoService, private config: ConfigService, private router: Router) {
-  }
+  constructor(
+    protected authService: IAuthenticationService,
+    private modalService: BsModalService,
+    private versionInfoSvc: VersionInfoService,
+    private config: ConfigService,
+    private router: Router
+  ) {}
 
   ngOnInit() {
-    this.user().subscribe( currentUser => {
-      this.versionInfoSvc.getVersionInfo().subscribe( versionInfo => {
+    this.user().subscribe((currentUser) => {
+      this.versionInfoSvc.getVersionInfo().subscribe((versionInfo) => {
         this.aboutConfig = {
-          additionalInfo: 'Microcks is Open Source mocking and testing platform for API and microservices. Visit https://microcks.io for more information.',
+          additionalInfo:
+            'Microcks is Open Source mocking and testing platform for API and microservices. Visit https://microcks.io for more information.',
           copyright: 'Distributed under Apache Licence v2.0',
           logoImageAlt: 'Microcks',
           logoImageSrc: 'assets/microcks.png',
@@ -62,35 +73,53 @@ export class VerticalNavComponent implements OnInit {
             { name: 'Version', value: versionInfo.versionId },
             { name: 'Build timestamp', value: versionInfo.buildTimestamp },
             { name: 'User Login', value: currentUser.login },
-            { name: 'User Name', value: currentUser.name } ]
+            { name: 'User Name', value: currentUser.name },
+          ],
         } as AboutModalConfig;
       });
     });
 
-    this.router.events.pipe(filter(event => event instanceof NavigationStart)).subscribe((event: NavigationStart) => {
-      // Do something with the NavigationStart event object.
-      console.log('Navigation start event: ' + JSON.stringify(event));
-      const navigationEvent = { type: 'navigationEvent', url: event.url };
-      try {
-        window.parent.postMessage(JSON.stringify(navigationEvent), '*');
-      } catch (error) {
-        console.warn('Error while posting navigationEvent to parent', error);
-      }
-
-      // Navigation between sections may happen outside vertical navigation (ex: when we move from Hub to
-      // freshly installed API or Service). We then have to refresh the active class on the correct section.
-      let section = '/';
-      if (event.url != '/') {
-        if (event.url.substring(1).indexOf('/') > 0) {
-          section += event.url.substring(1, event.url.substring(1).indexOf('/') + 1);
-        } else {
-          // Default to short section name.
-          section = event.url;
+    this.router.events
+      .pipe(filter((event) => event instanceof NavigationStart))
+      .subscribe((event: NavigationStart) => {
+        // Do something with the NavigationStart event object.
+        console.log('Navigation start event: ' + JSON.stringify(event));
+        const navigationEvent = { type: 'navigationEvent', url: event.url };
+        try {
+          window.parent.postMessage(JSON.stringify(navigationEvent), '*');
+        } catch (error) {
+          console.warn('Error while posting navigationEvent to parent', error);
         }
-      }
-      $('div.nav-pf-vertical-with-sub-menus li.list-group-item a[routerLink="' + section + '"]').parent().addClass('active');
-      $('div.nav-pf-vertical-with-sub-menus li.list-group-item a[routerLink!="' + section + '"]').parent().removeClass('active');
-    });
+
+        // Navigation between sections may happen outside vertical navigation (ex: when we move from Hub to
+        // freshly installed API or Service). We then have to refresh the active class on the correct section.
+        let section = '/';
+        if (event.url != '/') {
+          if (event.url.substring(1).indexOf('/') > 0) {
+            section += event.url.substring(
+              1,
+              event.url.substring(1).indexOf('/') + 1
+            );
+          } else {
+            // Default to short section name.
+            section = event.url;
+          }
+        }
+        $(
+          'div.nav-pf-vertical-with-sub-menus li.list-group-item a[routerLink="' +
+            section +
+            '"]'
+        )
+          .parent()
+          .addClass('active');
+        $(
+          'div.nav-pf-vertical-with-sub-menus li.list-group-item a[routerLink!="' +
+            section +
+            '"]'
+        )
+          .parent()
+          .removeClass('active');
+      });
   }
 
   ngAfterViewInit() {
@@ -99,7 +128,9 @@ export class VerticalNavComponent implements OnInit {
 
   public openHelpDialog() {
     const initialState = {};
-    this.modalRef = this.modalService.show(HelpDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(HelpDialogComponent, {
+      initialState,
+    });
   }
 
   public openAboutModal(template: TemplateRef<any>): void {
@@ -123,14 +154,17 @@ export class VerticalNavComponent implements OnInit {
 
   public canUseMicrocksHub(): boolean {
     if (this.hasFeatureEnabled('microcks-hub')) {
-      const rolesStr = this.config.getFeatureProperty('microcks-hub', 'allowed-roles');
+      const rolesStr = this.config.getFeatureProperty(
+        'microcks-hub',
+        'allowed-roles'
+      );
       if (rolesStr == undefined || rolesStr === '') {
         return true;
       }
       // If roles specified, check if any is endorsed.
       const roles = rolesStr.split(',');
-      for (let i = 0; i < roles.length; i++) {
-        if (this.hasRole(roles[i])) {
+      for (const role of roles) {
+        if (this.hasRole(role)) {
           return true;
         }
       }

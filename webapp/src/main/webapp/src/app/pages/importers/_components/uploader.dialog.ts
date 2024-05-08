@@ -16,15 +16,19 @@
 import { Component, OnInit } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  NotificationType,
+} from 'patternfly-ng/notification';
 import { FileUploader, FileItem, ParsedResponseHeaders } from 'ng2-file-upload';
 import { IAuthenticationService } from '../../../services/auth.service';
 
-
 @Component({
-  selector: 'uploader-dialog',
+  selector: 'app-uploader-dialog',
   templateUrl: './uploader.dialog.html',
-  styleUrls: ['./uploader.dialog.css']
+  styleUrls: ['./uploader.dialog.css'],
 })
 export class ArtifactUploaderDialogComponent implements OnInit {
   title: string;
@@ -33,22 +37,57 @@ export class ArtifactUploaderDialogComponent implements OnInit {
   mainArtifact = true;
   uploader: FileUploader;
 
-  constructor(public bsModalRef: BsModalRef, private notificationService: NotificationService, protected authService: IAuthenticationService) {
+  constructor(
+    public bsModalRef: BsModalRef,
+    private notificationService: NotificationService,
+    protected authService: IAuthenticationService
+  ) {
     if (this.authService.isAuthenticated) {
-      this.uploader = new FileUploader({url: '/api/artifact/upload', authToken: 'Bearer ' + this.authService.getAuthenticationSecret(), itemAlias: 'file', parametersBeforeFiles: true});
+      this.uploader = new FileUploader({
+        url: '/api/artifact/upload',
+        authToken: 'Bearer ' + this.authService.getAuthenticationSecret(),
+        itemAlias: 'file',
+        parametersBeforeFiles: true,
+      });
     } else {
-      this.uploader = new FileUploader({url: '/api/artifact/upload', itemAlias: 'file', parametersBeforeFiles: true});
+      this.uploader = new FileUploader({
+        url: '/api/artifact/upload',
+        itemAlias: 'file',
+        parametersBeforeFiles: true,
+      });
     }
   }
 
   ngOnInit() {
-    this.uploader.onErrorItem = (item: FileItem, response: string, status: number, headers: ParsedResponseHeaders) => {
-      this.notificationService.message(NotificationType.DANGER,
-        item.file.name, 'Importation error on server side (' + response + ')', false, null, null);
+    this.uploader.onErrorItem = (
+      item: FileItem,
+      response: string,
+      status: number,
+      headers: ParsedResponseHeaders
+    ) => {
+      this.notificationService.message(
+        NotificationType.DANGER,
+        item.file.name,
+        'Importation error on server side (' + response + ')',
+        false,
+        null,
+        null
+      );
     };
-    this.uploader.onSuccessItem = (item: FileItem, response: string, status: number, headers: ParsedResponseHeaders) => {
-      this.notificationService.message(NotificationType.SUCCESS,
-        item.file.name, 'Import of ' + response + ' done!', false, null, null);
+    this.uploader.onSuccessItem = (
+      item: FileItem,
+      response: string,
+      status: number,
+      headers: ParsedResponseHeaders
+    ) => {
+      this.notificationService.message(
+        NotificationType.SUCCESS,
+        item.file.name,
+        'Import of ' + response + ' done!',
+        false,
+        null,
+        null
+      );
     };
   }
 

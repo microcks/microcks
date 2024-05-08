@@ -19,7 +19,7 @@ import { Router } from '@angular/router';
 import * as d3 from 'd3';
 
 @Component({
-  selector: 'score-treemap',
+  selector: 'app-score-treemap',
   styleUrls: ['./score-treemap.component.css'],
   template: `
     <div style="padding-left: 10px">
@@ -36,19 +36,19 @@ import * as d3 from 'd3';
   `
 })
 export class ScoreTreemapComponent implements OnInit {
-  @Input('data')
+  @Input()
   data: d3.layout.treemap.Node;
 
-  @Input('scoreAttr')
+  @Input()
   scoreAttr: string;
 
-  @Input('block')
+  @Input()
   block: string;
 
-  @Input('elements')
+  @Input()
   elements: string;
 
-  @Input('legend')
+  @Input()
   legend: string;
 
   margin = {top: 5, right: 5, bottom: 5, left: 5};
@@ -82,17 +82,17 @@ export class ScoreTreemapComponent implements OnInit {
         .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
     this.treemap = d3.layout.treemap().round(false)
-      .size([this.width, this.height]).value(function(d) { return d.value; });
+      .size([this.width, this.height]).value((d) => d.value);
 
     const nodes: d3.layout.treemap.Node[] = this.treemap.nodes(this.data)
-      .filter(function(d) { return !d.children; })
+      .filter((d) => !d.children)
       .sort((a, b) => b[this.scoreAttr] - a[this.scoreAttr]);
 
     const cell = svg.selectAll('g')
       .data(nodes)
       .enter().append('g')
         .attr('class', 'cell')
-        .attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+        .attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
 
     this.initializeTreemap(cell);
   }
@@ -104,32 +104,31 @@ export class ScoreTreemapComponent implements OnInit {
     const elements = this.elements;
 
     cell.append('rect')
-      .attr('id', function(d) { return d.name; })
-      .attr('width', function(d) { return d.dx - 1; })
-      .attr('height', function(d) { return d.dy - 1; })
-      .on('mouseover', function(d) {
+      .attr('id', (d) => d.name)
+      .attr('width', (d) => d.dx - 1)
+      .attr('height', (d) => d.dy - 1)
+      .on('mouseover', (d) => {
         tooltip.text(d.value + ' ' + elements + ' - ' + d[scoreAttr] + ' %');
         cell.selectAll('rect')
-          .filter(d => d.name !== this.id)
+          .filter(function(item) { return item.name !== this.id; })
           .classed('rect-defocused', true);
         return tooltip.style('visibility', 'visible');
       })
-      .on('mousemove', function() {
-        return tooltip
-          .style('top', ((d3.event as any).pageY - 10) + 'px')
-          .style('left', ((d3.event as any).pageX + 10) + 'px');
-      })
-      .on('mouseout', function() {
+      .on('mousemove', () => tooltip
+        .style('top', ((d3.event as any).pageY - 10) + 'px')
+        .style('left', ((d3.event as any).pageX + 10) + 'px')
+      )
+      .on('mouseout', () => {
         cell.selectAll('rect')
-          .filter(d => d.name !== this.id)
+          .filter(function(d) { return d.name !== this.id; })
           .classed('rect-defocused', false);
         return tooltip.style('visibility', 'hidden');
       })
       .style('fill', d => this.colorGradient(1 - (d[scoreAttr] / 100)) );
 
     cell.append('text')
-      .attr('x', function(d) { return d.dx / 2; })
-      .attr('y', function(d) { return d.dy / 2; })
+      .attr('x', (d) => d.dx / 2)
+      .attr('y', (d) => d.dy / 2)
       .attr('dy', '.35em')
       .attr('text-anchor', 'middle')
       .attr('fill', d => d[scoreAttr] < 50 ? 'white' : 'black')
@@ -151,7 +150,7 @@ export class ScoreTreemapComponent implements OnInit {
     this.treemap.size([this.width, this.height]);
 
     const nodes: d3.layout.treemap.Node[] = this.treemap.nodes(this.data)
-      .filter(function(d) {return !d.children; })
+      .filter((d) => !d.children)
       .sort((a, b) => b[this.scoreAttr] - a[this.scoreAttr]);
 
     // Reinitialize graphics in svg.
@@ -165,7 +164,7 @@ export class ScoreTreemapComponent implements OnInit {
       .data(nodes)
       .enter().append('g')
         .attr('class', 'cell')
-        .attr('transform', function(d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+        .attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
 
     this.initializeTreemap(cell);
   }

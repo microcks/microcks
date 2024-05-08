@@ -16,27 +16,33 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  NotificationType,
+} from 'patternfly-ng/notification';
 
 import { TestResult } from '../../../../models/test.model';
 import { Service } from 'src/app/models/service.model';
 
 @Component({
-  selector: 'add-to-ci-dialog',
+  selector: 'app-add-to-ci-dialog',
   templateUrl: './add-to-ci.dialog.html',
-  styleUrls: ['./add-to-ci.dialog.css']
+  styleUrls: ['./add-to-ci.dialog.css'],
 })
 export class AddToCIDialogComponent implements OnInit {
-
   ciType: string;
   closeBtnName: string;
   test: TestResult;
   service: Service;
 
-  constructor(public bsModalRef: BsModalRef, private notificationService: NotificationService) {}
+  constructor(
+    public bsModalRef: BsModalRef,
+    private notificationService: NotificationService
+  ) {}
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   private getMicrocksURL(): string {
     let microcksURL = document.location.origin;
@@ -53,23 +59,25 @@ export class AddToCIDialogComponent implements OnInit {
     yaml += `    apiNameAndVersion: '${this.service.name}:${this.service.version}'\n`;
     yaml += `    testEndpoint: '${this.test.testedEndpoint}'\n`;
     yaml += `    runner: '${this.test.runnerType}'\n`;
-    yaml += `    microcksUrl: ${ this.getMicrocksURL() }/api\n`;
+    yaml += `    microcksUrl: ${this.getMicrocksURL()}/api\n`;
     yaml += '    keycloakClientId: ${{ secrets.MICROCKS_SERVICE_ACCOUNT }}\n';
-    yaml += '    keycloakClientSecret: ${{ secrets.MICROCKS_SERVICE_ACCOUNT_SECRET }}\n';
+    yaml +=
+      '    keycloakClientSecret: ${{ secrets.MICROCKS_SERVICE_ACCOUNT_SECRET }}\n';
 
     // Adding optional items.
     if (this.test.secretRef) {
       yaml += `    secretName: '${this.test.secretRef.name}'\n`;
     }
     if (this.test.operationsHeaders) {
-      yaml += `    operationsHeaders: '${JSON.stringify(this.test.operationsHeaders)}'\n`;
+      yaml += `    operationsHeaders: '${JSON.stringify(
+        this.test.operationsHeaders
+      )}'\n`;
     }
     // Check for filtered operations.
     if (this.test.testCaseResults.length != this.service.operations.length) {
-      const operationNames = [];
-      for (let i = 0; i < this.test.testCaseResults.length; i++) {
-        operationNames.push(this.test.testCaseResults[i].operationName);
-      }
+      const operationNames = this.test.testCaseResults.map(
+        (testCaseResult) => testCaseResult.operationName
+      );
       yaml += `    filteredOperations: '${JSON.stringify(operationNames)}'\n`;
     }
 
@@ -85,30 +93,33 @@ export class AddToCIDialogComponent implements OnInit {
     yaml += `    apiNameAndVersion: "${this.service.name}:${this.service.version}"\n`;
     yaml += `    testEndpoint: ${this.test.testedEndpoint}\n`;
     yaml += `    runner: ${this.test.runnerType}\n`;
-    yaml += `    microcksURL: ${ this.getMicrocksURL() }/api\n`;
+    yaml += `    microcksURL: ${this.getMicrocksURL()}/api\n`;
 
     // Adding optional items.
     if (this.test.secretRef) {
       yaml += `    secretName: '${this.test.secretRef.name}'\n`;
     }
     if (this.test.operationsHeaders) {
-      yaml += `    operationsHeaders: '${JSON.stringify(this.test.operationsHeaders)}'\n`;
+      yaml += `    operationsHeaders: '${JSON.stringify(
+        this.test.operationsHeaders
+      )}'\n`;
     }
     // Check for filtered operations.
-    const operationNames = [];
     if (this.test.testCaseResults.length != this.service.operations.length) {
-      for (let i = 0; i < this.test.testCaseResults.length; i++) {
-        operationNames.push(this.test.testCaseResults[i].operationName);
-      }
+      const operationNames = this.test.testCaseResults.map(
+        (testCaseResult) => testCaseResult.operationName
+      );
       yaml += `    filteredOperations: '${JSON.stringify(operationNames)}'\n`;
     }
 
     yaml += `    waitFor: ${this.test.timeout / 1000}sec\n`;
     yaml += '  script:\n';
     yaml += '    - >-\n';
-    yaml += '      microcks-cli test "$apiNameAndVersion" $testEndpoint $runner\n';
+    yaml +=
+      '      microcks-cli test "$apiNameAndVersion" $testEndpoint $runner\n';
     yaml += '      --microcksURL=$microcksURL\n';
-    yaml += '      --keycloakClientId=$MICROCKS_CLIENT_ID --keycloakClientSecret=$MICROCKS_CLIENT_SECRET\n';
+    yaml +=
+      '      --keycloakClientId=$MICROCKS_CLIENT_ID --keycloakClientSecret=$MICROCKS_CLIENT_SECRET\n';
 
     // Adding optional items.
     if (this.test.secretRef) {
@@ -137,7 +148,9 @@ export class AddToCIDialogComponent implements OnInit {
       groovy += `    secretName: '${this.test.secretRef.name}',\n`;
     }
     if (this.test.operationsHeaders) {
-      groovy += `    operationsHeaders: '${JSON.stringify(this.test.operationsHeaders)}',\n`;
+      groovy += `    operationsHeaders: '${JSON.stringify(
+        this.test.operationsHeaders
+      )}',\n`;
     }
 
     groovy += `    waitTime: '${this.test.timeout / 1000}', waitUnit: 'sec')\n`;
@@ -157,7 +170,7 @@ export class AddToCIDialogComponent implements OnInit {
     yaml += '    - name: runner\n';
     yaml += `      value: ${this.test.runnerType}\n`;
     yaml += '    - name: microcksURL\n';
-    yaml += `      value: ${ this.getMicrocksURL() }/api\n`;
+    yaml += `      value: ${this.getMicrocksURL()}/api\n`;
 
     // Adding optional items.
     if (this.test.secretRef) {
@@ -170,10 +183,9 @@ export class AddToCIDialogComponent implements OnInit {
     }
     // Check for filtered operations.
     if (this.test.testCaseResults.length != this.service.operations.length) {
-      const operationNames = [];
-      for (let i = 0; i < this.test.testCaseResults.length; i++) {
-        operationNames.push(this.test.testCaseResults[i].operationName);
-      }
+      const operationNames = this.test.testCaseResults.map(
+        (testCaseResult) => testCaseResult.operationName
+      );
       yaml += '    - name: filteredOperations\n';
       yaml += `      value: '${JSON.stringify(operationNames)}'\n`;
     }
@@ -186,7 +198,7 @@ export class AddToCIDialogComponent implements OnInit {
 
   public getCLICode(): string {
     let cmd = `./microcks-cli test '${this.service.name}:${this.service.version}' ${this.test.testedEndpoint} ${this.test.runnerType} \\ \n`;
-    cmd += `  --microcksURL=${ this.getMicrocksURL() }/api \\ \n`;
+    cmd += `  --microcksURL=${this.getMicrocksURL()}/api \\ \n`;
     cmd += `  --keycloakClientId=microcks-serviceaccount \\ \n`;
     cmd += `  --keycloakClientSecret=7deb71e8-8c80-4376-95ad-00a399ee3ca1 \\ \n`;
 
@@ -195,15 +207,18 @@ export class AddToCIDialogComponent implements OnInit {
       cmd += `  --secretName: '${this.test.secretRef.name}' \\ \n`;
     }
     if (this.test.operationsHeaders) {
-      cmd += `  --operationsHeaders: '${JSON.stringify(this.test.operationsHeaders)}' \\ \n`;
+      cmd += `  --operationsHeaders: '${JSON.stringify(
+        this.test.operationsHeaders
+      )}' \\ \n`;
     }
     // Check for filtered operations.
     if (this.test.testCaseResults.length != this.service.operations.length) {
-      const operationNames = [];
-      for (let i = 0; i < this.test.testCaseResults.length; i++) {
-        operationNames.push(this.test.testCaseResults[i].operationName);
-      }
-      cmd += `  --filteredOperations: '${JSON.stringify(operationNames)}' \\ \n`;
+      const operationNames = this.test.testCaseResults.map(
+        (testCaseResult) => testCaseResult.operationName
+      );
+      cmd += `  --filteredOperations: '${JSON.stringify(
+        operationNames
+      )}' \\ \n`;
     }
 
     cmd += `  --waitFor=${this.test.timeout / 1000}sec`;
@@ -222,7 +237,13 @@ export class AddToCIDialogComponent implements OnInit {
     selBox.select();
     document.execCommand('copy');
     document.body.removeChild(selBox);
-    this.notificationService.message(NotificationType.INFO,
-      this.ciType.toUpperCase(), 'Code has been copied to clipboard', false, null, null);
+    this.notificationService.message(
+      NotificationType.INFO,
+      this.ciType.toUpperCase(),
+      'Code has been copied to clipboard',
+      false,
+      null,
+      null
+    );
   }
 }

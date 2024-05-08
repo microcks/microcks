@@ -19,11 +19,13 @@
   <div class="row">
     <div class="col-xs-2 col-md-2 controls">
       <span class="input-group mb-3">
-        <input type="text" placeholder="dd/MM/yyyy" class="form-control" 
-            #datepickerInv="bsDatepicker" placement="bottom"
-            bsDatepicker [bsConfig]="{ dateInputFormat: 'DD/MM/YYYY', containerClass: 'theme-default' }" (bsValueChange)="changeDay($event)">
+        <input type="text" placeholder="dd/MM/yyyy" class="form-control" #datepickerInv="bsDatepicker"
+          placement="bottom" bsDatepicker
+          [bsConfig]="{ dateInputFormat: 'DD/MM/YYYY', containerClass: 'theme-default' }"
+          (bsValueChange)="changeDay($event)">
         <span class="input-group-btn">
-          <button type="button" class="btn btn-default" (click)="datepickerInv.toggle()" [attr.aria-expanded]="datepickerInv.isOpen"><i class="glyphicon glyphicon-calendar"></i></button>
+          <button type="button" class="btn btn-default" (click)="datepickerInv.toggle()"
+            [attr.aria-expanded]="datepickerInv.isOpen"><i class="glyphicon glyphicon-calendar"></i></button>
         </span>
       </span>
     </div>
@@ -32,10 +34,11 @@
     </div>
   </div>
 
-  <div class="row control-group" style="margin-top: 2em"  *ngIf="dailyInvocations | async">
+  <div class="row control-group" style="margin-top: 2em" *ngIf="dailyInvocations | async">
     <div class="col-sm-6">
       <h2>Day invocations</h2>
-      <day-invocations-bar-chart [data]="dailyInvocations" (onHourChange)="changeHour($event)"></day-invocations-bar-chart>
+      <app-day-invocations-bar-chart [data]="dailyInvocations"
+        (hourChange)="changeHour($event)"></app-day-invocations-bar-chart>
       <blockquote>
         <p id="dayInfo" class="text-info" *ngIf="!day">Today</p>
         <p id="dayInfo" class="text-info" *ngIf="day">{{ day | date : 'mediumDate' }}</p>
@@ -43,7 +46,7 @@
     </div>
     <div class="col-sm-6 text-right">
       <h2>Hour invocations</h2>
-      <hour-invocations-bar-chart [data]="dailyInvocations" [hour]="hour"></hour-invocations-bar-chart>
+      <app-hour-invocations-bar-chart [data]="dailyInvocations" [hour]="hour"></app-hour-invocations-bar-chart>
       <blockquote class="pull-right">
         <p id="hourInfo" class="text-info">From {{ hour }}h to {{ hour + 1 }}h</p>
       </blockquote>

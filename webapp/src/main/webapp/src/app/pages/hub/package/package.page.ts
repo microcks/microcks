@@ -25,7 +25,7 @@ import { APIPackage, APIVersion } from '../../../models/hub.model';
 import { markdownConverter } from '../../../components/markdown';
 
 @Component({
-  selector: 'hub-package-page',
+  selector: 'app-hub-package-page',
   templateUrl: './package.page.html',
   styleUrls: ['./package.page.css']
 })

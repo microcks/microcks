@@ -16,13 +16,13 @@
 import { Component, OnInit, Input } from '@angular/core';
 
 @Component({
-  selector: 'grade-index',
+  selector: 'app-grade-index',
   templateUrl: './grade-index.component.html',
   styleUrls: ['./grade-index.component.css']
 })
 export class GradeIndexComponent implements OnInit {
 
-  @Input('score') score: number;
+  @Input() score: number;
 
   activeGrade: string;
 

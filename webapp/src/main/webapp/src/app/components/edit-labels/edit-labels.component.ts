@@ -16,16 +16,16 @@
 import { Component, EventEmitter, OnInit, Input, Output } from '@angular/core';
 
 @Component({
-  selector: 'edit-labels',
+  selector: 'app-edit-labels',
   templateUrl: './edit-labels.component.html',
   styleUrls: ['./edit-labels.component.css']
 })
 export class EditLabelsComponent implements OnInit {
-  @Output() onSave = new EventEmitter<Map<string, string>>();
+  @Output() save = new EventEmitter<Map<string, string>>();
 
-  @Input('resourceType') resourceType: string;
-  @Input('resourceName') resourceName: string;
-  @Input('labels') labels: any;
+  @Input() resourceType: string;
+  @Input() resourceName: string;
+  @Input() labels: any;
 
   labelKV = '';
 
@@ -46,7 +46,7 @@ export class EditLabelsComponent implements OnInit {
 
   addLabel(): void {
     if (this.labelKV.indexOf('=') != -1) {
-      let kv: string[] = this.labelKV.split('=');
+      const kv: string[] = this.labelKV.split('=');
       if (kv.length == 2) {
         this.labels[kv[0]] = kv[1];
       }
@@ -56,6 +56,6 @@ export class EditLabelsComponent implements OnInit {
 
   saveLabels(): void {
     // console.log("[EditLabelsComponent saveLabels] with " + JSON.stringify(this.labels)");
-    this.onSave.emit(this.labels);
+    this.save.emit(this.labels);
   }
 }

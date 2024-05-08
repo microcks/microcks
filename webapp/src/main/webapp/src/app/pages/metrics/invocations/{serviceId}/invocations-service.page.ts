@@ -23,7 +23,7 @@ import { DailyInvocations } from 'src/app/models/metric.model';
 import { MetricsService } from '../../../../services/metrics.service';
 
 @Component({
-  selector: 'invocations-service-page',
+  selector: 'app-invocations-service-page',
   templateUrl: './invocations-service.page.html',
   styleUrls: ['./invocations-service.page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

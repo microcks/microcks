@@ -30,7 +30,7 @@ import { TestResult } from '../../../models/test.model';
 import { AddToCIDialogComponent } from './_components/add-to-ci.dialog';
 
 @Component({
-  selector: 'test-detail-page',
+  selector: 'app-test-detail-page',
   templateUrl: './test-detail.page.html',
   styleUrls: ['./test-detail.page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush

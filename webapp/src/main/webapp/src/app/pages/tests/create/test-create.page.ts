@@ -29,7 +29,7 @@ import { TestRunnerType, OAuth2ClientContext } from '../../../models/test.model'
 import { Secret } from '../../../models/secret.model';
 
 @Component({
-  selector: 'test-create-page',
+  selector: 'app-test-create-page',
   templateUrl: 'test-create.page.html',
   styleUrls: ['test-create.page.css']
 })
@@ -114,8 +114,7 @@ export class TestCreatePageComponent implements OnInit {
           if (this.resolvedService.type === 'EVENT' && res.testCaseResults.length == 1) {
             this.filteredOperation = res.testCaseResults[0].operationName;
           } else {
-            for (let i = 0; i < this.resolvedService.operations.length; i++) {
-              const operation = this.resolvedService.operations[i];
+            for (const operation of this.resolvedService.operations) {
               const foundOperation = res.testCaseResults.find(tc => tc.operationName === operation.name);
               if (foundOperation == undefined || foundOperation == null) {
                 this.removedOperationsNames.push(operation.name);
@@ -142,8 +141,7 @@ export class TestCreatePageComponent implements OnInit {
   public updateSecretProperties(event: any): void {
     const secretId = event.target.value;
     if ('undefined' != event.target.value) {
-      for (let i = 0; i < this.secrets.length; i++) {
-        const secret = this.secrets[i];
+      for (const secret of this.secrets) {
         if (secretId === secret.id) {
           this.secretName = secret.name;
           break;
