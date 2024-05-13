@@ -467,7 +467,9 @@ class AsyncAPI3ImporterTest {
             assertNotNull(refResource.getContent());
          } else if ("User signed-up API-0.3.0-user-signedup.avsc".equals(refResource.getName())) {
             assertEquals(ResourceType.AVRO_SCHEMA, refResource.getType());
-            assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup.avsc", refResource.getPath());
+            assertEquals(
+                  "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup.avsc",
+                  refResource.getPath());
             assertNotNull(refResource.getContent());
          } else {
             System.err.println(refResource.getName());
