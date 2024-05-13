@@ -404,10 +404,73 @@ class AsyncAPI3ImporterTest {
          if ("User signed-up API-0.3.0--user-signedup-commons.yaml".equals(refResource.getName())) {
             assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
             assertEquals("./user-signedup-commons.yaml", refResource.getPath());
+            assertTrue(refResource.getContent().contains("commonHeaders:"));
          } else if ("User signed-up API-0.3.0--user-signedup.avsc".equals(refResource.getName())) {
             assertEquals(ResourceType.AVRO_SCHEMA, refResource.getType());
             assertEquals("./user-signedup.avsc", refResource.getPath());
+            assertTrue(refResource.getContent().contains("\"namespace\": \"microcks.avro\""));
          } else {
+            fail("Unknown ref resource found");
+         }
+      }
+
+      importAndAssertOnSimpleAsyncAPI(service, importer, "avro/binary");
+   }
+
+   @Test
+   void testRemoteAbsoluteAvroReferenceAsyncAPI3ImportYAML() {
+      AsyncAPI3Importer importer = null;
+      try {
+         importer = new AsyncAPI3Importer(
+               "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-absolute-ref.yaml",
+               new ReferenceResolver(
+                     "https://raw.githubusercontent.com/microcks/microcks/1.9.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-asyncapi-3.0-avro-absolute-ref.yaml",
+                     null, true));
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("User signed-up API", service.getName());
+      assertEquals(ServiceType.EVENT, service.getType());
+      assertEquals("0.3.0", service.getVersion());
+
+      // Check that resources have been parsed, correctly renamed, etc...
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      assertEquals(3, resources.size());
+
+      Resource asyncAPISpec = resources.get(0);
+      assertEquals(ResourceType.ASYNC_API_SPEC, asyncAPISpec.getType());
+      assertTrue(asyncAPISpec.getName().startsWith(service.getName() + "-" + service.getVersion()));
+      assertNotNull(asyncAPISpec.getContent());
+
+      // Check references have been denormalized and replaced in content.
+      assertTrue(asyncAPISpec.getContent()
+            .contains("User+signed-up+API-0.3.0--user-signedup-commons.yaml#/components/messageTraits/commonHeaders"));
+      //assertTrue(asyncAPISpec.getContent().contains("User+signed-up+API-0.3.0--user-signedup.avsc#/User"));
+
+      for (int i = 1; i < 3; i++) {
+         Resource refResource = resources.get(i);
+
+         if ("User signed-up API-0.3.0--user-signedup-commons.yaml".equals(refResource.getName())) {
+            assertEquals(ResourceType.JSON_SCHEMA, refResource.getType());
+            assertEquals("./user-signedup-commons.yaml", refResource.getPath());
+            assertNotNull(refResource.getContent());
+         } else if ("User signed-up API-0.3.0-user-signedup.avsc".equals(refResource.getName())) {
+            assertEquals(ResourceType.AVRO_SCHEMA, refResource.getType());
+            assertEquals("https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup.avsc", refResource.getPath());
+            assertNotNull(refResource.getContent());
+         } else {
+            System.err.println(refResource.getName());
             fail("Unknown ref resource found");
          }
       }
