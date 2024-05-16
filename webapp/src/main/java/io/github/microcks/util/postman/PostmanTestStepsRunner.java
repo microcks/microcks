@@ -21,6 +21,7 @@ import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
+import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.TestResult;
 import io.github.microcks.domain.TestReturn;
@@ -98,7 +99,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
    public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult, List<Request> requests,
          String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
       if (log.isDebugEnabled()) {
-         log.debug("Launching test run on " + endpointUrl + " for " + requests.size() + " request(s)");
+         log.debug("Launching test run on {} for {} request(s)", endpointUrl, requests.size());
       }
 
       // Retrieve the resource corresponding to OpenAPI specification if any.
@@ -113,7 +114,6 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
       // Convert them to Node using Jackson object mapper.
       try {
-         ObjectMapper mapper = new ObjectMapper();
          collection = mapper.readTree(collectionResource.getContent());
       } catch (Exception e) {
          throw new IOException("Postman collection file cannot be found or parsed", e);
@@ -134,6 +134,11 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
       if (testScript != null) {
          log.debug("Found a testScript for this operation !");
          jsonArg.set("testScript", testScript);
+      } else {
+         // We have nothing to test and Postman runner will reject the request without testScript.
+         log.info("No testScript found for operation '{}', marking it as failed", operation.getName());
+         return requests.stream().map(request -> new TestReturn(TestReturn.FAILURE_CODE, 0,
+               "Not executed cause no Test Script found for this operation", request, new Response())).toList();
       }
 
       // Then we have to add the corresponding 'requests' objects.
@@ -144,16 +149,16 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          String operationName = operation.getName().substring(operation.getName().indexOf(" ") + 1);
          String customizedEndpointUrl = endpointUrl
                + URIBuilder.buildURIFromPattern(operationName, request.getQueryParameters());
-         log.debug("Using customized endpoint url: " + customizedEndpointUrl);
+         log.debug("Using customized endpoint url: {}", customizedEndpointUrl);
 
          jsonRequest.put("endpointUrl", customizedEndpointUrl);
          jsonRequest.put("method", operation.getMethod());
          jsonRequest.put("name", request.getName());
 
-         if (request.getContent() != null && request.getContent().length() > 0) {
+         if (request.getContent() != null && !request.getContent().isEmpty()) {
             jsonRequest.put("body", request.getContent());
          }
-         if (request.getQueryParameters() != null && request.getQueryParameters().size() > 0) {
+         if (request.getQueryParameters() != null && !request.getQueryParameters().isEmpty()) {
             ArrayNode jsonParams = buildQueryParams(request.getQueryParameters());
             jsonRequest.set("queryParams", jsonParams);
          }
@@ -172,7 +177,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
                headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
             }
          }
-         if (headers != null && headers.size() > 0) {
+         if (!headers.isEmpty()) {
             ArrayNode jsonHeaders = buildHeaders(headers);
             jsonRequest.set("headers", jsonHeaders);
          }
@@ -214,7 +219,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          JsonNode item = items.next();
          extractTestScript("", item, operation, collectedScripts);
       }
-      if (collectedScripts.size() > 0) {
+      if (!collectedScripts.isEmpty()) {
          return collectedScripts.get(0);
       }
       return null;
@@ -237,7 +242,6 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          String operationName = PostmanCollectionImporter.buildOperationName(itemNode, operationNameRadix);
          log.debug("Found operation '{}', comparing with '{}'", operationName, operation.getName());
          if (PostmanUtil.areOperationsEquivalent(operation.getName(), operationName)) {
-            //if (operationName.equals(operation.getName())) {
             // We've got the correct operation.
             JsonNode events = itemNode.path("event");
             for (JsonNode event : events) {

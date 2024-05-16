@@ -47,11 +47,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -155,12 +153,8 @@ public class TestController {
          @PathVariable("testCaseId") String testCaseId) {
       // We may have testCaseId being URLEncoded, with forbidden '/' replaced by '_' so unwrap id.
       // Switched form _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
-      try {
-         testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8.toString());
-         testCaseId = testCaseId.replace('!', '/');
-      } catch (UnsupportedEncodingException e) {
-         return Collections.emptyList();
-      }
+      testCaseId = URLDecoder.decode(testCaseId, StandardCharsets.UTF_8);
+      testCaseId = testCaseId.replace('!', '/');
       log.debug("Getting messages for testCase {} on test {}", testCaseId, testResultId);
       return messageService.getRequestResponseByTestCase(testCaseId);
    }

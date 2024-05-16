@@ -57,7 +57,6 @@ import org.apache.hc.core5.ssl.SSLContexts;
 import org.apache.hc.core5.util.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
@@ -85,30 +84,19 @@ import java.util.concurrent.CompletableFuture;
 public class TestRunnerService {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(TestRunnerService.class);
+   private static final Logger log = LoggerFactory.getLogger(TestRunnerService.class);
 
    /** Constant representing the header line in a custom CA Cert in PEM format. */
    private static final String BEGIN_CERTIFICATE = "-----BEGIN CERTIFICATE-----";
    /** Constant representing the footer line in a custom CA Cert in PEM format. */
    private static final String END_CERTIFICATE = "-----END CERTIFICATE-----";
 
-   @Autowired
-   private ResourceRepository resourceRepository;
-
-   @Autowired
-   private RequestRepository requestRepository;
-
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private TestResultRepository testResultRepository;
-
-   @Autowired
-   private SecretRepository secretRepository;
-
-   @Autowired
-   private ApplicationContext applicationContext;
+   private final ResourceRepository resourceRepository;
+   private final RequestRepository requestRepository;
+   private final ResponseRepository responseRepository;
+   private final TestResultRepository testResultRepository;
+   private final SecretRepository secretRepository;
+   private final ApplicationContext applicationContext;
 
    @Value("${tests-callback.url}")
    private String testsCallbackUrl = null;
@@ -121,6 +109,26 @@ public class TestRunnerService {
 
    @Value("${validation.resourceUrl}")
    private String validationResourceUrl = null;
+
+   /**
+    * Build a new TestRunnerService with the required dependencies.
+    * @param resourceRepository   The repository to manage persistent resources
+    * @param requestRepository    The repository to manage persistent requests
+    * @param responseRepository   The repository to manage persistent responses
+    * @param testResultRepository The repository to manage persistent testResults
+    * @param secretRepository     The repository to manage persistent secrets
+    * @param applicationContext   The Spring application context
+    */
+   public TestRunnerService(ResourceRepository resourceRepository, RequestRepository requestRepository,
+         ResponseRepository responseRepository, TestResultRepository testResultRepository,
+         SecretRepository secretRepository, ApplicationContext applicationContext) {
+      this.resourceRepository = resourceRepository;
+      this.requestRepository = requestRepository;
+      this.responseRepository = responseRepository;
+      this.testResultRepository = testResultRepository;
+      this.secretRepository = secretRepository;
+      this.applicationContext = applicationContext;
+   }
 
    /**
     * Launch tests using asynchronous/completable future pattern.
