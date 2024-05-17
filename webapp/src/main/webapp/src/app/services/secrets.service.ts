@@ -24,7 +24,7 @@ import { IAuthenticationService } from './auth.service';
 @Injectable({ providedIn: 'root' })
 export class SecretsService {
 
-  private rootUrl: string = '/api';
+  private rootUrl = '/api';
 
   constructor(private http: HttpClient) { }
 
@@ -38,7 +38,7 @@ export class SecretsService {
     return this.http.get<Secret[]>(this.rootUrl + '/secrets', options);
   }
 
-  countSecrets(): Observable<any> { 
+  countSecrets(): Observable<any> {
     return this.http.get<any>(this.rootUrl + '/secrets/count');
   }
 

@@ -25,8 +25,8 @@ import { KeycloakAuthenticationService } from './auth-keycloak.service';
 @Injectable({ providedIn: 'root' })
 export class UsersService {
 
-  private rootUrl: string = '/api';
-  
+  private rootUrl = '/api';
+
   private microcksAppClientId: string;
 
   constructor(private http: HttpClient, protected authService: IAuthenticationService) {
@@ -40,16 +40,13 @@ export class UsersService {
     this.http.get<any[]>(this.rootUrl + '/clients?clientId=microcks-app&max=2&search=true').subscribe(
       {
         next: res => {
-          for (let i = 0; i < res.length; i++) {
-            const client = res[i];
-            if (client['clientId'] === 'microcks-app') {
-              this.microcksAppClientId = client['id'];
-              break;
+            const client = res.find(c => c.clientId === 'microcks-app');
+            if (client) {
+            this.microcksAppClientId = client.id;
             }
-          }
         },
         error: err => {
-          console.warn("Unable to retrieve microcksAppClientId from Keycloak. Maybe you do not have correct roles?");
+          console.warn('Unable to retrieve microcksAppClientId from Keycloak. Maybe you do not have correct roles?');
           this.microcksAppClientId = null;
         },
       }
@@ -72,14 +69,14 @@ export class UsersService {
     return this.http.get<any[]>(this.rootUrl + '/groups', options);
   }
   createGroup(parentGroupId: string, name: string): Observable<any> {
-    var group = {'name': name};
+    const group = {name};
     return this.http.post<any[]>(this.rootUrl + '/groups/' + parentGroupId + '/children', group);
   }
 
   getUsers(page: number = 1, pageSize: number = 20): Observable<User[]> {
-    var first = 0;
+    let first = 0;
     if (page > 1) {
-      first += pageSize * (page - 1)
+      first += pageSize * (page - 1);
     }
     const options = { params: new HttpParams().set('first', String(first)).set('max', String(pageSize)) };
     return this.http.get<User[]>(this.rootUrl + '/users', options);
@@ -88,13 +85,13 @@ export class UsersService {
   getMicrocksAppClientId(): string {
     return this.microcksAppClientId;
   }
-  
+
   filterUsers(filter: string): Observable<User[]> {
     const options = { params: new HttpParams().set('search', filter) };
     return this.http.get<User[]>(this.rootUrl + '/users', options);
   }
 
-  countUsers(): Observable<any> { 
+  countUsers(): Observable<any> {
     return this.http.get<User[]>(this.rootUrl + '/users/count');
   }
 
@@ -108,24 +105,24 @@ export class UsersService {
     return this.http.get<any[]>(this.rootUrl + '/users/' + userId + '/groups');
   }
 
-  assignRoleToUser(userId: string, role: string): Observable<any> { 
-    return this.getRoleByName(role).pipe(
+  assignRoleToUser(userId: string, roleName: string): Observable<any> {
+    return this.getRoleByName(roleName).pipe(
       switchMap((role: any) => {
-        return this.http.post<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, [ role ]); 
+        return this.http.post<any[]>(this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, [ role ]);
       })
     );
   }
-  removeRoleFromUser(userId: string, role: string): Observable<any> {
-    return this.getRoleByName(role).pipe(
+  removeRoleFromUser(userId: string, roleName: string): Observable<any> {
+    return this.getRoleByName(roleName).pipe(
       switchMap((role: any) => {
-        return this.http.request<any[]>('delete', 
+        return this.http.request<any[]>('delete',
           this.rootUrl + '/users/' + userId + '/role-mappings/clients/' + this.microcksAppClientId, { body: [ role ] });
       })
     );
   }
 
   putUserInGroup(userId: string, groupId: string): Observable<any> {
-    let data = {realm: this.getRealmName(), userId: userId, groupId: groupId};
+    const data = {realm: this.getRealmName(), userId, groupId};
     return this.http.put<any[]>(this.rootUrl + '/users/' + userId + '/groups/' + groupId, { body: data });
   }
   removeUserFromGroup(userId: string, groupId: string): Observable<any> {

@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute, Router, Params } from '@angular/router';
+import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 
-import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { Filter, FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-ng/filter';
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
 import { ToolbarConfig } from 'patternfly-ng/toolbar';
-import { FilterConfig, FilterEvent, FilterField, FilterType, Filter } from 'patternfly-ng/filter';
 
 import { ImportJob, ServiceRef } from '../../models/importer.model';
+import { IAuthenticationService } from '../../services/auth.service';
+import { ConfigService } from '../../services/config.service';
 import { ImportersService } from '../../services/importers.service';
 import { ServicesService } from '../../services/services.service';
 import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
-import { IAuthenticationService } from "../../services/auth.service";
-import { ConfigService } from '../../services/config.service';
+import { ServiceRefsDialogComponent } from './service-refs.dialog';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
-  selector: 'importers-page',
+  selector: 'app-importers-page',
   templateUrl: './importers.page.html',
   styleUrls: ['./importers.page.css']
 })
@@ -47,21 +48,21 @@ export class ImportersPageComponent implements OnInit {
   paginationConfig: PaginationConfig;
   nameFilterTerm: string = null;
   repositoryFilter: string = null;
-  filtersText: string = '';
+  filtersText = '';
   selectedJob: ImportJob;
   notifications: Notification[];
 
   constructor(private importersSvc: ImportersService, private servicesSvc: ServicesService,
-    private modalService: BsModalService, private notificationService: NotificationService,
-    protected authService: IAuthenticationService, private config: ConfigService,
-    private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) { }
+              private modalService: BsModalService, private notificationService: NotificationService,
+              protected authService: IAuthenticationService, private config: ConfigService,
+              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
     this.getImportJobs();
     this.countImportJobs();
 
-    var filterFieldsConfig = [];
+    const filterFieldsConfig = [];
     if (this.hasRepositoryFilterFeatureEnabled()) {
       this.getServicesLabels();
       filterFieldsConfig.push({
@@ -90,7 +91,7 @@ export class ImportersPageComponent implements OnInit {
       fields: filterFieldsConfig as FilterField[],
       resultsCount: 20,
       appliedFilters: []
-    } as FilterConfig
+    } as FilterConfig;
 
     this.toolbarConfig = {
       actionConfig: undefined,
@@ -102,8 +103,8 @@ export class ImportersPageComponent implements OnInit {
     this.route.queryParams.subscribe(queryParams => {
       // Look at query parameters to apply filters.
       this.filterConfig.appliedFilters = [];
-      if (queryParams['name']) {
-        this.nameFilterTerm = queryParams['name'];
+      if (queryParams.name) {
+        this.nameFilterTerm = queryParams.name;
         this.filterConfig.appliedFilters.push({
           field: {title: 'Name'} as FilterField,
           value: this.nameFilterTerm
@@ -120,20 +121,17 @@ export class ImportersPageComponent implements OnInit {
         this.filterImportJobs(this.repositoryFilter, this.nameFilterTerm);
       } else {
         // Default - retrieve all the jobs
-        this.getImportJobs()
+        this.getImportJobs();
         this.countImportJobs();
       }
     });
-  }
-
-  ngAfterViewInit() {
   }
 
   getImportJobs(page: number = 1): void {
     this.importersSvc.getImportJobs(page).subscribe(results => this.importJobs = results);
   }
   filterImportJobs(repositoryFilter: string, nameFilterTerm: string): void {
-    var labelsFilter = new Map<string, string>();
+    const labelsFilter = new Map<string, string>();
     if (repositoryFilter != null) {
       labelsFilter.set(this.repositoryFilterFeatureLabelKey(), repositoryFilter);
     }
@@ -142,8 +140,8 @@ export class ImportersPageComponent implements OnInit {
       this.filterConfig.resultsCount = results.length;
     });
     // Update browser URL to make the page bookmarkable.
-    var queryParams = { name: nameFilterTerm };
-    for (let key of Array.from( labelsFilter.keys() )) {
+    const queryParams = { name: nameFilterTerm };
+    for (const key of Array.from( labelsFilter.keys() )) {
       queryParams['labels.' + key] = labelsFilter.get(key);
     }
     this.router.navigate([], {relativeTo: this.route, queryParams: queryParams as Params, queryParamsHandling: 'merge'});
@@ -159,7 +157,7 @@ export class ImportersPageComponent implements OnInit {
   getServicesLabels(): void {
     this.servicesSvc.getServicesLabels().subscribe(results => {
       this.servicesLabels = results;
-      var queries = [];
+      const queries = [];
       // Get only the label values corresponding to key used for filtering, then transform them for Patternfly.
       if (this.servicesLabels[this.repositoryFilterFeatureLabelKey()] != undefined) {
         this.servicesLabels[this.repositoryFilterFeatureLabelKey()].map(label => queries.push({id: label, value: label}));
@@ -169,11 +167,11 @@ export class ImportersPageComponent implements OnInit {
   }
 
   handlePageSize($event: PaginationEvent) {
-    //this.updateItems();
+    // this.updateItems();
   }
 
   handlePageNumber($event: PaginationEvent) {
-    this.getImportJobs($event.pageNumber)
+    this.getImportJobs($event.pageNumber);
   }
 
   handleFilter($event: FilterEvent): void {
@@ -203,7 +201,7 @@ export class ImportersPageComponent implements OnInit {
 
   openServiceRefs(serviceRefs: ServiceRef[]): void {
     const initialState = {
-      serviceRefs: serviceRefs
+      serviceRefs
     };
     this.modalRef = this.modalService.show(ServiceRefsDialogComponent, {initialState});
     this.modalRef.content.closeBtnName = 'Close';
@@ -212,7 +210,7 @@ export class ImportersPageComponent implements OnInit {
   createImportJob(template: TemplateRef<any>): void {
     this.modalRef = this.modalService.show(template, { class: 'modal-lg' });
   }
-  editImportJob(template: TemplateRef<any>, job: ImportJob):void {
+  editImportJob(template: TemplateRef<any>, job: ImportJob): void {
     this.selectedJob = job;
     this.modalRef = this.modalService.show(template, { class: 'modal-lg' });
   }
@@ -228,14 +226,14 @@ export class ImportersPageComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-                job.name, "Import job has been updated", false, null, null);
+                job.name, 'Import job has been updated', false, null, null);
             // Trigger view reevaluation to update the label list component.
             this.importJobs = JSON.parse(JSON.stringify(this.importJobs));
             this.ref.detectChanges();
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-                job.name, "Import job cannot be updated (" + err.message + ")", false, null, null);
+                job.name, 'Import job cannot be updated (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -245,7 +243,7 @@ export class ImportersPageComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-                job.name, "Import job has been created", false, null, null);
+                job.name, 'Import job has been created', false, null, null);
             this.getImportJobs();
             // Retrieve job id before activating.
             job.id = res.id;
@@ -253,7 +251,7 @@ export class ImportersPageComponent implements OnInit {
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-                job.name, "Import job cannot be created (" + err.message + ")", false, null, null);
+                job.name, 'Import job cannot be created (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -261,49 +259,49 @@ export class ImportersPageComponent implements OnInit {
     }
   }
 
-  deleteImportJob(job: ImportJob):void {
+  deleteImportJob(job: ImportJob): void {
     this.importersSvc.deleteImportJob(job).subscribe(
       {
         next: res => {
           job.active = true;
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, "Import job has been deleted", false, null, null);
+              job.name, 'Import job has been deleted', false, null, null);
           this.getImportJobs();
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, "Import job cannot be deleted (" + err.message + ")", false, null, null);
+              job.name, 'Import job cannot be deleted (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
     );
   }
 
-  activateImportJob(job: ImportJob):void {
+  activateImportJob(job: ImportJob): void {
     this.importersSvc.activateImportJob(job).subscribe(
       {
         next: res => {
           job.active = true;
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, "Import job has been started/activated", false, null, null);
+              job.name, 'Import job has been started/activated', false, null, null);
           this.startImportJob(job);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, "Import job cannot be started/activated (" + err.message + ")", false, null, null);
+              job.name, 'Import job cannot be started/activated (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
     );
   }
 
-  startImportJob(job: ImportJob):void {
+  startImportJob(job: ImportJob): void {
     this.importersSvc.startImportJob(job).subscribe(
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, "Import job has been forced", false, null, null);
-          console.log("ImportJobs in 2 secs");
+              job.name, 'Import job has been forced', false, null, null);
+          console.log('ImportJobs in 2 secs');
           // TODO run this outsize NgZone using zone.runOutsideAngular() : https://angular.io/api/core/NgZone
           setTimeout(() => {
             this.getImportJobs();
@@ -311,24 +309,24 @@ export class ImportersPageComponent implements OnInit {
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, "Import job cannot be forced now", false, null, null);
+              job.name, 'Import job cannot be forced now', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
     );
   }
 
-  stopImportJob(job: ImportJob):void {
+  stopImportJob(job: ImportJob): void {
     this.importersSvc.stopImportJob(job).subscribe(
       {
         next: res => {
           job.active = false;
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, "Import job has been stopped/desactivated", false, null, null);
+              job.name, 'Import job has been stopped/desactivated', false, null, null);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, "Import job cannot be stopped/desactivated (" + err.message + ")", false, null, null);
+              job.name, 'Import job cannot be stopped/desactivated (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }
@@ -341,20 +339,20 @@ export class ImportersPageComponent implements OnInit {
 
   public canImportArtifact(): boolean {
     if (this.hasRepositoryTenancyFeatureEnabled()) {
-      let rolesStr = this.config.getFeatureProperty('repository-tenancy', 'artifact-import-allowed-roles');
+      const rolesStr = this.config.getFeatureProperty('repository-tenancy', 'artifact-import-allowed-roles');
       if (rolesStr == undefined || rolesStr === '') {
         return true;
       }
       // If roles specified, check if any is endorsed.
-      let roles = rolesStr.split(',');
-      for (let i=0; i<roles.length; i++) {
-        if (this.hasRole(roles[i])) {
+      const roles = rolesStr.split(',');
+      for (const role of roles) {
+        if (this.hasRole(role)) {
           return true;
         }
-        if (roles[i] === 'manager-any') {
-          let managerOfAny = this.hasRoleForAny('manager');
+        if (role === 'manager-any') {
+          const managerOfAny = this.hasRoleForAny('manager');
           if (managerOfAny) {
-            return true;
+             return true;
           }
         }
       }
@@ -372,7 +370,7 @@ export class ImportersPageComponent implements OnInit {
   }
   public hasRoleForJob(role: string, job: ImportJob): boolean {
     if (this.hasRepositoryTenancyFeatureEnabled() && job.metadata && job.metadata.labels) {
-      let tenant = job.metadata.labels[this.repositoryFilterFeatureLabelKey()];
+      const tenant = job.metadata.labels[this.repositoryFilterFeatureLabelKey()];
       if (tenant !== undefined && this.authService.hasRoleForResource(role, tenant)) {
         return true;
       }
@@ -395,37 +393,5 @@ export class ImportersPageComponent implements OnInit {
   }
   public repositoryFilterFeatureLabelList(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-list');
-  }
-}
-
-@Component({
-  selector: 'servicerefs-dialog',
-  template: `
-    <div class="modal-header">
-      <h4 class="modal-title pull-left">Services</h4>
-      <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-    <div class="modal-body">
-      <ul *ngIf="serviceRefs.length">
-        <li *ngFor="let serviceRef of serviceRefs">
-        <a [routerLink]="['/services', serviceRef.serviceId]">{{ serviceRef.name }} - {{ serviceRef.version }}</a>
-        </li>
-      </ul>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
-    </div>
-  `
-})
-export class ServiceRefsDialogComponent implements OnInit {
-  title: string;
-  closeBtnName: string;
-  serviceRefs: ServiceRef[] = [];
- 
-  constructor(public bsModalRef: BsModalRef) {}
- 
-  ngOnInit() {
   }
 }

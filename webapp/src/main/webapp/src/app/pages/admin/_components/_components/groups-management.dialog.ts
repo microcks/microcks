@@ -22,7 +22,7 @@ import { User } from '../../../../models/user.model';
 import { UsersService } from '../../../../services/users.service';
 
 @Component({
-  selector: 'groups-management-dialog',
+  selector: 'app-groups-management-dialog',
   templateUrl: './groups-management.dialog.html',
   styleUrls: ['./groups-management.dialog.css']
 })
@@ -44,9 +44,9 @@ export class GroupsManagementDialogComponent implements OnInit {
   }
 
   computeAvailableGroups(): void {
-    for (let i=0; i<this.groups.length; i++) {
-      if (this.userGroups.map(g => g.id).indexOf(this.groups[i].id) == -1) {
-        this.availableGroups.push(this.groups[i]);
+    for (const group of this.groups) {
+      if (this.userGroups.map(g => g.id).indexOf(group.id) == -1) {
+        this.availableGroups.push(group);
       }
     }
   }
@@ -68,19 +68,18 @@ export class GroupsManagementDialogComponent implements OnInit {
   }
 
   leaveSelectedGroups(): void {
-    for (let i=0; i<this.memberSelected.length; i++) {
-      let memberOfGroup = this.memberSelected[i];
+    for (const memberOfGroup of this.memberSelected) {
       this.usersSvc.removeUserFromGroup(this.user.id, memberOfGroup.id).subscribe(
         {
           next: res => {
-            this.userGroups.splice(this.userGroups.indexOf(memberOfGroup), 1);
-            this.availableGroups.push(memberOfGroup);
-            this.notificationService.message(NotificationType.SUCCESS,
-              this.user.username, this.user.username + " is no longer member of " + memberOfGroup.path, false, null, null);
+          this.userGroups.splice(this.userGroups.indexOf(memberOfGroup), 1);
+          this.availableGroups.push(memberOfGroup);
+          this.notificationService.message(NotificationType.SUCCESS,
+            this.user.username, this.user.username + ' is no longer member of ' + memberOfGroup.path, false, null, null);
           },
           error: err => {
-            this.notificationService.message(NotificationType.DANGER,
-              this.user.username, this.user.username + " cannot leave " + memberOfGroup.path + " (" + err.message + ")", false, null, null);
+          this.notificationService.message(NotificationType.DANGER,
+            this.user.username, this.user.username + ' cannot leave ' + memberOfGroup.path + ' (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -89,19 +88,18 @@ export class GroupsManagementDialogComponent implements OnInit {
     this.memberSelected = [];
   }
   joinSelectedGroups(): void {
-    for (let i=0; i<this.availableSelected.length; i++) {
-      let availableGroup = this.availableSelected[i];
+    for (const availableGroup of this.availableSelected) {
       this.usersSvc.putUserInGroup(this.user.id, availableGroup.id).subscribe(
         {
           next: res => {
             this.availableGroups.splice(this.availableGroups.indexOf(availableGroup), 1);
             this.userGroups.push(availableGroup);
             this.notificationService.message(NotificationType.SUCCESS,
-              this.user.username, this.user.username + " is now member of " + availableGroup.path, false, null, null);
+              this.user.username, this.user.username + ' is now member of ' + availableGroup.path, false, null, null);
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-              this.user.username, this.user.username + " cannot join " + availableGroup.path + " (" + err.message + ")", false, null, null);
+              this.user.username, this.user.username + ' cannot join ' + availableGroup.path + ' (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }

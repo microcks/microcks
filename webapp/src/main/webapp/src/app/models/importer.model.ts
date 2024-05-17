@@ -20,13 +20,13 @@ export class ImportJob {
   id: string;
   name: string;
   repositoryUrl: string;
-  mainArtifact: boolean = true;
-  repositoryDisableSSLValidation: boolean = false;
+  mainArtifact = true;
+  repositoryDisableSSLValidation = false;
   frequency: string;
   createdDate: Date;
   lastImportDate: Date;
   lastImportError: string;
-  active: boolean = false;
+  active = false;
   etag: string;
 
   metadata: Metadata;

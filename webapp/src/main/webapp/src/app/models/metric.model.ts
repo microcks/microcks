@@ -36,11 +36,11 @@ export class TestConformanceMetric {
   latestScores: {string, number};
 }
 export enum Trend {
-  DOWN = "DOWN",
-  LOW_DOWN = "LOW_DOWN",
-  STABLE = "STABLE",
-  LOW_UP = "LOW_UP",
-  UP = "UP"
+  DOWN = 'DOWN',
+  LOW_DOWN = 'LOW_DOWN',
+  STABLE = 'STABLE',
+  LOW_UP = 'LOW_UP',
+  UP = 'UP'
 }
 
 export class WeightedMetricValue {
@@ -53,5 +53,5 @@ export class TestResultSummary {
   id: string;
   testDate: number;
   serviceId: string;
-  success: boolean = false;
+  success = false;
 }

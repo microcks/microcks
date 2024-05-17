@@ -14,26 +14,38 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  NotificationType,
+} from 'patternfly-ng/notification';
 
-import { Operation, Service, ServiceType, ServiceView, OperationMutableProperties, ParameterConstraint, ParameterLocation } from '../../../../models/service.model';
+import {
+  Operation,
+  Service,
+  ServiceType,
+  ServiceView,
+  OperationMutableProperties,
+  ParameterConstraint,
+  ParameterLocation,
+} from '../../../../models/service.model';
 import { ServicesService } from '../../../../services/services.service';
 import { ConfigService } from '../../../../services/config.service';
 
 @Component({
-  selector: 'operation-override-page',
+  selector: 'app-operation-override-page',
   templateUrl: './operation-override.page.html',
-  styleUrls: ['./operation-override.page.css']
+  styleUrls: ['./operation-override.page.css'],
 })
 export class OperationOverridePageComponent implements OnInit {
-
   serviceId: string;
-  operationName: string
+  operationName: string;
   serviceView: Observable<ServiceView>;
   resolvedServiceView: ServiceView;
   operation: Operation;
@@ -41,44 +53,43 @@ export class OperationOverridePageComponent implements OnInit {
   notifications: Notification[];
   frequencies: string[];
   paramConstraints: any = {
-    'header': [],
-    'query': []
-  }
+    header: [],
+    query: [],
+  };
 
   dispatchersByServiceType: any = {
-    'REST': [
-      {"value": "SEQUENCE", "label": "SEQUENCE"},
-      {"value": "URI_PARAMS", "label": "URI PARAMS"},
-      {"value": "URI_PARTS", "label": "URI PARTS"},
-      {"value": "URI_ELEMENTS", "label": "URI ELEMENTS"},
-      {"value": "SCRIPT", "label": "SCRIPT"},
-      {"value": "JSON_BODY", "label": "JSON BODY"},
-      {"value": "PROXY", "label": "PROXY"},
-      {"value": "FALLBACK", "label": "FALLBACK"},
-      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
+    REST: [
+      { value: 'SEQUENCE', label: 'SEQUENCE' },
+      { value: 'URI_PARAMS', label: 'URI PARAMS' },
+      { value: 'URI_PARTS', label: 'URI PARTS' },
+      { value: 'URI_ELEMENTS', label: 'URI ELEMENTS' },
+      { value: 'SCRIPT', label: 'SCRIPT' },
+      { value: 'JSON_BODY', label: 'JSON BODY' },
+      { value: 'PROXY', label: 'PROXY' },
+      { value: 'FALLBACK', label: 'FALLBACK' },
+      { value: 'PROXY_FALLBACK', label: 'PROXY FALLBACK' },
     ],
-    'SOAP': [
-      {"value": "QUERY_MATCH", "label": "QUERY MATCH"},
-      {"value": "SCRIPT", "label": "SCRIPT"},
-      {"value": "PROXY", "label": "PROXY"},
-      {"value": "FALLBACK", "label": "FALLBACK"},
-      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
+    SOAP: [
+      { value: 'QUERY_MATCH', label: 'QUERY MATCH' },
+      { value: 'SCRIPT', label: 'SCRIPT' },
+      { value: 'PROXY', label: 'PROXY' },
+      { value: 'FALLBACK', label: 'FALLBACK' },
+      { value: 'PROXY_FALLBACK', label: 'PROXY FALLBACK' },
     ],
-    'EVENT': [],
-    'GRPC': [
-      {"value": "JSON_BODY", "label": "JSON BODY"},
-      {"value": "FALLBACK", "label": "FALLBACK"}
+    EVENT: [],
+    GRPC: [
+      { value: 'JSON_BODY', label: 'JSON BODY' },
+      { value: 'FALLBACK', label: 'FALLBACK' },
     ],
-    'GRAPHQL': [
-      {"value": "QUERY_ARGS", "label": "QUERY_ARGS"},
-      {"value": "JSON_BODY", "label": "JSON BODY"},
-      {"value": "SCRIPT", "label": "SCRIPT"},
-      {"value": "PROXY", "label": "PROXY"},
-      {"value": "FALLBACK", "label": "FALLBACK"},
-      {"value": "PROXY_FALLBACK", "label": "PROXY FALLBACK"}
-    ]
-  }
-
+    GRAPHQL: [
+      { value: 'QUERY_ARGS', label: 'QUERY_ARGS' },
+      { value: 'JSON_BODY', label: 'JSON BODY' },
+      { value: 'SCRIPT', label: 'SCRIPT' },
+      { value: 'PROXY', label: 'PROXY' },
+      { value: 'FALLBACK', label: 'FALLBACK' },
+      { value: 'PROXY_FALLBACK', label: 'PROXY FALLBACK' },
+    ],
+  };
 
   fallback = `{
   "dispatcher": "URI_PARTS",
@@ -92,7 +103,7 @@ export class OperationOverridePageComponent implements OnInit {
   "proxyUrl": "http://external.net/"
 }`;
 
-  examplePayload =  `{
+  examplePayload = `{
   "name": "Abbey Brune",
   "country": "Belgium",
   "type": "Brown ale",
@@ -149,38 +160,47 @@ export class OperationOverridePageComponent implements OnInit {
   }
 }`;
 
-  constructor(private servicesSvc: ServicesService, private config: ConfigService, private notificationService: NotificationService,
-    private route: ActivatedRoute, private router: Router) {}
+  constructor(
+    private servicesSvc: ServicesService,
+    private config: ConfigService,
+    private notificationService: NotificationService,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {}
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
     this.operationName = this.route.snapshot.paramMap.get('name');
     this.serviceView = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.servicesSvc.getServiceView(params.get('serviceId')))
+        this.servicesSvc.getServiceView(params.get('serviceId'))
+      )
     );
-    this.serviceView.subscribe( view => {
+    this.serviceView.subscribe((view) => {
       this.serviceId = view.service.id;
       this.resolvedServiceView = view;
-      for (var i=0; i<this.resolvedServiceView.service.operations.length; i++) {
-        if (this.operationName === this.resolvedServiceView.service.operations[i].name) {
-          this.operation = this.resolvedServiceView.service.operations[i];
+      for (const operation of this.resolvedServiceView.service.operations) {
+        if (this.operationName === operation.name) {
+          this.operation = operation;
           // Clone mutable properties from operation.
           this.newOperation = new Operation();
-          this.newOperation.defaultDelay = this.operation.defaultDelay || 0;
+          this.newOperation.defaultDelay = this.operation.defaultDelay || 0;
           this.newOperation.dispatcher = this.operation.dispatcher;
           this.newOperation.dispatcherRules = this.operation.dispatcherRules;
-          this.newOperation.parameterConstraints = this.operation.parameterConstraints;
+          this.newOperation.parameterConstraints =
+            this.operation.parameterConstraints;
           if (this.newOperation.parameterConstraints) {
-            for (var j=0; j<this.newOperation.parameterConstraints.length; j++) {
-              this.paramConstraints[this.newOperation.parameterConstraints[j].in].push(this.newOperation.parameterConstraints[j]);
+            for (const constraint of this.newOperation.parameterConstraints) {
+              this.paramConstraints[constraint.in].push(constraint);
             }
           }
           break;
         }
       }
     });
-    this.frequencies = this.config.getFeatureProperty('async-api', 'frequencies').split(",");
+    this.frequencies = this.config
+      .getFeatureProperty('async-api', 'frequencies')
+      .split(',');
   }
 
   public resetOperationProperties() {
@@ -190,34 +210,50 @@ export class OperationOverridePageComponent implements OnInit {
     this.newOperation.dispatcherRules = this.operation.dispatcherRules;
   }
   public saveOperationProperties() {
-    var operationProperties = new OperationMutableProperties();
-    operationProperties.defaultDelay = this.newOperation.defaultDelay
+    const operationProperties = new OperationMutableProperties();
+    operationProperties.defaultDelay = this.newOperation.defaultDelay;
     operationProperties.dispatcher = this.newOperation.dispatcher;
     operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
-    operationProperties.parameterConstraints = [];
     // Now recopy parameter constraints.
-    for (var i=0; i<this.paramConstraints.header.length; i++) {
-      operationProperties.parameterConstraints.push(this.paramConstraints.header[i]);
-    }
-    for (var i=0; i<this.paramConstraints.query.length; i++) {
-      operationProperties.parameterConstraints.push(this.paramConstraints.query[i]);
-    }
+    operationProperties.parameterConstraints = (
+      this.paramConstraints.header.length ? this.paramConstraints.header : []
+    ).join(
+      this.paramConstraints.query.length ? this.paramConstraints.query : []
+    );
 
-    console.log("[saveOperationProperties] operationProperties: " + JSON.stringify(operationProperties));
-    this.servicesSvc.updateServiceOperationProperties(this.resolvedServiceView.service,
-      this.operationName, operationProperties).subscribe(
-        {
-          next: res => {
-            this.notificationService.message(NotificationType.SUCCESS,
-              this.operationName, "Dispatch properies have been updated", false, null, null);
-          },
-          error: err => {
-            this.notificationService.message(NotificationType.DANGER,
-              this.operationName, "Dispatch properties cannot be updated (" + err.message + ")", false, null, null);
-          },
-          complete: () => console.log('Observer got a complete notification'),
-        }
-      );
+    console.log(
+      '[saveOperationProperties] operationProperties: ' +
+        JSON.stringify(operationProperties)
+    );
+    this.servicesSvc
+      .updateServiceOperationProperties(
+        this.resolvedServiceView.service,
+        this.operationName,
+        operationProperties
+      )
+      .subscribe({
+        next: (res) => {
+          this.notificationService.message(
+            NotificationType.SUCCESS,
+            this.operationName,
+            'Dispatch properies have been updated',
+            false,
+            null,
+            null
+          );
+        },
+        error: (err) => {
+          this.notificationService.message(
+            NotificationType.DANGER,
+            this.operationName,
+            'Dispatch properties cannot be updated (' + err.message + ')',
+            false,
+            null,
+            null
+          );
+        },
+        complete: () => console.log('Observer got a complete notification'),
+      });
   }
 
   public copyDispatcherRules(operator: string): void {
@@ -225,29 +261,47 @@ export class OperationOverridePageComponent implements OnInit {
   }
 
   public addParameterConstraint(location: string): void {
-    var parameterConstraints = this.paramConstraints[location];
+    const parameterConstraints = this.paramConstraints[location];
     if (parameterConstraints == null) {
       this.paramConstraints[location] = [
-        { 'name': "my-header", 'in': location, 'required': false, 'recopy': false, 'mustMatchRegexp': null}
+        {
+          name: 'my-header',
+          in: location,
+          required: false,
+          recopy: false,
+          mustMatchRegexp: null,
+        },
       ];
     } else {
-      this.paramConstraints[location].push({ 'name': "my-header", 'in': location, 'required': false, 'recopy': false, 'mustMatchRegexp': null});
+      this.paramConstraints[location].push({
+        name: 'my-header',
+        in: location,
+        required: false,
+        recopy: false,
+        mustMatchRegexp: null,
+      });
     }
   }
 
   public removeParameterConstraint(location: string, index: number): void {
-    var parameterConstraints = this.paramConstraints[location];
+    const parameterConstraints = this.paramConstraints[location];
     if (parameterConstraints != null) {
       parameterConstraints.splice(index, 1);
     }
   }
 
   public isEventTypeService(): boolean {
-    return this.resolvedServiceView.service.type === ServiceType.EVENT || this.resolvedServiceView.service.type === ServiceType.GENERIC_EVENT;
+    return (
+      this.resolvedServiceView.service.type === ServiceType.EVENT ||
+      this.resolvedServiceView.service.type === ServiceType.GENERIC_EVENT
+    );
   }
 
   public isAsyncMockEnabled(): boolean {
-    return this.config.getFeatureProperty('async-api', 'enabled').toLowerCase() === 'true' && this.newOperation.defaultDelay != 0;
+    return (
+      this.config.getFeatureProperty('async-api', 'enabled').toLowerCase() ===
+        'true' && this.newOperation.defaultDelay != 0
+    );
   }
   public disableAsyncMock(): void {
     this.newOperation.defaultDelay = 0;

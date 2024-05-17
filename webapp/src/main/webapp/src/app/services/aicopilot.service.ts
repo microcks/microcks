@@ -22,7 +22,7 @@ import { Service, Exchange } from '../models/service.model';
 @Injectable({ providedIn: 'root' })
 export class AICopilotService {
 
-  private rootUrl: string = '/api';
+  private rootUrl = '/api';
 
   constructor(private http: HttpClient) { }
 

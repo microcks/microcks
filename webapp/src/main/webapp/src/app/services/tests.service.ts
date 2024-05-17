@@ -23,7 +23,7 @@ import { RequestResponsePair, UnidirectionalEvent } from '../models/service.mode
 @Injectable({ providedIn: 'root' })
 export class TestsService {
 
-  private rootUrl: string = '/api';
+  private rootUrl = '/api';
 
   constructor(private http: HttpClient) { }
 
@@ -49,8 +49,8 @@ export class TestsService {
     // Replace them by "!" and implement same protocole on server-side.
     // Switched from _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
     operation = operation.replace(/\//g, '!');
-    var testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
-    console.log("[getMessages] called for " + testCaseId);
+    const testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
+    console.log('[getMessages] called for ' + testCaseId);
     return this.http.get<RequestResponsePair>(this.rootUrl + '/tests/' + test.id + '/messages/' + testCaseId);
   }
 
@@ -59,8 +59,8 @@ export class TestsService {
     // Replace them by "!" and implement same protocole on server-side.
     // Switched from _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
     operation = operation.replace(/\//g, '!');
-    var testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
-    console.log("[getEventMessages] called for " + testCaseId);
+    const testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
+    console.log('[getEventMessages] called for ' + testCaseId);
     return this.http.get<UnidirectionalEvent>(this.rootUrl + '/tests/' + test.id + '/events/' + testCaseId);
   }
 }

@@ -48,8 +48,8 @@ import { ConfigService } from './services/config.service';
 
 import { ConfirmDeleteDialogComponent } from './components/confirm-delete/confirm-delete.component';
 import { DayInvocationsBarChartComponent } from './components/day-invocations-bar-chart/day-invocations-bar-chart-component';
-import { EditLabelsComponent } from './components/edit-labels/edit-labels.component'
-import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component'
+import { EditLabelsComponent } from './components/edit-labels/edit-labels.component';
+import { EditLabelsDialogComponent } from './components/edit-labels-dialog/edit-labels-dialog.component';
 import { GradeIndexComponent } from './components/grade-index/grade-index.component';
 import { HelpDialogComponent } from './components/help-dialog/help-dialog.component';
 import { HourInvocationsBarChartComponent } from './components/hour-invocations-bar-chart/hour-invocations-bar-chart.component';
@@ -65,7 +65,7 @@ import { UsersTabComponent } from './pages/admin/_components/users.tab';
 import { GroupsManagementDialogComponent } from './pages/admin/_components/_components/groups-management.dialog';
 import { DashboardPageComponent } from './pages/dashboard/dashboard.page';
 import { ServicesPageComponent } from './pages/services/services.page';
-import { DirectAPIWizardComponent } from './pages/services/_components/direct-api.wizard'
+import { DirectAPIWizardComponent } from './pages/services/_components/direct-api.wizard';
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
 import { GenerateSamplesDialogComponent } from './pages/services/{serviceId}/_components/generate-samples.dialog';
@@ -76,7 +76,7 @@ import { TestDetailPageComponent } from './pages/tests/{testId}/test-detail.page
 import { AddToCIDialogComponent } from './pages/tests/{testId}/_components/add-to-ci.dialog';
 import { TestRunnerPageComponent } from './pages/tests/runner/test-runner.page';
 import { InvocationsServicePageComponent } from './pages/metrics/invocations/{serviceId}/invocations-service.page';
-import { ImportersPageComponent, ServiceRefsDialogComponent } from './pages/importers/importers.page';
+import { ImportersPageComponent } from './pages/importers/importers.page';
 import { ImporterWizardComponent } from './pages/importers/_components/importer.wizard';
 import { ArtifactUploaderDialogComponent } from './pages/importers/_components/uploader.dialog';
 import { HubPageComponent } from './pages/hub/hub.page';
@@ -86,6 +86,7 @@ import { ExchangesTabsetComponent } from './pages/services/{serviceId}/_componen
 import json from 'highlight.js/lib/languages/json';
 import xml from 'highlight.js/lib/languages/xml';
 import yaml from 'highlight.js/lib/languages/yaml';
+import { ServiceRefsDialogComponent } from './pages/importers/service-refs.dialog';
 
 /**
  * Import specific languages to avoid importing everything

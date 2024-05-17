@@ -13,27 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit} from "@angular/core";
-import { ActivatedRoute, Router, ParamMap } from "@angular/router";
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 
-import { Observable, interval, Subscription } from 'rxjs';
+import { Observable, Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { ListConfig } from 'patternfly-ng/list';
 
 import { Notification, NotificationService } from 'patternfly-ng/notification';
 
+import { Service } from '../../../models/service.model';
+import { TestResult } from '../../../models/test.model';
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
-import { Service } from '../../../models/service.model';
-import { TestRunnerType, TestResult } from "../../../models/test.model";
 
 @Component({
-  selector: "test-runner-page",
-  templateUrl: "test-runner.page.html",
-  styleUrls: ["test-runner.page.css"]
+  selector: 'app-test-runner-page',
+  templateUrl: 'test-runner.page.html',
+  styleUrls: ['test-runner.page.css']
 })
-export class TestRunnerPageComponent implements OnInit {
+export class TestRunnerPageComponent implements OnInit, OnDestroy {
 
   testId: string;
   test: Observable<TestResult>;
@@ -43,7 +43,7 @@ export class TestRunnerPageComponent implements OnInit {
   resultsListConfig: ListConfig;
 
   constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private notificationService: NotificationService,
-    private route: ActivatedRoute, private router: Router) {
+              private route: ActivatedRoute, private router: Router) {
   }
 
   ngOnInit() {
@@ -62,7 +62,7 @@ export class TestRunnerPageComponent implements OnInit {
     this.poller = interval(2000).pipe(
       switchMap(() => this.test = this.testsSvc.getTestResult(this.testId))
     ).subscribe(res => {
-      if (!res.inProgress){
+      if (!res.inProgress) {
         this.poller.unsubscribe();
       }
     });
@@ -81,7 +81,7 @@ export class TestRunnerPageComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
-    if (this.poller){
+    if (this.poller) {
       this.poller.unsubscribe();
     }
   }

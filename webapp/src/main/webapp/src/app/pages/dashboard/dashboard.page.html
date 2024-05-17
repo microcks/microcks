@@ -1,5 +1,6 @@
 <div class="getting-started-panel">
-  <div class="panel-heading" style="background-color: #f1f1f1;" role="button" data-toggle="collapse" data-target="#getting-started-content">
+  <div class="panel-heading" style="background-color: #f1f1f1;" role="button" data-toggle="collapse"
+    data-target="#getting-started-content">
     <a href="#"><i class="fa fa-rocket"></i> Getting Started with Microcks?</a>
   </div>
   <div class="collapse" [class.in]="!isTestsPanelDisplayed()" id="getting-started-content">
@@ -16,19 +17,21 @@
         </div>
       </div>
     </div>
-    
+
     <div class="row">
       <div class="col-xs-2" align="right">
         <a routerLink="/services" class="btn btn-lg btn-success" type="button">APIs | Services</a>
       </div>
       <div class="col-xs-4">
-        <blockquote>Browse, get informations and request/response mocks on Microcks managed APIs &amp; Services.</blockquote>
+        <blockquote>Browse, get informations and request/response mocks on Microcks managed APIs &amp; Services.
+        </blockquote>
       </div>
       <div class="col-xs-2" align="right">
         <a routerLink="/importers" class="btn btn-lg btn-primary" type="button">Importers</a>
       </div>
       <div class="col-xs-4">
-        <blockquote>Visualize, create or edit a new Importer Job for filling Microcks with mocks and samples.</blockquote>
+        <blockquote>Visualize, create or edit a new Importer Job for filling Microcks with mocks and samples.
+        </blockquote>
       </div>
     </div>
   </div>
@@ -38,26 +41,27 @@
   <div class="row">
     <div class="col-md-4">
       <pfng-card [config]="repositoryCardConfig">
-        <pfng-donut-chart [chartData]="repositoryDonutChartData" [config]="repositoryDonutChargConfig"></pfng-donut-chart>
+        <pfng-donut-chart [chartData]="repositoryDonutChartData"
+          [config]="repositoryDonutChargConfig"></pfng-donut-chart>
       </pfng-card>
     </div>
     <div class="col-md-4">
-      <pfng-card [config]="topCardConfig"
-          (onFilterSelect)="handleTopFilterSelect($event)">
-          <ol>
-            <li *ngFor="let stat of topInvocations">
-              <blockquote class="text-right top-invocation">
-                <p class="top-invocation">{{ stat.serviceName }} - {{ stat.serviceVersion }}</p>
-                <small>with {{ stat.dailyCount }} <a [routerLink]="['/metrics/invocations', stat.serviceName, stat.serviceVersion]">invocations</a> <i class="glyphicon glyphicon-signal"></i></small>
-              </blockquote>
-            </li>
-          </ol>
+      <pfng-card [config]="topCardConfig" (onFilterSelect)="handleTopFilterSelect($event)">
+        <ol>
+          <li *ngFor="let stat of topInvocations">
+            <blockquote class="text-right top-invocation">
+              <p class="top-invocation">{{ stat.serviceName }} - {{ stat.serviceVersion }}</p>
+              <small>with {{ stat.dailyCount }} <a
+                  [routerLink]="['/metrics/invocations', stat.serviceName, stat.serviceVersion]">invocations</a> <i
+                  class="glyphicon glyphicon-signal"></i></small>
+            </blockquote>
+          </li>
+        </ol>
       </pfng-card>
     </div>
     <div class="col-md-4">
-      <pfng-card [config]="chartCardConfig"
-          (onFilterSelect)="handleChartFilterSelect($event)">
-        <pfng-sparkline-chart [config]="chartConfig" [chartData]="chartData" ></pfng-sparkline-chart>
+      <pfng-card [config]="chartCardConfig" (onFilterSelect)="handleChartFilterSelect($event)">
+        <pfng-sparkline-chart [config]="chartConfig" [chartData]="chartData"></pfng-sparkline-chart>
       </pfng-card>
     </div>
   </div>
@@ -67,14 +71,17 @@
   <div class="row">
     <div class="col-md-8">
       <pfng-card [config]="testConformanceCardConfig">
-        <score-treemap [data]="conformanceScores" scoreAttr="score" [block]="repositoryFilterFeatureLabelKey()" elements="API | Services" legend="The lower score the riskier in terms of non conformance"></score-treemap>
+        <app-score-treemap [data]="conformanceScores" scoreAttr="score" [block]="repositoryFilterFeatureLabelKey()"
+          elements="API | Services"
+          legend="The lower score the riskier in terms of non conformance"></app-score-treemap>
       </pfng-card>
     </div>
     <div class="col-md-4">
       <pfng-card [config]="testResultsCardConfig" (onFilterSelect)="handleTestsFilterSelect($event)">
-        <pfng-donut-chart [chartData]="testResultsDonutChartData" [config]="testResultsDonutChartConfig"></pfng-donut-chart>
+        <pfng-donut-chart [chartData]="testResultsDonutChartData"
+          [config]="testResultsDonutChartConfig"></pfng-donut-chart>
       </pfng-card>
     </div>
   </div>
 </div>
-<br/>
+<br />

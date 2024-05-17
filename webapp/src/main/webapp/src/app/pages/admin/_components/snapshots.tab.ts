@@ -22,7 +22,7 @@ import { Service } from '../../../models/service.model';
 import { ServicesService } from '../../../services/services.service';
 
 @Component({
-  selector: 'snapshots-tab',
+  selector: 'app-snapshots-tab',
   templateUrl: './snapshots.tab.html',
   styleUrls: ['./snapshots.tab.css']
 })
@@ -43,11 +43,11 @@ export class SnapshotsTabComponent implements OnInit {
     this.uploader.onCompleteItem = (item: any, response: any, status: any, headers: any) => {
       console.log('SnapshotUpload:uploaded:', item, status, response);
       this.notificationService.message(NotificationType.SUCCESS,
-        "Snapshot", "File uploaded successfully", false, null, null);
+        'Snapshot', 'File uploaded successfully', false, null, null);
     };
   }
 
-  getAllServices():void {
+  getAllServices(): void {
     this.servicesSvc.getServices(1, 1000).subscribe(
       results => {
         this.halfServices = results.slice(0, (results.length / 2) + 1);
@@ -58,7 +58,7 @@ export class SnapshotsTabComponent implements OnInit {
   }
 
   public createExport(): void {
-    var downloadPath = '/api/export?';
+    let downloadPath = '/api/export?';
     Object.keys(this.selectedServices.ids).forEach(function(element, index, array) {
       downloadPath += '&serviceIds=' + element;
     });

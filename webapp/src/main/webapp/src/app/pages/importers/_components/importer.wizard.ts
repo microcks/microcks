@@ -13,9 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, ViewChild, ViewEncapsulation, Host, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ViewChild,
+  ViewEncapsulation,
+  Host,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  AfterViewInit,
+} from '@angular/core';
 
-import { WizardComponent, WizardConfig, WizardEvent, WizardStep, WizardStepComponent, WizardStepConfig } from 'patternfly-ng/wizard';
+import {
+  WizardComponent,
+  WizardConfig,
+  WizardEvent,
+  WizardStep,
+  WizardStepComponent,
+  WizardStepConfig,
+} from 'patternfly-ng/wizard';
 
 import { ImportersPageComponent } from '../importers.page';
 import { Metadata } from '../../../models/commons.model';
@@ -23,19 +39,18 @@ import { ImportJob } from '../../../models/importer.model';
 import { Secret, SecretRef } from '../../../models/secret.model';
 import { SecretsService } from '../../../services/secrets.service';
 
-
 @Component({
   encapsulation: ViewEncapsulation.None,
-  selector: 'importer-wizard',
+  selector: 'app-importer-wizard',
   templateUrl: './importer.wizard.html',
-  styleUrls: ['./importer.wizard.css']
+  styleUrls: ['./importer.wizard.css'],
 })
-export class ImporterWizardComponent implements OnInit {
-  @ViewChild('wizard', {static: true}) wizard: WizardComponent;
+export class ImporterWizardComponent implements OnInit, AfterViewInit {
+  @ViewChild('wizard', { static: true }) wizard: WizardComponent;
 
   data: any = {};
   job: ImportJob = null;
-  useSecret: boolean = false;
+  useSecret = false;
   secrets: Secret[];
 
   // Wizard Step 1
@@ -48,16 +63,19 @@ export class ImporterWizardComponent implements OnInit {
   wizardConfig: WizardConfig;
   wizardHost: ImportersPageComponent;
 
-  constructor(@Host() wizardHost: ImportersPageComponent, private secretsSvc: SecretsService,
-      private ref: ChangeDetectorRef) {
+  constructor(
+    @Host() wizardHost: ImportersPageComponent,
+    private secretsSvc: SecretsService,
+    private ref: ChangeDetectorRef
+  ) {
     this.wizardHost = wizardHost;
   }
-  
+
   ngOnInit() {
-    var wizardTitle: string = 'Create a new Job';
+    let wizardTitle = 'Create a new Job';
     if (this.wizardHost.selectedJob) {
       this.job = this.wizardHost.selectedJob;
-      this.useSecret = (this.job.secretRef != null);
+      this.useSecret = this.job.secretRef != null;
       wizardTitle = 'Edit existing Job "' + this.job.name + '"';
     } else {
       this.job = new ImportJob();
@@ -69,16 +87,16 @@ export class ImporterWizardComponent implements OnInit {
       priority: 0,
       title: 'Importer Job properties',
       expandReviewDetails: true,
-      nextEnabled: false
+      nextEnabled: false,
     } as WizardStepConfig;
-    
+
     // Step 2
     this.step2Config = {
       id: 'step2',
       priority: 0,
       title: 'Authentication options',
       expandReviewDetails: true,
-      nextEnabled: true
+      nextEnabled: true,
     } as WizardStepConfig;
 
     // Step 3
@@ -87,32 +105,35 @@ export class ImporterWizardComponent implements OnInit {
       priority: 0,
       title: 'Labels',
       expandReviewDetails: true,
-      nextEnabled: true
+      nextEnabled: true,
     } as WizardStepConfig;
 
     // Step 4
     this.step4Config = {
       id: 'step4',
       priority: 2,
-      title: 'Review'
+      title: 'Review',
     } as WizardStepConfig;
 
     // Wizard
     this.wizardConfig = {
       title: wizardTitle,
       sidebarStyleClass: 'example-wizard-sidebar',
-      stepStyleClass: 'example-wizard-step'
+      stepStyleClass: 'example-wizard-step',
     } as WizardConfig;
 
     this.setNavAway(false);
   }
 
   ngAfterViewInit() {
+    // TODO: verify if needed?
     this.getSecrets();
   }
 
   getSecrets(page: number = 1): void {
-    this.secretsSvc.getSecrets(page).subscribe(results => this.secrets = results);
+    this.secretsSvc
+      .getSecrets(page)
+      .subscribe((results) => (this.secrets = results));
   }
 
   nextClicked($event: WizardEvent): void {
@@ -132,8 +153,10 @@ export class ImporterWizardComponent implements OnInit {
   }
 
   stepChanged($event: WizardEvent) {
-    let flatSteps = this.flattenWizardSteps(this.wizard);
-    let currentStep = flatSteps.filter(step => step.config.id === $event.step.config.id);
+    const flatSteps = this.flattenWizardSteps(this.wizard);
+    const currentStep = flatSteps.filter(
+      (step) => step.config.id === $event.step.config.id
+    );
     if (currentStep && currentStep.length > 0) {
       currentStep[0].config.nextEnabled = true;
     }
@@ -141,7 +164,7 @@ export class ImporterWizardComponent implements OnInit {
       this.updateJobProperties();
     } else if ($event.step.config.id === 'step4') {
       if (this.job.id) {
-        this.wizardConfig.nextTitle = 'Update';  
+        this.wizardConfig.nextTitle = 'Update';
       } else {
         this.wizardConfig.nextTitle = 'Create';
       }
@@ -151,8 +174,11 @@ export class ImporterWizardComponent implements OnInit {
   }
 
   updateJobProperties(): void {
-    this.step1Config.nextEnabled = 
-      (this.job.name !== undefined && this.job.name.length > 0 && this.job.repositoryUrl !== undefined && this.job.repositoryUrl.length > 0);
+    this.step1Config.nextEnabled =
+      this.job.name !== undefined &&
+      this.job.name.length > 0 &&
+      this.job.repositoryUrl !== undefined &&
+      this.job.repositoryUrl.length > 0;
     this.setNavAway(this.step1Config.nextEnabled);
     if (this.useSecret && this.job.secretRef == null) {
       this.job.secretRef = new SecretRef('none', '');
@@ -163,21 +189,20 @@ export class ImporterWizardComponent implements OnInit {
       this.job.metadata = new Metadata();
       this.job.metadata.labels = {};
     }
-    console.log("Job at end: " + JSON.stringify(this.job));
+    console.log('Job at end: ' + JSON.stringify(this.job));
   }
   updateMainArtifact(event: any): void {
     this.job.mainArtifact = !event;
   }
   updateSecretProperties(event: any): void {
-    var secretId = event.target.value;
+    const secretId = event.target.value;
     if ('none' != event.target.value) {
-      for (var i=0; i<this.secrets.length; i++) {
-        var secret = this.secrets[i];
+      for (const secret of this.secrets) {
         if (secretId === secret.id) {
           this.job.secretRef = new SecretRef(secret.id, secret.name);
           break;
         }
-      };
+      }
     } else {
       this.job.secretRef = null;
     }
@@ -191,10 +216,10 @@ export class ImporterWizardComponent implements OnInit {
   }
 
   private flattenWizardSteps(wizard: WizardComponent): WizardStep[] {
-    let flatWizard: WizardStep[] = [];
+    const flatWizard: WizardStep[] = [];
     wizard.steps.forEach((step: WizardStepComponent) => {
       if (step.hasSubsteps) {
-        step.steps.forEach(substep => {
+        step.steps.forEach((substep) => {
           flatWizard.push(substep);
         });
       } else {
