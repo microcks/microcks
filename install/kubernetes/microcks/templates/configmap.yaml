@@ -126,9 +126,12 @@ data:
       {{- end }}
     {{- end }}
 
+    {{- if (.Values.microcks.grpcEnableTLS) }}
+    
     # Grpc server properties
     grpc.server.certChainFilePath=/deployments/config/grpc/tls.crt
     grpc.server.privateKeyFilePath=/deployments/config/grpc/tls.key
+    {{- end }}
 
     # AI Copilot configuration properties
     ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}

@@ -9,17 +9,19 @@ microcks:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
   #ingressClassName: nginx
+
+  grpcEnableTLS: true
   #grpcSecretRef: my-secret-for-microcks-grpc
   #grpcIngressClassName: nginx
+    #grpcIngressAnnotations:
+  #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
+  #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
+
   generateCert: true
   image: quay.io/microcks/microcks:nightly
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
-
-  #grpcIngressAnnotations:
-    #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
-    #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
 
   resources:
     requests:

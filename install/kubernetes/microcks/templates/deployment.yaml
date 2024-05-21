@@ -146,8 +146,10 @@ spec:
         volumeMounts:
           - name: "{{ .Values.appName }}-config"
             mountPath: "/deployments/config"
+          {{- if (.Values.microcks.grpcEnableTLS) }}
           - name: "{{ .Values.appName }}-grpc-certs"
             mountPath: "/deployments/config/grpc"
+          {{- end }}
           {{- if eq .Values.features.async.kafka.install false }}
             {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
             {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
@@ -169,9 +171,11 @@ spec:
         - name: "{{ .Values.appName }}-config"
           configMap:
             name: "{{ .Values.appName }}-config"
+        {{- if (.Values.microcks.grpcEnableTLS) }}
         - name: "{{ .Values.appName }}-grpc-certs"
           secret:
             secretName: "{{ .Values.microcks.grpcSecretRef | default (print .Values.appName "-microcks-grpc-secret") }}"
+        {{- end }}
         {{- if eq .Values.features.async.kafka.install false }}
           {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
           {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}

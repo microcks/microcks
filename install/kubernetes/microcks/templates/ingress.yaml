@@ -46,7 +46,9 @@ metadata:
     {{- include "microcks-common-annotations" . | nindent 4 }}
     ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    {{- if (.Values.microcks.grpcEnableTLS) }}
     nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    {{- end }}
     {{- with .Values.microcks.grpcIngressAnnotations }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
