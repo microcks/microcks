@@ -1,7 +1,7 @@
 asyncapi: 3.0.0
 id: 'urn:io.microcks.example.user-signedup-v3'
 info:
-  title: User signed-up API v3
+  title: User signed-up API
   version: 0.1.30
   description: Sample AsyncAPI for user signedup events
 defaultContentType: application/json
