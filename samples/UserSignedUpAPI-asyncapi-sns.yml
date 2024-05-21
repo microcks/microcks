@@ -6,7 +6,7 @@ info:
   description: Sample AsyncAPI for user signedup events
 defaultContentType: application/json
 channels:
-  user/signedup:
+  userSignedUpChannel:
     address: user/signedup
     messages:
       receivedUserSignedUp.message:
@@ -53,10 +53,10 @@ operations:
   receivedUserSignedUp:
     action: receive
     channel:
-      $ref: '#/channels/user~1signedup'
+      $ref: '#/channels/userSignedUpChannel'
     summary: Receive informations about user signed up
     messages:
-      - $ref: '#/channels/user~1signedup/messages/receivedUserSignedUp.message'
+      - $ref: '#/channels/userSignedUpChannel/messages/receivedUserSignedUp.message'
     bindings:
       sns:
         topic:
