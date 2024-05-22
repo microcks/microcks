@@ -18,7 +18,7 @@ microcks:
   #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
 
   generateCert: true
-  image: quay.io/microcks/microcks:1.9.1
+  image: quay.io/microcks/microcks:nightly
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
@@ -170,7 +170,7 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
 
-    image: quay.io/microcks/microcks-async-minion:1.9.1
+    image: quay.io/microcks/microcks-async-minion:nightly
 
     env:
       #- name: OAUTH_CLIENT_ID
