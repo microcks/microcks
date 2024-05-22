@@ -39,7 +39,7 @@ import static org.junit.Assert.fail;
 public class OAuth2AuthorizeClientProviderTest {
 
    @ClassRule
-   public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:22.0.2")
+   public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.4")
          .withRealmImportFile("io/github/microcks/security/myrealm-realm.json");
 
    @Test

@@ -9,9 +9,9 @@ if (environment.production) {
 }
 
 // Load Keycloak config from server. Need to do this before invoking
-// keycloak-js constructor to first check the enabeld flag.
+// keycloak-js constructor to first check the enabled flag.
 let keycloakConfig: any;
-console.log('location.origin: ' + location.origin);
+console.log('[Microcks launch] Origin: ' + location.origin);
 
 function getKeycloakConfig(callback) {
   const xhr = new XMLHttpRequest();
@@ -42,7 +42,7 @@ getKeycloakConfig(function(err, datums) {
     console.log('[Microcks launch] Keycloak is enabled, launching OIDC login flow...');
 
     // Build keycloak-js adapter from config.
-    const keycloak = (window as any).Keycloak({
+    const keycloak = new (window as any).Keycloak({
       url: keycloakConfig['auth-server-url'],
       realm: keycloakConfig.realm,
       clientId: keycloakConfig.resource

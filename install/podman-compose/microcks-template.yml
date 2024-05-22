@@ -2,7 +2,7 @@ version: '2'
 
 services:
   mongo:
-    image: docker.io/library/mongo:3.6.23
+    image: docker.io/library/mongo:4.4.29
     container_name: microcks-db
     volumes:
       # Podman does not create missing folders, so we need to use an existing one
@@ -15,7 +15,7 @@ services:
     container_name: microcks-postman-runtime
 
   keycloak:
-    image: quay.io/keycloak/keycloak:22.0.2
+    image: quay.io/keycloak/keycloak:24.0.4
     container_name: microcks-keycloak
     ports:
       - "18080:8080"

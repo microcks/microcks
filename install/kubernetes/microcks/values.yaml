@@ -90,7 +90,7 @@ keycloak:
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
   generateCert: true
-  image: quay.io/keycloak/keycloak:22.0.3
+  image: quay.io/keycloak/keycloak:24.0.4
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
