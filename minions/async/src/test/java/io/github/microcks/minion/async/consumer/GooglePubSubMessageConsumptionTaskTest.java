@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This is a test case for GooglePubSubMessageConsumptionTask.
  * @author laurent
  */
-public class GooglePubSubMessageConumtionTaskTest {
+public class GooglePubSubMessageConsumptionTaskTest {
 
    @Test
    public void testAcceptEndpoint() {
