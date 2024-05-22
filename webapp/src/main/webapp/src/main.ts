@@ -1,5 +1,6 @@
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
 
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
@@ -42,12 +43,14 @@ getKeycloakConfig(function(err, datums) {
     console.log('[Microcks launch] Keycloak is enabled, launching OIDC login flow...');
 
     // Build keycloak-js adapter from config.
-    const keycloak = new (window as any).Keycloak({
+    //const keycloak = (window as any).Keycloak({
+    const keycloak = new Keycloak({
       url: keycloakConfig['auth-server-url'],
       realm: keycloakConfig.realm,
       clientId: keycloakConfig.resource
     });
-    const loginOptions = {onLoad: 'login-required', checkLoginIframe: undefined};
+    //const loginOptions = {onLoad: 'login-required', checkLoginIframe: undefined};
+    const loginOptions: KeycloakInitOptions = {onLoad: 'login-required', checkLoginIframe: true};
 
     if (location.origin.indexOf('/localhost:') != -1) {
       console.log('[Microcks launch] Running locally so disabling Keycloak checkLogin Iframe to respect modern browser restrictions');
