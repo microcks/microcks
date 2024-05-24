@@ -153,7 +153,7 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
    * @returns  Returns true if authentication is enabled, false otherwise.
    */
   public isAuthEnabled(): boolean {
-    return this.authService.constructor.name !== AnonymousAuthenticationService.name;
+    return this.config.authType() !== 'anonymous';
   }
 
   public logout(): void {
