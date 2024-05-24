@@ -145,10 +145,7 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
     return this.authService.getAuthenticatedUser();
   }
   /**
-   * Checks if authentication is enabled.
-   *
-   * This method checks if the current authentication service is not an instance of AnonymousAuthenticationService.
-   * If it is not, it means that some form of authentication is enabled.
+   * Checks if authentication is enabled using the configurationService.
    *
    * @returns  Returns true if authentication is enabled, false otherwise.
    */
