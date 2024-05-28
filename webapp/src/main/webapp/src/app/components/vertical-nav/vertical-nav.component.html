@@ -29,7 +29,7 @@
           </li>
         </ul>
       </li>
-      <li class="dropdown">
+      <li class="dropdown" *ngIf="isAuthEnabled()">
         <button class="btn btn-link dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
           <span title="Username" class="fa pficon-user"></span>
           <span class="dropdown-title">
