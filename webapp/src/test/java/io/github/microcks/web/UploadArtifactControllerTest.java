@@ -1,5 +1,21 @@
+/*
+ * Copyright The Microcks Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.github.microcks.web;
 
+import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.service.ArtifactInfo;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.MockRepositoryImportException;
@@ -25,6 +41,9 @@ class UploadArtifactControllerTest {
    @Mock
    private ServiceService serviceService;
 
+   @Mock
+   private SecretRepository secretRepository;
+
    @InjectMocks
    private UploadArtifactController sut;
 
@@ -37,7 +56,7 @@ class UploadArtifactControllerTest {
             Mockito.any(ArtifactInfo.class))).thenThrow(new MockRepositoryImportException("Intentional error"));
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(apiPastry, false);
+      ResponseEntity<String> responseEntity = sut.importArtifact(apiPastry, false, null);
 
       // assert
       SoftAssertions.assertSoftly(softly -> {
@@ -53,7 +72,7 @@ class UploadArtifactControllerTest {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/wrong-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false);
+      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
 
       // assert
       SoftAssertions.assertSoftly(softly -> {
@@ -71,7 +90,7 @@ class UploadArtifactControllerTest {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false);
+      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
 
       // assert
       Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
@@ -86,7 +105,7 @@ class UploadArtifactControllerTest {
       String wrongUrl = "https://raw.githubusercontent.com/microcks/microcks/master/samples/APIPastry-openapi.yaml";
 
       // act
-      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false);
+      ResponseEntity<String> responseEntity = sut.importArtifact(wrongUrl, false, null);
 
       // assert
       Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
