@@ -214,15 +214,17 @@ export class OperationOverridePageComponent implements OnInit {
     operationProperties.defaultDelay = this.newOperation.defaultDelay;
     operationProperties.dispatcher = this.newOperation.dispatcher;
     operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
+    operationProperties.parameterConstraints = [];
     // Now recopy parameter constraints.
-    operationProperties.parameterConstraints = (
-      this.paramConstraints.header.length ? this.paramConstraints.header : []
-    ).join(
-      this.paramConstraints.query.length ? this.paramConstraints.query : []
-    );
+    for (let i = 0; i < this.paramConstraints.header.length; i++) {
+      operationProperties.parameterConstraints.push(this.paramConstraints.header[i]);
+    }
+    for (let i = 0; i < this.paramConstraints.query.length; i++) {
+      operationProperties.parameterConstraints.push(this.paramConstraints.query[i]);
+    }
 
     console.log(
-      '[saveOperationProperties] operationProperties: ' +
+      "[saveOperationProperties] operationProperties: " +
         JSON.stringify(operationProperties)
     );
     this.servicesSvc
