@@ -15,9 +15,9 @@
  */
 package io.github.microcks.util.el.function;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for RandomIntELFunction class.

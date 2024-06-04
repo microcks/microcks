@@ -15,9 +15,9 @@
  */
 package io.github.microcks.util.el.function;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for RandomStringELFunction class.

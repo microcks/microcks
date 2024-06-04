@@ -18,10 +18,9 @@ package io.github.microcks.util.el;
 import io.github.microcks.domain.Request;
 import io.github.microcks.util.el.function.ELFunction;
 import io.github.microcks.util.el.function.NowELFunction;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for EvaluationContext class.

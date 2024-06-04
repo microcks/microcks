@@ -20,16 +20,13 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 
 import io.github.microcks.util.openapi.SwaggerImporter;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class SwaggerImporter.
@@ -74,7 +71,7 @@ public class SwaggerImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Beer Catalog API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("0.9", service.getVersion());
 
       // Now assert extensions parsing has been done.

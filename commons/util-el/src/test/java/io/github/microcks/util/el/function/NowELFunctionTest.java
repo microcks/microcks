@@ -15,12 +15,12 @@
  */
 package io.github.microcks.util.el.function;
 
-import org.junit.Test;
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for NowELFunction class.

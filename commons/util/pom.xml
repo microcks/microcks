@@ -31,7 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>../..</multi-project.rootdir>
     <java.version>17</java.version>
-    <junit.version>4.13.1</junit.version>
+    <junit.version>5.10.2</junit.version>
     <jackson.version>2.15.4</jackson.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <avro.version>1.11.3</avro.version>
@@ -94,15 +94,15 @@
 
     <!-- Test related dependencies -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>io.github.microcks</groupId>
       <artifactId>microcks-model</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
