@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * This is a test case for SwaggerSchemaValidator utility.
  * @author laurent
  */
-public class SwaggerSchemaValidatorTest {
+class SwaggerSchemaValidatorTest {
 
    @Test
-   public void testFullProcedureFromSwaggerResource() {
+   void testFullProcedureFromSwaggerResource() {
       String openAPIText = null;
       String jsonText = "{\n" + "  \"name\": \"Rodenbach\",\n" + "  \"country\": \"Belgium\",\n"
             + "  \"type\": \"Fruit\",\n" + "  \"rating\": 4.3,\n" + "  \"status\": \"available\"\n" + "}";

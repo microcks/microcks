@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author laurent
  */
 @Testcontainers
-public class TestControllerIT extends AbstractBaseIT {
+class TestControllerIT extends AbstractBaseIT {
 
    @Container
    public static GenericContainer pastryImpl = new GenericContainer("quay.io/microcks/quarkus-api-pastry:latest")
@@ -48,7 +48,7 @@ public class TestControllerIT extends AbstractBaseIT {
    private TestController testController;
 
    @Test
-   public void testOpenAPITesting() {
+   void testOpenAPITesting() {
       // Upload PetStore reference artifact.
       uploadArtifactFile("target/test-classes/io/github/microcks/web/pastry-for-test-openapi.yaml", true);
 

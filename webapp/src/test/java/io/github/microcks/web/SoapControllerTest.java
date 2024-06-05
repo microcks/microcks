@@ -23,10 +23,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a Test for SoapController class.
  * @laurent
  */
-public class SoapControllerTest {
+class SoapControllerTest {
 
    @Test
-   public void testOriginalOperationParsing() {
+   void testOriginalOperationParsing() {
       String originalPayload = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
             + "   <soapenv:Header/>\n" + "   <soapenv:Body>\n" + "      <hel:sayHello>\n"
             + "         <name>Karla</name>\n" + "      </hel:sayHello>\n" + "   </soapenv:Body>\n"
@@ -38,7 +38,7 @@ public class SoapControllerTest {
    }
 
    @Test
-   public void testDashNamespaceOperationParsing() {
+   void testDashNamespaceOperationParsing() {
       String dashNamespacePayload = "<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
             + "   <soap-env:Header/>\n" + "   <soap-env:Body>\n" + "      <hel:sayHello>\n"
             + "         <name>Karla</name>\n" + "      </hel:sayHello>\n" + "   </soap-env:Body>\n"
@@ -50,7 +50,7 @@ public class SoapControllerTest {
    }
 
    @Test
-   public void testOriginalOperationWithNSParsing() {
+   void testOriginalOperationWithNSParsing() {
       String originalPayloadOpWithNamespace = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
             + "   <soapenv:Header/>\n" + "   <soapenv:Body>\n"
             + "      <hel:sayHello xmlns:hel=\"http://www.example.com/hello\">\n" + "         <name>Karla</name>\n"
@@ -62,7 +62,7 @@ public class SoapControllerTest {
    }
 
    @Test
-   public void testDashNamespaceOperationWithNSParsing() {
+   void testDashNamespaceOperationWithNSParsing() {
       String dashNamespacePayloadOpWithNamespace = "<soap-env:Envelope xmlns:soap-env=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
             + "   <soap-env:Header/>\n" + "   <soap-env:Body>\n"
             + "      <hel:sayHello xmlns:hel=\"http://www.example.com/hello\">\n" + "         <name>Karla</name>\n"
@@ -75,7 +75,7 @@ public class SoapControllerTest {
    }
 
    @Test
-   public void testNegativeOperationMatching() {
+   void testNegativeOperationMatching() {
       String otherOperationPayload = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
             + "   <soapenv:Header/>\n" + "   <soapenv:Body>\n"
             + "      <hel:sayHelloWorld xmlns:hel=\"http://www.example.com/hello\">\n" + "         <name>Karla</name>\n"
@@ -88,7 +88,7 @@ public class SoapControllerTest {
    }
 
    @Test
-   public void testNoArgOperationMatching() {
+   void testNoArgOperationMatching() {
       String noArgOperationPayload = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
             + "   <soapenv:Header/>\n" + "   <soapenv:Body>\n" + "      <hel:sayHelloWorld/>\n" + "   </soapenv:Body>\n"
             + "</soapenv:Envelope>";
@@ -121,7 +121,7 @@ public class SoapControllerTest {
    }
 
    @Test
-   public void testConvertSoapUITemplate() {
+   void testConvertSoapUITemplate() {
       String soapUITemplate = "<something>${myParam}</something>";
       String microcksTemplate = SoapController.convertSoapUITemplate(soapUITemplate);
       assertEquals("<something>{{ myParam }}</something>", microcksTemplate);

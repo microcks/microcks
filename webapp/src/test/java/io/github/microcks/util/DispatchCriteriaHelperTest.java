@@ -43,7 +43,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractPartsFromURIs() {
+   void testExtractPartsFromURIs() {
       // Prepare a bunch of uri paths.
       List<String> resourcePaths = new ArrayList<>();
       resourcePaths.add("/v2/pet/findByDate/2017");
@@ -66,7 +66,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractPartsFromURIPattern() {
+   void testExtractPartsFromURIPattern() {
       // Check with single URI pattern.
       String operationName = "/deployment/byComponent/{component}/{version}?{{param}}";
 
@@ -94,7 +94,7 @@ class DispatchCriteriaHelperTest {
          "/deployment/byComponent/myComp/1.2, /deployment/byComponent/:component/:version",
          // Check with parts expressed using swagger/postman syntax.
          "/deployment/byComponent/myComp/1.2/$count, /deployment/byComponent/:component/:version/$count", })
-   public void testExtractFromURIPattern(String requestPath, String operationName) {
+   void testExtractFromURIPattern(String requestPath, String operationName) {
 
       final String dispatcherRule = "component && version";
       final String expectedCriteria = "/component=myComp/version=1.2";
@@ -106,7 +106,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIPattern2() {
+   void testExtractFromURIPattern2() {
       String resourcePath = "/pet/2";
       String operationName = "/pet/:petId";
       String paramRule = "petId";
@@ -123,7 +123,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIPatternUnsorted() {
+   void testExtractFromURIPatternUnsorted() {
       // Check with parts not sorted in natural order.
       String requestPath = "/deployment/byComponent/1.2/myComp";
       String operationName = "/deployment/byComponent/{version}/{component}";
@@ -135,7 +135,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIPatternWithExtension() {
+   void testExtractFromURIPatternWithExtension() {
       // Check with parts sorted in natural order.
       String requestPath = "/deployment/byComponent/myComp/1.2.json";
       String operationName = "/deployment/byComponent/{component}/{version}.json";
@@ -149,7 +149,7 @@ class DispatchCriteriaHelperTest {
    @ParameterizedTest
    @CsvSource({ "component, /component=myComp", "version, /version=1.2",
          "component && version, /component=myComp/version=1.2", "component ?? apiKey, /component=myComp" })
-   public void testExtractFromURIPatternWithCustomRule(String paramRule, String expectedCriteria) {
+   void testExtractFromURIPatternWithCustomRule(String paramRule, String expectedCriteria) {
       // Check with parts sorted in natural order.
       String requestPath = "/deployment/byComponent/myComp/1.2";
       String operationName = "/deployment/byComponent/{component}/{version}";
@@ -160,7 +160,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIParams() {
+   void testExtractFromURIParams() {
       // Check with parameters in no particular order.
       String requestPath = "/v2/pet/findByDate/2017/01/04?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available";
 
@@ -174,7 +174,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testBuildFromPartsMap() {
+   void testBuildFromPartsMap() {
       Multimap<String, String> partsMap = ArrayListMultimap.create();
       partsMap.put("year", "2018");
       partsMap.put("month", "05");
@@ -195,7 +195,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testBuildFromParamsMap() {
+   void testBuildFromParamsMap() {
       Multimap<String, String> paramsMap = ArrayListMultimap.create();
       paramsMap.put("page", "1");
       paramsMap.put("limit", "20");
@@ -216,7 +216,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testBuildFromParamsArrayMap() {
+   void testBuildFromParamsArrayMap() {
       Multimap<String, String> paramsMap = ArrayListMultimap.create();
       paramsMap.put("page", "1");
       paramsMap.put("limit", "20");
@@ -234,7 +234,7 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void extractCommonSuffix() {
+   void extractCommonSuffix() {
       final var uris = List.of("/ab/def", "/cde/def");
       final var result = DispatchCriteriaHelper.extractCommonSuffix(uris);
       assertEquals("/def", result);

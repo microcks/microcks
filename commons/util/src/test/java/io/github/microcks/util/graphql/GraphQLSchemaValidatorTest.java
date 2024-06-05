@@ -35,10 +35,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for GraphQLSchemaValidator utility.
  * @author laurent
  */
-public class GraphQLSchemaValidatorTest {
+class GraphQLSchemaValidatorTest {
 
    @Test
-   public void testBuildResponseJsonSchema() {
+   void testBuildResponseJsonSchema() {
       String schemaText;
       String queryText = "{\n" + "  hero {\n" + "    name\n" + "    email\n" + "    family\n" + "    affiliate\n"
             + "    movies {\n" + "      title\n" + "    }\n" + "  }\n" + "}";
@@ -88,7 +88,7 @@ public class GraphQLSchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJson() {
+   void testValidateJson() {
       String schemaText;
       String queryText = "{\n" + "  hero {\n" + "    name\n" + "    email\n" + "    family\n" + "    affiliate\n"
             + "    movies {\n" + "      title\n" + "    }\n" + "  }\n" + "}";
@@ -130,7 +130,7 @@ public class GraphQLSchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonAdvanced() {
+   void testValidateJsonAdvanced() {
       String schemaText;
       String queryText = "query allFilms {\n" + "    allFilms {\n" + "        films {\n" + "            id\n"
             + "            title\n" + "            episodeID\n" + "            director\n" + "            starCount\n"

@@ -91,7 +91,7 @@ class ProtobufImporterTest {
    }
 
    @Test
-   public void testProtobufWithOptionsImport() {
+   void testProtobufWithOptionsImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1-option.proto",
@@ -158,7 +158,7 @@ class ProtobufImporterTest {
    }
 
    @Test
-   public void testProtobufWithDependenciesImport() {
+   void testProtobufWithDependenciesImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/goodbye-v1.proto", null);
@@ -214,7 +214,7 @@ class ProtobufImporterTest {
    }
 
    @Test
-   public void testProtobufWithRemoteDependenciesImport() {
+   void testProtobufWithRemoteDependenciesImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/remote/goodbye-v1.proto",

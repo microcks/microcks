@@ -61,7 +61,7 @@ class JsonEvaluationSpecificationTest {
    }
 
    @Test
-   public void testJsonDeserialization() {
+   void testJsonDeserialization() {
       JsonEvaluationSpecification specification = null;
       try {
          specification = JsonEvaluationSpecification.buildFromJsonString(JSON_PAYLOAD);

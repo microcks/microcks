@@ -27,10 +27,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * This is a test case for OpenAPISchemaBuilder class.
  * @author laurent
  */
-public class OpenAPISchemaBuilderTest {
+class OpenAPISchemaBuilderTest {
 
    @Test
-   public void testBuildTypeSchemaFromJson() {
+   void testBuildTypeSchemaFromJson() {
       JsonNode jsonNode = null;
       ObjectMapper mapper = new ObjectMapper();
 

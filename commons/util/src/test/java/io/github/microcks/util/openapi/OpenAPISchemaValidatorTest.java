@@ -415,7 +415,7 @@ class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testNullableFieldInComponentRef() {
+   void testNullableFieldInComponentRef() {
       String openAPIText = null;
       String jsonText = """
              [

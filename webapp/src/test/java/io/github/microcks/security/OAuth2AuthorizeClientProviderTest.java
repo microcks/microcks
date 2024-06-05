@@ -108,7 +108,7 @@ public class OAuth2AuthorizeClientProviderTest {
    }
 
    @Test
-   public void testRefreshToken() {
+   void testRefreshToken() {
       // First use standard Spring Security classes to authorize and retrieve a refresh token.
       DefaultPasswordTokenResponseClient client = new DefaultPasswordTokenResponseClient();
 

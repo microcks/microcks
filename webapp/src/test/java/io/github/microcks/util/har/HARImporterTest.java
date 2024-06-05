@@ -79,7 +79,7 @@ class HARImporterTest {
    }
 
    @Test
-   public void testMissingCommentHARImport() {
+   void testMissingCommentHARImport() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/microcks.har");
@@ -99,7 +99,7 @@ class HARImporterTest {
    }
 
    @Test
-   public void testComplexHARImport() {
+   void testComplexHARImport() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1.har");
@@ -245,7 +245,7 @@ class HARImporterTest {
    }
 
    @Test
-   public void testComplexHARImportWithAPIPrefix() {
+   void testComplexHARImportWithAPIPrefix() {
       HARImporter importer = null;
       try {
          importer = new HARImporter(
@@ -345,7 +345,7 @@ class HARImporterTest {
    }
 
    @Test
-   public void testGraphQLMessageImportWithExistingOperation() {
+   void testGraphQLMessageImportWithExistingOperation() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/movie-graph-api-1.0.har");

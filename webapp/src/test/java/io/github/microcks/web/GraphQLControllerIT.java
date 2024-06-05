@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for all the GraphQL mock controller.
  * @author laurent
  */
-public class GraphQLControllerIT extends AbstractBaseIT {
+class GraphQLControllerIT extends AbstractBaseIT {
 
    @Test
-   public void testFilmsGraphQLAPIMocking() {
+   void testFilmsGraphQLAPIMocking() {
       // Upload the 2 required reference artifacts.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
@@ -145,7 +145,7 @@ public class GraphQLControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxy() {
+   void testProxy() {
       // Upload the required reference artifacts.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
@@ -169,7 +169,7 @@ public class GraphQLControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxyFallback() {
+   void testProxyFallback() {
       // Upload the required reference artifacts.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films.graphql", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/graphql/films-postman.json", false);
