@@ -23,10 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This is a test case for RandomIntELFunction class.
  * @author laurent
  */
-public class RandomIntELFunctionTest {
+class RandomIntELFunctionTest {
 
    @Test
-   public void testSimpleEvaluation() {
+   void testSimpleEvaluation() {
       // Compute evaluation.
       RandomIntELFunction function = new RandomIntELFunction();
       String randomIntString = function.evaluate(null);
@@ -37,7 +37,7 @@ public class RandomIntELFunctionTest {
    }
 
    @Test
-   public void testBoundedEvaluation() {
+   void testBoundedEvaluation() {
       // Compute evaluation.
       RandomIntELFunction function = new RandomIntELFunction();
       String randomIntString = function.evaluate(null, "50");
@@ -48,7 +48,7 @@ public class RandomIntELFunctionTest {
    }
 
    @Test
-   public void testIntervalEvaluation() {
+   void testIntervalEvaluation() {
       // Compute evaluation.
       RandomIntELFunction function = new RandomIntELFunction();
       String randomIntString = function.evaluate(null, "25", "50");

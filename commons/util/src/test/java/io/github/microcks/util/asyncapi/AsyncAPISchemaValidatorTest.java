@@ -34,10 +34,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for AsyncAPISchemaValidator utility.
  * @author laurent
  */
-public class AsyncAPISchemaValidatorTest {
+class AsyncAPISchemaValidatorTest {
 
    @Test
-   public void testValidateJsonSuccess() {
+   void testValidateJsonSuccess() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "{\"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
@@ -57,7 +57,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonSuccessFromYaml() {
+   void testValidateJsonSuccessFromYaml() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "{\"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
@@ -77,7 +77,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonFailure() {
+   void testValidateJsonFailure() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "{\"name\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
@@ -97,7 +97,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonFailureFromYaml() {
+   void testValidateJsonFailureFromYaml() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "{\"name\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
@@ -117,7 +117,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIResource() {
+   void testFullProcedureFromAsyncAPIResource() {
       String asyncAPIText = null;
       String jsonText = "{\"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
       JsonNode asyncAPISpec = null;
@@ -141,7 +141,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIResourceWithNumberFormats() {
+   void testFullProcedureFromAsyncAPIResourceWithNumberFormats() {
       String asyncAPIText = null;
       String jsonText = "{\"displayName\": \"Laurent Broudoux\", \"age\": 43, \"size\": 1.8, \"exp\": 1234567891011, \"rewards\": 12345.67}";
       JsonNode asyncAPISpec = null;
@@ -165,7 +165,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIResourceWithNumberFormatsWithRef() {
+   void testFullProcedureFromAsyncAPIResourceWithNumberFormatsWithRef() {
       String asyncAPIText = null;
       String jsonText = "{\"displayName\": \"Laurent Broudoux\", \"age\": 43, \"size\": 1.8, \"exp\": { \"level\": 1234567891011 }, \"rewards\": 12345.67}";
       JsonNode asyncAPISpec = null;
@@ -189,7 +189,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIResourceWithNumberFormatsWithRefRef() {
+   void testFullProcedureFromAsyncAPIResourceWithNumberFormatsWithRefRef() {
       String asyncAPIText = null;
       String jsonText = "{\"displayName\": \"Laurent Broudoux\", \"age\": 43, \"size\": 1.8, \"exp\": { \"level\": 1234567891011 }, \"rewards\": 12345.67}";
       JsonNode asyncAPISpec = null;
@@ -213,7 +213,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIResourceNulls() {
+   void testFullProcedureFromAsyncAPIResourceNulls() {
       String asyncAPIText = null;
       String jsonText = "{\n" + "              \"throwable\": null,\n" + "              \"person\": {\n"
             + "                \"taille\": 110,\n" + "                \"nom\": \"Bennour\",\n"
@@ -250,7 +250,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIResourceFailure() {
+   void testFullProcedureFromAsyncAPIResourceFailure() {
       String asyncAPIText = null;
       String jsonText = "{\"id\": \"123456\", \"name\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
       JsonNode asyncAPISpec = null;
@@ -280,7 +280,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIWithRefsResource() {
+   void testFullProcedureFromAsyncAPIWithRefsResource() {
       String asyncAPIText = null;
       String jsonText = "{\"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": 41}";
       JsonNode asyncAPISpec = null;
@@ -305,7 +305,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIWithDeepRefsResource() {
+   void testFullProcedureFromAsyncAPIWithDeepRefsResource() {
       String asyncAPIText = null;
       String jsonText = "{\"streetlightId\":\"dev0\", \"lumens\":1000, \"sentAt\":\"2020-11-20T21:46:38Z\"}";
       JsonNode asyncAPISpec = null;
@@ -331,7 +331,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIWithDeepRefsResourceFailure() {
+   void testFullProcedureFromAsyncAPIWithDeepRefsResourceFailure() {
       String asyncAPIText = null;
       String jsonText = "{\"streetlightId\":\"dev0\", \"location\":\"47.8509682604982, 0.11136576784773598\", \"sentAt\":\"2020-11-20T21:46:38Z\"}";
       JsonNode asyncAPISpec = null;
@@ -362,7 +362,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIWithOneOf21() {
+   void testFullProcedureFromAsyncAPIWithOneOf21() {
       String asyncAPIText = null;
       String jsonTextAlt1 = "{\"displayName\":\"Alice\"}";
       String jsonTextAlt2 = "{\"email\":\"bob@example.com\"}";
@@ -395,7 +395,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIWithOneOf23() {
+   void testFullProcedureFromAsyncAPIWithOneOf23() {
       String asyncAPIText = null;
       String jsonTextAlt1 = "{\"displayName\":\"Alice\"}";
       String jsonTextAlt2 = "{\"email\":\"bob@example.com\"}";
@@ -428,7 +428,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPI3() {
+   void testFullProcedureFromAsyncAPI3() {
       String asyncAPIText = null;
       String jsonText = """
                {"fullName": "Laurent Broudoux", "email": "laurent@microcks.io", "age": 45}
@@ -455,7 +455,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPI3WithOneOf() {
+   void testFullProcedureFromAsyncAPI3WithOneOf() {
       String asyncAPIText = null;
       String jsonTextAlt1 = """
                {"fullName": "Laurent Broudoux", "email": "laurent@microcks.io", "age": 45}
@@ -491,7 +491,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromAsyncAPIWithExternalRelativeReference() {
+   void testFullProcedureFromAsyncAPIWithExternalRelativeReference() {
       String asyncAPIText = null;
       String jsonText = "{\"fullName\":\"Laurent Broudoux\", \"email\":\"laurent@acme.com\", \"age\": 44}";
       JsonNode asyncAPISpec = null;
@@ -516,7 +516,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateAvroSuccessFromAsyncAPIResource() {
+   void testValidateAvroSuccessFromAsyncAPIResource() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
       Schema avroSchema = null;
@@ -546,7 +546,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateAvroFailureFromAsyncAPIResource() {
+   void testValidateAvroFailureFromAsyncAPIResource() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
       Schema avroSchema = null;
@@ -578,7 +578,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateAvroSuccessFromAsyncAPIWithRefsResource() {
+   void testValidateAvroSuccessFromAsyncAPIWithRefsResource() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
       Schema avroSchema = null;
@@ -616,7 +616,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateAvroFailureFromAsyncAPIWithRefsResource() {
+   void testValidateAvroFailureFromAsyncAPIWithRefsResource() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
       Schema avroSchema = null;
@@ -656,7 +656,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateAvroSuccessFromAsyncAPIWithOneOf23() {
+   void testValidateAvroSuccessFromAsyncAPIWithOneOf23() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
 
@@ -697,7 +697,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateAvroSuccessFromAsyncAPIWithOneOf23AndRefsResources() {
+   void testValidateAvroSuccessFromAsyncAPIWithOneOf23AndRefsResources() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
 
@@ -743,7 +743,7 @@ public class AsyncAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateAvroSuccessFromAsyncAPI3WithOneOf() {
+   void testValidateAvroSuccessFromAsyncAPI3WithOneOf() {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
 

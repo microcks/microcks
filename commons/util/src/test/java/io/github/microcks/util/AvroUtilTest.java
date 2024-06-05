@@ -43,10 +43,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case method for AvroUtil class.
  * @author laurent
  */
-public class AvroUtilTest {
+class AvroUtilTest {
 
    @Test
-   public void testAvroBasics() {
+   void testAvroBasics() {
       Schema schema = null;
 
       try {
@@ -106,7 +106,7 @@ public class AvroUtilTest {
    }
 
    @Test
-   public void testJsonToAvro() {
+   void testJsonToAvro() {
       String jsonText = "{\"name\":\"Laurent Broudoux\", \"email\":\"laurent@microcks.io\", \"age\":41}";
 
       try {
@@ -146,7 +146,7 @@ public class AvroUtilTest {
    }
 
    @Test
-   public void testJsonToAvroRecord() {
+   void testJsonToAvroRecord() {
       String jsonText = "{\"name\":\"Laurent Broudoux\", \"email\":\"laurent@microcks.io\", \"age\":42}";
 
       try {
@@ -164,7 +164,7 @@ public class AvroUtilTest {
    }
 
    @Test
-   public void testAvroBinaryReadingFailure() {
+   void testAvroBinaryReadingFailure() {
       String jsonText = "{\"name\":\"Laurent Broudoux\", \"email\":\"laurent@microcks.io\", \"age\":41}";
 
       try {
@@ -190,7 +190,7 @@ public class AvroUtilTest {
    }
 
    @Test
-   public void testValidate() {
+   void testValidate() {
       Schema v1Schema = SchemaBuilder.record("User").fields().requiredString("name").requiredInt("age").endRecord();
       Schema v2Schema = SchemaBuilder.record("User").fields().requiredString("fullName").requiredInt("age")
             .optionalString("email").endRecord();
@@ -216,7 +216,7 @@ public class AvroUtilTest {
    }
 
    @Test
-   public void testAvroSchemaCompatibility() {
+   void testAvroSchemaCompatibility() {
       Schema v1Schema = SchemaBuilder.record("User").fields().requiredString("name").requiredInt("age").endRecord();
       Schema v2Schema = SchemaBuilder.record("User").fields().requiredString("fullName").requiredInt("age")
             .optionalString("email").endRecord();

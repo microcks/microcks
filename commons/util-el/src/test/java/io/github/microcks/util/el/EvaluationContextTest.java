@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for EvaluationContext class.
  * @author laurent
  */
-public class EvaluationContextTest {
+class EvaluationContextTest {
 
    @Test
-   public void testVariableRegistrationAndLookup() throws Exception {
+   void testVariableRegistrationAndLookup() {
       // Create a context, register and retrieve a variable.
       EvaluationContext context = new EvaluationContext();
       context.setVariable("request", new Request());
@@ -39,7 +39,7 @@ public class EvaluationContextTest {
    }
 
    @Test
-   public void testFunctionRegistrationAndLookup() throws Exception {
+   void testFunctionRegistrationAndLookup() throws Exception {
       // Create a context, register and retrieve a function.
       EvaluationContext context = new EvaluationContext();
       context.registerFunction("now", NowELFunction.class);

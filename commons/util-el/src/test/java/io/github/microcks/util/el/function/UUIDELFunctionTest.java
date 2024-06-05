@@ -23,10 +23,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * This is a test case for UUIDELFunction class.
  * @author laurent
  */
-public class UUIDELFunctionTest {
+class UUIDELFunctionTest {
 
    @Test
-   public void testSimpleEvaluation() {
+   void testSimpleEvaluation() {
       // Compute uuid.
       UUIDELFunction function = new UUIDELFunction();
       String uuid = function.evaluate(null);

@@ -24,10 +24,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * This is a Test case for Random functions based on Faker.
  * @author laurent
  */
-public class RandomFakerELFunctionTest {
+class RandomFakerELFunctionTest {
 
    @Test
-   public void testNameEvaluations() {
+   void testNameEvaluations() {
       EvaluationContext context = new EvaluationContext();
       // Test simple evaluations.
       RandomFirstNameELFunction function = new RandomFirstNameELFunction();
@@ -47,7 +47,7 @@ public class RandomFakerELFunctionTest {
    }
 
    @Test
-   public void testAddressEvaluations() {
+   void testAddressEvaluations() {
       EvaluationContext context = new EvaluationContext();
       // Test simple evaluations.
       RandomCityELFunction cFunction = new RandomCityELFunction();
@@ -73,7 +73,7 @@ public class RandomFakerELFunctionTest {
    }
 
    @Test
-   public void testInternetEvaluations() {
+   void testInternetEvaluations() {
       EvaluationContext context = new EvaluationContext();
       // Test simple evaluations.
       RandomEmailELFunction eFunction = new RandomEmailELFunction();

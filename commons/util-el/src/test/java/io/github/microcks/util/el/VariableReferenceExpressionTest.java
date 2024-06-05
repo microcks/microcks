@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * This is a test case for VariableReferenceExpression class.
  * @author laurent
  */
-public class VariableReferenceExpressionTest {
+class VariableReferenceExpressionTest {
 
    @Test
-   public void testStringValue() {
+   void testStringValue() {
       EvaluableRequest request = new EvaluableRequest("hello world", null);
 
       // Create new expression evaluating simple string value.
@@ -39,7 +39,7 @@ public class VariableReferenceExpressionTest {
    }
 
    @Test
-   public void testJSONPointerValue() {
+   void testJSONPointerValue() {
       String jsonString = "{\n" + "    \"library\": \"My Personal Library\",\n" + "    \"books\": [\n"
             + "        { \"title\":\"Title 1\", \"author\":\"Jane Doe\" },\n"
             + "        { \"title\":\"Title 2\", \"author\":\"John Doe\" }\n" + "    ]\n" + "}";
@@ -63,7 +63,7 @@ public class VariableReferenceExpressionTest {
    }
 
    @Test
-   public void testJSONPointerValueInArray() {
+   void testJSONPointerValueInArray() {
       String jsonString = "[{\"foo\":{\"bar\":111222},\"quantity\":1}]";
       EvaluableRequest request = new EvaluableRequest(jsonString, null);
 
@@ -79,7 +79,7 @@ public class VariableReferenceExpressionTest {
    }
 
    @Test
-   public void testXPathValue() {
+   void testXPathValue() {
       String xmlString = "<library>\n" + "  <name>My Personal Library</name>\n" + "  <books>\n"
             + "    <book><title>Title 1</title><author>Jane Doe</author></book>\n"
             + "    <book><title>Title 2</title><author>John Doe</author></book>\n" + "  </books>\n" + "</library>";
@@ -92,7 +92,7 @@ public class VariableReferenceExpressionTest {
    }
 
    @Test
-   public void testXPathWithNamespaceValue() {
+   void testXPathWithNamespaceValue() {
       String xmlString = "<ns:library xmlns:ns=\"https://microcks.io\">\n"
             + "  <ns:name>My Personal Library</ns:name>\n" + "  <ns:books>\n"
             + "    <ns:book><ns:title>Title 1</ns:title><ns:author>Jane Doe</ns:author></ns:book>\n"
@@ -107,7 +107,7 @@ public class VariableReferenceExpressionTest {
    }
 
    @Test
-   public void testArrayValues() {
+   void testArrayValues() {
       EvaluableRequest request = new EvaluableRequest(null, new String[] { "one", "two" });
 
       // Create new expression evaluating array value.
@@ -127,7 +127,7 @@ public class VariableReferenceExpressionTest {
    }
 
    @Test
-   public void testMapValues() {
+   void testMapValues() {
       EvaluableRequest request = new EvaluableRequest(null, null);
       Map<String, String> headers = new HashMap<>();
       headers.put("key", "value");

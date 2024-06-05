@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * This is a test case for RandomValueEFFunction class.
  * @author laurent
  */
-public class RandomValueELFunctionTest {
+class RandomValueELFunctionTest {
 
    @Test
-   public void testSimpleEvaluation() {
+   void testSimpleEvaluation() {
       List<String> values = List.of("one", "two", "three");
 
       // Compute evaluation.

@@ -27,10 +27,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for JsonSchemaValidation utility.
  * @author laurent
  */
-public class JsonSchemaValidatorTest {
+class JsonSchemaValidatorTest {
 
    @Test
-   public void testValidateJsonSuccess() {
+   void testValidateJsonSuccess() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}";
@@ -50,7 +50,7 @@ public class JsonSchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonFailure() {
+   void testValidateJsonFailure() {
       boolean valid = true;
       String schemaText = null;
       String jsonText = "{\"id\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}";
@@ -80,7 +80,7 @@ public class JsonSchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonUnknownNodeFailure() {
+   void testValidateJsonUnknownNodeFailure() {
       boolean valid = true;
       String schemaText = null;
       String jsonText = "{\"name\": \"307\", " + "\"model\": \"Peugeot 307\", \"year\": 2003, \"energy\": \"GO\"}";

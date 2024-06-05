@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for TemplateEngine class.
  * @author laurent
  */
-public class TemplateEngineTest {
+class TemplateEngineTest {
 
    @Test
-   public void testSimpleTemplate() {
+   void testSimpleTemplate() {
       // Prepare a string representing now().
       Calendar currentDate = Calendar.getInstance();// Assert formatting.
       int day = currentDate.get(Calendar.DAY_OF_MONTH);
@@ -49,7 +49,7 @@ public class TemplateEngineTest {
    }
 
    @Test
-   public void testContextlessTemplate() {
+   void testContextlessTemplate() {
       String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"Laurent Broudoux\", \"email\": \"laurent@microcks.io\", \"age\": {{ randomInt(20, 99) }}} \n";
 
       TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
@@ -64,7 +64,7 @@ public class TemplateEngineTest {
    }
 
    @Test
-   public void testPostmanNotationCompatibility() {
+   void testPostmanNotationCompatibility() {
       String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"{{ randomFullName() }}\", \"email\": \"{{ randomEmail() }}\", \"age\": {{ randomInt(20, 99) }}} \n";
       String postmanTemplate = "{\"signedAt\": \"{{ $timestamp }}\", \"fullName\": \"{{ $randomFullName }}\", \"email\": \"{{ $randomEmail }}\", \"age\": {{ $randomInt }}} \n";
 
@@ -83,7 +83,7 @@ public class TemplateEngineTest {
    }
 
    @Test
-   public void testXMLWithAttributeTemplate() {
+   void testXMLWithAttributeTemplate() {
       // Execute simple template calling now() and request.body function.
       EvaluableRequest request = new EvaluableRequest("<request><name firstname=\"Laurent\"/></request>", null);
 
@@ -96,7 +96,7 @@ public class TemplateEngineTest {
    }
 
    @Test
-   public void testXMLWithNSAndAttributeTemplate() {
+   void testXMLWithNSAndAttributeTemplate() {
       // Execute simple template calling now() and request.body function.
       EvaluableRequest request = new EvaluableRequest(
             "<ns:request xmlns:ns=\"http://example.com/ns\"><ns:name><firstname value=\"Laurent\"/></ns:name></ns:request>",
@@ -112,7 +112,7 @@ public class TemplateEngineTest {
    }
 
    @Test
-   public void testRequestParams() {
+   void testRequestParams() {
       EvaluableRequest request = new EvaluableRequest("", null);
       Map<String, String> params = Map.of("id", "8", "account-name", "test");
       request.setParams(params);

@@ -26,10 +26,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This is a test case for NowELFunction class.
  * @author laurent
  */
-public class NowELFunctionTest {
+class NowELFunctionTest {
 
    @Test
-   public void testSimpleEvaluation() {
+   void testSimpleEvaluation() {
       long before = System.currentTimeMillis();
 
       // Compute evaluation.
@@ -44,7 +44,7 @@ public class NowELFunctionTest {
    }
 
    @Test
-   public void testPatternEvaluation() {
+   void testPatternEvaluation() {
       Calendar currentDate = Calendar.getInstance();
 
       // Compute evaluation.
@@ -61,7 +61,7 @@ public class NowELFunctionTest {
    }
 
    @Test
-   public void testPatternDeltaEvaluation() {
+   void testPatternDeltaEvaluation() {
       Calendar currentDate = Calendar.getInstance();
 
       // Compute evaluation.

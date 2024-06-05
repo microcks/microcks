@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for SoapMessageValidator class.
  * @author laurent
  */
-public class SoapMessageValidatorTest {
+class SoapMessageValidatorTest {
 
    private String validSoap = """
          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
@@ -114,7 +114,7 @@ public class SoapMessageValidatorTest {
          """;
 
    @Test
-   public void testValidateSoapEnvelope() {
+   void testValidateSoapEnvelope() {
       List<String> errors = SoapMessageValidator.validateSoapEnvelope(validSoap);
       assertTrue(errors.isEmpty());
 
@@ -133,7 +133,7 @@ public class SoapMessageValidatorTest {
    }
 
    @Test
-   public void testValidateSoapMessage() {
+   void testValidateSoapMessage() {
       String wsdlContent = null;
       try {
          wsdlContent = new String(
@@ -165,7 +165,7 @@ public class SoapMessageValidatorTest {
    }
 
    @Test
-   public void testValidateSoapMessageWithDistributedNS() {
+   void testValidateSoapMessageWithDistributedNS() {
       String soapMessage = """
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
                <soapenv:Header/>
