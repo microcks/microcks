@@ -19,27 +19,25 @@ import io.github.microcks.domain.DailyStatistic;
 import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.repository.DailyStatisticRepository;
 import io.github.microcks.repository.RepositoryTestsConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Test case for DailyStatisticsFeeder class.
  * @author laurent
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ContextConfiguration(classes = { RepositoryTestsConfiguration.class, ListenerTestsConfiguration.class })
+@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ListenerTestsConfiguration.class })
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class DailyStatisticsFeederTest {
 

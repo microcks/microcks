@@ -17,7 +17,7 @@ package io.github.microcks.web;
 
 import io.github.microcks.MicrocksApplication;
 import io.github.microcks.repository.ServiceRepository;
-import org.junit.runner.RunWith;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.testcontainers.containers.MongoDBContainer;
@@ -41,16 +40,13 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Base class for Integration tests using Http layers as well as testcontainers for MongoDB persistence.
  * @author laurent
  */
 @SpringBootTest(classes = MicrocksApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles("it")
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 public abstract class AbstractBaseIT {

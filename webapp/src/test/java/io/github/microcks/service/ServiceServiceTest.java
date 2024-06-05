@@ -26,27 +26,25 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryImportException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test case for ServiceService class.
  * @author laurent
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ContextConfiguration(classes = RepositoryTestsConfiguration.class)
+@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class ServiceServiceTest {
 
@@ -613,14 +611,16 @@ public class ServiceServiceTest {
       }
    }
 
-   @Test(expected = EntityAlreadyExistsException.class)
+   @Test
    public void testCreateGenericResourceServiceFailure() throws EntityAlreadyExistsException {
-      try {
-         Service first = service.createGenericResourceService("Order Service", "1.0", "order", null);
-      } catch (Exception e) {
-         fail("No exception should be raised on first save()!");
-      }
-      Service second = service.createGenericResourceService("Order Service", "1.0", "order", null);
+      assertThrows(EntityAlreadyExistsException.class, () -> {
+         try {
+            Service first = service.createGenericResourceService("Order Service", "1.0", "order", null);
+         } catch (Exception e) {
+            fail("No exception should be raised on first save()!");
+         }
+         Service second = service.createGenericResourceService("Order Service", "1.0", "order", null);
+      });
    }
 
    @Test

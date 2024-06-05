@@ -26,13 +26,14 @@ import io.github.microcks.util.openapi.SwaggerImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
 import io.github.microcks.util.postman.PostmanWorkspaceCollectionImporter;
 import io.github.microcks.util.soapui.SoapUIProjectImporter;
-import org.junit.Test;
 
 import java.io.File;
+
+import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This is a test case for MockRepositoryImporterFactory.

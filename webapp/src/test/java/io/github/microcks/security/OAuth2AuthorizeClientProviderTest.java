@@ -20,25 +20,25 @@ import io.github.microcks.domain.OAuth2ClientContext;
 import io.github.microcks.domain.OAuth2GrantType;
 
 import dasniko.testcontainers.keycloak.KeycloakContainer;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.client.endpoint.DefaultPasswordTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2PasswordGrantRequest;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for OAuth2AuthorizeClientProvider class.
  * @author laurent
  */
+@Testcontainers
 public class OAuth2AuthorizeClientProviderTest {
 
-   @ClassRule
+   @Container
    public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.4")
          .withRealmImportFile("io/github/microcks/security/myrealm-realm.json");
 
@@ -92,17 +92,19 @@ public class OAuth2AuthorizeClientProviderTest {
       assertNotNull(authorizedClient.getEncodedAccessToken());
    }
 
-   @Test(expected = AuthorizationException.class)
+   @Test
    public void testClientCredentialsFailure() throws AuthorizationException {
-      OAuth2AuthorizedClientProvider provider = new OAuth2AuthorizedClientProvider();
+      assertThrows(AuthorizationException.class, () -> {
+         OAuth2AuthorizedClientProvider provider = new OAuth2AuthorizedClientProvider();
 
-      OAuth2ClientContext clientContext = new OAuth2ClientContext();
-      clientContext.setClientId("myrealm-serviceaccount");
-      clientContext.setClientSecret("ab54d329-e435-41ae-a900-ec6b3fe15c55");
-      clientContext.setTokenUri(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token");
-      clientContext.setGrantType(OAuth2GrantType.CLIENT_CREDENTIALS);
+         OAuth2ClientContext clientContext = new OAuth2ClientContext();
+         clientContext.setClientId("myrealm-serviceaccount");
+         clientContext.setClientSecret("ab54d329-e435-41ae-a900-ec6b3fe15c55");
+         clientContext.setTokenUri(keycloak.getAuthServerUrl() + "/realms/myrealm/protocol/openid-connect/token");
+         clientContext.setGrantType(OAuth2GrantType.CLIENT_CREDENTIALS);
 
-      OAuth2AuthorizedClient authorizedClient = provider.authorize(clientContext);
+         OAuth2AuthorizedClient authorizedClient = provider.authorize(clientContext);
+      });
    }
 
    @Test

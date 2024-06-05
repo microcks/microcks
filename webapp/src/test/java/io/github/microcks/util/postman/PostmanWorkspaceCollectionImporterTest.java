@@ -25,16 +25,13 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
-import org.junit.Assert;
-import org.junit.Test;
 
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class PostmanWorkspaceCollectionImporter.
@@ -61,7 +58,7 @@ public class PostmanWorkspaceCollectionImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Swagger Petstore", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.1", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -75,7 +72,7 @@ public class PostmanWorkspaceCollectionImporterTest {
             // assertions for findByStatus.
             assertEquals("GET", operation.getMethod());
             assertEquals(1, operation.getResourcePaths().size());
-            Assert.assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
+            assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
             assertTrue(operation.getResourcePaths().contains("/v2/pet/findByStatus"));
 
             // Check that messages have been correctly found.

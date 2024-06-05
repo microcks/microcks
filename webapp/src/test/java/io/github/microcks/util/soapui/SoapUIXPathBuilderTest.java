@@ -15,14 +15,14 @@
  */
 package io.github.microcks.util.soapui;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.xml.sax.InputSource;
 
 import javax.xml.xpath.XPathExpression;
 
 import java.io.StringReader;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class SoapUIXPathBuilder class.

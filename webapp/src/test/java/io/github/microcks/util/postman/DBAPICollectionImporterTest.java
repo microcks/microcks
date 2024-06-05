@@ -18,15 +18,14 @@ package io.github.microcks.util.postman;
 
 import io.github.microcks.domain.*;
 import io.github.microcks.util.MockRepositoryImportException;
-import org.junit.Test;
 
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author laurent

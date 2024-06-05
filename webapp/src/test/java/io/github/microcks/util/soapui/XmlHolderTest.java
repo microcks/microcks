@@ -15,8 +15,9 @@
  */
 package io.github.microcks.util.soapui;
 
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for class XmlHolder class.

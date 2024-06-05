@@ -16,9 +16,9 @@
 package io.github.microcks.util.el.function;
 
 import io.github.microcks.util.el.EvaluationContext;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * This is a Test case for Random functions based on Faker.

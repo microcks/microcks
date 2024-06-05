@@ -31,8 +31,8 @@ import io.github.microcks.util.ReferenceResolver;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,12 +40,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class OpenAPIImporter.
@@ -140,7 +135,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("PetStore API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -258,7 +253,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -289,7 +284,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("LocationById", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -369,7 +364,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -482,7 +477,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -635,7 +630,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -789,7 +784,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -965,7 +960,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API with Refs", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -1051,7 +1046,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Sample API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -1129,7 +1124,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("API-Template", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -1170,7 +1165,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Broken Ref", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("2.0.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -1236,7 +1231,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1280,7 +1275,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1372,7 +1367,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1418,7 +1413,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1513,7 +1508,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1606,7 +1601,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Test API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1668,7 +1663,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -1779,7 +1774,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...

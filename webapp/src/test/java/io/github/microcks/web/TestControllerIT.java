@@ -19,26 +19,28 @@ package io.github.microcks.web;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.TestResult;
 
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test case for the Test controller.
  * @author laurent
  */
+@Testcontainers
 public class TestControllerIT extends AbstractBaseIT {
 
-   @ClassRule
+   @Container
    public static GenericContainer pastryImpl = new GenericContainer("quay.io/microcks/quarkus-api-pastry:latest")
          .withExposedPorts(8282);
 

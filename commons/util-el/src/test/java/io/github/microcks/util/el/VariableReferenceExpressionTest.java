@@ -15,12 +15,12 @@
  */
 package io.github.microcks.util.el;
 
-import org.junit.Test;
-
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for VariableReferenceExpression class.

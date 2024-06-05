@@ -18,7 +18,7 @@ package io.github.microcks.util.script;
 import io.github.microcks.service.StateStore;
 
 import org.jetbrains.annotations.Nullable;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import javax.script.ScriptEngine;
@@ -27,7 +27,7 @@ import javax.script.ScriptEngineManager;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class ScriptEngineBinder class.

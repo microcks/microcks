@@ -20,12 +20,12 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 
-import org.junit.Test;
-
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class MetadataImporter.

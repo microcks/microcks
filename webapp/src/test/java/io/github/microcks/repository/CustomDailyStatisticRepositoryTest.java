@@ -16,17 +16,15 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.DailyStatistic;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.data.mongodb.UncategorizedMongoDbException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,16 +33,15 @@ import java.util.Map;
  * Test case for CustomDailyStatisticRepository class.
  * @author laurent
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-@ContextConfiguration(classes = RepositoryTestsConfiguration.class)
+@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 public class CustomDailyStatisticRepositoryTest {
 
    @Autowired
    DailyStatisticRepository repository;
 
-   @Before
+   @BeforeEach
    public void setUp() {
       // Create a bunch of statistics...
       DailyStatistic stat = new DailyStatistic();
