@@ -56,7 +56,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class AbstractBaseIT {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AbstractBaseIT.class);
+   private static final Logger log = LoggerFactory.getLogger(AbstractBaseIT.class);
 
    @LocalServerPort
    private int port;
@@ -70,7 +70,7 @@ public abstract class AbstractBaseIT {
    private static final MongoDBContainer mongoDBContainer;
 
    static {
-      mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.4")).withReuse(true);
+      mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:4.4")).withReuse(false);
       mongoDBContainer.start();
    }
 
@@ -103,7 +103,7 @@ public abstract class AbstractBaseIT {
       }
 
       assertEquals(201, response.getStatusCode().value());
-      log.info("Just uploaded: " + response.getBody());
+      log.info("Just uploaded: {}", response.getBody());
    }
 
    protected void assertResponseIsOkAndContains(ResponseEntity<String> response, String substring) {
