@@ -82,7 +82,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(200, response.getStatusCode().value());
 
       testResult = response.getBody();
-
+      assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertTrue(testResult.isSuccess());
 
