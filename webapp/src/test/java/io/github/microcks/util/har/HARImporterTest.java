@@ -36,10 +36,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for class HARImporter.
  * @author laurent
  */
-public class HARImporterTest {
+class HARImporterTest {
 
    @Test
-   public void testSimpleHARImport() {
+   void testSimpleHARImport() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/api-pastry-2.0.har");

@@ -32,10 +32,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for class SwaggerImporter.
  * @author laurent
  */
-public class SwaggerImporterTest {
+class SwaggerImporterTest {
 
    @Test
-   public void testSimpleSwaggerImportYAML() {
+   void testSimpleSwaggerImportYAML() {
       SwaggerImporter importer = null;
       try {
          importer = new SwaggerImporter(
@@ -48,7 +48,7 @@ public class SwaggerImporterTest {
    }
 
    @Test
-   public void testSimpleSwaggerImportJSON() {
+   void testSimpleSwaggerImportJSON() {
       SwaggerImporter importer = null;
       try {
          importer = new SwaggerImporter(

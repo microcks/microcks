@@ -30,10 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * This is a test case for DispatchCriteriaHelper class.
  * @author laurent
  */
-public class DispatchCriteriaHelperTest {
+class DispatchCriteriaHelperTest {
 
    @Test
-   public void testExtractParamsFromURI() {
+   void testExtractParamsFromURI() {
       // Check with parameters.
       String requestPath = "/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available";
 

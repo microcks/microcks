@@ -30,10 +30,10 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * @author laurent
  */
-public class DBAPICollectionImporterTest {
+class DBAPICollectionImporterTest {
 
    @Test
-   public void testImportOriginal() {
+   void testImportOriginal() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -79,7 +79,7 @@ public class DBAPICollectionImporterTest {
    }
 
    @Test
-   public void testImportReorganised() {
+   void testImportReorganised() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(

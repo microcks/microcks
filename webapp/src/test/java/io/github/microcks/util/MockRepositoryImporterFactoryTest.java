@@ -39,10 +39,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * This is a test case for MockRepositoryImporterFactory.
  * @author laurent
  */
-public class MockRepositoryImporterFactoryTest {
+class MockRepositoryImporterFactoryTest {
 
    @Test
-   public void testGetMockRepositoryImporter() {
+   void testGetMockRepositoryImporter() {
 
       // Load a SoapUI file.
       File soapUIProject = new File("../samples/HelloService-soapui-project.xml");

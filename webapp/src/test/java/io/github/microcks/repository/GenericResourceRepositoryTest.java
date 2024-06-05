@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class GenericResourceRepositoryTest {
+class GenericResourceRepositoryTest {
 
    @Autowired
    GenericResourceRepository repository;
@@ -44,7 +44,7 @@ public class GenericResourceRepositoryTest {
    ServiceRepository serviceRepository;
 
    @Test
-   public void testCreateGenericResource() {
+   void testCreateGenericResource() {
 
       // Create a minimal service.
       Service service = new Service();

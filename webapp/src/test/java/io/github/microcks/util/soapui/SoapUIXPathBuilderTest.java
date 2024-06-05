@@ -28,10 +28,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for class SoapUIXPathBuilder class.
  * @author laurent
  */
-public class SoapUIXPathBuilderTest {
+class SoapUIXPathBuilderTest {
 
    @Test
-   public void testBuildXPathMatcherFromRulesSimple() {
+   void testBuildXPathMatcherFromRulesSimple() {
 
       String rules = "declare namespace ser='http://www.example.com/hello';\n" + "//ser:sayHello/name";
       String soap = "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:hel=\"http://www.example.com/hello\">\n"
@@ -57,7 +57,7 @@ public class SoapUIXPathBuilderTest {
    }
 
    @Test
-   public void testBuildXPathMatcherFromRulesFunction() {
+   void testBuildXPathMatcherFromRulesFunction() {
 
       String rules = "declare namespace ser='http://www.example.com/hello';\n"
             + "concat(//ser:sayHello/title/text(),' ',//ser:sayHello/name/text())";

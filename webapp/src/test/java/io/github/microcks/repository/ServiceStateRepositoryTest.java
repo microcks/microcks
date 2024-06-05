@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class ServiceStateRepositoryTest {
+class ServiceStateRepositoryTest {
 
    @Autowired
    ServiceStateRepository repository;
@@ -47,7 +47,7 @@ public class ServiceStateRepositoryTest {
    }
 
    @Test
-   public void testFindByServiceIdAndKey() {
+   void testFindByServiceIdAndKey() {
       ServiceState status = repository.findByServiceIdAndKey("azertyuiop", "foo");
       assertEquals("bar", status.getValue());
    }

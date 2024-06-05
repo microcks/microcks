@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This is a test case for class SimpleNotContainsAssertion.
  * @author laurent
  */
-public class SimpleNotContainsAssertionTest {
+class SimpleNotContainsAssertionTest {
 
    private String validSoap = """
          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
@@ -51,7 +51,7 @@ public class SimpleNotContainsAssertionTest {
          """;
 
    @Test
-   public void testExactMatch() {
+   void testExactMatch() {
       // Passing case.
       Map<String, String> configParams = Map.of(SimpleNotContainsAssertion.TOKEN_PARAM, "Hello Andrew!",
             SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "false");
@@ -70,7 +70,7 @@ public class SimpleNotContainsAssertionTest {
    }
 
    @Test
-   public void testCaseSensitiveness() {
+   void testCaseSensitiveness() {
       // Passing case.
       Map<String, String> configParams = Map.of(SimpleNotContainsAssertion.TOKEN_PARAM, "HeLlO AnDreW!",
             SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "true");
@@ -89,7 +89,7 @@ public class SimpleNotContainsAssertionTest {
    }
 
    @Test
-   public void testRegularExpression() {
+   void testRegularExpression() {
       // Passing case.
       Map<String, String> configParams = Map.of(SimpleNotContainsAssertion.TOKEN_PARAM, "Hello\\s(.*)!",
             SimpleNotContainsAssertion.IGNORE_CASE_PARAM, "false", SimpleNotContainsAssertion.USE_REGEX_PARAM, "true");

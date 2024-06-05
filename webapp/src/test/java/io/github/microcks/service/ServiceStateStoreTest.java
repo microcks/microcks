@@ -35,11 +35,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test case for ServiceStateStore class.
  * @author laurent
  */
-
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class ServiceStateStoreTest {
+class ServiceStateStoreTest {
 
    private static final String SERVICE_ID = "serviceId";
 
@@ -54,7 +53,7 @@ public class ServiceStateStoreTest {
    }
 
    @Test
-   public void testServiceStateStore() {
+   void testServiceStateStore() {
       // Test empty repo.
       String value = store.get("foo");
       assertNull(value);

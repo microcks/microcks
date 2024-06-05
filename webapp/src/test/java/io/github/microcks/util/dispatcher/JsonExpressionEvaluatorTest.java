@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * This is a test case for JsonExpressionEvaluator.
  * @author laurent
  */
-public class JsonExpressionEvaluatorTest {
+class JsonExpressionEvaluatorTest {
 
    private static final String BELGIUM_BEER = "{\"name\": \"Maredsous\","
          + "\"country\": \"Belgium\", \"type\": \"Brown ale\"," + "\"rating\": 4.2, \"status\": \"available\"}";
@@ -61,7 +61,7 @@ public class JsonExpressionEvaluatorTest {
          + "{\"name\": \"jean-pierre\", \"model\": \"Peugeot Traveller\", \"year\": 2017}]}";
 
    @Test
-   public void testEqualsOperatorDispatcher() throws Exception {
+   void testEqualsOperatorDispatcher() throws Exception {
 
       DispatchCases cases = new DispatchCases();
       Map<String, String> dispatchCases = new HashMap<>();
@@ -86,7 +86,7 @@ public class JsonExpressionEvaluatorTest {
    }
 
    @Test
-   public void testRangeOperatorDispatcher() throws Exception {
+   void testRangeOperatorDispatcher() throws Exception {
       DispatchCases cases = new DispatchCases();
       Map<String, String> dispatchCases = new HashMap<>();
       dispatchCases.put("[4.2;5.0]", "Acceptable");
@@ -110,7 +110,7 @@ public class JsonExpressionEvaluatorTest {
    }
 
    @Test
-   public void testRegexpOperatorDispatcher() throws Exception {
+   void testRegexpOperatorDispatcher() throws Exception {
       DispatchCases cases = new DispatchCases();
       Map<String, String> dispatchCases = new HashMap<>();
       dispatchCases.put(".*[Aa][Ll][Ee].*", "OK");
@@ -133,7 +133,7 @@ public class JsonExpressionEvaluatorTest {
    }
 
    @Test
-   public void testSizeOperatorDispatcher() throws Exception {
+   void testSizeOperatorDispatcher() throws Exception {
       DispatchCases cases = new DispatchCases();
       Map<String, String> dispatchCases = new HashMap<>();
       dispatchCases.put("[0;2]", "Standard");
@@ -157,7 +157,7 @@ public class JsonExpressionEvaluatorTest {
    }
 
    @Test
-   public void testPresenceOperatorDispatcher() throws Exception {
+   void testPresenceOperatorDispatcher() throws Exception {
       DispatchCases cases = new DispatchCases();
       Map<String, String> dispatchCases = new HashMap<>();
       dispatchCases.put("found", "Extra");

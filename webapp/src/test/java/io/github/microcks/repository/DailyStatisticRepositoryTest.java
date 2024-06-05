@@ -33,7 +33,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class DailyStatisticRepositoryTest {
+class DailyStatisticRepositoryTest {
 
    @Autowired
    DailyStatisticRepository repository;
@@ -55,7 +55,7 @@ public class DailyStatisticRepositoryTest {
    }
 
    @Test
-   public void testFindByDayAndServiceNameAndServiceVersion() {
+   void testFindByDayAndServiceNameAndServiceVersion() {
       // Retrieve a stat using theses 3 criteria.
       DailyStatistic stat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.0")
             .get(0);

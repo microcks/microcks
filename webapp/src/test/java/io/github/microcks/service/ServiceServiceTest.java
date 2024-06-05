@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class ServiceServiceTest {
+class ServiceServiceTest {
 
    @Autowired
    private ServiceService service;
@@ -67,7 +67,7 @@ public class ServiceServiceTest {
    private ResponseRepository responseRepository;
 
    @Test
-   public void testImportServiceDefinition() {
+   void testImportServiceDefinition() {
       List<Service> services = null;
       try {
          File artifactFile = new File("target/test-classes/io/github/microcks/service/weather-forecast-openapi.yaml");
@@ -117,7 +117,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testImportServiceDefinitionFromGitLabURL() {
+   void testImportServiceDefinitionFromGitLabURL() {
       List<Service> services = null;
       try {
          services = service.importServiceDefinition(
@@ -181,7 +181,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testImportServiceDefinitionFromGitLabURL2() {
+   void testImportServiceDefinitionFromGitLabURL2() {
       List<String> resourceNames = List.of("OpenAPI Car API-1.0.0.yaml",
             "OpenAPI Car API-1.0.0-paths-owner--owner--path.yaml",
             "OpenAPI Car API-1.0.0-paths-components-schemas-Error.yaml",
@@ -290,7 +290,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testImportServiceDefinitionMainAndSecondary() {
+   void testImportServiceDefinitionMainAndSecondary() {
       List<Service> services = null;
       try {
          File artifactFile = new File(
@@ -388,7 +388,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testImportServiceDefinitionMainGraphQLAndSecondaryPostman() {
+   void testImportServiceDefinitionMainGraphQLAndSecondaryPostman() {
       List<Service> services = null;
       try {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
@@ -453,7 +453,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testImportServiceDefinitionMainAndSecondariesWithAPIMetadata() {
+   void testImportServiceDefinitionMainAndSecondariesWithAPIMetadata() {
       List<Service> services = null;
       try {
          File artifactFile = new File(
@@ -503,7 +503,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testImportServiceDefinitionMainGraphQLAndSecondaryHAR() {
+   void testImportServiceDefinitionMainGraphQLAndSecondaryHAR() {
       List<Service> services = null;
       try {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
@@ -569,7 +569,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testCreateGenericResourceService() {
+   void testCreateGenericResourceService() {
       Service created = null;
       try {
          created = service.createGenericResourceService("Order Service", "1.0", "order", null);
@@ -612,7 +612,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testCreateGenericResourceServiceFailure() throws EntityAlreadyExistsException {
+   void testCreateGenericResourceServiceFailure() throws EntityAlreadyExistsException {
       assertThrows(EntityAlreadyExistsException.class, () -> {
          try {
             Service first = service.createGenericResourceService("Order Service", "1.0", "order", null);
@@ -624,7 +624,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testCreateGenericResourceServiceWithReference() {
+   void testCreateGenericResourceServiceWithReference() {
       Service created = null;
       try {
          created = service.createGenericResourceService("Order Service", "1.0", "order",
@@ -648,7 +648,7 @@ public class ServiceServiceTest {
    }
 
    @Test
-   public void testCreateGenericEventServiceWithReference() {
+   void testCreateGenericEventServiceWithReference() {
       Service created = null;
       try {
          created = service.createGenericEventService("Order Service", "2.0", "order",

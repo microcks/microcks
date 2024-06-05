@@ -33,10 +33,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for class ScriptEngineBinder class.
  * @author laurent
  */
-public class ScriptEngineBinderTest {
+class ScriptEngineBinderTest {
 
    @Test
-   public void testRequestContentIsBound() {
+   void testRequestContentIsBound() {
       String script = """
             return mockRequest.requestContent;
             """;
@@ -57,7 +57,7 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testRequestContentHeadersAreBound() {
+   void testRequestContentHeadersAreBound() {
       String script = """
             def headers = mockRequest.getRequestHeaders()
             log.info("headers: " + headers)
@@ -82,7 +82,7 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testRequestContextIsModified() {
+   void testRequestContextIsModified() {
       String script = """
             requestContext.foo = "bar";
             return mockRequest.requestContent;
@@ -107,7 +107,7 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testStateStoreIsBoundAndAccessed() {
+   void testStateStoreIsBoundAndAccessed() {
       String script = """
             def foo = store.get("foo");
             def bar = store.put("bar", "barValue");
@@ -160,7 +160,7 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testMicrocksXmlHolder() {
+   void testMicrocksXmlHolder() {
       String body = """
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
                 <soapenv:Header/>
@@ -202,7 +202,7 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testEviwareXmlHolder() {
+   void testEviwareXmlHolder() {
       String body = """
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
                 <soapenv:Header/>

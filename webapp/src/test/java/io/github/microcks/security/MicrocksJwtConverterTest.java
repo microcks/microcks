@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * This is a test case for MicrocksJwtConverter class.
  * @author laurent
  */
-public class MicrocksJwtConverterTest {
+class MicrocksJwtConverterTest {
 
    /**
     * { "alg": "RS256", "typ": "JWT", "kid": "bMWP9GYcT9PpSPKhkBWD9mOZeHq1YQKHq4JXTaxzd-o" } { "exp": 1695715998, "iat":
@@ -52,7 +52,7 @@ public class MicrocksJwtConverterTest {
    private static final String DECODING_ERROR_MESSAGE_TEMPLATE = "An error occurred while attempting to decode the Jwt: %s";
 
    @Test
-   public void testConvert() {
+   void testConvert() {
       MicrocksJwtConverter converter = new MicrocksJwtConverter();
       Jwt jwt = null;
 

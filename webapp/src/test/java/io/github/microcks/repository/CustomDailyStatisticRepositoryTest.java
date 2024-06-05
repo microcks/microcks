@@ -36,7 +36,7 @@ import java.util.Map;
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class CustomDailyStatisticRepositoryTest {
+class CustomDailyStatisticRepositoryTest {
 
    @Autowired
    DailyStatisticRepository repository;
@@ -62,7 +62,7 @@ public class CustomDailyStatisticRepositoryTest {
    }
 
    @Test
-   public void testAggregateDailyStatistics() {
+   void testAggregateDailyStatistics() {
       try {
          DailyStatistic stat = repository.aggregateDailyStatistics("20140930");
       } catch (ConverterNotFoundException cvnfe) {

@@ -45,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class ImportExportServiceTest {
+class ImportExportServiceTest {
 
    @Autowired
    private ImportExportService service;
@@ -89,7 +89,7 @@ public class ImportExportServiceTest {
    }
 
    @Test
-   public void testExportRepository() {
+   void testExportRepository() {
       String result = service.exportRepository(ids, "json");
 
       ObjectMapper mapper = new ObjectMapper();
@@ -128,7 +128,7 @@ public class ImportExportServiceTest {
    }
 
    @Test
-   public void testImportRepository() {
+   void testImportRepository() {
       // Setup and export result.
       String json = "{\"services\":[{\"name\":\"Imp1\",\"version\":\"1.2\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":25638445759706201468670970602},"
             + "{\"name\":\"Imp2\",\"version\":\"1.1\",\"xmlNS\":null,\"type\":null,\"operations\":[],\"id\":25638445759706201468670970603}], "

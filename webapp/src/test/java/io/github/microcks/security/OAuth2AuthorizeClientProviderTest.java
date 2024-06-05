@@ -43,7 +43,7 @@ public class OAuth2AuthorizeClientProviderTest {
          .withRealmImportFile("io/github/microcks/security/myrealm-realm.json");
 
    @Test
-   public void testResourceOwnerPassword() {
+   void testResourceOwnerPassword() {
       OAuth2AuthorizedClientProvider provider = new OAuth2AuthorizedClientProvider();
 
       OAuth2ClientContext clientContext = new OAuth2ClientContext();
@@ -69,7 +69,7 @@ public class OAuth2AuthorizeClientProviderTest {
    }
 
    @Test
-   public void testClientCredentials() {
+   void testClientCredentials() {
       OAuth2AuthorizedClientProvider provider = new OAuth2AuthorizedClientProvider();
 
       OAuth2ClientContext clientContext = new OAuth2ClientContext();
@@ -93,7 +93,7 @@ public class OAuth2AuthorizeClientProviderTest {
    }
 
    @Test
-   public void testClientCredentialsFailure() throws AuthorizationException {
+   void testClientCredentialsFailure() throws AuthorizationException {
       assertThrows(AuthorizationException.class, () -> {
          OAuth2AuthorizedClientProvider provider = new OAuth2AuthorizedClientProvider();
 

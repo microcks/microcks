@@ -36,10 +36,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for class SoapUIProjectImporter.
  * @author laurent
  */
-public class SoapUIProjectImporterTest {
+class SoapUIProjectImporterTest {
 
    @Test
-   public void testSimpleProjectImport() {
+   void testSimpleProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -118,7 +118,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleScriptWithSOAPFaultProjectImport() {
+   void testSimpleScriptWithSOAPFaultProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -197,7 +197,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleScriptProjectImport() {
+   void testSimpleScriptProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -271,7 +271,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testComplexProjectImport() {
+   void testComplexProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -313,7 +313,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleRestProjectImport() {
+   void testSimpleRestProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -437,7 +437,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleProjectNoVersionImport() {
+   void testSimpleProjectNoVersionImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -458,7 +458,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testHelloAPIProjectImport() {
+   void testHelloAPIProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -477,7 +477,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testMultipleInterfacesProjectImport() {
+   void testMultipleInterfacesProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -513,7 +513,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testPartNamesCorrectResolution() {
+   void testPartNamesCorrectResolution() {
       // Initialized from https://github.com/microcks/microcks/issues/680.
       SoapUIProjectImporter importer = null;
       try {

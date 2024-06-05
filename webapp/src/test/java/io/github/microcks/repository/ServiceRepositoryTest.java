@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class ServiceRepositoryTest {
+class ServiceRepositoryTest {
 
    @Autowired
    ServiceRepository repository;
@@ -63,7 +63,7 @@ public class ServiceRepositoryTest {
    }
 
    @Test
-   public void testFindOne() {
+   void testFindOne() {
       Service service = repository.findById(serviceId).orElse(null);
       assertNotNull(service);
       assertEquals("MyService-hello", service.getName());
@@ -71,7 +71,7 @@ public class ServiceRepositoryTest {
    }
 
    @Test
-   public void testFindByNameAndVersion() {
+   void testFindByNameAndVersion() {
       Service service = repository.findByNameAndVersion("HelloWorld", "1.2");
       assertNotNull(service);
       assertEquals("HelloWorld", service.getName());
@@ -79,7 +79,7 @@ public class ServiceRepositoryTest {
    }
 
    @Test
-   public void testFindByNameLike() {
+   void testFindByNameLike() {
       List<Service> services = repository.findByNameLike("world");
       assertTrue(!services.isEmpty());
       assertEquals(2, services.size());

@@ -37,10 +37,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for class PostmanCollectionImporter.
  * @author laurent
  */
-public class PostmanCollectionImporterTest {
+class PostmanCollectionImporterTest {
 
    @Test
-   public void testSimpleProjectImportV2() {
+   void testSimpleProjectImportV2() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -148,7 +148,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testSimpleProjectImportV21() {
+   void testSimpleProjectImportV21() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -255,7 +255,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testTestAPIImport() {
+   void testTestAPIImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -416,7 +416,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testTestAPINoVersionImport() {
+   void testTestAPINoVersionImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -437,7 +437,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testTestAPIMalformedVersionImport() {
+   void testTestAPIMalformedVersionImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -458,7 +458,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testPetstoreWithTrailingDollarImport() {
+   void testPetstoreWithTrailingDollarImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -526,7 +526,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testPetstoreWithTrailingSlashImport() {
+   void testPetstoreWithTrailingSlashImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -575,7 +575,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testGraphQLCollectionImport() {
+   void testGraphQLCollectionImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(

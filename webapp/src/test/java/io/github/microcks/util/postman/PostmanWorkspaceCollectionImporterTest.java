@@ -37,10 +37,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for class PostmanWorkspaceCollectionImporter.
  * @author laurent
  */
-public class PostmanWorkspaceCollectionImporterTest {
+class PostmanWorkspaceCollectionImporterTest {
 
    @Test
-   public void testSimpleProjectImportV21() {
+   void testSimpleProjectImportV21() {
       PostmanWorkspaceCollectionImporter importer = null;
       try {
          importer = new PostmanWorkspaceCollectionImporter(

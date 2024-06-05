@@ -34,10 +34,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for GraphQLImporter class.
  * @author laurent
  */
-public class GraphQLImporterTest {
+class GraphQLImporterTest {
 
    @Test
-   public void testSimpleGraphQLImport() {
+   void testSimpleGraphQLImport() {
       GraphQLImporter importer = null;
       try {
          importer = new GraphQLImporter("target/test-classes/io/github/microcks/util/graphql/films.graphql");

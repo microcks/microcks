@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class TestResultRepositoryTest {
+class TestResultRepositoryTest {
 
    @Autowired
    ServiceRepository serviceRepository;
@@ -75,7 +75,7 @@ public class TestResultRepositoryTest {
    }
 
    @Test
-   public void testFindByService() {
+   void testFindByService() {
       long count = repository.countByServiceId(serviceId);
       assertEquals(2, count);
       List<TestResult> results = repository.findByServiceId(serviceId);
@@ -83,7 +83,7 @@ public class TestResultRepositoryTest {
    }
 
    @Test
-   public void testFindLastOnesForService() {
+   void testFindLastOnesForService() {
       List<TestResult> older = repository.findByServiceId(serviceId,
             PageRequest.of(0, 2, Sort.Direction.DESC, "testNumber"));
       assertEquals(2, older.size());

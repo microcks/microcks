@@ -36,10 +36,10 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for ProtobufImporter class.
  * @author laurent
  */
-public class ProtobufImporterTest {
+class ProtobufImporterTest {
 
    @Test
-   public void testSimpleProtobufImport() {
+   void testSimpleProtobufImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", null);

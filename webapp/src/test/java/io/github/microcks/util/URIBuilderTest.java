@@ -33,10 +33,10 @@ import static org.junit.jupiter.api.Assertions.fail;
  * This is a Test for URIBuilder class.
  * @laurent
  */
-public class URIBuilderTest {
+class URIBuilderTest {
 
    @Test
-   public void testBuildURIFromPatternWithNoParameters() {
+   void testBuildURIFromPatternWithNoParameters() {
       String pattern = "http://localhost:8080/blog/{year}/{month}";
       try {
          String uri = URIBuilder.buildURIFromPattern(pattern, new ArrayList<Parameter>());
@@ -46,7 +46,7 @@ public class URIBuilderTest {
    }
 
    @Test
-   public void testBuildURIFromPattern() {
+   void testBuildURIFromPattern() {
       // Prepare a bunch of parameters.
       Parameter yearParam = new Parameter();
       yearParam.setName("year");
@@ -84,7 +84,7 @@ public class URIBuilderTest {
    }
 
    @Test
-   public void testBuildURIFromPatternWithEncoding() {
+   void testBuildURIFromPatternWithEncoding() {
       // Prepare a bunch of parameters.
       Parameter nameParam = new Parameter();
       nameParam.setName("name");
@@ -110,7 +110,7 @@ public class URIBuilderTest {
    }
 
    @Test
-   public void testBuildURIFromPatternWithMap() {
+   void testBuildURIFromPatternWithMap() {
       // Prepare a bunch of parameters.
       Map<String, String> parameters = new HashMap<>();
       parameters.put("year", "2018");
@@ -132,7 +132,7 @@ public class URIBuilderTest {
    }
 
    @Test
-   public void testBuildURIFromPatternWithMapWithParamsArray() {
+   void testBuildURIFromPatternWithMapWithParamsArray() {
       // Prepare a bunch of parameters.
       Multimap<String, String> parameters = ArrayListMultimap.create();
       parameters.put("year", "2018");

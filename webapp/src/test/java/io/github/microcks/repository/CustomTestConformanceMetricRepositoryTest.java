@@ -35,13 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class CustomTestConformanceMetricRepositoryTest {
+class CustomTestConformanceMetricRepositoryTest {
 
    @Autowired
    TestConformanceMetricRepository repository;
 
    @Test
-   public void testAggregateTestMetricCoverage() {
+   void testAggregateTestMetricCoverage() {
       // Save a bunch of coverage metrics.
       TestConformanceMetric m1 = new TestConformanceMetric();
       m1.setAggregationLabelValue("domain1");

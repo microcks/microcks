@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ListenerTestsConfiguration.class })
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class DailyStatisticsFeederTest {
+class DailyStatisticsFeederTest {
 
    @Autowired
    DailyStatisticsFeeder feeder;
@@ -48,7 +48,7 @@ public class DailyStatisticsFeederTest {
    DailyStatisticRepository statisticsRepository;
 
    @Test
-   public void testOnApplicationEvent() {
+   void testOnApplicationEvent() {
       Calendar today = Calendar.getInstance();
       MockInvocationEvent event = new MockInvocationEvent(this, "TestService1", "1.0", "123456789", today.getTime(),
             100);
@@ -66,7 +66,7 @@ public class DailyStatisticsFeederTest {
       assertEquals("TestService1", stat.getServiceName());
       assertEquals("1.0", stat.getServiceVersion());
       assertEquals(1, stat.getDailyCount());
-      assertEquals(new Integer(1), stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
+      assertEquals(1, stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
 
       // Fire event a second time.
       feeder.onApplicationEvent(event);
@@ -78,6 +78,6 @@ public class DailyStatisticsFeederTest {
       assertEquals("TestService1", stat.getServiceName());
       assertEquals("1.0", stat.getServiceVersion());
       assertEquals(2, stat.getDailyCount());
-      assertEquals(new Integer(2), stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
+      assertEquals(2, stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
    }
 }

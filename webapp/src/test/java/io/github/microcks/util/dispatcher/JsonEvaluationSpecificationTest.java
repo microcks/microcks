@@ -27,13 +27,13 @@ import static org.junit.jupiter.api.Assertions.*;
  * This is a test case for JsonEvaluationSpecification class.
  * @author laurent
  */
-public class JsonEvaluationSpecificationTest {
+class JsonEvaluationSpecificationTest {
 
    private final static String JSON_PAYLOAD = "{\"exp\": \"/type\", \"operator\": \"range\", \"cases\": {"
          + "\".*[Aa][Ll][Ee].*\": \"OK\", " + "\"default\": \"Bad\"" + "}}";
 
    @Test
-   public void testJsonSerialization() {
+   void testJsonSerialization() {
       DispatchCases cases = new DispatchCases();
       Map<String, String> dispatchCases = new HashMap<>();
       dispatchCases.put(".*[Aa][Ll][Ee].*", "OK");
