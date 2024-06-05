@@ -23,6 +23,7 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
@@ -35,6 +36,8 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.util.JsonFormat;
 import io.github.microcks.util.grpc.GrpcUtil;
 import io.github.microcks.util.script.ScriptEngineBinder;
+import io.github.microcks.service.ServiceStateStore;
+
 import io.grpc.ServerCallHandler;
 import io.grpc.Status;
 import io.grpc.stub.ServerCalls;
@@ -59,26 +62,30 @@ import java.util.Map;
 public class GrpcServerCallHandler {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(GrpcServerCallHandler.class);
+   private static final Logger log = LoggerFactory.getLogger(GrpcServerCallHandler.class);
 
    private final ServiceRepository serviceRepository;
+   private final ServiceStateRepository serviceStateRepository;
    private final ResourceRepository resourceRepository;
    private final ResponseRepository responseRepository;
    private final ApplicationContext applicationContext;
 
    @Value("${mocks.enable-invocation-stats}")
-   private Boolean enableInvocationStats = null;
+   private Boolean enableInvocationStats;
 
    /**
     * Build a new GrpcServerCallHandler with all the repositories it needs and application context.
-    * @param serviceRepository  Repository for getting service definitions
-    * @param resourceRepository Repository for getting service resources definitions
-    * @param responseRepository Repository for getting mock responses definitions
-    * @param applicationContext The Spring current application context
+    * @param serviceRepository      Repository for getting service definitions
+    * @param serviceStateRepository Repository for getting service state
+    * @param resourceRepository     Repository for getting service resources definitions
+    * @param responseRepository     Repository for getting mock responses definitions
+    * @param applicationContext     The Spring current application context
     */
-   public GrpcServerCallHandler(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         ResponseRepository responseRepository, ApplicationContext applicationContext) {
+   public GrpcServerCallHandler(ServiceRepository serviceRepository, ServiceStateRepository serviceStateRepository,
+         ResourceRepository resourceRepository, ResponseRepository responseRepository,
+         ApplicationContext applicationContext) {
       this.serviceRepository = serviceRepository;
+      this.serviceStateRepository = serviceStateRepository;
       this.resourceRepository = resourceRepository;
       this.responseRepository = responseRepository;
       this.applicationContext = applicationContext;
@@ -179,7 +186,8 @@ public class GrpcServerCallHandler {
                log.debug("Request body: {}", jsonBody);
 
                //
-               DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules, jsonBody);
+               DispatchContext dispatchContext = computeDispatchCriteria(service, dispatcher, dispatcherRules,
+                     jsonBody);
                log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
                // For now - regarding the available dispatchers - we only dealing with response names.
@@ -216,7 +224,7 @@ public class GrpcServerCallHandler {
                   }
 
                   // Publish an invocation event before returning if enabled.
-                  if (enableInvocationStats) {
+                  if (Boolean.TRUE.equals(enableInvocationStats)) {
                      MockControllerCommons.publishMockInvocation(applicationContext, this, service, response,
                            startTime);
                   }
@@ -246,7 +254,8 @@ public class GrpcServerCallHandler {
       }
 
       /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
-      private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules, String jsonBody) {
+      private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
+            String jsonBody) {
          String dispatchCriteria = null;
          Map<String, Object> requestContext = null;
 
@@ -269,7 +278,8 @@ public class GrpcServerCallHandler {
                   try {
                      // Evaluating request with script coming from operation dispatcher rules.
                      ScriptEngine se = sem.getEngineByExtension("groovy");
-                     ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext);
+                     ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext,
+                           new ServiceStateStore(serviceStateRepository, service.getId()));
                      dispatchCriteria = (String) se.eval(dispatcherRules);
                   } catch (Exception e) {
                      log.error("Error during Script evaluation", e);

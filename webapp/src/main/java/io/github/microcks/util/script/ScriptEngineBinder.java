@@ -15,6 +15,8 @@
  */
 package io.github.microcks.util.script;
 
+import io.github.microcks.service.StateStore;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,18 +34,23 @@ import java.util.Map;
 public class ScriptEngineBinder {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ScriptEngineBinder.class);
+   private static final Logger log = LoggerFactory.getLogger(ScriptEngineBinder.class);
 
+   /** Private constructor to hide the implicit public one. */
+   private ScriptEngineBinder() {
+   }
 
    /**
     * Create and bind a SoapUI environment for a ScriptEngine.
     * @param engine         The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
     * @param requestContext The execution context of this request
+    * @param stateStore     A store to save/get state from script
     */
-   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext) {
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
+         StateStore stateStore) {
       // Build a map of header values.
-      bindEnvironment(engine, requestContent, requestContext, null);
+      bindEnvironment(engine, requestContent, requestContext, stateStore, null);
    }
 
    /**
@@ -51,10 +58,11 @@ public class ScriptEngineBinder {
     * @param engine         The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
     * @param requestContext The execution context of this request
+    * @param stateStore     A store to save/get state from script
     * @param request        The wrapped incoming servlet request.
     */
    public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
-         HttpServletRequest request) {
+         StateStore stateStore, HttpServletRequest request) {
       // Build a map of header values.
       StringToStringsMap headers = new HttpHeadersStringToStringsMap();
       if (request != null) {
@@ -72,6 +80,7 @@ public class ScriptEngineBinder {
       bindings.put("mockRequest", mockRequest);
       bindings.put("log", log);
       bindings.put("requestContext", requestContext);
+      bindings.put("store", stateStore);
       engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
    }
 
