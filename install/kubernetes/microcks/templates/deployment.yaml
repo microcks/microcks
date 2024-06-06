@@ -309,6 +309,7 @@ spec:
       containers:
       - name: mongodb
         image: {{ .Values.mongodb.image }}
+        args: ["--dbpath","/var/lib/mongodb/data"]
         ports:
         - containerPort: 27017
           protocol: TCP
@@ -320,7 +321,7 @@ spec:
             - "/bin/sh"
             - "-i"
             - "-c"
-            - mongo 127.0.0.1:27017/$MONGODB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
+            - mongo 127.0.0.1:27017/$MONGO_INITDB_DATABASE -u $MONGODB_USER -p $MONGODB_PASSWORD
               --eval="quit()"
         livenessProbe:
           timeoutSeconds: 1
@@ -338,18 +339,25 @@ spec:
             secretKeyRef:
               key: password
               name: "{{ .Values.appName }}-mongodb-connection"
-        - name: MONGODB_ADMIN_PASSWORD
+        - name: MONGO_INITDB_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              key: adminUsername
+              name: "{{ .Values.appName }}-mongodb-connection"
+        - name: MONGO_INITDB_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
               key: adminPassword
               name: "{{ .Values.appName }}-mongodb-connection"
-        - name: MONGODB_DATABASE
+        - name: MONGO_INITDB_DATABASE
           value: "{{ .Values.appName }}"
         resources:
           {{- toYaml .Values.mongodb.resources | nindent 10 }}
         volumeMounts:
         - name: "{{ .Values.appName }}-mongodb-data"
           mountPath: "/var/lib/mongodb/data"
+        - name: custom-init-scripts
+          mountPath: /docker-entrypoint-initdb.d
         terminationMessagePath: "/dev/termination-log"
         imagePullPolicy: IfNotPresent
         securityContext:
@@ -364,6 +372,9 @@ spec:
         emptyDir:
           medium: ''
         {{- end }}
+      - name: custom-init-scripts
+        configMap:
+          name: "{{ .Values.appName }}-mongodb-init"
       restartPolicy: Always
       dnsPolicy: ClusterFirst
 {{- end }}
