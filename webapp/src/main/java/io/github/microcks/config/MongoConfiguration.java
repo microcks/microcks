@@ -55,7 +55,7 @@ public class MongoConfiguration {
 
    @EventListener(ContextRefreshedEvent.class)
    public void initIndicesAfterStartup() {
-      log.info("Ensuring TTL index for ServiceStatus");
+      log.info("Ensuring TTL index for ServiceState");
       MappingContext<? extends MongoPersistentEntity<?>, MongoPersistentProperty> mappingContext = mongoTemplate
             .getConverter().getMappingContext();
 
