@@ -437,6 +437,17 @@ data:
       ],
       "identityProviders": [
       ],
+      "requiredActions": [
+        {
+          "alias": "VERIFY_PROFILE",
+          "name": "Verify Profile",
+          "providerId": "VERIFY_PROFILE",
+          "enabled": false,
+          "defaultAction": false,
+          "priority": 90,
+          "config": {}
+        }
+      ],
       "keycloakVersion": "10.0.1"
     }
 {{- end }}

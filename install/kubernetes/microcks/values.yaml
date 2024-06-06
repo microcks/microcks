@@ -120,7 +120,7 @@ keycloak:
   # Unless you uncomment following line and set class, persistent volume claim is created
   # with no storage class and relies on cluster default one.
   #storageClassName: my-awesome-class
-  postgresImage: centos/postgresql-95-centos7:latest
+  postgresImage: library/postgres:16.3-alpine
   username: userP
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.

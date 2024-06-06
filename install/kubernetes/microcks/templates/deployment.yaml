@@ -559,16 +559,11 @@ spec:
       annotations:
         {{- include "microcks-common-annotations" . | nindent 8 }}
     spec:
-      {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
-      securityContext:
-        runAsUser: 26
-        runAsGroup: 26
-        fsGroup: 26
-      {{- end }}
       terminationGracePeriodSeconds: 60
       containers:
       - name: keycloak-postgresql
         image: {{ .Values.keycloak.postgresImage }}
+        args: ["-c", "max_connections=100", "-c", "shared_buffers=12MB"]
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 5432
@@ -581,33 +576,28 @@ spec:
             - "/bin/sh"
             - "-i"
             - "-c"
-            - psql 127.0.0.1 -U ${POSTGRESQL_USER} -q -d ${POSTGRESQL_DATABASE}
-              -c 'SELECT 1'
+            - psql 127.0.0.1 -U ${POSTGRES_USER} -q -d ${POSTGRES_DB} -c 'SELECT 1'
         livenessProbe:
           timeoutSeconds: 1
           initialDelaySeconds: 30
           tcpSocket:
             port: 5432
         env:
-        - name: POSTGRESQL_USER
+        - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
               key: postgresUsername
               name: "{{ .Values.appName }}-keycloak-admin"
-        - name: POSTGRESQL_PASSWORD
+        - name: POSTGRES_PASSWORD
           valueFrom:
             secretKeyRef:
               key: postgresPassword
               name: "{{ .Values.appName }}-keycloak-admin"
-        - name: POSTGRESQL_DATABASE
+        - name: POSTGRES_DB
           value: root
-        - name: POSTGRESQL_MAX_CONNECTIONS
-          value: '100'
-        - name: POSTGRESQL_SHARED_BUFFERS
-          value: 12MB
         volumeMounts:
           - name: "{{ .Values.appName }}-keycloak-postgresql-data"
-            mountPath: "/var/lib/pgsql/data"
+            mountPath: "/var/lib/postgresql/data"
       volumes:
       - name: "{{ .Values.appName }}-keycloak-postgresql-data"
         {{- if .Values.keycloak.persistent }}
