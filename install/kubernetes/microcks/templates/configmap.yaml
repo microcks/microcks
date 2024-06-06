@@ -215,7 +215,7 @@ metadata:
   name: "{{ .Values.appName }}-mongodb-init"
   labels:
     app: "{{ .Values.appName }}"
-    container: async-minion
+    container: mongodb
     group: microcks
     {{- include "microcks-common-labels" . | nindent 4 }}
   annotations:
