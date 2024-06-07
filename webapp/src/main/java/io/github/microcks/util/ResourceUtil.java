@@ -39,14 +39,17 @@ import java.util.stream.Stream;
  */
 public class ResourceUtil {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ResourceUtil.class);
-   private static final String SERVICE_PATTERN = "\\{service\\}";
-   private static final String VERSION_PATTERN = "\\{version\\}";
-   private static final String RESOURCE_PATTERN = "\\{resource\\}";
-   private static final String SCHEMA_PATTERN = "\\{resourceSchema\\}";
+   private ResourceUtil() {
+      // Private constructor to hide implicit public one.
+   }
 
-   private static final String REFERENCE_PATTERN = "\\{reference\\}";
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(ResourceUtil.class);
+   private static final String SERVICE_PLACEHOLDER = "{service}";
+   private static final String VERSION_PLACEHOLDER = "{version}";
+   private static final String RESOURCE_PLACEHOLDER = "{resource}";
+   private static final String SCHEMA_PLACEHOLDER = "{resourceSchema}";
+   private static final String REFERENCE_PLACEHOLDER = "{reference}";
 
    /**
     * Load a resource from classspath using its path.
@@ -67,7 +70,7 @@ public class ResourceUtil {
     * @param resource         The API resource
     * @param referenceSchema  An optional reference API schema
     * @param referencePayload An optional reference resource payload
-    * @return
+    * @return The stream content with placeholders replaced by actual values.
     */
    public static String replaceTemplatesInSpecStream(InputStream stream, Service service, String resource,
          JsonNode referenceSchema, String referencePayload) {
@@ -84,10 +87,10 @@ public class ResourceUtil {
    /** Do the replacement within a given stream line. */
    private static String replaceInLine(String line, Service service, String resource, JsonNode referenceSchema,
          String referencePayload) {
-      line = line.replaceAll(SERVICE_PATTERN, service.getName());
-      line = line.replaceAll(VERSION_PATTERN, service.getVersion());
-      line = line.replaceAll(RESOURCE_PATTERN, resource);
-      if (line.matches(".*" + SCHEMA_PATTERN + ".*")) {
+      line = line.replace(SERVICE_PLACEHOLDER, service.getName());
+      line = line.replace(VERSION_PLACEHOLDER, service.getVersion());
+      line = line.replace(RESOURCE_PLACEHOLDER, resource);
+      if (line.contains(SCHEMA_PLACEHOLDER) ) {
          if (referenceSchema != null) {
             // Serialize reference schema and replace it.
             try {
@@ -95,23 +98,23 @@ public class ResourceUtil {
                      new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
                            .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).disable(YAMLGenerator.Feature.INDENT_ARRAYS));
                String schema = mapper.writeValueAsString(referenceSchema);
-               log.debug("schema: " + schema);
-               line = line.replaceAll(SCHEMA_PATTERN, schema.replaceAll("\\n", "\n      "));
+               log.debug("Reference schema: {}", schema);
+               line = line.replace(SCHEMA_PLACEHOLDER, schema.replace("\n", "\n      "));
             } catch (Exception e) {
                log.warn("Exception while replacing resource schema", e);
             }
          } else {
             // Stick to the default: an empty type definition.
-            line = line.replaceAll(SCHEMA_PATTERN, "");
+            line = line.replace(SCHEMA_PLACEHOLDER, "");
          }
       }
-      if (line.matches(".*" + REFERENCE_PATTERN + ".*")) {
+      if (line.contains(REFERENCE_PLACEHOLDER)) {
          if (referencePayload != null) {
             // Inline Json and escape quotes.
-            line = line.replaceAll(REFERENCE_PATTERN, referencePayload.replaceAll("\\n", ""));
+            line = line.replace(REFERENCE_PLACEHOLDER, referencePayload.replace("\n", ""));
          } else {
             // Stick to the default: an empty reference.
-            line = line.replaceAll(REFERENCE_PATTERN, "");
+            line = line.replace(REFERENCE_PLACEHOLDER, "");
          }
       }
       return line;
