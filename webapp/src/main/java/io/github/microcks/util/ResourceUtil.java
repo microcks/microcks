@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 /**
  * Utility class to retrieve classpath resource and replace content in template resources (like OpenAPI, AsyncAPI spec
  * templates).
+ *
  * @author laurent
  */
 public class ResourceUtil {
@@ -43,7 +44,9 @@ public class ResourceUtil {
       // Private constructor to hide implicit public one.
    }
 
-   /** A simple logger for diagnostic messages. */
+   /**
+    * A simple logger for diagnostic messages.
+    */
    private static final Logger log = LoggerFactory.getLogger(ResourceUtil.class);
    private static final String SERVICE_PLACEHOLDER = "{service}";
    private static final String VERSION_PLACEHOLDER = "{version}";
@@ -53,6 +56,7 @@ public class ResourceUtil {
 
    /**
     * Load a resource from classspath using its path.
+    *
     * @param resourcePath The path of resource to load.
     * @return The resource input stream
     * @throws IOException if resource cannot be found or opened
@@ -65,6 +69,7 @@ public class ResourceUtil {
    /**
     * Given a resource stream holding placeholder patterns (aka {placeholder}), replace the patterns with actual value
     * coming from Service, an API resource name, an API schema and a reference payload.
+    *
     * @param stream           The stream to scan for patterns and substitute in.
     * @param service          The Service corresponding to API
     * @param resource         The API resource
@@ -84,7 +89,9 @@ public class ResourceUtil {
       return writer.toString();
    }
 
-   /** Do the replacement within a given stream line. */
+   /**
+    * Do the replacement within a given stream line.
+    */
    private static String replaceInLine(String line, Service service, String resource, JsonNode referenceSchema,
          String referencePayload) {
       line = line.replace(SERVICE_PLACEHOLDER, service.getName());
@@ -98,8 +105,13 @@ public class ResourceUtil {
                      new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
                            .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES).disable(YAMLGenerator.Feature.INDENT_ARRAYS));
                String schema = mapper.writeValueAsString(referenceSchema);
-               log.debug("Reference schema: {}", schema);
-               line = line.replace(SCHEMA_PLACEHOLDER, schema.replace("\n", "\n      "));
+               // find the indentation level of the schema placeholder
+               int indentation = line.indexOf(SCHEMA_PLACEHOLDER);
+               // add the indentation to the schema
+               schema = schema.replaceAll("\n", "\n" + line.substring(0, indentation));
+               // remove the last indentation and the last newline
+               schema = schema.substring(0, schema.length() - indentation - 1);
+               line = line.replace(SCHEMA_PLACEHOLDER, schema);
             } catch (Exception e) {
                log.warn("Exception while replacing resource schema", e);
             }
