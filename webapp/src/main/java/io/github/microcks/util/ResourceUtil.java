@@ -90,7 +90,7 @@ public class ResourceUtil {
       line = line.replace(SERVICE_PLACEHOLDER, service.getName());
       line = line.replace(VERSION_PLACEHOLDER, service.getVersion());
       line = line.replace(RESOURCE_PLACEHOLDER, resource);
-      if (line.contains(SCHEMA_PLACEHOLDER) ) {
+      if (line.contains(SCHEMA_PLACEHOLDER)) {
          if (referenceSchema != null) {
             // Serialize reference schema and replace it.
             try {

@@ -13,31 +13,32 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ResourceUtilTest {
 
-  @Test
-  void replaceTemplatesInSpecStream() throws Exception {
-    // Arrange
-    Service service = new Service();
-    service.setName("TestService");
-    service.setVersion("1.0");
+   @Test
+   void replaceTemplatesInSpecStream() throws Exception {
+      // Arrange
+      Service service = new Service();
+      service.setName("TestService");
+      service.setVersion("1.0");
 
-    String resource = "TestResource";
+      String resource = "TestResource";
 
-    ObjectMapper mapper = new ObjectMapper();
-    JsonNode referenceSchema = mapper.readTree("{\"type\":\"string\"}");
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode referenceSchema = mapper.readTree("{\"type\":\"string\"}");
 
-    String referencePayload = "{\"data\":\"TestPayload\"}";
+      String referencePayload = "{\"data\":\"TestPayload\"}";
 
-    String template = "{service} {version} {resource} {resourceSchema} {reference}";
-    InputStream stream = new ByteArrayInputStream(template.getBytes());
+      String template = "{service} {version} {resource} {resourceSchema} {reference}";
+      InputStream stream = new ByteArrayInputStream(template.getBytes());
 
-    // Act
-    String result = ResourceUtil.replaceTemplatesInSpecStream(stream, service, resource, referenceSchema, referencePayload);
+      // Act
+      String result = ResourceUtil.replaceTemplatesInSpecStream(stream, service, resource, referenceSchema,
+            referencePayload);
 
-    // Assert
-    String expected = """
-      TestService 1.0 TestResource type: string
-             {"data":"TestPayload"}
-      """;
-    assertEquals(expected, result);
-  }
+      // Assert
+      String expected = """
+            TestService 1.0 TestResource type: string
+                   {"data":"TestPayload"}
+            """;
+      assertEquals(expected, result);
+   }
 }
