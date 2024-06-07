@@ -174,6 +174,16 @@ class DispatchCriteriaHelperTest {
    }
 
    @Test
+   void testExtractFromURIParamsWithEmpty() {
+      // Check with parameters that allows empty.
+      String requestPath = "/search?param1=test&param2=&param3=";
+
+      // Only 1 parameter should be taken into account according to rules.
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams("param1 && param2", requestPath);
+      assertEquals("?param1=test", dispatchCriteria);
+   }
+
+   @Test
    void testBuildFromPartsMap() {
       Multimap<String, String> partsMap = ArrayListMultimap.create();
       partsMap.put("year", "2018");
