@@ -35,14 +35,9 @@ import java.util.stream.Stream;
 /**
  * Utility class to retrieve classpath resource and replace content in template resources (like OpenAPI, AsyncAPI spec
  * templates).
- *
  * @author laurent
  */
 public class ResourceUtil {
-
-   private ResourceUtil() {
-      // Private constructor to hide implicit public one.
-   }
 
    /**
     * A simple logger for diagnostic messages.
@@ -53,6 +48,10 @@ public class ResourceUtil {
    private static final String RESOURCE_PLACEHOLDER = "{resource}";
    private static final String SCHEMA_PLACEHOLDER = "{resourceSchema}";
    private static final String REFERENCE_PLACEHOLDER = "{reference}";
+
+   private ResourceUtil() {
+      // Private constructor to hide implicit public one.
+   }
 
    /**
     * Load a resource from classspath using its path.
@@ -108,7 +107,7 @@ public class ResourceUtil {
                // find the indentation level of the schema placeholder
                int indentation = line.indexOf(SCHEMA_PLACEHOLDER);
                // add the indentation to the schema
-               schema = schema.replaceAll("\n", "\n" + line.substring(0, indentation));
+               schema = schema.replace("\n", "\n" + line.substring(0, indentation));
                // remove the last indentation and the last newline
                schema = schema.substring(0, schema.length() - indentation - 1);
                line = line.replace(SCHEMA_PLACEHOLDER, schema);
