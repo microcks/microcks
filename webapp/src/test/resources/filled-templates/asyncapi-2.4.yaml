@@ -1,0 +1,37 @@
+asyncapi: '2.4.0'
+id: 'urn:io.microcks.generic.Book Service-1.0.0'
+info:
+  title: Book Service
+  version: '1.0.0'
+  description: This is a generic Event Driven API definition that sends Book events.
+defaultContentType: application/json
+channels:
+  Book:
+    bindings:
+      ws:
+        method: POST
+    subscribe:
+      message:
+        bindings:
+          kafka:
+            key:
+              type: string
+              description: Timestamp of event as milliseconds since 1st Jan 1970
+        '$ref': '#/components/messages/BookMsg'
+components:
+  messages:
+    BookMsg:
+      payload:
+        '$ref': '#/components/schemas/BookType'
+      examples:
+        - name: Reference
+          payload: {"title":"Example Title","author":"Example Author","isbn":"Example ISBN"}
+  schemas:
+    BookType:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+
