@@ -44,6 +44,10 @@ class TestControllerIT extends AbstractBaseIT {
    public static GenericContainer pastryImpl = new GenericContainer("quay.io/microcks/quarkus-api-pastry:latest")
          .withExposedPorts(8282);
 
+   @Container
+   public static GenericContainer helloWorldImpl = new GenericContainer("quay.io/microcks/grpc-hello-world:nightly")
+         .withExposedPorts(9000);
+
    @SpyBean
    private TestController testController;
 
@@ -92,5 +96,57 @@ class TestControllerIT extends AbstractBaseIT {
       List<RequestResponsePair> pairs = testController.getMessagesForTestCase(testResult.getId(), testCaseId);
       assertEquals(1, pairs.size());
       assertEquals("pastries_json", pairs.get(0).getRequest().getName());
+   }
+
+   @Test
+   void testGRPCTesting() {
+      // Upload GRPC reference artifact.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
+
+      String testEndpoint = String.format("http://localhost:%d", helloWorldImpl.getMappedPort(9000));
+
+      StringBuilder testRequest = new StringBuilder("{")
+            .append("\"serviceId\": \"io.github.microcks.grpc.hello.v1.HelloService:v1\", ")
+            .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ")
+            .append("\"runnerType\": \"GRPC_PROTOBUF\", ").append("\"timeout\": 2000").append("}");
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+
+      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatusCode().value());
+
+      TestResult testResult = response.getBody();
+      assertNotNull(testResult);
+      assertNotNull(testResult.getId());
+      assertTrue(testResult.isInProgress());
+      assertEquals(testEndpoint, testResult.getTestedEndpoint());
+
+      // Wait till timeout and re-fetch the result.
+      try {
+         Thread.sleep(2000);
+      } catch (InterruptedException e) {
+         throw new RuntimeException(e);
+      }
+
+      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatusCode().value());
+
+      testResult = response.getBody();
+      assertNotNull(testResult);
+      assertFalse(testResult.isInProgress());
+      assertTrue(testResult.isSuccess());
+
+      // Now try accessing messages for basic operation.
+      String testCaseId = testResult.getId() + "-" + testResult.getTestNumber() + "-greeting";
+
+      List<RequestResponsePair> pairs = testController.getMessagesForTestCase(testResult.getId(), testCaseId);
+      assertEquals(2, pairs.size());
+      for (RequestResponsePair pair : pairs) {
+         assertTrue(pair.getRequest().getName().equals("Laurent") || pair.getRequest().getName().equals("Philippe"));
+      }
    }
 }

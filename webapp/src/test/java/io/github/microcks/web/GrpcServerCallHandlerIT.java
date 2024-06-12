@@ -27,12 +27,12 @@ import static org.junit.jupiter.api.Assertions.fail;
  * Test case for the GrpcServerCallHandler.
  * @author laurent
  */
-public class GrpcServerCallHandlerIT extends AbstractBaseIT {
+class GrpcServerCallHandlerIT extends AbstractBaseIT {
 
    private static final String GRPCURL_IMAGE = "quay.io/microcks/grpcurl:v1.8.9-alpine";
 
    @Test
-   public void testGrpcMocking() {
+   void testGrpcMocking() {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
@@ -56,7 +56,7 @@ public class GrpcServerCallHandlerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testGrpcReflection() {
+   void testGrpcReflection() {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
