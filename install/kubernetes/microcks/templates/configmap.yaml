@@ -76,7 +76,9 @@ data:
     spring.security.oauth2.client.registration.keycloak.scope=openid,profile
     spring.security.oauth2.client.provider.keycloak.issuer-uri=${KEYCLOAK_URL}/realms/${keycloak.realm}
     spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
+    {{- if .Values.keycloak.validateIssuerUri }}
     spring.security.oauth2.resourceserver.jwt.issuer-uri=${sso.public-url}/realms/${keycloak.realm}
+    {{- end }}
     {{- if hasKey .Values.keycloak "privateUrl" }}
     spring.security.oauth2.resourceserver.jwt.jwk-set-uri=${KEYCLOAK_URL}/realms/${keycloak.realm}/protocol/openid-connect/certs
     {{- end }}
@@ -492,7 +494,7 @@ data:
         {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
     %kube.kafka.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
         {{- end }}
-    
+
     %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SASL_SSL
       {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
