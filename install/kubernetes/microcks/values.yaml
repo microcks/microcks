@@ -1,8 +1,17 @@
 appName: microcks
-ingresses: true
+ingresses: false
 
-microcks:
-  url: microcks-microcks.192.168.99.100.nip.io
+
+global:
+  storageClass: ""
+  imagePullSecrets: []
+  imageRegistry: ""
+
+microcks: # Waiting for verify
+  # This SSL toggle only control the reDirect URL protocol in realms.config file.
+  ssl:
+    enabled: false
+  url: microcks.example.com
   #url: microcks-microcks.192.168.64.6.nip.io
   #ingressSecretRef: my-secret-for-microcks-ingress
   #ingressAnnotations:
@@ -21,14 +30,20 @@ microcks:
   image: quay.io/microcks/microcks:1.9.1
   replicas: 1
   # Uncomment to change Microcks Service to a NodePort
-  #serviceType: NodePort
+  serviceType: ClusterIP
+  serviceAnnotations: {}
+    # external-dns.alpha.kubernetes.io/hostname: "microcks.example.com"
+    # service.beta.kubernetes.io/aws-load-balancer-name: "microcks"
+    # service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+    # service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    # service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "instance"
 
   resources:
     requests:
       cpu: 200m
       memory: 512Mi
     limits:
-      #cpu: 500m
+      cpu: 500m
       memory: 512Mi
 
   # Enabling by adding yaml extra application configurations
@@ -49,7 +64,7 @@ microcks:
     #  value: 'true'
 
   #logLevel: TRACE | DEBUG | INFO | WARN
-  logLevel: INFO
+  logLevel: DEBUG
 
   # Enabling/disabling mock invocation stats.
   mockInvocationStats: true
@@ -62,51 +77,113 @@ microcks:
   #customSecretRef:
   #  secret: microcks-keystore
   #  key: cacerts
+  dependencies: # Waiting for verify
+    mongodb:
+      uri: "microcks-mognodb.example.com:27017"
+      # database: ""
+      # uriParemeters: "?ssl=true"
+      auth:
+        username: ""
+        password: ""
+        secretRef: ""
+          secret: ""
+          usernameKey: ""
+          passwordKey: ""
+    keycloak:
+      enabled: "true"
+      url: "microcks-keycloak.example.com"  # Bitnami chart using 80 as keycloak services
+      realm: "microcks"
+      serviceAccount: microcks-serviceaccount
+      serviceAccountCredentials: ab54d329-e435-41ae-a900-ec6b3fe15c54
+      auth:
+        adminUsername: "hex"
+        admminPassword: "keycloak-microcks"
+        secretRef:
+          secret: keycloak
+          usernameKey: "username"
+          passwordKey: "password"
+  realms:
+    users:
+      role:
+        user:
+          username: user
+          password: microcks123
+        manager:
+          username: manager
+          password: microcks123
+        admin:
+          username: admin
+          password: microcks123
 
-postman:
-  image: quay.io/microcks/microcks-postman-runtime:latest
-  replicas: 1
-  resources:
-    requests:
-      memory: 256Mi
-    limits:
-      memory: 256Mi
+postman: # WfV
+  nameOverride: ""
+  pod:
+    labels: {}
+    annotations: {}
+    image:
+      registry: "quay.io"
+      repository: "microcks/microcks-postman-runtime"
+      tag: "latest"
+      pullPolicy: IfNotPresent
+    replicas: 1
+    resources:
+      requests:
+        memory: 60Mi
+        cpu: 50m
+      limits:
+        memory: 120Mi
+        cpu: 100m
+    logLevel: info
+  service:
+    labels: {}
+    annotations: {}
+    port: 8000
+    targetPort: 3000
 
-keycloak:
+
+keycloak: # WIP, but almost done, WfV
   # Use keycloack in this release
   enabled: true
   # Install keycloack in this release
-  install: true
-  realm: microcks
-  # Now that we switched to newer version of Keycloak-X, default url does not contain '/auth' path
-  # If you use an older external Keycloak instance, url must include the '/auth' path
-  url: keycloak-microcks.192.168.99.100.nip.io
-  #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080
-  #ingressSecretRef: my-secret-for-keycloak-ingress
-  #ingressAnnotations:
-    #cert-manager.io/issuer: my-cert-issuer
-    #kubernetes.io/tls-acme: "true"
-  #ingressClassName: nginx
-  #pvcAnnotations:
-    #helm.sh/resource-policy: keep
-  generateCert: true
-  image: quay.io/keycloak/keycloak:22.0.3
-  adminUsername: admin
+  install: false
+  extraEnvVars:
+    - name: KEYCLOAK_EXTRA_ARGS
+      value: "-Dkeycloak.import=/tmp/import/microcks-realm.json"
+  extraVolumeMounts:
+    - name: import-realm
+      mountPath: "/tmp/import"
+      readOnly: true
+  extraVolumes:
+    - name: import-realm
+      configMap:
+        name: "microcks-keycloak-config"
+        items:
+        - key: "microcks-realms.json"
+          path: "microcks-realms.json"
+  auth:
+    adminUser: "user"
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
-  #adminPassword: 123
-
-  # Or you can uncomment secretRef block if credentials are provided through a Secret.
-  #secretRef:
-    #secret: keycloak
-    #usernameKey: username
-    #passwordKey: password
-    #postgresUsernameKey: postgresUsername
-    #postgresPasswordKey: postgresPassword
-
-  # Uncomment to change Keycloak Service to a NodePort
-  #serviceType: NodePort
-
+    adminPassword: "keycloak-microcks"
+    existingSecret: ""
+    passwordSecretKey: ""
+    annotations: {}
+  tls:
+    enabled: false
+    authGenerated: false
+    existingSecret: ""
+    usePem: false
+    truststoreFilename: "keycloak.truststore.jks"
+    keystoreFilename: "keycloak.keystore.jks"
+    keystorePassword: ""
+    truststorePassword: ""
+    passwordsSecret: ""
+  ## Keycloak resource requests and limits
+  ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
+  ## @param resourcesPreset Set container resources according to one common preset (allowed   values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if   resources is set (resources is recommended for production).
+  ## More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/  _resources.tpl#L15
+  ##
+  resourcesPreset: "small"
   resources:
     requests:
       cpu: 400m
@@ -114,24 +191,74 @@ keycloak:
     limits:
       #cpu: 500m
       memory: 512Mi
+  ## @section Database parameters
 
-  persistent: true
-  volumeSize: 1Gi
-  # Unless you uncomment following line and set class, persistent volume claim is created
-  # with no storage class and relies on cluster default one.
-  #storageClassName: my-awesome-class
-  postgresImage: centos/postgresql-95-centos7:latest
-  username: userP
-  # Unless you uncomment following line, admin password will be randomly generated.
-  # Beware that in case of update, new value will be generated and overwrite existing one.
-  #password: 123
+  ## PostgreSQL chart configuration
+  ## ref: https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
+  ## @param postgresql.enabled Switch to enable or disable the PostgreSQL helm chart
+  ## @param postgresql.auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` with key `postgres-password` is provided
+  ## @param postgresql.auth.username Name for a custom user to create
+  ## @param postgresql.auth.password Password for the custom user to create
+  ## @param postgresql.auth.database Name for a custom database to create
+  ## @param postgresql.auth.existingSecret Name of existing secret to use for PostgreSQL   credentials
+  ## @param postgresql.architecture PostgreSQL architecture (`standalone` or `replication`)
+  ##
+  postgresql:
+    enabled: true
+    auth:
+      postgresPassword: ""
+      username: bn_keycloak
+      password: ""
+      database: bitnami_keycloak
+      existingSecret: ""
+    architecture: standalone
+  ## External PostgreSQL configuration
+  ## All of these values are only used when postgresql.enabled is set to false
+  ## @param externalDatabase.host Database host
+  ## @param externalDatabase.port Database port number
+  ## @param externalDatabase.user Non-root username for Keycloak
+  ## @param externalDatabase.password Password for the non-root username for Keycloak
+  ## @param externalDatabase.database Keycloak database name
+  ## @param externalDatabase.existingSecret Name of an existing secret resource containing the database credentials
+  ## @param externalDatabase.existingSecretHostKey Name of an existing secret key containing the database host name
+  ## @param externalDatabase.existingSecretPortKey Name of an existing secret key containing the database port
+  ## @param externalDatabase.existingSecretUserKey Name of an existing secret key containing the database user
+  ## @param externalDatabase.existingSecretDatabaseKey Name of an existing secret key   containing the database name
+  ## @param externalDatabase.existingSecretPasswordKey Name of an existing secret key   containing the database credentials
+  ## @param externalDatabase.annotations Additional custom annotations for external database secret object
+  ##
+  externalDatabase:
+    host: ""
+    port: 5432
+    user: bn_keycloak
+    database: bitnami_keycloak
+    password: ""
+    existingSecret: ""
+    existingSecretHostKey: ""
+    existingSecretPortKey: ""
+    existingSecretUserKey: ""
+    existingSecretDatabaseKey: ""
+    existingSecretPasswordKey: ""
+    annotations: {}
+  logging:
+    output: default
+    level: INFO
+    persistent: true
+    volumeSize: 1Gi
+    # Unless you uncomment following line and set class, persistent volume claim is created
+    # with no storage class and relies on cluster default one.
+    #storageClassName: my-awesome-class
+    postgresImage: centos/postgresql-95-centos7:latest
+    username: userP
+    # Unless you uncomment following line, admin password will be randomly generated.
+    # Beware that in case of update, new value will be generated and overwrite existing one.
+    #password: 123
+  serviceAccount:
+    create: true
 
-  serviceAccount: microcks-serviceaccount
-  serviceAccountCredentials: ab54d329-e435-41ae-a900-ec6b3fe15c54
-
-mongodb:
-  install: true
-  #uri: mongodb:27017
+mongodb:  # WIP
+  install: false
+  uri: "microcks-mongodb.example.com:27017"
   #uriParameters: "?ssl=true"
   #database: sampledb
   image: centos/mongodb-36-centos7:latest
@@ -141,10 +268,10 @@ mongodb:
   # with no storage class and relies on cluster default one.
   #storageClassName: my-awesome-class
 
-  username: userM
+  username: "microcks"
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.
-  #password: 123
+  password: "microcks"
 
   # Or you can uncomment secretRef block if username and password are provided through a Secret.
   #secretRef:

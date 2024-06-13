@@ -1,20 +1,34 @@
 apiVersion: v2
-name: microcks
-version: 1.9.1
-kubeVersion: '>=1.17.0-0'
-description: Microcks - API Mocking and Testing
-type: application
-keywords:
-  - mocks
-  - microservice
-  - api
-  - test
-home: https://microcks.io
-sources:
-  - http://github.com/microcks/microcks/
-  - https://microcks.io
-maintainers:
-  - name: Laurent Broudoux
-    email: laurent.broudoux@gmail.com
-icon: https://microcks.io/images/microcks-big.png
 appVersion: 1.9.1
+description: Microcks - API Mocking and Testing
+home: https://microcks.io
+icon: https://microcks.io/images/microcks-big.png
+keywords:
+- mocks
+- microservice
+- api
+- test
+kubeVersion: '>=1.17.0-0'
+maintainers:
+- email: laurent.broudoux@gmail.com
+  name: Laurent Broudoux
+name: microcks
+sources:
+- http://github.com/microcks/microcks/
+- https://microcks.io
+type: application
+version: 1.9.1
+dependencies:
+- condition: mongodb.install
+  name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 2.13.3
+- condition: keycloak.install
+  name: keycloak
+  repository: https://charts.bitnami.com/bitnami
+  version: 21.3.1
+- condition: features.async.kafka.install
+  name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 28.3.0
+

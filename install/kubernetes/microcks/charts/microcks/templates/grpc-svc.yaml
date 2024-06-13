@@ -1,0 +1,23 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-grpc"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: spring
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+spec:
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: 9090
+      name: spring-grpc
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: "{{ .Values.appName }}"
+    container: spring
+    group: microcks

@@ -1,0 +1,24 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: spring
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-service-annotations" . | nindent 4 }}
+
+spec:
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    name: spring
+  type: {{ .Values.microcks.serviceType | default "ClusterIP" | quote }}
+  sessionAffinity: None
+  selector:
+    app: "{{ .Values.appName }}"
+    container: spring
+    group: microcks

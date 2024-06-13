@@ -1,0 +1,197 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.appName }}"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: spring
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.microcks.replicas }}
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: "{{ .Values.appName }}"
+      container: spring
+      group: microcks
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.appName }}"
+        deploymentconfig: "{{ .Values.appName }}"
+        container: spring
+        group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "microcks-common-annotations" . | nindent 8 }}
+    spec:
+      containers:
+      - name: spring
+        image: {{ .Values.microcks.image }}
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        env:
+          - name: JAVA_OPTIONS
+            value: "-XX:+TieredCompilation -XX:TieredStopAtLevel=2"
+          - name: JAVA_MAJOR_VERSION
+            value: "11"
+          - name: SPRING_PROFILES_ACTIVE
+            value: prod{{ if .Values.microcks.extraProperties }},extra{{ end }}
+          - name: SPRING_DATA_MONGODB_URI
+            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.mongodb.uri | default (print .Values.appName "-mongodb:27017") }}/${SPRING_DATA_MONGODB_DATABASE}{{ .Values.mongodb.uriParameters }}
+          - name: SPRING_DATA_MONGODB_USER
+            valueFrom:
+              secretKeyRef:
+                {{- if hasKey .Values.mongodb "secretRef" }}
+                key: {{ .Values.mongodb.secretRef.usernameKey | default "username" }}
+                name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
+                {{- else }}
+                key: username
+                name: "{{ .Values.appName }}-mongodb-connection"
+                {{- end }}
+          - name: SPRING_DATA_MONGODB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                {{- if hasKey .Values.mongodb "secretRef" }}
+                key: {{ .Values.mongodb.secretRef.passwordKey | default "password" }}
+                name: {{ .Values.mongodb.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
+                {{- else }}
+                key: password
+                name: "{{ .Values.appName }}-mongodb-connection"
+                {{- end }}
+          - name: SPRING_DATA_MONGODB_DATABASE
+            value: {{ .Values.mongodb.database | default .Values.appName }}
+          - name: POSTMAN_RUNNER_URL
+            value: http://{{ .Values.appName }}-postman-runtime:8080
+          - name: TEST_CALLBACK_URL
+            value: http://{{ .Values.appName }}:8080
+          - name: KEYCLOAK_ENABLED
+            value: "{{ .Values.keycloak.enabled }}"
+          {{- if hasKey .Values.keycloak "privateUrl" }}
+          - name: KEYCLOAK_URL
+            value: "{{ .Values.keycloak.privateUrl }}"
+          - name: KEYCLOAK_PUBLIC_URL
+            value: http://{{ .Values.keycloak.url }}
+          {{- else }}
+          - name: KEYCLOAK_URL
+            value: http://{{ .Values.keycloak.url }}
+          {{- end }}
+          {{- if and .Values.features.async.enabled }}
+          - name: ASYNC_MINION_URL
+            value: http://{{ .Values.appName }}-async-minion:8080
+          {{- end }}
+          - name: KAFKA_BOOTSTRAP_SERVER
+            {{- if eq .Values.features.async.kafka.install true }}
+            value: "{{ .Values.appName }}-kafka-kafka-bootstrap:9092"
+            {{- else }}
+            value: "{{ .Values.features.async.kafka.url }}"
+            {{- end }}
+          {{- if eq .Values.features.async.kafka.install false }}
+            {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+            {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
+          - name: KAFKA_TRUSTSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.features.async.kafka.authentication.truststoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-truststore"
+            {{- end }}
+            {{- end }}
+            {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+          - name: KAFKA_KEYSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.features.async.kafka.authentication.keystoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-keystore"
+            {{- end }}
+          {{- end }}
+          {{- toYaml .Values.microcks.env | nindent 10 }}
+        resources:
+          {{- toYaml .Values.microcks.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: "/api/health"
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 25
+          timeoutSeconds: 3
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: "/api/health"
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 35
+          timeoutSeconds: 3
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        startupProbe:
+          httpGet:
+            path: "/api/health"
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 3
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 10
+        volumeMounts:
+          - name: "{{ .Values.appName }}-config"
+            mountPath: "/deployments/config"
+          {{- if (.Values.microcks.grpcEnableTLS) }}
+          - name: "{{ .Values.appName }}-grpc-certs"
+            mountPath: "/deployments/config/grpc"
+          {{- end }}
+          {{- if eq .Values.features.async.kafka.install false }}
+            {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+            {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
+          - name: "{{ .Values.appName }}-kafka-truststore"
+            mountPath: "/deployments/config/kafka/truststore"
+            {{- end }}
+            {{- end }}
+            {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+          - name: "{{ .Values.appName }}-kafka-keystore"
+            mountPath: "/deployments/config/kafka/keystore"
+            {{- end }}
+          {{- end }}
+          {{- if .Values.microcks.customSecretRef }}
+          - name: "{{ .Values.microcks.customSecretRef.secret }}"
+            mountPath: "/deployments/config/custom/secret"
+          {{- end}}
+        terminationMessagePath: "/dev/termination-log"
+      volumes:
+        - name: "{{ .Values.appName }}-config"
+          configMap:
+            name: "{{ .Values.appName }}-config"
+        {{- if (.Values.microcks.grpcEnableTLS) }}
+        - name: "{{ .Values.appName }}-grpc-certs"
+          secret:
+            secretName: "{{ .Values.microcks.grpcSecretRef | default (print .Values.appName "-microcks-grpc-secret") }}"
+        {{- end }}
+        {{- if eq .Values.features.async.kafka.install false }}
+          {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
+          {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
+        - name: "{{ .Values.appName }}-kafka-truststore"
+          secret:
+            secretName: "{{ .Values.features.async.kafka.authentication.truststoreSecretRef.secret }}"
+          {{- end }}
+          {{- end }}
+          {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+        - name: "{{ .Values.appName }}-kafka-keystore"
+          secret:
+            secretName: "{{ .Values.features.async.kafka.authentication.keystoreSecretRef.secret }}"
+          {{- end }}
+        {{- end }}
+        {{- if .Values.microcks.customSecretRef }}
+        - name: "{{ .Values.microcks.customSecretRef.secret }}"
+          secret:
+            secretName: "{{ .Values.microcks.customSecretRef.secret }}"
+        {{- end }}

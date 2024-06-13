@@ -70,42 +70,6 @@ spec:
             name: "{{ .Values.appName }}-grpc"
             port:
               number: 9090
-{{- if and .Values.keycloak.enabled .Values.keycloak.install }}
----
-kind: Ingress
-apiVersion: networking.k8s.io/v1
-metadata:
-  name: "{{ .Values.appName }}-keycloak"
-  labels:
-    app: "{{ .Values.appName }}"
-    group: microcks
-    {{- include "microcks-common-labels" . | nindent 4 }}
-  annotations:
-    {{- include "microcks-common-annotations" . | nindent 4 }}
-    ingress.kubernetes.io/rewrite-target: /
-    {{- with .Values.keycloak.ingressAnnotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-spec:
-  {{- if .Values.keycloak.ingressClassName }}
-  ingressClassName: {{ .Values.keycloak.ingressClassName | quote }}
-  {{- end }}
-  tls:
-  - hosts:
-    - "{{ .Values.keycloak.url }}"
-    secretName: {{ .Values.keycloak.ingressSecretRef | default (print .Values.appName "-keycloak-ingress-secret") }}
-  rules:
-  - host: "{{ .Values.keycloak.url }}"
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: "{{ .Values.appName }}-keycloak"
-            port:
-              number: 8080
-{{- end }}
 {{- if and .Values.features.async.enabled }}
 ---
 kind: Ingress

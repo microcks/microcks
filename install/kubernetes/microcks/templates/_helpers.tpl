@@ -27,17 +27,6 @@ tls.crt: {{ $cert.Cert | b64enc }}
 tls.key: {{ $cert.Key | b64enc }}
 {{- end -}}
 
-
-{{/*
-Generate certificates for keycloak ingress
-*/}}
-{{- define "keycloak-ingress.gen-certs" -}}
-{{- $cert := genSelfSignedCert .Values.keycloak.url nil nil 365 -}}
-tls.crt: {{ $cert.Cert | b64enc }}
-tls.key: {{ $cert.Key | b64enc }}
-{{- end -}}
-
-
 {{/*
 Produce WS Ingress URL
 */}}
@@ -73,3 +62,11 @@ Generate common annotations
 {{- end -}}
 {{- end -}}
 
+{{/*
+Service annotations
+*/}}
+{{- define "microcks-service-annotations" -}}
+{{- range $name, $value := .Values.microcks.serviceAnnotations }}
+{{ $name }}: {{ $value | quote }}
+{{- end -}}
+{{- end -}}

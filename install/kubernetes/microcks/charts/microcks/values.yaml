@@ -1,0 +1,25 @@
+nameOverride: ""
+# namespaceOverride: ""
+imagePullSecrets: []
+pod:
+  labels: {}
+  annotations: {}
+  image:
+    registry: "quay.io"
+    repository: "microcks/microcks"
+    tag: "1.9.1"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 200m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+  logLevel: info
+service:
+  labels: {}
+  annotations: {}
+  port: 8000
+  targetPort: 3000
