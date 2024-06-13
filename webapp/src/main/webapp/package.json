@@ -37,9 +37,9 @@
     "zone.js": "~0.9.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "~0.802.1",
+    "@angular-devkit/build-angular": "~18.0.4",
     "@angular/cli": "~8.2.1",
-    "@angular/compiler-cli": "~8.2.0",
+    "@angular/compiler-cli": "~18.0.3",
     "@angular/language-service": "~8.2.0",
     "@types/d3": "3.5.34",
     "@types/node": "~8.9.4",
@@ -48,7 +48,7 @@
     "codelyzer": "^5.0.0",
     "jasmine-core": "~3.5.0",
     "jasmine-spec-reporter": "~4.2.1",
-    "karma": "~4.1.0",
+    "karma": "~4.4.1",
     "karma-chrome-launcher": "~2.2.0",
     "karma-coverage-istanbul-reporter": "~2.0.1",
     "karma-jasmine": "~2.0.1",
