@@ -21,7 +21,9 @@ To get involved with our community, please make sure you are familiar with the p
 
 ## Build Status
 
-The current development version is `1.10.0-SNAPSHOT`. [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.10.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
+The current development version is `1.10.0-SNAPSHOT`. 
+
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.10.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
 #### Sonarcloud Quality metrics
 
@@ -32,6 +34,12 @@ The current development version is `1.10.0-SNAPSHOT`. [![GitHub Workflow Status]
 [![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=microcks_microcks&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=microcks_microcks)
+
+#### Fossa license and security scans
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_shield&issueType=license)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_shield&issueType=security)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_small)
 
 ## Versions
 
