@@ -21,6 +21,9 @@ To get involved with our community, please make sure you are familiar with the p
 
 ## Build Status
 
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/7513/badge)](https://bestpractices.coreinfrastructure.org/projects/7513)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/microcks/microcks/badge)](https://securityscorecards.dev/viewer/?uri=github.com/microcks/microcks)
+
 The current development version is `1.10.0-SNAPSHOT`. 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.10.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
