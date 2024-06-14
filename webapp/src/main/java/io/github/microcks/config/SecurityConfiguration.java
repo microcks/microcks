@@ -91,7 +91,7 @@ public class SecurityConfiguration {
                .hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN).requestMatchers("/api/services/*/*")
                .hasAnyRole(ROLE_MANAGER, ROLE_ADMIN).requestMatchers("/api/jobs/*/*")
                .hasAnyRole(ROLE_MANAGER, ROLE_ADMIN).requestMatchers("/api/artifact/*")
-               .hasAnyRole(ROLE_MANAGER, ROLE_ADMIN).requestMatchers("/api/import/*", "/api/export/*")
+               .hasAnyRole(ROLE_ADMIN).requestMatchers("/api/import", "/api/export")
                .hasAnyRole(ROLE_ADMIN).requestMatchers(HttpMethod.GET, "/api/secrets")
                .hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN).requestMatchers(HttpMethod.GET, "/api/secrets/*")
                .hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN).requestMatchers(HttpMethod.POST, "/api/secrets")
