@@ -4,15 +4,21 @@ on:
     paths-ignore:
       - '.github/**'
       - '.gitignore'
+      - 'ADOPTERS*'
       - 'LICENSE'
       - 'README*'
+      - 'CHANGELOG*'
+      - 'ROADMAP*'
   pull_request:
     paths-ignore:
       - '.github/**'
       - '.gitignore'
+      - 'ADOPTERS*'
       - 'LICENSE'
       - 'README*'
-
+      - 'CHANGELOG*'
+      - 'ROADMAP*'
+permissions: read-all
 jobs:
   build-verify-package:
     runs-on: ubuntu-latest
