@@ -1633,13 +1633,13 @@ components:
           description: Reserved for future usage
           type: string
         createdDate:
-          format: date-time
-          description: Creation date for this ImportJob
-          type: string
+          format: int32
+          description: Creation Timestamp for this ImportJob
+          type: integer
         lastImportDate:
-          format: date-time
-          description: Date last import was done
-          type: string
+          format: int32
+          description: Timestamp of the last import
+          type: integer
         lastImportError:
           description: Error message of last import (if any)
           type: string
