@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class KeycloakConfigController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(KeycloakConfigController.class);
+   private static final Logger log = LoggerFactory.getLogger(KeycloakConfigController.class);
 
    @Value("${keycloak.enabled}")
    private Boolean keycloakEnabled = true;
@@ -56,13 +56,6 @@ public class KeycloakConfigController {
 
 
    private class Config {
-      @JsonProperty("ssl-required")
-      private static final String SSL_REQUIRED = "external";
-
-      @JsonProperty("public-client")
-      private static final boolean PUBLIC_CLIENT = true;
-
-      private static final String RESOURCE = "microcks-app-js";
 
       private boolean enabled = true;
 
@@ -70,6 +63,14 @@ public class KeycloakConfigController {
 
       @JsonProperty("auth-server-url")
       private String authServerUrl = "http://localhost:8180/auth";
+
+      @JsonProperty("ssl-required")
+      private String sslRequired = "external";
+
+      @JsonProperty("public-client")
+      private boolean publicClient = true;
+
+      private String resource = "microcks-app-js";
 
       public Config(boolean enabled, String realmName, String authServerUrl) {
          this.enabled = enabled;
@@ -94,15 +95,15 @@ public class KeycloakConfigController {
       }
 
       public String getSslRequired() {
-         return SSL_REQUIRED;
+         return sslRequired;
       }
 
       public boolean isPublicClient() {
-         return PUBLIC_CLIENT;
+         return publicClient;
       }
 
       public String getResource() {
-         return RESOURCE;
+         return resource;
       }
    }
 }

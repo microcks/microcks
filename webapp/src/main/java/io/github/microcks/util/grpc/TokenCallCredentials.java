@@ -32,10 +32,10 @@ public class TokenCallCredentials extends CallCredentials {
    public static final Metadata.Key<String> AUTHORIZATION_METADATA_KEY = Metadata.Key.of("Authorization",
          ASCII_STRING_MARSHALLER);
 
-   public static final String BEARER_TYPE = "Bearer";
+   public static final String BEARER_TYPE = "Bearer ";
 
-   private String token;
-   private String tokenHeader;
+   private final String token;
+   private final String tokenHeader;
 
    public TokenCallCredentials(String token, String tokenHeader) {
       this.token = token;
@@ -58,9 +58,5 @@ public class TokenCallCredentials extends CallCredentials {
             metadataApplier.fail(Status.UNAUTHENTICATED.withCause(e));
          }
       });
-   }
-
-   @Override
-   public void thisUsesUnstableApi() {
    }
 }

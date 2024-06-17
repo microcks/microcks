@@ -17,7 +17,7 @@ package io.github.microcks.security;
 
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTParser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -27,14 +27,14 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This is a test case for MicrocksJwtConverter class.
  * @author laurent
  */
-public class MicrocksJwtConverterTest {
+class MicrocksJwtConverterTest {
 
    /**
     * { "alg": "RS256", "typ": "JWT", "kid": "bMWP9GYcT9PpSPKhkBWD9mOZeHq1YQKHq4JXTaxzd-o" } { "exp": 1695715998, "iat":
@@ -52,7 +52,7 @@ public class MicrocksJwtConverterTest {
    private static final String DECODING_ERROR_MESSAGE_TEMPLATE = "An error occurred while attempting to decode the Jwt: %s";
 
    @Test
-   public void testConvert() {
+   void testConvert() {
       MicrocksJwtConverter converter = new MicrocksJwtConverter();
       Jwt jwt = null;
 

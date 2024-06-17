@@ -17,23 +17,23 @@ package io.github.microcks.util;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for DispatchCriteriaHelper class.
  * @author laurent
  */
-public class DispatchCriteriaHelperTest {
+class DispatchCriteriaHelperTest {
 
    @Test
-   public void testExtractParamsFromURI() {
+   void testExtractParamsFromURI() {
       // Check with parameters.
       String requestPath = "/v2/pet/findByStatus?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available";
 
@@ -43,7 +43,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractPartsFromURIs() {
+   void testExtractPartsFromURIs() {
       // Prepare a bunch of uri paths.
       List<String> resourcePaths = new ArrayList<>();
       resourcePaths.add("/v2/pet/findByDate/2017");
@@ -66,7 +66,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractPartsFromURIPattern() {
+   void testExtractPartsFromURIPattern() {
       // Check with single URI pattern.
       String operationName = "/deployment/byComponent/{component}/{version}?{{param}}";
 
@@ -94,7 +94,7 @@ public class DispatchCriteriaHelperTest {
          "/deployment/byComponent/myComp/1.2, /deployment/byComponent/:component/:version",
          // Check with parts expressed using swagger/postman syntax.
          "/deployment/byComponent/myComp/1.2/$count, /deployment/byComponent/:component/:version/$count", })
-   public void testExtractFromURIPattern(String requestPath, String operationName) {
+   void testExtractFromURIPattern(String requestPath, String operationName) {
 
       final String dispatcherRule = "component && version";
       final String expectedCriteria = "/component=myComp/version=1.2";
@@ -106,7 +106,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIPattern2() {
+   void testExtractFromURIPattern2() {
       String resourcePath = "/pet/2";
       String operationName = "/pet/:petId";
       String paramRule = "petId";
@@ -123,7 +123,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIPatternUnsorted() {
+   void testExtractFromURIPatternUnsorted() {
       // Check with parts not sorted in natural order.
       String requestPath = "/deployment/byComponent/1.2/myComp";
       String operationName = "/deployment/byComponent/{version}/{component}";
@@ -135,7 +135,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIPatternWithExtension() {
+   void testExtractFromURIPatternWithExtension() {
       // Check with parts sorted in natural order.
       String requestPath = "/deployment/byComponent/myComp/1.2.json";
       String operationName = "/deployment/byComponent/{component}/{version}.json";
@@ -149,7 +149,7 @@ public class DispatchCriteriaHelperTest {
    @ParameterizedTest
    @CsvSource({ "component, /component=myComp", "version, /version=1.2",
          "component && version, /component=myComp/version=1.2", "component ?? apiKey, /component=myComp" })
-   public void testExtractFromURIPatternWithCustomRule(String paramRule, String expectedCriteria) {
+   void testExtractFromURIPatternWithCustomRule(String paramRule, String expectedCriteria) {
       // Check with parts sorted in natural order.
       String requestPath = "/deployment/byComponent/myComp/1.2";
       String operationName = "/deployment/byComponent/{component}/{version}";
@@ -160,7 +160,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testExtractFromURIParams() {
+   void testExtractFromURIParams() {
       // Check with parameters in no particular order.
       String requestPath = "/v2/pet/findByDate/2017/01/04?user_key=998bac0775b1d5f588e0a6ca7c11b852&status=available";
 
@@ -174,7 +174,17 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testBuildFromPartsMap() {
+   void testExtractFromURIParamsWithEmpty() {
+      // Check with parameters that allows empty.
+      String requestPath = "/search?param1=test&param2=&param3=";
+
+      // Only 1 parameter should be taken into account according to rules.
+      String dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams("param1 && param2", requestPath);
+      assertEquals("?param1=test", dispatchCriteria);
+   }
+
+   @Test
+   void testBuildFromPartsMap() {
       Multimap<String, String> partsMap = ArrayListMultimap.create();
       partsMap.put("year", "2018");
       partsMap.put("month", "05");
@@ -195,7 +205,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testBuildFromParamsMap() {
+   void testBuildFromParamsMap() {
       Multimap<String, String> paramsMap = ArrayListMultimap.create();
       paramsMap.put("page", "1");
       paramsMap.put("limit", "20");
@@ -216,7 +226,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void testBuildFromParamsArrayMap() {
+   void testBuildFromParamsArrayMap() {
       Multimap<String, String> paramsMap = ArrayListMultimap.create();
       paramsMap.put("page", "1");
       paramsMap.put("limit", "20");
@@ -234,7 +244,7 @@ public class DispatchCriteriaHelperTest {
    }
 
    @Test
-   public void extractCommonSuffix() {
+   void extractCommonSuffix() {
       final var uris = List.of("/ab/def", "/cde/def");
       final var result = DispatchCriteriaHelper.extractCommonSuffix(uris);
       assertEquals("/def", result);

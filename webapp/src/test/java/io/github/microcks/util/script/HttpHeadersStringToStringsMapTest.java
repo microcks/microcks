@@ -15,21 +15,21 @@
  */
 package io.github.microcks.util.script;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for class HttpHeadersStringToStringsMap class.
  * @author laurent
  */
-public class HttpHeadersStringToStringsMapTest {
+class HttpHeadersStringToStringsMapTest {
 
    @Test
-   public void testRFC7230() {
+   void testRFC7230() {
       List<String> value = List.of("12345");
       StringToStringsMap headers = new HttpHeadersStringToStringsMap();
       headers.put("JWTPortail", value);

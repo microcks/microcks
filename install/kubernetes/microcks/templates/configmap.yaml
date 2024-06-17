@@ -207,7 +207,6 @@ data:
   {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
-
 {{- if .Values.features.async.enabled }}
 ---
 kind: ConfigMap

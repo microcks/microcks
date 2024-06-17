@@ -31,8 +31,11 @@ import io.github.microcks.util.ReferenceResolver;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,37 +43,23 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class OpenAPIImporter.
  * @author laurent
  */
-public class OpenAPIImporterTest {
+class OpenAPIImporterTest {
 
-   @Test
-   public void testSimpleOpenAPIImportYAML() {
+   @ParameterizedTest
+   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml",
+         "target/test-classes/io/github/microcks/util/openapi/cars-openapi.json",
+         "target/test-classes/io/github/microcks/util/openapi/cars-openapi-quoted.yaml",
+         "target/test-classes/io/github/microcks/util/openapi/cars-openapi-spacesops.yaml" })
+   void testSimpleOpenAPI(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi.yaml", null);
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-
-      importAndAssertOnSimpleOpenAPI(importer);
-   }
-
-   @Test
-   public void testSimpleOpenAPIImportJSON() {
-      OpenAPIImporter importer = null;
-      try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi.json", null);
+         importer = new OpenAPIImporter(specificationFile, null);
       } catch (IOException ioe) {
          fail("Exception should not be thrown");
       }
@@ -78,14 +67,14 @@ public class OpenAPIImporterTest {
       importAndAssertOnSimpleOpenAPI(importer);
    }
 
-   @Test
-   public void testSimpleOpenAPIImportYAMLWithExtensions() {
+   @ParameterizedTest
+   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.yaml",
+         "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.json" })
+   void testSimpleOpenAPIWithExtensions(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.yaml", null);
+         importer = new OpenAPIImporter(specificationFile, null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -93,41 +82,12 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testSimpleOpenAPIImportJSONWithExtensions() {
-      OpenAPIImporter importer = null;
-      try {
-         importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-extensions.json", null);
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-
-      importAndAssertOnSimpleOpenAPIWithExtensions(importer);
-   }
-
-   @Test
-   public void testSimpleOpenAPIImportYAMLWithQuotes() {
-      OpenAPIImporter importer = null;
-      try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-quoted.yaml",
-               null);
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-
-      importAndAssertOnSimpleOpenAPI(importer);
-   }
-
-   @Test
-   public void testApicurioPetstoreOpenAPI() {
+   void testApicurioPetstoreOpenAPI() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json",
                null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -140,7 +100,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("PetStore API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -239,13 +199,12 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testSimpleOpenAPIImportYAMLNoDashesWithJSON() {
+   void testSimpleOpenAPIImportYAMLNoDashesWithJSON() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
                "target/test-classes/io/github/microcks/util/openapi/cars-openapi-with-json.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -258,7 +217,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -270,13 +229,12 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testOpenAPIWithOpsPathParameter() {
+   void testOpenAPIWithOpsPathParameter() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/locations-openapi.json",
                null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -289,7 +247,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("LocationById", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -336,21 +294,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testOpenAPIImportYAMLWithSpacesOps() {
-      OpenAPIImporter importer = null;
-      try {
-         importer = new OpenAPIImporter(
-               "target/test-classes/io/github/microcks/util/openapi/cars-openapi-spacesops.yaml", null);
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-
-      importAndAssertOnSimpleOpenAPI(importer);
-   }
-
-   @Test
-   public void testOpenAPIImportYAMLWithHeaders() {
+   void testOpenAPIImportYAMLWithHeaders() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/cars-openapi-headers.yaml",
@@ -369,7 +313,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -441,7 +385,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testOpenAPIJsonPointer() {
+   void testOpenAPIJsonPointer() {
       try {
          ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
          byte[] bytes = Files
@@ -463,7 +407,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testCompleteOpenAPIImportYAML() {
+   void testCompleteOpenAPIImportYAML() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
@@ -482,7 +426,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -616,7 +560,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testCompleteOpenAPI31ImportYAML() {
+   void testCompleteOpenAPI31ImportYAML() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
@@ -635,7 +579,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -769,13 +713,12 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testUncompleteParamsOpenAPIImportYAML() {
+   void testUncompleteParamsOpenAPIImportYAML() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
                "target/test-classes/io/github/microcks/util/openapi/cars-openapi-uncomplete-params.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -789,7 +732,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -891,26 +834,26 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExampleValueDeserializationYAML() {
+   void testExampleValueDeserializationYAML() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
       importAndAssertOnTestOpenAPI(importer);
    }
 
-   @Test
-   public void testExampleValueDeserializationYAMLYAML() {
+   @ParameterizedTest
+   @ValueSource(strings = { "target/test-classes/io/github/microcks/util/openapi/test-openapi-yaml.yaml",
+         "target/test-classes/io/github/microcks/util/openapi/test-openapi.json",
+         "target/test-classes/io/github/microcks/util/openapi/test-openapi-json.json" })
+   void testExampleValueDeserialization(String specificationFile) {
       OpenAPIImporter importer = null;
       try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-yaml.yaml",
-               null);
+         importer = new OpenAPIImporter(specificationFile, null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -918,40 +861,12 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExampleValueDeserializationJSON() {
-      OpenAPIImporter importer = null;
-      try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi.json", null);
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-
-      importAndAssertOnTestOpenAPI(importer);
-   }
-
-   @Test
-   public void testExampleValueDeserializationJSONJSON() {
-      OpenAPIImporter importer = null;
-      try {
-         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/test-openapi-json.json",
-               null);
-      } catch (IOException ioe) {
-         ioe.printStackTrace();
-         fail("Exception should not be thrown");
-      }
-
-      importAndAssertOnTestOpenAPI(importer);
-   }
-
-   @Test
-   public void testResponseRefsOpenAPIImport() {
+   void testResponseRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
                "target/test-classes/io/github/microcks/util/openapi/cars-openapi-complex-refs.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -965,7 +880,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API with Refs", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -1031,13 +946,12 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testParameterRefsOpenAPIImport() {
+   void testParameterRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/param-refs-openapi.yaml",
                null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -1051,7 +965,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Sample API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -1109,13 +1023,12 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testQueryParameterRefsOpenAPIImport() {
+   void testQueryParameterRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
                "target/test-classes/io/github/microcks/util/openapi/query-param-refs-openapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -1129,7 +1042,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("API-Template", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -1151,7 +1064,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExamplesRefsOpenAPIImport() {
+   void testExamplesRefsOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/examples-ref-openapi.yaml",
@@ -1170,7 +1083,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Broken Ref", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("2.0.0", service.getVersion());
 
       // Check that operations and input/output have been found.
@@ -1212,7 +1125,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExternalRelativeReferenceOpenAPIImport() {
+   void testExternalRelativeReferenceOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
             "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml",
@@ -1222,7 +1135,6 @@ public class OpenAPIImporterTest {
                "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml",
                resolver);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -1236,7 +1148,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1256,7 +1168,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExternalRelativeReferenceWithJSONPointerOpenAPIImport() {
+   void testExternalRelativeReferenceWithJSONPointerOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
             "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml",
@@ -1266,7 +1178,6 @@ public class OpenAPIImporterTest {
                "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref-example.yaml",
                resolver);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -1280,7 +1191,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1348,7 +1259,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExternalAbsoluteReferenceOpenAPIImport() {
+   void testExternalAbsoluteReferenceOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
             "https://raw.githubusercontent.com/microcks/microcks/1.5.x/webapp/src/test/resources/io/github/microcks/util/openapi/",
@@ -1358,7 +1269,6 @@ public class OpenAPIImporterTest {
                "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml",
                resolver);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -1372,7 +1282,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1394,7 +1304,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExternalAbsoluteReferenceWithJSONPointerOpenAPIImport() {
+   void testExternalAbsoluteReferenceWithJSONPointerOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
             "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/",
@@ -1404,7 +1314,6 @@ public class OpenAPIImporterTest {
                "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref-pointers.yaml",
                resolver);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -1418,7 +1327,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1490,7 +1399,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testExternalRelativeRecursiveReferenceWithJSONPointerOpenAPIImport() {
+   void testExternalRelativeRecursiveReferenceWithJSONPointerOpenAPIImport() {
       OpenAPIImporter importer = null;
       ReferenceResolver resolver = new ReferenceResolver(
             "https://raw.githubusercontent.com/microcks/microcks/1.8.x/webapp/src/test/resources/io/github/microcks/util/openapi/weather-forecast-openapi-relative-recursive-ref.yaml",
@@ -1513,7 +1422,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("WeatherForecast API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1587,7 +1496,7 @@ public class OpenAPIImporterTest {
    }
 
    @Test
-   public void testNoContentResponseOpenAPIImport() {
+   void testNoContentResponseOpenAPIImport() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter(
@@ -1606,7 +1515,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("Test API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
@@ -1668,7 +1577,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...
@@ -1779,7 +1688,7 @@ public class OpenAPIImporterTest {
       assertEquals(1, services.size());
       Service service = services.get(0);
       assertEquals("OpenAPI Car API", service.getName());
-      Assert.assertEquals(ServiceType.REST, service.getType());
+      Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
       // Check that resources have been parsed, correctly renamed, etc...

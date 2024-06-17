@@ -9,14 +9,14 @@ paths:
     get:
       summary: Retrieve {resource} resources.
       description: Retrieve a bunch of {resource} resources. Specify example resource as body payload.
-      operationId:
+      operationId: get{resource}List
       responses:
         200:
           description: Get an array of {resource} resources.
     post:
       summary: Create new {resource} resource.
       description: Create a new {resource} resource. Specify payload within request body.
-      operationId:
+      operationId: create{resource}
       requestBody:
         description: The payload of resource {resource} to create.
         content:
@@ -30,18 +30,18 @@ paths:
     get:
       summary: Retrieve a {resource} resource.
       description: Retrieve an already existing {resource} resource having the specified id.
-      operationId:
+      operationId: get{resource}ById
       responses:
         200:
           description: {resource} resource having specified id.
           content:
             application/json:
               schema:
-                 $ref: '#/components/schema/{resource}Type'
+                $ref: '#/components/schema/{resource}Type'
     put:
       summary: Update a {resource} resource.
       description: Update an already existing {resource} resource having the specified id.
-      operationId:
+      operationId: update{resource}ById
       requestBody:
         description: The payload of resource {resource} to update.
         content:
@@ -50,14 +50,15 @@ paths:
               $ref: '#/components/schema/{resource}Type'
       responses:
         200:
-          description:
+          description: Updated {resource} resource.
           content:
             application/json:
               schema:
+                $ref: '#/components/schema/{resource}Type'
     delete:
       summary: Delete a {resource} resource.
       description: Remove an existing {resource} resource having the specified id.
-      operationId:
+      operationId: delete{resource}ById
       responses:
         204:
           description: Resource {resource} with specified id has been removed.

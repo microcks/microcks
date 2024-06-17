@@ -1,5 +1,5 @@
 apiVersion: v2
-appVersion: 1.9.1
+appVersion: 1.10.0
 description: Microcks - API Mocking and Testing
 home: https://microcks.io
 icon: https://microcks.io/images/microcks-big.png
@@ -17,7 +17,7 @@ sources:
 - http://github.com/microcks/microcks/
 - https://microcks.io
 type: application
-version: 1.9.1
+version: 1.10.0
 dependencies:
 - condition: mongodb.install
   name: mongodb
@@ -31,4 +31,3 @@ dependencies:
   name: kafka
   repository: https://charts.bitnami.com/bitnami
   version: 28.3.0
-

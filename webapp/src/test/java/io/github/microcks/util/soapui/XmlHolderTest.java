@@ -15,14 +15,15 @@
  */
 package io.github.microcks.util.soapui;
 
-import static org.junit.Assert.assertEquals;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for class XmlHolder class.
  * @author laurent
  */
-public class XmlHolderTest {
+class XmlHolderTest {
 
    private final String validSoap = """
          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
@@ -36,7 +37,7 @@ public class XmlHolderTest {
          """;
 
    @Test
-   public void testWithoutNamespace() throws Exception {
+   void testWithoutNamespace() throws Exception {
       String xpathStr = """
             //hel:sayHelloResponse/sayHello
             """;
@@ -45,7 +46,7 @@ public class XmlHolderTest {
    }
 
    @Test
-   public void testWithNamespaceInXpath() throws Exception {
+   void testWithNamespaceInXpath() throws Exception {
       String xpathStr = """
             declare namespace ser='http://www.example.com/hello';
             //ser:sayHelloResponse/sayHello
@@ -55,7 +56,7 @@ public class XmlHolderTest {
    }
 
    @Test
-   public void testWithNamespaceInHolder() throws Exception {
+   void testWithNamespaceInHolder() throws Exception {
       String xpathStr = """
             //ser:sayHelloResponse/sayHello
             """;

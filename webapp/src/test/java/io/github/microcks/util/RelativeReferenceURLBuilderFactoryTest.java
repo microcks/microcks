@@ -15,21 +15,21 @@
  */
 package io.github.microcks.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for RelativeReferenceURLBuilderFactory.
  * @author laurent
  */
-public class RelativeReferenceURLBuilderFactoryTest {
+class RelativeReferenceURLBuilderFactoryTest {
 
    @Test
-   public void testGetRelativeReferenceURLBuilder() {
+   void testGetRelativeReferenceURLBuilder() {
       RelativeReferenceURLBuilder builder = RelativeReferenceURLBuilderFactory.getRelativeReferenceURLBuilder(null);
       assertTrue(builder instanceof SimpleReferenceURLBuilder);
 

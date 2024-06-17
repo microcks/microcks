@@ -23,12 +23,14 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.script.ScriptEngineBinder;
+import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
 
@@ -75,7 +77,7 @@ import java.util.regex.Pattern;
 public class SoapController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(SoapController.class);
+   private static final Logger log = LoggerFactory.getLogger(SoapController.class);
 
    /** Regular expression pattern for capturing Soap Operation name from body. */
    private static final Pattern OPERATION_CAPTURE_PATTERN = Pattern
@@ -85,29 +87,33 @@ public class SoapController {
          .compile("\\$\\{\s*([a-zA-Z0-9-_]+)\s*\\}", Pattern.DOTALL);
 
    private final ServiceRepository serviceRepository;
+   private final ServiceStateRepository serviceStateRepository;
    private final ResponseRepository responseRepository;
    private final ResourceRepository resourceRepository;
    private final ApplicationContext applicationContext;
    private final ProxyService proxyService;
 
    @Value("${mocks.enable-invocation-stats}")
-   private final Boolean enableInvocationStats = null;
+   private Boolean enableInvocationStats;
 
    @Value("${validation.resourceUrl}")
-   private final String resourceUrl = null;
+   private String resourceUrl;
 
 
    /**
     * Build a SoapController with required dependencies.
-    * @param serviceRepository  The repository to access services definitions
-    * @param responseRepository The repository to access responses definitions
-    * @param resourceRepository The repository to access resources artifacts
-    * @param applicationContext The Spring application context
-    * @param proxyService       The proxy to external URLs or services
+    * @param serviceRepository      The repository to access services definitions
+    * @param serviceStateRepository The repository to access service state
+    * @param responseRepository     The repository to access responses definitions
+    * @param resourceRepository     The repository to access resources artifacts
+    * @param applicationContext     The Spring application context
+    * @param proxyService           The proxy to external URLs or services
     */
-   public SoapController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
-         ResourceRepository resourceRepository, ApplicationContext applicationContext, ProxyService proxyService) {
+   public SoapController(ServiceRepository serviceRepository, ServiceStateRepository serviceStateRepository,
+         ResponseRepository responseRepository, ResourceRepository resourceRepository,
+         ApplicationContext applicationContext, ProxyService proxyService) {
       this.serviceRepository = serviceRepository;
+      this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
       this.applicationContext = applicationContext;
@@ -225,7 +231,7 @@ public class SoapController {
             if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
                dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
             } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-               dispatchContext = getDispatchCriteriaFromScriptEval(dispatcherRules, body, request);
+               dispatchContext = getDispatchCriteriaFromScriptEval(service, dispatcherRules, body, request);
             } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
                dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
             } else if (DispatchStyles.PROXY.equals(dispatcher)) {
@@ -290,7 +296,7 @@ public class SoapController {
          MockControllerCommons.waitForDelay(startTime, delay);
 
          // Publish an invocation event before returning if enabled.
-         if (enableInvocationStats) {
+         if (Boolean.TRUE.equals(enableInvocationStats)) {
             MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
          }
 
@@ -380,14 +386,15 @@ public class SoapController {
    }
 
    /** Build a dispatch context after a Groovy script evaluation coming from rules. */
-   private DispatchContext getDispatchCriteriaFromScriptEval(String dispatcherRules, String body,
+   private DispatchContext getDispatchCriteriaFromScriptEval(Service service, String dispatcherRules, String body,
          HttpServletRequest request) {
       ScriptEngineManager sem = new ScriptEngineManager();
       Map<String, Object> requestContext = new HashMap<>();
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
+         ScriptEngineBinder.bindEnvironment(se, body, requestContext,
+               new ServiceStateStore(serviceStateRepository, service.getId()), request);
          String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
          return new DispatchContext((String) se.eval(script), requestContext);
       } catch (Exception e) {

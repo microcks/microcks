@@ -23,7 +23,7 @@
     "@angular/platform-browser-dynamic": "~8.2.0",
     "@angular/router": "~8.2.0",
     "jquery": "^3.5.0",
-    "keycloak-js": "^20.0.2",
+    "keycloak-js": "^22.0.5",
     "ng2-file-upload": "^1.4.0",
     "ngx-bootstrap": "^5.6.1",
     "ngx-highlightjs": "^4.0.2",

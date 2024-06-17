@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.ClientHttpRequest;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
@@ -45,7 +46,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
@@ -58,13 +58,13 @@ import java.util.TreeSet;
 public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(HttpTestRunner.class);
+   private static final Logger log = LoggerFactory.getLogger(HttpTestRunner.class);
+
+   private static final String IOEXCEPTION_STATUS_CODE = "IOException while getting raw status code in response";
 
    private Secret secret;
 
    private ClientHttpRequestFactory clientHttpRequestFactory;
-
-   private Map<String, Secret> cachedSecrets;
 
    /**
     * Set the Secret used for securing the requests.
@@ -85,27 +85,26 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
    @Override
    public List<TestReturn> runTest(Service service, Operation operation, TestResult testResult, List<Request> requests,
          String endpointUrl, HttpMethod method) throws URISyntaxException, IOException {
-      if (log.isDebugEnabled()) {
-         log.debug("Launching test run on {} for {} request(s)", endpointUrl, requests.size());
-      }
+
+      log.debug("Launching test run on {} for {} request(s)", endpointUrl, requests.size());
 
       if (requests.isEmpty()) {
          return null;
       }
 
       // Initialize result container.
-      List<TestReturn> result = new ArrayList<TestReturn>();
+      List<TestReturn> result = new ArrayList<>();
 
       for (Request request : requests) {
          // Reset status code, message and request each time.
          int code = TestReturn.SUCCESS_CODE;
          String message = null;
          String customizedEndpointUrl = endpointUrl;
-         if (service.getType().equals(ServiceType.REST)) {
+         if (ServiceType.REST.equals(service.getType())) {
             String operationName = operation.getName();
             // Name may start with verb, remove it if present.
-            if (operationName.indexOf(' ') > 0 && operationName.indexOf(' ') < operationName.length()) {
-               operationName = operationName.split(" ")[1];
+            if (operationName.trim().contains(" ")) {
+               operationName = operationName.trim().split(" ")[1];
             }
 
             customizedEndpointUrl += URIBuilder.buildURIFromPattern(operationName, request.getQueryParameters());
@@ -113,33 +112,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
          }
          ClientHttpRequest httpRequest = clientHttpRequestFactory.createRequest(new URI(customizedEndpointUrl), method);
 
-         // Set headers to request if any. Start with those coming from request itself.
-         // Add or override existing headers with test specific ones for operation and globals.
-         Set<Header> headers = new HashSet<>();
-         if (request.getHeaders() != null) {
-            headers.addAll(request.getHeaders());
-         }
-         if (testResult.getOperationsHeaders() != null) {
-            if (testResult.getOperationsHeaders().getGlobals() != null) {
-               headers.addAll(testResult.getOperationsHeaders().getGlobals());
-            }
-            if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
-               headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
-            }
-         }
-         if (!headers.isEmpty()) {
-            for (Header header : headers) {
-               log.debug("Adding header {} to request", header.getName());
-               httpRequest.getHeaders().add(header.getName(), buildValue(header.getValues()));
-            }
-            // Update request headers for traceability of possibly added ones.
-            request.setHeaders(headers);
-         }
-
-         // Now manage specific authorization headers if there's a secret.
-         if (secret != null) {
-            addAuthorizationHeadersFromSecret(httpRequest, request, secret);
-         }
+         // Prepare headers on httpRequest and report on request.
+         Set<Header> headers = prepareRequestHeaders(operation, httpRequest, request, testResult);
 
          // Allow extensions to realize some pre-processing of request.
          prepareRequest(request);
@@ -164,13 +138,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
          }
          long duration = System.currentTimeMillis() - startTime;
 
-         // Extract and store response body so that stream may not be consumed more than o1 time ;-)
-         String responseContent = null;
-         if (httpResponse != null) {
-            StringWriter writer = new StringWriter();
-            IOUtils.copy(httpResponse.getBody(), writer);
-            responseContent = writer.toString();
-         }
+         // Extract and store response body so that stream may not be consumed more than 1 time ;-)
+         String responseContent = getResponseContent(httpResponse);
 
          // If still in success, check if http code is out of correct ranges (20x and 30x).
          if (code == TestReturn.SUCCESS_CODE) {
@@ -178,22 +147,9 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
             message = extractTestReturnMessage(service, operation, request, httpResponse);
          }
 
-         // Create a Response object for returning.
+         // Create a Response object and complete it for returning.
          Response response = new Response();
-         if (httpResponse != null) {
-            response.setContent(responseContent);
-            response.setStatus(String.valueOf(httpResponse.getStatusCode().value()));
-            log.debug("Response Content-Type: {}", httpResponse.getHeaders().getContentType());
-            if (httpResponse.getHeaders().getContentType() != null) {
-               response.setMediaType(httpResponse.getHeaders().getContentType().toString());
-            }
-            headers = buildHeaders(httpResponse);
-            if (headers != null) {
-               response.setHeaders(headers);
-            }
-            log.info("Closing http response");
-            httpResponse.close();
-         }
+         completeResponse(response, httpResponse, responseContent);
 
          result.add(new TestReturn(code, duration, message, request, response));
       }
@@ -222,6 +178,62 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
    }
 
    /**
+    * Manage headers or additional headers preparation on httpRequest and report on request.
+    * @param operation   The operation this request is prepared for
+    * @param httpRequest The http request to preapre
+    * @param request     The recorded microcks request to report values on
+    * @param testResult  The results that may contain headers override
+    * @return The prepared headers.
+    */
+   protected Set<Header> prepareRequestHeaders(Operation operation, ClientHttpRequest httpRequest, Request request,
+         TestResult testResult) {
+      Set<Header> headers = new HashSet<>();
+
+      // Set headers to request if any. Start with those coming from request itself.
+      if (request.getHeaders() != null) {
+         headers.addAll(request.getHeaders());
+      }
+      // Add or override existing headers with test specific ones for operation and globals.
+      if (testResult.getOperationsHeaders() != null) {
+         if (testResult.getOperationsHeaders().getGlobals() != null) {
+            headers.addAll(testResult.getOperationsHeaders().getGlobals());
+         }
+         if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
+            headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
+         }
+      }
+      if (!headers.isEmpty()) {
+         for (Header header : headers) {
+            log.debug("Adding header {} to request", header.getName());
+            httpRequest.getHeaders().add(header.getName(), buildValue(header.getValues()));
+         }
+      }
+      // Update request headers for traceability of possibly added ones.
+      request.setHeaders(headers);
+
+      // Now manage specific authorization headers if there's a secret.
+      if (secret != null) {
+         addAuthorizationHeadersFromSecret(httpRequest, request, secret);
+      }
+      return headers;
+   }
+
+   /**
+    * Extract the Http response body as a string.
+    * @param httpResponse The http response
+    * @return The UTF-8 string representation of response body content
+    * @throws IOException if http response cannot be read
+    */
+   protected String getResponseContent(ClientHttpResponse httpResponse) throws IOException {
+      if (httpResponse != null) {
+         StringWriter writer = new StringWriter();
+         IOUtils.copy(httpResponse.getBody(), writer, StandardCharsets.UTF_8);
+         return writer.toString();
+      }
+      return null;
+   }
+
+   /**
     * This is a hook for allowing sub-classes to redefine the criteria for telling a response is a success or a failure.
     * This implementation check raw http code (success if in 20x range, failure if not).
     * @param service         The service under test
@@ -241,7 +253,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
             code = TestReturn.FAILURE_CODE;
          }
       } catch (IOException ioe) {
-         log.debug("IOException while getting raw status code in response", ioe);
+         log.debug(IOEXCEPTION_STATUS_CODE, ioe);
          code = TestReturn.FAILURE_CODE;
       }
       return code;
@@ -272,16 +284,43 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
       try {
          message = String.valueOf(httpResponse.getStatusCode().value());
       } catch (IOException ioe) {
-         log.debug("IOException while getting raw status code in response", ioe);
-         message = "IOException while getting raw status code in response";
+         log.debug(IOEXCEPTION_STATUS_CODE, ioe);
+         message = IOEXCEPTION_STATUS_CODE;
       }
       return message;
    }
 
+   /**
+    * Complete the microcks domain response from http response.
+    * @param response        The Microcks domain response
+    * @param httpResponse    The Http response
+    * @param responseContent The Http response body content previously extracted (to prevent reading it multiple time)
+    * @throws IOException If status code of response cannot be read
+    */
+   protected void completeResponse(Response response, ClientHttpResponse httpResponse, String responseContent)
+         throws IOException {
+      if (httpResponse != null) {
+         response.setContent(responseContent);
+         response.setStatus(String.valueOf(httpResponse.getStatusCode().value()));
+         log.debug("Response Content-Type: {}", httpResponse.getHeaders().getContentType());
+
+         MediaType contentType = httpResponse.getHeaders().getContentType();
+         if (contentType != null) {
+            response.setMediaType(contentType.toString());
+         }
+         Set<Header> headers = buildHeaders(httpResponse);
+         if (!headers.isEmpty()) {
+            response.setHeaders(headers);
+         }
+         log.debug("Closing http response");
+         httpResponse.close();
+      }
+   }
+
    /** Build domain headers from ClientHttpResponse ones. */
    private Set<Header> buildHeaders(ClientHttpResponse httpResponse) {
-      if (httpResponse.getHeaders() != null && !httpResponse.getHeaders().isEmpty()) {
-         Set<Header> headers = new HashSet<>();
+      Set<Header> headers = new HashSet<>();
+      if (!httpResponse.getHeaders().isEmpty()) {
          HttpHeaders responseHeaders = httpResponse.getHeaders();
          for (Entry<String, List<String>> responseHeader : responseHeaders.entrySet()) {
             Header header = new Header();
@@ -289,9 +328,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
             header.setValues(new HashSet<>(responseHeader.getValue()));
             headers.add(header);
          }
-         return headers;
       }
-      return null;
+      return headers;
    }
 
    /** Complete the test request with authorization data coming from secret. */
@@ -310,7 +348,7 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
 
          // If Token authentication required, set request property.
          if (secret.getToken() != null) {
-            if (secret.getTokenHeader() != null && secret.getTokenHeader().trim().length() > 0) {
+            if (secret.getTokenHeader() != null && !secret.getTokenHeader().trim().isEmpty()) {
                log.debug("Secret contains token and token header, adding them as request header");
                httpRequest.getHeaders().set(secret.getTokenHeader().trim(), secret.getToken());
                // Add to Microcks request for traceability.

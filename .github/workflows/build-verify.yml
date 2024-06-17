@@ -4,15 +4,21 @@ on:
     paths-ignore:
       - '.github/**'
       - '.gitignore'
+      - 'ADOPTERS*'
       - 'LICENSE'
       - 'README*'
+      - 'CHANGELOG*'
+      - 'ROADMAP*'
   pull_request:
     paths-ignore:
       - '.github/**'
       - '.gitignore'
+      - 'ADOPTERS*'
       - 'LICENSE'
       - 'README*'
-
+      - 'CHANGELOG*'
+      - 'ROADMAP*'
+permissions: read-all
 jobs:
   build-verify-package:
     runs-on: ubuntu-latest
@@ -40,6 +46,8 @@ jobs:
       - name: Run Integration tests
         run: |
           cd ${{github.workspace}}/webapp
+          mvn -Pit test
+          cd ${{github.workspace}}/minions/async
           mvn -Pit test
 
       - name: Verify Javadoc completion

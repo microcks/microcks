@@ -15,7 +15,6 @@
  */
 package io.github.microcks.util.grpc;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.Resource;
@@ -30,10 +29,12 @@ import io.github.microcks.util.test.AbstractTestRunner;
 
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
+import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.grpc.CallOptions;
 import io.grpc.Deadline;
 import io.grpc.Grpc;
+import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.TlsChannelCredentials;
 import io.grpc.stub.ClientCalls;
@@ -41,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpMethod;
 
-import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -55,19 +55,19 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * An extension of AbstractTestRunner that deals with GRPC calls. Response is received as byte array and then parsed as
- * DynamicMessage to chack that is conforms with Service Protobuf description.
+ * DynamicMessage to check that it conforms with Service Protobuf description.
  * @author laurent
  */
 public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(GrpcTestRunner.class);
+   private final static Logger log = LoggerFactory.getLogger(GrpcTestRunner.class);
 
    private long timeout = 10000L;
 
    private Secret secret;
 
-   private ResourceRepository resourceRepository;
+   private final ResourceRepository resourceRepository;
 
    /**
     * Build a new GrpcTestRunner.
@@ -107,7 +107,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
       List<TestReturn> results = new ArrayList<>();
 
       // Rebuild the GRPC fullMethodName.
-      String fullMethodName = service.getXmlNS() + "." + service.getName() + "/" + operation.getName();
+      String fullMethodName = service.getName() + "/" + operation.getName();
 
       // Build a new GRPC Channel from endpoint URL.
       URL endpoint = new URL(endpointUrl);
@@ -120,23 +120,26 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
             tlsBuilder.trustManager(new ByteArrayInputStream(secret.getCaCertPem().getBytes(StandardCharsets.UTF_8)));
          } else {
             // Install a trust manager that accepts everything and does not validate certificate chains.
-            tlsBuilder.trustManager(new TrustManager[] { new X509TrustManager() {
+            tlsBuilder.trustManager(new X509TrustManager() {
                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                   return null;
                }
 
                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                  // Accept everything.
                }
 
                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                  // Accept everything.
                }
-            } });
+            });
          }
          // Build a Channel using the TLS Builder.
          channel = Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), tlsBuilder.build()).build();
       } else {
-         // Build a simple Channel using plain text.
-         channel = Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), null).usePlaintext()
+         // Build a simple Channel using no creds (now default to plain text so usePlainText() is no longer necessary).
+         channel = Grpc
+               .newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), InsecureChannelCredentials.create())
                .build();
       }
 
@@ -156,7 +159,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
       try {
          md = GrpcUtil.findMethodDescriptor(pbResource.getContent(), service.getName(), operation.getName());
       } catch (Exception e) {
-         log.error("Protobuf descriptor cannot be read or parsed: " + e.getMessage());
+         log.error("Protobuf descriptor cannot be read or parsed: {}", e.getMessage());
          results.add(new TestReturn(TestReturn.FAILURE_CODE, 0,
                "Protobuf descriptor cannot be read or parsed: " + e.getMessage(), null, null));
          return results;
@@ -183,7 +186,8 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
          if (secret != null && secret.getToken() != null) {
             log.debug("Secret contains token and maybe token header, adding them as call credentials");
-            callOptions.withCallCredentials(new TokenCallCredentials(secret.getToken(), secret.getTokenHeader()));
+            callOptions = callOptions
+                  .withCallCredentials(new TokenCallCredentials(secret.getToken(), secret.getTokenHeader()));
          }
 
          // Actually execute request.
@@ -196,7 +200,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          Response response = new Response();
          response.setStatus("200");
          response.setMediaType("application/x-protobuf");
-         response.setContent(new String(responseBytes, "UTF-8"));
+         response.setContent(new String(responseBytes, StandardCharsets.UTF_8));
 
          try {
             // Validate incoming message parsing a DynamicMessage.
@@ -208,12 +212,11 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
             results.add(new TestReturn(code, duration, message, request, response));
          } catch (InvalidProtocolBufferException ipbe) {
-            log.error("Received bytes cannot be transformed in " + md.getOutputType().getFullName());
+            log.error("Received bytes cannot be transformed in {}", md.getOutputType().getFullName());
             results.add(new TestReturn(TestReturn.FAILURE_CODE, duration,
-                  "Received bytes cannot be transformed in \" + md.getOutputType().getFullName()", request, response));
+                  "Received bytes cannot be transformed in " + md.getOutputType().getFullName(), request, response));
          }
       }
-
       return results;
    }
 

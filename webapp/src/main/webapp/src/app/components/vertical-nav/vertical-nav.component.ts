@@ -35,6 +35,7 @@ import { IAuthenticationService } from '../../services/auth.service';
 import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from '../../models/user.model';
 import { ConfigService } from 'src/app/services/config.service';
+import {AnonymousAuthenticationService} from '../../services/auth-anonymous.service';
 
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
 // import * as $ from 'jquery';
@@ -142,6 +143,14 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
 
   public user(): Observable<User> {
     return this.authService.getAuthenticatedUser();
+  }
+  /**
+   * Checks if authentication is enabled using the configurationService.
+   *
+   * @returns  Returns true if authentication is enabled, false otherwise.
+   */
+  public isAuthEnabled(): boolean {
+    return this.config.authType() !== 'anonymous';
   }
 
   public logout(): void {
