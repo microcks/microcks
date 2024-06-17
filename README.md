@@ -17,6 +17,7 @@ It also reuses these assets for running compliance and non-regression tests agai
 ## Getting Started
 
 * [Documentation](https://microcks.io/documentation/getting-started/)
+* [Microcks Community](https://github.com/microcks/community) and community meeting
 
 To get involved with our community, please make sure you are familiar with the project's [Code of Conduct](./CODE_OF_CONDUCT.md).
 
