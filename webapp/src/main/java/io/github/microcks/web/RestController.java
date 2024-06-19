@@ -59,6 +59,7 @@ import javax.annotation.CheckForNull;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -281,7 +282,7 @@ public class RestController {
 
          // Return response content or just headers.
          if (responseContent != null) {
-            return new ResponseEntity<>(responseContent.getBytes(), responseHeaders, status);
+            return new ResponseEntity<>(responseContent.getBytes(StandardCharsets.UTF_8), responseHeaders, status);
          }
          return new ResponseEntity<>(responseHeaders, status);
       }
