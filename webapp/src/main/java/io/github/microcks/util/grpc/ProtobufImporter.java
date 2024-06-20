@@ -264,7 +264,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
                }
             }
 
-            if (hasOnlyPrimitiveArgs) {
+            if (hasOnlyPrimitiveArgs && !method.getInputType().getFields().isEmpty()) {
                operation.setDispatcher(DispatchStyles.QUERY_ARGS);
                operation.setDispatcherRules(extractOperationParams(method.getInputType().getFields()));
             }
