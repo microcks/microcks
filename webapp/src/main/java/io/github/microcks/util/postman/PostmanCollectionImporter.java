@@ -264,8 +264,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   if (requestNode.path("body").has(GRAPHQL_NODE)) {
                      // We must transform JSON representing variables into a Map<String, String>
                      // before building a dispatchCriteria matching the rules.
-                     String variables = requestNode.path("body").path(GRAPHQL_NODE).path(VARIABLES_NODE)
-                           .asText();
+                     String variables = requestNode.path("body").path(GRAPHQL_NODE).path(VARIABLES_NODE).asText();
                      dispatchCriteria = extractQueryArgsCriteria(rootDispatcherRules, variables);
                   }
                   // or for gRPC.
