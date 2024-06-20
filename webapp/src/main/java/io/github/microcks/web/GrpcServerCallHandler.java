@@ -231,7 +231,6 @@ public class GrpcServerCallHandler {
 
          // Depending on dispatcher, evaluate request with rules.
          if (dispatcher != null) {
-            System.err.println("Dispatcher is " + dispatcher);
             switch (dispatcher) {
                case DispatchStyles.QUERY_ARGS:
                   try {
@@ -269,7 +268,6 @@ public class GrpcServerCallHandler {
                   break;
             }
          }
-         System.err.println("Dispatch Criteria is: " + dispatchCriteria);
          return new DispatchContext(dispatchCriteria, requestContext);
       }
 
