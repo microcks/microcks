@@ -1,0 +1,62 @@
+[
+  {
+    "name": "io.github.microcks.util.el.EvaluableRequest",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.NowELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.PutInContextELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.RandomBooleanELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.RandomCityELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.RandomCountryCodeELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.RandomIntELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.RandomStringELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.RandomValueELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.microcks.util.el.function.UUIDELFunction",
+    "queryAllDeclaredMethods": true, "queryAllDeclaredConstructors": true, "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true, "queryAllPublicConstructors": true, "queryAllPublicFields": true,
+    "allDeclaredClasses": true, "allDeclaredConstructors": true
+  }
+]
