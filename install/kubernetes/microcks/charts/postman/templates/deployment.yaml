@@ -11,7 +11,7 @@ metadata:
   annotations:
     {{- include "postman-pod-annotations" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicas }}
+  replicas: {{ .Values.pod.replicas }}
   selector:
     matchLabels:
       app: "{{ .Values.appName }}"

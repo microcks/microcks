@@ -1,14 +1,7 @@
 {{/*
-Customized the name of this chart.
-*/}}
-{{- define "async.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
-
-
-{{/*
 Print the image
 */}}
-{{- define "async.image" -}}
+{{- define "pod.image" -}}
 {{- $image := printf "%s:%s" .repository .tag }}
 {{- if .registry }}
 {{- $image = printf "%s/%s" .registry $image }}
@@ -59,6 +52,24 @@ Service annotations
 */}}
 {{- define "async-service-annotations" -}}
 {{- range $name, $value := .Values.features.async.service.annotations }}
+{{ $name }}: {{ $value | quote }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+configmap labels
+*/}}
+{{- define "async-configmap-labels" -}}
+{{- range $name, $value := .Values.features.async.configmap.labels }}
+{{ $name }}: {{ $value | quote }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+configmap annotations
+*/}}
+{{- define "async-configmap-annotations" -}}
+{{- range $name, $value := .Values.features.async.configmap.annotations }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
