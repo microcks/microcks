@@ -134,6 +134,24 @@
     "allPermittedSubclasses": true
   },
   {
+    "condition": {
+      "typeReachable": "io.grpc.netty.shaded.io.netty.channel.socket.nio.NioSocketChannel"
+    },
+    "name": "io.grpc.netty.shaded.io.netty.channel.socket.nio.NioSocketChannel",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
     "name": "org.springframework.security.web.access.HandlerMappingIntrospectorRequestTransformer",
     "queryAllDeclaredMethods": true,
     "queryAllDeclaredConstructors": true,
