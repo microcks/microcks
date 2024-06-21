@@ -12,6 +12,8 @@ kubeVersion: '>=1.17.0-0'
 maintainers:
 - email: laurent.broudoux@gmail.com
   name: Laurent Broudoux
+- email: ax@civ.ax
+  name: Ariy C
 name: microcks
 sources:
 - http://github.com/microcks/microcks/

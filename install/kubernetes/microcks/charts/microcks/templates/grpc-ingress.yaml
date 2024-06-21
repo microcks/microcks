@@ -1,0 +1,39 @@
+{{- if .Values.ingresses -}}
+
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: "{{ .Values.appName }}-grpc"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+    ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/backend-protocol: "GRPC"
+    {{- if (.Values.microcks.grpcEnableTLS) }}
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    {{- end }}
+    {{- with .Values.microcks.grpcIngressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if .Values.microcks.grpcIngressClassName }}
+  ingressClassName: {{ .Values.microcks.grpcIngressClassName | quote }}
+  {{- end }}
+  tls:
+  - hosts:
+     - {{ ( include "microcks-grpc.url" . ) }}
+  rules:
+  - host: {{ ( include "microcks-grpc.url" . ) }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: "{{ .Values.appName }}-grpc"
+            port:
+              number: 9090
+{{- end }}

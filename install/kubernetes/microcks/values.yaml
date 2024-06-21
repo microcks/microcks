@@ -7,101 +7,115 @@ global:
   imagePullSecrets: []
   imageRegistry: ""
 
-microcks: # Waiting for verify
-  # This SSL toggle only control the reDirect URL protocol in realms.config file.
-  ssl:
-    enabled: false
-  url: microcks.example.com
-  #url: microcks-microcks.192.168.64.6.nip.io
-  #ingressSecretRef: my-secret-for-microcks-ingress
-  #ingressAnnotations:
-    #cert-manager.io/issuer: my-cert-issuer
-    #kubernetes.io/tls-acme: "true"
-  #ingressClassName: nginx
+externalDependencies:
+  kafka:
+    url: "kafka.example.com"
+    port: "9092"
+    protocol: "PLAINTEXT"
+  mongodb:
+    uri: "mognodb.example.com"
+    port: "27017"
+    # database: ""
+    # uriParemeters: "?ssl=true"
+    auth:
+      username: ""
+      password: ""
+      secretRef:
+        secret: ""
+        usernameKey: ""
+        passwordKey: ""
+  keycloak:
+    enabled: "true"
+    url: "keycloak.example.com"
+    realm: "microcks"
+    auth:
+      adminUsername: "microcks"
+      admminPassword: "keycloak-microcks"
+      secretRef:
+        secret: keycloak
+        usernameKey: "username"
+        passwordKey: "password"
 
-  grpcEnableTLS: true
-  #grpcSecretRef: my-secret-for-microcks-grpc
-  #grpcIngressClassName: nginx
-    #grpcIngressAnnotations:
-  #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
-  #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
+microcks:
+  nameOverride: ""
+  pod:
+    labels: {}
+    annotations: {}
+    image:
+      registry: "quay.io"
+      repository: "quay.io/microcks/microcks"
+      tag: "nightly"
+      pullPolicy: IfNotPresent
+    replicas: 1
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 200m
+      limits:
+        memory: 512Mi
+        cpu: 500m
+    logLevel: info
+    # Enabling by adding yaml extra application configurations
+    extraProperties:
+      #server:
+        #tomcat:
+          #remoteip:
+            #internal-proxies: 172.16.0.0/12
+    env:
+      - name: SERVICES_UPDATE_INTERVAL
+        value: 0 0 0/2 * * *
+      #- name: MAX_UPLOAD_FILE_SIZE
+      #  value: 5MB
+      #- name: CORS_REST_ALLOWED_ORIGINS
+      #  value: my-site.acme.com
+      #- name: CORS_REST_ALLOW_CREDENTIALS
+      #  value: 'true'
+  service:
+    serviceType: LoadBalancer
+    labels: {}
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: "microcks.example.com"
+      service.beta.kubernetes.io/aws-load-balancer-name: "microcks"
+      service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
+      service.beta.kubernetes.io/aws-load-balancer-type: "external"
+      service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "instance"
+    port: 8080
+    targetPort: 8080
+  config:
+    # This SSL toggle only control the reDirect URL protocol in realms.config file.
+    ssl:
+      enabled: false
+    url: microcks.example.com
+    #url: microcks-microcks.192.168.64.6.nip.io
+    #ingressSecretRef: my-secret-for-microcks-ingress
+    #ingressAnnotations:
+      #cert-manager.io/issuer: my-cert-issuer
+      #kubernetes.io/tls-acme: "true"
+    #ingressClassName: nginx
 
-  generateCert: true
-  image: quay.io/microcks/microcks:nightly
-  replicas: 1
-  # Uncomment to change Microcks Service to a NodePort
-  serviceType: ClusterIP
-  serviceAnnotations: {}
-    # external-dns.alpha.kubernetes.io/hostname: "microcks.example.com"
-    # service.beta.kubernetes.io/aws-load-balancer-name: "microcks"
-    # service.beta.kubernetes.io/aws-load-balancer-scheme: "internal"
-    # service.beta.kubernetes.io/aws-load-balancer-type: "external"
-    # service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "instance"
+    grpcEnableTLS: true
+    #grpcSecretRef: my-secret-for-microcks-grpc
+    #grpcIngressClassName: nginx
+      #grpcIngressAnnotations:
+    #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
+    #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
 
-  resources:
-    requests:
-      cpu: 200m
-      memory: 512Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
+    generateCert: true
+    # Enabling by adding yaml extra application configurations
 
-  # Enabling by adding yaml extra application configurations
-  extraProperties:
-    #server:
-      #tomcat:
-        #remoteip:
-          #internal-proxies: 172.16.0.0/12
+    # Enabling/disabling mock invocation stats.
+    mockInvocationStats: true
 
-  env:
-    - name: SERVICES_UPDATE_INTERVAL
-      value: 0 0 0/2 * * *
-    #- name: MAX_UPLOAD_FILE_SIZE
-    #  value: 5MB
-    #- name: CORS_REST_ALLOWED_ORIGINS
-    #  value: my-site.acme.com
-    #- name: CORS_REST_ALLOW_CREDENTIALS
-    #  value: 'true'
-
-  #logLevel: TRACE | DEBUG | INFO | WARN
-  logLevel: DEBUG
-
-  # Enabling/disabling mock invocation stats.
-  mockInvocationStats: true
-
-  # Custom secret for Microcks
-  # It can be usec to deploy a keystore to add certificats to trust sso connection with keycloak.
-  # In this case: Use an existing secret with the provided keystore.
-  # Don't forget to add java options like that if your secret is a keystore:
-  # JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/deployments/config/custom/secret/KEYSTORE -Djavax.net.ssl.trustStorePassword=XXXXX"
-  #customSecretRef:
-  #  secret: microcks-keystore
-  #  key: cacerts
-  dependencies: # Waiting for verify
-    mongodb:
-      uri: "microcks-mognodb.example.com:27017"
-      # database: ""
-      # uriParemeters: "?ssl=true"
-      auth:
-        username: ""
-        password: ""
-        secretRef: ""
-          secret: ""
-          usernameKey: ""
-          passwordKey: ""
-    keycloak:
-      enabled: "true"
-      url: "microcks-keycloak.example.com"  # Bitnami chart using 80 as keycloak services
-      realm: "microcks"
-      serviceAccount: microcks-serviceaccount
-      serviceAccountCredentials: ab54d329-e435-41ae-a900-ec6b3fe15c54
-      auth:
-        adminUsername: "hex"
-        admminPassword: "keycloak-microcks"
-        secretRef:
-          secret: keycloak
-          usernameKey: "username"
-          passwordKey: "password"
+    # Custom secret for Microcks
+    # It can be usec to deploy a keystore to add certificats to trust sso connection with   keycloak.
+    # In this case: Use an existing secret with the provided keystore.
+    # Don't forget to add java options like that if your secret is a keystore:
+    # JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/deployments/config/custom/secret/KEYSTORE   -Djavax.net.ssl.trustStorePassword=XXXXX"
+    #customSecretRef:
+    #  secret: microcks-keystore
+    #  key: cacerts
+    postman-runtime:
+      port: 8080
   realms:
     users:
       role:
@@ -115,8 +129,7 @@ microcks: # Waiting for verify
           username: admin
           password: microcks123
 
-postman: # WfV
-  nameOverride: ""
+postman:
   pod:
     labels: {}
     annotations: {}
@@ -135,17 +148,21 @@ postman: # WfV
         cpu: 100m
     logLevel: info
   service:
+    type: ClusterIP
     labels: {}
     annotations: {}
     port: 8000
     targetPort: 3000
 
-
-keycloak: # WIP, but almost done, WfV
-  # Use keycloack in this release
-  enabled: true
-  # Install keycloack in this release
+keycloak:
+  ## ============================================================================
+  ## For more customisation and specifics please check [ charts/keycloak/values.yaml ]
+  ## Here are only some of the custimisable configurations for minimised setup.
+  ## We do not recommend to deploy everything with an Omni-charts.
+  ## Please considering deploying and maintaining these components independently.
+  ## ============================================================================
   install: false
+  ## ↓ Process the microcks-realm.json file via configMap !!! NOT VERIFIED !!!
   extraEnvVars:
     - name: KEYCLOAK_EXTRA_ARGS
       value: "-Dkeycloak.import=/tmp/import/microcks-realm.json"
@@ -160,6 +177,7 @@ keycloak: # WIP, but almost done, WfV
         items:
         - key: "microcks-realms.json"
           path: "microcks-realms.json"
+  ## ↑ Process the microcks-realm.json file via configMap !!! NOT VERIFIED !!!
   auth:
     adminUser: "user"
   # Unless you uncomment following line, admin password will be randomly generated.
@@ -179,10 +197,6 @@ keycloak: # WIP, but almost done, WfV
     truststorePassword: ""
     passwordsSecret: ""
   ## Keycloak resource requests and limits
-  ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
-  ## @param resourcesPreset Set container resources according to one common preset (allowed   values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if   resources is set (resources is recommended for production).
-  ## More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/  _resources.tpl#L15
-  ##
   resourcesPreset: "small"
   resources:
     requests:
@@ -191,42 +205,6 @@ keycloak: # WIP, but almost done, WfV
     limits:
       #cpu: 500m
       memory: 512Mi
-  ## @section Database parameters
-
-  ## PostgreSQL chart configuration
-  ## ref: https://github.com/bitnami/charts/blob/main/bitnami/postgresql/values.yaml
-  ## @param postgresql.enabled Switch to enable or disable the PostgreSQL helm chart
-  ## @param postgresql.auth.postgresPassword Password for the "postgres" admin user. Ignored if `auth.existingSecret` with key `postgres-password` is provided
-  ## @param postgresql.auth.username Name for a custom user to create
-  ## @param postgresql.auth.password Password for the custom user to create
-  ## @param postgresql.auth.database Name for a custom database to create
-  ## @param postgresql.auth.existingSecret Name of existing secret to use for PostgreSQL   credentials
-  ## @param postgresql.architecture PostgreSQL architecture (`standalone` or `replication`)
-  ##
-  postgresql:
-    enabled: true
-    auth:
-      postgresPassword: ""
-      username: bn_keycloak
-      password: ""
-      database: bitnami_keycloak
-      existingSecret: ""
-    architecture: standalone
-  ## External PostgreSQL configuration
-  ## All of these values are only used when postgresql.enabled is set to false
-  ## @param externalDatabase.host Database host
-  ## @param externalDatabase.port Database port number
-  ## @param externalDatabase.user Non-root username for Keycloak
-  ## @param externalDatabase.password Password for the non-root username for Keycloak
-  ## @param externalDatabase.database Keycloak database name
-  ## @param externalDatabase.existingSecret Name of an existing secret resource containing the database credentials
-  ## @param externalDatabase.existingSecretHostKey Name of an existing secret key containing the database host name
-  ## @param externalDatabase.existingSecretPortKey Name of an existing secret key containing the database port
-  ## @param externalDatabase.existingSecretUserKey Name of an existing secret key containing the database user
-  ## @param externalDatabase.existingSecretDatabaseKey Name of an existing secret key   containing the database name
-  ## @param externalDatabase.existingSecretPasswordKey Name of an existing secret key   containing the database credentials
-  ## @param externalDatabase.annotations Additional custom annotations for external database secret object
-  ##
   externalDatabase:
     host: ""
     port: 5432
@@ -243,52 +221,138 @@ keycloak: # WIP, but almost done, WfV
   logging:
     output: default
     level: INFO
-    persistent: true
-    volumeSize: 1Gi
-    # Unless you uncomment following line and set class, persistent volume claim is created
-    # with no storage class and relies on cluster default one.
-    #storageClassName: my-awesome-class
-    postgresImage: centos/postgresql-95-centos7:latest
-    username: userP
-    # Unless you uncomment following line, admin password will be randomly generated.
-    # Beware that in case of update, new value will be generated and overwrite existing one.
-    #password: 123
   serviceAccount:
     create: true
+    name: "" # default will be "keycloak"
 
-mongodb:  # WIP
+  postgresql:
+    ## ============================================================================
+    ## For more customisation and specifics please check [ charts/keycloak/charts/postgresql/values.yaml ]
+    ## Here are only some of the custimisable configurations for minimised setup.
+    ## We do not recommend to deploy everything with an Omni-charts.
+    ## Please considering deploying and maintaining these components independently.
+    ## ============================================================================
+    enabled: true
+    auth:
+      postgresPassword: ""
+      username: bn_keycloak
+      password: ""
+      database: bitnami_keycloak
+      existingSecret: ""
+    architecture: standalone
+    persistence:
+      enabled: true
+      existingClaim: ""
+      storageClass: ""
+      size: 4Gi
+
+mongodb:
+  ## ============================================================================
+  ## For more customisation and specifics please check [ charts/mongodb/values.yaml ]
+  ## Here are only some of the custimisable configurations for minimised setup.
+  ## We do not recommend to deploy everything with an Omni-charts.
+  ## Please considering deploying and maintaining these components independently.
+  ## ============================================================================
   install: false
-  uri: "microcks-mongodb.example.com:27017"
-  #uriParameters: "?ssl=true"
-  #database: sampledb
-  image: library/mongo:4.4.29
-  persistent: true
-  volumeSize: 2Gi
-  # Unless you uncomment following line and set class, persistent volume claim is created
-  # with no storage class and relies on cluster default one.
-  #storageClassName: my-awesome-class
-
-  username: "microcks"
-  # Unless you uncomment following line, admin password will be randomly generated.
-  # Beware that in case of update, new value will be generated and overwrite existing one.
-  password: "microcks"
-
-  # Or you can uncomment secretRef block if username and password are provided through a Secret.
-  #secretRef:
-    #secret: mongodb
-    #usernameKey: database-user
-    #passwordKey: database-password
-
-  #pvcAnnotations:
-    #helm.sh/resource-policy: keep
-
+  ## Standalone or replicaSet
+  architecture: standalone
+  useStatefulSet: false
+  containerPorts:
+    mongodb: 27017
+  auth:
+    enabled: true
+    rootUser: root
+    rootPassword: ""
+    ## NOTE: When existingSecret is set the previous parameters are ignored.
+    existingSecret: ""
+  tls:
+    enabled: false
+    mTLS:
+      ## IF TLS support is enabled, require clients to provide certificates
+      enabled: true
+    ## Generate a custom CA and self-signed certificates
+    ##
+    autoGenerated: true
+  persistence:
+    enabled: true
+    existingClaim: ""
+    ## Setting it to "keep" to avoid removing PVCs during a helm delete operation. Leaving it empty will delete PVCs after the chart deleted
+    resourcePolicy: "keep"
+    storageClass: ""
+    size: 4Gi
   resources:
-    requests:
-      cpu: 250m
-      memory: 512Mi
-    limits:
-      #cpu: 500m
-      memory: 512Mi
+    ## Example:
+    ## limits:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    ##
+    limits: {}
+    ## Examples:
+    ## requests:
+    ##    cpu: 100m
+    ##    memory: 128Mi
+    ##
+    requests: {}
+
+kafka:
+  ## ============================================================================
+  ## For more customisation and specifics please check [ charts/kafka/values.yaml ]
+  ## Here are only some of the custimisable configurations for minimised setup.
+  ## We do not recommend to deploy everything with an Omni-charts.
+  ## Please considering deploying and maintaining these components independently.
+  ## ============================================================================
+  install: false
+  listeners:
+    client:
+      containerPort: 9092
+      protocol: PLAINTEXT
+      name: CLIENT
+    controller:
+      name: CONTROLLER
+      containerPort: 9093
+      protocol: PLAINTEXT
+    external:
+      containerPort: 9095
+      protocol: PLAINTEXT
+      name: EXTERNAL
+  controller:
+    replicaCount: 1
+    resourcesPreset: "nano"
+    ## resourcesPreset will be ignored if resources is given.
+    resources: {}
+    persistence:
+      enabled: true
+      existingClaim: ""
+      storageClass: ""
+      size: 4Gi
+  externalAccess:
+    ## Enable Kubernetes external cluster access to Kafka brokers.
+    enabled: false
+    ## External IPs auto-discovery configuration
+    autoDiscovery:
+      enabled: false
+    ## Service settings
+    controller:
+      service:
+        type: LoadBalancer
+        ports:
+          external: 9094
+        annotations: {}
+
+schema-registry:
+  ## ============================================================================
+  ## For more customisation and specifics please check [ charts/schema-registry/values.yaml ]
+  ## Here are only some of the custimisable configurations for minimised setup.
+  ## We do not recommend to deploy everything with an Omni-charts.
+  ## Please considering deploying and maintaining these components independently.
+  ## ============================================================================
+  install: false
+  externalKafka:
+    ## The address and protocol should matches the Kafka instances configurations.
+    brokers:
+      - PLAINTEXT://kafka.9092
+    listener:
+      protocol: PLAINTEXT
 
 features:
   async:
@@ -296,72 +360,42 @@ features:
     defaultBinding: KAFKA
     defaultFrequency: 10
     defaultAvroEncoding: RAW
+    pod:
+      labels: {}
+      annotations: {}
+      image:
+        registry: "quay.io"
+        repository: "microcks/microcks-async-minion"
+        tag: "nightly"
+        pullPolicy: IfNotPresent
+      replicas: 1
+      resources:
+        requests: {}
+        limits: {}
+      logLevel: info
+      env:
+        #- name: OAUTH_CLIENT_ID
+        #  value: <kafka-oauth-client-id>
+        #- name: OAUTH_CLIENT_SECRET
+        #  value: <kafka-oauth-client-secret>
+        #- name: OAUTH_TOKEN_ENDPOINT_URI
+        #  value: <kafka-oauth-endpoint-uri>
+    service:
+      type: ClusterIP
+      labels: {}
+      annotations: {}
+      port: 8080
+      targetPort: 8080
 
-    image: quay.io/microcks/microcks-async-minion:nightly
-
-    env:
-      #- name: OAUTH_CLIENT_ID
-      #  value: <kafka-oauth-client-id>
-      #- name: OAUTH_CLIENT_SECRET
-      #  value: <kafka-oauth-client-secret>
-      #- name: OAUTH_TOKEN_ENDPOINT_URI
-      #  value: <kafka-oauth-endpoint-uri>
+    configmap:
+      labels: {}
+      annotations: {}
+      keycloak:
+        uri: "keycloak.example.com"
+        serviceAccount: "keycloak"
 
     kafka:
-      install: true
-      url: 192.168.99.100.nip.io
-      #url: kafka-bootstrap:9092
-      # Set this to your own class name if not using bare nginx
-      ingressClassName: nginx
-      persistent: false
-      volumeSize: 2Gi
-      resources:
-        #requests:
-          #cpu: 100m
-          #memory: 256Mi
-        limits:
-          #cpu: 500m
-          memory: 800Mi
-      zkResources:
-        #requests:
-          #cpu: 100m
-          #memory: 256Mi
-        limits:
-          #cpu: 500m
-          memory: 800Mi
-      schemaRegistry:
-        #url: http://schema-registry.192.168.99.100.nip.io
-        confluent: true
-        username: microcks
-        credentialsSource: USER_INFO
-
-      # If you choose not to install a Kafka broker and reuse on pre-existing,
-      # you may need to set some authentication parameters.
-      authentication:
-        # If not 'none', we support 'SSL' for mutual TLS and 'SASL_SSL' for SASL over TLS.
-        type: none #SSL #SASL_SSL
-        # For TLS transport, you'll always need a truststore to hold your cluster certificate.
-        # You have to setup a truststore type and a secret reference for retrieving content and password.
-        #truststoreType: PKCS12
-        #truststoreSecretRef:
-          #secret: kafka-cluster-ca-cert
-          #storeKey: ca.p12
-          #passwordKey: ca.password
-        # For mutual TLS authentication, you'll also need a keystore to hold your user private key.
-        # You have to setup a keystore type and a secret reference for retrieving content and password.
-        keystoreType: PKCS12
-        keystoreSecretRef:
-          secret: mtls-user
-          storeKey: user.p12
-          passwordKey: user.password
-        # For SASL authentication, you'll have to specify an additional authentication mechanism
-        # as well as a JAAS configuration line with login module, username and password.
-        #saslMechanism: SCRAM-SHA-512
-        #saslJaasConfig: org.apache.kafka.common.security.scram.ScramLoginModule required username="scram-user" password="tDtDCT3pYKE5";
-        # or an OAuth configuration (you'll need here to extend the async-minion image with your handler class implementation)
-        #saslMechanism: OAUTHBEARER
-        #saslJaasConfig: org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required;
-        #saslLoginCallbackHandlerClass: io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler
+      install: false
 
     # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
     mqtt:
@@ -461,6 +495,3 @@ features:
 
 # common labels associated with all resources helm chart
 commonLabels: {}
-
-# common annotations associated with all resource of this helm chart
-commonAnnotations: {}

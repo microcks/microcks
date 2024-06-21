@@ -16,7 +16,7 @@ spec:
     port: {{ .Values.service.port }}
     targetPort: {{ .Values.service.targetPort }}
     name: postman-runtime
-  type: ClusterIP
+  type: {{ .Values.service.type | default "ClusterIP" | quote }}
   sessionAffinity: None
   selector:
     app: "{{ .Values.appName }}"

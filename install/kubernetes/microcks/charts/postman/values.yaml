@@ -1,5 +1,4 @@
-nameOverride: ""
-# namespaceOverride: ""
+appName: ""
 imagePullSecrets: []
 pod:
   labels: {}
@@ -19,6 +18,7 @@ pod:
       cpu: 100m
   logLevel: info
 service:
+  type: ClusterIP
   labels: {}
   annotations: {}
   port: 8000

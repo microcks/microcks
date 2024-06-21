@@ -1,14 +1,7 @@
 {{/*
-Customized the name of this chart.
-*/}}
-{{- define "postman.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
-
-
-{{/*
 Print the image
 */}}
-{{- define "postman.image" -}}
+{{- define "pod.image" -}}
 {{- $image := printf "%s:%s" .repository .tag }}
 {{- if .registry }}
 {{- $image = printf "%s/%s" .registry $image }}

@@ -1,0 +1,13 @@
+{{- if and (.Values.ingresses) (not .Values.microcks.ingressSecretRef) (.Values.microcks.generateCert) }}
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-microcks-ingress-secret"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+type: kubernetes.io/tls
+data:
+{{ ( include "microcks-ingress.gen-certs" . ) | indent 2 }}
+{{- end }}

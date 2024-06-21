@@ -1,14 +1,7 @@
 {{/*
-Customized the name of this chart.
-*/}}
-{{- define "postman.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
-
-
-{{/*
 Print the image
 */}}
-{{- define "postman.image" -}}
+{{- define "pod.image" -}}
 {{- $image := printf "%s:%s" .repository .tag }}
 {{- if .registry }}
 {{- $image = printf "%s/%s" .registry $image }}
@@ -29,8 +22,8 @@ Default common labels
 {{/*
 Pod labels
 */}}
-{{- define "postman-pod-labels" -}}
-{{- range $name, $value := .Values.pod.labels }}
+{{- define "microcks-pod-labels" -}}
+{{- range $name, $value := .Values.features.async.pod.labels }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
@@ -39,7 +32,7 @@ Pod labels
 Pod annotations
 */}}
 {{- define "microcks-pod-annotations" -}}
-{{- range $name, $value := .Values.pod.annotations }}
+{{- range $name, $value := .Values.features.async.pod.annotations }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
@@ -49,7 +42,7 @@ Pod annotations
 Service labels
 */}}
 {{- define "microcks-service-labels" -}}
-{{- range $name, $value := .Values.service.labels }}
+{{- range $name, $value := .Values.features.async.service.labels }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
@@ -58,7 +51,7 @@ Service labels
 Service annotations
 */}}
 {{- define "microcks-service-annotations" -}}
-{{- range $name, $value := .Values.service.annotations }}
+{{- range $name, $value := .Values.features.async.service.annotations }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}

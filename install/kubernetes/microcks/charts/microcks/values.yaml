@@ -1,4 +1,4 @@
-nameOverride: ""
+appName: ""
 # namespaceOverride: ""
 imagePullSecrets: []
 pod:
@@ -6,8 +6,8 @@ pod:
   annotations: {}
   image:
     registry: "quay.io"
-    repository: "microcks/microcks"
-    tag: "1.9.1"
+    repository: "quay.io/microcks/microcks"
+    tag: "latest"
     pullPolicy: IfNotPresent
   replicas: 1
   resources:
@@ -18,8 +18,95 @@ pod:
       memory: 512Mi
       cpu: 500m
   logLevel: info
+  # Enabling by adding yaml extra application configurations
+  extraProperties:
+    #server:
+      #tomcat:
+        #remoteip:
+          #internal-proxies: 172.16.0.0/12
+  env:
+    - name: SERVICES_UPDATE_INTERVAL
+      value: 0 0 0/2 * * *
+    #- name: MAX_UPLOAD_FILE_SIZE
+    #  value: 5MB
+    #- name: CORS_REST_ALLOWED_ORIGINS
+    #  value: my-site.acme.com
+    #- name: CORS_REST_ALLOW_CREDENTIALS
+    #  value: 'true'
+
 service:
+  Type: ClusterIP
   labels: {}
   annotations: {}
   port: 8000
   targetPort: 3000
+
+config:
+  # This SSL toggle only control the reDirect URL protocol in realms.config file.
+  ssl:
+    enabled: false
+  url: microcks.example.com
+  #url: microcks-microcks.192.168.64.6.nip.io
+  #ingressSecretRef: my-secret-for-microcks-ingress
+  #ingressAnnotations:
+    #cert-manager.io/issuer: my-cert-issuer
+    #kubernetes.io/tls-acme: "true"
+  #ingressClassName: nginx
+
+  grpcEnableTLS: true
+  #grpcSecretRef: my-secret-for-microcks-grpc
+  #grpcIngressClassName: nginx
+    #grpcIngressAnnotations:
+  #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
+  #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
+
+  generateCert: true
+
+  # Enabling/disabling mock invocation stats.
+  mockInvocationStats: true
+
+  # Custom secret for Microcks
+  # It can be usec to deploy a keystore to add certificats to trust sso connection with keycloak.
+  # In this case: Use an existing secret with the provided keystore.
+  # Don't forget to add java options like that if your secret is a keystore:
+  # JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/deployments/config/custom/secret/KEYSTORE -Djavax.net.ssl.trustStorePassword=XXXXX"
+  #customSecretRef:
+  #  secret: microcks-keystore
+  #  key: cacerts
+dependencies:
+  mongodb:
+    uri: "mognodb.example.com:27017"
+    # database: ""
+    # uriParemeters: "?ssl=true"
+    auth:
+      username: ""
+      password: ""
+      secretRef: ""
+        secret: ""
+        usernameKey: ""
+        passwordKey: ""
+  keycloak:
+    enabled: "true"
+    url: "keycloak.example.com"
+    realm: "microcks"
+    serviceAccount: microcks-serviceaccount
+    serviceAccountCredentials: ab54d329-e435-41ae-a900-ec6b3fe15c54
+    auth:
+      adminUsername: "hex"
+      admminPassword: "keycloak-microcks"
+      secretRef:
+        secret: keycloak
+        usernameKey: "username"
+        passwordKey: "password"
+    realms:
+      users:
+        role:
+          user:
+            username: user
+            password: microcks123
+          manager:
+            username: manager
+            password: microcks123
+          admin:
+            username: admin
+            password: microcks123
