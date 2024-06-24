@@ -35,80 +35,82 @@ import static org.mockito.Mockito.when;
 
 public class JsonSchemaBuilderQueryVisitorTest {
 
-  private ObjectNode jsonSchemaData;
-  private JsonSchemaBuilderQueryVisitor visitor;
+   private ObjectNode jsonSchemaData;
+   private JsonSchemaBuilderQueryVisitor visitor;
 
-  @BeforeEach
-  public void setUp(){
-    ObjectMapper mapper = new ObjectMapper();
-    jsonSchemaData = mapper.createObjectNode();
-    jsonSchemaData.putObject(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES);
-    visitor = new JsonSchemaBuilderQueryVisitor(jsonSchemaData);
-  }
+   @BeforeEach
+   public void setUp() {
+      ObjectMapper mapper = new ObjectMapper();
+      jsonSchemaData = mapper.createObjectNode();
+      jsonSchemaData.putObject(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES);
+      visitor = new JsonSchemaBuilderQueryVisitor(jsonSchemaData);
+   }
 
-  @Test
-  public void testVisitFieldWithScalarType() {
-    QueryVisitorFieldEnvironment environment = mock(QueryVisitorFieldEnvironment.class);
-    GraphQLOutputType outputType = mock(GraphQLOutputType.class);
-    TypeName definitionType = TypeName.newTypeName().name("String").build();
+   @Test
+   public void testVisitFieldWithScalarType() {
+      QueryVisitorFieldEnvironment environment = mock(QueryVisitorFieldEnvironment.class);
+      GraphQLOutputType outputType = mock(GraphQLOutputType.class);
+      TypeName definitionType = TypeName.newTypeName().name("String").build();
 
-    when(environment.getFieldDefinition()).thenReturn(mock(GraphQLFieldDefinition.class));
-    when(environment.getFieldDefinition().getDefinition()).thenReturn(mock(FieldDefinition.class));
-    when(environment.getFieldDefinition().getType()).thenReturn(outputType);
-    when(environment.getFieldDefinition().getDefinition().getType()).thenReturn(definitionType);
-    when(environment.getFieldDefinition().getName()).thenReturn("scalarField");
+      when(environment.getFieldDefinition()).thenReturn(mock(GraphQLFieldDefinition.class));
+      when(environment.getFieldDefinition().getDefinition()).thenReturn(mock(FieldDefinition.class));
+      when(environment.getFieldDefinition().getType()).thenReturn(outputType);
+      when(environment.getFieldDefinition().getDefinition().getType()).thenReturn(definitionType);
+      when(environment.getFieldDefinition().getName()).thenReturn("scalarField");
 
-    visitor.visitField(environment);
+      visitor.visitField(environment);
 
-    JsonNode fieldNode = jsonSchemaData.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES).get("scalarField");
-    assertEquals("string", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_TYPE).asText());
-  }
+      JsonNode fieldNode = jsonSchemaData.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES).get("scalarField");
+      assertEquals("string", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_TYPE).asText());
+   }
 
-  @Test
-  public void testVisitFieldWithObjectType() {
-    QueryVisitorFieldEnvironment environment = mock(QueryVisitorFieldEnvironment.class);
-    GraphQLOutputType outputType = mock(GraphQLObjectType.class);
-    TypeName definitionType = TypeName.newTypeName().name("Object").build();
+   @Test
+   public void testVisitFieldWithObjectType() {
+      QueryVisitorFieldEnvironment environment = mock(QueryVisitorFieldEnvironment.class);
+      GraphQLOutputType outputType = mock(GraphQLObjectType.class);
+      TypeName definitionType = TypeName.newTypeName().name("Object").build();
 
-    when(environment.getFieldDefinition()).thenReturn(mock(GraphQLFieldDefinition.class));
-    when(environment.getFieldDefinition().getDefinition()).thenReturn(mock(FieldDefinition.class));
-    when(environment.getFieldDefinition().getType()).thenReturn(outputType);
-    when(environment.getFieldDefinition().getDefinition().getType()).thenReturn(definitionType);
-    when(environment.getFieldDefinition().getName()).thenReturn("objectField");
+      when(environment.getFieldDefinition()).thenReturn(mock(GraphQLFieldDefinition.class));
+      when(environment.getFieldDefinition().getDefinition()).thenReturn(mock(FieldDefinition.class));
+      when(environment.getFieldDefinition().getType()).thenReturn(outputType);
+      when(environment.getFieldDefinition().getDefinition().getType()).thenReturn(definitionType);
+      when(environment.getFieldDefinition().getName()).thenReturn("objectField");
 
-    visitor.visitField(environment);
+      visitor.visitField(environment);
 
-    JsonNode fieldNode = jsonSchemaData.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES).get("objectField");
-    assertEquals("object", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_TYPE).asText());
-    assertFalse(fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ADDITIONAL_PROPERTIES).asBoolean());
-  }
+      JsonNode fieldNode = jsonSchemaData.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES).get("objectField");
+      assertEquals("object", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_TYPE).asText());
+      assertFalse(fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ADDITIONAL_PROPERTIES).asBoolean());
+   }
 
-  @Test
-  public void testVisitFieldWithEnumType() {
-    QueryVisitorFieldEnvironment environment = mock(QueryVisitorFieldEnvironment.class);
-    GraphQLEnumType enumType = mock(GraphQLEnumType.class);
-    TypeName definitionType = TypeName.newTypeName().name("EnumType").build();
+   @Test
+   public void testVisitFieldWithEnumType() {
+      QueryVisitorFieldEnvironment environment = mock(QueryVisitorFieldEnvironment.class);
+      GraphQLEnumType enumType = mock(GraphQLEnumType.class);
+      TypeName definitionType = TypeName.newTypeName().name("EnumType").build();
 
-    when(environment.getFieldDefinition()).thenReturn(mock(GraphQLFieldDefinition.class));
-    when(environment.getFieldDefinition().getDefinition()).thenReturn(mock(FieldDefinition.class));
-    when(environment.getFieldDefinition().getType()).thenReturn(enumType);
-    when(environment.getFieldDefinition().getDefinition().getType()).thenReturn(definitionType);
-    when(environment.getFieldDefinition().getName()).thenReturn("enumField");
+      when(environment.getFieldDefinition()).thenReturn(mock(GraphQLFieldDefinition.class));
+      when(environment.getFieldDefinition().getDefinition()).thenReturn(mock(FieldDefinition.class));
+      when(environment.getFieldDefinition().getType()).thenReturn(enumType);
+      when(environment.getFieldDefinition().getDefinition().getType()).thenReturn(definitionType);
+      when(environment.getFieldDefinition().getName()).thenReturn("enumField");
 
-    EnumValueDefinition valueDef1 = EnumValueDefinition.newEnumValueDefinition().name("VALUE1").build();
-    EnumValueDefinition valueDef2 = EnumValueDefinition.newEnumValueDefinition().name("VALUE2").build();
+      EnumValueDefinition valueDef1 = EnumValueDefinition.newEnumValueDefinition().name("VALUE1").build();
+      EnumValueDefinition valueDef2 = EnumValueDefinition.newEnumValueDefinition().name("VALUE2").build();
 
-    GraphQLEnumValueDefinition enumValueDef1 = new GraphQLEnumValueDefinition.Builder().name("VALUE1").value("Description").build();
-    GraphQLEnumValueDefinition enumValueDef2 = new GraphQLEnumValueDefinition.Builder().name("VALUE2").value("Description").build();
+      GraphQLEnumValueDefinition enumValueDef1 = new GraphQLEnumValueDefinition.Builder().name("VALUE1")
+            .value("Description").build();
+      GraphQLEnumValueDefinition enumValueDef2 = new GraphQLEnumValueDefinition.Builder().name("VALUE2")
+            .value("Description").build();
 
-    when(enumType.getValues()).thenReturn(List.of(enumValueDef1, enumValueDef2));
+      when(enumType.getValues()).thenReturn(List.of(enumValueDef1, enumValueDef2));
 
-    visitor.visitField(environment);
+      visitor.visitField(environment);
 
-    JsonNode fieldNode = jsonSchemaData.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES).get("enumField");
-    assertEquals("string", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_TYPE).asText());
-    assertEquals(2, fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM).size());
-    assertEquals("VALUE1", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM).get(0).asText());
-    assertEquals("VALUE2", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM).get(1).asText());
-  }
+      JsonNode fieldNode = jsonSchemaData.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_PROPERTIES).get("enumField");
+      assertEquals("string", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_TYPE).asText());
+      assertEquals(2, fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM).size());
+      assertEquals("VALUE1", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM).get(0).asText());
+      assertEquals("VALUE2", fieldNode.get(JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM).get(1).asText());
+   }
 }

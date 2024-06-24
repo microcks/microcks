@@ -29,61 +29,61 @@ import static org.mockito.Mockito.*;
 
 public class XmlSchemaURLResolverTest {
 
-  private static final String BASE_RESOURCE_URL = "http://example.com/schemas";
-  private XmlSchemaURLResolver resolver;
+   private static final String BASE_RESOURCE_URL = "http://example.com/schemas";
+   private XmlSchemaURLResolver resolver;
 
-  @BeforeEach
-  public void setUp() {
-    resolver = new XmlSchemaURLResolver(BASE_RESOURCE_URL);
-  }
+   @BeforeEach
+   public void setUp() {
+      resolver = new XmlSchemaURLResolver(BASE_RESOURCE_URL);
+   }
 
-  @Test
-  public void testResolveResourceWithLocalResolution() {
-    String systemId = "http://www.w3.org/2001/xml.xsd";
+   @Test
+   public void testResolveResourceWithLocalResolution() {
+      String systemId = "http://www.w3.org/2001/xml.xsd";
 
-    LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
+      LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
 
-    assertNotNull(lsInput);
-    assertEquals(systemId, lsInput.getSystemId());
-    assertNotNull(lsInput.getCharacterStream());
-  }
+      assertNotNull(lsInput);
+      assertEquals(systemId, lsInput.getSystemId());
+      assertNotNull(lsInput.getCharacterStream());
+   }
 
-  @Test
-  public void testResolveResourceWithBaseResourceURL() throws Exception {
-    String systemId = "test.xsd";
-    String expectedContent = "<schema></schema>";
+   @Test
+   public void testResolveResourceWithBaseResourceURL() throws Exception {
+      String systemId = "test.xsd";
+      String expectedContent = "<schema></schema>";
 
-    URL mockURL = mock(URL.class);
-    URLConnection mockConnection = mock(URLConnection.class);
-    InputStream mockInputStream = new ByteArrayInputStream(expectedContent.getBytes());
+      URL mockURL = mock(URL.class);
+      URLConnection mockConnection = mock(URLConnection.class);
+      InputStream mockInputStream = new ByteArrayInputStream(expectedContent.getBytes());
 
-    when(mockURL.openStream()).thenReturn(mockInputStream);
-    when(mockConnection.getInputStream()).thenReturn(mockInputStream);
+      when(mockURL.openStream()).thenReturn(mockInputStream);
+      when(mockConnection.getInputStream()).thenReturn(mockInputStream);
 
-    // Instead of mocking the URL constructor, we can mock URL.openStream directly.
-    URL.setURLStreamHandlerFactory(protocol -> {
-      return new java.net.URLStreamHandler() {
-        @Override
-        protected URLConnection openConnection(URL url) {
-          return mockConnection;
-        }
-      };
-    });
+      // Instead of mocking the URL constructor, we can mock URL.openStream directly.
+      URL.setURLStreamHandlerFactory(protocol -> {
+         return new java.net.URLStreamHandler() {
+            @Override
+            protected URLConnection openConnection(URL url) {
+               return mockConnection;
+            }
+         };
+      });
 
-    LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
+      LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
 
-    assertNotNull(lsInput);
-    assertEquals(systemId, lsInput.getSystemId());
-    assertNotNull(lsInput.getCharacterStream());
-  }
+      assertNotNull(lsInput);
+      assertEquals(systemId, lsInput.getSystemId());
+      assertNotNull(lsInput.getCharacterStream());
+   }
 
-  @Test
-  public void testResolveResourceWithNonExistentResource() {
-    String systemId = "non-existent.xsd";
+   @Test
+   public void testResolveResourceWithNonExistentResource() {
+      String systemId = "non-existent.xsd";
 
-    LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
+      LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
 
-    assertNull(lsInput);
-  }
+      assertNull(lsInput);
+   }
 }
 
