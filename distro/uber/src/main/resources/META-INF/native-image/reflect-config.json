@@ -149,7 +149,8 @@
     "allRecordComponents": true,
     "allNestMembers": true,
     "allSigners": true,
-    "allPermittedSubclasses": true
+    "allPermittedSubclasses": true,
+    "allDeclaredConstructors": true
   },
   {
     "name": "org.springframework.security.web.access.HandlerMappingIntrospectorRequestTransformer",
