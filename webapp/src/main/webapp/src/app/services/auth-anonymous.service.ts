@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { IAuthenticationService } from "./auth.service";
-import { Observable, of } from "rxjs";
-import { User } from "../models/user.model";
-import { ConfigService } from "./config.service";
-import { HttpClient } from "@angular/common/http";
+import { IAuthenticationService } from './auth.service';
+import { Observable, of } from 'rxjs';
+import { User } from '../models/user.model';
+import { ConfigService } from './config.service';
+import { HttpClient } from '@angular/common/http';
 
 /**
  * A version of the authentication service that uses keycloak.js to provide
@@ -29,8 +29,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Constructor.
-   * @param http
-   * @param config
    */
   constructor(private http: HttpClient, private config: ConfigService) {
     super();
@@ -64,24 +62,20 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Not supported.
-   * @param user
-   * @param credential
    */
   public login(user: string, credential: any): Promise<User> {
-    throw new Error("Not supported.");
+    throw new Error('Not supported.');
   }
 
   /**
    * Called to check that user can endorse a role.
-   * @param role
    */
   public hasRole(role: string): boolean {
     return true;
   }
 
-/**
+  /**
    * Called to check that user can endorse role for at least one resource.
-   * @param role
    */
   public hasRoleForAnyResource(role: string): boolean {
     return true;
@@ -89,8 +83,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to check that user can endorse role for a specific resource.
-   * @param role
-   * @param resource
    */
   public hasRoleForResource(role: string, resource: string): boolean {
     return true;
@@ -105,7 +97,6 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
 
   /**
    * Called to inject authentication headers into a remote API call.
-   * @param headers
    */
   public injectAuthHeaders(headers: { [header: string]: string }): void {
     // Nothing to do here.
@@ -122,20 +113,20 @@ export class AnonymousAuthenticationService extends IAuthenticationService {
    * Return the Keycloak realm name.
    */
   public getRealmName(): string {
-    return 'microcks'
+    return 'microcks';
   }
 
   /**
    * Return the Keycloak realm url.
    */
   public getRealmUrl(): string {
-    throw new Error("Not supported.");
+    throw new Error('Not supported.');
   }
 
   /**
    * Return the Keycloak administration realm url.
    */
   public getAdminRealmUrl(): string {
-    throw new Error("Not supported.");
+    throw new Error('Not supported.');
   }
 }

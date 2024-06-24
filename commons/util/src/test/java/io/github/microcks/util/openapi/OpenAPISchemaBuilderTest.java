@@ -18,19 +18,19 @@ package io.github.microcks.util.openapi;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * This is a test case for OpenAPISchemaBuilder class.
  * @author laurent
  */
-public class OpenAPISchemaBuilderTest {
+class OpenAPISchemaBuilderTest {
 
    @Test
-   public void testBuildTypeSchemaFromJson() {
+   void testBuildTypeSchemaFromJson() {
       JsonNode jsonNode = null;
       ObjectMapper mapper = new ObjectMapper();
 

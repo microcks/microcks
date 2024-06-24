@@ -25,7 +25,7 @@ import { SecretsService } from '../../../services/secrets.service';
 
 
 @Component({
-  selector: 'secrets-tab',
+  selector: 'app-secrets-tab',
   templateUrl: './secrets.tab.html',
   styleUrls: ['./secrets.tab.css']
 })
@@ -37,10 +37,10 @@ export class SecretsTabComponent implements OnInit {
   filterConfig: FilterConfig;
   paginationConfig: PaginationConfig;
   filterTerm: string = null;
-  filtersText: string = '';
+  filtersText = '';
 
   secret: Secret = new Secret();
-  createOrUpdateBtn: string = 'Create';
+  createOrUpdateBtn = 'Create';
   authenticationType: string;
 
   constructor(private secretsSvc: SecretsService, private notificationService: NotificationService) {}
@@ -64,7 +64,7 @@ export class SecretsTabComponent implements OnInit {
       }] as FilterField[],
       resultsCount: 20,
       appliedFilters: []
-    } as FilterConfig
+    } as FilterConfig;
 
     this.toolbarConfig = {
       actionConfig: undefined,
@@ -92,11 +92,11 @@ export class SecretsTabComponent implements OnInit {
   }
 
   handlePageSize($event: PaginationEvent) {
-    //this.updateItems();
+    // this.updateItems();
   }
 
   handlePageNumber($event: PaginationEvent) {
-    this.getSecrets($event.pageNumber)
+    this.getSecrets($event.pageNumber);
   }
 
   handleFilter($event: FilterEvent): void {
@@ -118,7 +118,7 @@ export class SecretsTabComponent implements OnInit {
     this.createOrUpdateBtn = 'Update';
     if (secret.username != null && secret.password != null) {
       this.authenticationType = 'basic';
-    } else if (secret.token != null){
+    } else if (secret.token != null) {
       this.authenticationType = 'token';
     }
   }
@@ -126,18 +126,18 @@ export class SecretsTabComponent implements OnInit {
     this.secret = new Secret();
     this.createOrUpdateBtn = 'Create';
   }
-  
+
   saveOrUpdateSecret(secret: Secret): void {
     if (secret.id) {
       this.secretsSvc.updateSecret(secret).subscribe(
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-              secret.name, "Secret has been updated", false, null, null);
+              secret.name, 'Secret has been updated', false, null, null);
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-              secret.name, "Secret cannot be updated (" + err.message + ")", false, null, null);
+              secret.name, 'Secret cannot be updated (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -147,14 +147,14 @@ export class SecretsTabComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-              secret.name, "Secret has been created", false, null, null);
+              secret.name, 'Secret has been created', false, null, null);
             this.secret = new Secret();
             this.createOrUpdateBtn = 'Create';
             this.getSecrets();
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-              secret.name, "Secret cannot be created (" + err.message + ")", false, null, null);
+              secret.name, 'Secret cannot be created (' + err.message + ')', false, null, null);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -162,17 +162,17 @@ export class SecretsTabComponent implements OnInit {
     }
   }
 
-  deleteSecret(secret: Secret):void {
+  deleteSecret(secret: Secret): void {
     this.secretsSvc.deleteSecret(secret).subscribe(
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-            secret.name, "Secret has been deleted", false, null, null);
+            secret.name, 'Secret has been deleted', false, null, null);
           this.getSecrets();
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              secret.name, "Secret cannot be deleted (" + err.message + ")", false, null, null);
+              secret.name, 'Secret cannot be deleted (' + err.message + ')', false, null, null);
         },
         complete: () => console.log('Observer got a complete notification'),
       }

@@ -37,55 +37,55 @@ const routes: Routes = [
     component: DashboardPageComponent
   },
   {
-    path: "services",
+    path: 'services',
     component: ServicesPageComponent
   },
   {
-    path: "services/:serviceId",
+    path: 'services/:serviceId',
     component: ServiceDetailPageComponent
   },
   {
-    path: "services/:serviceId/operation/:name",
+    path: 'services/:serviceId/operation/:name',
     component: OperationOverridePageComponent
   },
   {
-    path: "tests/service/:serviceId",
+    path: 'tests/service/:serviceId',
     component: TestsPageComponent
   },
   {
-    path: "tests/runner/:testId",
+    path: 'tests/runner/:testId',
     component: TestRunnerPageComponent
   },
   {
-    path: "tests/create",
+    path: 'tests/create',
     component: TestCreatePageComponent
   },
   {
-    path: "tests/:testId",
+    path: 'tests/:testId',
     component: TestDetailPageComponent
   },
   {
-    path: "metrics/invocations/:serviceName/:serviceVersion",
+    path: 'metrics/invocations/:serviceName/:serviceVersion',
     component: InvocationsServicePageComponent
   },
   {
-    path: "importers",
+    path: 'importers',
     component: ImportersPageComponent
   },
   {
-    path: "hub",
+    path: 'hub',
     component: HubPageComponent
   },
   {
-    path: "hub/package/:packageId",
+    path: 'hub/package/:packageId',
     component: HubPackagePageComponent
   },
   {
-    path: "hub/package/:packageId/api/:apiVersionId",
+    path: 'hub/package/:packageId/api/:apiVersionId',
     component: HubAPIVersionPageComponent
   },
   {
-    path: "admin",
+    path: 'admin',
     component: AdminPageComponent
   }
 ];

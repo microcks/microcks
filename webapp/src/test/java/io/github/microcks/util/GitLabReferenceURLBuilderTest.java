@@ -15,23 +15,23 @@
  */
 package io.github.microcks.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for GitLabReferenceURLBuilder.
  * @author laurent
  */
-public class GitLabReferenceURLBuilderTest {
+class GitLabReferenceURLBuilderTest {
 
    private static final String BASE_URL = "https://gitlab.com/api/v4/projects/35980862/repository/files/pastry%2FAPI_Pastry_1.0.0-openapi.yaml/raw?ref=main";
 
    @Test
-   public void testGetFileName() {
+   void testGetFileName() {
       GitLabReferenceURLBuilder builder = new GitLabReferenceURLBuilder();
 
       assertEquals("API_Pastry_1.0.0-openapi.yaml", builder.getFileName(BASE_URL, null));
@@ -44,7 +44,7 @@ public class GitLabReferenceURLBuilderTest {
    }
 
    @Test
-   public void testBuildRemoteURL() {
+   void testBuildRemoteURL() {
       GitLabReferenceURLBuilder builder = new GitLabReferenceURLBuilder();
 
       assertEquals("https://gitlab.com/api/v4/projects/35980862/repository/files/pastry%2Fschema-ref.yml/raw?ref=main",

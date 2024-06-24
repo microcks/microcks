@@ -38,7 +38,11 @@ import java.util.List;
 public class ExpressionParser {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ExpressionParser.class);
+   private static final Logger log = LoggerFactory.getLogger(ExpressionParser.class);
+
+   // Private constructor to hide the implicit one.
+   private ExpressionParser() {
+   }
 
    /**
     * Navigate the template for finding expressions that can be evaluated into this template. Expressions are returned
@@ -73,16 +77,14 @@ public class ExpressionParser {
                            + ": " + template.substring(prefixIndex));
             }
             if (suffixIndex == afterPrefixIndex) {
-               log.info("No expression defined within delimiter '{}' at character {}",
-                     expressionPrefix + expressionSuffix, prefixIndex);
+               log.info("No expression defined within delimiter '{}' at character {}", expressionPrefix, prefixIndex);
                throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
                      + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
             }
             String expr = template.substring(prefixIndex + expressionPrefix.length(), suffixIndex);
             expr = expr.trim();
             if (expr.isEmpty()) {
-               log.info("No expression defined within delimiter '{}' at character {}",
-                     expressionPrefix + expressionSuffix, prefixIndex);
+               log.info("No expression defined within delimiter '{}' at character {}", expressionPrefix, prefixIndex);
                throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
                      + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
             }
@@ -172,15 +174,15 @@ public class ExpressionParser {
             functionName = expressionString.substring(0, argsStart);
             String argsString = expressionString.substring(argsStart + 1, argsEnd);
             // Parse arguments if non empty string.
-            if (argsString.length() > 0) {
-               args = Arrays.stream(argsString.split(",")).map(arg -> arg.trim()).toArray(String[]::new);
+            if (!argsString.isEmpty()) {
+               args = Arrays.stream(argsString.split(",")).map(String::trim).toArray(String[]::new);
             }
          }
 
          Class<ELFunction> functionClazz = context.lookupFunction(functionName);
          ELFunction function = null;
          try {
-            function = functionClazz.newInstance();
+            function = functionClazz.getDeclaredConstructor().newInstance();
          } catch (Exception e) {
             log.error("Exception while instantiating the functionClazz " + functionClazz, e);
             return new LiteralExpression("");

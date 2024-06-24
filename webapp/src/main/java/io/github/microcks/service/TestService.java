@@ -25,7 +25,6 @@ import io.github.microcks.util.IdBuilder;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
@@ -41,25 +40,34 @@ import java.util.concurrent.ThreadLocalRandom;
 public class TestService {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(TestService.class);
+   private static final Logger log = LoggerFactory.getLogger(TestService.class);
 
-   @Autowired
-   private RequestRepository requestRepository;
+   private final RequestRepository requestRepository;
+   private final ResponseRepository responseRepository;
+   private final EventMessageRepository eventMessageRepository;
+   private final TestResultRepository testResultRepository;
+   private final TestRunnerService testRunnerService;
+   private final ApplicationContext applicationContext;
 
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private EventMessageRepository eventMessageRepository;
-
-   @Autowired
-   private TestResultRepository testResultRepository;
-
-   @Autowired
-   private TestRunnerService testRunnerService;
-
-   @Autowired
-   private ApplicationContext applicationContext;
+   /**
+    * Build a new TestService with the required dependencies.
+    * @param requestRepository      The repository to manage persistent requests
+    * @param responseRepository     The repository to manage persistent responses
+    * @param eventMessageRepository The repository to manage persistent eventMessages
+    * @param testResultRepository   The repository to manage persistent testResults
+    * @param testRunnerService      The service for running tests
+    * @param applicationContext     The Spring application context
+    */
+   public TestService(RequestRepository requestRepository, ResponseRepository responseRepository,
+         EventMessageRepository eventMessageRepository, TestResultRepository testResultRepository,
+         TestRunnerService testRunnerService, ApplicationContext applicationContext) {
+      this.requestRepository = requestRepository;
+      this.responseRepository = responseRepository;
+      this.eventMessageRepository = eventMessageRepository;
+      this.testResultRepository = testResultRepository;
+      this.testRunnerService = testRunnerService;
+      this.applicationContext = applicationContext;
+   }
 
    /**
     * Launch tests for a Service on dedicated endpoint URI.

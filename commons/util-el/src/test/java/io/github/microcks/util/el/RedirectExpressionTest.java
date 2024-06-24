@@ -16,19 +16,18 @@
 package io.github.microcks.util.el;
 
 import io.github.microcks.util.el.function.PutInContextELFunction;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for RedirectExpression class.
  * @author laurent
  */
-public class RedirectExpressionTest {
+class RedirectExpressionTest {
 
    @Test
-   public void testLiteralRedirect() {
+   void testLiteralRedirect() {
       Expression[] expressions = new Expression[] { new LiteralExpression("hello"), new LiteralExpression("world") };
 
       RedirectExpression exp = new RedirectExpression(expressions);
@@ -37,7 +36,7 @@ public class RedirectExpressionTest {
    }
 
    @Test
-   public void testLiteralRedirectToContext() {
+   void testLiteralRedirectToContext() {
       EvaluationContext context = new EvaluationContext();
 
       Expression[] expressions = new Expression[] { new LiteralExpression("hello"),
@@ -50,7 +49,7 @@ public class RedirectExpressionTest {
    }
 
    @Test
-   public void testLiteralRedirectToMultiContext() {
+   void testLiteralRedirectToMultiContext() {
       EvaluationContext context = new EvaluationContext();
 
       Expression[] expressions = new Expression[] { new LiteralExpression("hello"),

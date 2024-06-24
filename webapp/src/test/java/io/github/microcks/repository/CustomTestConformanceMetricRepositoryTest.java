@@ -18,33 +18,30 @@ package io.github.microcks.repository;
 import io.github.microcks.domain.TestConformanceMetric;
 import io.github.microcks.domain.WeightedMetricValue;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Test case for CustomTestConformanceMetricRepository class.
  * @author laurent
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ContextConfiguration(classes = RepositoryTestsConfiguration.class)
+@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class CustomTestConformanceMetricRepositoryTest {
+class CustomTestConformanceMetricRepositoryTest {
 
    @Autowired
    TestConformanceMetricRepository repository;
 
    @Test
-   public void testAggregateTestMetricCoverage() {
+   void testAggregateTestMetricCoverage() {
       // Save a bunch of coverage metrics.
       TestConformanceMetric m1 = new TestConformanceMetric();
       m1.setAggregationLabelValue("domain1");

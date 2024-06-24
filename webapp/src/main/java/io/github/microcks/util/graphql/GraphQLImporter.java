@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -57,15 +57,15 @@ import java.util.List;
 public class GraphQLImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(MockRepositoryImporter.class);
+   private static final Logger log = LoggerFactory.getLogger(GraphQLImporter.class);
 
-   /** The starter marker for the comment referenceing microck service and version identifiers. */
+   /** The starter marker for the comment referencing microck service and version identifiers. */
    public static final String MICROCKS_ID_STARTER = "microcksId:";
 
-   private String specContent;
-   private Document graphqlSchema;
-
    private static final List<String> VALID_OPERATION_TYPES = Arrays.asList("query", "mutation");
+
+   private final String specContent;
+   private Document graphqlSchema;
 
    /**
     * Build a new importer.
@@ -76,7 +76,7 @@ public class GraphQLImporter implements MockRepositoryImporter {
       try {
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(graphqlFilePath));
-         specContent = new String(bytes, Charset.forName("UTF-8"));
+         specContent = new String(bytes, StandardCharsets.UTF_8);
 
          // Parse schema file to a dom.
          graphqlSchema = Parser.parse(specContent);
@@ -128,11 +128,11 @@ public class GraphQLImporter implements MockRepositoryImporter {
       List<Resource> results = new ArrayList<>();
 
       // Just one resource: The GraphQL schema file.
-      Resource graphqlSchema = new Resource();
-      graphqlSchema.setName(service.getName() + "-" + service.getVersion() + ".graphql");
-      graphqlSchema.setType(ResourceType.GRAPHQL_SCHEMA);
-      graphqlSchema.setContent(specContent);
-      results.add(graphqlSchema);
+      Resource schema = new Resource();
+      schema.setName(service.getName() + "-" + service.getVersion() + ".graphql");
+      schema.setType(ResourceType.GRAPHQL_SCHEMA);
+      schema.setContent(specContent);
+      results.add(schema);
 
       return results;
    }
@@ -140,8 +140,7 @@ public class GraphQLImporter implements MockRepositoryImporter {
    @Override
    public List<Exchange> getMessageDefinitions(Service service, Operation operation)
          throws MockRepositoryImportException {
-      List<Exchange> result = new ArrayList<>();
-      return result;
+      return new ArrayList<>();
    }
 
    /**
@@ -151,8 +150,7 @@ public class GraphQLImporter implements MockRepositoryImporter {
       List<Operation> results = new ArrayList<>();
 
       for (Definition definition : graphqlSchema.getDefinitions()) {
-         if (definition instanceof ObjectTypeDefinition) {
-            ObjectTypeDefinition typeDefinition = (ObjectTypeDefinition) definition;
+         if (definition instanceof ObjectTypeDefinition typeDefinition) {
 
             if (VALID_OPERATION_TYPES.contains(typeDefinition.getName().toLowerCase())) {
                List<Operation> operations = extractOperations(typeDefinition);
@@ -226,11 +224,10 @@ public class GraphQLImporter implements MockRepositoryImporter {
 
    /** Get the short string representation of a type. eg. 'Film' or '[Films]'. */
    private String getTypeName(Type type) {
-      if (type instanceof ListType) {
-         ListType listType = (ListType) type;
+      if (type instanceof ListType listType) {
          return "[" + getTypeName(listType.getType()) + "]";
-      } else if (type instanceof TypeName) {
-         return ((TypeName) type).getName();
+      } else if (type instanceof TypeName typeName) {
+         return typeName.getName();
       }
       return type.toString();
    }

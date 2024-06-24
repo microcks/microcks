@@ -19,7 +19,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.9.1-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -31,6 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>../..</multi-project.rootdir>
     <java.version>17</java.version>
+    <junit.version>5.10.2</junit.version>
   </properties>
 
   <dependencies>
@@ -48,6 +49,14 @@
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
       <artifactId>jackson-annotations</artifactId>
+    </dependency>
+
+    <!-- Test related dependencies -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

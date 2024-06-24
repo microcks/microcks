@@ -15,18 +15,18 @@
  */
 package io.github.microcks.util.soapui.assertions;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for class SimpleContainsAssertion.
  * @author laurent
  */
-public class SimpleContainsAssertionTest {
+class SimpleContainsAssertionTest {
 
    private String validSoap = """
          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
@@ -51,7 +51,7 @@ public class SimpleContainsAssertionTest {
          """;
 
    @Test
-   public void testExactMatch() {
+   void testExactMatch() {
       // Passing case.
       Map<String, String> configParams = Map.of(SimpleContainsAssertion.TOKEN_PARAM, "Hello Andrew!",
             SimpleContainsAssertion.IGNORE_CASE_PARAM, "false");
@@ -69,7 +69,7 @@ public class SimpleContainsAssertionTest {
    }
 
    @Test
-   public void testCaseSensitiveness() {
+   void testCaseSensitiveness() {
       // Passing case.
       Map<String, String> configParams = Map.of(SimpleContainsAssertion.TOKEN_PARAM, "HeLlO AnDreW!",
             SimpleContainsAssertion.IGNORE_CASE_PARAM, "true");
@@ -87,7 +87,7 @@ public class SimpleContainsAssertionTest {
    }
 
    @Test
-   public void testRegularExpression() {
+   void testRegularExpression() {
       // Passing case.
       Map<String, String> configParams = Map.of(SimpleContainsAssertion.TOKEN_PARAM, "Hello\\s(.*)!",
             SimpleContainsAssertion.IGNORE_CASE_PARAM, "false", SimpleContainsAssertion.USE_REGEX_PARAM, "true");

@@ -1,5 +1,5 @@
-<div bsModal #confirmDeleteModal="bs-modal" class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog" aria-labelledby="confirmDeleteModalLabel"
-    aria-hidden="true" *ngIf="isOpen()" (onHidden)="close()">
+<div bsModal #confirmDeleteModal="bs-modal" class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog"
+  aria-labelledby="confirmDeleteModalLabel" aria-hidden="true" *ngIf="isOpen" (onHidden)="close()">
   <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
@@ -13,7 +13,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" (click)="cancel()">Cancel</button>
-        <button type="button" class="btn btn-danger" (click)="delete()">Delete</button>
+        <button type="button" class="btn btn-danger" (click)="handleDelete()">Delete</button>
       </div>
     </div>
   </div>

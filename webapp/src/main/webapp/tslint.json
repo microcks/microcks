@@ -27,10 +27,12 @@
     ],
     "interface-name": false,
     "max-classes-per-file": false,
-    "max-line-length": [
-      true,
-      140
-    ],
+    "max-line-length": {
+      "severity": "warning",
+      "options": [
+        140
+      ]
+    },
     "member-access": false,
     "member-ordering": [
       true,
@@ -44,14 +46,16 @@
       }
     ],
     "no-consecutive-blank-lines": false,
-    "no-console": [
-      true,
-      "debug",
-      "info",
-      "time",
-      "timeEnd",
-      "trace"
-    ],
+    "no-console": {
+      "severity": "warning",
+      "options": [
+        "debug",
+        "info",
+        "time",
+        "timeEnd",
+        "trace"
+      ]
+    },
     "no-empty": false,
     "no-inferrable-types": [
       true,
@@ -67,12 +71,21 @@
       "as-needed"
     ],
     "object-literal-sort-keys": false,
+    "only-arrow-functions": {
+      "severity": "warning"
+    },
     "ordered-imports": false,
     "quotemark": [
       true,
       "single"
     ],
     "trailing-comma": false,
+    "triple-equals": {
+      "severity": "warning"
+    },
+    "radix": {
+      "severity": "warning"
+    },
     "no-conflicting-lifecycle": true,
     "no-host-metadata-property": true,
     "no-input-rename": true,

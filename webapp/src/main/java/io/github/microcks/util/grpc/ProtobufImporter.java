@@ -15,18 +15,21 @@
  */
 package io.github.microcks.util.grpc;
 
-import com.github.os72.protocjar.Protoc;
-import com.google.protobuf.DescriptorProtos;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
+import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.MockRepositoryImporter;
-
 import io.github.microcks.util.ReferenceResolver;
+
+import com.github.os72.protocjar.Protoc;
+import com.google.protobuf.DescriptorProtos;
+import com.google.protobuf.Descriptors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,15 +55,16 @@ public class ProtobufImporter implements MockRepositoryImporter {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(ProtobufImporter.class);
 
-   private String specContent;
-   private String protoDirectory;
-   private String protoFileName;
-   private ReferenceResolver referenceResolver;
-   private DescriptorProtos.FileDescriptorSet fds;
-
    private static final String BINARY_DESCRIPTOR_EXT = ".pbb";
 
    private static final String BUILTIN_LIBRARY_PREFIX = "google/protobuf";
+
+   private final String specContent;
+   private final String protoDirectory;
+   private final String protoFileName;
+   private final ReferenceResolver referenceResolver;
+   private DescriptorProtos.FileDescriptorSet fds;
+
 
    /**
     * Build a new importer.
@@ -119,16 +123,23 @@ public class ProtobufImporter implements MockRepositoryImporter {
          String[] parts = packageName.split("\\.");
          String version = (parts.length > 2 ? parts[parts.length - 1] : packageName);
 
-         for (DescriptorProtos.ServiceDescriptorProto sdp : fdp.getServiceList()) {
+         Descriptors.FileDescriptor fd = null;
+         try {
+            fd = Descriptors.FileDescriptor.buildFrom(fdp, new Descriptors.FileDescriptor[] {}, true);
+         } catch (Descriptors.DescriptorValidationException e) {
+            throw new RuntimeException(e);
+         }
+
+         for (Descriptors.ServiceDescriptor sd : fd.getServices()) {
             // Build a new service.
             Service service = new Service();
-            service.setName(packageName + "." + sdp.getName());
+            service.setName(sd.getFullName());
             service.setVersion(version);
             service.setType(ServiceType.GRPC);
-            service.setXmlNS(packageName);
+            service.setXmlNS(fd.getPackage());
 
             // Then build its operations.
-            service.setOperations(extractOperations(sdp));
+            service.setOperations(extractOperations(sd));
 
             results.add(service);
          }
@@ -165,7 +176,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
       if (referenceResolver != null) {
          referenceResolver.getRelativeResolvedReferences().forEach((p, f) -> {
             Resource protoResource = new Resource();
-            protoResource.setName(service.getName() + "-" + service.getVersion() + "-" + p.replaceAll("/", "~1"));
+            protoResource.setName(service.getName() + "-" + service.getVersion() + "-" + p.replace("/", "~1"));
             protoResource.setType(ResourceType.PROTOBUF_SCHEMA);
             protoResource.setPath(p);
             try {
@@ -236,17 +247,51 @@ public class ProtobufImporter implements MockRepositoryImporter {
    /**
     * Extract the operations from GRPC service methods.
     */
-   private List<Operation> extractOperations(DescriptorProtos.ServiceDescriptorProto service) {
+   private List<Operation> extractOperations(Descriptors.ServiceDescriptor service) {
       List<Operation> results = new ArrayList<>();
 
-      for (DescriptorProtos.MethodDescriptorProto method : service.getMethodList()) {
+      for (Descriptors.MethodDescriptor method : service.getMethods()) {
          Operation operation = new Operation();
          operation.setName(method.getName());
-         operation.setInputName(method.getInputType());
-         operation.setOutputName(method.getOutputType());
+         if (method.getInputType() != null) {
+            operation.setInputName("." + method.getInputType().getFullName());
+
+            boolean hasOnlyPrimitiveArgs = true;
+            for (Descriptors.FieldDescriptor field : method.getInputType().getFields()) {
+               Descriptors.FieldDescriptor.Type fieldType = field.getType();
+               if (!isScalarType(fieldType)) {
+                  hasOnlyPrimitiveArgs = false;
+               }
+            }
+
+            if (hasOnlyPrimitiveArgs && !method.getInputType().getFields().isEmpty()) {
+               operation.setDispatcher(DispatchStyles.QUERY_ARGS);
+               operation.setDispatcherRules(extractOperationParams(method.getInputType().getFields()));
+            }
+         }
+         if (method.getOutputType() != null) {
+            operation.setOutputName("." + method.getOutputType().getFullName());
+         }
 
          results.add(operation);
       }
       return results;
+   }
+
+   /** Defines is a protobuf message field type is a scalar type. s */
+   private static boolean isScalarType(Descriptors.FieldDescriptor.Type fieldType) {
+      return fieldType != Descriptors.FieldDescriptor.Type.MESSAGE
+            && fieldType != Descriptors.FieldDescriptor.Type.GROUP
+            && fieldType != Descriptors.FieldDescriptor.Type.BYTES;
+   }
+
+   /** Build a string representing operation parameters as used in dispatcher rules (arg1 && arg2). */
+   private static String extractOperationParams(List<Descriptors.FieldDescriptor> inputFields) {
+      StringBuilder builder = new StringBuilder();
+
+      for (Descriptors.FieldDescriptor inputField : inputFields) {
+         builder.append(inputField.getName()).append(" && ");
+      }
+      return builder.substring(0, builder.length() - 4);
    }
 }

@@ -22,9 +22,9 @@ export class User {
   avatar: string;
 
   constructor() {
-    this.login = "";
-    this.username = "";
-    this.name = "";
-    this.email = "";
+    this.login = '';
+    this.username = '';
+    this.name = '';
+    this.email = '';
   }
 }

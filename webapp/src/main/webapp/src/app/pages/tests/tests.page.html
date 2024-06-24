@@ -11,15 +11,16 @@
 <h1>
   Test History for {{ service.name }} - {{ service.version }}
 </h1>
-<small>These are the conformance tests that have been run against this service implementations on different endpoints.</small>
+<small>These are the conformance tests that have been run against this service implementations on different
+  endpoints.</small>
 
 <div class="container-fluid">
 
   <div class="test-bar-chart" *ngIf="resolvedTestResults">
-    <test-bar-chart [data]="resolvedTestResults"></test-bar-chart>
+    <app-test-bar-chart [data]="resolvedTestResults"></app-test-bar-chart>
   </div>
 
-  <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">  
+  <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">
     <div *ngFor="let test of resolvedTestResults" class="list-group-item">
       <div class="list-view-pf-main-info">
         <div class="list-view-pf-body">
@@ -27,7 +28,7 @@
             <div class="list-group-item-heading">
               <div>
                 <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-fw fa-refresh fa-spin"></i>
-                <i *ngIf="!test.inProgress && test.success" class="fa fa-fw fa-check-circle"></i> 
+                <i *ngIf="!test.inProgress && test.success" class="fa fa-fw fa-check-circle"></i>
                 <i *ngIf="!test.inProgress && !test.success" class="fa fa-fw fa-times-circle"></i>
                 <i *ngIf="timedOut(test)" class="fa fa-fw fa-clock-o"></i>
                 <a [routerLink]="['/tests', test.id]">Test #{{ test.testNumber }}</a>
@@ -36,15 +37,15 @@
               <span class="test-timestamp">{{ test.testDate | timeAgo }}</span>
             </div>
             <div class="list-group-item-text">
-              Endpoint <code>{{ test.testedEndpoint }}</code><br/>
-              <span class="fa fa-cog"> </span> <strong> {{ test.testCaseResults.length }} </strong> Operations tested | 
+              Endpoint <code>{{ test.testedEndpoint }}</code><br />
+              <span class="fa fa-cog"> </span> <strong> {{ test.testCaseResults.length }} </strong> Operations tested |
               <span class="pficon pficon-image"> </span> <strong> {{ numberOfTestSteps(test) }} </strong> Samples tested
             </div>
           </div>
           <div class="list-view-pf-additional-info">
             <div class="list-view-pf-additional-info-item">
               <i *ngIf="test.inProgress && !timedOut(test)" class="fa fa-2x fa-fw fa-refresh fa-spin"></i>
-              <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i> 
+              <i *ngIf="!test.inProgress && test.success" class="fa fa-2x fa-fw fa-check-circle"></i>
               <i *ngIf="!test.inProgress && !test.success" class="fa fa-2x fa-fw fa-times-circle"></i>
               <i *ngIf="timedOut(test)" class="fa fa-2x fa-fw fa-clock-o"></i>
               <span class="label label-info">{{ displayTestType(test.runnerType) }}</span>
@@ -55,16 +56,16 @@
 
       <div class="list-view-pf-actions">
         <div class="btn-group">
-        <a [routerLink]="['/tests', test.id]"><button class="btn btn-default" type="button">Details</button></a>
-        <a [routerLink]="['/tests/create', {serviceId: test.serviceId, fromTest: test.id }]" tooltip="Relaunch this test!">
-          <button class="btn btn-primary" type="button"><span class="fa fa-repeat"></span></button>
-        </a>
+          <a [routerLink]="['/tests', test.id]"><button class="btn btn-default" type="button">Details</button></a>
+          <a [routerLink]="['/tests/create', {serviceId: test.serviceId, fromTest: test.id }]"
+            tooltip="Relaunch this test!">
+            <button class="btn btn-primary" type="button"><span class="fa fa-repeat"></span></button>
+          </a>
         </div>
       </div>
     </div>
 
-  <pfng-pagination [config]="paginationConfig"
-      (onPageNumberChange)="handlePageNumber($event)"
+    <pfng-pagination [config]="paginationConfig" (onPageNumberChange)="handlePageNumber($event)"
       (onPageSizeChange)="handlePageSize($event)">
-  </pfng-pagination>
-</div>
+    </pfng-pagination>
+  </div>

@@ -432,9 +432,11 @@ public class DispatchCriteriaHelper {
 
          for (String parameter : parameters.split("&")) {
             String[] pair = parameter.split("=");
-            String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
-            String value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
-            criteriaMap.put(key, value);
+            if (pair.length > 1) {
+               String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
+               String value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
+               criteriaMap.put(key, value);
+            }
          }
 
          // Just appends sorted entries, separating them with ?.

@@ -5,9 +5,9 @@
   </button>
 </div>
 <div class="modal-body">
-  <edit-labels [resourceName]="resourceName" [resourceType]="resourceType" [labels]="labels"></edit-labels>
+  <app-edit-labels [resourceName]="resourceName" [resourceType]="resourceType" [labels]="labels"></app-edit-labels>
   <div class="modal-footer">
     <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
-    <input type="submit" class="btn btn-primary" (click)="saveLabels()" ng-disabled="form.$invalid" value="Save"/>
+    <input type="submit" class="btn btn-primary" (click)="saveLabels()" ng-disabled="form.$invalid" value="Save" />
   </div>
 </div>

@@ -3,13 +3,13 @@ on:
   push:
     branches:
       - master
-      - 1.8.x
       - 1.9.x
+      - 1.10.x
   schedule:
     - cron: '0 4 * * *'  # Everyday at 4am UTC
   pull_request:
     types: [opened, synchronize, reopened]
-
+permissions: read-all
 jobs:
   build:
     name: Build and analyze

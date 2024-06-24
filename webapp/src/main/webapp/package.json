@@ -7,7 +7,9 @@
     "build": "ng build",
     "build-prod": "ng build --prod",
     "test": "ng test",
+    "test:coverage": "ng test --code-coverage --watch false",
     "lint": "ng lint",
+    "lint:fix": "ng lint --fix",
     "e2e": "ng e2e"
   },
   "private": true,
@@ -21,7 +23,7 @@
     "@angular/platform-browser-dynamic": "~8.2.14",
     "@angular/router": "~8.2.14",
     "jquery": "^3.7.1",
-    "keycloak-js": "^20.0.5",
+    "keycloak-js": "^22.0.5",
     "ng2-file-upload": "^1.4.0",
     "ngx-bootstrap": "^5.6.2",
     "ngx-highlightjs": "~4.0.2",

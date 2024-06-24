@@ -17,15 +17,15 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { ConfigService } from "./config.service";
+import { ConfigService } from './config.service';
 import { APIPackage, APIVersion } from '../models/hub.model';
 
 @Injectable({ providedIn: 'root' })
 export class HubService {
 
   private rootUrl: string = null;
-  //private rootUrl: string = 'http://localhost:4000/api';
-  //private rootUrl: string = 'http://microcks-hub/api';
+  // private rootUrl: string = 'http://localhost:4000/api';
+  // private rootUrl: string = 'http://microcks-hub/api';
 
   constructor(private http: HttpClient, private config: ConfigService) {
     this.rootUrl = this.config.getFeatureProperty('microcks-hub', 'endpoint');
@@ -43,12 +43,12 @@ export class HubService {
 
   public getLatestAPIVersions(packageName: string): Observable<APIVersion[]> {
     this.ensureRootUrl();
-    return this.http.get<APIVersion[]>(this.rootUrl + '/mocks/' + packageName + "/apis");
+    return this.http.get<APIVersion[]>(this.rootUrl + '/mocks/' + packageName + '/apis');
   }
 
   public getAPIVersion(packageName: string, apiVersionName: string): Observable<APIVersion> {
     this.ensureRootUrl();
-    return this.http.get<APIVersion>(this.rootUrl + '/mocks/' + packageName + "/apis/" + apiVersionName);
+    return this.http.get<APIVersion>(this.rootUrl + '/mocks/' + packageName + '/apis/' + apiVersionName);
   }
 
   public importAPIVersionContractContent(contractUrl: string, mainArtifact: boolean = true): Observable<any> {

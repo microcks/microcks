@@ -1,6 +1,6 @@
 <div class="form-group pull-right">
-  <pfng-toast-notification-list [notifications]="notifications"
-      (onCloseSelect)="handleCloseNotification($event)" [showClose]="true">
+  <pfng-toast-notification-list [notifications]="notifications" (onCloseSelect)="handleCloseNotification($event)"
+    [showClose]="true">
   </pfng-toast-notification-list>
 </div>
 
@@ -15,11 +15,13 @@
   </div>
 
   <h1>{{ view.service.name }} - {{ view.service.version }}</h1>
-  <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn | timeAgo }}, last update on {{ view.service.metadata.lastUpdate | date : 'medium'  }}</small>
+  <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn | timeAgo }}, last update on {{
+    view.service.metadata.lastUpdate | date : 'medium' }}</small>
 
   <div *ngIf="view.service.metadata" class="metadata-labels">
-    <label-list [metadata]="view.service.metadata"></label-list>
-    <button type="button" class="btn btn-link" *ngIf="hasRole('admin') || hasRoleForService('manager')" (click)="openEditLabels()">Edit Labels</button>
+    <app-label-list [metadata]="view.service.metadata"></app-label-list>
+    <button type="button" class="btn btn-link" *ngIf="hasRole('admin') || hasRoleForService('manager')"
+      (click)="openEditLabels()">Edit Labels</button>
   </div>
 
   <div class="row">
@@ -47,10 +49,13 @@
               <span *ngFor="let contract of contracts$">
                 <a href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
                   {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i>
-                </a><br/>
-                <a *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC' || contract.type === 'SWAGGER'" href="/api/documentation/{{ contract.name }}/{{ contract.type }}" target="new" title="{{ contract.name }}">
+                </a><br />
+                <a *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC' || contract.type === 'SWAGGER'"
+                  href="/api/documentation/{{ contract.name }}/{{ contract.type }}" target="new"
+                  title="{{ contract.name }}">
                   View Documentation <i class="fa fa-external-link"></i>
-                </a><br *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC' || contract.type === 'SWAGGER'"/>
+                </a><br
+                  *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC' || contract.type === 'SWAGGER'" />
               </span>
             </ng-container>
             <ng-template *ngIf="view.service.type != 'GENERIC_REST'" #noContracts>No contracts attached</ng-template>
@@ -60,7 +65,7 @@
           <span *ngIf="view.service.type === 'GENERIC_REST'">
             <a href="/api/resources/{{ view.service.id }}/swagger_20" target="new" alt="Swagger 2.0 spec">
               Swagger 2.0 spec <i class="glyphicon glyphicon-globe"></i>
-            </a> <br/>
+            </a> <br />
             <a href="/api/resources/{{ view.service.id }}/openapi_30" target="new" alt="OpenAPI 3.0 spec">
               OpenAPI 3.0 spec <i class="glyphicon glyphicon-globe"></i>
             </a>
@@ -68,7 +73,8 @@
         </dd>
         <dt>Statistics:</dt>
         <dd>
-          <a [routerLink]="['/metrics/invocations', view.service.name, view.service.version]">Mocks invocations <i class="glyphicon glyphicon-signal"></i></a>
+          <a [routerLink]="['/metrics/invocations', view.service.name, view.service.version]">Mocks invocations <i
+              class="glyphicon glyphicon-signal"></i></a>
         </dd>
       </dl>
     </div>
@@ -82,7 +88,7 @@
             <div class="col-xs-7">
               <div class="conformance-index">
                 <dt>Conformance index</dt>
-                <grade-index [score]="conformanceMetric.maxPossibleScore"></grade-index>
+                <app-grade-index [score]="conformanceMetric.maxPossibleScore"></app-grade-index>
               </div>
               <div style="margin-top: 5px;">
                 <a href="https://microcks.io/documentation/using/tests/#conformance-metrics" target="_blank">Learn More
@@ -101,10 +107,12 @@
                 [class.fa-low-down]="conformanceMetric.latestTrend === 'LOW_DOWN'"></i>
             </div>
           </div>
-          <ng-template #loadingt>Loading test conformance metric... You may need to update your service first.</ng-template>
+          <ng-template #loadingt>Loading test conformance metric... You may need to update your service
+            first.</ng-template>
           <div class="row" *ngIf="view.service.type != 'GENERIC_REST'" style="margin-top: 10px">
             <div class="col-sm-6" style="padding-top: 8px;">
-              <a [routerLink]="['/tests/service', view.service.id]"><i class="glyphicon glyphicon-time"></i> View Tests Runs</a>
+              <a [routerLink]="['/tests/service', view.service.id]"><i class="glyphicon glyphicon-time"></i> View Tests
+                Runs</a>
             </div>
             <div class="col-sm-6">
               <button class="btn btn-primary pull-right" (click)="gotoCreateTest()">
@@ -116,7 +124,7 @@
       </div>
       <span *ngIf="view.service.type === 'GENERIC_REST'">
         <p>
-          You may have already used this Direct API to record resources.<br/>
+          You may have already used this Direct API to record resources.<br />
           Check <a (click)="openResources()">what's in the repository <i class="glyphicon glyphicon-transfer"></i></a>.
         </p>
       </span>
@@ -128,61 +136,58 @@
   </div>
 
   <div class="container-fluid">
-    <pfng-list id="operationsList"
-        [actionTemplate]="actionTemplate"
-        [config]="operationsListConfig"
-        [expandTemplate]="operationDetailTemplate"
-        [items]="operations"
-        [itemTemplate]="operationTemplate"
-        (onActionSelect)="handleAction($event, null)"
-        (onDblClick)="handleDblClick($event)"
-        (onSelectionChange)="handleSelectionChange($event)">
+    <pfng-list id="operationsList" [actionTemplate]="actionTemplate" [config]="operationsListConfig"
+      [expandTemplate]="operationDetailTemplate" [items]="operations" [itemTemplate]="operationTemplate"
+      (onActionSelect)="handleAction($event, null)" (onDblClick)="handleDblClick($event)"
+      (onSelectionChange)="handleSelectionChange($event)">
 
-        <ng-template #operationTemplate let-item="item" let-index="index">
-          <div class="list-pf-left">
-          </div>
-          <div class="list-pf-content-wrapper">
-            <div class="list-pf-main-content">
-              <div class="list-pf-title">{{ item.name }}</div>
-              <div class="list-pf-description text-overflow-pf">
-                <span [ngSwitch]="item.method">
-                  <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
-                  <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
-                  <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
-                  <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
-                  <span class="label label-info" *ngSwitchDefault>{{ item.method || 'POST'}}</span>
-                </span>
-                <span *ngIf="item.dispatcher">
-                  with <code>{{ item.dispatcher }}</code> dispatcher
-                </span>
-              </div>
-            </div>
-            <div class="list-pf-additional-content">
-              <div>
-                <span class="pficon pficon-image"> </span>
-                <strong>  {{ view.messagesMap[item.name].length }}</strong> sample(s)
-              </div>
-            </div>
-
-            <div class="list-view-pf-actions">
-              <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="allowOperationsPropertiesEdit()">
-                <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-                  <span class="fa fa-ellipsis-v"></span>
-                </button>
-                <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
-                  <li><a [routerLink]="['operation', item.name]">Edit Properties</a></li>
-                  <li><a (click)="openGenerateSamples(item.name)" *ngIf="allowAICopilotOnSamples()">AI Copilot Samples <i class="pficon pficon-optimize"></i></a></li>
-                </ul>
-              </div>
+      <ng-template #operationTemplate let-item="item" let-index="index">
+        <div class="list-pf-left">
+        </div>
+        <div class="list-pf-content-wrapper">
+          <div class="list-pf-main-content">
+            <div class="list-pf-title">{{ item.name }}</div>
+            <div class="list-pf-description text-overflow-pf">
+              <span [ngSwitch]="item.method">
+                <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
+                <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
+                <span class="label label-info" *ngSwitchDefault>{{ item.method || 'POST'}}</span>
+              </span>
+              <span *ngIf="item.dispatcher">
+                with <code>{{ item.dispatcher }}</code> dispatcher
+              </span>
             </div>
           </div>
-        </ng-template>
+          <div class="list-pf-additional-content">
+            <div>
+              <span class="pficon pficon-image"> </span>
+              <strong> {{ view.messagesMap[item.name].length }}</strong> sample(s)
+            </div>
+          </div>
 
-        <ng-template #operationDetailTemplate let-item="item" let-index="index">
-          <h4 class="section-label no-margin-top">Dispatching Properties</h4>
-          <div class="row">
-            <div class="col-md-6">
-              <dl class="dl-horizontal left">
+          <div class="list-view-pf-actions">
+            <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="allowOperationsPropertiesEdit()">
+              <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="true">
+                <span class="fa fa-ellipsis-v"></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
+                <li><a [routerLink]="['operation', item.name]">Edit Properties</a></li>
+                <li><a (click)="openGenerateSamples(item.name)" *ngIf="allowAICopilotOnSamples()">AI Copilot Samples <i
+                      class="pficon pficon-optimize"></i></a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template #operationDetailTemplate let-item="item" let-index="index">
+        <h4 class="section-label no-margin-top">Dispatching Properties</h4>
+        <div class="row">
+          <div class="col-md-6">
+            <dl class="dl-horizontal left">
               <span *ngIf="view.service.type === 'SOAP_HTTP'">
                 <dt>SOAP Action:</dt>
                 <dd><code>{{ item.action }}</code></dd>
@@ -191,7 +196,7 @@
                 <dt>Dispatcher:</dt>
                 <dd><code>{{ item.dispatcher }}</code> &nbsp;
                   <span class="learn-more-inline">
-                    <a href="https://microcks.io/documentation/using/advanced/dispatching/" target="_blank">Learn More
+                    <a href="https://microcks.io/documentation/using/dispatching/" target="_blank">Learn More
                       <i class="fa fa-external-link" aria-hidden="true"></i>
                     </a>
                   </span>
@@ -203,7 +208,8 @@
                 <dt>Frequency:</dt>
                 <dd>
                   {{ item.defaultDelay || 0 }} s
-                  <span class="label label-default async-mock-status-label" *ngIf="!isAsyncMockEnabled(item)">Mocks are disabled</span>
+                  <span class="label label-default async-mock-status-label" *ngIf="!isAsyncMockEnabled(item)">Mocks are
+                    disabled</span>
                 </dd>
                 <dt>Available bindings:</dt>
                 <dd>
@@ -215,45 +221,46 @@
                   </span>
                 </dd>
               </span>
-              </dl>
-            </div>
-            <div class="col-md-6">
-              <dl class="dl-horizontal left" *ngIf="isEventTypeService()">
-                <span *ngIf="hasBinding(item, 'KAFKA')">
-                  <dt>Kafka endpoint:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('KAFKA') }}</a></dd>
-                </span>
-                <span *ngIf="hasBinding(item, 'MQTT')">
-                  <dt>MQTT endpoint:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('MQTT') }}</a></dd>
-                </span>
-                <span *ngIf="hasBinding(item, 'WS')">
-                  <dt>WebSocket endpoint:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('WS') }}</a></dd>
-                </span>
-                <span *ngIf="hasBinding(item, 'NATS')">
-                  <dt>NATS endpoint:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('NATS') }}</a></dd>
-                </span>
-                <span *ngIf="hasBinding(item, 'AMQP')">
-                  <dt>AMQP endpoint:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('AMQP') }}</a></dd>
-                </span>
-                <span *ngIf="hasBinding(item, 'GOOGLEPUBSUB')">
-                  <dt>Google PubSub project:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('GOOGLEPUBSUB') }}</a></dd>
-                </span>
-                <span *ngIf="hasBinding(item, 'SQS')">
-                  <dt>Amazon SQS region:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('SQS') }}</a></dd>
-                </span>
-                <span *ngIf="hasBinding(item, 'SNS')">
-                  <dt>Amazon SNS region:</dt>
-                  <dd><a>{{ asyncAPIFeatureEndpoint('SNS') }}</a></dd>
-                </span>
-              </dl>
-              <dl class="dl-horizontal left" *ngIf="!isEventTypeService()">
-              <span *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
+            </dl>
+          </div>
+          <div class="col-md-6">
+            <dl class="dl-horizontal left" *ngIf="isEventTypeService()">
+              <span *ngIf="hasBinding(item, 'KAFKA')">
+                <dt>Kafka endpoint:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('KAFKA') }}</a></dd>
+              </span>
+              <span *ngIf="hasBinding(item, 'MQTT')">
+                <dt>MQTT endpoint:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('MQTT') }}</a></dd>
+              </span>
+              <span *ngIf="hasBinding(item, 'WS')">
+                <dt>WebSocket endpoint:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('WS') }}</a></dd>
+              </span>
+              <span *ngIf="hasBinding(item, 'NATS')">
+                <dt>NATS endpoint:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('NATS') }}</a></dd>
+              </span>
+              <span *ngIf="hasBinding(item, 'AMQP')">
+                <dt>AMQP endpoint:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('AMQP') }}</a></dd>
+              </span>
+              <span *ngIf="hasBinding(item, 'GOOGLEPUBSUB')">
+                <dt>Google PubSub project:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('GOOGLEPUBSUB') }}</a></dd>
+              </span>
+              <span *ngIf="hasBinding(item, 'SQS')">
+                <dt>Amazon SQS region:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('SQS') }}</a></dd>
+              </span>
+              <span *ngIf="hasBinding(item, 'SNS')">
+                <dt>Amazon SNS region:</dt>
+                <dd><a>{{ asyncAPIFeatureEndpoint('SNS') }}</a></dd>
+              </span>
+            </dl>
+            <dl class="dl-horizontal left" *ngIf="!isEventTypeService()">
+              <span
+                *ngIf="view.service.type === 'SOAP_HTTP' || view.service.type === 'GRPC' || view.service.type === 'GRAPHQL'">
                 <dt>Input / Output Name:</dt>
                 <dd><code>{{ item.inputName }} / {{ item.outputName }}</code></dd>
               </span>
@@ -269,71 +276,58 @@
               </dd>
               <dt>Default delay:</dt>
               <dd>{{ item.defaultDelay || 0 }} ms</dd>
-              </dl>
-            </div>
+            </dl>
           </div>
-          <dl class="dl-horizontal left" *ngIf="view.service.type === 'GENERIC_REST'">
-            <dt>Mock URL:</dt>
-            <dd>
-              <div class="input-group">
-                <input type="text" class="form-control" value="{{ formatMockUrl(item, null) }}" disabled/>
-                <span class="input-group-addon">
-                  <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                    (click)="copyToClipboard(formatMockUrl(item, null))"></i>
-                </span>
-              </div>
-            </dd>
-          </dl>
+        </div>
+        <dl class="dl-horizontal left" *ngIf="view.service.type === 'GENERIC_REST'">
+          <dt>Mock URL:</dt>
+          <dd>
+            <div class="input-group">
+              <input type="text" class="form-control" value="{{ formatMockUrl(item, null) }}" disabled />
+              <span class="input-group-addon">
+                <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
+                  (click)="copyToClipboard(formatMockUrl(item, null))"></i>
+              </span>
+            </div>
+          </dd>
+        </dl>
 
-          <h4 class="section-label" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">Parameter Constraints</h4>
-          <div class="row" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">
-            <div class="col-md-6">
-              <dl class="dl-horizontal left">
-                <span *ngFor="let constraint of item.parameterConstraints">
-                  <span *ngIf="constraint.in === 'query'">
-                    <dt>Query param {{ constraint.name }}:</dt>
-                    <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
-                  </span>
+        <h4 class="section-label" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">Parameter
+          Constraints</h4>
+        <div class="row" *ngIf="item.parameterConstraints && item.parameterConstraints.length > 0">
+          <div class="col-md-6">
+            <dl class="dl-horizontal left">
+              <span *ngFor="let constraint of item.parameterConstraints">
+                <span *ngIf="constraint.in === 'query'">
+                  <dt>Query param {{ constraint.name }}:</dt>
+                  <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
                 </span>
-              </dl>
-            </div>
-            <div class="col-md-6">
-              <dl class="dl-horizontal left">
-                <span *ngFor="let constraint of item.parameterConstraints">
-                  <span *ngIf="constraint.in === 'header'">
-                    <dt>Header {{ constraint.name }}:</dt>
-                    <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
-                  </span>
-                </span>
-              </dl>
-            </div>
+              </span>
+            </dl>
           </div>
+          <div class="col-md-6">
+            <dl class="dl-horizontal left">
+              <span *ngFor="let constraint of item.parameterConstraints">
+                <span *ngIf="constraint.in === 'header'">
+                  <dt>Header {{ constraint.name }}:</dt>
+                  <dd [innerHTML]="displayParameterConstraint(constraint)"></dd>
+                </span>
+              </span>
+            </dl>
+          </div>
+        </div>
 
-          <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
-          <app-exchanges-tabset
-          [item]="item"
-          [view]="view"
-          [resolvedServiceView]="resolvedServiceView"
-          [notificationService]="notificationService"
-          [isEventTypeService]="isEventTypeService"
-          [getExchangeName]="getExchangeName"
-          [getExchangeSourceArtifact]="getExchangeSourceArtifact"
-          [hasBinding]="hasBinding"
-          [getBindingProperty]="getBindingProperty"
-          [formatMockUrl]="formatMockUrl"
-          [formatAsyncDestination]="formatAsyncDestination"
-          [getDestinationOperationPart]="getDestinationOperationPart"
-          [formatRequestContent]="formatRequestContent"
-          [formatGraphQLVariables]="formatGraphQLVariables"
-          [prettyPrintIfJSON]="prettyPrintIfJSON"
-          [formatCurlCmd]="formatCurlCmd"
-          [copyToClipboard]="copyToClipboard"
-          [removeVerbInUrl]="removeVerbInUrl"
-          [encodeUrl]="encodeUrl"
-          [asyncAPIFeatureEndpoint]="asyncAPIFeatureEndpoint"
-          [config]="config"
-          ></app-exchanges-tabset>
-        </ng-template>
+        <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
+        <app-exchanges-tabset [item]="item" [view]="view" [resolvedServiceView]="resolvedServiceView"
+          [notificationService]="notificationService" [isEventTypeService]="isEventTypeService"
+          [getExchangeName]="getExchangeName" [getExchangeSourceArtifact]="getExchangeSourceArtifact"
+          [hasBinding]="hasBinding" [getBindingProperty]="getBindingProperty" [formatMockUrl]="formatMockUrl"
+          [formatAsyncDestination]="formatAsyncDestination" [getDestinationOperationPart]="getDestinationOperationPart"
+          [formatRequestContent]="formatRequestContent" [formatGraphQLVariables]="formatGraphQLVariables"
+          [prettyPrintIfJSON]="prettyPrintIfJSON" [formatCurlCmd]="formatCurlCmd" [copyToClipboard]="copyToClipboard"
+          [removeVerbInUrl]="removeVerbInUrl" [encodeUrl]="encodeUrl"
+          [asyncAPIFeatureEndpoint]="asyncAPIFeatureEndpoint" [config]="config"></app-exchanges-tabset>
+      </ng-template>
 
     </pfng-list>
   </div>

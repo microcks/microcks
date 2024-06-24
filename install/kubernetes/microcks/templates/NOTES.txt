@@ -10,9 +10,11 @@ To learn more about the release, try:
 Microcks is available at https://{{ .Values.microcks.url }}.
 
 GRPC mock service is available at {{ ( include "microcks-grpc.url" . ) }}.
+{{- if (.Values.microcks.grpcEnableTLS) }}
 It has been exposed using TLS passthrough on the Ingress controller, you should extract the certificate for your client using:
 
   $ kubectl get secret {{ .Values.appName }}-microcks-grpc-secret -n {{ .Release.Namespace }} -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
+{{ end }}
 
 {{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 Keycloak has been deployed on https://{{ .Values.keycloak.url }} to protect user access.

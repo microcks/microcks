@@ -15,33 +15,30 @@
  */
 package io.github.microcks.repository;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import io.github.microcks.domain.DailyStatistic;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.annotation.DirtiesContext.ClassMode;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
  * Test case for DailyStatisticRepository class.
  * @author laurent
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = ClassMode.AFTER_EACH_TEST_METHOD)
-@ContextConfiguration(classes = RepositoryTestsConfiguration.class)
+@SpringJUnitConfig(classes = RepositoryTestsConfiguration.class)
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class DailyStatisticRepositoryTest {
+class DailyStatisticRepositoryTest {
 
    @Autowired
    DailyStatisticRepository repository;
 
-   @Before
+   @BeforeEach
    public void setUp() {
       // Create a bunch of statistics...
       DailyStatistic stat = new DailyStatistic();
@@ -58,7 +55,7 @@ public class DailyStatisticRepositoryTest {
    }
 
    @Test
-   public void testFindByDayAndServiceNameAndServiceVersion() {
+   void testFindByDayAndServiceNameAndServiceVersion() {
       // Retrieve a stat using theses 3 criteria.
       DailyStatistic stat = repository.findByDayAndServiceNameAndServiceVersion("20140319", "TestService1", "1.0")
             .get(0);

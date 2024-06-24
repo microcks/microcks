@@ -15,24 +15,53 @@
  */
 package io.github.microcks.web;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test case for the GrpcServerCallHandler.
  * @author laurent
  */
-public class GrpcServerCallHandlerIT extends AbstractBaseIT {
+class GrpcServerCallHandlerIT extends AbstractBaseIT {
 
    private static final String GRPCURL_IMAGE = "quay.io/microcks/grpcurl:v1.8.9-alpine";
 
    @Test
-   public void testGrpcMocking() {
+   void testGrpcMockingWithQueryArgs() {
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
+
+      Testcontainers.exposeHostPorts(9090);
+
+      GenericContainer grpcurl = new GenericContainer(GRPCURL_IMAGE).withAccessToHost(true);
+
+      try {
+         grpcurl.start();
+         Container.ExecResult result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext", "-d", """
+               {"firstname": "Laurent", "lastname": "Broudoux"}
+               """, "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
+
+         assertTrue(result.getStdout().contains("\"greeting\": \"Hello Laurent Broudoux !\""));
+
+         result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext", "-d", """
+               {"firstname": "Philippe", "lastname": "Huet"}
+               """, "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
+
+         assertTrue(result.getStdout().contains("\"greeting\": \"Hello Philippe Huet !\""));
+      } catch (Exception e) {
+         fail("No exception should be thrown");
+      } finally {
+         grpcurl.stop();
+      }
+   }
+
+   @Test
+   void testGrpcMockingWithCustomDispatcher() {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
@@ -48,6 +77,12 @@ public class GrpcServerCallHandlerIT extends AbstractBaseIT {
                """, "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
 
          assertTrue(result.getStdout().contains("\"greeting\": \"Hello Laurent Broudoux !\""));
+
+         result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext", "-d", """
+               {"firstname": "John", "lastname": "Doe"}
+               """, "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
+
+         assertTrue(result.getStdout().contains("\"greeting\": \"Hello Philippe Huet !\""));
       } catch (Exception e) {
          fail("No exception should be thrown");
       } finally {
@@ -56,7 +91,7 @@ public class GrpcServerCallHandlerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testGrpcReflection() {
+   void testGrpcReflection() {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);

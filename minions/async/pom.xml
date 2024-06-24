@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.9.1-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -23,15 +22,15 @@
 
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>3.6.6</quarkus.platform.version>
-    <quarkus-plugin.version>3.6.6</quarkus-plugin.version>
+    <quarkus.platform.version>3.8.4</quarkus.platform.version>
+    <quarkus-plugin.version>3.8.4</quarkus-plugin.version>
 
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.17.2</nats.version>
     <rabbitmq.version>5.19.0</rabbitmq.version>
     <apicurio-registry.version>2.5.8.Final</apicurio-registry.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
-    <surefire-plugin.version>3.0.0</surefire-plugin.version>
+    <surefire-plugin.version>3.2.5</surefire-plugin.version>
   </properties>
 
   <dependencyManagement>
@@ -257,6 +256,22 @@
   </build>
 
   <profiles>
+    <profile>
+      <id>it</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <includes>
+                <include>**/*IT.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
     <profile>
       <id>native</id>
       <activation>

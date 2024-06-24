@@ -33,13 +33,13 @@ export class Service {
   sourceArtifact: string;
 }
 export enum ServiceType {
-  SOAP_HTTP = "SOAP_HTTP",
-  REST = "REST",
-  EVENT = "EVENT",
-  GRPC = "GRPC",
-  GENERIC_REST = "GENERIC_REST",
-  GENERIC_EVENT = "GENERIC_EVENT",
-  GRAPHQL = "GRAPHQL"
+  SOAP_HTTP = 'SOAP_HTTP',
+  REST = 'REST',
+  EVENT = 'EVENT',
+  GRPC = 'GRPC',
+  GENERIC_REST = 'GENERIC_REST',
+  GENERIC_EVENT = 'GENERIC_EVENT',
+  GRAPHQL = 'GRAPHQL'
 }
 
 export class Operation {
@@ -48,7 +48,7 @@ export class Operation {
   action: string;
   inputName: string;
   outputName: string;
-  bindings: {string: Binding[]}
+  bindings: {string: Binding[]};
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
@@ -149,15 +149,17 @@ export class Response extends Message {
   status: string;
   mediaType: string;
   dispatchCriteria: string;
-  isFault: boolean = false;
+  isFault = false;
 }
 export class EventMessage extends Message {
   id: string;
   mediaType: string;
-  dispatchCriteria: string;  
+  dispatchCriteria: string;
 }
 
 export abstract class Exchange {
+  type?: string;
+  eventMessage?: EventMessage;
 }
 export class UnidirectionalEvent extends Exchange {
   eventMessage: EventMessage;
@@ -169,7 +171,7 @@ export class RequestResponsePair extends Exchange {
 
 export class ServiceView {
   service: Service;
-  messagesMap: {string : Exchange[]};
+  messagesMap: {string: Exchange[]};
 }
 
 export class GenericResource {

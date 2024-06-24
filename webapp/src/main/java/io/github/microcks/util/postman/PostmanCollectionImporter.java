@@ -61,10 +61,16 @@ import java.util.stream.Collectors;
 public class PostmanCollectionImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(PostmanCollectionImporter.class);
+   private static final Logger log = LoggerFactory.getLogger(PostmanCollectionImporter.class);
 
    /** Postman collection property that references service version property. */
    public static final String SERVICE_VERSION_PROPERTY = "version";
+
+   private static final String REQUEST_NODE = "request";
+   private static final String QUERY_NODE = "query";
+   private static final String VARIABLE_NODE = "variable";
+   private static final String GRAPHQL_NODE = "graphql";
+   private static final String VARIABLES_NODE = "variables";
 
    private ObjectMapper mapper;
    private JsonNode collection;
@@ -203,11 +209,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    private Map<Request, Response> getMessageDefinitionsV2(String folderName, JsonNode itemNode, Operation operation) {
-      log.debug("Extracting message definitions in folder " + folderName);
+      log.debug("Extracting message definitions in folder {}", folderName);
       Map<Request, Response> result = new HashMap<>();
       String itemNodeName = itemNode.path("name").asText();
 
-      if (!itemNode.has("request")) {
+      if (!itemNode.has(REQUEST_NODE)) {
          // Item is simply a folder that may contain some other folders recursively.
          Iterator<JsonNode> items = itemNode.path("item").elements();
          while (items.hasNext()) {
@@ -255,17 +261,23 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
                } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
                   // This dispatcher is used for GraphQL
-                  if (requestNode.path("body").has("graphql")) {
+                  if (requestNode.path("body").has(GRAPHQL_NODE)) {
                      // We must transform JSON representing variables into a Map<String, String>
                      // before building a dispatchCriteria matching the rules.
-                     String variables = requestNode.path("body").path("graphql").path("variables").asText();
-                     dispatchCriteria = extractGraphQLCriteria(rootDispatcherRules, variables);
+                     String variables = requestNode.path("body").path(GRAPHQL_NODE).path(VARIABLES_NODE).asText();
+                     dispatchCriteria = extractQueryArgsCriteria(rootDispatcherRules, variables);
                   }
+                  // or for gRPC.
+                  if (requestNode.path("body").has("raw")) {
+                     String variables = requestNode.path("body").path("raw").asText();
+                     dispatchCriteria = extractQueryArgsCriteria(rootDispatcherRules, variables);
+                  }
+
                } else {
                   // If dispatcher has been overriden (to SCRIPT for example), we should still put a generic resourcePath
                   // (maybe containing : parts) to later force operation matching at the mock controller level. Only do that
                   // when request url is not empty (means not the root url like POST /order).
-                  if (requestUrl != null && requestUrl.length() > 0) {
+                  if (requestUrl != null && !requestUrl.isEmpty()) {
                      operation.addResourcePath(extractResourcePath(requestUrl, null));
                      log.debug("Added operation generic resource path: {}", operation.getResourcePaths());
                   }
@@ -288,10 +300,10 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          request.setHeaders(buildHeaders(requestNode.path("header")));
          if (requestNode.has("body") && requestNode.path("body").has("raw")) {
             request.setContent(requestNode.path("body").path("raw").asText());
-         } else if (requestNode.has("body") && requestNode.path("body").has("graphql")) {
+         } else if (requestNode.has("body") && requestNode.path("body").has(GRAPHQL_NODE)) {
             // We got to rebuild a specific HTTP request for GraphQL.
-            String query = requestNode.path("body").path("graphql").path("query").asText();
-            String variables = requestNode.path("body").path("graphql").path("variables").asText();
+            String query = requestNode.path("body").path(GRAPHQL_NODE).path(QUERY_NODE).asText();
+            String variables = requestNode.path("body").path(GRAPHQL_NODE).path(VARIABLES_NODE).asText();
             // Initialize with query field.
             StringBuilder requestContent = new StringBuilder("{\"query\": \"").append(query.replace("\n", "\\n"))
                   .append("\"");
@@ -309,8 +321,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             requestContent.append("}");
             request.setContent(requestContent.toString());
          }
-         if (requestNode.path("url").has("variable")) {
-            JsonNode variablesNode = requestNode.path("url").path("variable");
+         if (requestNode.path("url").has(VARIABLE_NODE)) {
+            JsonNode variablesNode = requestNode.path("url").path(VARIABLE_NODE);
             for (JsonNode variableNode : variablesNode) {
                Parameter param = new Parameter();
                param.setName(variableNode.path("key").asText());
@@ -318,8 +330,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                request.addQueryParameter(param);
             }
          }
-         if (requestNode.path("url").has("query")) {
-            JsonNode queryNode = requestNode.path("url").path("query");
+         if (requestNode.path("url").has(QUERY_NODE)) {
+            JsonNode queryNode = requestNode.path("url").path(QUERY_NODE);
             for (JsonNode variableNode : queryNode) {
                Parameter param = new Parameter();
                param.setName(variableNode.path("key").asText());
@@ -335,8 +347,8 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
    private Map<String, String> buildRequestParts(JsonNode requestNode) {
       Map<String, String> parts = new HashMap<>();
-      if (requestNode.has("url") && requestNode.path("url").has("variable")) {
-         Iterator<JsonNode> variables = requestNode.path("url").path("variable").elements();
+      if (requestNode.has("url") && requestNode.path("url").has(VARIABLE_NODE)) {
+         Iterator<JsonNode> variables = requestNode.path("url").path(VARIABLE_NODE).elements();
          while (variables.hasNext()) {
             JsonNode variable = variables.next();
             parts.put(variable.path("key").asText(), variable.path("value").asText());
@@ -345,14 +357,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return parts;
    }
 
-   private String extractGraphQLCriteria(String dispatcherRules, String variables) {
+   private String extractQueryArgsCriteria(String dispatcherRules, String variables) {
       String dispatchCriteria = "";
       try {
          Map<String, String> paramsMap = mapper.readValue(variables,
                TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
          dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
       } catch (Exception e) {
-         log.error("Exception while extracting dispatch criteria from GraphQL variables: {}", e.getMessage());
+         log.error("Exception while extracting dispatch criteria from JSON body: {}", e.getMessage());
       }
       return dispatchCriteria;
    }
@@ -442,11 +454,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    private void extractOperationV2(String folderName, JsonNode itemNode, Map<String, Operation> collectedOperations) {
-      log.debug("Extracting operation in folder " + folderName);
+      log.debug("Extracting operation in folder {}", folderName);
       String itemNodeName = itemNode.path("name").asText();
 
       // Item may be a folder or an operation description.
-      if (!itemNode.has("request")) {
+      if (!itemNode.has(REQUEST_NODE)) {
          // Item is simply a folder that may contain some other folders recursively.
          Iterator<JsonNode> items = itemNode.path("item").elements();
          while (items.hasNext()) {
@@ -457,14 +469,14 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          // Item is here an operation description.
          String operationName = buildOperationName(itemNode, folderName);
          Operation operation = collectedOperations.get(operationName);
-         String url = itemNode.path("request").path("url").asText("");
+         String url = itemNode.path(REQUEST_NODE).path("url").asText("");
          if ("".equals(url)) {
-            url = itemNode.path("request").path("url").path("raw").asText("");
+            url = itemNode.path(REQUEST_NODE).path("url").path("raw").asText("");
          }
 
          // Collection may have been used for testing so it may contain a valid URL with prefix that will bother us.
          // Ex: http://localhost:8080/prefix1/prefix2/order/123456 or http://petstore.swagger.io/v2/pet/1. Trim it.
-         if (url.indexOf(folderName + "/") != -1) {
+         if (url.contains(folderName + "/")) {
             url = removeProtocolAndHostPort(url);
          }
 
@@ -474,7 +486,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             operation.setName(operationName);
 
             // Complete with REST specific fields.
-            operation.setMethod(itemNode.path("request").path("method").asText());
+            operation.setMethod(itemNode.path(REQUEST_NODE).path("method").asText());
 
             // Deal with dispatcher stuffs.
             if (urlHasParameters(url) && urlHasParts(url)) {
@@ -507,9 +519,9 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
     * @return Operation name
     */
    public static String buildOperationName(JsonNode operationNode, String folderName) {
-      String url = operationNode.path("request").path("url").asText("");
+      String url = operationNode.path(REQUEST_NODE).path("url").asText("");
       if ("".equals(url)) {
-         url = operationNode.path("request").path("url").path("raw").asText();
+         url = operationNode.path(REQUEST_NODE).path("url").path("raw").asText();
       }
 
       // New way of computing operation name.
@@ -519,7 +531,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       }
       // Remove protocol pragma and host/port stuffs.
       url = removeProtocolAndHostPort(url);
-      return operationNode.path("request").path("method").asText() + " " + url;
+      return operationNode.path(REQUEST_NODE).path("method").asText() + " " + url;
    }
 
    /**
@@ -535,7 +547,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          result = result.substring(0, result.indexOf('?'));
       }
       // Remove prefix of radix if specified.
-      if (operationNameRadix != null && result.indexOf(operationNameRadix) != -1) {
+      if (operationNameRadix != null && result.contains(operationNameRadix)) {
          result = result.substring(result.indexOf(operationNameRadix));
       }
       // Remove trailing / if present.

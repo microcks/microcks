@@ -22,17 +22,17 @@ import { ServicesPageComponent } from '../services.page';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
-  selector: 'direct-api-wizard',
+  selector: 'app-direct-api-wizard',
   templateUrl: './direct-api.wizard.html',
   styleUrls: ['./direct-api.wizard.css']
 })
 export class DirectAPIWizardComponent implements OnInit {
   @ViewChild('wizard', {static: true}) wizard: WizardComponent;
 
-  formInvalid: boolean = true;
+  formInvalid = true;
   api: Api = new Api();
   apiType: ServiceType = null;
-  
+
   // Wizard Step 1
   step1Config: WizardStepConfig;
   step2Config: WizardStepConfig;
@@ -48,8 +48,8 @@ export class DirectAPIWizardComponent implements OnInit {
   }
 
   ngOnInit() {
-    var wizardTitle: string = 'Add a new Direct API';
-    
+    const wizardTitle = 'Add a new Direct API';
+
     // Step 1
     this.step1Config = {
       id: 'step1',
@@ -103,16 +103,16 @@ export class DirectAPIWizardComponent implements OnInit {
   }
 
   stepChanged($event: WizardEvent) {
-    let flatSteps = this.flattenWizardSteps(this.wizard);
-    let currentStep = flatSteps.filter(step => step.config.id === $event.step.config.id);
+    const flatSteps = this.flattenWizardSteps(this.wizard);
+    const currentStep = flatSteps.filter(step => step.config.id === $event.step.config.id);
     if (currentStep && currentStep.length > 0) {
       currentStep[0].config.nextEnabled = true;
     }
     if ($event.step.config.id === 'step1') {
       this.updateApiType();
-    } if ($event.step.config.id === 'step2') {
+    } else if ($event.step.config.id === 'step2') {
       this.updateApiProperties();
-    } if ($event.step.config.id === 'step3') {
+    } else if ($event.step.config.id === 'step3') {
       this.updateApiReference();
     } else {
       this.wizardConfig.nextTitle = 'Next >';
@@ -124,8 +124,8 @@ export class DirectAPIWizardComponent implements OnInit {
     this.updateApiType();
   }
   updateApiType(): void {
-    this.step1Config.nextEnabled = 
-      (this.apiType !== undefined && this.apiType != null && 
+    this.step1Config.nextEnabled =
+      (this.apiType !== undefined && this.apiType != null &&
         (this.apiType == ServiceType.GENERIC_REST || this.apiType == ServiceType.GENERIC_EVENT));
     this.setNavAway(this.step1Config.nextEnabled);
   }
@@ -138,15 +138,15 @@ export class DirectAPIWizardComponent implements OnInit {
   }
   updateApiReference(): void {
     this.formInvalid = false;
-    if (this.api.referencePayload != null && this.api.referencePayload.trim() != "") {
+    if (this.api.referencePayload != null && this.api.referencePayload.trim() != '') {
       try {
-        JSON.parse(this.api.referencePayload)
+        JSON.parse(this.api.referencePayload);
       } catch (e) {
         this.formInvalid = true;
       }
     }
-    if (this.apiType === ServiceType.GENERIC_EVENT && 
-        ((this.api.referencePayload == null || this.api.referencePayload.trim() === ""))) {
+    if (this.apiType === ServiceType.GENERIC_EVENT &&
+        ((this.api.referencePayload == null || this.api.referencePayload.trim() === ''))) {
       this.formInvalid = true;
     }
     this.step3Config.nextEnabled = !this.formInvalid;
@@ -160,7 +160,7 @@ export class DirectAPIWizardComponent implements OnInit {
   }
 
   private flattenWizardSteps(wizard: WizardComponent): WizardStep[] {
-    let flatWizard: WizardStep[] = [];
+    const flatWizard: WizardStep[] = [];
     wizard.steps.forEach((step: WizardStepComponent) => {
       if (step.hasSubsteps) {
         step.steps.forEach(substep => {

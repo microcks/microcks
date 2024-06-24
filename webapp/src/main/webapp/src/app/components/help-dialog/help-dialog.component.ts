@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component } from "@angular/core";
+import { Component } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
 @Component({
-  selector: "help-dialog",
-  templateUrl: "help-dialog.component.html"
+  selector: 'app-help-dialog',
+  templateUrl: 'help-dialog.component.html'
 })
 export class HelpDialogComponent {
 
-  protected _isOpen: boolean = false;
+  protected isOpenBF = false;
 
   constructor(public bsModalRef: BsModalRef) {}
-
-  ngOnInit() {
-  }
 }

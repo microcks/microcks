@@ -1,5 +1,6 @@
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
 
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
@@ -8,16 +9,16 @@ if (environment.production) {
   enableProdMode();
 }
 
-// Load Keycloak config from server. Need to do this before invoking 
-// keycloak-js constructor to first check the enabeld flag.
+// Load Keycloak config from server. Need to do this before invoking
+// keycloak-js constructor to first check the enabled flag.
 let keycloakConfig: any;
-console.log("location.origin: " + location.origin);
+console.log('[Microcks launch] Origin: ' + location.origin);
 
 function getKeycloakConfig(callback) {
-  let xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   xhr.open('GET', location.origin + '/api/keycloak/config', true);
   xhr.setRequestHeader('Accept', 'application/json');
-  xhr.onreadystatechange = function () {
+  xhr.onreadystatechange = function() {
     if (xhr.readyState == 4) {
       if (xhr.status == 200 || fileLoaded(xhr)) {
         keycloakConfig = JSON.parse(xhr.responseText);
@@ -31,40 +32,42 @@ function getKeycloakConfig(callback) {
 }
 
 // Actually call the getKeycloakConfig function and process with startup.
-getKeycloakConfig(function (err, datums) {
+getKeycloakConfig(function(err, datums) {
   // Deal with error if any.
   if (err) {
-    console.error("[Microcks launch] Error while fetching Keycloak config: " + err);
-    throw err; 
+    console.error('[Microcks launch] Error while fetching Keycloak config: ' + err);
+    throw err;
   }
-  
-  if (keycloakConfig.enabled) {
-    console.log("[Microcks launch] Keycloak is enabled, launching OIDC login flow...");
+
+  if (keycloakConfig && keycloakConfig.enabled) {
+    console.log('[Microcks launch] Keycloak is enabled, launching OIDC login flow...');
 
     // Build keycloak-js adapter from config.
-    var keycloak = window["Keycloak"]({
+    //const keycloak = (window as any).Keycloak({
+    const keycloak = new Keycloak({
       url: keycloakConfig['auth-server-url'],
-      realm: keycloakConfig['realm'],
-      clientId: keycloakConfig['resource']
+      realm: keycloakConfig.realm,
+      clientId: keycloakConfig.resource
     });
-    var loginOptions = {onLoad: 'login-required'};
-  
-    if (location.origin.indexOf("/localhost:") != -1) {
-      console.log("[Microcks launch] Running locally so disabling Keycloak checkLogin Iframe to respect modern browser restrictions");
-      loginOptions['checkLoginIframe'] = false;
+    //const loginOptions = {onLoad: 'login-required', checkLoginIframe: undefined};
+    const loginOptions: KeycloakInitOptions = {onLoad: 'login-required', checkLoginIframe: true};
+
+    if (location.origin.indexOf('/localhost:') != -1) {
+      console.log('[Microcks launch] Running locally so disabling Keycloak checkLogin Iframe to respect modern browser restrictions');
+      loginOptions.checkLoginIframe = false;
     }
 
-    keycloak.init(loginOptions).then(function (authenticated) {
+    keycloak.init(loginOptions).then(function(authenticated) {
       if (authenticated) {
-          window['keycloak'] = keycloak;
+          (window as any).keycloak = keycloak;
           platformBrowserDynamic().bootstrapModule(AppModule)
               .catch(err => console.log(err));
       }
-    }).catch(function () {
+    }).catch(function() {
       alert('Failed to initialize authentication subsystem.');
     });
   } else {
-    console.log("[Microcks launch] Keycloak is disabled so running in dev mode with anonymous authent");
+    console.log('[Microcks launch] Keycloak is disabled so running in dev mode with anonymous authent');
     platformBrowserDynamic().bootstrapModule(AppModule)
         .catch(err => console.log(err));
   }

@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { async, ComponentFixture, TestBed } from "@angular/core/testing";
+import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { CommonModule } from "@angular/common";
-import { HttpClientModule } from "@angular/common/http";
-import { FormsModule } from "@angular/forms";
-import { ActivatedRoute, Params, Router, RouterModule } from "@angular/router";
-import { HighlightModule } from "ngx-highlightjs";
+import { CommonModule } from '@angular/common';
+import { HttpClientModule } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Params, Router, RouterModule } from '@angular/router';
+import { HighlightModule } from 'ngx-highlightjs';
 import {
   NotificationService,
   ToastNotificationListModule,
-} from "patternfly-ng/notification";
-import { of } from "rxjs";
-import { Operation, Service } from "src/app/models/service.model";
-import { ServicesService } from "src/app/services/services.service";
-import { TestsService } from "src/app/services/tests.service";
-import { TestCreatePageComponent } from "./test-create.page";
+} from 'patternfly-ng/notification';
+import { of } from 'rxjs';
+import { Operation, Service } from 'src/app/models/service.model';
+import { ServicesService } from 'src/app/services/services.service';
+import { TestsService } from 'src/app/services/tests.service';
+import { TestCreatePageComponent } from './test-create.page';
 
-describe("ServicesPageComponent", () => {
+describe('ServicesPageComponent', () => {
   let component: TestCreatePageComponent;
   let fixture: ComponentFixture<TestCreatePageComponent>;
   let servicesSvcMock: jasmine.SpyObj<ServicesService>;
@@ -40,22 +40,23 @@ describe("ServicesPageComponent", () => {
   let routerMock: jasmine.SpyObj<Router>;
 
   beforeEach(async(() => {
-    servicesSvcMock = jasmine.createSpyObj("ServicesService", ["getService"]);
-    testsSvcMock = jasmine.createSpyObj("TestsService", [
-      "listByServiceId",
-      "countryByServiceId",
+    servicesSvcMock = jasmine.createSpyObj('ServicesService', ['getService']);
+    testsSvcMock = jasmine.createSpyObj('TestsService', [
+      'listByServiceId',
+      'countryByServiceId',
     ]);
-    notificationsSvcMock = jasmine.createSpyObj("NotificationService", [
-      "addNotification",
-      "getNotifications",
+    notificationsSvcMock = jasmine.createSpyObj('NotificationService', [
+      'addNotification',
+      'getNotifications',
     ]);
     notificationsSvcMock.getNotifications.and.returnValue([]);
     activatedRouteMock = {
       paramMap: of({
-        get: () => "mockServiceId",
+        get: () => 'mockServiceId',
         has: () => false,
       }) as Partial<Params> as Params,
     } as Partial<ActivatedRoute> as ActivatedRoute;
+    routerMock = jasmine.createSpyObj('RouterMock', []);
 
     TestBed.configureTestingModule({
       imports: [
@@ -100,12 +101,12 @@ describe("ServicesPageComponent", () => {
     fixture.detectChanges();
   });
 
-  it("should create", () => {
+  it('should create', () => {
     expect(component).toBeTruthy();
     expect(component.removedOperationsNames).toEqual([]);
   });
 
-  describe("on init", () => {
+  describe('on init', () => {
     beforeEach(async () => {
       notificationsSvcMock.getNotifications.and.returnValue([]);
 
@@ -113,31 +114,31 @@ describe("ServicesPageComponent", () => {
       await fixture.whenStable();
     });
 
-    it("should define notifications", () => {
+    it('should define notifications', () => {
       notificationsSvcMock.getNotifications.and.returnValue([]);
 
       expect(component.notifications).toEqual([]);
     });
   });
 
-  describe("resetOperations", () => {
+  describe('resetOperations', () => {
     beforeEach(() => {
-      component.removedOperationsNames = ["operationN"];
+      component.removedOperationsNames = ['operationN'];
       component.resolvedService = {
-        operations: [{ name: "operation1" }],
+        operations: [{ name: 'operation1' }],
       } as Partial<Service> as Service;
     });
 
     [
       { input: [], expected: [] },
       {
-        input: [{ name: "operation1" }, { name: "operation2" }],
-        expected: ["operation1", "operation2"],
+        input: [{ name: 'operation1' }, { name: 'operation2' }],
+        expected: ['operation1', 'operation2'],
       },
-      { input: undefined, expected: ["operation1"] },
+      { input: undefined, expected: ['operation1'] },
     ].forEach((testCase) => {
       it(`should filter operations ${
-        testCase.expected || "from resolvedService"
+        testCase.expected || 'from resolvedService'
       } when input is ${JSON.stringify(testCase.input)}`, () => {
         component.resetOperations(
           testCase.input as Partial<Operation>[] as Operation[]

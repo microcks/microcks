@@ -27,7 +27,7 @@ export class Secret {
 export class SecretRef {
   secretId: string;
   name: string;
-  
+
   constructor(secretId: string, name: string) {
     this.secretId = secretId;
     this.name = name;

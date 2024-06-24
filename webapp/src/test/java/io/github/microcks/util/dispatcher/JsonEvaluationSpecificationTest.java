@@ -16,26 +16,24 @@
 package io.github.microcks.util.dispatcher;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for JsonEvaluationSpecification class.
  * @author laurent
  */
-public class JsonEvaluationSpecificationTest {
+class JsonEvaluationSpecificationTest {
 
    private final static String JSON_PAYLOAD = "{\"exp\": \"/type\", \"operator\": \"range\", \"cases\": {"
          + "\".*[Aa][Ll][Ee].*\": \"OK\", " + "\"default\": \"Bad\"" + "}}";
 
    @Test
-   public void testJsonSerialization() {
+   void testJsonSerialization() {
       DispatchCases cases = new DispatchCases();
       Map<String, String> dispatchCases = new HashMap<>();
       dispatchCases.put(".*[Aa][Ll][Ee].*", "OK");
@@ -63,7 +61,7 @@ public class JsonEvaluationSpecificationTest {
    }
 
    @Test
-   public void testJsonDeserialization() {
+   void testJsonDeserialization() {
       JsonEvaluationSpecification specification = null;
       try {
          specification = JsonEvaluationSpecification.buildFromJsonString(JSON_PAYLOAD);

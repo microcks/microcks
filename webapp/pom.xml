@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.9.1-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -18,10 +18,9 @@
     <java.version>17</java.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <junit.version>4.13.1</junit.version>
     <bouncycastle.version>1.70</bouncycastle.version>
     <snakeyaml.version>2.2</snakeyaml.version>
-    <mongo-java-server.version>1.43.0</mongo-java-server.version>
+    <mongo-java-server.version>1.45.0</mongo-java-server.version>
     <apache-httpclient.version>5.3</apache-httpclient.version>
     <commons-lang3.version>3.14.0</commons-lang3.version>
     <commons-io.version>2.15.1</commons-io.version>
@@ -205,12 +204,6 @@
 
     <!-- Test related dependencies -->
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>${junit.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-test</artifactId>
       <version>${spring-boot.version}</version>
@@ -234,11 +227,23 @@
       <artifactId>mongodb</artifactId>
       <version>1.17.6</version>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>com.github.dasniko</groupId>
       <artifactId>testcontainers-keycloak</artifactId>
       <version>3.0.0</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>1.19.3</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
@@ -269,20 +274,14 @@
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
-        <version>3.0.0</version>
-        <dependencies>
-          <dependency>
-            <groupId>org.apache.maven.surefire</groupId>
-            <artifactId>surefire-junit-platform</artifactId>
-            <version>3.0.0</version>
-          </dependency>
-          <dependency>
-            <groupId>org.junit.vintage</groupId>
-            <artifactId>junit-vintage-engine</artifactId>
-            <version>5.9.3</version>
-          </dependency>
-        </dependencies>
+        <version>3.2.5</version>
+        <configuration>
+          <includes>
+            <include>**/*Test.java</include>
+          </includes>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.springframework.boot</groupId>
@@ -343,9 +342,27 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.12.4</version>
+            <version>3.1.2</version>
             <configuration>
               <includes>
+                <include>**/*IT.java</include>
+              </includes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>coverage</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.5</version>
+            <configuration>
+              <includes>
+                <include>**/*Test.java</include>
                 <include>**/*IT.java</include>
               </includes>
             </configuration>
@@ -518,7 +535,7 @@
                 <OTEL_METRIC_EXPORT_INTERVAL>10000</OTEL_METRIC_EXPORT_INTERVAL>
                 <OTEL_EXPORTER_OTLP_TIMEOUT>7000</OTEL_EXPORTER_OTLP_TIMEOUT>
                 <OTEL_RESOURCE_ATTRIBUTES>service.name=${project.artifactId},service.namespace=${project.artifactId}-ns,service.instance.id=${project.artifactId}-dev,service.version=${project.version}</OTEL_RESOURCE_ATTRIBUTES>
-              </environmentVariables>          
+              </environmentVariables>
             </configuration>
           </plugin>
         </plugins>

@@ -20,7 +20,7 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class VersionInfoService {
 
-  private rootUrl: string = '/api';
+  private rootUrl = '/api';
 
   constructor(private http: HttpClient) { }
 

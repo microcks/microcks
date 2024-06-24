@@ -56,8 +56,8 @@ export class TestResult {
   serviceId: string;
   timeout: number;
   elapsedTime: number;
-  success: boolean = false;
-  inProgress: boolean = true;
+  success = false;
+  inProgress = true;
   runnerType: TestRunnerType;
   operationsHeaders: any;
   testCaseResults: TestCaseResult[];
@@ -66,14 +66,14 @@ export class TestResult {
 }
 
 export class TestCaseResult {
-  success: boolean = false;
-  elapsedTime: number = -1;
+  success = false;
+  elapsedTime = -1;
   operationName: string;
   testStepResults: TestStepResult[];
 }
 
 export class TestStepResult {
-  success: boolean = false;
+  success = false;
   elapsedTime: number;
   requestName: string;
   eventMessageName: string;
