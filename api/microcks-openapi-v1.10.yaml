@@ -41,7 +41,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Service'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Service'
           description: List of found Services
       security:
       - jwt-bearer:
@@ -1607,62 +1609,6 @@ components:
         sourceArtifact:
           description: Short name of the artifact this resource was extracted from
           type: string
-    ImportJob:
-      description: An ImportJob allow defining a repository artifact to poll for discovering
-        Services and APIs mocks and tests
-      required:
-      - name
-      - repositoryUrl
-      properties:
-        id:
-          description: Unique identifier of ImportJob
-          type: string
-        name:
-          description: Unique distinct name of this ImportJob
-          type: string
-        repositoryUrl:
-          description: URL of mocks and tests repository artifact
-          type: string
-        repositoryDisableSSLValidation:
-          description: Whether to disable SSL certificate verification when checking
-            repository
-          type: boolean
-        frequency:
-          description: Reserved for future usage
-          type: string
-        createdDate:
-          format: date-time
-          description: Creation date for this ImportJob
-          type: string
-        lastImportDate:
-          format: date-time
-          description: Date last import was done
-          type: string
-        lastImportError:
-          description: Error message of last import (if any)
-          type: string
-        active:
-          description: Whether this ImportJob is active (ie. scheduled for execution)
-          type: boolean
-        etag:
-          description: Etag of repository URL during previous import. Is used for
-            not re-importing if no recent changes
-          type: string
-        serviceRefs:
-          description: References of Services discovered when checking repository
-          type: array
-          items:
-            $ref: '#/components/schemas/ServiceRef'
-        metadata:
-          $ref: '#/components/schemas/Metadata'
-          description: Metadata of ImportJob
-        secretRef:
-          $ref: '#/components/schemas/SecretRef'
-          description: Reference of a Secret to used when checking repository
-        mainArtifact:
-          description: Flag telling if considered as primary or secondary artifact.
-            Default to `true`
-          type: boolean
     TestRunnerType:
       description: Type of test strategy (different strategies are implemented by
         different runners)
@@ -2219,6 +2165,62 @@ components:
           description: The name of a secret that can be used to authenticated when
             downloading remote artifact.
           type: string
+    ImportJob:
+      description: An ImportJob allow defining a repository artifact to poll for discovering
+        Services and APIs mocks and tests
+      required:
+      - name
+      - repositoryUrl
+      properties:
+        id:
+          description: Unique identifier of ImportJob
+          type: string
+        name:
+          description: Unique distinct name of this ImportJob
+          type: string
+        repositoryUrl:
+          description: URL of mocks and tests repository artifact
+          type: string
+        repositoryDisableSSLValidation:
+          description: Whether to disable SSL certificate verification when checking
+            repository
+          type: boolean
+        frequency:
+          description: Reserved for future usage
+          type: string
+        createdDate:
+          format: int32
+          description: Creation timestamp for this ImportJob
+          type: integer
+        lastImportDate:
+          format: int32
+          description: Timestamp of the last import
+          type: integer
+        lastImportError:
+          description: Error message of last import (if any)
+          type: string
+        active:
+          description: Whether this ImportJob is active (ie. scheduled for execution)
+          type: boolean
+        etag:
+          description: Etag of repository URL during previous import. Is used for
+            not re-importing if no recent changes
+          type: string
+        serviceRefs:
+          description: References of Services discovered when checking repository
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceRef'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+          description: Metadata of ImportJob
+        secretRef:
+          $ref: '#/components/schemas/SecretRef'
+          description: Reference of a Secret to used when checking repository
+        mainArtifact:
+          description: Flag telling if considered as primary or secondary artifact.
+            Default to `true`
+          type: boolean
   responses:
     ServiceResponse:
       content:

@@ -453,6 +453,83 @@ class ServiceServiceTest {
    }
 
    @Test
+   void testImportServiceDefinitionMainGrpcAndSecondaryPostman() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");
+         services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("hello-v1.proto", true));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("v1", importedSvc.getVersion());
+      assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(1, importedSvc.getOperations().size());
+
+      // As operation as only scalar type, it should be QUERY_ARGS dispatcher.
+      assertEquals(DispatchStyles.QUERY_ARGS, importedSvc.getOperations().get(0).getDispatcher());
+      assertEquals("firstname && lastname", importedSvc.getOperations().get(0).getDispatcherRules());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, requests.size());
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, responses.size());
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("HelloService.postman.json", false));
+      } catch (MockRepositoryImportException mrie) {
+         mrie.printStackTrace();
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      importedSvc = services.get(0);
+      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("v1", importedSvc.getVersion());
+      assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(1, importedSvc.getOperations().size());
+
+      // Inspect and check requests.
+      requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(2, requests.size());
+      for (Request request : requests) {
+         assertEquals("HelloService.postman.json", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(2, requests.size());
+      for (Response response : responses) {
+         assertEquals("HelloService.postman.json", response.getSourceArtifact());
+         if ("Laurent".equals(response.getName())) {
+            assertEquals("?firstname=Laurent?lastname=Broudoux", response.getDispatchCriteria());
+         } else if ("Philippe".equals(response.getName())) {
+            assertEquals("?firstname=Philippe?lastname=Huet", response.getDispatchCriteria());
+         } else {
+            fail("Unexpected response name: " + response.getName());
+         }
+      }
+   }
+
+   @Test
    void testImportServiceDefinitionMainAndSecondariesWithAPIMetadata() {
       List<Service> services = null;
       try {

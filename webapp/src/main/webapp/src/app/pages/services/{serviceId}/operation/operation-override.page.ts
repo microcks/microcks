@@ -78,10 +78,13 @@ export class OperationOverridePageComponent implements OnInit {
     ],
     EVENT: [],
     GRPC: [
+      { value: '', label: '' },
+      { value: 'QUERY_ARGS', label: 'QUERY_ARGS' },
       { value: 'JSON_BODY', label: 'JSON BODY' },
       { value: 'FALLBACK', label: 'FALLBACK' },
     ],
     GRAPHQL: [
+      { value: '', label: '' },
       { value: 'QUERY_ARGS', label: 'QUERY_ARGS' },
       { value: 'JSON_BODY', label: 'JSON BODY' },
       { value: 'SCRIPT', label: 'SCRIPT' },

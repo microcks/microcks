@@ -43,7 +43,7 @@ In a terminal, start frontend GUI server using NG :
 
 ```shell
 $ cd src/main/webapp
-$ npm install --force
+$ npm install --legacy-peer-deps
 $ ng serve
 ```
 

@@ -6,7 +6,7 @@ on:
         description: 'The tag to use for the images'
         type: string
         required: true
-
+permissions: read-all
 jobs:
   build-native-images:
     runs-on: ubuntu-latest-4-cores

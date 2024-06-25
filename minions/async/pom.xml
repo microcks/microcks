@@ -30,7 +30,7 @@
     <rabbitmq.version>5.19.0</rabbitmq.version>
     <apicurio-registry.version>2.5.8.Final</apicurio-registry.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
-    <surefire-plugin.version>3.0.0</surefire-plugin.version>
+    <surefire-plugin.version>3.2.5</surefire-plugin.version>
   </properties>
 
   <dependencyManagement>

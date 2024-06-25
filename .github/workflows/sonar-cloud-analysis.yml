@@ -9,7 +9,7 @@ on:
     - cron: '0 4 * * *'  # Everyday at 4am UTC
   pull_request:
     types: [opened, synchronize, reopened]
-
+permissions: read-all
 jobs:
   build:
     name: Build and analyze
