@@ -33,6 +33,7 @@ import org.springframework.http.client.ClientHttpResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This is an implementation of HttpTestRunner that deals with OpenAPI schema validation. This implementation now
@@ -42,17 +43,19 @@ import java.util.List;
 public class OpenAPITestRunner extends HttpTestRunner {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
+   private static final Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
 
    /** Content-type for JSON that is the sole valid response type. */
    private static final String APPLICATION_JSON_TYPE = "application/json";
 
+   private final ResourceRepository resourceRepository;
+   private final ResponseRepository responseRepository;
+
+   private final boolean validateResponseCode;
+
+
    /** The URL of resources used for validation. */
    private String resourceUrl = null;
-
-   private ResourceRepository resourceRepository;
-   private ResponseRepository responseRepository;
-   private boolean validateResponseCode = false;
 
    private List<String> lastValidationErrors = null;
 
@@ -149,22 +152,16 @@ public class OpenAPITestRunner extends HttpTestRunner {
          boolean isOpenAPIv3 = true;
 
          // Retrieve the resource corresponding to OpenAPI specification if any.
-         Resource openapiSpecResource = null;
-         List<Resource> resources = resourceRepository.findByServiceId(service.getId());
-         for (Resource resource : resources) {
-            if (ResourceType.OPEN_API_SPEC.equals(resource.getType())) {
-               openapiSpecResource = resource;
-               break;
-            } else if (ResourceType.SWAGGER.equals(resource.getType())) {
-               openapiSpecResource = resource;
-               isOpenAPIv3 = false;
-               break;
-            }
-         }
+         Resource openapiSpecResource = findResourceCandidate(service);
          if (openapiSpecResource == null) {
             log.debug("Found no OpenAPI specification resource for service {} - {}, so failing validating",
                   service.getId(), service.getName());
             return TestReturn.FAILURE_CODE;
+         }
+
+         // Check the type so guess the kind of validation.
+         if (ResourceType.SWAGGER.equals(openapiSpecResource.getType())) {
+            isOpenAPIv3 = false;
          }
 
          JsonNode openApiSpec = null;
@@ -219,5 +216,28 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Reset just after consumption so avoid side-effects.
       lastValidationErrors = null;
       return builder.toString();
+   }
+
+   private Resource findResourceCandidate(Service service) {
+      Optional<Resource> candidate = Optional.empty();
+      // Try resources marked within mainArtifact first.
+      List<Resource> resources = resourceRepository.findMainByServiceId(service.getId());
+      if (!resources.isEmpty()) {
+         candidate = getResourceCandidate(resources);
+      }
+      // Else try all the services resources...
+      if (candidate.isEmpty()) {
+         resources = resourceRepository.findByServiceId(service.getId());
+         if (!resources.isEmpty()) {
+            candidate = getResourceCandidate(resources);
+         }
+      }
+      return candidate.orElse(null);
+   }
+
+   private Optional<Resource> getResourceCandidate(List<Resource> resources) {
+      return resources.stream()
+            .filter(r -> ResourceType.OPEN_API_SPEC.equals(r.getType()) || ResourceType.SWAGGER.equals(r.getType()))
+            .findFirst();
    }
 }

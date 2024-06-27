@@ -29,7 +29,7 @@ import java.util.List;
  */
 public interface ResourceRepository extends MongoRepository<Resource, String> {
 
-   Resource findByName(String name);
+   List<Resource> findByName(String name);
 
    List<Resource> findByServiceId(String serviceId);
 
@@ -39,4 +39,7 @@ public interface ResourceRepository extends MongoRepository<Resource, String> {
 
    @Query("{ 'serviceId' : {'$in' : ?0}}")
    List<Resource> findByServiceIdIn(List<String> serviceIds);
+
+   @Query("{ 'mainArtifact': true, 'serviceId': ?0 }")
+   List<Resource> findMainByServiceId(String serviceId);
 }

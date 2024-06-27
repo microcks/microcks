@@ -232,6 +232,19 @@ export class ServiceDetailPageComponent implements OnInit {
     });
   }
 
+  public getContractLink(contract: Contract): string {
+    if (contract.mainArtifact) {
+      return "/api/resources/" + contract.name;
+    }
+    return "/api/resources/id/" + contract.id;
+  }
+  public getContractDocumentationLink(contract: Contract): string {
+    if (contract.mainArtifact) {
+      return "/api/documentation/" + contract.name + "/" + contract.type;
+    }
+    return "/api/documentation/id/" + contract.id + "/" + contract.type;
+  }
+
   public openResources(): void {
     const initialState = {
       closeBtnName: 'Close',
