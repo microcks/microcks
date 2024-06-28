@@ -1,7 +1,7 @@
 {{/*
 Print the image
 */}}
-{{- define "pod.image" -}}
+{{- define "microcks.image" -}}
 {{- $image := printf "%s:%s" .repository .tag }}
 {{- if .registry }}
 {{- $image = printf "%s/%s" .registry $image }}
@@ -9,21 +9,11 @@ Print the image
 {{- $image -}}
 {{- end }}
 
-
-{{/*
-Default common labels
-*/}}
-{{- define "microcks-common-labels" -}}
-{{- range $name, $value := .Values.commonLabels }}
-{{ $name }}: {{ $value | quote }}
-{{- end -}}
-{{- end -}}
-
 {{/*
 Pod labels
 */}}
 {{- define "microcks-pod-labels" -}}
-{{- range $name, $value := .Values.features.async.pod.labels }}
+{{- range $name, $value := .Values.microcks.labels }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
@@ -32,7 +22,7 @@ Pod labels
 Pod annotations
 */}}
 {{- define "microcks-pod-annotations" -}}
-{{- range $name, $value := .Values.features.async.pod.annotations }}
+{{- range $name, $value := .Values.microcks.annotations }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
@@ -42,7 +32,7 @@ Pod annotations
 Service labels
 */}}
 {{- define "microcks-service-labels" -}}
-{{- range $name, $value := .Values.features.async.service.labels }}
+{{- range $name, $value := .Values.microcks.service.labels }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
@@ -51,7 +41,7 @@ Service labels
 Service annotations
 */}}
 {{- define "microcks-service-annotations" -}}
-{{- range $name, $value := .Values.features.async.service.annotations }}
+{{- range $name, $value := .Values.microcks.service.annotations }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}

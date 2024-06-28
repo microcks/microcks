@@ -15,10 +15,10 @@ metadata:
 spec:
   ports:
     - protocol: TCP
-      port: {{ .Values.features.async.service.port }}
-      targetPort: {{ .Values.features.async.services.targetPort }}
+      port: {{ .Values.async.service.port }}
+      targetPort: {{ .Values.async.services.targetPort }}
       name: async-minion
-  type: {{ .Values.feature.async.serviceType | default "ClusterIP" | quote }}
+  type: {{ .Values.async.serviceType | default "ClusterIP" | quote }}
   sessionAffinity: None
   selector:
     app: "{{ .Values.appName }}"

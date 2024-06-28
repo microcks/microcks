@@ -1,7 +1,6 @@
 appName: microcks
 ingresses: false
 
-
 global:
   storageClass: ""
   imagePullSecrets: []
@@ -9,11 +8,32 @@ global:
 
 externalDependencies:
   kafka:
+    enabled: true
     url: "kafka.example.com"
     port: "9092"
     protocol: "PLAINTEXT"
+    auth:
+      enabled: false
+      type: "none"  #SSL #SASL_SSL
+      truststoreType: PKCS12
+      truststoreSecretRef:
+        secret: kafka-cluster-ca-cert
+        storeKey: ca.p12
+        passwordKey: ca.password
+      keystoreType: PKCS12
+      keystoreSecretRef:
+        secret: mtls-user
+        storeKey: user.p12
+        passwordKey: user.password
+  # ---------------------------------------
+  schema-registry:
+    enabled: true
+    url: "schema-registry.example.com"
+    port: "8081"
+  # ---------------------------------------
   mongodb:
-    uri: "mognodb.example.com"
+    enabled: true
+    uri: "mongodb.example.com"
     port: "27017"
     # database: ""
     # uriParemeters: "?ssl=true"
@@ -24,27 +44,28 @@ externalDependencies:
         secret: ""
         usernameKey: ""
         passwordKey: ""
+  # ---------------------------------------
   keycloak:
-    enabled: "true"
-    url: "keycloak.example.com"
+    enabled: false
+    url: "keycloak.exampl.com"
+    port: "80"
     realm: "microcks"
     auth:
-      adminUsername: "microcks"
+      adminUsername: "hex"
       admminPassword: "keycloak-microcks"
       secretRef:
-        secret: keycloak
+        secret: ""
         usernameKey: "username"
         passwordKey: "password"
 
 microcks:
-  nameOverride: ""
   pod:
     labels: {}
     annotations: {}
     image:
       registry: "quay.io"
       repository: "quay.io/microcks/microcks"
-      tag: "nightly"
+      tag: "1.9.1"
       pullPolicy: IfNotPresent
     replicas: 1
     resources:
@@ -82,9 +103,6 @@ microcks:
     port: 8080
     targetPort: 8080
   config:
-    # This SSL toggle only control the reDirect URL protocol in realms.config file.
-    ssl:
-      enabled: false
     url: microcks.example.com
     #url: microcks-microcks.192.168.64.6.nip.io
     #ingressSecretRef: my-secret-for-microcks-ingress
@@ -117,6 +135,9 @@ microcks:
     postman-runtime:
       port: 8080
   realms:
+    # This SSL toggle only control the reDirect URL protocol in realms.config file.
+    ssl:
+      enabled: false
     users:
       role:
         user:
@@ -339,7 +360,7 @@ kafka:
           external: 9094
         annotations: {}
 
-schema-registry:
+schemaRegistry:
   ## ============================================================================
   ## For more customisation and specifics please check [ charts/schema-registry/values.yaml ]
   ## Here are only some of the custimisable configurations for minimised setup.
@@ -366,7 +387,7 @@ features:
       image:
         registry: "quay.io"
         repository: "microcks/microcks-async-minion"
-        tag: "nightly"
+        tag: "1.9.1"
         pullPolicy: IfNotPresent
       replicas: 1
       resources:

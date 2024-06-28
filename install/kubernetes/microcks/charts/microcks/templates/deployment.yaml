@@ -33,10 +33,10 @@ spec:
     spec:
       containers:
       - name: spring
-        image: {{ .Values.microcks.image }}
-        imagePullPolicy: IfNotPresent
+        image: {{ include "microcks.image" .Values.microcks.image }}
+        imagePullPolicy: {{ .Values.microcks.images.pullPolicy }}
         ports:
-        - containerPort: 8080
+        - containerPort: {{ .Values.microcks.services.targetPort }}
           protocol: TCP
         env:
           - name: JAVA_OPTIONS
@@ -44,49 +44,50 @@ spec:
           - name: JAVA_MAJOR_VERSION
             value: "11"
           - name: SPRING_PROFILES_ACTIVE
-            value: prod{{ if .Values.microcks.pod.extraProperties }},extra{{ end }}
+            value: prod{{ if .Values.microcks.extraProperties }},extra{{ end }}
           - name: SPRING_DATA_MONGODB_URI
-            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{ .Values.dependencies.mongodb.uri | default (print .Values.appName "-mongodb:27017") }}/${SPRING_DATA_MONGODB_DATABASE}{{ .Values.dependencies.mongodb.uriParameters }}
+            value: mongodb://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@{{- include "microcks.mongodb.url" -}}:{{- include "microcks.mongodb.port" }}/${SPRING_DATA_MONGODB_DATABASE}{{ .Values.externalDependencies.mongodb.uriParameters }}
           - name: SPRING_DATA_MONGODB_USER
+            {{- include "microcks.mongodb.secretRef.secret" -}}
+            {{- if microcks.mongodb.secretRef.secret }}
             valueFrom:
               secretKeyRef:
-                {{- if hasKey .Values.dependencies.mongodb.auth "secretRef" }}
-                key: {{ .Values.dependencies.mongodb.auth.secretRef.usernameKey | default "username" }}
-                name: {{ .Values.dependencies.mongodb.auth.secret | default (print .Values.appName "-mongodb-connection") }}
-                {{- else }}
-                key: username
-                name: "{{ .Values.appName }}-mongodb-connection"
-                {{- end }}
+                name: {{- include microcks.mongodb.secretRef.secret -}}
+                key: {{- include microcks.mongodb.secretRef.usernameKey -}}
+            {{- else }}
+            value: {{- include microcks.mongodb.username -}}
+            {{- end -}}
           - name: SPRING_DATA_MONGODB_PASSWORD
+            {{- include "microcks.mongodb.secretRef.secret" -}}
+            {{- if microcks.mongodb.secretRef.secret }}
             valueFrom:
               secretKeyRef:
-                {{- if hasKey .Values.dependencies.mongodb.auth "secretRef" }}
-                key: {{ .Values.dependencies.mongodb.auth.secretRef.passwordKey | default "password" }}
-                name: {{ .Values.dependencies.mongodb.auth.secretRef.secret | default (print .Values.appName "-mongodb-connection") }}
-                {{- else }}
-                key: password
-                name: "{{ .Values.appName }}-mongodb-connection"
-                {{- end }}
+                name: {{- include microcks.mongodb.secretRef.secret -}}
+                key: {{- include microcks.mongodb.secretRef.passwordKey -}}
+            {{- else }}
+            value: {{- include microcks.mongodb.password -}}
+            {{- end -}}
           - name: SPRING_DATA_MONGODB_DATABASE
-            value: {{ .Values.dependencies.mongodb.database | default .Values.appName }}
+            value: {{- include "microcks.mongodb.database" | default .Values.appName }}
           - name: POSTMAN_RUNNER_URL
             value: http://{{ .Values.appName }}-postman-runtime:{{ .Values.config.postman-runtime }}
           - name: TEST_CALLBACK_URL
             value: http://{{ .Values.appName }}:{{ .Values.service.targetPort }}
           - name: KEYCLOAK_ENABLED
-            value: "{{ .Values.dependencies.keycloak.enabled }}"
+            {{- include "microcks.keycloak.url" -}}
+            {{- if microcks.keycloak.url -}}
+            value: "true"
+            {{- else -}}
+            value: "false"
+            {{- end -}}
           - name: KEYCLOAK_URL
-            value: http://{{ .Values.dependencies.keycloak.url }}
+            value: http://{{ include "microcks.keycloak.url" }}
           {{- if and .Values.features.async.enabled }}
           - name: ASYNC_MINION_URL
             value: http://{{ .Values.appName }}-async-minion:8080
           {{- end }}
           - name: KAFKA_BOOTSTRAP_SERVER
-            {{- if eq .Values.features.async.kafka.install true }}
-            value: "{{ .Values.appName }}-kafka-kafka-bootstrap:9092"
-            {{- else }}
-            value: "{{ .Values.features.async.kafka.url }}"
-            {{- end }}
+            value: "{{- include microcks.kafka.protocol -}}://{{- include microcks.kafka.url -}}:{{- include microcks.kafka.port -}}"
           {{- if eq .Values.features.async.kafka.install false }}
             {{- if not (eq .Values.features.async.kafka.authentication.type "none") }}
             {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
@@ -97,11 +98,11 @@ spec:
                 name: "{{ .Values.appName }}-kafka-truststore"
             {{- end }}
             {{- end }}
-            {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
+            {{- if eq .Values.externalDependencies.kafka.auth.type "SSL" }}
           - name: KAFKA_KEYSTORE_PASSWORD
             valueFrom:
               secretKeyRef:
-                key: {{ .Values.features.async.kafka.authentication.keystoreSecretRef.passwordKey }}
+                key: {{ .Values.externalDependencies.kafka.auth.keystoreSecretRef.passwordKey }}
                 name: "{{ .Values.appName }}-kafka-keystore"
             {{- end }}
           {{- end }}
@@ -141,7 +142,7 @@ spec:
         volumeMounts:
           - name: "{{ .Values.appName }}-config"
             mountPath: "/deployments/config"
-          {{- if (.Values.microcks.config.grpcEnableTLS) }}
+          {{- if (.Values.microcks.grpcEnableTLS) }}
           - name: "{{ .Values.appName }}-grpc-certs"
             mountPath: "/deployments/config/grpc"
           {{- end }}

@@ -1,7 +1,7 @@
 appName: ""
 # namespaceOverride: ""
 imagePullSecrets: []
-pod:
+microcks:
   labels: {}
   annotations: {}
   image:
@@ -34,12 +34,12 @@ pod:
     #- name: CORS_REST_ALLOW_CREDENTIALS
     #  value: 'true'
 
-service:
-  Type: ClusterIP
-  labels: {}
-  annotations: {}
-  port: 8000
-  targetPort: 3000
+  service:
+    Type: ClusterIP
+    labels: {}
+    annotations: {}
+    port: 8080
+    targetPort: 8080
 
 config:
   # This SSL toggle only control the reDirect URL protocol in realms.config file.
