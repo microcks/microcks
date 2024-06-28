@@ -3,11 +3,10 @@ Detect and return the MongoDB's url
 */}}
 {{- define "microcks.mongodb.url" -}}
 {{- if .Values.mongdb.install -}}
-{{-   $url = "mongodb"  -}}
+{{-   $url := "mongodb"  -}}
 {{- else -}}
-{{-   $url = .Values.externalDependencies.mongodb.url -}}
+{{-   $url := .Values.externalDependencies.mongodb.url -}}
 {{- end -}}
-{{- $url -}}
 {{- end -}}
 
 {{/*
@@ -26,11 +25,10 @@ Detect and return the MongoDB's database
 */}}
 {{- define "microcks.mongodb.database" -}}
 {{- if .Values.mongodb.install -}}
-{{-   $database = default "microcks" .Values.mongodb.auth.database -}}
+{{-   $database := "microcks" -}}
 {{- else -}}
-{{-   $database = default "microcks" .Values.externalDependencies.mongodb.database -}}
+{{-   $database := default "microcks" .Values.externalDependencies.mongodb.database -}}
 {{- end -}}
-{{- $database -}}
 {{- end -}}
 
 {{/*
@@ -42,7 +40,6 @@ Detect and return the MongoDB's username in plaintext
 {{- else -}}
 {{-   $username := .Values.externalDependencies.mongodb.auth.username -}}
 {{- end -}}
-{{- $username -}}
 {{- end -}}
 
 {{/*
@@ -54,7 +51,6 @@ Detect and return the MongoDB's password in plaintext
 {{- else -}}
 {{-   $password := .Values.externalDependencies.mongodb.auth.password -}}
 {{- end -}}
-{{- $password -}}
 {{- end -}}
 
 {{/*

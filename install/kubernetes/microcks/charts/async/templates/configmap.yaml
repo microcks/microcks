@@ -15,82 +15,25 @@ metadata:
 data:
   application.properties: |-
     # Configuration file.
-    %kube.quarkus.http.port={{ .Values.features.async.service.targetPort }}
+    %kube.quarkus.http.port={{ .Values.async.service.targetPort }}
 
     # Configure the log level.
-    %kube.quarkus.log.level={{ .Values.features.async.pod.logLevel }}
-    %kube.quarkus.log.console.level={{ .Values.features.async.pod.logLevel }}
+    %kube.quarkus.log.level={{ .Values.async.logLevel }}
+    %kube.quarkus.log.console.level={{ .Values.async.logLevel }}
 
     # Access to Microcks API server.
     %kube.io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url=http://{{ .Values.appName }}:8080
-    %kube.microcks.serviceaccount={{ .Values.features.async.configmap.keycloak.serviceAccount }}
 
-    {{ if hasKey .Values.features.async.configmap.keycloak "uri" -}}
     # Access to Keycloak URL if you override the one coming from Microcks config
-    keycloak.auth.url={{ .Values.features.async.configmap.keycloak.uri }}
-    {{- end }}
+    keycloak.auth.url={{ include "microcks.keycloak.url" }}:{{ include "microcks.keycloak.port"}}
 
     # Access to Kafka broker.
-    {{- if .Values.features.async.kafka.install }}
-    %kube.kafka.bootstrap.servers={{ .Values.appName }}-kafka:9092
-    %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.appName }}-kafka-kafka-bootstrap:9092
-    {{ else }}
-    %kube.kafka.bootstrap.servers={{ .Values.features.async.kafka.url }}
-    %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ .Values.features.async.kafka.url }}
+    %kube.kafka.bootstrap.servers={{ include "microcks.kafka.url" }}:{{ include "microcks.kafka.port" }}
+    %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ {{ include "microcks.kafka.url" }}:{{ include "microcks.kafka.port" }}
 
-      {{- if eq .Values.features.async.kafka.authentication.type "SSL" }}
-    %kube.kafka.security.protocol=SSL
-      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
-    %kube.kafka.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
-    %kube.kafka.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
-    %kube.kafka.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
-      {{- end }}
-    %kube.kafka.ssl.keystore.location=/deployments/config/kafka/keystore/{{ .Values.features.async.kafka.authentication.keystoreSecretRef.storeKey }}
-    %kube.kafka.ssl.keystore.password=${KAFKA_KEYSTORE_PASSWORD}
-    %kube.kafka.ssl.keystore.type={{ .Values.features.async.kafka.authentication.keystoreType }}
-
-    %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SSL
-      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
-      {{- end }}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.keystore.location=/deployments/config/kafka/keystore/{{ .Values.features.async.kafka.authentication.keystoreSecretRef.storeKey }}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.keystore.password=${KAFKA_KEYSTORE_PASSWORD}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.keystore.type={{ .Values.features.async.kafka.authentication.keystoreType }}
-      {{- else if eq .Values.features.async.kafka.authentication.type "SASL_SSL" }}
-    %kube.kafka.security.protocol=SASL_SSL
-      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
-    %kube.kafka.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
-    %kube.kafka.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
-    %kube.kafka.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
-      {{- end }}
-    %kube.kafka.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
-    %kube.kafka.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
-        {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
-    %kube.kafka.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
-        {{- end }}
-
-    %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SASL_SSL
-      {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.password=${KAFKA_TRUSTSTORE_PASSWORD}
-    %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.type={{ .Values.features.async.kafka.authentication.truststoreType }}
-      {{- end }}
-    %kube.mp.messaging.incoming.microcks-services-updates.sasl.mechanism={{ .Values.features.async.kafka.authentication.saslMechanism }}
-    %kube.mp.messaging.incoming.microcks-services-updates.sasl.jaas.config={{ .Values.features.async.kafka.authentication.saslJaasConfig }}
-        {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
-    %kube.mp.messaging.incoming.microcks-services-updates.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
-        {{- end }}
-      {{- end }}
-    {{ end }}
-
-    {{- if .Values.features.async.kafka.schemaRegistry.url }}
+    {{- if or ( eq .Values.schema-registry.install true) ( hasKey .Values.externalDependencies.schema-registry.url ) -}}
     # Access to Kafka schema registry.
-    %kube.kafka.schema.registry.url={{ .Values.features.async.kafka.schemaRegistry.url }}
-    %kube.kafka.schema.registry.confluent={{ .Values.features.async.kafka.schemaRegistry.confluent }}
-    %kube.kafka.schema.registry.username={{ .Values.features.async.kafka.schemaRegistry.username | default "" }}
-    %kube.kafka.schema.registry.credentials.source={{ .Values.features.async.kafka.schemaRegistry.credentialsSource | default "USER_INFO" }}
+    %kube.kafka.schema.registry.url={{ include "microcks.schema-registry.url" }}:{{ include "microcks.schema-registry.port" }}
     {{ end }}
 
     {{- if .Values.features.async.mqtt.url }}

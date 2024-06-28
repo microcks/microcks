@@ -1,7 +1,7 @@
 {{/*
 Print the image
 */}}
-{{- define "pod.image" -}}
+{{- define "postman.image" -}}
 {{- $image := printf "%s:%s" .repository .tag }}
 {{- if .registry }}
 {{- $image = printf "%s/%s" .registry $image }}
@@ -9,21 +9,11 @@ Print the image
 {{- $image -}}
 {{- end }}
 
-
-{{/*
-Default common labels
-*/}}
-{{- define "microcks-common-labels" -}}
-{{- range $name, $value := .Values.commonLabels }}
-{{ $name }}: {{ $value | quote }}
-{{- end -}}
-{{- end -}}
-
 {{/*
 Pod labels
 */}}
 {{- define "postman-pod-labels" -}}
-{{- range $name, $value := .Values.pod.labels }}
+{{- range $name, $value := .Values.postman.labels }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
@@ -32,7 +22,7 @@ Pod labels
 Pod annotations
 */}}
 {{- define "postman-pod-annotations" -}}
-{{- range $name, $value := .Values.pod.annotations }}
+{{- range $name, $value := .Values.postman.annotations }}
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}

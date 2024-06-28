@@ -4,9 +4,9 @@ Detect and return the kafka's url
 {{- define "microcks.kafka.url" -}}
 {{- $url := -}}
 {{- if .Values.kafka.install -}}
-{{-   $url = "kafka"  -}}
+{{-   $url := "kafka"  -}}
 {{- else -}}
-{{-   $url = .Values.externalDependencies.kafka.url -}}
+{{-   $url := .Values.externalDependencies.kafka.url -}}
 {{- end -}}
 
 {{/*
@@ -31,4 +31,26 @@ Detect and return the kafka's protocol
 {{- default "PLAINTEXT" .Values.kafka.listeners.controller.protocol -}}
 {{- else if (eq .Values.kafka.install false) -}}
 {{- .Values.externalDependencies.kafka.protocol -}}
+{{- end -}}
+
+{{/*
+Detect and return the schema registry's url
+*/}}
+{{- define "microcks.schemaRegistry.url" -}}
+{{- $url := -}}
+{{- if .Values.schema-registry.install -}}
+{{-   $url := "schema-registry" -}}
+{{- else if haskey .Values.externalDependencies.schema-registry.url -}}
+{{-   $url := ".Values.externalDependencies.schema-registry.url" -}}
+{{- end -}}
+
+{{/*
+Detect and return the schema registry's port
+*/}}
+{{- define "microcks.schemaRegistry.port" -}}
+{{- $port := -}}
+{{- if .Values.schema-registry.install -}}
+{{-   $url := "8081" -}}
+{{- else if hasKey .Values.externalDependencies.schema-registry.port -}}
+{{-   $port := ".Values.externalDependencies.schema-registry.port" -}}
 {{- end -}}

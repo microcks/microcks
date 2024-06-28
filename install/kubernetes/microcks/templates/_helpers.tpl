@@ -52,21 +52,3 @@ Generate common labels
 {{ $name }}: {{ $value | quote }}
 {{- end -}}
 {{- end -}}
-
-{{/*
-Generate common annotations
-*/}}
-{{- define "microcks-common-annotations" -}}
-{{- range $name, $value := .Values.commonAnnotations }}
-{{ $name }}: {{ $value | quote }}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Service annotations
-*/}}
-{{- define "microcks-service-annotations" -}}
-{{- range $name, $value := .Values.microcks.serviceAnnotations }}
-{{ $name }}: {{ $value | quote }}
-{{- end -}}
-{{- end -}}

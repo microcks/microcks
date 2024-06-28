@@ -1,8 +1,9 @@
 appName: ""
 imagePullSecrets: []
-pod:
+postman:
   labels: {}
   annotations: {}
+  # --------------------------------
   image:
     registry: "quay.io"
     repository: "microcks/microcks-postman-runtime"
@@ -17,9 +18,10 @@ pod:
       memory: 120Mi
       cpu: 100m
   logLevel: info
-service:
-  type: ClusterIP
-  labels: {}
-  annotations: {}
-  port: 8000
-  targetPort: 3000
+  # --------------------------------
+  service:
+    type: ClusterIP
+    labels: {}
+    annotations: {}
+    port: 8000
+    targetPort: 3000

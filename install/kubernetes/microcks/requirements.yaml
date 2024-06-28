@@ -11,7 +11,7 @@ dependencies:
   name: kafka
   repository: https://charts.bitnami.com/bitnami
   version: 28.3.0
-- condition: schema-registry.instal
+- condition: schema-registry.install
   name: schema-registry
   repository: https://charts.bitnami.com/bitnami
   version: 28.2.6

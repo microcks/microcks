@@ -13,10 +13,10 @@ metadata:
 spec:
   ports:
   - protocol: TCP
-    port: {{ .Values.service.port }}
-    targetPort: {{ .Values.service.targetPort }}
+    port: {{ .Values.postman.service.port }}
+    targetPort: {{ .Values.postman.service.targetPort }}
     name: postman-runtime
-  type: {{ .Values.service.type | default "ClusterIP" | quote }}
+  type: {{ .Values.postman.service.type | default "ClusterIP" | quote }}
   sessionAffinity: None
   selector:
     app: "{{ .Values.appName }}"

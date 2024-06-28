@@ -162,7 +162,7 @@ data:
           "enabled": true,
           "publicClient": true,
           "redirectUris": [
-            {{- if .Values.microcks.ssl.enabled }}
+            {{- if .Values.microcks.realms.ssl.enabled -}}
             "https://{{ .Values.microcks.url }}:{{ .Values.microcks.port.targetPort }}/*"
             {{- else }}
             "http://{{ .Values.microcks.url }}:{{ .Values.microcks.port.targetPort }}/*"
@@ -197,17 +197,6 @@ data:
           "defaultRoles": [
             "user"
           ]
-        },
-        {
-          "name": "{{ .Values.microcks.dependencies.keycloak.serviceAccount }}",
-          "secret": "{{ .Values.microcks.dependencies.keycloak.serviceAccountCredentials }}",
-          "enabled": true,
-          "bearerOnly": false,
-          "publicClient": false,
-          "standardFlowEnabled": false,
-          "directAccessGrantsEnabled": true,
-          "serviceAccountsEnabled": true,
-          "clientAuthenticatorType": "client-secret"
         }
       ],
       "identityProviders": [

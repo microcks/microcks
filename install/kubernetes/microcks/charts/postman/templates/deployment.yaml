@@ -11,7 +11,7 @@ metadata:
   annotations:
     {{- include "postman-pod-annotations" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.pod.replicas }}
+  replicas: {{ .Values.postman.replicas }}
   selector:
     matchLabels:
       app: "{{ .Values.appName }}"
@@ -37,20 +37,20 @@ spec:
       {{- end}}
       containers:
       - name: postman-runtime
-        image: {{ include "postman.image" .Values.pod.image }}
-        imagePullPolicy: {{ .Values.pod.images.pullPolicy }}
+        image: {{ include "postman.image" .Values.postman.image }}
+        imagePullPolicy: {{ .Values.postman.images.pullPolicy }}
         ports:
-        - containerPort: {{ .Values.services.targetPort }}
+        - containerPort: {{ .Values.postman.services.targetPort }}
           protocol: TCP
         env:
         - name: LOG_LEVEL
-          value: {{ .Values.pod.logLevel }}
+          value: {{ .Values.postman.logLevel }}
         resources:
-          {{- toYaml .Values.pod.resources | nindent 10 }}
+          {{- toYaml .Values.postman.resources | nindent 10 }}
         livenessProbe:
           httpGet:
             path: "/health"
-            port: {{ .Values.services.targetPort }}
+            port: {{ .Values.postman.services.targetPort }}
             scheme: HTTP
           initialDelaySeconds: 4
           timeoutSeconds: 3
@@ -60,7 +60,7 @@ spec:
         readinessProbe:
           httpGet:
             path: "/health"
-            port: {{ .Values.services.targetPort }}
+            port: {{ .Values.postman.services.targetPort }}
             scheme: HTTP
           initialDelaySeconds: 5
           timeoutSeconds: 3
