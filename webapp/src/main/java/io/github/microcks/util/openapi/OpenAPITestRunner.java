@@ -45,8 +45,9 @@ public class OpenAPITestRunner extends HttpTestRunner {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
 
-   /** Content-type for JSON that is the sole valid response type. */
-   private static final String APPLICATION_JSON_TYPE = "application/json";
+   /** Content-types for JSON that are valid response types validated using JSON Schemas. */
+   private static final List<String> APPLICATION_JSON_TYPES = List.of("application/json", "application/hal+json",
+         "application/vnd.entity.v1+json");
 
    private final ResourceRepository resourceRepository;
    private final ResponseRepository responseRepository;
@@ -144,8 +145,8 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Do not try to validate response content if no content provided ;-)
       // Also do not try to schema validate something that is not application/json for now...
       // Alternatives schemes are on their way for OpenAPI but not yet ready (see https://github.com/OAI/OpenAPI-Specification/pull/1736)
-      contentType = getShortContentType(contentType);
-      if (responseCode != 204 && APPLICATION_JSON_TYPE.equals(contentType)) {
+      String shortContentType = getShortContentType(contentType);
+      if (responseCode != 204 && APPLICATION_JSON_TYPES.contains(shortContentType)) {
          boolean isOpenAPIv3 = true;
 
          // Retrieve the resource corresponding to OpenAPI specification if any.
