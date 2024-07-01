@@ -115,10 +115,6 @@ public class OpenAPITestRunner extends HttpTestRunner {
       if (httpResponse.getHeaders().getContentType() != null) {
          contentType = httpResponse.getHeaders().getContentType().toString();
          log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType());
-         // Sanitize charset information from media-type.
-         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-            contentType = contentType.substring(0, contentType.indexOf(";"));
-         }
       }
 
       // If required, compare response code and content-type to expected ones.
@@ -135,7 +131,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
             }
 
             if (expectedResponse.getMediaType() != null
-                  && !expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
+                  && !contentTypesAreEquivalent(expectedResponse.getMediaType(), contentType)) {
                log.debug("Response Content-Type does not match expected one, returning failure");
                lastValidationErrors = List
                      .of(String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
@@ -148,6 +144,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Do not try to validate response content if no content provided ;-)
       // Also do not try to schema validate something that is not application/json for now...
       // Alternatives schemes are on their way for OpenAPI but not yet ready (see https://github.com/OAI/OpenAPI-Specification/pull/1736)
+      contentType = getShortContentType(contentType);
       if (responseCode != 204 && APPLICATION_JSON_TYPE.equals(contentType)) {
          boolean isOpenAPIv3 = true;
 
@@ -216,6 +213,27 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Reset just after consumption so avoid side-effects.
       lastValidationErrors = null;
       return builder.toString();
+   }
+
+   private boolean contentTypesAreEquivalent(String expectedContentType, String responseContentType) {
+      if (responseContentType != null) {
+         // If charset is specified, compare ignore case ignoring spaces.
+         if (expectedContentType.contains("charset=")) {
+            return expectedContentType.replace(" ", "").equalsIgnoreCase(responseContentType.replace(" ", ""));
+         }
+         // Sanitize charset information from media-type.
+         String shortResponseContentType = getShortContentType(responseContentType);
+         return expectedContentType.equalsIgnoreCase(shortResponseContentType);
+      }
+      return false;
+   }
+
+   private String getShortContentType(String contentType) {
+      // Sanitize charset information from media-type.
+      if (contentType != null && contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+         return contentType.substring(0, contentType.indexOf(";"));
+      }
+      return contentType;
    }
 
    private Resource findResourceCandidate(Service service) {
