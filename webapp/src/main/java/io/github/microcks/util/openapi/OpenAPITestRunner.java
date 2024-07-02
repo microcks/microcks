@@ -34,6 +34,7 @@ import org.springframework.http.client.ClientHttpResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * This is an implementation of HttpTestRunner that deals with OpenAPI schema validation. This implementation now
@@ -46,8 +47,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
    private static final Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
 
    /** Content-types for JSON that are valid response types validated using JSON Schemas. */
-   private static final List<String> APPLICATION_JSON_TYPES = List.of("application/json", "application/hal+json",
-         "application/vnd.entity.v1+json");
+   public static final Pattern APPLICATION_JSON_TYPES_PATTERN = Pattern.compile("application/.*json");
 
    private final ResourceRepository resourceRepository;
    private final ResponseRepository responseRepository;
@@ -143,10 +143,12 @@ public class OpenAPITestRunner extends HttpTestRunner {
       }
 
       // Do not try to validate response content if no content provided ;-)
-      // Also do not try to schema validate something that is not application/json for now...
+      // Also do not try to schema validate something that is not application/.*json for now...
       // Alternatives schemes are on their way for OpenAPI but not yet ready (see https://github.com/OAI/OpenAPI-Specification/pull/1736)
       String shortContentType = getShortContentType(contentType);
-      if (responseCode != 204 && APPLICATION_JSON_TYPES.contains(shortContentType)) {
+      if (responseCode != 204 && shortContentType != null
+            && APPLICATION_JSON_TYPES_PATTERN.matcher(shortContentType).matches()) {
+
          boolean isOpenAPIv3 = true;
 
          // Retrieve the resource corresponding to OpenAPI specification if any.
