@@ -36,6 +36,7 @@
     <snakeyaml.version>2.2</snakeyaml.version>
     <avro.version>1.11.3</avro.version>
     <graphql-java.version>21.3</graphql-java.version>
+    <mockito.version>5.7.0</mockito.version>
   </properties>
 
   <dependencies>
@@ -109,6 +110,12 @@
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
       <version>2.15.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>${mockito.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
