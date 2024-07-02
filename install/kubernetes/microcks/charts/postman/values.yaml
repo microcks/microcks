@@ -1,0 +1,27 @@
+appName: ""
+imagePullSecrets: []
+postman:
+  labels: {}
+  annotations: {}
+  # --------------------------------
+  image:
+    registry: "quay.io"
+    repository: "microcks/microcks-postman-runtime"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      memory: 60Mi
+      cpu: 50m
+    limits:
+      memory: 120Mi
+      cpu: 100m
+  logLevel: info
+  # --------------------------------
+  service:
+    type: ClusterIP
+    labels: {}
+    annotations: {}
+    port: 8000
+    targetPort: 3000

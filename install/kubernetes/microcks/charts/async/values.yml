@@ -1,0 +1,199 @@
+appName: ""
+nameOverride: ""
+# namespaceOverride: ""
+imagePullSecrets: []
+
+externalDependencies:
+  kafka:
+    url: "kafka.example.com"
+    port: "9092"
+    protocol: "PLAINTEXT"
+    auth:
+      enabled: false
+      type: "none"  #SSL #SASL_SSL
+      truststoreType: PKCS12
+      truststoreSecretRef:
+        secret: kafka-cluster-ca-cert
+        storeKey: ca.p12
+        passwordKey: ca.password
+      keystoreType: PKCS12
+      keystoreSecretRef:
+        secret: mtls-user
+        storeKey: user.p12
+        passwordKey: user.password
+  # ---------------------------------------
+  schema-registry:
+    url: "schema-registry.example.com"
+    port: "8081"
+  # ---------------------------------------
+  mongodb:
+    uri: "mongodb.example.com"
+    port: "27017"
+    # database: ""
+    # uriParemeters: "?ssl=true"
+    auth:
+      username: ""
+      password: ""
+      secretRef:
+        secret: ""
+        usernameKey: ""
+        passwordKey: ""
+  # ---------------------------------------
+  keycloak:
+    enabled: "true"
+    url: "keycloak.exampl.com"
+    port: "80"
+    realm: "microcks"
+    auth:
+      adminUsername: "hex"
+      admminPassword: "keycloak-microcks"
+      secretRef:
+        secret: ""
+        usernameKey: "username"
+        passwordKey: "password"
+
+async:
+  labels: {}
+  annotations: {}
+  image:
+    registry: "quay.io"
+    repository: "microcks/microcks-postman-runtime"
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      memory: 60Mi
+      cpu: 50m
+    limits:
+      memory: 120Mi
+      cpu: 100m
+  logLevel: info
+  service:
+    serviceType: ClusterIP
+    labels: {}
+    annotations: {}
+    port: 8080
+    targetPort: 8080
+  ingresses:
+    labels: {}
+    annotations: {}
+
+  configmap:
+    labels: {}
+    annotations: {}
+  cert:
+    labels: {}
+    annotations: {}
+
+features:
+  async:
+    enabled: false
+    defaultBinding: KAFKA
+    defaultFrequency: 10
+    defaultAvroEncoding: RAW
+
+    image: quay.io/microcks/microcks-async-minion:1.9.1
+
+    env:
+      #- name: OAUTH_CLIENT_ID
+      #  value: <kafka-oauth-client-id>
+      #- name: OAUTH_CLIENT_SECRET
+      #  value: <kafka-oauth-client-secret>
+      #- name: OAUTH_TOKEN_ENDPOINT_URI
+      #  value: <kafka-oauth-endpoint-uri>
+    # Uncomment the mqtt.url and put a valid endpoint address below to enable MQTT support.
+    mqtt:
+      #url: artemis:1883
+      username: microcks
+      password: microcks
+
+    # Uncomment the amqp.url and put a valid endpoint address below to enable AMQP support.
+    amqp:
+      #url: rabbitmq:5672
+      username: microcks
+      password: microcks
+
+    # Uncomment the nats.url and put a valid endpoint address below to enable NATS support.
+    nats:
+      #url: nats:4222
+      username: microcks
+      password: microcks
+
+    # Uncomment the googlepubsub.project and put a valid project id below to enable PubSub support.
+    googlepubsub:
+      #project: my-project
+      # For authentication, we rely on a Google Service Account JSON file.
+      # You have to setup a secret reference for retrieving this file from secret.
+      serviceAccountSecretRef:
+        secret: googlecloud-service-account
+        fileKey: googlecloud-service-account.json
+
+    # Uncomment the sqs.region and put a valid region below to enable Amazon SQS support.
+    sqs:
+      #region: eu-west-3
+      # For authentication, we rely on either Environment Variables or an AWS Profile of type credentials (see https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html).
+      # You can choose between 'env-variable' and 'profile'
+      credentialsType: env-variable
+      #credentialsType: profile
+      # For 'env-variable', you may want to specify a Secret to get environment variables from.
+      #credentialsSecretRef:
+        #secret: aws-credentials
+        #accessKeyIdKey: access_key_id
+        #secretAccessKeyKey: secret_access_key
+        #sessionTokenKey: session_token
+      # For 'profile', you have to provide the profile name and setup a secret reference for retrieving this file from secret.
+      credentialsProfile: microcks-sqs-admin
+      #credentialsSecretRef:
+        #secret: aws-credentials
+        #fileKey: aws.profile
+
+    # Uncomment the sns.region and put a valid region below to enable Amazon SNS support.
+    sns:
+      #region: eu-west-3
+      # For authentication, we rely on either Environment Variables or an AWS Profile of type credentials (see https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html).
+      # You can choose between 'env-variable' and 'profile'
+      credentialsType: env-variable
+      #credentialsType: profile
+      # For 'env-variable', you may want to specify a Secret to get environment variables from.
+      #credentialsSecretRef:
+        #secret: aws-credentials
+        #accessKeyIdKey: access_key_id
+        #secretAccessKeyKey: secret_access_key
+        #sessionTokenKey: session_token
+      # For 'profile', you have to provide the profile name and setup a secret reference for retrieving this file from secret.
+      credentialsProfile: microcks-sns-admin
+      #credentialsSecretRef:
+        #secret: aws-credentials
+        #fileKey: aws.profile
+
+    ws:
+      #ingressSecretRef: my-secret-for-microcks-ws-ingress
+      #ingressAnnotations:
+        #cert-manager.io/issuer: my-ws-cert-issuer
+        #kubernetes.io/tls-acme: "true"
+      #ingressClassName: nginx
+      generateCert: true
+
+  repositoryFilter:
+    enabled: false
+    labelKey: app
+    labelLabel: Application
+    labelList: app,status
+
+  repositoryTenancy:
+    enabled: false
+    artifactImportAllowedRoles: admin,manager,manager-any
+
+  microcksHub:
+    enabled: true
+    allowedRoles: admin,manager,manager-any
+
+  aiCopilot:
+    enabled: false
+    implementation: openai
+    openai:
+      apiKey: sk-my-openai-api-token
+      timeout: 20
+      #model: gpt-3.5-turbo
+      #maxTokens: 2000

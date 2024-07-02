@@ -1,0 +1,17 @@
+dependencies:
+- condition: mongodb.install
+  name: mongodb
+  repository: https://charts.bitnami.com/bitnami
+  version: 14.1.0
+- condition: keycloak.install
+  name: keycloak
+  repository: https://charts.bitnami.com/bitnami
+  version: 21.3.1
+- condition: kafka.install
+  name: kafka
+  repository: https://charts.bitnami.com/bitnami
+  version: 28.3.0
+- condition: schema-registry.install
+  name: schema-registry
+  repository: https://charts.bitnami.com/bitnami
+  version: 28.2.6

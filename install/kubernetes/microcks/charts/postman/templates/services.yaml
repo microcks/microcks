@@ -1,0 +1,24 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-postman-runtime"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: postman-runtime
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+    {{- include "postman-service-labels" . | nindent 4 }}
+  annotations:
+    {{- include "postman-service-annotations" . | nindent 4 }}
+spec:
+  ports:
+  - protocol: TCP
+    port: {{ .Values.postman.service.port }}
+    targetPort: {{ .Values.postman.service.targetPort }}
+    name: postman-runtime
+  type: {{ .Values.postman.service.type | default "ClusterIP" | quote }}
+  sessionAffinity: None
+  selector:
+    app: "{{ .Values.appName }}"
+    container: postman-runtime
+    group: microcks

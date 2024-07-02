@@ -1,0 +1,27 @@
+{{- if and .Values.features.async.enabled }}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-async-minion"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: async-minion
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+    {{- include "async-service-labels" . | nindent 4 }}
+  annotations:
+    {{- include "async-service-annotations" . | nindent 4 }}
+spec:
+  ports:
+    - protocol: TCP
+      port: {{ .Values.async.service.port }}
+      targetPort: {{ .Values.async.services.targetPort }}
+      name: async-minion
+  type: {{ .Values.async.serviceType | default "ClusterIP" | quote }}
+  sessionAffinity: None
+  selector:
+    app: "{{ .Values.appName }}"
+    container: async-minion
+    group: microcks
+{{- end }}

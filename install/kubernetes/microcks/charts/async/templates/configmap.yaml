@@ -1,0 +1,102 @@
+{{- if .Values.features.async.enabled }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-async-minion-config"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: async-minion
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+    {{- include "async-configmap-labels" . | nindent 4 }}
+  annotations:
+    {{- include "async-configmap-annotations" . | nindent 4 }}
+data:
+  application.properties: |-
+    # Configuration file.
+    %kube.quarkus.http.port={{ .Values.async.service.targetPort }}
+
+    # Configure the log level.
+    %kube.quarkus.log.level={{ .Values.async.logLevel }}
+    %kube.quarkus.log.console.level={{ .Values.async.logLevel }}
+
+    # Access to Microcks API server.
+    %kube.io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url=http://{{ .Values.appName }}:8080
+
+    # Access to Keycloak URL if you override the one coming from Microcks config
+    keycloak.auth.url={{ include "microcks.keycloak.url" }}:{{ include "microcks.keycloak.port"}}
+
+    # Access to Kafka broker.
+    %kube.kafka.bootstrap.servers={{ include "microcks.kafka.url" }}:{{ include "microcks.kafka.port" }}
+    %kube.mp.messaging.incoming.microcks-services-updates.bootstrap.servers={{ {{ include "microcks.kafka.url" }}:{{ include "microcks.kafka.port" }}
+
+    {{- if or ( eq .Values.schema-registry.install true) ( hasKey .Values.externalDependencies.schema-registry.url ) -}}
+    # Access to Kafka schema registry.
+    %kube.kafka.schema.registry.url={{ include "microcks.schema-registry.url" }}:{{ include "microcks.schema-registry.port" }}
+    {{ end }}
+
+    {{- if .Values.features.async.mqtt.url }}
+    # Access to MQTT broker.
+    %kube.mqtt.server={{ .Values.features.async.mqtt.url }}
+    %kube.mqtt.username={{ .Values.features.async.mqtt.username }}
+    %kube.mqtt.password={{ .Values.features.async.mqtt.password }}
+    {{- end }}
+
+    {{- if .Values.features.async.amqp.url }}
+    # Access to AMQP broker.
+    %kube.amqp.server={{ .Values.features.async.amqp.url }}
+    %kube.amqp.username={{ .Values.features.async.amqp.username }}
+    %kube.amqp.password={{ .Values.features.async.amqp.password }}
+    {{- end }}
+
+    {{- if .Values.features.async.nats.url }}
+    # Access to NATS broker.
+    %kube.nats.server={{ .Values.features.async.nats.url }}
+    %kube.nats.username={{ .Values.features.async.nats.username }}
+    %kube.nats.password={{ .Values.features.async.nats.password }}
+    {{- end }}
+
+    {{- if .Values.features.async.googlepubsub.project }}
+    # Access to Google PubSub.
+    %kube.googlepubsub.project={{ .Values.features.async.googlepubsub.project }}
+      {{- if .Values.features.async.googlepubsub.serviceAccountSecretRef.fileKey }}
+    %kube.googlepubsub.service-account-location=/deployments/config/googlepubsub/sa/{{ .Values.features.async.googlepubsub.serviceAccountSecretRef.fileKey }}
+      {{- end }}
+    {{- end }}
+
+    {{- if .Values.features.async.sqs.region }}
+    # Access to Amazon SQS.
+    %kube.amazonsqs.region={{ .Values.features.async.sqs.region }}
+    %kube.amazonsqs.credentials-type={{ .Values.features.async.sqs.credentialsType }}
+      {{- if eq .Values.features.async.sqs.credentialsType "profile" }}
+    %kube.amazonsqs.credentials-profile-name={{ .Values.features.async.sqs.credentialsProfile }}
+        {{- if .Values.features.async.sqs.credentialsSecretRef.fileKey }}
+    %kube.amazonsqs.credentials-profile-location=/deployments/config/amazon-sqs/{{ .Values.features.async.sqs.credentialsSecretRef.fileKey }}
+        {{- end }}
+      {{- end }}
+    {{- if .Values.features.async.sqs.endpointOverride }}
+    %kube.amazonsqs.endpoint-override={{ .Values.features.async.sqs.endpointOverride }}
+    {{- end }}
+    {{- end }}
+
+    {{- if .Values.features.async.sns.region }}
+    # Access to Amazon SNS.
+    %kube.amazonsns.region={{ .Values.features.async.sns.region }}
+    %kube.amazonsns.credentials-type={{ .Values.features.async.sns.credentialsType }}
+      {{- if eq .Values.features.async.sns.credentialsType "profile" }}
+    %kube.amazonsns.credentials-profile-name={{ .Values.features.async.sns.credentialsProfile }}
+        {{- if .Values.features.async.sns.credentialsSecretRef.fileKey }}
+    %kube.amazonsns.credentials-profile-location=/deployments/config/amazon-sns/{{ .Values.features.async.sns.credentialsSecretRef.fileKey }}
+        {{- end }}
+      {{- end }}
+    {{- if .Values.features.async.sns.endpointOverride }}
+    %kube.amazonsns.endpoint-override={{ .Values.features.async.sns.endpointOverride }}
+    {{- end }}
+    {{- end }}
+
+    # Configure the minion own behavioral properties.
+    %kube.minion.supported-bindings=KAFKA,WS{{ if .Values.features.async.mqtt.url }},MQTT{{ end }}{{ if .Values.features.async.amqp.url }},AMQP{{ end }}{{ if .Values.features.async.nats.url }},NATS{{ end }}{{ if .Values.features.async.googlepubsub.project }},GOOGLEPUBSUB{{ end }}{{ if .Values.features.async.sqs.region }},SQS{{ end }}{{ if .Values.features.async.sns.region }},SNS{{ end }}
+    %kube.minion.restricted-frequencies=3,10,30
+    %kube.minion.default-avro-encoding={{ .Values.features.async.defaultAvroEncoding }}
+{{- end -}}

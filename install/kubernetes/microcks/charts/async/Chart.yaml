@@ -1,0 +1,19 @@
+apiVersion: v2
+appVersion: 1
+description: Seperated chart for postman-runtime
+home: https://microcks.io
+icon: https://microcks.io/images/microcks-big.png
+keywords:
+- async
+kubeVersion: '>=1.17.0-0'
+maintainers:
+- email: laurent.broudoux@gmail.com
+  name: Laurent Broudoux
+- email: ax@civ.ax
+  name: Arey C
+name: async
+sources:
+- http://github.com/microcks/microcks/
+- https://microcks.io
+version: 1
+type: application

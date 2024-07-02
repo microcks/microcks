@@ -1,0 +1,41 @@
+{{- if and .Values.features.async.enabled }}
+{{- if .Values.async.ingresses -}}
+---
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: "{{ .Values.appName }}-ws"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+    {{- include "async-ingresses-labels" . | nindent 4 }}
+  annotations:
+    {{- include "asnyc-ingresses-annotations" . | nindent 4 }}
+    ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3000"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3000"
+  {{- with .Values.features.async.ws.ingressAnnotations }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.features.async.ws.ingressClassName }}
+  ingressClassName: {{ .Values.features.async.ws.ingressClassName | quote }}
+  {{- end }}
+  tls:
+  - hosts:
+    - "{{ ( include "microcks-ws.url" . ) }}"
+    secretName: {{ .Values.features.async.ws.ingressSecretRef | default (print .Values.appName "-microcks-ws-ingress-secret") }}
+  rules:
+  - host: "{{ ( include "microcks-ws.url" . ) }}"
+    http:
+      paths:
+        - path: /api/ws
+          pathType: Prefix
+          backend:
+            service:
+              name: "{{ .Values.appName }}-async-minion"
+              port:
+                number: 8080
+{{- end }}
+{{- end }}

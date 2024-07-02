@@ -1,0 +1,17 @@
+{{- if and (.Values.features.async.enabled) (not .Values.features.async.ws.ingressSecretRef) (.Values.features.async.ws.generateCert) }}
+---
+kind: Secret
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-microcks-ws-ingress-secret"
+  labels:
+    app: "{{ .Values.appName }}"
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+    {{- include "async-cert-labels" . | nindent 4 }}
+  annotations:
+    {{- include "async-cert-annotations" . | nindent 4 }}
+type: kubernetes.io/tls
+data:
+{{ ( include "microcks-ws-ingress.gen-certs" . ) | indent 2 }}
+{{- end }}

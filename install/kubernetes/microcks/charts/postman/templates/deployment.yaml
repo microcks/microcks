@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.appName }}-postman-runtime"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: postman-runtime
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+    {{- include "postman-pod-labels" . | nindent 4 }}
+  annotations:
+    {{- include "postman-pod-annotations" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.postman.replicas }}
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: "{{ .Values.appName }}-postman-runtime"
+      container: postman-runtime
+      group: microcks
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.appName }}"
+        deploymentconfig: "{{ .Values.appName }}-postman-runtime"
+        container: postman-runtime
+        group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+        {{- include "postman-pod-labels" . | nindent 4 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "postman-pod-annotations" . | nindent 4 }}
+    spec:
+      {{- with .Values.imagePullSecrets}}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8}}
+      {{- end}}
+      containers:
+      - name: postman-runtime
+        image: {{ include "postman.image" .Values.postman.image }}
+        imagePullPolicy: {{ .Values.postman.images.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.postman.services.targetPort }}
+          protocol: TCP
+        env:
+        - name: LOG_LEVEL
+          value: {{ .Values.postman.logLevel }}
+        resources:
+          {{- toYaml .Values.postman.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: "/health"
+            port: {{ .Values.postman.services.targetPort }}
+            scheme: HTTP
+          initialDelaySeconds: 4
+          timeoutSeconds: 3
+          periodSeconds: 20
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: "/health"
+            port: {{ .Values.postman.services.targetPort }}
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          periodSeconds: 20
+          successThreshold: 1
+          failureThreshold: 3
+        terminationMessagePath: "/dev/termination-log"
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst

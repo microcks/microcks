@@ -1,0 +1,206 @@
+{{- if and .Values.keycloak.enabled }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "microcks-keycloak-config"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: keycloak
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+data:
+  microcks-realm.json: |-
+    {
+      "id": "microcks",
+      "realm": "microcks",
+      "displayName": "Microcks",
+      "notBefore": 0,
+      "revokeRefreshToken": false,
+      "refreshTokenMaxReuse": 0,
+      "accessTokenLifespan": 300,
+      "accessTokenLifespanForImplicitFlow": 900,
+      "ssoSessionIdleTimeout": 1800,
+      "ssoSessionMaxLifespan": 36000,
+      "offlineSessionIdleTimeout": 2592000,
+      "accessCodeLifespan": 60,
+      "accessCodeLifespanUserAction": 300,
+      "accessCodeLifespanLogin": 1800,
+      "actionTokenGeneratedByAdminLifespan": 43200,
+      "actionTokenGeneratedByUserLifespan": 300,
+      "enabled": true,
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "registrationEmailAsUsername": false,
+      "rememberMe": false,
+      "verifyEmail": false,
+      "loginWithEmailAllowed": true,
+      "duplicateEmailsAllowed": false,
+      "resetPasswordAllowed": false,
+      "editUsernameAllowed": false,
+      "bruteForceProtected": false,
+      "permanentLockout": false,
+      "maxFailureWaitSeconds": 900,
+      "minimumQuickLoginWaitSeconds": 60,
+      "waitIncrementSeconds": 60,
+      "quickLoginCheckMilliSeconds": 1000,
+      "maxDeltaTimeSeconds": 43200,
+      "failureFactor": 30,
+      "users" : [
+        {
+          "username" : "{{ .Values.microcks.realm.users.role.user.username | default "user"}}",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "{{ .Values.microcks.realm.users.role.user.password | default "microcks123" }}" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "microcks-app": [ "user" ]
+          }
+        },
+        {
+          "username" : "{{ .Values.microcks.realm.users.role.manager.username | default "manager"}}",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "{{ .Values.microcks.realm.users.role.manager.password | default "microcks123"}}" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "microcks-app": [ "user", "manager" ]
+          }
+        },
+        {
+          "username" : "{{ .Values.microcks.realm.users.role.admin.username | default "admin" }}",
+          "enabled": true,
+          "credentials" : [
+            { "type" : "password",
+              "value" : "{{ .Values.microcks.realm.users.role.admin.password | default "microcks123" }}" }
+          ],
+          "realmRoles": [],
+          "applicationRoles": {
+            "realm-management": [ "manage-users", "manage-clients" ],
+            "account": [ "manage-account" ],
+            "microcks-app": [ "user", "manager", "admin" ]
+          }
+        }
+      ],
+      "roles": {
+        "realm": [],
+        "client": {
+          "microcks-app": [
+            {
+              "name": "user",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "microcks"
+            },
+            {
+              "name": "admin",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "microcks"
+            },
+            {
+              "name": "manager",
+              "composite": false,
+              "clientRole": true,
+              "containerId": "microcks"
+            }
+          ]
+        }
+      },
+      "groups": [
+        {
+          "name": "microcks",
+          "path": "/microcks",
+          "attributes": {},
+          "realmRoles": [],
+          "clientRoles": {},
+          "subGroups": [
+            {
+              "name": "manager",
+              "path": "/microcks/manager",
+              "attributes": {},
+              "realmRoles": [],
+              "clientRoles": {},
+              "subGroups": []
+            }
+          ]
+        }
+      ],
+      "defaultRoles": [ ],
+      "requiredCredentials": [ "password" ],
+      "scopeMappings": [],
+      "clientScopeMappings": {
+        "microcks-app": [
+          {
+            "client": "microcks-app-js",
+            "roles": [
+              "manager",
+              "admin",
+              "user"
+            ]
+          }
+        ],
+        "realm-management": [
+          {
+            "client": "microcks-app-js",
+            "roles": [
+              "manage-users",
+              "manage-clients"
+            ]
+          }
+        ]
+      },
+      "clients": [
+        {
+          "clientId": "microcks-app-js",
+          "enabled": true,
+          "publicClient": true,
+          "redirectUris": [
+            {{- if .Values.microcks.realms.ssl.enabled -}}
+            "https://{{ .Values.microcks.url }}:{{ .Values.microcks.port.targetPort }}/*"
+            {{- else }}
+            "http://{{ .Values.microcks.url }}:{{ .Values.microcks.port.targetPort }}/*"
+            {{- end }}
+          ],
+          "webOrigins": [
+            "+"
+          ],
+          "fullScopeAllowed": false,
+          "protocolMappers": [
+            {
+              "name": "microcks-group-mapper",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "consentRequired": false,
+              "config": {
+                "full.path": "true",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "claim.name": "microcks-groups",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        }
+      ],
+      "applications": [
+        {
+          "name": "microcks-app",
+          "enabled": true,
+          "bearerOnly": true,
+          "defaultRoles": [
+            "user"
+          ]
+        }
+      ],
+      "identityProviders": [
+      ],
+      "keycloakVersion": "10.0.1"
+    }
+{{- end }}

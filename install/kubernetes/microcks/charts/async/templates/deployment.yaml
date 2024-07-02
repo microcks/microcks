@@ -1,0 +1,221 @@
+{{- if and .Values.features.async.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Values.appName }}-async-minion"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: async-minion
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+    {{- include "async-pod-labels" . | nindent 4 }}
+  annotations:
+    {{- include "async-pod-annotations" . | nindent 4 }}
+
+spec:
+  strategy:
+    type: Recreate
+  replicas: {{ .Values.async.replicas }}
+  selector:
+    matchLabels:
+      app: "{{ .Values.appName }}"
+      deploymentconfig: async-minion
+      container: async-minion
+      group: microcks
+  template:
+    metadata:
+      labels:
+        app: "{{ .Values.appName }}"
+        deploymentconfig: async-minion
+        container: async-minion
+        group: microcks
+        {{- include "microcks-common-labels" . | nindent 8 }}
+        {{- include "async-pod-labels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- include "async-pod-annotations" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets}}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8}}
+      {{- end}}
+      containers:
+      - name: async-minion
+        image: {{ include "async.image" .Values.async.image }}
+        imagePullPolicy: {{ .Values.async.images.pullPolicy }}
+        env:
+          - name: QUARKUS_PROFILE
+            value: kube
+          {{- if .Values.externalDependencies.kafka.auth }}
+            {{- if not (eq .Values.externalDependencies.kafka.auth.type "none") }}
+            {{- if .Values.externalDependencies.kafka.auth.truststoreSecretRef }}
+          - name: KAFKA_TRUSTSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.externalDependencies.kafka.auth..truststoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-truststore"
+            {{- end }}
+            {{- end }}
+            {{- if eq .Values.externalDependencies.kafka.auth.type "SSL" }}
+          - name: KAFKA_KEYSTORE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: {{ .Values.externalDependencies.kafka.auth.keystoreSecretRef.passwordKey }}
+                name: "{{ .Values.appName }}-kafka-keystore"
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.sqs.region }}
+            {{- if eq .Values.features.async.sqs.credentialsType "env-variable" }}
+            {{- if .Values.features.async.sqs.credentialsSecretRef }}
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sqs.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sqs.credentialsSecretRef.accessKeyIdKey }}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sqs.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sqs.credentialsSecretRef.secretAccessKeyKey }}
+              {{- if .Values.features.async.sqs.credentialsSecretRef.sessionTokenKey }}
+          - name: AWS_SESSION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sqs.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sqs.credentialsSecretRef.sessionTokenKey }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.sns.region }}
+            {{- if eq .Values.features.async.sns.credentialsType "env-variable" }}
+            {{- if .Values.features.async.sns.credentialsSecretRef }}
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sns.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sns.credentialsSecretRef.accessKeyIdKey }}
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sns.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sns.credentialsSecretRef.secretAccessKeyKey }}
+              {{- if .Values.features.async.sns.credentialsSecretRef.sessionTokenKey }}
+          - name: AWS_SESSION_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: {{ .Values.features.async.sns.credentialsSecretRef.secret }}
+                key: {{ .Values.features.async.sns.credentialsSecretRef.sessionTokenKey }}
+              {{- end }}
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.env }}
+          {{- toYaml .Values.features.async.env | nindent 10 }}
+          {{- end }}
+        ports:
+        - containerPort: {{ .Values.features.async.services.targetPort }}
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: "/q/health/live"
+            port: {{ .Values.features.async.services.targetPort }}
+            scheme: HTTP
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+          periodSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: "/q/health/ready"
+            port: {{ .Values.features.async.services.targetPort }}
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+          - name: "{{ .Values.appName }}-async-minion-config"
+            mountPath: "/deployments/config"
+          {{- if .Values.externalDependencies.kafka.auth.enabled }}
+            {{- if not (eq .Values.externalDependencies.kafka.auth.type "none") }}
+            {{- if .Values.externalDependencies.kafka.auth.truststoreSecretRef }}
+          - name: "{{ .Values.appName }}-kafka-truststore"
+            mountPath: "/deployments/config/kafka/truststore"
+            {{- end }}
+            {{- end }}
+            {{- if eq .Values.externalDependencies.kafka.auth.type "SSL" }}
+          - name: "{{ .Values.appName }}-kafka-keystore"
+            mountPath: "/deployments/config/kafka/keystore"
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.googlepubsub.project }}
+            {{- if .Values.features.async.googlepubsub.serviceAccountSecretRef }}
+          - name: "{{ .Values.appName }}-googlepubsub-sa"
+            mountPath: "/deployments/config/googlepubsub/sa"
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.sqs.region }}
+            {{- if .Values.features.async.sqs.credentialsSecretRef }}
+            {{- if eq .Values.features.async.sqs.credentialsType "profile" }}
+          - name: "{{ .Values.appName }}-amazonsqs-creds"
+            mountPath: "/deployments/config/amazon-sqs"
+            {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.features.async.sns.region }}
+            {{- if .Values.features.async.sns.credentialsSecretRef }}
+            {{- if eq .Values.features.async.sns.credentialsType "profile" }}
+          - name: "{{ .Values.appName }}-amazonsns-creds"
+            mountPath: "/deployments/config/amazon-sns"
+            {{- end }}
+            {{- end }}
+          {{- end }}
+        terminationMessagePath: "/dev/termination-log"
+      volumes:
+        - name: "{{ .Values.appName }}-async-minion-config"
+          configMap:
+            name: "{{ .Values.appName }}-async-minion-config"
+        {{- if .Values.externalDependencies.kafka.auth.enabled }}
+          {{- if not (eq .Values.externalDependencies.kafka.auth.type "none") }}
+          {{- if .Values.externalDependencies.kafka.auth.truststoreSecretRef }}
+        - name: "{{ .Values.appName }}-kafka-truststore"
+          secret:
+            secretName: "{{ .Values.externalDependencies.kafka.auth.truststoreSecretRef.secret }}"
+          {{- end }}
+          {{- end }}
+          {{- if eq .Values.externalDependencies.kafka.auth.type "SSL" }}
+        - name: "{{ .Values.appName }}-kafka-keystore"
+          secret:
+            secretName: "{{ .Values.externalDependencies.kafka.auth.keystoreSecretRef.secret }}"
+          {{- end }}
+        {{- end }}
+        {{- if .Values.features.async.googlepubsub.project }}
+          {{- if .Values.features.async.googlepubsub.serviceAccountSecretRef }}
+        - name: "{{ .Values.appName }}-googlepubsub-sa"
+          secret:
+            secretName: "{{ .Values.features.async.googlepubsub.serviceAccountSecretRef.secret }}"
+          {{- end }}
+        {{- end }}
+        {{- if .Values.features.async.sqs.region }}
+          {{- if .Values.features.async.sqs.credentialsSecretRef }}
+          {{- if eq .Values.features.async.sqs.credentialsType "profile" }}
+        - name: "{{ .Values.appName }}-amazonsqs-creds"
+          secret:
+            secretName: "{{ .Values.features.async.sqs.credentialsSecretRef.secret }}"
+          {{- end }}
+          {{- end }}
+        {{- end }}
+        {{- if .Values.features.async.sns.region }}
+          {{- if .Values.features.async.sns.credentialsSecretRef }}
+          {{- if eq .Values.features.async.sns.credentialsType "profile" }}
+        - name: "{{ .Values.appName }}-amazonsns-creds"
+          secret:
+            secretName: "{{ .Values.features.async.sns.credentialsSecretRef.secret }}"
+          {{- end }}
+          {{- end }}
+        {{- end }}
+{{- end }}
