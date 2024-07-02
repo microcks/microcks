@@ -285,8 +285,32 @@ class OpenAPISchemaValidatorTest {
 
       // Validate the content for Get /accounts/{accountId} response message.
       errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
-            "/paths/~1accounts~1{accountId}/get/responses/200", "application/json");
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=utf-8");
       assertTrue(errors.isEmpty());
+
+      // Now try with failing message.
+      jsonText = "{ \"account\": {\"resourceIdentifier\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+
+      try {
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts/{accountId} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=UTF-8");
+      assertFalse(errors.isEmpty());
+      assertEquals("object instance has properties which are not allowed by the schema: [\"resourceIdentifier\"]",
+            errors.get(1));
+
+      // Validate again the content for Get /accounts/{accountId} response message with no charset.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=UTF-8");
+      assertFalse(errors.isEmpty());
+      assertEquals("object instance has properties which are not allowed by the schema: [\"resourceIdentifier\"]",
+            errors.get(1));
    }
 
    @Test

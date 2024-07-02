@@ -276,6 +276,12 @@ public class OpenAPISchemaValidator {
                return contentTypeNode.getValue();
             }
          }
+
+         // If no match here, it's maybe contentType contains charset but not the spec.
+         // Remove charset information and try again.
+         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+            return getMessageContentNode(responseCodeNode, contentType.substring(0, contentType.indexOf(";")));
+         }
       }
       return contentNode;
    }

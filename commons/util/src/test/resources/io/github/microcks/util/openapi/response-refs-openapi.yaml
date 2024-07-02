@@ -68,6 +68,28 @@ components:
           examples:
             "Example 1":
               $ref: "#/components/examples/accountDetailsRegularAccount"
+        application/hal+json:
+          schema:
+            type: object
+            required:
+              - account
+            properties:
+              account:
+                $ref: "#/components/schemas/accountDetails"
+          examples:
+            "Example 1":
+              $ref: "#/components/examples/accountDetailsRegularAccount"
+        application/hal+json;charset=UTF-8:
+          schema:
+            type: object
+            required:
+              - account
+            properties:
+              account:
+                $ref: "#/components/schemas/accountDetails"
+          examples:
+            "Example 1":
+              $ref: "#/components/examples/accountDetailsRegularAccount"
 
   schemas:
     accountId:
