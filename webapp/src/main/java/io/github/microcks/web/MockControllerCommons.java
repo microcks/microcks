@@ -263,7 +263,7 @@ public class MockControllerCommons {
       try {
          return engine.getValue(responseContent);
       } catch (Throwable t) {
-         log.error("Failing at evaluating template {}", responseContent, t);
+         log.error("Failed at evaluating template {}", responseContent, t);
       }
       return responseContent;
    }
