@@ -125,7 +125,7 @@ public class NATSProducerManager {
                   try {
                      headerValue = Base64.getEncoder().encodeToString(engine.getValue(firstValue).getBytes());
                   } catch (Throwable t) {
-                     logger.error("Failing at evaluating template " + firstValue, t);
+                     logger.error("Failed at evaluating template " + firstValue, t);
                      headerValue = Base64.getEncoder().encodeToString(firstValue.getBytes());
                   }
                } else {
