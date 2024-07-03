@@ -164,7 +164,7 @@ public class AMQPProducerManager {
                      renderedHeader.setValues(Set.of(engine.getValue(firstValue)));
                      renderedHeaders.add(renderedHeader);
                   } catch (Throwable t) {
-                     logger.error("Failing at evaluating template " + firstValue, t);
+                     logger.error("Failed at evaluating template " + firstValue, t);
                      Header renderedHeader = new Header();
                      renderedHeader.setName(header.getName());
                      renderedHeader.setValues(Set.of(firstValue));
