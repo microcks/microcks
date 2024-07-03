@@ -221,7 +221,7 @@ public class KafkaProducerManager {
                try {
                   renderedHeaders.add(new RecordHeader(header.getName(), engine.getValue(firstValue).getBytes()));
                } catch (Throwable t) {
-                  logger.error("Failing at evaluating template " + firstValue, t);
+                  logger.error("Failed at evaluating template " + firstValue, t);
                   renderedHeaders.add(new RecordHeader(header.getName(), firstValue.getBytes()));
                }
             } else {
