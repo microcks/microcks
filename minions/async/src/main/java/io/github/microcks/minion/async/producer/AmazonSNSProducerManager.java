@@ -180,7 +180,7 @@ public class AmazonSNSProducerManager {
                try {
                   finaleValue = engine.getValue(firstValue);
                } catch (Throwable t) {
-                  logger.error("Failing at evaluating template " + firstValue, t);
+                  logger.error("Failed at evaluating template " + firstValue, t);
                }
             }
             return MessageAttributeValue.builder().stringValue(finaleValue).dataType("String").build();
