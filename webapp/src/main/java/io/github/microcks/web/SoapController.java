@@ -297,7 +297,7 @@ public class SoapController {
 
          // Publish an invocation event before returning if enabled.
          if (Boolean.TRUE.equals(enableInvocationStats)) {
-            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime, "");
          }
 
          if (response.isFault()) {

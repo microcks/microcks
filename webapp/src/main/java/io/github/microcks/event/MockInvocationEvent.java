@@ -35,6 +35,8 @@ public class MockInvocationEvent extends ApplicationEvent {
    private final Date invocationTimestamp;
    /** */
    private final long duration;
+   /** */
+   private final String requestId;
 
    /**
     * Create a new mock invocation event.
@@ -46,13 +48,14 @@ public class MockInvocationEvent extends ApplicationEvent {
     * @param duration            Duration of invocation
     */
    public MockInvocationEvent(Object source, String serviceName, String serviceVersion, String mockResponse,
-         Date invocationTimestamp, long duration) {
+         Date invocationTimestamp, long duration, String requestId) {
       super(source);
       this.serviceName = serviceName;
       this.serviceVersion = serviceVersion;
       this.mockResponse = mockResponse;
       this.invocationTimestamp = invocationTimestamp;
       this.duration = duration;
+      this.requestId = requestId;
    }
 
    public String getServiceName() {
@@ -73,5 +76,9 @@ public class MockInvocationEvent extends ApplicationEvent {
 
    public long getDuration() {
       return duration;
+   }
+
+   public String getRequestId() {
+      return requestId;
    }
 }
