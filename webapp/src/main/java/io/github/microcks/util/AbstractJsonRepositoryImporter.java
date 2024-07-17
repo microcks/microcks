@@ -50,11 +50,10 @@ import java.util.Set;
 public abstract class AbstractJsonRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AbstractJsonRepositoryImporter.class);
+   private static final Logger log = LoggerFactory.getLogger(AbstractJsonRepositoryImporter.class);
 
    protected Boolean isYaml;
    protected JsonNode rootSpecification;
-
    protected String rootSpecificationContent;
    protected ReferenceResolver referenceResolver;
    protected List<Resource> externalResources = new ArrayList<>();

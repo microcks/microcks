@@ -47,11 +47,11 @@
           <span *ngIf="contracts | async as contracts$; else loadingc">
             <ng-container *ngIf="contracts$.length; else noContracts">
               <span *ngFor="let contract of contracts$">
-                <a href="/api/resources/{{ contract.name }}" target="new" title="{{ contract.name }}">
-                  {{ contract.name }} {{ contract.type }} <i class="glyphicon glyphicon-globe"></i>
+                <a href="{{ getContractLink(contract) }}" target="new" title="{{ contract.name }}">
+                  {{ contract.name }} {{ contract.type }} <i tooltip="Source artifact: {{ contract.sourceArtifact }}" containerClass="tooltip-break" class="glyphicon glyphicon-globe"></i>
                 </a><br />
                 <a *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC' || contract.type === 'SWAGGER'"
-                  href="/api/documentation/{{ contract.name }}/{{ contract.type }}" target="new"
+                  href="{{ getContractDocumentationLink(contract) }}" target="new"
                   title="{{ contract.name }}">
                   View Documentation <i class="fa fa-external-link"></i>
                 </a><br

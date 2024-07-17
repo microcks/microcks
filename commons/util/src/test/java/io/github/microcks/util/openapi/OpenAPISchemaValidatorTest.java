@@ -250,6 +250,70 @@ class OpenAPISchemaValidatorTest {
    }
 
    @Test
+   void testFullProcedureFromOpenAPIResourceWithLooseCharsetContentType() {
+      String openAPIText = null;
+      String jsonText = "[\n" + "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n"
+            + "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" + "]";
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts/get/responses/200", "application/json;charset=UTF-8");
+      assertTrue(errors.isEmpty());
+
+      // Now try with another message.
+      jsonText = "{ \"account\": {\"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+
+      try {
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts/{accountId} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=utf-8");
+      assertTrue(errors.isEmpty());
+
+      // Now try with failing message.
+      jsonText = "{ \"account\": {\"resourceIdentifier\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+
+      try {
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts/{accountId} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=UTF-8");
+      assertFalse(errors.isEmpty());
+      assertEquals("object instance has properties which are not allowed by the schema: [\"resourceIdentifier\"]",
+            errors.get(1));
+
+      // Validate again the content for Get /accounts/{accountId} response message with no charset.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=UTF-8");
+      assertFalse(errors.isEmpty());
+      assertEquals("object instance has properties which are not allowed by the schema: [\"resourceIdentifier\"]",
+            errors.get(1));
+   }
+
+   @Test
    void testFullProcedureFromOpenAPIResourceWithRef() {
       String openAPIText = null;
       String jsonText = "{\n" + "  \"region\": \"north\",\n" + "  \"temp\": -1.5,\n" + "  \"weather\": \"snowy\",\n"

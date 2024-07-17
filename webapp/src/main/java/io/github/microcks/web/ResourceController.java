@@ -25,28 +25,28 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.ResourceUtil;
 import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 import static io.github.microcks.web.DynamicMockRestController.ID_FIELD;
 
@@ -59,58 +59,64 @@ import static io.github.microcks.web.DynamicMockRestController.ID_FIELD;
 public class ResourceController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ResourceController.class);
+   private static final Logger log = LoggerFactory.getLogger(ResourceController.class);
 
    private static final String SWAGGER_20 = "swagger_20";
    private static final String OPENAPI_30 = "openapi_30";
 
-   @Autowired
-   private ResourceRepository resourceRepository;
-
-   @Autowired
-   private ServiceRepository serviceRepository;
-
-   @Autowired
-   private GenericResourceRepository genericResourceRepository;
+   private final ResourceRepository resourceRepository;
+   private final ServiceRepository serviceRepository;
+   private final GenericResourceRepository genericResourceRepository;
 
 
-   @RequestMapping(value = "/resources/{name}", method = RequestMethod.GET)
-   public ResponseEntity<?> execute(@PathVariable("name") String name, HttpServletRequest request) {
-      String extension = request.getRequestURI().substring(request.getRequestURI().lastIndexOf('.'));
-
-      try {
-         name = URLDecoder.decode(name, StandardCharsets.UTF_8.toString());
-      } catch (UnsupportedEncodingException e) {
-         log.error("Exception while decoding resource name: {}", e.getMessage());
-      }
-      log.info("Requesting resource named " + name);
-
-      Resource resource = resourceRepository.findByName(name);
-      if (resource != null) {
-         HttpHeaders headers = new HttpHeaders();
-
-         if (".json".equals(extension)) {
-            headers.setContentType(MediaType.APPLICATION_JSON);
-         } else if (".yaml".equals(extension) || ".yml".equals(extension)) {
-            headers.set("Content-Type", "text/yaml");
-            headers.setContentDisposition(ContentDisposition.builder("inline").filename(name).build());
-         } else if (".wsdl".equals(extension) || ".xsd".equals(extension)) {
-            headers.setContentType(MediaType.TEXT_XML);
-         } else if (".avsc".equals(extension)) {
-            headers.setContentType(MediaType.APPLICATION_JSON);
-         }
-         return new ResponseEntity<Object>(resource.getContent(), headers, HttpStatus.OK);
-      }
-      return new ResponseEntity<Object>(HttpStatus.NOT_FOUND);
+   /**
+    * Create a new ResourceController with mandatory components.
+    * @param resourceRepository        The repository to access resource definitions.
+    * @param serviceRepository         The repository to access service definitions.
+    * @param genericResourceRepository The repository to access generic resource definitions.
+    */
+   public ResourceController(ResourceRepository resourceRepository, ServiceRepository serviceRepository,
+         GenericResourceRepository genericResourceRepository) {
+      this.resourceRepository = resourceRepository;
+      this.serviceRepository = serviceRepository;
+      this.genericResourceRepository = genericResourceRepository;
    }
 
-   @RequestMapping(value = "/resources/service/{serviceId}", method = RequestMethod.GET)
+   @GetMapping(value = "/resources/{name}")
+   public ResponseEntity<?> getResourceByName(@PathVariable("name") String name, HttpServletRequest request) {
+      String extension = request.getRequestURI().substring(request.getRequestURI().lastIndexOf('.'));
+
+      name = URLDecoder.decode(name, StandardCharsets.UTF_8);
+      log.info("Requesting resource named {}", name);
+
+      List<Resource> resources = resourceRepository.findByName(name);
+      if (!resources.isEmpty()) {
+         Optional<Resource> resourceOpt = resources.stream().filter(Resource::isMainArtifact).findFirst();
+         if (resourceOpt.isPresent()) {
+            return responseWithResource(resourceOpt.get(), request);
+         }
+      }
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+   }
+
+   @GetMapping(value = "/resources/id/{id}")
+   public ResponseEntity<?> getResourceById(@PathVariable("id") String id, HttpServletRequest request) {
+      log.info("Requesting resource with id {}", id);
+      Optional<Resource> resourceOpt = resourceRepository.findById(id);
+
+      if (resourceOpt.isPresent()) {
+         return responseWithResource(resourceOpt.get(), request);
+      }
+      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+   }
+
+   @GetMapping(value = "/resources/service/{serviceId}")
    public List<Resource> getServiceResources(@PathVariable("serviceId") String serviceId) {
       log.debug("Request resources for service {}", serviceId);
       return resourceRepository.findByServiceId(serviceId);
    }
 
-   @RequestMapping(value = "/resources/{serviceId}/{resourceType}", method = RequestMethod.GET)
+   @GetMapping(value = "/resources/{serviceId}/{resourceType}")
    public ResponseEntity<byte[]> getServiceResource(@PathVariable("serviceId") String serviceId,
          @PathVariable("resourceType") String resourceType, HttpServletResponse response) {
       log.info("Requesting {} resource for service {}", resourceType, serviceId);
@@ -159,6 +165,23 @@ public class ResourceController {
          }
       }
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+   }
+
+   private ResponseEntity<?> responseWithResource(Resource resource, HttpServletRequest request) {
+      String extension = resource.getName().substring(resource.getName().lastIndexOf('.'));
+      HttpHeaders headers = new HttpHeaders();
+
+      if (".json".equals(extension)) {
+         headers.setContentType(MediaType.APPLICATION_JSON);
+      } else if (".yaml".equals(extension) || ".yml".equals(extension)) {
+         headers.set("Content-Type", "text/yaml");
+         headers.setContentDisposition(ContentDisposition.builder("inline").filename(resource.getName()).build());
+      } else if (".wsdl".equals(extension) || ".xsd".equals(extension)) {
+         headers.setContentType(MediaType.TEXT_XML);
+      } else if (".avsc".equals(extension)) {
+         headers.setContentType(MediaType.APPLICATION_JSON);
+      }
+      return new ResponseEntity<>(resource.getContent(), headers, HttpStatus.OK);
    }
 
    private String findResource(Service service) {
