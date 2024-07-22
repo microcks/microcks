@@ -1641,8 +1641,7 @@ class OpenAPIImporterTest {
             assertTrue(operation.getResourcePaths().contains("/owner/laurent/car"));
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
@@ -1776,14 +1775,13 @@ class OpenAPIImporterTest {
             assertEquals(1, exchanges.size());
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
                   assertNotNull(response.getContent());
-                  assertFalse(response.getContent().length() == 0);
+                  assertNotEquals(0, response.getContent().length());
                   assertTrue(response.getContent().startsWith("["));
                   assertTrue(response.getContent().contains("\"some text\""));
                   assertTrue(response.getContent().contains("11"));
@@ -1804,14 +1802,13 @@ class OpenAPIImporterTest {
             assertEquals(1, exchanges.size());
 
             for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair) {
-                  RequestResponsePair entry = (RequestResponsePair) exchange;
+               if (exchange instanceof RequestResponsePair entry) {
                   Request request = entry.getRequest();
                   Response response = entry.getResponse();
                   assertNotNull(request);
                   assertNotNull(response);
                   assertNotNull(response.getContent());
-                  assertFalse(response.getContent().length() == 0);
+                  assertNotEquals(0, response.getContent().length());
                   assertTrue(response.getContent().startsWith("{"));
                   assertTrue(response.getContent().contains("\"foo\":"));
                   assertTrue(response.getContent().contains("\"bar\":"));
@@ -1825,7 +1822,7 @@ class OpenAPIImporterTest {
    }
 
    @Test
-   public void testSimpleOpenAPIWithObjectQueryParam() {
+   void testSimpleOpenAPIWithObjectQueryParam() {
       OpenAPIImporter importer = null;
       try {
          importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/object-query-params.yaml",

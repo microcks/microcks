@@ -649,8 +649,9 @@ public class ServiceService {
          eventMessageRepository.deleteAll(
                eventMessageRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
 
-         // Save new messages.
-         List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
+         // Save new messages. We should use 'reference' here instead of 'service' as it may contain
+         // additional information to proper import messages (such as dispatch criteria inferring).
+         List<Exchange> exchanges = importer.getMessageDefinitions(reference, operation);
 
          for (Exchange exchange : exchanges) {
             if (exchange instanceof RequestResponsePair pair) {

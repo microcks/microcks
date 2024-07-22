@@ -298,7 +298,6 @@ class ServiceServiceTest {
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
          fail("No MockRepositoryImportException should have be thrown");
       }
 
@@ -337,7 +336,6 @@ class ServiceServiceTest {
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-postman.json", false));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
          fail("No MockRepositoryImportException should have be thrown");
       }
 
@@ -453,6 +451,86 @@ class ServiceServiceTest {
    }
 
    @Test
+   void testImportServiceDefinitionMainGraphQLAndSecondaryExamples() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
+         services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films.graphql", true));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("Movie Graph API", importedSvc.getName());
+      assertEquals("1.0", importedSvc.getVersion());
+      assertEquals("films.graphql", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(4, importedSvc.getOperations().size());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, requests.size());
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, responses.size());
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films-1.0-examples.yml");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("films-1.0-examples.yml", false));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      importedSvc = services.get(0);
+      assertEquals("Movie Graph API", importedSvc.getName());
+      assertEquals("1.0", importedSvc.getVersion());
+      assertEquals("films.graphql", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(4, importedSvc.getOperations().size());
+
+      // Inspect and check requests.
+      requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(1, requests.size());
+      for (Request request : requests) {
+         assertEquals("films-1.0-examples.yml", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(1, requests.size());
+      for (Response response : responses) {
+         assertEquals("films-1.0-examples.yml", response.getSourceArtifact());
+      }
+
+      // Check that dispatch criteria have been correctly extracted.
+      for (Operation operation : importedSvc.getOperations()) {
+         if ("film".equals(operation.getName())) {
+            requests = requestRepository.findByOperationId(IdBuilder.buildOperationId(importedSvc, operation));
+            responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(importedSvc, operation));
+
+            assertEquals(2, requests.size());
+            assertEquals(2, responses.size());
+
+            for (Response response : responses) {
+               assertTrue("?id=ZmlsbXM6MQ==".equals(response.getDispatchCriteria())
+                     || "?id=ZmlsbXM6Mg==".equals(response.getDispatchCriteria()));
+            }
+         }
+      }
+   }
+
+   @Test
    void testImportServiceDefinitionMainGrpcAndSecondaryPostman() {
       List<Service> services = null;
       try {
@@ -523,6 +601,81 @@ class ServiceServiceTest {
             assertEquals("?firstname=Laurent?lastname=Broudoux", response.getDispatchCriteria());
          } else if ("Philippe".equals(response.getName())) {
             assertEquals("?firstname=Philippe?lastname=Huet", response.getDispatchCriteria());
+         } else {
+            fail("Unexpected response name: " + response.getName());
+         }
+      }
+   }
+
+   @Test
+   void testImportServiceDefinitionMainGrpcAndSecondaryExamples() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");
+         services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("hello-v1.proto", true));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("v1", importedSvc.getVersion());
+      assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(1, importedSvc.getOperations().size());
+
+      // As operation as only scalar type, it should be QUERY_ARGS dispatcher.
+      assertEquals(DispatchStyles.QUERY_ARGS, importedSvc.getOperations().get(0).getDispatcher());
+      assertEquals("firstname && lastname", importedSvc.getOperations().get(0).getDispatcherRules());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, requests.size());
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, responses.size());
+
+      try {
+         File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1-examples.yml");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("hello-v1-examples.yml", false));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes.
+      importedSvc = services.get(0);
+      assertEquals("io.github.microcks.grpc.hello.v1.HelloService", importedSvc.getName());
+      assertEquals("v1", importedSvc.getVersion());
+      assertEquals("hello-v1.proto", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(1, importedSvc.getOperations().size());
+
+      // Inspect and check requests.
+      requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(2, requests.size());
+      for (Request request : requests) {
+         assertEquals("hello-v1-examples.yml", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(2, requests.size());
+      for (Response response : responses) {
+         assertEquals("hello-v1-examples.yml", response.getSourceArtifact());
+         if ("Laurent".equals(response.getName())) {
+            assertEquals("?firstname=Laurent?lastname=Broudoux", response.getDispatchCriteria());
+         } else if ("John".equals(response.getName())) {
+            assertEquals("?firstname=John?lastname=Doe", response.getDispatchCriteria());
          } else {
             fail("Unexpected response name: " + response.getName());
          }
