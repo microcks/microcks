@@ -18,7 +18,7 @@
     <java.version>17</java.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <bouncycastle.version>1.70</bouncycastle.version>
+    <bouncycastle.version>1.78</bouncycastle.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <mongo-java-server.version>1.45.0</mongo-java-server.version>
     <apache-httpclient.version>5.3</apache-httpclient.version>
@@ -113,7 +113,7 @@
     </dependency>
     <dependency>
       <groupId>org.bouncycastle</groupId>
-      <artifactId>bcpkix-jdk15on</artifactId>
+      <artifactId>bcpkix-jdk15to18</artifactId>
       <version>${bouncycastle.version}</version>
     </dependency>
     <dependency>
