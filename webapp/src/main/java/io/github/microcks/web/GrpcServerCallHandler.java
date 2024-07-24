@@ -319,7 +319,7 @@ public class GrpcServerCallHandler {
 
          // Publish an invocation event before returning if enabled.
          if (Boolean.TRUE.equals(enableInvocationStats)) {
-            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime, "");
          }
 
          // Send the output message and complete the stream.

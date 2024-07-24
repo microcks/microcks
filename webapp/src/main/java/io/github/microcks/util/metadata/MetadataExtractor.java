@@ -61,5 +61,8 @@ public class MetadataExtractor {
       if (node.has("dispatcherRules")) {
          operation.setDispatcherRules(node.path("dispatcherRules").asText());
       }
+      if (node.has("requestIdPath")) {
+         operation.setIdPath(node.path("requestIdPath").asText());
+      }
    }
 }

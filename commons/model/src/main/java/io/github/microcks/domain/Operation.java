@@ -43,6 +43,7 @@ public class Operation {
 
    private Set<String> resourcePaths;
    private List<ParameterConstraint> parameterConstraints;
+   private String idPath;
 
    public String getName() {
       return name;
@@ -161,5 +162,13 @@ public class Operation {
          this.parameterConstraints = new ArrayList<>();
       }
       parameterConstraints.add(constraint);
+   }
+
+   public void setIdPath(String idPath) {
+      this.idPath = idPath;
+   }
+
+   public String getIdPath() {
+      return idPath;
    }
 }
