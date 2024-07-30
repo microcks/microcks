@@ -27,7 +27,7 @@ import java.net.URLConnection;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class XmlSchemaURLResolverTest {
+class XmlSchemaURLResolverTest {
 
    private static final String BASE_RESOURCE_URL = "http://example.com/schemas";
    private XmlSchemaURLResolver resolver;
@@ -38,7 +38,7 @@ public class XmlSchemaURLResolverTest {
    }
 
    @Test
-   public void testResolveResourceWithLocalResolution() {
+   void testResolveResourceWithLocalResolution() {
       String systemId = "http://www.w3.org/2001/xml.xsd";
 
       LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
@@ -49,7 +49,7 @@ public class XmlSchemaURLResolverTest {
    }
 
    @Test
-   public void testResolveResourceWithBaseResourceURL() throws Exception {
+   void testResolveResourceWithBaseResourceURL() throws Exception {
       String systemId = "test.xsd";
       String expectedContent = "<schema></schema>";
 
@@ -78,7 +78,7 @@ public class XmlSchemaURLResolverTest {
    }
 
    @Test
-   public void testResolveResourceWithNonExistentResource() {
+   void testResolveResourceWithNonExistentResource() {
       String systemId = "non-existent.xsd";
 
       LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
