@@ -512,6 +512,9 @@ class AsyncAPISchemaValidatorTest {
       List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
             "/channels/user~1signedup/subscribe/message",
             "https://raw.githubusercontent.com/microcks/microcks/1.7.x/commons/util/src/test/resources/io/github/microcks/util/asyncapi/");
+      for (String error : errors) {
+         System.out.println("Validation error: " + error);
+      }
       assertTrue(errors.isEmpty());
    }
 

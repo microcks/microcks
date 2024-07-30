@@ -352,6 +352,9 @@ class OpenAPISchemaValidatorTest {
       // Validate the content for Get /forecast/{region} response message.
       errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
             "/paths/~1forecast~1{region}/get/responses/200", "application/json");
+      for (String error : errors) {
+         System.out.println("Validation error: " + error);
+      }
       assertTrue(errors.isEmpty());
 
       // Now try with an external relative ref.
