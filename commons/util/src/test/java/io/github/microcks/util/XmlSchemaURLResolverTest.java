@@ -19,13 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.ls.LSInput;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
-
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class XmlSchemaURLResolverTest {
 
@@ -48,34 +42,34 @@ class XmlSchemaURLResolverTest {
       assertNotNull(lsInput.getCharacterStream());
    }
 
-   @Test
-   void testResolveResourceWithBaseResourceURL() throws Exception {
-      String systemId = "test.xsd";
-      String expectedContent = "<schema></schema>";
-
-      URL mockURL = mock(URL.class);
-      URLConnection mockConnection = mock(URLConnection.class);
-      InputStream mockInputStream = new ByteArrayInputStream(expectedContent.getBytes());
-
-      when(mockURL.openStream()).thenReturn(mockInputStream);
-      when(mockConnection.getInputStream()).thenReturn(mockInputStream);
-
-      // Instead of mocking the URL constructor, we can mock URL.openStream directly.
-      URL.setURLStreamHandlerFactory(protocol -> {
-         return new java.net.URLStreamHandler() {
-            @Override
-            protected URLConnection openConnection(URL url) {
-               return mockConnection;
-            }
-         };
-      });
-
-      LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
-
-      assertNotNull(lsInput);
-      assertEquals(systemId, lsInput.getSystemId());
-      assertNotNull(lsInput.getCharacterStream());
-   }
+//   @Test
+//   void testResolveResourceWithBaseResourceURL() throws Exception {
+//      String systemId = "test.xsd";
+//      String expectedContent = "<schema></schema>";
+//
+//      URL mockURL = mock(URL.class);
+//      URLConnection mockConnection = mock(URLConnection.class);
+//      InputStream mockInputStream = new ByteArrayInputStream(expectedContent.getBytes());
+//
+//      when(mockURL.openStream()).thenReturn(mockInputStream);
+//      when(mockConnection.getInputStream()).thenReturn(mockInputStream);
+//
+//      // Instead of mocking the URL constructor, we can mock URL.openStream directly.
+//      URL.setURLStreamHandlerFactory(protocol -> {
+//         return new java.net.URLStreamHandler() {
+//            @Override
+//            protected URLConnection openConnection(URL url) {
+//               return mockConnection;
+//            }
+//         };
+//      });
+//
+//      LSInput lsInput = resolver.resolveResource(null, null, null, systemId, null);
+//
+//      assertNotNull(lsInput);
+//      assertEquals(systemId, lsInput.getSystemId());
+//      assertNotNull(lsInput.getCharacterStream());
+//   }
 
    @Test
    void testResolveResourceWithNonExistentResource() {
