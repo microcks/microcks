@@ -18,8 +18,13 @@ microcks:
   #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
 
   generateCert: true
-  image: quay.io/microcks/microcks:nightly
+  image:
+    registry: quay.io
+    repository: microcks/microcks
+    tag: nightly
+    digest:
   replicas: 1
+
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
 
@@ -64,7 +69,11 @@ microcks:
   #  key: cacerts
 
 postman:
-  image: quay.io/microcks/microcks-postman-runtime:latest
+  image:
+    registry: quay.io
+    repository: microcks/microcks-postman-runtime
+    tag: latest
+    digest:
   replicas: 1
   resources:
     requests:
@@ -90,7 +99,11 @@ keycloak:
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
   generateCert: true
-  image: quay.io/keycloak/keycloak:24.0.4
+  image:
+    registry: quay.io
+    repository: keycloak/keycloak
+    tag: 24.0.4
+    digest:
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and
@@ -120,7 +133,10 @@ keycloak:
   # Unless you uncomment following line and set class, persistent volume claim is created
   # with no storage class and relies on cluster default one.
   #storageClassName: my-awesome-class
-  postgresImage: library/postgres:16.3-alpine
+  postgresImage:
+    registry:
+    repository: library/postgres
+    tag: 16.3-alpine
   username: userP
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.
@@ -134,7 +150,11 @@ mongodb:
   #uri: mongodb:27017
   #uriParameters: "?ssl=true"
   #database: sampledb
-  image: library/mongo:4.4.29
+  image:
+    registry:
+    repository: library/mongo
+    tag: 4.4.29
+    digest:
   persistent: true
   volumeSize: 2Gi
   # Unless you uncomment following line and set class, persistent volume claim is created
@@ -170,7 +190,11 @@ features:
     defaultFrequency: 10
     defaultAvroEncoding: RAW
 
-    image: quay.io/microcks/microcks-async-minion:nightly
+    image:
+      registry: quay.io
+      repository: microcks/microcks-async-minion
+      tag: nightly
+      digest:
 
     env:
       #- name: OAUTH_CLIENT_ID
