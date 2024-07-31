@@ -15,10 +15,10 @@ $ helm repo add microcks https://microcks.io/helm
 
 $ kubectl create namespace microcks
 
-$ helm install microcks microcks/microcks —-version 1.7.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io
+$ helm install microcks microcks/microcks —-version 1.10.0 --namespace microcks --set microcks.url=microcks.$(minikube ip).nip.io --set keycloak.url=keycloak.$(minikube ip).nip.io --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080
   
 NAME: microcks
-LAST DEPLOYED: Wed Mar 08 17:57:32 2023
+LAST DEPLOYED: Wed Jul 31 17:38:43 2024
 NAMESPACE: microcks
 STATUS: deployed
 REVISION: 1
@@ -54,10 +54,11 @@ $ cd install/kubernetes
 
 $ helm install microcks ./microcks --namespace microcks \
    --set microcks.url=microcks.$(minikube ip).nip.io \
-   --set keycloak.url=keycloak.$(minikube ip).nip.io 
+   --set keycloak.url=keycloak.$(minikube ip).nip.io \
+   --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080
 
 NAME: microcks
-LAST DEPLOYED: Thu Jul  7 10:01:06 2022
+LAST DEPLOYED: Wed Jul 31 18:02:12 2024
 NAMESPACE: microcks
 STATUS: deployed
 REVISION: 1
@@ -104,10 +105,11 @@ $ helm install microcks ./microcks --namespace=microcks \
     --set appName=microcks --set features.async.enabled=true \
     --set microcks.url=microcks.$(minikube ip).nip.io \
     --set keycloak.url=keycloak.$(minikube ip).nip.io \
+    --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
     --set features.async.kafka.url=$(minikube ip).nip.io 
 
 NAME: microcks
-LAST DEPLOYED: Wed Apr 28 16:12:47 2021
+LAST DEPLOYED: Wed Jul 31 18:27:35 2024
 NAMESPACE: microcks
 STATUS: deployed
 REVISION: 1
@@ -123,6 +125,11 @@ To learn more about the release, try:
   $ helm get microcks
 
 Microcks is available at https://microcks.192.168.64.6.nip.io.
+
+GRPC mock service is available at "microcks-grpc.192.168.64.6.nip.io".
+It has been exposed using TLS passthrough on the Ingress controller, you should extract the certificate for your client using:
+
+  $ kubectl get secret microcks-microcks-grpc-secret -n  -o jsonpath='{.data.tls\.crt}' | base64 -d > tls.crt
 
 Keycloak has been deployed on https://keycloak.192.168.64.6.nip.io to protect user access.
 You may want to configure an Identity Provider or add some users for your Microcks installation by login in using the
@@ -175,7 +182,7 @@ The table below describes all the fields of the `values.yaml`, providing informa
 | `microcks` | `logLevel`                  | **Optional**. Allows to tune the verbosity level of logs. Default is `INFO`. You can use `DEBUG` for more verbosity or `WARN` for less.                                                                                                                                                                               |
 | `microcks` | `mockInvocationStats`       | **Optional**. Allows to disable invocation stats on mocks. Default is `true` (enabled).                                                                                                                                                                                                                               |
 | `microcks` | `extraProperties`           | **Optional**. Allows to add yaml extra application configurations. Default is `empty` (disabled).                                                                                                                                                                                                                     |
-| `microcks` | `customSecretRef`           | **Optional**. Permit to use a secret (for exemple a keystore). Default is `false` (disabled).                                                                                                                                                                                                                         |
+| `microcks` | `customSecretRef`           | **Optional**. Permit to use a secret (for exemple a keystore). Default is `false` (disabled). |
 | `postman`  | `replicas`                  | **Optional**. The number of replicas for the Microcks Postman pod. Default is `1`.                                                                                                                                                                                                                                    |
 | `postman`  | `image`                     | **Optional**. The reference of container image used. Chart comes with its default version.                                                                                                                                                                                                                            |
 | `postman`  | `resources`                 | **Optional**. Some resources constraints to apply on Postman pods. This should be expressed using [Kubernetes syntax](https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-requests-and-limits-of-pod-and-container)..                                                             |
