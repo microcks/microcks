@@ -15,18 +15,18 @@
  */
 package io.github.microcks.util.el.function;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for RandomStringELFunction class.
  * @author laurent
  */
-public class RandomStringELFunctionTest {
+class RandomStringELFunctionTest {
 
    @Test
-   public void testSimpleEvaluation() {
+   void testSimpleEvaluation() {
       // Compute evaluation.
       RandomStringELFunction function = new RandomStringELFunction();
       String result = function.evaluate(null);
@@ -35,7 +35,7 @@ public class RandomStringELFunctionTest {
    }
 
    @Test
-   public void testCustomSizeEvaluation() {
+   void testCustomSizeEvaluation() {
       // Compute evaluation.
       RandomStringELFunction function = new RandomStringELFunction();
       String result = function.evaluate(null, "64");

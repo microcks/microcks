@@ -15,17 +15,17 @@
  */
 package io.github.microcks.util.soapui.assertions;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for class XPathContainsAssertion.
  * @author laurent
  */
-public class XPathContainsAssertionTest {
+class XPathContainsAssertionTest {
 
    private String validSoap = """
          <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
@@ -50,7 +50,7 @@ public class XPathContainsAssertionTest {
          """;
 
    @Test
-   public void testExactMatch() {
+   void testExactMatch() {
       // Passing case.
       Map<String, String> configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
             declare namespace ser='http://www.example.com/hello';
@@ -73,7 +73,7 @@ public class XPathContainsAssertionTest {
    }
 
    @Test
-   public void testFuzzyMatch() {
+   void testFuzzyMatch() {
       // Passing case with starting *.
       Map<String, String> configParams = Map.of(XPathContainsAssertion.PATH_PARAM, """
             declare namespace ser='http://www.example.com/hello';

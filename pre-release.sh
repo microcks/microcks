@@ -21,15 +21,17 @@ if [[ $# -eq 1 ]]; then
   if [ "$(uname)" == "Darwin" ]; then
     sed -i '' 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/docker-compose/docker-compose*.yml
     sed -i '' 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/docker-compose/docker-compose*.yml
-    sed -i '' 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/kubernetes/microcks/values.yaml
-    sed -i '' 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/kubernetes/microcks/values.yaml
+    #sed -i '' 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/kubernetes/microcks/values.yaml
+    #sed -i '' 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/kubernetes/microcks/values.yaml
+    sed -i '' 's=tag: nightly=tag: '"$1"'=g' install/kubernetes/microcks/values.yaml
     sed -i '' 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/podman-compose/microcks-*.yml
     sed -i '' 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/podman-compose/microcks-*.yml
   elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     sed -i 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/docker-compose/docker-compose.yml
     sed -i 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/docker-compose/docker-compose*.yml
-    sed -i 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/kubernetes/microcks/values.yaml
-    sed -i 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/kubernetes/microcks/values.yaml
+    #sed -i 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/kubernetes/microcks/values.yaml
+    #sed -i 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/kubernetes/microcks/values.yaml
+    sed -i 's=tag: nightly=tag: '"$1"'=g' install/kubernetes/microcks/values.yaml
     sed -i 's=quay.io/microcks/microcks:nightly=quay.io/microcks/microcks:'"$1"'=g' install/podman-compose/microcks-*.yml
     sed -i 's=quay.io/microcks/microcks-async-minion:nightly=quay.io/microcks/microcks-async-minion:'"$1"'=g' install/podman-compose/microcks-*.yml
   fi

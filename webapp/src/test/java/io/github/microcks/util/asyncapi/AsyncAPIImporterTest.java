@@ -20,31 +20,27 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
 
-import org.junit.Test;
-
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class AsyncAPIImporter.
  * @author laurent
  */
-public class AsyncAPIImporterTest {
+class AsyncAPIImporterTest {
 
    @Test
-   public void testSimpleAsyncAPIImportYAML() {
+   void testSimpleAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -52,13 +48,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testSimpleAsyncAPIImportJSON() {
+   void testSimpleAsyncAPIImportJSON() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi.json", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -158,13 +153,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testSimpleAsyncAPIImportYAMLWithExtensions() {
+   void testSimpleAsyncAPIImportYAMLWithExtensions() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -205,13 +199,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAsyncAPIImportGHMasterYAML() {
+   void testAsyncAPIImportGHMasterYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-gh-master.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -307,13 +300,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAsyncAPI21ImportYAML() {
+   void testAsyncAPI21ImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-asyncapi-2.1.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -409,13 +401,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAsyncAPI21RefImportYAML() {
+   void testAsyncAPI21RefImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/account-service-asyncapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -462,13 +453,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAsyncAPI21MultiRefsImportYAML() {
+   void testAsyncAPI21MultiRefsImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-events-asyncapi-2.1.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -515,13 +505,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testReferenceAsyncAPIImportYAML() {
+   void testReferenceAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/streetlights-asyncapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -571,7 +560,7 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testJsonRemoteRelativeReferenceAsyncAPIImportYAML() {
+   void testJsonRemoteRelativeReferenceAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
@@ -613,13 +602,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAvroAsyncAPIImportYAML() {
+   void testAvroAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/user-signedup-avro-asyncapi.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -715,7 +703,7 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAvroRemoteRefAsyncAPIImportYAML() {
+   void testAvroRemoteRefAsyncAPIImportYAML() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
@@ -724,7 +712,6 @@ public class AsyncAPIImporterTest {
                      "https://raw.githubusercontent.com/microcks/microcks/master/webapp/src/test/resources/io/github/microcks/util/asyncapi/user-signedup-avro-ref-asyncapi.yaml",
                      null, true));
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -791,13 +778,12 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAsyncAPIImportWithParametrizedChannel() {
+   void testAsyncAPIImportWithParametrizedChannel() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/api-maintenance.async-api-spec.yaml", null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 
@@ -878,14 +864,13 @@ public class AsyncAPIImporterTest {
    }
 
    @Test
-   public void testAsyncAPIImportWithParametrizedChannelGHMaster() {
+   void testAsyncAPIImportWithParametrizedChannelGHMaster() {
       AsyncAPIImporter importer = null;
       try {
          importer = new AsyncAPIImporter(
                "target/test-classes/io/github/microcks/util/asyncapi/api-maintenance.async-api-spec-gh-master.yaml",
                null);
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 

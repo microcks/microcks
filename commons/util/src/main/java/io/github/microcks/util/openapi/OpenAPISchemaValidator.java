@@ -29,9 +29,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static io.github.microcks.util.JsonSchemaValidator.*;
 
@@ -42,8 +42,8 @@ import static io.github.microcks.util.JsonSchemaValidator.*;
  */
 public class OpenAPISchemaValidator {
 
-   /** A commons logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(OpenAPISchemaValidator.class);
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(OpenAPISchemaValidator.class);
 
    private static final String[] STRUCTURES = { "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties" };
    private static final String[] NOT_SUPPORTED_ATTRIBUTES = { "nullable", "discriminator", "readOnly", "writeOnly",
@@ -201,7 +201,7 @@ public class OpenAPISchemaValidator {
          messageNode = specificationNode.at(ref.substring(1));
       }
       // Extract message corresponding to contentType.
-      messageNode = messageNode.at("/content/" + contentType.replace("/", "~1"));
+      messageNode = getMessageContentNode(messageNode, contentType);
       if (messageNode == null || messageNode.isMissingNode()) {
          log.debug("content for {} cannot be found into OpenAPI specification", contentType);
          return List.of("messagePathPointer does not represent an existing JSON Pointer in OpenAPI specification");
@@ -264,6 +264,27 @@ public class OpenAPISchemaValidator {
       return mapper.readTree(schemaText);
    }
 
+   protected static JsonNode getMessageContentNode(JsonNode responseCodeNode, String contentType) {
+      JsonNode contentNode = responseCodeNode.at("/content/" + contentType.replace("/", "~1"));
+      if (contentNode == null || contentNode.isMissingNode()) {
+         // If no exact matching, try loose matching browsing the content types.
+         // We may have 'application/json; charset=utf-8' on one side and 'application/json;charset=UTF-8' on the other.
+         Iterator<Map.Entry<String, JsonNode>> contents = responseCodeNode.path("content").fields();
+         while (contents.hasNext()) {
+            Map.Entry<String, JsonNode> contentTypeNode = contents.next();
+            if (contentTypeNode.getKey().replace(" ", "").equalsIgnoreCase(contentType.replace(" ", ""))) {
+               return contentTypeNode.getValue();
+            }
+         }
+
+         // If no match here, it's maybe contentType contains charset but not the spec.
+         // Remove charset information and try again.
+         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+            return getMessageContentNode(responseCodeNode, contentType.substring(0, contentType.indexOf(";")));
+         }
+      }
+      return contentNode;
+   }
 
    /** Entry point method for converting an OpenAPI schema node to Json schema. */
    private static JsonNode convertOpenAPISchemaToJsonSchema(JsonNode jsonNode) {

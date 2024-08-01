@@ -21,6 +21,18 @@ paths:
                       { "resourceId": "396be545-e2d4-4497-a5b5-700e89ab99c0" },
                       { "resourceId": "f377afb3-5c62-40cc-8f07-1f4749a780eb" }
                     ]
+            application/json; charset=utf-8:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/accountDetails"
+              examples:
+                "Example 0":
+                  value: |-
+                    [
+                      { "resourceId": "396be545-e2d4-4497-a5b5-700e89ab99c0" },
+                      { "resourceId": "f377afb3-5c62-40cc-8f07-1f4749a780eb" }
+                    ]
   /accounts/{accountId}:
     get:
       parameters:
@@ -46,6 +58,28 @@ components:
       description: OK
       content:
         application/json:
+          schema:
+            type: object
+            required:
+              - account
+            properties:
+              account:
+                $ref: "#/components/schemas/accountDetails"
+          examples:
+            "Example 1":
+              $ref: "#/components/examples/accountDetailsRegularAccount"
+        application/hal+json:
+          schema:
+            type: object
+            required:
+              - account
+            properties:
+              account:
+                $ref: "#/components/schemas/accountDetails"
+          examples:
+            "Example 1":
+              $ref: "#/components/examples/accountDetailsRegularAccount"
+        application/hal+json;charset=UTF-8:
           schema:
             type: object
             required:

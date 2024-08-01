@@ -2,7 +2,7 @@ version: '2'
 
 services:
   mongo:
-    image: mongo:3.6.23
+    image: mongo:4.4.29
     container_name: microcks-db
     volumes:
       - "~/tmp/microcks-data:/data/db"
@@ -28,7 +28,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:1.9.1
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
@@ -52,7 +52,7 @@ services:
       - app
     ports:
       - "8081:8081"
-    image: quay.io/microcks/microcks-async-minion:1.9.1
+    image: quay.io/microcks/microcks-async-minion:nightly
     container_name: microcks-async-minion
     restart: on-failure
     volumes:

@@ -2,7 +2,7 @@
 Generate certificates for microcks ingress
 */}}
 {{- define "microcks-ingress.gen-certs" -}}
-{{- $cert := genSelfSignedCert .Values.microcks.url nil nil 365 -}}
+{{- $cert := genSelfSignedCert .Values.microcks.url nil (list .Values.microcks.url) 365 -}}
 tls.crt: {{ $cert.Cert | b64enc }}
 tls.key: {{ $cert.Key | b64enc }}
 {{- end -}}
@@ -32,7 +32,7 @@ tls.key: {{ $cert.Key | b64enc }}
 Generate certificates for keycloak ingress
 */}}
 {{- define "keycloak-ingress.gen-certs" -}}
-{{- $cert := genSelfSignedCert .Values.keycloak.url nil nil 365 -}}
+{{- $cert := genSelfSignedCert .Values.keycloak.url nil (list .Values.keycloak.url) 365 -}}
 tls.crt: {{ $cert.Cert | b64enc }}
 tls.key: {{ $cert.Key | b64enc }}
 {{- end -}}
@@ -73,3 +73,53 @@ Generate common annotations
 {{- end -}}
 {{- end -}}
 
+{{/*
+Create image name value
+( dict "imageRoot" .Values.path.to.image "context" $ )
+*/}}
+{{- define "renderImage" -}}
+{{- $ref := join "/" (compact (list .imageRoot.registry .imageRoot.repository)) -}}
+{{- join "" (compact (list $ref (ternary ":" "@" (empty .imageRoot.digest)) (default .imageRoot.tag .imageRoot.digest))) -}}
+{{- end -}}
+
+{{/*
+Compute microcks image full name
+*/}}
+{{- define "microcks.image" -}}
+{{- include "renderImage" ( dict "imageRoot" .Values.microcks.image "context" $ ) -}}
+{{- end -}}
+
+{{/*
+Compute postman image full name
+*/}}
+{{- define "postman.image" -}}
+{{- include "renderImage" ( dict "imageRoot" .Values.postman.image "context" $ ) -}}
+{{- end -}}
+
+{{/*
+Compute mongodb image full name
+*/}}
+{{- define "mongodb.image" -}}
+{{- include "renderImage" ( dict "imageRoot" .Values.mongodb.image "context" $ ) -}}
+{{- end -}}
+
+{{/*
+Compute keycloak image full name
+*/}}
+{{- define "keycloak.image" -}}
+{{- include "renderImage" ( dict "imageRoot" .Values.keycloak.image "context" $ ) -}}
+{{- end -}}
+
+{{/*
+Compute keycloak postgres image full name
+*/}}
+{{- define "keycloakPostgres.image" -}}
+{{- include "renderImage" ( dict "imageRoot" .Values.keycloak.postgresImage "context" $ ) -}}
+{{- end -}}
+
+{{/*
+Compute async-minion image full name
+*/}}
+{{- define "async-minion.image" -}}
+{{- include "renderImage" ( dict "imageRoot" .Values.features.async.image "context" $ ) -}}
+{{- end -}}

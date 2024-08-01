@@ -25,25 +25,21 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 
-import org.junit.Test;
-
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class HARImporter.
  * @author laurent
  */
-public class HARImporterTest {
+class HARImporterTest {
 
    @Test
-   public void testSimpleHARImport() {
+   void testSimpleHARImport() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/api-pastry-2.0.har");
@@ -83,7 +79,7 @@ public class HARImporterTest {
    }
 
    @Test
-   public void testMissingCommentHARImport() {
+   void testMissingCommentHARImport() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/microcks.har");
@@ -103,7 +99,7 @@ public class HARImporterTest {
    }
 
    @Test
-   public void testComplexHARImport() {
+   void testComplexHARImport() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/api-pastries-0.0.1.har");
@@ -249,7 +245,7 @@ public class HARImporterTest {
    }
 
    @Test
-   public void testComplexHARImportWithAPIPrefix() {
+   void testComplexHARImportWithAPIPrefix() {
       HARImporter importer = null;
       try {
          importer = new HARImporter(
@@ -349,7 +345,7 @@ public class HARImporterTest {
    }
 
    @Test
-   public void testGraphQLMessageImportWithExistingOperation() {
+   void testGraphQLMessageImportWithExistingOperation() {
       HARImporter importer = null;
       try {
          importer = new HARImporter("target/test-classes/io/github/microcks/util/har/movie-graph-api-1.0.har");

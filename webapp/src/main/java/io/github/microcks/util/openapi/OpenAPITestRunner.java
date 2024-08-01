@@ -33,6 +33,8 @@ import org.springframework.http.client.ClientHttpResponse;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * This is an implementation of HttpTestRunner that deals with OpenAPI schema validation. This implementation now
@@ -42,17 +44,19 @@ import java.util.List;
 public class OpenAPITestRunner extends HttpTestRunner {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
+   private static final Logger log = LoggerFactory.getLogger(OpenAPITestRunner.class);
 
-   /** Content-type for JSON that is the sole valid response type. */
-   private static final String APPLICATION_JSON_TYPE = "application/json";
+   /** Content-types for JSON that are valid response types validated using JSON Schemas. */
+   public static final Pattern APPLICATION_JSON_TYPES_PATTERN = Pattern.compile("application/.*json");
+
+   private final ResourceRepository resourceRepository;
+   private final ResponseRepository responseRepository;
+
+   private final boolean validateResponseCode;
+
 
    /** The URL of resources used for validation. */
    private String resourceUrl = null;
-
-   private ResourceRepository resourceRepository;
-   private ResponseRepository responseRepository;
-   private boolean validateResponseCode = false;
 
    private List<String> lastValidationErrors = null;
 
@@ -112,10 +116,6 @@ public class OpenAPITestRunner extends HttpTestRunner {
       if (httpResponse.getHeaders().getContentType() != null) {
          contentType = httpResponse.getHeaders().getContentType().toString();
          log.debug("Response media-type is {}", httpResponse.getHeaders().getContentType());
-         // Sanitize charset information from media-type.
-         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-            contentType = contentType.substring(0, contentType.indexOf(";"));
-         }
       }
 
       // If required, compare response code and content-type to expected ones.
@@ -132,7 +132,7 @@ public class OpenAPITestRunner extends HttpTestRunner {
             }
 
             if (expectedResponse.getMediaType() != null
-                  && !expectedResponse.getMediaType().equalsIgnoreCase(contentType)) {
+                  && !contentTypesAreEquivalent(expectedResponse.getMediaType(), contentType)) {
                log.debug("Response Content-Type does not match expected one, returning failure");
                lastValidationErrors = List
                      .of(String.format("Response Content-Type does not match expected one. Expecting %s but got %s",
@@ -143,28 +143,25 @@ public class OpenAPITestRunner extends HttpTestRunner {
       }
 
       // Do not try to validate response content if no content provided ;-)
-      // Also do not try to schema validate something that is not application/json for now...
+      // Also do not try to schema validate something that is not application/.*json for now...
       // Alternatives schemes are on their way for OpenAPI but not yet ready (see https://github.com/OAI/OpenAPI-Specification/pull/1736)
-      if (responseCode != 204 && APPLICATION_JSON_TYPE.equals(contentType)) {
+      String shortContentType = getShortContentType(contentType);
+      if (responseCode != 204 && shortContentType != null
+            && APPLICATION_JSON_TYPES_PATTERN.matcher(shortContentType).matches()) {
+
          boolean isOpenAPIv3 = true;
 
          // Retrieve the resource corresponding to OpenAPI specification if any.
-         Resource openapiSpecResource = null;
-         List<Resource> resources = resourceRepository.findByServiceId(service.getId());
-         for (Resource resource : resources) {
-            if (ResourceType.OPEN_API_SPEC.equals(resource.getType())) {
-               openapiSpecResource = resource;
-               break;
-            } else if (ResourceType.SWAGGER.equals(resource.getType())) {
-               openapiSpecResource = resource;
-               isOpenAPIv3 = false;
-               break;
-            }
-         }
+         Resource openapiSpecResource = findResourceCandidate(service);
          if (openapiSpecResource == null) {
             log.debug("Found no OpenAPI specification resource for service {} - {}, so failing validating",
                   service.getId(), service.getName());
             return TestReturn.FAILURE_CODE;
+         }
+
+         // Check the type so guess the kind of validation.
+         if (ResourceType.SWAGGER.equals(openapiSpecResource.getType())) {
+            isOpenAPIv3 = false;
          }
 
          JsonNode openApiSpec = null;
@@ -219,5 +216,49 @@ public class OpenAPITestRunner extends HttpTestRunner {
       // Reset just after consumption so avoid side-effects.
       lastValidationErrors = null;
       return builder.toString();
+   }
+
+   private boolean contentTypesAreEquivalent(String expectedContentType, String responseContentType) {
+      if (responseContentType != null) {
+         // If charset is specified, compare ignore case ignoring spaces.
+         if (expectedContentType.contains("charset=")) {
+            return expectedContentType.replace(" ", "").equalsIgnoreCase(responseContentType.replace(" ", ""));
+         }
+         // Sanitize charset information from media-type.
+         String shortResponseContentType = getShortContentType(responseContentType);
+         return expectedContentType.equalsIgnoreCase(shortResponseContentType);
+      }
+      return false;
+   }
+
+   private String getShortContentType(String contentType) {
+      // Sanitize charset information from media-type.
+      if (contentType != null && contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+         return contentType.substring(0, contentType.indexOf(";"));
+      }
+      return contentType;
+   }
+
+   private Resource findResourceCandidate(Service service) {
+      Optional<Resource> candidate = Optional.empty();
+      // Try resources marked within mainArtifact first.
+      List<Resource> resources = resourceRepository.findMainByServiceId(service.getId());
+      if (!resources.isEmpty()) {
+         candidate = getResourceCandidate(resources);
+      }
+      // Else try all the services resources...
+      if (candidate.isEmpty()) {
+         resources = resourceRepository.findByServiceId(service.getId());
+         if (!resources.isEmpty()) {
+            candidate = getResourceCandidate(resources);
+         }
+      }
+      return candidate.orElse(null);
+   }
+
+   private Optional<Resource> getResourceCandidate(List<Resource> resources) {
+      return resources.stream()
+            .filter(r -> ResourceType.OPEN_API_SPEC.equals(r.getType()) || ResourceType.SWAGGER.equals(r.getType()))
+            .findFirst();
    }
 }

@@ -53,12 +53,12 @@ import io.github.microcks.util.RelativeReferenceURLBuilder;
 import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
 import io.github.microcks.util.ResourceUtil;
 import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import org.bson.Document;
 import org.bson.json.JsonParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 
@@ -76,36 +76,20 @@ import java.util.Map;
 public class ServiceService {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ServiceService.class);
+   private static final Logger log = LoggerFactory.getLogger(ServiceService.class);
 
    private static final String AI_COPILOT_SOURCE = "AI Copilot";
 
-   @Autowired
-   private ServiceRepository serviceRepository;
+   private final ServiceRepository serviceRepository;
+   private final ResourceRepository resourceRepository;
+   private final GenericResourceRepository genericResourceRepository;
+   private final RequestRepository requestRepository;
+   private final ResponseRepository responseRepository;
+   private final EventMessageRepository eventMessageRepository;
+   private final TestResultRepository testResultRepository;
 
-   @Autowired
-   private ResourceRepository resourceRepository;
-
-   @Autowired
-   private GenericResourceRepository genericResourceRepository;
-
-   @Autowired
-   private RequestRepository requestRepository;
-
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private EventMessageRepository eventMessageRepository;
-
-   @Autowired
-   private TestResultRepository testResultRepository;
-
-   @Autowired
-   private ApplicationContext applicationContext;
-
-   @Autowired
-   private AuthorizationChecker authorizationChecker;
+   private final ApplicationContext applicationContext;
+   private final AuthorizationChecker authorizationChecker;
 
    @Value("${async-api.default-binding}")
    private final String defaultAsyncBinding = null;
@@ -113,9 +97,38 @@ public class ServiceService {
    @Value("${async-api.default-frequency}")
    private final Long defaultAsyncFrequency = 30l;
 
+
+   /**
+    * Build a ServiceService with required dependencies.
+    * @param serviceRepository         The repository to access service definitions
+    * @param resourceRepository        The repository to access resource definitions
+    * @param genericResourceRepository The repository to access generic resource definitions
+    * @param requestRepository         The repository to access request definitions
+    * @param responseRepository        The repository to access response definitions
+    * @param eventMessageRepository    The repository to access event message definitions
+    * @param testResultRepository      The repository to access test result definitions
+    * @param applicationContext        The Spring application context
+    * @param authorizationChecker      The authorization checker service
+    */
+   public ServiceService(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
+         GenericResourceRepository genericResourceRepository, RequestRepository requestRepository,
+         ResponseRepository responseRepository, EventMessageRepository eventMessageRepository,
+         TestResultRepository testResultRepository, ApplicationContext applicationContext,
+         AuthorizationChecker authorizationChecker) {
+      this.serviceRepository = serviceRepository;
+      this.resourceRepository = resourceRepository;
+      this.genericResourceRepository = genericResourceRepository;
+      this.requestRepository = requestRepository;
+      this.responseRepository = responseRepository;
+      this.eventMessageRepository = eventMessageRepository;
+      this.testResultRepository = testResultRepository;
+      this.applicationContext = applicationContext;
+      this.authorizationChecker = authorizationChecker;
+   }
+
    /**
     * Import definitions of services and bounded resources and messages into Microcks repository. This uses a
-    * MockRepositoryImporter underhood.
+    * MockRepositoryImporter under the hood.
     * @param repositoryUrl        The String representing mock repository url.
     * @param repositorySecret     The authentication secret associated with the repository url. Can be set to null if
     *                             none.
@@ -254,55 +267,9 @@ public class ServiceService {
             services.add(reference);
          }
 
-         // Remove resources previously attached to service.
-         List<Resource> existingResources = resourceRepository.findByServiceIdAndSourceArtifact(reference.getId(),
-               artifactInfo.getArtifactName());
-         if (existingResources != null && !existingResources.isEmpty()) {
-            resourceRepository.deleteAll(existingResources);
-         }
-
-         // Save new resources.
-         List<Resource> resources = importer.getResourceDefinitions(service);
-         for (Resource resource : resources) {
-            resource.setServiceId(reference.getId());
-            resource.setSourceArtifact(artifactInfo.getArtifactName());
-         }
-         resourceRepository.saveAll(resources);
-
-         for (Operation operation : reference.getOperations()) {
-            String operationId = IdBuilder.buildOperationId(reference, operation);
-
-            // Remove messages previously attached to service.
-            requestRepository.deleteAll(
-                  requestRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
-            responseRepository.deleteAll(
-                  responseRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
-            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationIdAndSourceArtifact(operationId,
-                  artifactInfo.getArtifactName()));
-
-            List<Exchange> exchanges = importer.getMessageDefinitions(service, operation);
-
-            for (Exchange exchange : exchanges) {
-               if (exchange instanceof RequestResponsePair pair) {
-                  // Associate request and response with operation and artifact.
-                  pair.getRequest().setOperationId(operationId);
-                  pair.getResponse().setOperationId(operationId);
-                  pair.getRequest().setSourceArtifact(artifactInfo.getArtifactName());
-                  pair.getResponse().setSourceArtifact(artifactInfo.getArtifactName());
-
-                  // Save response and associate request with response before saving it.
-                  responseRepository.save(pair.getResponse());
-                  pair.getRequest().setResponseId(pair.getResponse().getId());
-                  requestRepository.save(pair.getRequest());
-
-               } else if (exchange instanceof UnidirectionalEvent event) {
-                  // Associate event message with operation and artifact before saving it..
-                  event.getEventMessage().setOperationId(operationId);
-                  event.getEventMessage().setSourceArtifact(artifactInfo.getArtifactName());
-                  eventMessageRepository.save(event.getEventMessage());
-               }
-            }
-         }
+         // Remove resources and messages previously attached to service.
+         updateArtifactResources(reference, importer, service, artifactInfo);
+         updateArtifactMessages(reference, importer, service, artifactInfo);
 
          // When extracting message information, we may have modified Operation because discovered new resource paths
          // depending on variable URI parts. As a consequence, we got to update Service in repository.
@@ -641,6 +608,69 @@ public class ServiceService {
             }
             if (operation.getBindings() == null || operation.getBindings().isEmpty()) {
                operation.addBinding(defaultAsyncBinding, new Binding(BindingType.valueOf(defaultAsyncBinding)));
+            }
+         }
+      }
+   }
+
+   /** Manage the update of previous artifact resources with new imported ones. */
+   private void updateArtifactResources(Service reference, MockRepositoryImporter importer, Service service,
+         ArtifactInfo artifactInfo) throws MockRepositoryImportException {
+
+      // Remove resources previously attached to service.
+      List<Resource> existingResources = resourceRepository.findByServiceIdAndSourceArtifact(reference.getId(),
+            artifactInfo.getArtifactName());
+      if (existingResources != null && !existingResources.isEmpty()) {
+         resourceRepository.deleteAll(existingResources);
+      }
+
+      // Save new resources.
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      for (Resource resource : resources) {
+         resource.setServiceId(reference.getId());
+         resource.setSourceArtifact(artifactInfo.getArtifactName());
+         resource.setMainArtifact(artifactInfo.isMainArtifact());
+      }
+      resourceRepository.saveAll(resources);
+   }
+
+   /** Manage the update of previous artifact messages with new imported ones. */
+   private void updateArtifactMessages(Service reference, MockRepositoryImporter importer, Service service,
+         ArtifactInfo artifactInfo) throws MockRepositoryImportException {
+
+      for (Operation operation : reference.getOperations()) {
+         String operationId = IdBuilder.buildOperationId(reference, operation);
+
+         // Remove messages previously attached to service.
+         requestRepository.deleteAll(
+               requestRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
+         responseRepository.deleteAll(
+               responseRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
+         eventMessageRepository.deleteAll(
+               eventMessageRepository.findByOperationIdAndSourceArtifact(operationId, artifactInfo.getArtifactName()));
+
+         // Save new messages. We should use 'reference' here instead of 'service' as it may contain
+         // additional information to proper import messages (such as dispatch criteria inferring).
+         List<Exchange> exchanges = importer.getMessageDefinitions(reference, operation);
+
+         for (Exchange exchange : exchanges) {
+            if (exchange instanceof RequestResponsePair pair) {
+               // Associate request and response with operation and artifact.
+               pair.getRequest().setOperationId(operationId);
+               pair.getResponse().setOperationId(operationId);
+               pair.getRequest().setSourceArtifact(artifactInfo.getArtifactName());
+               pair.getResponse().setSourceArtifact(artifactInfo.getArtifactName());
+
+               // Save response and associate request with response before saving it.
+               responseRepository.save(pair.getResponse());
+               pair.getRequest().setResponseId(pair.getResponse().getId());
+               requestRepository.save(pair.getRequest());
+
+            } else if (exchange instanceof UnidirectionalEvent event) {
+               // Associate event message with operation and artifact before saving it..
+               event.getEventMessage().setOperationId(operationId);
+               event.getEventMessage().setSourceArtifact(artifactInfo.getArtifactName());
+               eventMessageRepository.save(event.getEventMessage());
             }
          }
       }

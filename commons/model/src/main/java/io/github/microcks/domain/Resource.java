@@ -21,7 +21,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Domain object representing a Resource : a contractualization companion to microservices Service managed with this
+ * Domain object representing a Resource: a contractualization companion to microservices Service managed with this
  * application. These are typically retrieved using the serviceId.
  * @author laurent
  */
@@ -35,6 +35,7 @@ public class Resource {
    private ResourceType type;
    private String serviceId;
    private String sourceArtifact;
+   private boolean mainArtifact = false;
    private Set<String> operations;
 
    public String getId() {
@@ -91,6 +92,14 @@ public class Resource {
 
    public void setSourceArtifact(String sourceArtifact) {
       this.sourceArtifact = sourceArtifact;
+   }
+
+   public boolean isMainArtifact() {
+      return mainArtifact;
+   }
+
+   public void setMainArtifact(boolean mainArtifact) {
+      this.mainArtifact = mainArtifact;
    }
 
    public Set<String> getOperations() {

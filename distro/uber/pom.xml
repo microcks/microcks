@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks-distro</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.9.2-SNAPSHOT</version>
+    <version>1.10.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -16,7 +16,7 @@
     <java.version>17</java.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
-    <mongo-java-server.version>1.43.0</mongo-java-server.version>
+    <mongo-java-server.version>1.45.0</mongo-java-server.version>
   </properties>
 
   <dependencies>

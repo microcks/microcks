@@ -25,6 +25,7 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
@@ -37,6 +38,7 @@ import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.graphql.GraphQLHttpRequest;
 import io.github.microcks.util.script.ScriptEngineBinder;
+import io.github.microcks.service.ServiceStateStore;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -97,18 +99,19 @@ import java.util.Optional;
 public class GraphQLController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(GraphQLController.class);
+   private static final Logger log = LoggerFactory.getLogger(GraphQLController.class);
 
    private static final String INTROSPECTION_SELECTION = "__schema";
 
    private final ServiceRepository serviceRepository;
+   private final ServiceStateRepository serviceStateRepository;
    private final ResponseRepository responseRepository;
    private final ResourceRepository resourceRepository;
    private final ApplicationContext applicationContext;
    private final ProxyService proxyService;
 
    @Value("${mocks.enable-invocation-stats}")
-   private final Boolean enableInvocationStats = null;
+   private Boolean enableInvocationStats;
 
    private final Parser requestParser = new Parser();
    private final SchemaParser schemaParser = new SchemaParser();
@@ -118,15 +121,18 @@ public class GraphQLController {
 
    /**
     * Build a GraphQLController with required dependencies.
-    * @param serviceRepository  The repository to access services definitions
-    * @param responseRepository The repository to access responses definitions
-    * @param resourceRepository The repository to access resources artifacts
-    * @param applicationContext The Spring application context
-    * @param proxyService       The proxy to external URLs or services
+    * @param serviceRepository      The repository to access services definitions
+    * @param serviceStateRepository The repository to access service state
+    * @param responseRepository     The repository to access responses definitions
+    * @param resourceRepository     The repository to access resources artifacts
+    * @param applicationContext     The Spring application context
+    * @param proxyService           The proxy to external URLs or services
     */
-   public GraphQLController(ServiceRepository serviceRepository, ResponseRepository responseRepository,
-         ResourceRepository resourceRepository, ApplicationContext applicationContext, ProxyService proxyService) {
+   public GraphQLController(ServiceRepository serviceRepository, ServiceStateRepository serviceStateRepository,
+         ResponseRepository responseRepository, ResourceRepository resourceRepository,
+         ApplicationContext applicationContext, ProxyService proxyService) {
       this.serviceRepository = serviceRepository;
+      this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
       this.applicationContext = applicationContext;
@@ -255,7 +261,7 @@ public class GraphQLController {
       MockControllerCommons.waitForDelay(startTime, maxDelay[0]);
 
       // Publish an invocation event before returning if enabled.
-      if (enableInvocationStats) {
+      if (Boolean.TRUE.equals(enableInvocationStats)) {
          MockControllerCommons.publishMockInvocation(applicationContext, this, service,
                graphqlResponses.get(0).getResponse(), startTime);
       }
@@ -310,12 +316,10 @@ public class GraphQLController {
       Operation rOperation = null;
       for (Operation operation : service.getOperations()) {
          // Select operation based on type (QUERY or MUTATION)...
-         if (operation.getMethod().equals(operationType)) {
-            // ... then check the operation name itself.
-            if (operation.getName().equals(operationName)) {
-               rOperation = operation;
-               break;
-            }
+         // ... then check the operation name itself.
+         if (operation.getMethod().equals(operationType) && operation.getName().equals(operationName)) {
+            rOperation = operation;
+            break;
          }
       }
 
@@ -343,7 +347,7 @@ public class GraphQLController {
          }
 
          //
-         DispatchContext dispatchContext = computeDispatchCriteria(dispatcher, dispatcherRules, graphqlField,
+         DispatchContext dispatchContext = computeDispatchCriteria(service, dispatcher, dispatcherRules, graphqlField,
                graphqlHttpReq.getVariables(), request, body);
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
@@ -443,7 +447,7 @@ public class GraphQLController {
    }
 
    /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
-   private DispatchContext computeDispatchCriteria(String dispatcher, String dispatcherRules,
+   private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
          Selection<?> graphqlSelection, JsonNode requestVariables, HttpServletRequest request, String body) {
 
       String dispatchCriteria = null;
@@ -458,7 +462,8 @@ public class GraphQLController {
                try {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
-                  ScriptEngineBinder.bindEnvironment(se, body, requestContext, request);
+                  ScriptEngineBinder.bindEnvironment(se, body, requestContext,
+                        new ServiceStateStore(serviceStateRepository, service.getId()), request);
                   dispatchCriteria = (String) se.eval(dispatcherRules);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);

@@ -20,6 +20,7 @@ import io.github.microcks.util.asyncapi.AsyncAPIImporter;
 import io.github.microcks.util.graphql.GraphQLImporter;
 import io.github.microcks.util.grpc.ProtobufImporter;
 import io.github.microcks.util.har.HARImporter;
+import io.github.microcks.util.metadata.ExamplesImporter;
 import io.github.microcks.util.metadata.MetadataImporter;
 import io.github.microcks.util.openapi.OpenAPIImporter;
 import io.github.microcks.util.postman.PostmanCollectionImporter;
@@ -44,7 +45,7 @@ import java.nio.file.Files;
 public class MockRepositoryImporterFactory {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(MockRepositoryImporterFactory.class);
+   private static final Logger log = LoggerFactory.getLogger(MockRepositoryImporterFactory.class);
 
    /** A RegExp for detecting a line containing the openapi: 3 pragma. */
    public static final String OPENAPI_3_REGEXP = ".*['\\\"]?openapi['\\\"]?\\s*:\\s*['\\\"]?[3\\.].*";
@@ -143,6 +144,9 @@ public class MockRepositoryImporterFactory {
       } else if (line.contains("kind: APIMetadata")) {
          log.info("Found a kind: APIMetadata pragma in file so assuming it's a Microcks APIMetadata to import");
          return new MetadataImporter(mockRepository.getPath());
+      } else if (line.contains("kind: APIExamples")) {
+         log.info("Found a kind: APIExamples pragma in file so assuming it's a Microcks APIExamples to import");
+         return new ExamplesImporter(mockRepository.getPath());
       } else if (line.contains("type Query {") || line.contains("type Mutation {") || line.contains("microcksId:")) {
          log.info("Found query, mutation or microcksId: pragmas in file so assuming it's a GraphQL schema to import");
          return new GraphQLImporter(mockRepository.getPath());

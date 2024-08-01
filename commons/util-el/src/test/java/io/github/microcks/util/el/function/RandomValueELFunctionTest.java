@@ -15,20 +15,21 @@
  */
 package io.github.microcks.util.el.function;
 
-import org.junit.Test;
-
 import java.util.List;
 
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for RandomValueEFFunction class.
  * @author laurent
  */
-public class RandomValueELFunctionTest {
+class RandomValueELFunctionTest {
 
    @Test
-   public void testSimpleEvaluation() {
+   void testSimpleEvaluation() {
       List<String> values = List.of("one", "two", "three");
 
       // Compute evaluation.

@@ -207,6 +207,26 @@ data:
   {{- toYaml . | nindent 4 }}
   {{- end }}
 {{- end }}
+{{- if (.Values.mongodb.install) }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: "{{ .Values.appName }}-mongodb-init"
+  labels:
+    app: "{{ .Values.appName }}"
+    container: mongodb
+    group: microcks
+    {{- include "microcks-common-labels" . | nindent 4 }}
+  annotations:
+    {{- include "microcks-common-annotations" . | nindent 4 }}
+data:
+  create-user.sh: |-
+    #!/bin/bash
+    echo "Started Adding the Users..."
+    mongo admin --eval "db.getSiblingDB('${MONGO_INITDB_DATABASE}').createUser({user: '${MONGODB_USER}', pwd: '${MONGODB_PASSWORD}', roles: [{role: 'readWrite', db: '${MONGO_INITDB_DATABASE}'}]})"
+    echo "End Adding the User Roles."
+{{- end -}}
 {{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
 kind: ConfigMap
@@ -416,6 +436,17 @@ data:
         }
       ],
       "identityProviders": [
+      ],
+      "requiredActions": [
+        {
+          "alias": "VERIFY_PROFILE",
+          "name": "Verify Profile",
+          "providerId": "VERIFY_PROFILE",
+          "enabled": false,
+          "defaultAction": false,
+          "priority": 90,
+          "config": {}
+        }
       ],
       "keycloakVersion": "10.0.1"
     }

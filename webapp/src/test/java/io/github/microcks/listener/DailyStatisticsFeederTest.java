@@ -19,29 +19,27 @@ import io.github.microcks.domain.DailyStatistic;
 import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.repository.DailyStatisticRepository;
 import io.github.microcks.repository.RepositoryTestsConfiguration;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Test case for DailyStatisticsFeeder class.
  * @author laurent
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ContextConfiguration(classes = { RepositoryTestsConfiguration.class, ListenerTestsConfiguration.class })
+@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ListenerTestsConfiguration.class })
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
-public class DailyStatisticsFeederTest {
+class DailyStatisticsFeederTest {
 
    @Autowired
    DailyStatisticsFeeder feeder;
@@ -50,7 +48,7 @@ public class DailyStatisticsFeederTest {
    DailyStatisticRepository statisticsRepository;
 
    @Test
-   public void testOnApplicationEvent() {
+   void testOnApplicationEvent() {
       Calendar today = Calendar.getInstance();
       MockInvocationEvent event = new MockInvocationEvent(this, "TestService1", "1.0", "123456789", today.getTime(),
             100);
@@ -68,7 +66,7 @@ public class DailyStatisticsFeederTest {
       assertEquals("TestService1", stat.getServiceName());
       assertEquals("1.0", stat.getServiceVersion());
       assertEquals(1, stat.getDailyCount());
-      assertEquals(new Integer(1), stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
+      assertEquals(1, stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
 
       // Fire event a second time.
       feeder.onApplicationEvent(event);
@@ -80,6 +78,6 @@ public class DailyStatisticsFeederTest {
       assertEquals("TestService1", stat.getServiceName());
       assertEquals("1.0", stat.getServiceVersion());
       assertEquals(2, stat.getDailyCount());
-      assertEquals(new Integer(2), stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
+      assertEquals(2, stat.getHourlyCount().get(String.valueOf(today.get(Calendar.HOUR_OF_DAY))));
    }
 }

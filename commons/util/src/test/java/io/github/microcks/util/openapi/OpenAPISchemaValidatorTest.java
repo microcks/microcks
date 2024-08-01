@@ -17,24 +17,21 @@ package io.github.microcks.util.openapi;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for OpenAPISchemaValidator utility.
  * @author laurent
  */
-public class OpenAPISchemaValidatorTest {
+class OpenAPISchemaValidatorTest {
 
    @Test
-   public void testValidateJsonSuccess() {
+   void testValidateJsonSuccess() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}";
@@ -54,7 +51,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonSuccessWithNull() {
+   void testValidateJsonSuccessWithNull() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "{\"name\": \"307\", \"model\": null, \"year\": 2003}";
@@ -74,7 +71,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonFailure() {
+   void testValidateJsonFailure() {
       boolean valid = true;
       String schemaText = null;
       String jsonText = "{\"id\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003}";
@@ -104,7 +101,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonUnknownNodeFailure() {
+   void testValidateJsonUnknownNodeFailure() {
       boolean valid = true;
       String schemaText = null;
       String jsonText = "{\"name\": \"307\", " + "\"model\": \"Peugeot 307\", \"year\": 2003, \"energy\": \"GO\"}";
@@ -134,7 +131,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonSchemaWithReferenceSuccess() {
+   void testValidateJsonSchemaWithReferenceSuccess() {
       boolean valid = true;
       String schemaText = null;
       String jsonText = "[{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003},"
@@ -156,7 +153,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonWithExternalReferenceSuccess() {
+   void testValidateJsonWithExternalReferenceSuccess() {
       boolean valid = false;
       String schemaText = null;
       String jsonText = "[{\"region\": \"north\", \"weather\": \"snowy\", \"temp\": -1.5, \"visibility\": 25}, "
@@ -178,7 +175,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testValidateJsonSchemaWithReferenceFailure() {
+   void testValidateJsonSchemaWithReferenceFailure() {
       boolean valid = true;
       String schemaText = null;
       String jsonText = "[{\"name\": \"307\", \"model\": \"Peugeot 307\", \"year\": 2003},"
@@ -213,7 +210,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromOpenAPIResource() {
+   void testFullProcedureFromOpenAPIResource() {
       String openAPIText = null;
       String jsonText = "[\n" + "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n"
             + "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" + "]";
@@ -253,7 +250,71 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromOpenAPIResourceWithRef() {
+   void testFullProcedureFromOpenAPIResourceWithLooseCharsetContentType() {
+      String openAPIText = null;
+      String jsonText = "[\n" + "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n"
+            + "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" + "]";
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts/get/responses/200", "application/json;charset=UTF-8");
+      assertTrue(errors.isEmpty());
+
+      // Now try with another message.
+      jsonText = "{ \"account\": {\"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+
+      try {
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts/{accountId} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=utf-8");
+      assertTrue(errors.isEmpty());
+
+      // Now try with failing message.
+      jsonText = "{ \"account\": {\"resourceIdentifier\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" } }";
+
+      try {
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts/{accountId} response message.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=UTF-8");
+      assertFalse(errors.isEmpty());
+      assertEquals("object instance has properties which are not allowed by the schema: [\"resourceIdentifier\"]",
+            errors.get(1));
+
+      // Validate again the content for Get /accounts/{accountId} response message with no charset.
+      errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1accounts~1{accountId}/get/responses/200", "application/hal+json; charset=UTF-8");
+      assertFalse(errors.isEmpty());
+      assertEquals("object instance has properties which are not allowed by the schema: [\"resourceIdentifier\"]",
+            errors.get(1));
+   }
+
+   @Test
+   void testFullProcedureFromOpenAPIResourceWithRef() {
       String openAPIText = null;
       String jsonText = "{\n" + "  \"region\": \"north\",\n" + "  \"temp\": -1.5,\n" + "  \"weather\": \"snowy\",\n"
             + "  \"visibility\": 25\n" + "}";
@@ -291,6 +352,9 @@ public class OpenAPISchemaValidatorTest {
       // Validate the content for Get /forecast/{region} response message.
       errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
             "/paths/~1forecast~1{region}/get/responses/200", "application/json");
+      for (String error : errors) {
+         System.out.println("Validation error: " + error);
+      }
       assertTrue(errors.isEmpty());
 
       // Now try with an external relative ref.
@@ -348,7 +412,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromOpenAPIResourceFailure() {
+   void testFullProcedureFromOpenAPIResourceFailure() {
       String openAPIText = null;
       String jsonText = "[\n" + "  { \"resource\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\", \"id\": \"01\" },\n"
             + "  { \"resource\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\", \"id\": \"01\" }\n" + "]";
@@ -389,7 +453,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testFullProcedureFromOpenAPIResourceWithStructures() {
+   void testFullProcedureFromOpenAPIResourceWithStructures() {
       String openAPIText = null;
       String jsonText = "{\n" + "          \"id\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\",\n"
             + "          \"realm_id\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\",\n" + "          \"slug\": \"gore\",\n"
@@ -418,7 +482,7 @@ public class OpenAPISchemaValidatorTest {
    }
 
    @Test
-   public void testNullableFieldInComponentRef() {
+   void testNullableFieldInComponentRef() {
       String openAPIText = null;
       String jsonText = """
              [

@@ -17,9 +17,10 @@ package io.github.microcks.web;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.Test;
+
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
-import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
@@ -28,7 +29,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.UUID;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
@@ -38,13 +39,13 @@ import static org.mockito.Mockito.verify;
  * Test case for all the Rest mock controller.
  * @author laurent
  */
-public class RestControllerIT extends AbstractBaseIT {
+class RestControllerIT extends AbstractBaseIT {
 
    @SpyBean
    private RestController restController;
 
    @Test
-   public void testOpenAPIMocking() {
+   void testOpenAPIMocking() {
       // Upload PetStore reference artifact.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
 
@@ -71,7 +72,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testSwaggerMocking() {
+   void testSwaggerMocking() {
       // Upload Beer Catalog API swagger and then Postman collection artifacts.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.json", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-collection.json", false);
@@ -98,7 +99,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testNoFallbackMatchingWithRegex() {
+   void testNoFallbackMatchingWithRegex() {
       // Upload modified pastry spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
 
@@ -123,7 +124,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testHeadersTemplating() {
+   void testHeadersTemplating() {
       // Upload modified pastry-with-headers-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-headers-openapi.yaml", true);
 
@@ -140,7 +141,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testHeadersOnlyResponse() {
+   void testHeadersOnlyResponse() {
       // Upload simple-oidc-redirect-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
 
@@ -159,7 +160,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxyFallback() {
+   void testProxyFallback() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
@@ -193,7 +194,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxyFallbackWithEqualsOriginAndExternalUrls() {
+   void testProxyFallbackWithEqualsOriginAndExternalUrls() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
@@ -215,7 +216,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxyFallbackWithHttpError() {
+   void testProxyFallbackWithHttpError() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
             true);
@@ -235,7 +236,7 @@ public class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxy() {
+   void testProxy() {
       // Upload pastry-with-proxy and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-openapi.yaml", true);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);

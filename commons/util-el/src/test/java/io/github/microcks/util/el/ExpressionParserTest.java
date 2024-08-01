@@ -18,20 +18,19 @@ package io.github.microcks.util.el;
 import io.github.microcks.util.el.function.NowELFunction;
 import io.github.microcks.util.el.function.PutInContextELFunction;
 import io.github.microcks.util.el.function.UUIDELFunction;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * A TestCase for ExpressionParser class.
  * @author laurent
  */
-public class ExpressionParserTest {
+class ExpressionParserTest {
 
    @Test
-   public void testParseExpressions() {
+   void testParseExpressions() {
       String template = "Hello {{ request.body/name}} it's {{now() }}";
 
       // Build a suitable context.
@@ -52,7 +51,7 @@ public class ExpressionParserTest {
    }
 
    @Test
-   public void testRedirectParseExpressions() {
+   void testRedirectParseExpressions() {
       String template = "Hello {{ guid() > put(id) }} world! This is my {{ id }}";
 
       // Build a suitable context.
@@ -74,7 +73,7 @@ public class ExpressionParserTest {
    }
 
    @Test
-   public void testXpathExpressionWithNestedFunction() {
+   void testXpathExpressionWithNestedFunction() {
       String template = "Hello {{ request.body//*[local-name() = 'name'] }} it's {{ now() }}";
 
       // Build a suitable context.
@@ -95,7 +94,7 @@ public class ExpressionParserTest {
    }
 
    @Test
-   public void testXpathAttributeExpressionWithNestedFunction() {
+   void testXpathAttributeExpressionWithNestedFunction() {
       String template = "Hello {{ request.body/request/name/@firstname }} it's {{ now() }}";
 
       // Build a suitable context.

@@ -23,7 +23,7 @@ To get involved with our community, please make sure you are familiar with the p
 
 ## Build Status
 
-The current development version is `1.10.0-SNAPSHOT`. 
+The current development version is `1.10.1-SNAPSHOT`. 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.10.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
@@ -48,14 +48,25 @@ The current development version is `1.10.0-SNAPSHOT`.
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/7513/badge)](https://bestpractices.coreinfrastructure.org/projects/7513)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/microcks/microcks/badge)](https://securityscorecards.dev/viewer/?uri=github.com/microcks/microcks)
 
+#### Fossa license and security scans
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_shield&issueType=license)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_shield&issueType=security)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_small)
+
+#### OpenSSF best practices
+
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/7513/badge)](https://bestpractices.coreinfrastructure.org/projects/7513)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/microcks/microcks/badge)](https://securityscorecards.dev/viewer/?uri=github.com/microcks/microcks)
+
 ## Versions
 
 Here are the naming conventions we're using for current releases, ongoing development maintenance activities.
 
 | Status      | Version           | Branch   | Container images tags |
 | ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.9.1`           | `master` | `1.9.1`, `latest`     |
-| Dev         | `1.10.0-SNAPSHOT` | `1.10.x` | `nightly`             |
+| Stable      | `1.10.0`          | `master` | `1.10.0`, `latest`    |
+| Dev         | `1.10.1-SNAPSHOT` | `1.10.x` | `nightly`             |
 | Maintenance | `1.9.2-SNAPSHOT`  | `1.9.x`  | `maintenance`         |
 
 

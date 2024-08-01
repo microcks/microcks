@@ -18,7 +18,6 @@ package io.github.microcks.web;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.util.MockRepositoryImporterFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -47,25 +48,62 @@ import java.util.stream.Stream;
 public class DocumentationController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(DocumentationController.class);
+   private static final Logger log = LoggerFactory.getLogger(DocumentationController.class);
 
    private static final String RESOURCE_URL = "{RESOURCE_URL}";
 
    final ResourceRepository resourceRepository;
 
    /**
-    * Build a new DocumentationCoontroller with a resource repository.
-    * @param resourceRepository Repostiory to access resource.
+    * Build a new DocumentationController with a resource repository.
+    * @param resourceRepository Repository to access resource.
     */
    public DocumentationController(ResourceRepository resourceRepository) {
       this.resourceRepository = resourceRepository;
    }
 
    @GetMapping(value = "/documentation/{name}/{resourceType}")
-   public ResponseEntity<byte[]> execute(@PathVariable("name") String name,
+   public ResponseEntity<byte[]> getDocumentationByResourceName(@PathVariable("name") String name,
          @PathVariable("resourceType") String resourceType) {
       log.info("Requesting {} documentation for resource {}", resourceType, name);
 
+      Resource resource = null;
+      if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
+         List<Resource> resources = resourceRepository.findByName(name);
+         if (!resources.isEmpty()) {
+            Optional<Resource> resourceOpt = resources.stream().filter(Resource::isMainArtifact).findFirst();
+            if (resourceOpt.isPresent()) {
+               resource = resourceOpt.get();
+            } else {
+               return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+         } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+         }
+      }
+
+      return responseWithResource("/api/resources/" + name, resourceType, resource);
+   }
+
+   @GetMapping(value = "/documentation/id/{id}/{resourceType}")
+   public ResponseEntity<byte[]> getDocumentationByResourceId(@PathVariable("id") String id,
+         @PathVariable("resourceType") String resourceType) {
+      log.info("Requesting {} documentation for resource with id {}", resourceType, id);
+
+      Resource resource = null;
+      if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
+         Optional<Resource> resourceOpt = resourceRepository.findById(id);
+         if (resourceOpt.isPresent()) {
+            resource = resourceOpt.get();
+         } else {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+         }
+      }
+
+      return responseWithResource("/api/resources/id/" + id, resourceType, resource);
+   }
+
+   private ResponseEntity<byte[]> responseWithResource(String resourceUrl, String resourceType, Resource resource) {
       // Prepare HttpHeaders.
       InputStream stream = null;
       HttpHeaders headers = new HttpHeaders();
@@ -78,7 +116,6 @@ public class DocumentationController {
          headers.setContentType(MediaType.TEXT_HTML);
       } else if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
 
-         Resource resource = resourceRepository.findByName(name);
          if (resource.getContent().contains("asyncapi: 3") || resource.getContent().contains("\"asyncapi\": \"3")
                || resource.getContent().contains("'asyncapi': '3")) {
             template = new ClassPathResource("templates/asyncapi-v3.html");
@@ -100,15 +137,14 @@ public class DocumentationController {
          StringWriter writer = new StringWriter();
 
          try (Stream<String> lines = reader.lines()) {
-            lines.map(line -> replaceInLine(line, name)).forEach(line -> writer.write(line + "\n"));
+            lines.map(line -> replaceResourceUrlInLing(line, resourceUrl)).forEach(line -> writer.write(line + "\n"));
          }
          return new ResponseEntity<>(writer.toString().getBytes(), headers, HttpStatus.OK);
       }
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   private String replaceInLine(String line, String resourceName) {
-      line = line.replace(RESOURCE_URL, "/api/resources/" + resourceName);
-      return line;
+   private String replaceResourceUrlInLing(String line, String resourceUrl) {
+      return line.replace(RESOURCE_URL, resourceUrl);
    }
 }

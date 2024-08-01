@@ -18,12 +18,11 @@ package io.github.microcks.web;
 import io.github.microcks.service.ImportExportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,16 +35,23 @@ import org.springframework.web.multipart.MultipartFile;
 public class ImportController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ImportController.class);
+   private static final Logger log = LoggerFactory.getLogger(ImportController.class);
 
-   @Autowired
-   private ImportExportService importExportService;
+   private final ImportExportService importExportService;
 
-   @RequestMapping(value = "/import", method = RequestMethod.POST)
-   public ResponseEntity<?> importRepository(@RequestParam(value = "file") MultipartFile file) {
+   /**
+    * Create new ImportController with required service.
+    * @param importExportService The service for managing imports.
+    */
+   public ImportController(ImportExportService importExportService) {
+      this.importExportService = importExportService;
+   }
+
+   @PostMapping(value = "/import")
+   public ResponseEntity<byte[]> importRepository(@RequestParam(value = "file") MultipartFile file) {
       log.debug("Importing new services and resources definitions");
       if (!file.isEmpty()) {
-         log.debug("Content type of " + file.getOriginalFilename() + " is " + file.getContentType());
+         log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
          if (MediaType.APPLICATION_JSON_VALUE.equals(file.getContentType())) {
             try {
                byte[] bytes = file.getBytes();
@@ -56,6 +62,6 @@ public class ImportController {
             }
          }
       }
-      return new ResponseEntity<Object>(HttpStatus.CREATED);
+      return new ResponseEntity<>(HttpStatus.CREATED);
    }
 }

@@ -49,6 +49,8 @@ jobs:
         run: |
           cd ${{github.workspace}}/webapp
           mvn -Pit test
+          cd ${{github.workspace}}/minions/async
+          mvn -Pit test
 
       - name: Verify Javadoc completion
         run: mvn -B javadoc:javadoc

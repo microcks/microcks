@@ -15,18 +15,18 @@
  */
 package io.github.microcks.util.postman;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for PostmanUtilTest class.
  * @author laurent
  */
-public class PostmanUtilTest {
+class PostmanUtilTest {
 
    @Test
-   public void testAreOperationsEquivalent() {
+   void testAreOperationsEquivalent() {
       assertTrue(PostmanUtil.areOperationsEquivalent("GET /PaStRiEs", "get /pastries"));
       assertTrue(PostmanUtil.areOperationsEquivalent("GET /PaStRiEs/{name}", "get /pastries/:name"));
       assertTrue(PostmanUtil.areOperationsEquivalent("recommendation", "POST recommendation"));

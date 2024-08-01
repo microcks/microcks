@@ -301,12 +301,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   continue;
                }
 
-               Multimap<String, String> exampleParams = results.get(exampleName);
-
-               if (exampleParams == null) {
-                  exampleParams = ArrayListMultimap.create();
-                  results.put(exampleName, exampleParams);
-               }
+               Multimap<String, String> exampleParams = results.computeIfAbsent(exampleName,
+                     k -> ArrayListMultimap.create());
 
                if (PARAMETERS_QUERY_VALUE.equals(parameterType) && exampleValue.isArray()) {
                   // Array of query params.
@@ -376,6 +372,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    private Map<String, List<Header>> extractHeadersByExample(JsonNode responseNode) {
       Map<String, List<Header>> results = new HashMap<>();
 
+      responseNode = followRefIfAny(responseNode);
       if (responseNode.has(HEADERS_NODE)) {
          JsonNode headersNode = responseNode.path(HEADERS_NODE);
          Iterator<String> headerNames = headersNode.fieldNames();
@@ -391,6 +388,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   JsonNode example = headerNode.path(EXAMPLES_NODE).path(exampleName);
                   String exampleValue = getSerializedExampleValue(example);
 
+                  List<Header> headersForExample = results.computeIfAbsent(exampleName, k -> new ArrayList<>());
+
                   // Example may be multiple CSV.
                   Set<String> values = Arrays.stream(exampleValue.split(",")).map(String::trim)
                         .collect(Collectors.toSet());
@@ -399,19 +398,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                   header.setName(headerName);
                   header.setValues(values);
 
-                  List<Header> headersForExample = results.get(exampleName);
-                  if (headersForExample == null) {
-                     headersForExample = new ArrayList<>();
-                  }
                   headersForExample.add(header);
                   results.put(exampleName, headersForExample);
                }
             }
          }
-      }
-      if (responseNode.has("$ref")) {
-         JsonNode component = followRefIfAny(responseNode);
-         return extractHeadersByExample(component);
       }
       return results;
    }
@@ -432,10 +423,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
       // Find here potential headers for output of this operation examples.
       Map<String, List<Header>> headersByExample = extractHeadersByExample(responseCode.getValue());
 
-      JsonNode examplesNode = content.getValue().path(EXAMPLES_NODE);
-      if (examplesNode.has("$ref")) {
-         examplesNode = followRefIfAny(examplesNode);
-      }
+      JsonNode examplesNode = followRefIfAny(content.getValue().path(EXAMPLES_NODE));
 
       Iterator<String> exampleNames = examplesNode.fieldNames();
       while (exampleNames.hasNext()) {
@@ -493,6 +481,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
          results.put(request, response);
       }
+
       return results;
    }
 

@@ -15,18 +15,18 @@
  */
 package io.github.microcks.util.el.function;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for UUIDELFunction class.
  * @author laurent
  */
-public class UUIDELFunctionTest {
+class UUIDELFunctionTest {
 
    @Test
-   public void testSimpleEvaluation() {
+   void testSimpleEvaluation() {
       // Compute uuid.
       UUIDELFunction function = new UUIDELFunction();
       String uuid = function.evaluate(null);

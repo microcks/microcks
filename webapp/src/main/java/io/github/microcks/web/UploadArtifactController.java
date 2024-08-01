@@ -15,7 +15,9 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Secret;
 import io.github.microcks.domain.Service;
+import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.service.ArtifactInfo;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.HTTPDownloader;
@@ -24,7 +26,6 @@ import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +39,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -49,29 +52,44 @@ import java.util.List;
 public class UploadArtifactController {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(UploadArtifactController.class);
+   private static final Logger log = LoggerFactory.getLogger(UploadArtifactController.class);
 
    private ServiceService serviceService;
 
-   public UploadArtifactController(ServiceService serviceService) {
+   private SecretRepository secretRepository;
+
+   /**
+    * Build a new UploadArtifactController with its dependencies.
+    * @param serviceService   to perform business logic on Services
+    * @param secretRepository to retrieve requested Secrets
+    */
+   public UploadArtifactController(ServiceService serviceService, SecretRepository secretRepository) {
       this.serviceService = serviceService;
+      this.secretRepository = secretRepository;
    }
 
    @PostMapping(value = "/artifact/download")
    public ResponseEntity<String> importArtifact(@RequestParam(value = "url", required = true) String url,
-         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
+         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact,
+         @RequestParam(value = "secretName", required = false) String secretName) {
       if (!url.isEmpty()) {
          List<Service> services = null;
 
+         Secret secret = null;
+         if (secretName != null) {
+            secret = secretRepository.findByName(secretName).stream().findFirst().orElse(null);
+            log.debug("Secret {} was requested. Have we found it? {}", secretName, (secret != null));
+         }
+
          try {
             // Download remote to local file before import.
-            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(url, null,
-                  true);
+            HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(url,
+                  secret, true);
             File localFile = fileAndHeaders.getLocalFile();
 
             // Now try importing services.
             services = serviceService.importServiceDefinition(localFile,
-                  new ReferenceResolver(url, null, true,
+                  new ReferenceResolver(url, secret, true,
                         RelativeReferenceURLBuilderFactory
                               .getRelativeReferenceURLBuilder(fileAndHeaders.getResponseHeaders())),
                   new ArtifactInfo(url, mainArtifact));
@@ -91,7 +109,7 @@ public class UploadArtifactController {
    }
 
    @PostMapping(value = "/artifact/upload")
-   public ResponseEntity<?> importArtifact(@RequestParam(value = "file") MultipartFile file,
+   public ResponseEntity<String> importArtifact(@RequestParam(value = "file") MultipartFile file,
          @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
       if (!file.isEmpty()) {
          log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
@@ -103,23 +121,17 @@ public class UploadArtifactController {
             String localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis()
                   + ".artifact";
 
-            ReadableByteChannel rbc = null;
-            FileOutputStream fos = null;
-            try {
-               rbc = Channels.newChannel(file.getInputStream());
-               // Transfer file to local.
-               fos = new FileOutputStream(localFile);
+            try (ReadableByteChannel rbc = Channels.newChannel(file.getInputStream());
+                  FileOutputStream fos = new FileOutputStream(localFile)) {
                fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            } finally {
-               if (fos != null)
-                  fos.close();
-               if (rbc != null)
-                  rbc.close();
             }
 
             // Now try importing services.
             services = serviceService.importServiceDefinition(new File(localFile), null,
                   new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
+
+            // Cleanup and remove local file.
+            Files.delete(Paths.get(localFile));
          } catch (IOException ioe) {
             log.error("Exception while writing uploaded item {}", file.getOriginalFilename(), ioe);
             return new ResponseEntity<>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);

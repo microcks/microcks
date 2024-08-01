@@ -101,6 +101,7 @@ export class Contract {
   type: ContractType;
   serviceId: string;
   sourceArtifact: string;
+  mainArtifact: boolean;
 }
 export enum ContractType {
   WSDL,

@@ -1,0 +1,81 @@
+---
+openapi: 3.0.0
+info:
+  title: Book Service
+  description: This is a generic API definition for manipulation of Book resources. It contains basic CRUD operations for Book resources.
+  version: 1.0.0
+paths:
+  /Book:
+    get:
+      summary: Retrieve Book resources.
+      description: Retrieve a bunch of Book resources. Specify example resource as body payload.
+      operationId: getBookList
+      responses:
+        200:
+          description: Get an array of Book resources.
+    post:
+      summary: Create new Book resource.
+      description: Create a new Book resource. Specify payload within request body.
+      operationId: createBook
+      requestBody:
+        description: The payload of resource Book to create.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schema/BookType'
+      responses:
+        201:
+          description: Get the newly created Book resource.
+  /Book/{id}:
+    get:
+      summary: Retrieve a Book resource.
+      description: Retrieve an already existing Book resource having the specified id.
+      operationId: getBookById
+      responses:
+        200:
+          description: Book resource having specified id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schema/BookType'
+    put:
+      summary: Update a Book resource.
+      description: Update an already existing Book resource having the specified id.
+      operationId: updateBookById
+      requestBody:
+        description: The payload of resource Book to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schema/BookType'
+      responses:
+        200:
+          description: Updated Book resource.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schema/BookType'
+    delete:
+      summary: Delete a Book resource.
+      description: Remove an existing Book resource having the specified id.
+      operationId: deleteBookById
+      responses:
+        204:
+          description: Resource Book with specified id has been removed.
+    parameters:
+      - name: id
+        in: path
+        description: Id of resource
+        required: true
+        schema:
+          type: string
+components:
+  schemas:
+    BookType:
+      type: object
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+

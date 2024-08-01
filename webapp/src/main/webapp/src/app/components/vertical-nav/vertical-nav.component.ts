@@ -35,6 +35,7 @@ import { IAuthenticationService } from '../../services/auth.service';
 import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from '../../models/user.model';
 import { ConfigService } from 'src/app/services/config.service';
+import { KeycloakAuthenticationService } from '../../services/auth-keycloak.service';
 
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
 // import * as $ from 'jquery';
@@ -142,6 +143,22 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
 
   public user(): Observable<User> {
     return this.authService.getAuthenticatedUser();
+  }
+
+  /**
+   * Checks if authentication is enabled using the configurationService.
+   * @returns  Returns true if authentication is enabled, false otherwise.
+   */
+  public isAuthEnabled(): boolean {
+    return this.config.authType() !== 'anonymous';
+  }
+
+  public getPreferencesLink(): string {
+    if (this.config.authType() === 'keycloakjs') {
+      const keycloakSvc = this.authService as KeycloakAuthenticationService;
+      return keycloakSvc.getRealmUrl() + "/account/?referrer=microcks-app-js";
+    }
+    return "";
   }
 
   public logout(): void {

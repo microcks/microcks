@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  * This helper class holds general utility constants and methods for:
@@ -57,7 +59,7 @@ import java.util.Set;
 public class AICopilotHelper {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AICopilotHelper.class);
+   private static final Logger log = LoggerFactory.getLogger(AICopilotHelper.class);
 
    protected static final ObjectMapper JSON_MAPPER = new ObjectMapper();
    protected static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
@@ -227,9 +229,17 @@ public class AICopilotHelper {
                      resourcePathPattern, url);
                dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
             } else if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
-               // This dispatcher is used for GraphQL
-               Map<String, String> variables = getGraphQLVariables(request.getContent());
-               dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(), variables);
+               // This dispatcher is used for GraphQL or gRPC
+               if (ServiceType.GRAPHQL.equals(service.getType())) {
+                  Map<String, String> variables = getGraphQLVariables(request.getContent());
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(),
+                        variables);
+               } else if (ServiceType.GRPC.equals(service.getType())) {
+                  Map<String, String> parameters = JSON_MAPPER.readValue(request.getContent(),
+                        TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(),
+                        parameters);
+               }
             }
             response.setDispatchCriteria(dispatchCriteria);
 

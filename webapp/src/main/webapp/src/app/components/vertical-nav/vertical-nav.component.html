@@ -29,22 +29,25 @@
           </li>
         </ul>
       </li>
-      <li class="dropdown">
+      <li class="dropdown" *ngIf="isAuthEnabled()">
         <button class="btn btn-link dropdown-toggle nav-item-iconic" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
           <span title="Username" class="fa pficon-user"></span>
           <span class="dropdown-title">
-              {{ (user() | async).name }} <span class="caret"></span>
+              {{ (user() | async)?.name
+                ? (user() | async)?.name
+                : (user() | async)?.login
+            }} <span class="caret"></span>
           </span>
         </button>
         <ul class="dropdown-menu" aria-labelledby="dropdownMenu2">
-          <li><a href="#0">Preferences</a></li>
+          <li><a href="{{ getPreferencesLink() }}">Preferences</a></li>
           <li><a (click)="logout()">Logout</a></li>
         </ul>
       </li>
     </ul>
   </nav>
 </nav>
-  
+
 <div class="nav-pf-vertical nav-pf-vertical-with-sub-menus">
   <ul class="list-group">
     <li class="list-group-item">

@@ -37,8 +37,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class AsyncAPI3Importer.

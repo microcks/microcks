@@ -1,0 +1,16 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIExamples
+metadata:
+  name: User signed-up API
+  version: 0.1.0
+operations:
+  'SUBSCRIBE /user/signedup':
+    jane:
+      eventMessage:
+        headers:
+          my-app-header: 123
+          sentAt: "2024-07-14T18:01:28Z"
+        payload:
+          fullName: Jane Doe
+          email: jane@microcks.io
+          age: 35

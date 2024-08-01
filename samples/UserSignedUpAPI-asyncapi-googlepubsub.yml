@@ -1,4 +1,4 @@
-asyncapi: '2.0.0'
+asyncapi: 3.0.0
 id: 'urn:io.microcks.example.user-signedup'
 info:
   title: User signed-up API
@@ -6,15 +6,10 @@ info:
   description: Sample AsyncAPI for user signedup events
 defaultContentType: application/json
 channels:
-  user/signedup:
-    description: The topic on which user signed up events may be consumed
-    bindings:
-      googlepubsub:
-        topic: projects/my-project/topics/my-topic
-    subscribe:
-      summary: Receive informations about user signed up
-      operationId: receivedUserSignedUp
-      message:
+  userSignedUpChannel:
+    address: user/signedup
+    messages:
+      receivedUserSignedUp.message:
         description: An event describing that a user just signed up.
         traits:
           - $ref: '#/components/messageTraits/commonHeaders'
@@ -35,22 +30,38 @@ channels:
               type: integer
               minimum: 18
         examples:
-          - laurent:
-              summary: Example for Laurent user
-              headers: |-
-                {"my-app-header": 23}
-              payload: |-
-                {"id": "{{randomString(32)}}", "sendAt": "{{now()}}", "fullName": "Laurent Broudoux", "email": "laurent@microcks.io", "age": 41}
-          - john:
-              summary: Example for John Doe user
-              headers:
-                my-app-header: 24
-              payload:
-                id: '{{randomString(32)}}'
-                sendAt: '{{now()}}'
-                fullName: John Doe
-                email: john@microcks.io
-                age: 36
+          - name: laurent
+            summary: Example for Laurent user
+            headers:
+              {"my-app-header": 23}
+            payload:
+              {"id": "{{randomString(32)}}", "sendAt": "{{now()}}",
+              "fullName": "Laurent Broudoux", "email": "laurent@microcks.io",
+              "age": 41}
+          - name: john
+            summary: Example for John Doe user
+            headers:
+              my-app-header: 24
+            payload:
+              id: '{{randomString(32)}}'
+              sendAt: '{{now()}}'
+              fullName: John Doe
+              email: john@microcks.io
+              age: 36
+    description: The topic on which user signed up events may be consumed
+    bindings:
+      googlepubsub:
+        schemaSettings:
+          encoding: json
+          name: projects/my-project/topics/my-topic
+operations:
+  receivedUserSignedUp:
+    action: receive
+    channel:
+      $ref: '#/channels/userSignedUpChannel'
+    summary: Receive informations about user signed up
+    messages:
+      - $ref: '#/channels/userSignedUpChannel/messages/receivedUserSignedUp.message'
 components:
   messageTraits:
     commonHeaders:

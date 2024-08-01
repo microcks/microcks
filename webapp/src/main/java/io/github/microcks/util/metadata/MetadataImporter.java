@@ -30,7 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -39,16 +39,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * Mock repository importer that uses a {@code APIMetadata} YAML descriptor as a source artifact.
  * @author laurent
  */
 public class MetadataImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(MetadataImporter.class);
+   private static final Logger log = LoggerFactory.getLogger(MetadataImporter.class);
 
-   private JsonNode spec;
-   private String specContent;
+   private final JsonNode spec;
 
    /**
     * Build a new importer.
@@ -59,11 +58,11 @@ public class MetadataImporter implements MockRepositoryImporter {
       try {
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(specificationFilePath));
-         specContent = new String(bytes, Charset.forName("UTF-8"));
+         String specContent = new String(bytes, StandardCharsets.UTF_8);
 
          // Convert them to Node using Jackson object mapper.
          ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-         spec = mapper.readTree(specContent.getBytes(Charset.forName("UTF-8")));
+         spec = mapper.readTree(specContent.getBytes(StandardCharsets.UTF_8));
       } catch (Exception e) {
          log.error("Exception while parsing APIMetadata specification file " + specificationFilePath, e);
          throw new IOException("APIMetadata spec file parsing error");
@@ -110,7 +109,7 @@ public class MetadataImporter implements MockRepositoryImporter {
    /**
     * Extract the list of operations from Specification.
     */
-   private List<Operation> extractOperations() throws MockRepositoryImportException {
+   private List<Operation> extractOperations() {
       List<Operation> results = new ArrayList<>();
 
       // Iterate on specification "operations" nodes.

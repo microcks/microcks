@@ -1,0 +1,179 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIExamples
+metadata:
+  name: Movie Graph API
+  version: 1.0
+operations:
+  allFilms:
+    affFilms:
+      request:
+        body:
+          query: |-
+            query {
+              allFilms {
+                films {
+                  id
+                  title
+                  episodeID
+                  director
+                  starCount
+                  rating
+                }
+              }
+            }
+      response:
+        mediaType: application/json
+        body:
+          data:
+            allFilms:
+              films:
+                - id: ZmlsbXM6MQ==
+                  title: A New Hope
+                  episodeID: 4
+                  director: George Lucas
+                  starCount: 432
+                  rating: 4.3
+                - id: ZmlsbXM6Mg==
+                  title: The Empire Strikes Back
+                  episodeID: 5
+                  director: Irvin Kershner
+                  starCount: 433
+                  rating: 4.3
+                - id: ZmlsbXM6Mw==
+                  title: Return of the Jedi
+                  episodeID: 6
+                  director: Richard Marquand
+                  starCount: 434
+                  rating: 4.3
+                - id: ZmlsbXM6NA==
+                  title: The Phantom Menace
+                  episodeID: 1
+                  director: George Lucas
+                  starCount: 252
+                  rating: 3.2
+                - id: ZmlsbXM6NQ==
+                  title: Attack of the Clones
+                  episodeID: 2
+                  director: George Lucas
+                  starCount: 320
+                  rating: 3.9
+                - id: ZmlsbXM6Ng==
+                  title: Revenge of the Sith
+                  episodeID: 3
+                  director: George Lucas
+                  starCount: 410
+                  rating: 4.1
+  film:
+    film ZmlsbXM6MQ==:
+      request:
+        body:
+          query: |-
+            query {
+              film(id: $id) {
+                id
+                title
+                episodeID
+                director
+                starCount
+                rating
+              }
+            }
+          variables:
+            id: ZmlsbXM6MQ==
+      response:
+        mediaType: application/json
+        body:
+          data:
+            film:
+              id: ZmlsbXM6MQ==
+              title: A New Hope
+              episodeID: 4
+              director: George Lucas
+              starCount: 432
+              rating: 4.3
+    film ZmlsbXM6Mg==:
+      request:
+        body:
+          query: |-
+            query {
+              film(id: $id) {
+                id
+                title
+                episodeID
+                director
+                starCount
+                rating
+              }
+            }
+          variables:
+            id: ZmlsbXM6Mg==
+      response:
+        mediaType: application/json
+        body:
+          data:
+            film:
+              id: ZmlsbXM6Mg==
+              title: The Empire Strikes Back
+              episodeID: 5
+              director: Irvin Kershner
+              starCount: 433
+              rating: 4.3
+  addStar:
+    addStar to ZmlsbXM6Mg==:
+      request:
+        body:
+          query: |-
+            mutation AddStar($filmId: String) {
+              addStar(filmId: $filmId) {
+                id
+                title
+                episodeID
+                director
+                starCount
+                rating
+              }
+            }
+          variables:
+            filmId: ZmlsbXM6Mg==
+      response:
+        mediaType: application/json
+        body:
+          data:
+            addStar:
+              id: ZmlsbXM6Mg==
+              title: The Empire Strikes Back
+              episodeID: 5
+              director: Irvin Kershner
+              starCount: 434
+              rating: 4.3
+  addReview:
+    addReview to ZmlsbXM6Mg==:
+      request:
+        body:
+          query: |-
+            mutation AddReview($filmId: String, $review: Review) {
+              addReview(filmId: $filmId, review: $review) {
+                id
+                title
+                episodeID
+                director
+                starCount
+                rating
+              }
+            }
+          variables:
+            filmId: ZmlsbXM6Mg==
+            review:
+              rating: 5
+              commentary: "Awesome movie, I love it !"
+      response:
+        mediaType: application/json
+        body:
+          data:
+            addReview:
+              id: ZmlsbXM6Mg==
+              title: The Empire Strikes Back
+              episodeID: 5
+              director: Irvin Kershner
+              starCount: 433
+              rating: 4.4

@@ -26,27 +26,21 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 
-import org.junit.Assert;
-import org.junit.Test;
-
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class PostmanCollectionImporter.
  * @author laurent
  */
-public class PostmanCollectionImporterTest {
+class PostmanCollectionImporterTest {
 
    @Test
-   public void testSimpleProjectImportV2() {
+   void testSimpleProjectImportV2() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -154,7 +148,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testSimpleProjectImportV21() {
+   void testSimpleProjectImportV21() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -261,7 +255,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testTestAPIImport() {
+   void testTestAPIImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -422,7 +416,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testTestAPINoVersionImport() {
+   void testTestAPINoVersionImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -443,7 +437,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testTestAPIMalformedVersionImport() {
+   void testTestAPIMalformedVersionImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -464,7 +458,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testPetstoreWithTrailingDollarImport() {
+   void testPetstoreWithTrailingDollarImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -532,7 +526,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testPetstoreWithTrailingSlashImport() {
+   void testPetstoreWithTrailingSlashImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(
@@ -581,7 +575,7 @@ public class PostmanCollectionImporterTest {
    }
 
    @Test
-   public void testGraphQLCollectionImport() {
+   void testGraphQLCollectionImport() {
       PostmanCollectionImporter importer = null;
       try {
          importer = new PostmanCollectionImporter(

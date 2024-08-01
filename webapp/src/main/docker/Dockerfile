@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.3-1475
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4-1134
 
 MAINTAINER Laurent Broudoux <laurent@microcks.io>
 
@@ -26,7 +26,7 @@ ENV JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar \
     OTEL_METRICS_EXPORTER=otlp \
     OTEL_LOGS_EXPORTER=otlp \
     OTEL_TRACES_EXPORTER=otlp \
-    OTEL_RESOURCE_ATTRIBUTES=service.name=microcks,service.namespace=microcks-ns,service.instance.id=microcks-cnt,service.version=1.9.0
+    OTEL_RESOURCE_ATTRIBUTES=service.name=microcks,service.namespace=microcks-ns,service.instance.id=microcks-cnt,service.version=1.10.0
 
 
 # Set working directory at /deployments

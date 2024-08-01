@@ -15,7 +15,10 @@
  */
 package io.github.microcks.util.script;
 
-import org.junit.Test;
+import io.github.microcks.service.StateStore;
+
+import org.jetbrains.annotations.Nullable;
+import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 import javax.script.ScriptEngine;
@@ -24,18 +27,16 @@ import javax.script.ScriptEngineManager;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class ScriptEngineBinder class.
  * @author laurent
  */
-public class ScriptEngineBinderTest {
+class ScriptEngineBinderTest {
 
    @Test
-   public void testRequestContentIsBound() {
+   void testRequestContentIsBound() {
       String script = """
             return mockRequest.requestContent;
             """;
@@ -46,7 +47,7 @@ public class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null);
+         ScriptEngineBinder.bindEnvironment(se, body, null, null);
          String result = (String) se.eval(script);
 
          assertEquals(body, result);
@@ -56,7 +57,7 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testRequestContentHeadersAreBound() {
+   void testRequestContentHeadersAreBound() {
       String script = """
             def headers = mockRequest.getRequestHeaders()
             log.info("headers: " + headers)
@@ -71,7 +72,7 @@ public class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, request);
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, request);
          String result = (String) se.eval(script);
 
          assertEquals("bar", result);
@@ -81,7 +82,7 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testRequestContextIsModified() {
+   void testRequestContextIsModified() {
       String script = """
             requestContext.foo = "bar";
             return mockRequest.requestContent;
@@ -94,7 +95,7 @@ public class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null);
          String result = (String) se.eval(script);
 
          assertEquals(body, result);
@@ -106,7 +107,60 @@ public class ScriptEngineBinderTest {
    }
 
    @Test
-   public void testMicrocksXmlHolder() {
+   void testStateStoreIsBoundAndAccessed() {
+      String script = """
+            def foo = store.get("foo");
+            def bar = store.put("bar", "barValue");
+            store.delete("baz");
+            return foo;
+            """;
+
+      StateStore store = new StateStore() {
+         private final Map<String, String> map = new HashMap<>();
+
+         @Override
+         public void put(String key, String value) {
+            map.put(key, value);
+         }
+
+         @Override
+         public void put(String key, String value, int secondsTTL) {
+            map.put(key, value);
+         }
+
+         @Nullable
+         @Override
+         public String get(String key) {
+            return map.get(key);
+         }
+
+         @Override
+         public void delete(String key) {
+            map.remove(key);
+         }
+      };
+
+      ScriptEngineManager sem = new ScriptEngineManager();
+      Map<String, Object> context = new HashMap<>();
+      store.put("foo", "fooValue");
+      store.put("baz", "bazValue");
+
+      try {
+         // Evaluating request with script coming from operation dispatcher rules.
+         ScriptEngine se = sem.getEngineByExtension("groovy");
+         ScriptEngineBinder.bindEnvironment(se, "body", context, store);
+         String result = (String) se.eval(script);
+
+         assertEquals("fooValue", result);
+         assertEquals("barValue", store.get("bar"));
+         assertNull(store.get("baz"));
+      } catch (Exception e) {
+         fail("Exception should no be thrown");
+      }
+   }
+
+   @Test
+   void testMicrocksXmlHolder() {
       String body = """
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
                 <soapenv:Header/>
@@ -138,18 +192,17 @@ public class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null);
          String result = (String) se.eval(script);
 
          assertEquals("Andrew Response", result);
       } catch (Exception e) {
-         e.printStackTrace();
          fail("Exception should no be thrown");
       }
    }
 
    @Test
-   public void testEviwareXmlHolder() {
+   void testEviwareXmlHolder() {
       String body = """
             <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
                 <soapenv:Header/>
@@ -181,7 +234,7 @@ public class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null);
          script = ScriptEngineBinder.ensureSoapUICompatibility(script);
          String result = (String) se.eval(script);
 

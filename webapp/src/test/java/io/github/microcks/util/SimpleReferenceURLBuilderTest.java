@@ -15,26 +15,26 @@
  */
 package io.github.microcks.util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * This is a test case for SimpleReferenceURLBuilder.
  * @author laurent
  */
-public class SimpleReferenceURLBuilderTest {
+class SimpleReferenceURLBuilderTest {
 
    private static final String BASE_URL = "https://raw.githubusercontent.com/microcks/microcks/main/samples/API_Pastry_1.0.0-openapi.yaml";
 
    @Test
-   public void testGetFileName() {
+   void testGetFileName() {
       SimpleReferenceURLBuilder builder = new SimpleReferenceURLBuilder();
       assertEquals("API_Pastry_1.0.0-openapi.yaml", builder.getFileName(BASE_URL, null));
    }
 
    @Test
-   public void testBuildRemoteURL() {
+   void testBuildRemoteURL() {
 
       SimpleReferenceURLBuilder builder = new SimpleReferenceURLBuilder();
       assertEquals("https://raw.githubusercontent.com/microcks/microcks/main/samples/schema-ref.yml",

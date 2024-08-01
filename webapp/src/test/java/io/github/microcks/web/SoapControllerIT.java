@@ -17,7 +17,8 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Service;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -26,16 +27,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test case for the Soap mock controller.
  * @author laurent
  */
-public class SoapControllerIT extends AbstractBaseIT {
+class SoapControllerIT extends AbstractBaseIT {
 
    @Test
-   public void testHelloSoapWSMocking() {
+   void testHelloSoapWSMocking() {
       // Upload Hello Service SoapUI project.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml", true);
 
@@ -105,7 +106,7 @@ public class SoapControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testHelloRandomSoapWSMocking() {
+   void testHelloRandomSoapWSMocking() {
       // given list of responses
       List<String> okResponses = new ArrayList<>();
       List<String> koResponses = new ArrayList<>();
@@ -162,7 +163,7 @@ public class SoapControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxy() {
+   void testProxy() {
       // Upload SoapUI projects for proxy test.
       uploadArtifactFile(
             "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);
@@ -185,7 +186,7 @@ public class SoapControllerIT extends AbstractBaseIT {
    }
 
    @Test
-   public void testProxyFallback() {
+   void testProxyFallback() {
       // Upload SoapUI projects for proxy test.
       uploadArtifactFile(
             "target/test-classes/io/github/microcks/util/soapui/HelloService-to-set-proxy-soapui-project.xml", true);

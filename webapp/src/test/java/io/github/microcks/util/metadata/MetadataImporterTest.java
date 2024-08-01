@@ -20,27 +20,26 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.MockRepositoryImportException;
 
-import org.junit.Test;
-
 import java.io.IOException;
+
+import org.junit.jupiter.api.Test;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class MetadataImporter.
  * @author laurent
  */
-public class MetadataImporterTest {
+class MetadataImporterTest {
 
    @Test
-   public void testAPIMetadataImport() {
+   void testAPIMetadataImport() {
       MetadataImporter importer = null;
       try {
          importer = new MetadataImporter(
                "target/test-classes/io/github/microcks/util/metadata/hello-grpc-v1-metadata.yml");
       } catch (IOException ioe) {
-         ioe.printStackTrace();
          fail("Exception should not be thrown");
       }
 

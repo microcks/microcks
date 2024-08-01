@@ -16,6 +16,8 @@
 package io.github.microcks.util.grpc;
 
 import com.google.protobuf.DescriptorProtos;
+import org.junit.jupiter.api.Test;
+
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
@@ -23,25 +25,21 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Base64;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for ProtobufImporter class.
  * @author laurent
  */
-public class ProtobufImporterTest {
+class ProtobufImporterTest {
 
    @Test
-   public void testSimpleProtobufImport() {
+   void testSimpleProtobufImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", null);
@@ -93,7 +91,7 @@ public class ProtobufImporterTest {
    }
 
    @Test
-   public void testProtobufWithOptionsImport() {
+   void testProtobufWithOptionsImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/hello-v1-option.proto",
@@ -160,7 +158,7 @@ public class ProtobufImporterTest {
    }
 
    @Test
-   public void testProtobufWithDependenciesImport() {
+   void testProtobufWithDependenciesImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/goodbye-v1.proto", null);
@@ -216,7 +214,7 @@ public class ProtobufImporterTest {
    }
 
    @Test
-   public void testProtobufWithRemoteDependenciesImport() {
+   void testProtobufWithRemoteDependenciesImport() {
       ProtobufImporter importer = null;
       try {
          importer = new ProtobufImporter("target/test-classes/io/github/microcks/util/grpc/remote/goodbye-v1.proto",

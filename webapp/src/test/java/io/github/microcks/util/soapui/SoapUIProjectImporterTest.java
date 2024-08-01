@@ -25,22 +25,21 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.util.MockRepositoryImportException;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class SoapUIProjectImporter.
  * @author laurent
  */
-public class SoapUIProjectImporterTest {
+class SoapUIProjectImporterTest {
 
    @Test
-   public void testSimpleProjectImport() {
+   void testSimpleProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -79,12 +78,12 @@ public class SoapUIProjectImporterTest {
       assertEquals(2, resources.size());
 
       Resource resource = resources.get(0);
-      Assert.assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
+      Assertions.assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
       assertEquals("HelloServiceSoapBinding-1.2.xml", resource.getName());
       assertNotNull(resource.getContent());
 
       resource = resources.get(1);
-      Assert.assertEquals(ResourceType.WSDL, resource.getType());
+      Assertions.assertEquals(ResourceType.WSDL, resource.getType());
       assertEquals("HelloServiceSoapBinding-1.2.wsdl", resource.getName());
       assertNotNull(resource.getContent());
 
@@ -119,7 +118,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleScriptWithSOAPFaultProjectImport() {
+   void testSimpleScriptWithSOAPFaultProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -198,7 +197,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleScriptProjectImport() {
+   void testSimpleScriptProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -272,7 +271,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testComplexProjectImport() {
+   void testComplexProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -314,7 +313,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleRestProjectImport() {
+   void testSimpleRestProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -438,7 +437,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testSimpleProjectNoVersionImport() {
+   void testSimpleProjectNoVersionImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -459,7 +458,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testHelloAPIProjectImport() {
+   void testHelloAPIProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -478,7 +477,7 @@ public class SoapUIProjectImporterTest {
    }
 
    @Test
-   public void testMultipleInterfacesProjectImport() {
+   void testMultipleInterfacesProjectImport() {
       SoapUIProjectImporter importer = null;
       try {
          importer = new SoapUIProjectImporter(
@@ -503,18 +502,18 @@ public class SoapUIProjectImporterTest {
       List<Resource> resources = importer.getResourceDefinitions(services.get(0));
       assertEquals(2, resources.size());
       Resource resource = resources.get(0);
-      Assert.assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
+      Assertions.assertEquals(ResourceType.SOAP_UI_PROJECT, resource.getType());
       assertEquals("DriverSoap-1.0.xml", resource.getName());
       assertNotNull(resource.getContent());
 
       resource = resources.get(1);
-      Assert.assertEquals(ResourceType.WSDL, resource.getType());
+      Assertions.assertEquals(ResourceType.WSDL, resource.getType());
       assertEquals("DriverSoap-1.0.wsdl", resource.getName());
       assertNotNull(resource.getContent());
    }
 
    @Test
-   public void testPartNamesCorrectResolution() {
+   void testPartNamesCorrectResolution() {
       // Initialized from https://github.com/microcks/microcks/issues/680.
       SoapUIProjectImporter importer = null;
       try {
@@ -548,7 +547,7 @@ public class SoapUIProjectImporterTest {
       assertEquals(3, resources.size());
 
       Resource resource = resources.get(1);
-      Assert.assertEquals(ResourceType.XSD, resource.getType());
+      Assertions.assertEquals(ResourceType.XSD, resource.getType());
       assertEquals("Suivi_Parcours_Carte_2.0.xsd", resource.getName());
    }
 }
