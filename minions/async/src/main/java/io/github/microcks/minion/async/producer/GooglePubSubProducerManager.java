@@ -161,7 +161,7 @@ public class GooglePubSubProducerManager {
                try {
                   return engine.getValue(firstValue);
                } catch (Exception e) {
-                  logger.error("Failing at evaluating template " + firstValue, e);
+                  logger.error("Failed at evaluating template " + firstValue, e);
                   return firstValue;
                }
             }
