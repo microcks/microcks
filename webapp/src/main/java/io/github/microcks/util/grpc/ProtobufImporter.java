@@ -115,6 +115,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
    public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
       List<Service> results = new ArrayList<>();
 
+      // Prepare dependencies.
+      List<Descriptors.FileDescriptor> dependencies = new ArrayList<>();
       for (DescriptorProtos.FileDescriptorProto fdp : fds.getFileList()) {
          // Retrieve version from package name.
          // org.acme package => org.acme version
@@ -125,9 +127,14 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
          Descriptors.FileDescriptor fd = null;
          try {
-            fd = Descriptors.FileDescriptor.buildFrom(fdp, new Descriptors.FileDescriptor[] {}, true);
+            fd = Descriptors.FileDescriptor.buildFrom(fdp,
+                  dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
+            dependencies.add(fd);
          } catch (Descriptors.DescriptorValidationException e) {
-            throw new RuntimeException(e);
+            log.error("Exception while building Protobuf descriptor, probably a missing dependency issue", e);
+            throw new MockRepositoryImportException(
+                  "Exception while building Protobuf descriptor, probably a missing dependency issue: "
+                        + e.getMessage());
          }
 
          for (Descriptors.ServiceDescriptor sd : fd.getServices()) {

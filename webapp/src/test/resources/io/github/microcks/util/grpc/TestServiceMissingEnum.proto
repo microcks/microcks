@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package hello;
+
+import "protos/common.proto";
+
+service TestService {
+    rpc unary(UnaryRequest) returns (UnaryResponse) {}  
+}
+
+message UnaryRequest {   
+    // Comment this line, import will work 
+    EnumTest type = 1;
+    Filters filters = 2;
+}
+
+message UnaryResponse {
+    string message = 1;
+}
