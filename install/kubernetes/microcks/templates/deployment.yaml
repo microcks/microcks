@@ -230,7 +230,7 @@ spec:
     spec:
       containers:
       - name: postman-runtime
-        image: {{ include "postman.image" . }}
+        image: {{ include "microcks.postman.image" . }}
         ports:
         - containerPort: 3000
           protocol: TCP
@@ -308,7 +308,7 @@ spec:
       {{- end }}
       containers:
       - name: mongodb
-        image: {{ include "mongodb.image" . }}
+        image: {{ include "microcks.mongodb.image" . }}
         args: ["--dbpath","/var/lib/mongodb/data"]
         ports:
         - containerPort: 27017
@@ -415,7 +415,7 @@ spec:
     spec:
       containers:
       - name: keycloak-server
-        image: {{ include "keycloak.image" . }}
+        image: {{ include "microcks.keycloak.image" . }}
         resources:
           {{- toYaml .Values.keycloak.resources | nindent 10 }}
         ports:
@@ -562,7 +562,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
       - name: keycloak-postgresql
-        image: {{ include "keycloakPostgres.image" . }}
+        image: {{ include "microcks.keycloakPostgres.image" . }}
         args: ["-c", "max_connections=100", "-c", "shared_buffers=12MB"]
         imagePullPolicy: IfNotPresent
         ports:
@@ -646,7 +646,7 @@ spec:
     spec:
       containers:
       - name: async-minion
-        image: {{ include "async-minion.image" . }}
+        image: {{ include "microcks.async-minion.image" . }}
         imagePullPolicy: IfNotPresent
         env:
           - name: QUARKUS_PROFILE
