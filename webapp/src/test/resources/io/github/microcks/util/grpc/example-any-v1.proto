@@ -1,0 +1,25 @@
+syntax = "proto3";
+package example.v1;
+
+import "google/protobuf/any.proto";
+
+service ExampleServiceV1 {
+  rpc Example (ExampleMessage) returns (ExampleResponseMessage) {}
+}
+
+message ExampleMessage {
+  message ExamplePayload {
+    google.protobuf.Any parameters = 1;
+  }
+  ExamplePayload payload = 1;
+}
+
+message ExampleResponseMessage {
+  message ExampleResponsePayload {
+  }
+  ExampleResponsePayload payload = 1;
+}
+
+message ExampleParametersV1 {
+  string text = 1;
+}

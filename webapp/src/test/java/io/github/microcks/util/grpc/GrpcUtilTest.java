@@ -16,6 +16,7 @@
 package io.github.microcks.util.grpc;
 
 import com.google.protobuf.Descriptors;
+import com.google.protobuf.TypeRegistry;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,5 +57,26 @@ class GrpcUtilTest {
 
       assertNotNull(desc);
       assertEquals("io.github.microcks.grpc.goodbye.v1.GoodbyeService.goodbye", desc.getFullName());
+   }
+
+   @Test
+   void testBuildTypeRegistry() {
+      // This is the ExampleService from example-any-v1.proto using Any typed parameter and requiring a TypeRegistry.
+      String base64ProtobufDescriptor = "Ct0BChlnb29nbGUvcHJvdG9idWYvYW55LnByb3RvEg9nb29nbGUucHJvdG9idWYiNgoDQW55EhkKCHR5cGVfdXJsGAEgASgJUgd0eXBlVXJsEhQKBXZhbHVlGAIgASgMUgV2YWx1ZUJvChNjb20uZ29vZ2xlLnByb3RvYnVmQghBbnlQcm90b1ABWiVnaXRodWIuY29tL2dvbGFuZy9wcm90b2J1Zi9wdHlwZXMvYW55ogIDR1BCqgIeR29vZ2xlLlByb3RvYnVmLldlbGxLbm93blR5cGVzYgZwcm90bzMK/AMKFWV4YW1wbGVfc2VydmljZS5wcm90bxIKZXhhbXBsZS52MRoZZ29vZ2xlL3Byb3RvYnVmL2FueS5wcm90byKdAQoORXhhbXBsZU1lc3NhZ2USQwoHcGF5bG9hZBgBIAEoCzIpLmV4YW1wbGUudjEuRXhhbXBsZU1lc3NhZ2UuRXhhbXBsZVBheWxvYWRSB3BheWxvYWQaRgoORXhhbXBsZVBheWxvYWQSNAoKcGFyYW1ldGVycxgBIAEoCzIULmdvb2dsZS5wcm90b2J1Zi5BbnlSCnBhcmFtZXRlcnMihwEKFkV4YW1wbGVSZXNwb25zZU1lc3NhZ2USUwoHcGF5bG9hZBgBIAEoCzI5LmV4YW1wbGUudjEuRXhhbXBsZVJlc3BvbnNlTWVzc2FnZS5FeGFtcGxlUmVzcG9uc2VQYXlsb2FkUgdwYXlsb2FkGhgKFkV4YW1wbGVSZXNwb25zZVBheWxvYWQiKQoTRXhhbXBsZVBhcmFtZXRlcnNWMRISCgR0ZXh0GAEgASgJUgR0ZXh0Ml8KEEV4YW1wbGVTZXJ2aWNlVjESSwoHRXhhbXBsZRIaLmV4YW1wbGUudjEuRXhhbXBsZU1lc3NhZ2UaIi5leGFtcGxlLnYxLkV4YW1wbGVSZXNwb25zZU1lc3NhZ2UiAGIGcHJvdG8z";
+
+      TypeRegistry registry = null;
+      try {
+         registry = GrpcUtil.buildTypeRegistry(base64ProtobufDescriptor);
+      } catch (Exception e) {
+         fail("No exception should be thrown while parsing protobuf descriptor and building registry");
+      }
+
+      assertNotNull(registry);
+      assertNotNull(registry.find("example.v1.ExampleParametersV1"));
+      assertNotNull(registry.find("example.v1.ExampleMessage"));
+      assertNotNull(registry.find("example.v1.ExampleMessage.ExamplePayload"));
+      assertNotNull(registry.find("example.v1.ExampleResponseMessage"));
+      assertNotNull(registry.find("example.v1.ExampleResponseMessage.ExampleResponsePayload"));
+      assertNotNull(registry.find("google.protobuf.Any"));
    }
 }

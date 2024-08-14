@@ -38,6 +38,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
 import io.github.microcks.util.grpc.GrpcUtil;
 import io.github.microcks.util.script.ScriptEngineBinder;
@@ -183,12 +184,14 @@ public class GrpcServerCallHandler {
                }
                Resource pbResource = resources.get(0);
 
+               // Get the method descriptor and type registry.
                Descriptors.MethodDescriptor md = GrpcUtil.findMethodDescriptor(pbResource.getContent(), serviceName,
                      operationName);
+               TypeRegistry registry = GrpcUtil.buildTypeRegistry(pbResource.getContent());
 
                // Now parse the incoming message.
                DynamicMessage inMsg = DynamicMessage.parseFrom(md.getInputType(), bytes);
-               String jsonBody = JsonFormat.printer().print(inMsg);
+               String jsonBody = JsonFormat.printer().usingTypeRegistry(registry).print(inMsg);
                log.debug("Request body: {}", jsonBody);
 
                //
@@ -201,8 +204,8 @@ public class GrpcServerCallHandler {
 
                // No filter to apply, just check that we have a response.
                if (!responses.isEmpty()) {
-                  manageResponseTransmission(streamObserver, service, grpcOperation, md, dispatchContext, jsonBody,
-                        responses.get(0), startTime);
+                  manageResponseTransmission(streamObserver, service, grpcOperation, md, registry, dispatchContext,
+                        jsonBody, responses.get(0), startTime);
                } else {
                   // No response found.
                   log.info("No appropriate response found for this input {}, returning an error", jsonBody);
@@ -300,8 +303,9 @@ public class GrpcServerCallHandler {
 
       /** Manage the transmission of response on observer + all the common rendering mechanisms. */
       private void manageResponseTransmission(StreamObserver<byte[]> streamObserver, Service service,
-            Operation grpcOperation, Descriptors.MethodDescriptor md, DispatchContext dispatchContext,
-            String requestJsonBody, Response response, long startTime) throws InvalidProtocolBufferException {
+            Operation grpcOperation, Descriptors.MethodDescriptor md, TypeRegistry registry,
+            DispatchContext dispatchContext, String requestJsonBody, Response response, long startTime)
+            throws InvalidProtocolBufferException {
          // Use a builder for out type with a Json parser to merge content and build outMsg.
          DynamicMessage.Builder outBuilder = DynamicMessage.newBuilder(md.getOutputType());
 
@@ -309,7 +313,7 @@ public class GrpcServerCallHandler {
          String responseContent = MockControllerCommons.renderResponseContent(requestJsonBody,
                dispatchContext.requestContext(), response);
 
-         JsonFormat.parser().merge(responseContent, outBuilder);
+         JsonFormat.parser().usingTypeRegistry(registry).merge(responseContent, outBuilder);
          DynamicMessage outMsg = outBuilder.build();
 
          // Setting delay to default one if not set.

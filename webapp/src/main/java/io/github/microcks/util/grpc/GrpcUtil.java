@@ -18,6 +18,7 @@ package io.github.microcks.util.grpc;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.TypeRegistry;
 import io.grpc.MethodDescriptor;
 import io.grpc.protobuf.services.BinaryLogProvider;
 
@@ -63,6 +64,20 @@ public class GrpcUtil {
    }
 
    /**
+    * Get the Protobuf FileDescriptorSet from a base64 encoded representation of the proto descriptor.
+    * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
+    * @return A Protobuf FileDescriptorSet
+    * @throws InvalidProtocolBufferException
+    */
+   public static DescriptorProtos.FileDescriptorSet getFileDescriptorSet(String base64ProtobufDescriptor)
+         throws InvalidProtocolBufferException {
+      // Protobuf binary descriptor has been encoded in base64 to be stored as a string.
+      // Decode it and recreate DescriptorProtos objects.
+      byte[] decodedBinaryPB = Base64.getDecoder().decode(base64ProtobufDescriptor.getBytes(StandardCharsets.UTF_8));
+      return DescriptorProtos.FileDescriptorSet.parseFrom(decodedBinaryPB);
+   }
+
+   /**
     * Find a Protobuf file descriptor using a base64 encoded representation of the proto descriptor + symbol name.
     * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
     * @param symbol                   The name of a symbol to get descriptor for (can be a service, a message type or an
@@ -74,10 +89,8 @@ public class GrpcUtil {
    public static Descriptors.FileDescriptor findFileDescriptorBySymbol(String base64ProtobufDescriptor, String symbol)
          throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
 
-      // Protobuf binary descriptor has been encoded in base64 to be stored as a string.
-      // Decode it and recreate DescriptorProtos objects.
-      byte[] decodedBinaryPB = Base64.getDecoder().decode(base64ProtobufDescriptor.getBytes(StandardCharsets.UTF_8));
-      DescriptorProtos.FileDescriptorSet fds = DescriptorProtos.FileDescriptorSet.parseFrom(decodedBinaryPB);
+      // Get Descriptor objects corresponding to the base64 encoded descriptor.
+      DescriptorProtos.FileDescriptorSet fds = getFileDescriptorSet(base64ProtobufDescriptor);
 
       if (fds.getFileCount() > 1) {
          // Build dependencies.
@@ -96,6 +109,36 @@ public class GrpcUtil {
          }
       }
       return Descriptors.FileDescriptor.buildFrom(fds.getFile(0), new Descriptors.FileDescriptor[] {}, true);
+   }
+
+   /**
+    * Build a TypeRegistry for JSON parsing/serialization. Use the base64 encoded representation of the proto descriptor
+    * to extract types information.
+    * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
+    * @return A TYpeRegistry instance.
+    * @throws InvalidProtocolBufferException            If representation is not understood as protobuf descriptor.
+    * @throws Descriptors.DescriptorValidationException If included FileDescriptor cannot be validated.
+    */
+   public static TypeRegistry buildTypeRegistry(String base64ProtobufDescriptor)
+         throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
+      // Get Descriptor objects corresponding to the base64 encoded descriptor.
+      DescriptorProtos.FileDescriptorSet fds = getFileDescriptorSet(base64ProtobufDescriptor);
+
+      // Initialize a new TypeRegistry builder.
+      TypeRegistry.Builder registryBuilder = TypeRegistry.newBuilder();
+
+      // Build dependencies.
+      List<Descriptors.FileDescriptor> dependencies = new ArrayList<>();
+      for (int i = 0; i < fds.getFileCount(); i++) {
+         // Build descriptor and add to dependencies.
+         Descriptors.FileDescriptor fd = Descriptors.FileDescriptor.buildFrom(fds.getFile(i),
+               dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
+         dependencies.add(fd);
+
+         registryBuilder.add(fd.getMessageTypes());
+      }
+
+      return registryBuilder.build();
    }
 
    /**
