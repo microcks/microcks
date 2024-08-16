@@ -31,7 +31,7 @@ tls.key: {{ $cert.Key | b64enc }}
 {{/*
 Generate certificates for keycloak ingress
 */}}
-{{- define "keycloak-ingress.gen-certs" -}}
+{{- define "microcks.keycloak-ingress.gen-certs" -}}
 {{- $cert := genSelfSignedCert .Values.keycloak.url nil (list .Values.keycloak.url) 365 -}}
 tls.crt: {{ $cert.Cert | b64enc }}
 tls.key: {{ $cert.Key | b64enc }}
@@ -77,7 +77,7 @@ Generate common annotations
 Create image name value
 ( dict "imageRoot" .Values.path.to.image "context" $ )
 */}}
-{{- define "renderImage" -}}
+{{- define "microcks.renderImage" -}}
 {{- $ref := join "/" (compact (list .imageRoot.registry .imageRoot.repository)) -}}
 {{- join "" (compact (list $ref (ternary ":" "@" (empty .imageRoot.digest)) (default .imageRoot.tag .imageRoot.digest))) -}}
 {{- end -}}
@@ -86,40 +86,40 @@ Create image name value
 Compute microcks image full name
 */}}
 {{- define "microcks.image" -}}
-{{- include "renderImage" ( dict "imageRoot" .Values.microcks.image "context" $ ) -}}
+{{- include "microcks.renderImage" ( dict "imageRoot" .Values.microcks.image "context" $ ) -}}
 {{- end -}}
 
 {{/*
 Compute postman image full name
 */}}
-{{- define "postman.image" -}}
-{{- include "renderImage" ( dict "imageRoot" .Values.postman.image "context" $ ) -}}
+{{- define "microcks.postman.image" -}}
+{{- include "microcks.renderImage" ( dict "imageRoot" .Values.postman.image "context" $ ) -}}
 {{- end -}}
 
 {{/*
 Compute mongodb image full name
 */}}
-{{- define "mongodb.image" -}}
-{{- include "renderImage" ( dict "imageRoot" .Values.mongodb.image "context" $ ) -}}
+{{- define "microcks.mongodb.image" -}}
+{{- include "microcks.renderImage" ( dict "imageRoot" .Values.mongodb.image "context" $ ) -}}
 {{- end -}}
 
 {{/*
 Compute keycloak image full name
 */}}
-{{- define "keycloak.image" -}}
-{{- include "renderImage" ( dict "imageRoot" .Values.keycloak.image "context" $ ) -}}
+{{- define "microcks.keycloak.image" -}}
+{{- include "microcks.renderImage" ( dict "imageRoot" .Values.keycloak.image "context" $ ) -}}
 {{- end -}}
 
 {{/*
 Compute keycloak postgres image full name
 */}}
-{{- define "keycloakPostgres.image" -}}
-{{- include "renderImage" ( dict "imageRoot" .Values.keycloak.postgresImage "context" $ ) -}}
+{{- define "microcks.keycloakPostgres.image" -}}
+{{- include "microcks.renderImage" ( dict "imageRoot" .Values.keycloak.postgresImage "context" $ ) -}}
 {{- end -}}
 
 {{/*
 Compute async-minion image full name
 */}}
-{{- define "async-minion.image" -}}
-{{- include "renderImage" ( dict "imageRoot" .Values.features.async.image "context" $ ) -}}
+{{- define "microcks.async-minion.image" -}}
+{{- include "microcks.renderImage" ( dict "imageRoot" .Values.features.async.image "context" $ ) -}}
 {{- end -}}
