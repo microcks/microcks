@@ -595,9 +595,12 @@ spec:
               name: "{{ .Values.appName }}-keycloak-admin"
         - name: POSTGRES_DB
           value: root
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
         volumeMounts:
           - name: "{{ .Values.appName }}-keycloak-postgresql-data"
             mountPath: "/var/lib/postgresql/data"
+            subPath: pgdata
       volumes:
       - name: "{{ .Values.appName }}-keycloak-postgresql-data"
         {{- if .Values.keycloak.persistent }}
