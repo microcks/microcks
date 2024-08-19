@@ -34,7 +34,11 @@ spec:
         image: {{ include "microcks.image" . }}
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8080
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: grpc
+          containerPort: 9090
           protocol: TCP
         env:
           - name: JAVA_OPTIONS
@@ -232,7 +236,8 @@ spec:
       - name: postman-runtime
         image: {{ include "microcks.postman.image" . }}
         ports:
-        - containerPort: 3000
+        - name: http
+          containerPort: 3000
           protocol: TCP
         env:
         - name: LOG_LEVEL
@@ -311,7 +316,8 @@ spec:
         image: {{ include "microcks.mongodb.image" . }}
         args: ["--dbpath","/var/lib/mongodb/data"]
         ports:
-        - containerPort: 27017
+        - name: mongodb
+          containerPort: 27017
           protocol: TCP
         readinessProbe:
           timeoutSeconds: 1
@@ -566,7 +572,8 @@ spec:
         args: ["-c", "max_connections=100", "-c", "shared_buffers=12MB"]
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5432
+        - name: postgres
+          containerPort: 5432
           protocol: TCP
         readinessProbe:
           timeoutSeconds: 1
@@ -722,7 +729,8 @@ spec:
           {{- toYaml .Values.features.async.env | nindent 10 }}
           {{- end }}
         ports:
-        - containerPort: 8080
+        - name: http
+          containerPort: 8080
           protocol: TCP
         livenessProbe:
           httpGet:
