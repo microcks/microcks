@@ -2189,11 +2189,11 @@ components:
           description: Reserved for future usage
           type: string
         createdDate:
-          format: int32
+          format: int64
           description: Creation timestamp for this ImportJob
           type: integer
         lastImportDate:
-          format: int32
+          format: int64
           description: Timestamp of the last import
           type: integer
         lastImportError:
