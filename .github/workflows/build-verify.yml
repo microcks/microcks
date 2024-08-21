@@ -10,6 +10,7 @@ on:
       - 'CHANGELOG*'
       - 'ROADMAP*'
       - 'GOVERNANCE*'
+      - 'CODE_OF_CONDUCT*'
   pull_request:
     paths-ignore:
       - '.github/**'
@@ -20,6 +21,7 @@ on:
       - 'CHANGELOG*'
       - 'ROADMAP*'
       - 'GOVERNANCE*'
+      - 'CODE_OF_CONDUCT*'
 permissions: read-all
 jobs:
   build-verify-package:
