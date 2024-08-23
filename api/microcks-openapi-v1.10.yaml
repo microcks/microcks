@@ -392,10 +392,21 @@ paths:
       summary: Get Secret
       description: Retrieve a Secret
     put:
+      requestBody:
+        description: The Secret to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        required: true
       tags:
       - config
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
           description: Updated Secret
       security:
       - jwt-bearer:
