@@ -1104,6 +1104,31 @@ paths:
       operationId: downloadArtifact
       summary: Download an artifact
       description: Ask Microcks to download an artifact and import it
+  /secrets/search:
+    get:
+      tags:
+      - config
+      parameters:
+      - name: name
+        description: Search using this name-like criterion
+        schema:
+          type: string
+        in: query
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Secret'
+          description: List of found Secrets (filtered according search criteria)
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: SearchSecrets
+      summary: Search for Secrets
 components:
   schemas:
     TestCaseResult:
