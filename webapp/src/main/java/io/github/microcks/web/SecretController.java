@@ -53,7 +53,7 @@ public class SecretController {
 
    /**
     * Build a new SecretController with its dependencies.
-    * @param secretRepository  to have access to Secrets definition
+    * @param secretRepository to have access to Secrets definition
     */
    public SecretController(SecretRepository secretRepository) {
       this.secretRepository = secretRepository;
