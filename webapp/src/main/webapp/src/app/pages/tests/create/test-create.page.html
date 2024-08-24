@@ -71,7 +71,7 @@
                 <span *ngIf="service.type != 'EVENT'">The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).</span>
                 <span *ngIf="service.type === 'EVENT'">The runner to use for this test (for now we only have ASYNC API SCHEMA compliance).</span>
                 <span class="learn-more-inline">
-                  <a href="https://microcks.io/documentation/using/tests/" target="blanck">Learn More 
+                  <a href="https://microcks.io/documentation/references/test-endpoints/" target="blanck">Learn More
                     <i class="fa fa-external-link" aria-hidden="true"></i>
                   </a>
                 </span>
@@ -196,7 +196,7 @@
               <small>This section allows you to add/override requests headers with global or operation specific ones. Use comma-separated string for multiple values for same header.</small>
               <div class="control-group operation-headers">
                   <h5 class="subsection">Globals headers</h5>
-                  <div class="key-value-editor-entry key-value-editor-entry-header" 
+                  <div class="key-value-editor-entry key-value-editor-entry-header"
                       *ngIf="operationsHeaders['globals'] != null && operationsHeaders['globals'].length > 0">
                     <div class="key-value-editor-header key-header">Name</div>
                     <div class="key-value-editor-header value-header">Values</div>
@@ -220,7 +220,7 @@
                 </div>
               <div class="control-group operation-headers" *ngFor="let operation of service.operations; index as i;">
                 <h5 class="subsection">Headers for {{ operation.name }}</h5>
-                <div class="key-value-editor-entry key-value-editor-entry-header" 
+                <div class="key-value-editor-entry key-value-editor-entry-header"
                     *ngIf="operationsHeaders[operation.name] != null && operationsHeaders[operation.name].length > 0">
                   <div class="key-value-editor-header key-header">Name</div>
                   <div class="key-value-editor-header value-header">Values</div>
@@ -278,12 +278,12 @@
           For Event based-API through <a href="https://microcks.io/documentation/using/asyncapi" target="blank">AsyncAPI testing <i class="fa fa-external-link" aria-hidden="true"></i></a>, the Test Endpoint pattern is depending on the protocole binding you’d like to test.
         </p>
         <p>
-          Microcks supports <a (click)="testEndpoint = 'kafka://'"><code>kafka://</code></a>, <a (click)="testEndpoint = 'mqtt://'"><code>mqtt://</code></a>, 
-          <a (click)="testEndpoint = 'ws://'"><code>ws://</code></a>, <a (click)="testEndpoint = 'amqp://'"><code>amqp://</code></a>, 
-          <a (click)="testEndpoint = 'nats://'"><code>nats://</code></a>, <a (click)="testEndpoint = 'googlepubsub://'"><code>googlepubsub://</code></a>, 
+          Microcks supports <a (click)="testEndpoint = 'kafka://'"><code>kafka://</code></a>, <a (click)="testEndpoint = 'mqtt://'"><code>mqtt://</code></a>,
+          <a (click)="testEndpoint = 'ws://'"><code>ws://</code></a>, <a (click)="testEndpoint = 'amqp://'"><code>amqp://</code></a>,
+          <a (click)="testEndpoint = 'nats://'"><code>nats://</code></a>, <a (click)="testEndpoint = 'googlepubsub://'"><code>googlepubsub://</code></a>,
           <a (click)="testEndpoint = 'sns://'"><code>sns://</code></a> and <a (click)="testEndpoint = 'sqs://'"><code>sqs://</code></a> bindings.
         </p>
-      
+
         <div *ngIf="testEndpoint && testEndpoint.startsWith('kafka:')">
           <br/>
           <h5>Kafka endpoint pattern</h5>
@@ -420,7 +420,7 @@
         <h4>Additional Operations Headers</h4>
 
         <p>
-          Additional Operations Headers allows you to add or override requests headers with your own values. 
+          Additional Operations Headers allows you to add or override requests headers with your own values.
           They can be used to transfer additional security materials, traceability elements or any other needs.
         </p>
         <p>
