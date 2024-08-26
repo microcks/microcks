@@ -341,6 +341,11 @@ public class ExamplesImporter implements MockRepositoryImporter {
       } else if (responseNode.has("dispatchCriteria")) {
          dispatchCriteria = responseNode.get("dispatchCriteria").asText();
       }
+
+      // In any case (dispatcher forced via Metadata or set to SCRIPT, we should still put a generic resourcePath
+      // (maybe containing {} parts) to later force operation matching at the mock controller level.
+      operation.addResourcePath(resourcePathPattern);
+
       response.setDispatchCriteria(dispatchCriteria);
    }
 

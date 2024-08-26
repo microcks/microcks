@@ -74,6 +74,12 @@ class ExamplesImporterTest {
          fail("Exception should not be thrown");
       }
 
+      // No dispatcher has been seet but we should have at least the resource path pattern.
+      assertNull(operation.getDispatcher());
+      assertNotNull(operation.getResourcePaths());
+      assertEquals(1, operation.getResourcePaths().size());
+      assertTrue(operation.getResourcePaths().contains("/pastry/{name}"));
+
       assertNotNull(exchanges);
       assertEquals(2, exchanges.size());
 
