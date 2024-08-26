@@ -323,17 +323,19 @@ public class MockControllerCommons {
 
    /**
     * Publish a mock invocation event on Spring ApplicationContext internal bus.
+    *
     * @param applicationContext The context to use for publication
     * @param eventSource        The source of this event
     * @param service            The mocked Service that was invoked
     * @param response           The response it has been dispatched to
     * @param startTime          The start time of the invocation
+    * @param id                 The rendered ID to be saved for this request
     */
    public static void publishMockInvocation(ApplicationContext applicationContext, Object eventSource, Service service,
-         Response response, Long startTime) {
+         Response response, Long startTime, String id) {
       // Publish an invocation event before returning.
       MockInvocationEvent event = new MockInvocationEvent(eventSource, service.getName(), service.getVersion(),
-            response.getName(), new Date(startTime), startTime - System.currentTimeMillis());
+            response.getName(), new Date(startTime), startTime - System.currentTimeMillis(), id);
       applicationContext.publishEvent(event);
       log.debug("Mock invocation event has been published");
    }
@@ -352,5 +354,19 @@ public class MockControllerCommons {
          resourcePath = resourcePath.replace("+", "%20");
       }
       return resourcePath;
+   }
+
+   /**
+    * extract and render a request identifier based on supplied operation metadata.
+    * @param requestBody         Request Body to be used as input
+    * @param requestResourcePath Request Resource Path to be used as parameter
+    * @param request             Request conext
+    * @param idString            Templated string for rendering the id
+    * @return rendered request id as string
+    */
+   public static String extractId(String requestBody, String requestResourcePath, HttpServletRequest request,
+         String idString) {
+      return unguardedRenderResponseContent(buildEvaluableRequest(requestBody, requestResourcePath, request),
+            Collections.emptyMap(), TemplateEngineFactory.getTemplateEngine(), idString);
    }
 }

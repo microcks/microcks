@@ -263,7 +263,7 @@ public class GraphQLController {
       // Publish an invocation event before returning if enabled.
       if (Boolean.TRUE.equals(enableInvocationStats)) {
          MockControllerCommons.publishMockInvocation(applicationContext, this, service,
-               graphqlResponses.get(0).getResponse(), startTime);
+               graphqlResponses.get(0).getResponse(), startTime, "");
       }
 
       String responseContent = null;

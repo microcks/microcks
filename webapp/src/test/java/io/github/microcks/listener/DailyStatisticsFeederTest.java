@@ -51,7 +51,7 @@ class DailyStatisticsFeederTest {
    void testOnApplicationEvent() {
       Calendar today = Calendar.getInstance();
       MockInvocationEvent event = new MockInvocationEvent(this, "TestService1", "1.0", "123456789", today.getTime(),
-            100);
+            100, "");
 
       // Fire event a first time.
       feeder.onApplicationEvent(event);

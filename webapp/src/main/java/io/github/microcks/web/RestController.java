@@ -277,7 +277,8 @@ public class RestController {
 
          // Publish an invocation event before returning if enabled.
          if (Boolean.TRUE.equals(enableInvocationStats)) {
-            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime);
+            String id = MockControllerCommons.extractId(body, resourcePath, request, operation.getIdPath());
+            MockControllerCommons.publishMockInvocation(applicationContext, this, service, response, startTime, id);
          }
 
          // Return response content or just headers.
