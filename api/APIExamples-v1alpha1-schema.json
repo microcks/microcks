@@ -169,12 +169,12 @@
         "mediaType": {
           "type": "string",
           "title": "The response media type",
-          "description": "The media type of the response body."
+          "description": "The media type of the response body (like application/json)."
         },
-        "code": {
+        "status": {
           "type": "string",
-          "title": "The response status code",
-          "description": "The status code of the response."
+          "title": "The response status",
+          "description": "The status of the response (typically the Http code)."
         },
         "body": {
           "title": "The response body",
