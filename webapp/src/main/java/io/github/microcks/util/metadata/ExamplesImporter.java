@@ -42,6 +42,7 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -318,8 +319,15 @@ public class ExamplesImporter implements MockRepositoryImporter {
          String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parameters);
          operation.addResourcePath(resourcePath);
       } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
-         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
-         dispatchCriteria += DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
+         // Split parameters between path and query.
+         Multimap<String, String> pathParameters = Multimaps.filterEntries(parameters,
+               entry -> operation.getName().contains("/{" + entry.getKey() + "}")
+                     || operation.getName().contains("/:" + entry.getKey()));
+         Multimap<String, String> queryParameters = Multimaps.filterEntries(parameters,
+               entry -> !pathParameters.containsKey(entry.getKey()));
+
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, pathParameters);
+         dispatchCriteria += DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, queryParameters);
          // We should complete resourcePath here.
          String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parameters);
          operation.addResourcePath(resourcePath);
