@@ -648,7 +648,8 @@ export class ServiceDetailPageComponent implements OnInit {
   ): string {
     const mockUrl = this.formatMockUrl(
       operation,
-      exchange.response.dispatchCriteria
+      exchange.response.dispatchCriteria,
+      exchange.request.queryParameters
     );
 
     let verb = operation.method.toUpperCase();
