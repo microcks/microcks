@@ -42,6 +42,7 @@ import {
   ServiceType,
   ServiceView,
   Contract,
+  Parameter,
   ParameterConstraint,
   Exchange,
   UnidirectionalEvent,
@@ -410,7 +411,7 @@ export class ServiceDetailPageComponent implements OnInit {
     return null;
   }
 
-  public formatMockUrl(operation: Operation, dispatchCriteria: string): string {
+  public formatMockUrl(operation: Operation, dispatchCriteria: string, queryParameters: Parameter[]): string {
     // console.log("[ServiceDetailPageComponent.formatMockUrl()]");
     let result = document.location.origin;
 
@@ -466,6 +467,15 @@ export class ServiceDetailPageComponent implements OnInit {
       // Remove leading VERB in Postman import case.
       operationName = this.removeVerbInUrl(operationName);
       result += operationName;
+
+      // Result may still contain {} if no dispatchCriteria (because of SCRIPT)
+      if (result.indexOf('{') != -1 && queryParameters != null) {
+        console.log('queryParameters: ' + queryParameters);
+        queryParameters.forEach((param) => {
+          result = result.replace('{' + param.name + '}', param.value);
+        });
+      }
+
     } else if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
       result += '/graphql/';
       result +=
@@ -622,8 +632,12 @@ export class ServiceDetailPageComponent implements OnInit {
       (content.startsWith('[') || content.startsWith('{')) &&
       content.indexOf('\n') == -1
     ) {
-      const jsonContent = JSON.parse(content);
-      return JSON.stringify(jsonContent, null, 2);
+      try {
+        const jsonContent = JSON.parse(content);
+        return JSON.stringify(jsonContent, null, 2);
+      } catch (error) {
+        return content;
+      }
     }
     return content;
   }

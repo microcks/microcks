@@ -180,7 +180,7 @@
             <dt>Mock URL</dt>
             <dd>
               <div class="input-group">
-                <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria) }}" disabled/>
+                <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria, exchange.request.queryParameters) }}" disabled/>
                 <span class="input-group-addon" style="border-left: 0;">
                   <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
                     (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria))"></i>
