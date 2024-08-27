@@ -19,8 +19,7 @@ services:
       KC_HOSTNAME_URL: "http://localhost:18080"
     volumes:
       - "./keycloak-realm/microcks-realm-sample.json:/opt/keycloak/data/import/microcks-realm.json"
-    command:
-      - start-dev --import-realm
+    command: ["start-dev", "--import-realm"]
 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:latest
