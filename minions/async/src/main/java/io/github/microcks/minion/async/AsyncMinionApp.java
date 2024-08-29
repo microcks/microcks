@@ -34,19 +34,17 @@ import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-import jakarta.inject.Inject;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-@ApplicationScoped
 /**
  * A Minion App for dealing with Async message mocks.
  * @author laurent
  */
+@ApplicationScoped
 public class AsyncMinionApp {
 
    /** Get a JBoss logging logger. */
@@ -63,21 +61,28 @@ public class AsyncMinionApp {
    @ConfigProperty(name = "keycloak.auth.url", defaultValue = "")
    Optional<String> keycloakAuthURL;
 
-   @Inject
-   @RestClient
-   MicrocksAPIConnector microcksAPIConnector;
+   final MicrocksAPIConnector microcksAPIConnector;
+   final KeycloakConnector keycloakConnector;
+   final AsyncMockRepository mockRepository;
+   final SchemaRegistry schemaRegistry;
+   final ProducerScheduler producerScheduler;
 
-   @Inject
-   KeycloakConnector keycloakConnector;
-
-   @Inject
-   AsyncMockRepository mockRepository;
-
-   @Inject
-   SchemaRegistry schemaRegistry;
-
-   @Inject
-   ProducerScheduler producerScheduler;
+   /**
+    * Build a new instance of the AsyncMinionApp with required dependencies.
+    * @param microcksAPIConnector to access Microcks API
+    * @param keycloakConnector    to access Keycloak server for authentication
+    * @param mockRepository       to store and retrieve mock definitions
+    * @param schemaRegistry       to store and retrieve schema definitions
+    * @param producerScheduler    to initiate producer jobs
+    */
+   public AsyncMinionApp(@RestClient MicrocksAPIConnector microcksAPIConnector, KeycloakConnector keycloakConnector,
+         AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry, ProducerScheduler producerScheduler) {
+      this.microcksAPIConnector = microcksAPIConnector;
+      this.keycloakConnector = keycloakConnector;
+      this.mockRepository = mockRepository;
+      this.schemaRegistry = schemaRegistry;
+      this.producerScheduler = producerScheduler;
+   }
 
 
    /** Application startup method. */
@@ -120,9 +125,9 @@ public class AsyncMinionApp {
                   List<Operation> operations = service.getOperations().stream()
                         .filter(o -> Arrays.asList(restrictedFrequencies).contains(o.getDefaultDelay())).filter(o -> o
                               .getBindings().keySet().stream().anyMatch(Arrays.asList(supportedBindings)::contains))
-                        .collect(Collectors.toList());
+                        .toList();
 
-                  if (operations.size() > 0) {
+                  if (!operations.isEmpty()) {
                      logger.info("Found " + operations.size() + " candidate operations in " + service.getName() + " - "
                            + service.getVersion());
                      ServiceView serviceView = microcksAPIConnector.getService("Bearer " + oauthToken, service.getId(),
@@ -132,9 +137,8 @@ public class AsyncMinionApp {
                         AsyncMockDefinition mockDefinition = new AsyncMockDefinition(serviceView.getService(),
                               operation,
                               serviceView.getMessagesMap().get(operation.getName()).stream()
-                                    .filter(e -> e instanceof UnidirectionalEvent)
-                                    .map(e -> ((UnidirectionalEvent) e).getEventMessage())
-                                    .collect(Collectors.toList()));
+                                    .filter(UnidirectionalEvent.class::isInstance)
+                                    .map(e -> ((UnidirectionalEvent) e).getEventMessage()).toList());
                         mockRepository.storeMockDefinition(mockDefinition);
                         schemaRegistry.updateRegistryForService(mockDefinition.getOwnerService());
                      }
