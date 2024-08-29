@@ -142,6 +142,21 @@ class GraphQLControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+
+      // Check query with __typename and inlined argument.
+      query = "{\"query\": \"query film($id: String) {\\n" + "  __typename\\n  film(id: \\\"ZmlsbXM6MQ==\\\") {\\n"
+            + "    id\\n" + "    title\\n" + "    episodeID\\n" + "    starCount\\n" + "  }\\n" + "}\"}";
+      response = restTemplate.postForEntity("/graphql/Movie+Graph+API/1.0", query, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals(
+               "{\n" + "  \"data\": {\n" + "  \"__typename\":\"Query\", \"film\": {\n"
+                     + "      \"id\": \"ZmlsbXM6MQ==\",\n" + "      \"title\": \"A New Hope\",\n"
+                     + "      \"episodeID\": 4,\n" + "      \"starCount\": 432\n" + "    }\n" + "  }\n" + "}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
    }
 
    @Test
