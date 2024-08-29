@@ -210,6 +210,10 @@ public class OpenAPISchemaValidator {
       // Build a schema object with responseNode schema as root and by importing
       // all the common parts that may be referenced by references.
       JsonNode schemaNode = messageNode.path("schema").deepCopy();
+      if (schemaNode == null || schemaNode.isMissingNode()) {
+         log.debug("schema for {} cannot be found into OpenAPI specification", messageNode);
+         return List.of("schemaPathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+      }
       ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT,
             specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
