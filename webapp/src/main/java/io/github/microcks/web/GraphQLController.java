@@ -89,6 +89,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A controller for mocking GraphQL responses.
@@ -103,6 +104,7 @@ public class GraphQLController {
 
    private static final String INTROSPECTION_SELECTION = "__schema";
    private static final String TYPENAME_SELECTION = "__typename";
+   private static final Set<String> IGNORED_HEADERS = Set.of("transfer-encoding", "content-length");
 
    private final ServiceRepository serviceRepository;
    private final ServiceStateRepository serviceStateRepository;
@@ -248,7 +250,7 @@ public class GraphQLController {
       for (GraphQLQueryResponse response : graphqlResponses) {
          if (response.getResponse() != null && response.getResponse().getHeaders() != null) {
             for (Header header : response.getResponse().getHeaders()) {
-               if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
+               if (!IGNORED_HEADERS.contains(header.getName().toLowerCase())) {
                   responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
                }
             }
