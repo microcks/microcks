@@ -646,41 +646,62 @@ export class ServiceDetailPageComponent implements OnInit {
     operation: Operation,
     exchange: RequestResponsePair
   ): string {
-    const mockUrl = this.formatMockUrl(
+    let mockUrl = this.formatMockUrl(
       operation,
       exchange.response.dispatchCriteria,
       exchange.request.queryParameters
     );
 
-    let verb = operation.method.toUpperCase();
-    if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
-      verb = 'POST';
+    let cmd;
+
+    if (this.resolvedServiceView.service.type != ServiceType.GRPC) {
+      let verb = operation.method.toUpperCase();
+      if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
+        verb = 'POST';
+      }
+
+      cmd = 'curl -X ' + verb + ' \'' + mockUrl + '\'';
+
+      // Add request headers if any.
+      if (exchange.request.headers != null) {
+        for (const header of exchange.request.headers) {
+          cmd += ` -H '${header.name}: ${header.values.join(', ')}'`;
+        }
+      }
+
+      // Add a content-type header if missing and obvious we need one.
+      if (
+        exchange.request.content != null &&
+        !cmd.toLowerCase().includes('-h \'content-type:')
+      ) {
+        if (
+          exchange.request.content.startsWith('[') ||
+          exchange.request.content.startsWith('{')
+        ) {
+          cmd += ' -H \'Content-Type: application/json\'';
+        }
+      }
+    } else {
+      cmd = 'grpcurl -plaintext';
     }
 
-    let cmd = 'curl -X ' + verb + ' \'' + mockUrl + '\'';
-    if (
-      exchange.request.content != null &&
-      exchange.request.content != undefined
-    ) {
+    if (exchange.request.content != null
+        && exchange.request.content != undefined
+         && exchange.request.content != '') {
       cmd += ' -d \'' + exchange.request.content.replace(/\n/g, '') + '\'';
     }
-    if (exchange.request.headers != null) {
-      for (const header of exchange.request.headers) {
-        cmd += ` -H '${header.name}: ${header.values.join(', ')}'`;
-      }
-    }
 
-    // Add a content-type header if missing and obvious we need one.
-    if (
-      exchange.request.content != null &&
-      !cmd.toLowerCase().includes('-h \'content-type:')
-    ) {
-      if (
-        exchange.request.content.startsWith('[') ||
-        exchange.request.content.startsWith('{')
-      ) {
-        cmd += ' -H \'Content-Type: application/json\'';
+    if (this.resolvedServiceView.service.type === ServiceType.GRPC) {
+      // Add empty request body.
+      if (exchange.request.content == null
+          || exchange.request.content == undefined
+          || exchange.request.content == '') {
+        cmd += ' -d \'{}\'';
       }
+      if (mockUrl.indexOf('://') != -1) {
+        mockUrl = mockUrl.substring(mockUrl.indexOf('://') + 3);
+      }
+      cmd += ' ' + mockUrl + ' ' + this.resolvedServiceView.service.name + '/' + operation.name;
     }
 
     return cmd;
