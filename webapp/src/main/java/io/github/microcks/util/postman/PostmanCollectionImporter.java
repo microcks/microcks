@@ -145,7 +145,16 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       // On v2.1 collection format, we may have a version attribute under info.
       // See https://schema.getpostman.com/json/collection/v2.1.0/docs/index.html
       if (collection.path("info").has(SERVICE_VERSION_PROPERTY)) {
-         version = collection.path("info").path(SERVICE_VERSION_PROPERTY).asText();
+         if (collection.path("info").path(SERVICE_VERSION_PROPERTY).has("identifier"))
+            version = collection.path("info").path(SERVICE_VERSION_PROPERTY).path("identifier").asText();
+         else if (collection.path("info").path(SERVICE_VERSION_PROPERTY).has("major")
+               && collection.path("info").path(SERVICE_VERSION_PROPERTY).has("minor")
+               && collection.path("info").path(SERVICE_VERSION_PROPERTY).has("path")) {
+            version = collection.path("info").path(SERVICE_VERSION_PROPERTY).path("major").asText();
+            version += "." + collection.path("info").path(SERVICE_VERSION_PROPERTY).path("minor").asText();
+            version += "." + collection.path("info").path(SERVICE_VERSION_PROPERTY).path("path").asText();
+         } else
+            version = collection.path("info").path(SERVICE_VERSION_PROPERTY).asText();
       } else {
          String description = collection.path("info").path("description").asText();
          if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
