@@ -122,7 +122,6 @@ public class AMQPProducerManager {
          channel.basicPublish(destinationName, "", properties, value.getBytes(StandardCharsets.UTF_8));
       } catch (IOException | TimeoutException ioe) {
          logger.warnf("Message %s sending has thrown an exception", ioe);
-         ioe.printStackTrace();
       }
    }
 
