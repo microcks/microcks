@@ -232,8 +232,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
                   Path importPath = protoFilePath.getParent().resolve(importStr);
                   if (!Files.exists(importPath)) {
                      // Not there, so resolve it remotely and write to local file for protoc.
-                     String importContent = referenceResolver.getHttpReferenceContent(importStr,
-                           StandardCharsets.UTF_8);
+                     String importContent = referenceResolver.getReferenceContent(importStr, StandardCharsets.UTF_8);
                      try {
                         Files.createDirectories(importPath.getParent());
                         Files.createFile(importPath);

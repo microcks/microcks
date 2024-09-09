@@ -155,7 +155,7 @@ public abstract class AbstractJsonRepositoryImporter {
          if (referenceResource == null) {
             try {
                // Extract content using resolver.
-               String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
+               String content = referenceResolver.getReferenceContent(ref, StandardCharsets.UTF_8);
 
                // Build resource name from short name.
                String resourceName = ref.substring(ref.lastIndexOf('/') + 1);

@@ -24,8 +24,11 @@ import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
+import io.github.microcks.util.SimpleReferenceURLBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -39,9 +42,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This is a controller for managing import of uploaded or downloaded artifact contract files.
@@ -54,9 +57,11 @@ public class UploadArtifactController {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(UploadArtifactController.class);
 
-   private ServiceService serviceService;
+   private final ServiceService serviceService;
+   private final SecretRepository secretRepository;
 
-   private SecretRepository secretRepository;
+   @Value("${default-artifacts-repository.url:#{null}}")
+   private Optional<String> defaultArtifactsRepositoryUrl;
 
    /**
     * Build a new UploadArtifactController with its dependencies.
@@ -81,11 +86,12 @@ public class UploadArtifactController {
             log.debug("Secret {} was requested. Have we found it? {}", secretName, (secret != null));
          }
 
+         File localFile = null;
          try {
             // Download remote to local file before import.
             HTTPDownloader.FileAndHeaders fileAndHeaders = HTTPDownloader.handleHTTPDownloadToFileAndHeaders(url,
                   secret, true);
-            File localFile = fileAndHeaders.getLocalFile();
+            localFile = fileAndHeaders.getLocalFile();
 
             // Now try importing services.
             services = serviceService.importServiceDefinition(localFile,
@@ -94,11 +100,16 @@ public class UploadArtifactController {
                               .getRelativeReferenceURLBuilder(fileAndHeaders.getResponseHeaders())),
                   new ArtifactInfo(url, mainArtifact));
          } catch (IOException ioe) {
-            log.error("Exception while retrieving remote item " + url, ioe);
+            log.error("Exception while retrieving remote item {}", url, ioe);
             return new ResponseEntity<>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
          } catch (MockRepositoryImportException mrie) {
+            log.error("Exception while reading remote item {}", url, mrie);
             return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+         } finally {
+            // Cleanup and remove local file.
+            localFile.delete();
          }
+
          if (services != null && !services.isEmpty()) {
             return new ResponseEntity<>(
                   "{\"name\": \"" + services.get(0).getName() + ":" + services.get(0).getVersion() + "\"}",
@@ -115,11 +126,10 @@ public class UploadArtifactController {
          log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
 
          List<Service> services = null;
-
+         String localFile = null;
          try {
             // Save upload to local file before import.
-            String localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis()
-                  + ".artifact";
+            localFile = System.getProperty("java.io.tmpdir") + "/microcks-" + System.currentTimeMillis() + ".artifact";
 
             try (ReadableByteChannel rbc = Channels.newChannel(file.getInputStream());
                   FileOutputStream fos = new FileOutputStream(localFile)) {
@@ -127,22 +137,43 @@ public class UploadArtifactController {
             }
 
             // Now try importing services.
-            services = serviceService.importServiceDefinition(new File(localFile), null,
+            ReferenceResolver referenceResolver = getDefaultReferenceResolver(file.getOriginalFilename());
+            services = serviceService.importServiceDefinition(new File(localFile), referenceResolver,
                   new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
 
-            // Cleanup and remove local file.
-            Files.delete(Paths.get(localFile));
+
          } catch (IOException ioe) {
             log.error("Exception while writing uploaded item {}", file.getOriginalFilename(), ioe);
             return new ResponseEntity<>("Exception while writing uploaded item", HttpStatus.INTERNAL_SERVER_ERROR);
          } catch (MockRepositoryImportException mrie) {
+            log.error("Exception while reading uploaded item {}", file.getOriginalFilename(), mrie);
             return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
+         } finally {
+            // Cleanup and remove local file.
+            Paths.get(localFile).toFile().delete();
          }
+
          if (services != null && !services.isEmpty()) {
             return new ResponseEntity<>(services.get(0).getName() + ":" + services.get(0).getVersion(),
                   HttpStatus.CREATED);
          }
       }
       return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+   }
+
+   private ReferenceResolver getDefaultReferenceResolver(String fileName) {
+      log.debug("defaultArtifactsRepositoryUrl is {}", defaultArtifactsRepositoryUrl);
+      if (defaultArtifactsRepositoryUrl.isPresent()) {
+         String repositoryUrl = defaultArtifactsRepositoryUrl.get();
+         String baseRepositoryUrl = repositoryUrl.endsWith("/") ? repositoryUrl + fileName
+               : repositoryUrl + "/" + fileName;
+         ReferenceResolver resolver = new ReferenceResolver(baseRepositoryUrl, null, true,
+               new SimpleReferenceURLBuilder());
+         if (!repositoryUrl.startsWith("http")) {
+            resolver.setCleanResolvedFiles(false);
+         }
+         return resolver;
+      }
+      return null;
    }
 }
