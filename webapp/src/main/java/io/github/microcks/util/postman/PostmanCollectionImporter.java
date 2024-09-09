@@ -65,12 +65,17 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
 
    /** Postman collection property that references service version property. */
    public static final String SERVICE_VERSION_PROPERTY = "version";
+   /** We only support Postman Collection v2. Here's the error message otherwise. */
+   public static final String COLLECTION_VERSION_ERROR_MESSAGE = "Only Postman v2 Collection are supported.";
 
+   private static final String INFO_NODE = "info";
    private static final String REQUEST_NODE = "request";
+   private static final String RESPONSE_NODE = "response";
    private static final String QUERY_NODE = "query";
    private static final String VARIABLE_NODE = "variable";
    private static final String GRAPHQL_NODE = "graphql";
    private static final String VARIABLES_NODE = "variables";
+   private static final String VALUE_NODE = "value";
 
    private ObjectMapper mapper;
    private JsonNode collection;
@@ -117,11 +122,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       Service service = new Service();
 
       // Collection V2 as an info node.
-      if (collection.has("info")) {
+      if (collection.has(INFO_NODE)) {
          isV2Collection = true;
          fillServiceDefinition(service);
       } else {
-         throw new MockRepositoryImportException("Only Postman v2 Collection are supported.");
+         throw new MockRepositoryImportException(COLLECTION_VERSION_ERROR_MESSAGE);
       }
 
       // Then build its operations.
@@ -137,27 +142,19 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    private void fillServiceDefinition(Service service) throws MockRepositoryImportException {
-      service.setName(collection.path("info").path("name").asText());
+      JsonNode infoNode = collection.path(INFO_NODE);
+      service.setName(infoNode.path("name").asText());
       service.setType(ServiceType.REST);
 
       String version = null;
 
       // On v2.1 collection format, we may have a version attribute under info.
       // See https://schema.getpostman.com/json/collection/v2.1.0/docs/index.html
-      if (collection.path("info").has(SERVICE_VERSION_PROPERTY)) {
-         if (collection.path("info").path(SERVICE_VERSION_PROPERTY).has("identifier"))
-            version = collection.path("info").path(SERVICE_VERSION_PROPERTY).path("identifier").asText();
-         else if (collection.path("info").path(SERVICE_VERSION_PROPERTY).has("major")
-               && collection.path("info").path(SERVICE_VERSION_PROPERTY).has("minor")
-               && collection.path("info").path(SERVICE_VERSION_PROPERTY).has("path")) {
-            version = collection.path("info").path(SERVICE_VERSION_PROPERTY).path("major").asText();
-            version += "." + collection.path("info").path(SERVICE_VERSION_PROPERTY).path("minor").asText();
-            version += "." + collection.path("info").path(SERVICE_VERSION_PROPERTY).path("path").asText();
-         } else
-            version = collection.path("info").path(SERVICE_VERSION_PROPERTY).asText();
+      if (infoNode.has(SERVICE_VERSION_PROPERTY)) {
+         version = extractStructuredVersion(infoNode.path(SERVICE_VERSION_PROPERTY));
       } else {
-         String description = collection.path("info").path("description").asText();
-         if (description != null && description.indexOf(SERVICE_VERSION_PROPERTY + "=") != -1) {
+         String description = infoNode.path("description").asText();
+         if (description != null && description.contains(SERVICE_VERSION_PROPERTY + "=")) {
             description = description.substring(description.indexOf(SERVICE_VERSION_PROPERTY + "="));
             if (description.indexOf(' ') > -1) {
                description = description.substring(0, description.indexOf(' '));
@@ -174,6 +171,20 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          throw new MockRepositoryImportException("Version property is missing in Collection description");
       }
       service.setVersion(version);
+   }
+
+   private String extractStructuredVersion(JsonNode versionNode) {
+      String version = null;
+      if (versionNode.has("identifier")) {
+         version = versionNode.path("identifier").asText();
+      } else if (versionNode.has("major") && versionNode.has("minor") && versionNode.has("patch")) {
+         version = versionNode.path("major").asText();
+         version += "." + versionNode.path("minor").asText();
+         version += "." + versionNode.path("patch").asText();
+      } else {
+         version = versionNode.asText();
+      }
+      return version;
    }
 
    @Override
@@ -199,7 +210,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       if (isV2Collection) {
          return getMessageDefinitionsV2(service, operation);
       } else {
-         throw new MockRepositoryImportException("Only Postman v2 Collection are supported.");
+         throw new MockRepositoryImportException(COLLECTION_VERSION_ERROR_MESSAGE);
       }
    }
 
@@ -241,7 +252,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             String rootDispatcher = details.rootDispatcher();
             String rootDispatcherRules = details.rootDispatcherRules();
 
-            Iterator<JsonNode> responses = itemNode.path("response").elements();
+            Iterator<JsonNode> responses = itemNode.path(RESPONSE_NODE).elements();
             while (responses.hasNext()) {
                JsonNode responseNode = responses.next();
                JsonNode requestNode = responseNode.path("originalRequest");
@@ -335,7 +346,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             for (JsonNode variableNode : variablesNode) {
                Parameter param = new Parameter();
                param.setName(variableNode.path("key").asText());
-               param.setValue(variableNode.path("value").asText());
+               param.setValue(variableNode.path(VALUE_NODE).asText());
                request.addQueryParameter(param);
             }
          }
@@ -344,7 +355,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
             for (JsonNode variableNode : queryNode) {
                Parameter param = new Parameter();
                param.setName(variableNode.path("key").asText());
-               param.setValue(variableNode.path("value").asText());
+               param.setValue(variableNode.path(VALUE_NODE).asText());
                request.addQueryParameter(param);
             }
          }
@@ -360,7 +371,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          Iterator<JsonNode> variables = requestNode.path("url").path(VARIABLE_NODE).elements();
          while (variables.hasNext()) {
             JsonNode variable = variables.next();
-            parts.put(variable.path("key").asText(), variable.path("value").asText());
+            parts.put(variable.path("key").asText(), variable.path(VALUE_NODE).asText());
          }
       }
       return parts;
@@ -419,7 +430,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
    }
 
    private Set<Header> buildHeaders(JsonNode headerNode) {
-      if (headerNode == null || headerNode.size() == 0) {
+      if (headerNode == null || headerNode.isEmpty()) {
          return null;
       }
 
@@ -431,7 +442,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
          Header header = new Header();
          header.setName(item.path("key").asText());
          Set<String> values = new HashSet<>();
-         values.add(item.path("value").asText());
+         values.add(item.path(VALUE_NODE).asText());
          header.setValues(values);
          headers.add(header);
       }
@@ -445,7 +456,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       if (isV2Collection) {
          return extractOperationsV2();
       }
-      throw new MockRepositoryImportException("Only Postman v2 Collection are supported.");
+      throw new MockRepositoryImportException(COLLECTION_VERSION_ERROR_MESSAGE);
    }
 
    private List<Operation> extractOperationsV2() {

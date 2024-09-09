@@ -1,0 +1,11 @@
+{
+  "variables": [],
+  "info": {
+    "name": "Test API",
+    "_postman_id": "48430400-3a9b-28dc-4f16-c1c404eee237",
+    "description": "version=1.0.0 - Description for Test API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+  ]
+}

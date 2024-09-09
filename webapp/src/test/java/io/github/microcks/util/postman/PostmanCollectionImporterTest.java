@@ -29,6 +29,9 @@ import io.github.microcks.util.MockRepositoryImportException;
 import java.io.IOException;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -446,7 +449,6 @@ class PostmanCollectionImporterTest {
          fail("Exception should not be thrown");
       }
       // Check that basic service properties import fail because of missing version.
-      boolean failure = false;
       List<Service> services = null;
       try {
          services = importer.getServiceDefinitions();
@@ -455,6 +457,30 @@ class PostmanCollectionImporterTest {
       }
       assertEquals(1, services.size());
       assertEquals("0.0.1-Description", services.get(0).getVersion());
+   }
+
+   @ParameterizedTest
+   @ValueSource(strings = {
+         "target/test-classes/io/github/microcks/util/postman/structured-version-identifier-collection.json",
+         "target/test-classes/io/github/microcks/util/postman/structured-version-digits-collection.json",
+         "target/test-classes/io/github/microcks/util/postman/structured-version-raw-collection.json",
+         "target/test-classes/io/github/microcks/util/postman/structured-version-desc-collection.json" })
+   void testStructuredVersionImport(String collection) {
+      PostmanCollectionImporter importer = null;
+      try {
+         importer = new PostmanCollectionImporter(collection);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+      // Check that basic service properties import fail because of missing version.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      assertEquals("1.0.0", services.get(0).getVersion());
    }
 
    @Test
