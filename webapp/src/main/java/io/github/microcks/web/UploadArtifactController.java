@@ -107,7 +107,9 @@ public class UploadArtifactController {
             return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          } finally {
             // Cleanup and remove local file.
-            localFile.delete();
+            if (localFile != null) {
+               localFile.delete();
+            }
          }
 
          if (services != null && !services.isEmpty()) {
@@ -150,7 +152,9 @@ public class UploadArtifactController {
             return new ResponseEntity<>(mrie.getMessage(), HttpStatus.BAD_REQUEST);
          } finally {
             // Cleanup and remove local file.
-            Paths.get(localFile).toFile().delete();
+            if (localFile != null) {
+               Paths.get(localFile).toFile().delete();
+            }
          }
 
          if (services != null && !services.isEmpty()) {
