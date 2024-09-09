@@ -17,9 +17,8 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Secret;
 import io.github.microcks.repository.SecretRepository;
+import io.github.microcks.util.SafeLogger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -46,8 +45,8 @@ import java.util.Map;
 @RequestMapping("/api")
 public class SecretController {
 
-   /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(SecretController.class);
+   /** A safe logger for filtering user-controller data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(SecretController.class);
 
    private final SecretRepository secretRepository;
 
