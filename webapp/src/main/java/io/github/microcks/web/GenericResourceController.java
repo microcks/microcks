@@ -17,20 +17,18 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.GenericResource;
 import io.github.microcks.repository.GenericResourceRepository;
+import io.github.microcks.util.SafeLogger;
+
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * A controller that expose APIs for browsing Generic resources.
@@ -40,15 +38,22 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 public class GenericResourceController {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(GenericResourceController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(GenericResourceController.class);
 
    public static final String ID_FIELD = "id";
 
-   @Autowired
-   GenericResourceRepository genericResourceRepository;
+   private final GenericResourceRepository genericResourceRepository;
 
-   @RequestMapping(value = "/genericresources/service/{serviceId}", method = RequestMethod.GET)
+   /**
+    * Build a new GenericResourceController with its dependencies.
+    * @param genericResourceRepository to have access to GenericResource definition
+    */
+   public GenericResourceController(GenericResourceRepository genericResourceRepository) {
+      this.genericResourceRepository = genericResourceRepository;
+   }
+
+   @GetMapping(value = "/genericresources/service/{serviceId}")
    public List<GenericResource> listResources(@PathVariable("serviceId") String serviceId,
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
          @RequestParam(value = "size", required = false, defaultValue = "10") int size) {
@@ -57,13 +62,10 @@ public class GenericResourceController {
       List<GenericResource> genericResources = genericResourceRepository.findByServiceId(serviceId,
             PageRequest.of(page, size));
       // Transform and collect resources.
-      List<GenericResource> resources = genericResources.stream()
-            .map(genericResource -> addIdToPayload(genericResource)).collect(Collectors.toList());
-
-      return resources;
+      return genericResources.stream().map(this::addIdToPayload).toList();
    }
 
-   @RequestMapping(value = "/genericresources/service/{serviceId}/count", method = RequestMethod.GET)
+   @GetMapping(value = "/genericresources/service/{serviceId}/count")
    public Map<String, Long> countResources(@PathVariable("serviceId") String serviceId) {
       log.debug("Counting resources for service '{}'", serviceId);
 

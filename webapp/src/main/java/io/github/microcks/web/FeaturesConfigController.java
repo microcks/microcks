@@ -15,16 +15,12 @@
  */
 package io.github.microcks.web;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.context.annotation.PropertySources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -35,14 +31,10 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/features")
-@PropertySources({ @PropertySource("features.properties"),
-      @PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true) })
+@PropertySource("features.properties")
+@PropertySource(value = "file:/deployments/config/features.properties", ignoreResourceNotFound = true)
 @ConfigurationProperties("features")
 public class FeaturesConfigController {
-
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(FeaturesConfigController.class);
-
 
    private Map<String, Map<String, String>> feature;
 
@@ -54,8 +46,8 @@ public class FeaturesConfigController {
       this.feature = feature;
    }
 
-   @RequestMapping(value = "/config", method = RequestMethod.GET)
-   public ResponseEntity<?> getConfig() {
+   @GetMapping(value = "/config")
+   public ResponseEntity<Object> getConfig() {
       return new ResponseEntity<>(feature, HttpStatus.OK);
    }
 }

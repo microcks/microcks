@@ -36,8 +36,6 @@ import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.service.ServiceStateStore;
 
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -70,8 +68,8 @@ import java.util.*;
 @RequestMapping("/rest")
 public class RestController {
 
-   /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(RestController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(RestController.class);
 
    private final ServiceRepository serviceRepository;
    private final ServiceStateRepository serviceStateRepository;

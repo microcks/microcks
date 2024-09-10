@@ -45,7 +45,7 @@ import java.util.Map;
 @RequestMapping("/api")
 public class SecretController {
 
-   /** A safe logger for filtering user-controller data in diagnostic messages. */
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
    private static final SafeLogger log = SafeLogger.getLogger(SecretController.class);
 
    private final SecretRepository secretRepository;

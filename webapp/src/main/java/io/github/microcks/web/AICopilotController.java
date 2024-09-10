@@ -25,11 +25,9 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.security.UserInfo;
 import io.github.microcks.service.ServiceService;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.ai.AICopilot;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,15 +49,14 @@ import java.util.Optional;
 @RequestMapping("/api/copilot")
 public class AICopilotController {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AICopilotController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(AICopilotController.class);
 
-   @Autowired(required = false)
    private AICopilot copilot;
 
-   private ServiceService serviceService;
-   private ServiceRepository serviceRepository;
-   private ResourceRepository resourceRepository;
+   private final ServiceService serviceService;
+   private final ServiceRepository serviceRepository;
+   private final ResourceRepository resourceRepository;
 
 
    /**
@@ -67,12 +64,14 @@ public class AICopilotController {
     * @param serviceService     The service to managed Services objects
     * @param serviceRepository  The repository for Services
     * @param resourceRepository The repository for Resources
+    * @param copilot            The optional AI Copilot
     */
    public AICopilotController(ServiceService serviceService, ServiceRepository serviceRepository,
-         ResourceRepository resourceRepository) {
+         ResourceRepository resourceRepository, Optional<AICopilot> copilot) {
       this.serviceService = serviceService;
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
+      copilot.ifPresent(aiCopilot -> this.copilot = aiCopilot);
    }
 
    @GetMapping(value = "/samples/{id:.+}")

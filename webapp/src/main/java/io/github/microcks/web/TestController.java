@@ -31,11 +31,11 @@ import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.service.MessageService;
 import io.github.microcks.service.TestService;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.web.dto.HeaderDTO;
 import io.github.microcks.web.dto.TestCaseReturnDTO;
 import io.github.microcks.web.dto.TestRequestDTO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -64,8 +64,8 @@ import java.util.Set;
 @RequestMapping("/api")
 public class TestController {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(TestController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(TestController.class);
 
    private final TestResultRepository testResultRepository;
    private final ServiceRepository serviceRepository;

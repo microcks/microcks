@@ -27,6 +27,7 @@ import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.script.ScriptEngineBinder;
@@ -35,8 +36,6 @@ import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
 
 import org.apache.commons.lang3.RandomUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -76,8 +75,8 @@ import java.util.regex.Pattern;
 @RequestMapping("/soap")
 public class SoapController {
 
-   /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(SoapController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(SoapController.class);
 
    /** Regular expression pattern for capturing Soap Operation name from body. */
    private static final Pattern OPERATION_CAPTURE_PATTERN = Pattern

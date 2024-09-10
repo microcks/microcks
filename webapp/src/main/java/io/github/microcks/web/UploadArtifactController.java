@@ -24,10 +24,9 @@ import io.github.microcks.util.HTTPDownloader;
 import io.github.microcks.util.MockRepositoryImportException;
 import io.github.microcks.util.ReferenceResolver;
 import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.SimpleReferenceURLBuilder;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,8 +53,8 @@ import java.util.Optional;
 @RequestMapping("/api")
 public class UploadArtifactController {
 
-   /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(UploadArtifactController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(UploadArtifactController.class);
 
    private final ServiceService serviceService;
    private final SecretRepository secretRepository;

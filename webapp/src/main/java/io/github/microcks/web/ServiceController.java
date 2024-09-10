@@ -30,11 +30,10 @@ import io.github.microcks.service.MessageService;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.EntityAlreadyExistsException;
 import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.web.dto.GenericResourceServiceDTO;
 import io.github.microcks.web.dto.OperationOverrideDTO;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -61,14 +60,12 @@ import java.util.Map;
 @RequestMapping("/api")
 public class ServiceController {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ServiceController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(ServiceController.class);
 
-   private ServiceService serviceService;
-
-   private ServiceRepository serviceRepository;
-
-   private MessageService messageService;
+   private final ServiceService serviceService;
+   private final ServiceRepository serviceRepository;
+   private final MessageService messageService;
 
    /**
     * Build a new ServiceController with its dependencies.
@@ -108,7 +105,7 @@ public class ServiceController {
          log.debug("Searching services corresponding to name {}", name);
          return serviceRepository.findByNameLike(name);
       }
-      if (name == null || name.trim().length() == 0) {
+      if (name == null || name.trim().isEmpty()) {
          log.debug("Searching services corresponding to labels {}", labels);
          return serviceRepository.findByLabels(labels);
       }

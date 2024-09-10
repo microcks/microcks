@@ -40,40 +40,8 @@ public class SafeLogger {
     * @param clazz the returned logger will be named after clazz
     * @return logger
     */
-   public static SafeLogger getLogger(Class clazz) {
+   public static SafeLogger getLogger(Class<?> clazz) {
       return new SafeLogger(LoggerFactory.getLogger(clazz));
-   }
-
-   /**
-    * Is the logger instance enabled for the INFO level?
-    * @return True if this Logger is enabled for the INFO level, false otherwise.
-    */
-   public boolean isInfoEnabled() {
-      return log.isInfoEnabled();
-   }
-
-   public void info(String message) {
-      if (log.isInfoEnabled()) {
-         log.info(encode(message));
-      }
-   }
-
-   public void info(String format, Object arg) {
-      if (log.isInfoEnabled()) {
-         log.info(encode(format), encode(arg));
-      }
-   }
-
-   public void info(String format, Object arg1, Object arg2) {
-      if (log.isInfoEnabled()) {
-         log.info(encode(format), encode(arg1), encode(arg2));
-      }
-   }
-
-   public void info(String format, Object... args) {
-      if (log.isInfoEnabled()) {
-         log.info(encode(format), encode(args));
-      }
    }
 
    /**
@@ -84,27 +52,182 @@ public class SafeLogger {
       return log.isDebugEnabled();
    }
 
+   /**
+    * Log a message at the DEBUG level.
+    * @param message the message string to be logged
+    */
    public void debug(String message) {
       if (log.isDebugEnabled()) {
          log.debug(encode(message));
       }
    }
 
+   /**
+    * Log a message at the DEBUG level according to the specified format and argument. This form avoids superfluous
+    * object creation when the logger is disabled for the DEBUG level.
+    * @param format the format string
+    * @param arg    the argument
+    */
    public void debug(String format, Object arg) {
       if (log.isDebugEnabled()) {
          log.debug(encode(format), encode(arg));
       }
    }
 
+   /**
+    * Log a message at the DEBUG level according to the specified format and arguments. This form avoids superfluous
+    * object creation when the logger is disabled for the DEBUG level.
+    * @param format the format string
+    * @param arg1   the first argument
+    * @param arg2   the second argument
+    */
    public void debug(String format, Object arg1, Object arg2) {
       if (log.isDebugEnabled()) {
          log.debug(encode(format), encode(arg1), encode(arg2));
       }
    }
 
+   /**
+    * Log a message at the DEBUG level according to the specified format and arguments. This form avoids superfluous
+    * string concatenation when the logger is disabled for the DEBUG level. However, this variant incurs the hidden (and
+    * relatively small) cost of creating an Object[] before invoking the method, even if this logger is disabled for
+    * DEBUG. The variants taking one and two arguments exist solely in order to avoid this hidden cost.
+    * @param format    the format string
+    * @param arguments a list of 3 or more arguments
+    */
    public void debug(String format, Object... arguments) {
       if (log.isDebugEnabled()) {
          log.debug(encode(format), encode(arguments));
+      }
+   }
+
+   /**
+    * Is the logger instance enabled for the INFO level?
+    * @return True if this Logger is enabled for the INFO level, false otherwise.
+    */
+   public boolean isInfoEnabled() {
+      return log.isInfoEnabled();
+   }
+
+   /**
+    * Log a message at the INFO level.
+    * @param message the message string to be logged
+    */
+   public void info(String message) {
+      if (log.isInfoEnabled()) {
+         log.info(encode(message));
+      }
+   }
+
+   /**
+    * Log a message at the INFO level according to the specified format and argument. This form avoids superfluous
+    * object creation when the logger is disabled for the INFO level.
+    * @param format the format string
+    * @param arg    the argument
+    */
+   public void info(String format, Object arg) {
+      if (log.isInfoEnabled()) {
+         log.info(encode(format), encode(arg));
+      }
+   }
+
+   /**
+    * Log a message at the INFO level according to the specified format and arguments. This form avoids superfluous
+    * object creation when the logger is disabled for the INFO level.
+    * @param format the format string
+    * @param arg1   the first argument
+    * @param arg2   the second argument
+    */
+   public void info(String format, Object arg1, Object arg2) {
+      if (log.isInfoEnabled()) {
+         log.info(encode(format), encode(arg1), encode(arg2));
+      }
+   }
+
+   /**
+    * Log a message at the INFO level according to the specified format and arguments. This form avoids superfluous
+    * string concatenation when the logger is disabled for the INFO level. However, this variant incurs the hidden (and
+    * relatively small) cost of creating an Object[] before invoking the method, even if this logger is disabled for
+    * INFO. The variants taking one and two arguments exist solely in order to avoid this hidden cost.
+    * @param format the format string
+    * @param args   a list of 3 or more arguments
+    */
+   public void info(String format, Object... args) {
+      if (log.isInfoEnabled()) {
+         log.info(encode(format), encode(args));
+      }
+   }
+
+   /**
+    * Is the logger instance enabled for the WARN level?
+    * @return True if this Logger is enabled for the WARN level, false otherwise.
+    */
+   public boolean isWarnEnabled() {
+      return log.isWarnEnabled();
+   }
+
+   /**
+    * Log an exception (throwable) at the WARN level with an accompanying message.
+    * @param message the message string to be logged
+    * @param t       the exception (throwable) to log
+    */
+   public void warn(String message, Throwable t) {
+      if (log.isWarnEnabled()) {
+         log.warn(encode(message), t);
+      }
+   }
+
+   /**
+    * Is the logger instance enabled for the ERROR level?
+    * @return True if this Logger is enabled for the ERROR level, false otherwise.
+    */
+   public boolean isErrorEnabled() {
+      return log.isErrorEnabled();
+   }
+
+   /**
+    * Log a message at the ERROR level.
+    * @param message the message string to be logged
+    */
+   public void error(String message) {
+      if (log.isErrorEnabled()) {
+         log.error(encode(message));
+      }
+   }
+
+   /**
+    * Log an exception (throwable) at the ERROR level with an accompanying message.
+    * @param message the message accompanying the exception
+    * @param t       the exception (throwable) to log
+    */
+   public void error(String message, Throwable t) {
+      if (log.isErrorEnabled()) {
+         log.error(encode(message), t);
+      }
+   }
+
+   /**
+    * Log a message at the ERROR level according to the specified format and arguments. This form avoids superfluous
+    * object creation when the logger is disabled for the ERROR level.
+    * @param format the format string
+    * @param arg    the argument
+    */
+   public void error(String format, Object arg) {
+      if (log.isErrorEnabled()) {
+         log.error(encode(format), encode(arg));
+      }
+   }
+
+   /**
+    * Log a message at the ERROR level according to the specified format and arguments. This form avoids superfluous
+    * object creation when the logger is disabled for the ERROR level.
+    * @param format the format string
+    * @param arg1   the first argument
+    * @param arg2   the second argument
+    */
+   public void error(String format, Object arg1, Object arg2) {
+      if (log.isErrorEnabled()) {
+         log.error(encode(format), encode(arg1), encode(arg2));
       }
    }
 
