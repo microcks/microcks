@@ -1,10 +1,35 @@
 # Microcks Community Code of Conduct
 
-Microcks project follows the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md).
+Microcks project adheres to the [CNCF Code of Conduct](https://github.com/cncf/foundation/blob/master/code-of-conduct.md), aligning with the values of collaboration, transparency, and inclusivity that define open source.
 
 ## Our Pledge
-In the interest of fostering an open and welcoming environment, we as contributors and maintainers pledge to make participation in our project and our community a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, gender identity and expression, level of experience, nationality, personal appearance, race, religion, or sexual identity and orientation.
+
+As contributors and maintainers of the Microcks project, we are committed to fostering an open, welcoming, and inclusive environment. By participating in our community, we pledge to:
+
+- Promote a harassment-free experience for everyone, regardless of age, body size, disability, ethnicity, gender identity and expression, experience level, nationality, personal appearance, race, religion, or sexual identity and orientation.
+- Support a spirit of mutual respect, empathy, and cooperation, ensuring that every contribution—big or small—is valued.
+- Encourage collaboration, knowledge-sharing, and continuous learning, as these are the cornerstones of any successful open-source community.
+
+## Our Standards
+
+To ensure a productive, positive experience for all community members, we ask everyone to:
+
+- **Be respectful and considerate**: Engage with others constructively, appreciating the diverse perspectives and ideas within the community.
+- **Be collaborative**: Open-source thrives on shared efforts and diverse input. Offer help where needed and seek help when necessary.
+- **Lead by example**: Encourage new contributors and foster an environment where everyone feels welcome to participate.
+- **Value inclusivity**: Open source is for everyone. Actively support a diverse range of contributors and voices, regardless of background.
 
 ## Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team via info@microcks.io. The project team will review and investigate all complaints, and will respond in a way that it deems appropriate to the circumstances. The project team is obligated to maintain confidentiality with regard to the reporter of an incident. Further details of specific enforcement policies may be posted separately.
+Instances of unacceptable behavior—including harassment, abusive language, or any other forms of misconduct—should be reported to the Microcks project team at **info@microcks.io**.
+
+The project team will:
+- Review and investigate all reports confidentially.
+- Take action deemed appropriate for the situation, including potential temporary or permanent bans from the community.
+- Keep the identity of the reporter confidential, ensuring a safe and respectful process for all involved.
+
+## A Community-Driven Open Source
+
+Microcks thrives because of its open-source community. We encourage all members to actively contribute, share knowledge, and help make our project better for everyone. By following this Code of Conduct, we can create a community that supports innovation, collaboration, and the open-source values we all believe in.
+
+Thank you for being part of the Microcks community!
