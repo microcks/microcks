@@ -48,7 +48,7 @@
           <div class="control-group" *ngIf="service.type === 'EVENT'">
             <label class="control-label required-pf" for="filteredOperation">Operation</label>
             <div class="controls">
-              <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
+              <select id="filteredOperation" name="filteredOperation" class="focd rm-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
                 <option *ngFor="let operation of service.operations" [value]="operation.name">{{ operation.name }}</option>
               </select>
               <p class="help-block">Select the Asynchronous operation you want to test.</p>
@@ -58,14 +58,14 @@
             <label class="control-label required-pf" for="runnerType">Runner</label>
             <div class="controls">
               <select id="runnerType" name="runnerType" class="form-control" [(ngModel)]="runnerType" (ngModelChange)="checkForm()">
-                <option value="HTTP" *ngIf="service.type != 'EVENT'">HTTP</option>
-                <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP'">SOAP</option>
-                <option value="SOAP_UI" *ngIf="service.type != 'EVENT'">SOAP UI</option>
-                <option value="POSTMAN" *ngIf="service.type === 'REST'">POSTMAN</option>
-                <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST'">OPEN API SCHEMA</option>
-                <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT'">ASYNC API SCHEMA</option>
-                <option value="GRPC_PROTOBUF" *ngIf="service.type === 'GRPC'">GRPC PROTOBUF</option>
-                <option value="GRAPHQL_SCHEMA" *ngIf="service.type === 'GRAPHQL'">GRAPHQL SCHEMA</option>
+                <option value="HTTP" *ngIf="service.type != 'EVENT' && isRunnerAvailable('HTTP')">HTTP</option>
+                <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP' && isRunnerAvailable('SOAP_HTTP')">SOAP</option>
+                <option value="SOAP_UI" *ngIf="service.type != 'EVENT' && isRunnerAvailable('SOAP_UI_PROJECT')">SOAP UI</option>
+                <option value="POSTMAN" *ngIf="service.type === 'REST' && isRunnerAvailable('POSTMAN_COLLECTION')">POSTMAN</option>
+                <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST' && isRunnerAvailable('OPEN_API_SCHEMA')">OPEN API SCHEMA</option>
+                <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT' && isRunnerAvailable('ASYNC_API_SCHEMA')">ASYNC API SCHEMA</option>
+                <option value="GRPC_PROTOBUF" *ngIf="service.type === 'GRPC' && isRunnerAvailable('PROTOBUF_SCHEMA')">GRPC PROTOBUF</option>
+                <option value="GRAPHQL_SCHEMA" *ngIf="service.type === 'GRAPHQL' && isRunnerAvailable('GRAPHQL_SCHEMA')">GRAPHQL SCHEMA</option>
               </select>
               <p class="help-block">
                 <span *ngIf="service.type != 'EVENT'">The runner to use for this test (test only HTTP return code, test also SOAP compliance, use SOAP UI assertions, POSTMAN tests or OPEN API SCHEMA compliance).</span>

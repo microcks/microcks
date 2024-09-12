@@ -24,9 +24,10 @@ import { Notification, NotificationEvent, NotificationService, NotificationType 
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { SecretsService } from '../../../services/secrets.service';
-import { Operation, Service } from '../../../models/service.model';
+import {Contract, Operation, Service} from '../../../models/service.model';
 import { TestRunnerType, OAuth2ClientContext } from '../../../models/test.model';
 import { Secret } from '../../../models/secret.model';
+import {ContractsService} from "../../../services/contracts.service";
 
 @Component({
   selector: 'app-test-create-page',
@@ -40,6 +41,7 @@ export class TestCreatePageComponent implements OnInit {
   serviceId: string;
   testEndpoint: string;
   runnerType: TestRunnerType;
+  contracts: string[]
   showAdvanced = false;
   submitEnabled = false;
   notifications: Notification[];
@@ -55,7 +57,7 @@ export class TestCreatePageComponent implements OnInit {
   filteredOperation: string;
   removedOperationsNames: string[] = [];
 
-  constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private secretsSvc: SecretsService,
+  constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, public testsSvc: TestsService, private secretsSvc: SecretsService,
               private notificationService: NotificationService, private route: ActivatedRoute, private router: Router) {
   }
 
@@ -78,6 +80,14 @@ export class TestCreatePageComponent implements OnInit {
         this.initializeFromPreviousTestResult(fromTestId);
       }
     });
+    this.route.paramMap.pipe(
+      switchMap((params: ParamMap) =>
+        this.contractsSvc.listByServiceId(params.get('serviceId'))
+      )
+    ).subscribe((contracts: Contract[]) => {
+      this.contracts = contracts.map((contract : Contract) => contract.type.toString());
+    });
+
   }
 
   getSecrets(page: number = 1): void {
@@ -245,5 +255,9 @@ export class TestCreatePageComponent implements OnInit {
         complete: () => console.log('Observer got a complete notification')
       }
     );
+  }
+
+  public isRunnerAvailable(runner: string) : boolean{
+    return this.contracts.includes(runner)
   }
 }
