@@ -48,7 +48,7 @@
           <div class="control-group" *ngIf="service.type === 'EVENT'">
             <label class="control-label required-pf" for="filteredOperation">Operation</label>
             <div class="controls">
-              <select id="filteredOperation" name="filteredOperation" class="focd rm-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
+              <select id="filteredOperation" name="filteredOperation" class="form-control" [(ngModel)]="filteredOperation" (ngModelChange)="checkForm()">
                 <option *ngFor="let operation of service.operations" [value]="operation.name">{{ operation.name }}</option>
               </select>
               <p class="help-block">Select the Asynchronous operation you want to test.</p>
