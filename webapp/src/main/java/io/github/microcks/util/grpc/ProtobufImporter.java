@@ -190,7 +190,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
             try {
                protoResource.setContent(Files.readString(f.toPath(), StandardCharsets.UTF_8));
             } catch (IOException ioe) {
-               log.error("", ioe);
+               log.warn("Exception while setting content of {} Protobuf resource", protoResource.getName(), ioe);
+               log.warn("Pursuing on next resource as it was for information purpose only");
             }
             results.add(protoResource);
          });
@@ -266,14 +267,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
          if (method.getInputType() != null) {
             operation.setInputName("." + method.getInputType().getFullName());
 
-            boolean hasOnlyPrimitiveArgs = true;
-            for (Descriptors.FieldDescriptor field : method.getInputType().getFields()) {
-               Descriptors.FieldDescriptor.Type fieldType = field.getType();
-               if (!isScalarType(fieldType)) {
-                  hasOnlyPrimitiveArgs = false;
-               }
-            }
-
+            boolean hasOnlyPrimitiveArgs = hasOnlyPrimitiveArgs(method);
             if (hasOnlyPrimitiveArgs && !method.getInputType().getFields().isEmpty()) {
                operation.setDispatcher(DispatchStyles.QUERY_ARGS);
                operation.setDispatcherRules(extractOperationParams(method.getInputType().getFields()));
@@ -286,6 +280,17 @@ public class ProtobufImporter implements MockRepositoryImporter {
          results.add(operation);
       }
       return results;
+   }
+
+   /** Check if a method has only primitive arguments. */
+   private static boolean hasOnlyPrimitiveArgs(Descriptors.MethodDescriptor method) {
+      for (Descriptors.FieldDescriptor field : method.getInputType().getFields()) {
+         Descriptors.FieldDescriptor.Type fieldType = field.getType();
+         if (!isScalarType(fieldType)) {
+            return false;
+         }
+      }
+      return true;
    }
 
    /** Defines is a protobuf message field type is a scalar type. s */
