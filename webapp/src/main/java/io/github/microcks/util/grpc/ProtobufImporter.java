@@ -56,13 +56,12 @@ public class ProtobufImporter implements MockRepositoryImporter {
    private static final Logger log = LoggerFactory.getLogger(ProtobufImporter.class);
 
    private static final String BINARY_DESCRIPTOR_EXT = ".pbb";
-
    private static final String BUILTIN_LIBRARY_PREFIX = "google/protobuf";
 
-   private final String specContent;
    private final String protoDirectory;
    private final String protoFileName;
    private final ReferenceResolver referenceResolver;
+   private String specContent;
    private DescriptorProtos.FileDescriptorSet fds;
 
 
@@ -83,13 +82,14 @@ public class ProtobufImporter implements MockRepositoryImporter {
       String[] args = { "-v3.21.8", "--include_std_types", "--include_imports", "--proto_path=" + protoDirectory,
             "--descriptor_set_out=" + protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT, protoFileName };
 
+      // Track resolved imports (must be cleanup after success of failure).
+      List<File> resolvedImportsLocalFiles = null;
       try {
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(protoFilePath));
          specContent = new String(bytes, StandardCharsets.UTF_8);
 
          // Resolve and retrieve imports if any.
-         List<File> resolvedImportsLocalFiles = null;
          if (referenceResolver != null) {
             resolvedImportsLocalFiles = new ArrayList<>();
             resolveAndPrepareRemoteImports(Paths.get(protoFilePath), resolvedImportsLocalFiles);
@@ -98,16 +98,18 @@ public class ProtobufImporter implements MockRepositoryImporter {
          // Run Protoc.
          int result = Protoc.runProtoc(args);
 
-         File protoFileB = new File(protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT);
+         File protoFileB = new File(protoDirectory, protoFileName + BINARY_DESCRIPTOR_EXT);
          fds = DescriptorProtos.FileDescriptorSet.parseFrom(new FileInputStream(protoFileB));
-
+      } catch (InterruptedException ie) {
+         log.error("Protobuf schema compilation has been interrupted on {}", protoFilePath);
+         Thread.currentThread().interrupt();
+      } catch (Exception e) {
+         throw new IOException("Protobuf schema file parsing error on " + protoFilePath + ": " + e.getMessage());
+      } finally {
          // Cleanup locally downloaded dependencies needed by protoc.
          if (resolvedImportsLocalFiles != null) {
             resolvedImportsLocalFiles.forEach(File::delete);
          }
-      } catch (Exception e) {
-         log.error("Exception while parsing Protobuf schema file " + protoFilePath, e);
-         throw new IOException("Protobuf schema file parsing error");
       }
    }
 
@@ -131,7 +133,6 @@ public class ProtobufImporter implements MockRepositoryImporter {
                   dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
             dependencies.add(fd);
          } catch (Descriptors.DescriptorValidationException e) {
-            log.error("Exception while building Protobuf descriptor, probably a missing dependency issue", e);
             throw new MockRepositoryImportException(
                   "Exception while building Protobuf descriptor, probably a missing dependency issue: "
                         + e.getMessage());
@@ -241,6 +242,9 @@ public class ProtobufImporter implements MockRepositoryImporter {
                      }
                      Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
                      resolvedImportsLocalFiles.add(importPath.toFile());
+
+                     // Now go down the resource content and resolve its own imports.
+                     resolveAndPrepareRemoteImports(importPath, resolvedImportsLocalFiles);
                   }
                }
             }
