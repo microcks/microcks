@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static io.github.microcks.util.JsonSchemaValidator.*;
 
@@ -46,6 +47,8 @@ public class OpenAPISchemaValidator {
    private static final Logger log = LoggerFactory.getLogger(OpenAPISchemaValidator.class);
 
    private static final String[] STRUCTURES = { "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties" };
+   private static final String[] COMPOSITION_STRUCTURES = { "allOf", "anyOf", "oneOf" };
+
    private static final String[] NOT_SUPPORTED_ATTRIBUTES = { "nullable", "discriminator", "readOnly", "writeOnly",
          "xml", "externalDocs", "example", "deprecated" };
 
@@ -332,6 +335,26 @@ public class OpenAPISchemaValidator {
       }
    }
 
+   private static Optional<String> getCompositionStructureType(JsonNode node) {
+      for (var current : COMPOSITION_STRUCTURES) {
+         if (node.has(current)) {
+            return Optional.of(current);
+         }
+      }
+      return Optional.empty();
+   }
+
+   private static boolean isOneOfNullable(ArrayNode oneOf) {
+      for (Iterator<JsonNode> it = oneOf.iterator(); it.hasNext();) {
+         JsonNode current = it.next();
+         if (current.isObject() && ((ObjectNode) current).has("type")
+               && ((ObjectNode) current).get("type").asText().equals("null")) {
+            return true;
+         }
+      }
+      return false;
+   }
+
    /** Deal with converting type of a Json node object. */
    private static void convertType(JsonNode node) {
       if (node.has("type") && !node.path("type").asText().equals("object")) {
@@ -343,5 +366,36 @@ public class OpenAPISchemaValidator {
             typeArray.add(type).add("null");
          }
       }
+
+      //Handle OneOf, AnyOf & AllOf
+      if (node.path("nullable").asBoolean()) {
+         Optional<String> maybeStructure = getCompositionStructureType(node);
+         if (maybeStructure.isPresent()) {
+            String structure = maybeStructure.get();
+            if (structure.equals("oneOf")) {
+               //Append null type to oneOf if it's not already there
+               var oneOf = ((ArrayNode) node.path("oneOf"));
+               if (!isOneOfNullable(oneOf)) {
+                  ObjectNode nullNode = new ObjectMapper().createObjectNode();
+                  nullNode.put("type", "null");
+                  ((ArrayNode) node.path("oneOf")).add(nullNode);
+               }
+            } else {
+               //Nesting current structure inside a OneOf
+               ObjectNode allOfChildObject = new ObjectMapper().createObjectNode();
+               allOfChildObject.put(structure, node.path(structure));
+               ((ObjectNode) node).remove(structure);
+
+               ((ObjectNode) node).putArray("oneOf");
+               ((ArrayNode) node.path("oneOf")).add(allOfChildObject);
+
+               //Adding null type to oneOf structure
+               ObjectNode nullNode = new ObjectMapper().createObjectNode();
+               nullNode.put("type", "null");
+               ((ArrayNode) node.path("oneOf")).add(nullNode);
+            }
+         }
+      }
+
    }
 }

@@ -18,6 +18,9 @@ package io.github.microcks.util.openapi;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.util.List;
@@ -479,6 +482,92 @@ class OpenAPISchemaValidatorTest {
             "/paths/~1boards~1{slug}/get/responses/200", "application/json");
 
       assertTrue(errors.isEmpty());
+   }
+
+   @ParameterizedTest()
+   @CsvSource(value = { "null | {\"seasonData\":null} | true",
+         "notNull | {\"seasonData\": {\"seasonType\": \"BratSummer\", \"isTooHot\": false, \"isTooCold\": true}} | true",
+         "notNullInvalid | {\"seasonData\": {\"seasonType\": \"365PartyGirl\", \"isTooHot\": false, \"isTooCold\": true}} | false" }, delimiter = '|')
+   void testNullableAllOf(String testType, String jsonText, boolean expected) {
+      String openAPIText = null;
+
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1seasonAllOf/post/responses/201", "application/json");
+
+      assertEquals(expected, errors.isEmpty());
+   }
+
+
+   @ParameterizedTest()
+   @CsvSource(value = { "null | {\"seasonData\":null} | true",
+         "notNullOne | {\"seasonData\": {\"seasonType\": \"BratSummer\", \"isTooHot\": false, \"isTooCold\": true}} | true",
+         "notNullTwo | {\"seasonData\": {\"isUmami\": true, \"isSalty\": true}} | true",
+         "notNullInvalidAllMatching | {\"seasonData\": {\"seasonType\": \"BratSummer\", \"isTooHot\": false, \"isTooCold\": true, \"isUmami\": true,  \"isSalty\": true}} | false",
+         "notNullInvalidNoneMatching | {\"seasonData\": {\"seasonType\": \"365PartyGirl\", \"isTooHot\": false, \"isTooCold\": true, \"isUmami\": true}} | false", }, delimiter = '|')
+   void testNullableOneOf(String testType, String jsonText, boolean expected) {
+      String openAPIText = null;
+
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1seasonOneOf/post/responses/201", "application/json");
+
+      assertEquals(expected, errors.isEmpty());
+   }
+
+   @ParameterizedTest()
+   @CsvSource(value = { "null | {\"seasonData\":null} | true",
+         "notNullOne | {\"seasonData\": {\"seasonType\": \"BratSummer\", \"isTooHot\": false, \"isTooCold\": true}} | true",
+         "notNullTwo | {\"seasonData\": {\"isUmami\": true, \"isSalty\": true}} | true",
+         "notNullAllMatch | {\"seasonData\": {\"seasonType\": \"BratSummer\", \"isTooHot\": false, \"isTooCold\": true, \"isUmami\": true, \"isSalty\": true}} | true",
+         "notNullInvalid | {\"seasonData\": {\"seasonType\": \"365PartyGirl\", \"isTooHot\": false, \"isTooCold\": true, \"isUmami\": true}} | false", }, delimiter = '|')
+   void testNullableAnyOf(String testType, String jsonText, boolean expected) {
+      String openAPIText = null;
+
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"));
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1seasonAnyOf/post/responses/201", "application/json");
+
+      assertEquals(expected, errors.isEmpty());
    }
 
    @Test
