@@ -146,7 +146,7 @@ jobs:
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile \
             --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --label "org.opencontainers.image.created=${{ steps.date.outputs.date }} \
+            --label "org.opencontainers.image.created=${{ steps.date.outputs.date }}" \
             --tag=quay.io/microcks/microcks-uber:$IMAGE_TAG \
             --tag=docker.io/microcks/microcks-uber:$IMAGE_TAG .
 
