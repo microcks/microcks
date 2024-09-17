@@ -1,3 +1,4 @@
+# This workflow is used to manage stale issues and PRs in the Microcks project.
 name: Manage stale issues and PRs
 
 on:
