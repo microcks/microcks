@@ -1,78 +1,85 @@
-# Contributing guide
+# Contributing to Microcks
 
-**Want to contribute? Great!** ✨ We try to make it easy, and all contributions, even the smaller ones, are more than welcome. This includes bug reports, fixes, documentation, examples... 
+We love your input! We want to make contributing to this project as easy and transparent as possible.
 
-First, you may need to read our [global contribution guide](https://github.com/microcks/.github/blob/master/CONTRIBUTING.md) and then to read this page.
+## Contribution recogniton
 
-## Reporting an issue
+We plan to use [All Contributors](https://allcontributors.org/docs/en/specification) specification to handle recognitions.
 
-This project uses GitHub issues to manage the issues. Open an issue directly in GitHub.
+## Summary of the contribution flow
 
-If you believe you found a bug, and it's likely possible, please indicate a way to reproduce it, what you are seeing and what you would expect to see.
-Don't forget to indicate your Java, Maven and/or Docker version.
-
-## Build
-
-### Build the whole project
-
-You need to have [Apache Maven](https://maven.apache.org) (version >= 3.5) up and running as well as a valid Java Development Kit (version >= 17) install to build the project.
+The following is a summary of the ideal contribution flow. Please, note that Pull Requests can also be rejected by the maintainers when appropriate.
 
 ```
-$ git clone https://github.com/microcks/microcks.git
-[...]
-$ cd microcks
-$ mvn clean install
-[...] 
-[INFO] ------------------------------------------------------------------------
-[INFO] Reactor Summary for Microcks 1.0.0-SNAPSHOT:
-[INFO] 
-[INFO] Microcks ........................................... SUCCESS [  0.234 s]
-[INFO] Microcks Model ..................................... SUCCESS [  1.602 s]
-[INFO] Microcks EL ........................................ SUCCESS [  1.907 s]
-[INFO] Microcks App ....................................... SUCCESS [ 28.038 s]
-[INFO] Microcks Async Minion .............................. SUCCESS [  8.007 s]
-[INFO] ------------------------------------------------------------------------
-[INFO] BUILD SUCCESS
-[INFO] ------------------------------------------------------------------------
-[INFO] Total time:  40.036 s
-[INFO] Finished at: 2020-06-12T09:05:45+02:00
-[INFO] ------------------------------------------------------------------------
+    ┌───────────────────────┐
+    │                       │
+    │    Open an issue      │
+    │  (a bug report or a   │
+    │   feature request)    │
+    │                       │
+    └───────────────────────┘
+               ⇩
+    ┌───────────────────────┐
+    │                       │
+    │  Open a Pull Request  │
+    │   (only after issue   │
+    │     is approved)      │
+    │                       │
+    └───────────────────────┘
+               ⇩
+    ┌───────────────────────┐
+    │                       │
+    │   Your changes will   │
+    │     be merged and     │
+    │ published on the next │
+    │        release        │
+    │                       │
+    └───────────────────────┘
 ```
 
-More information on how to build and run the webapp locally in development mode can be found in the [webapp README](webapp/README.md).
+## Code of Conduct
 
-### Build and run webapp jar
+Microcks has adopted a Code of Conduct that we expect project participants to adhere to. Please [read the full text](CODE_OF_CONDUCT.md) so that you can understand what sort of behaviour is expected.
 
-You can build a production-ready jar and run it with the following commands:
+## Our Development Process
 
-```
-$ cd webapp
-$ mvn -Pprod package
-[...]
-$ java -jar target/microcks-x.y.z-SNAPSHOT-exec.jar
-```
+We use Github to host code, to track issues and feature requests, as well as accept pull requests.
 
-You'll then have a running instance of Microcks webapp on `http://localhost:8080/`.
+## Issues
 
-### Build and run webapp Docker image
+[Open an issue](https://github.com/microcks/microcks/issues/new) **only** if you want to report a bug or a feature. Don't open issues for questions or support, instead join our [Zulip #user channel](https://microcksio.zulipchat.com/) or our [GitHub discussions](https://github.com/orgs/microcks/discussions) and ask there. 
 
-Package the application, build the docker image and use a modified docker-compose to start the application:
+## Bug Reports and Feature Requests
 
-```
-$ cd webapp
-$ mvn -Pprod package
-$ docker build -f src/main/docker/Dockerfile -t microcks:x.y.z-SNAPSHOT .
-[...]
-$ cd ../install/docker-compose
-# Update docker-compose.yml to use the correct image tag
-$ docker-compose -f docker-compose.yml up -d
-```
+Please use our issues templates that provide you with hints on what information we need from you to help you out.
 
-After spinning up the containers, you will now have access to Keycloak for account management, and microcks webapp to setup mocking, etc.
+## Pull Requests
 
-You can login to keycloak on `http://localhost:18080/` with username and password `admin`.
-You can login to microcks webapp with the username `admin` and password `microcks123`.
+**Please, make sure you open an issue before starting with a Pull Request, unless it's a typo or a really obvious error.** Pull requests are the best way to propose changes to the specification. Take time to check the current working branch for the repository you want to contribute on before working :wink:
 
-## Before you contribute
+## Conventional commits
 
-To contribute, use GitHub Pull Requests, from your **own** fork.
+Our repositories follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification. Releasing to GitHub and NPM is done with the support of [semantic-release](https://semantic-release.gitbook.io/semantic-release/).
+
+Pull requests should have a title that follows the specification, otherwise, merging is blocked. If you are not familiar with the specification simply ask maintainers to modify. You can also use this cheatsheet if you want:
+
+- `fix: ` prefix in the title indicates that PR is a bug fix and PATCH release must be triggered.
+- `feat: ` prefix in the title indicates that PR is a feature and MINOR release must be triggered.
+- `docs: ` prefix in the title indicates that PR is only related to the documentation and there is no need to trigger release.
+- `chore: ` prefix in the title indicates that PR is only related to cleanup in the project and there is no need to trigger release.
+- `test: ` prefix in the title indicates that PR is only related to tests and there is no need to trigger release.
+- `refactor: ` prefix in the title indicates that PR is only related to refactoring and there is no need to trigger release.
+
+What about MAJOR release? just add `!` to the prefix, like `fix!: ` or `refactor!: `
+
+Prefix that follows specification is not enough though. Remember that the title must be clear and descriptive with usage of [imperative mood](https://chris.beams.io/posts/git-commit/#imperative).
+
+Happy contributing :heart:
+
+## License
+
+When you submit changes, your submissions are understood to be under the same [Apache 2.0 License](https://github.com/microcks/microcks/blob/master/LICENSE) that covers the project. Feel free to [contact the maintainers](https://microcksio.zulipchat.com/) if that's a concern.
+
+## References
+
+This document was adapted from the open-source contribution guidelines for [Facebook's Draft](https://github.com/facebook/draft-js/blob/master/CONTRIBUTING.md).
