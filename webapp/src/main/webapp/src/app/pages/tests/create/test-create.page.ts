@@ -21,7 +21,7 @@ import { switchMap } from 'rxjs/operators';
 
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 
-import { ContractsService} from "../../../services/contracts.service";
+import { ContractsService } from "../../../services/contracts.service";
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { SecretsService } from '../../../services/secrets.service';
