@@ -21,13 +21,13 @@ import { switchMap } from 'rxjs/operators';
 
 import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
 
+import { ContractsService} from "../../../services/contracts.service";
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
 import { SecretsService } from '../../../services/secrets.service';
-import {Contract, Operation, Service} from '../../../models/service.model';
+import { Contract, Operation, Service } from '../../../models/service.model';
 import { TestRunnerType, OAuth2ClientContext } from '../../../models/test.model';
 import { Secret } from '../../../models/secret.model';
-import {ContractsService} from "../../../services/contracts.service";
 
 @Component({
   selector: 'app-test-create-page',
@@ -41,7 +41,7 @@ export class TestCreatePageComponent implements OnInit {
   serviceId: string;
   testEndpoint: string;
   runnerType: TestRunnerType;
-  contracts: string[]
+  contractTypes: string[]
   showAdvanced = false;
   submitEnabled = false;
   notifications: Notification[];
@@ -85,7 +85,7 @@ export class TestCreatePageComponent implements OnInit {
         this.contractsSvc.listByServiceId(params.get('serviceId'))
       )
     ).subscribe((contracts: Contract[]) => {
-      this.contracts = contracts.map((contract : Contract) => contract.type.toString());
+      this.contractTypes = contracts.map((contract : Contract) => contract.type.toString());
     });
 
   }
@@ -257,7 +257,7 @@ export class TestCreatePageComponent implements OnInit {
     );
   }
 
-  public isRunnerAvailable(runner: string) : boolean{
-    return this.contracts.includes(runner)
+  public isContractAvailable(runner: string) : boolean{
+    return this.contractTypes.includes(runner)
   }
 }
