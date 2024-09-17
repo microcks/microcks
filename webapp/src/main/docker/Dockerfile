@@ -1,11 +1,13 @@
 FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4-1134
 
-MAINTAINER Laurent Broudoux <laurent@microcks.io>
-
 # Some version information
-LABEL io.k8s.description="Microcks is Open Source Kubernetes native tool for API Mocking and Testing" \
-      io.k8s.display-name="Microcks Application" \
-      maintainer="Laurent Broudoux <laurent@microcks.io>"
+LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.authors="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.title="Microcks Application" \
+      org.opencontainers.image.description="Microcks is Open Source cloud-native native tool for API Mocking and Testing" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.documentation="https://github.com/microcks/microcks" \
+      io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/README.md"
 
 # Install Java runtime
 RUN microdnf install java-17-openjdk-headless openssl curl-minimal ca-certificates -y \

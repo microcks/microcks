@@ -7,7 +7,7 @@ LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
       org.opencontainers.image.description="Microcks is Open Source cloud-native native tool for API Mocking and Testing" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.documentation="https://github.com/microcks/microcks/tree/master/distro/uber" \
-      io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/distro/uber/README.md" \
+      io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/distro/uber/README.md"
 
 # Install Java runtime
 RUN microdnf install java-17-openjdk-headless openssl curl-minimal ca-certificates -y \
