@@ -14,7 +14,7 @@ The Microcks project community adheres to the following principles:
 
 - **Open**: The Microcks community strives to be open, accessible and welcoming to everyone. Anyone may contribute, and contributions are available to all users according to open source values and licenses.
 - **Transparent** and **accessible**: Any changes to the Microcks source code and collaborations on the project are publicly accessible (GitHub code, issues, PRs, and discussions).
-- Merit: Ideas and contributions are accepted according to their technical merit and alignment with project objectives, scope, and design principles.
+- **Merit**: Ideas and contributions are accepted according to their technical merit and alignment with project objectives, scope, and design principles.
 
 Join us 👉 https://microcks.io/community/
 
