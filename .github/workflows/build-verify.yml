@@ -26,6 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: Build
     steps:
+      - name: Get current date
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%S')"
+
       - name: Checkout Code
         uses: actions/checkout@v4
 
@@ -141,6 +145,8 @@ jobs:
             --provenance=false \
             --build-arg TAG=$IMAGE_TAG \
             --file src/main/docker/Dockerfile \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.created=${{ steps.date.outputs.date }} \
             --tag=quay.io/microcks/microcks-uber:$IMAGE_TAG \
             --tag=docker.io/microcks/microcks-uber:$IMAGE_TAG .
 
