@@ -35,7 +35,7 @@
     <jackson.version>2.15.4</jackson.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <avro.version>1.11.3</avro.version>
-    <graphql-java.version>21.3</graphql-java.version>
+    <graphql-java.version>21.5</graphql-java.version>
     <mockito.version>5.7.0</mockito.version>
   </properties>
 
