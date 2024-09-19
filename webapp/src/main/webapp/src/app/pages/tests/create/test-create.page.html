@@ -58,12 +58,12 @@
             <label class="control-label required-pf" for="runnerType">Runner</label>
             <div class="controls">
               <select id="runnerType" name="runnerType" class="form-control" [(ngModel)]="runnerType" (ngModelChange)="checkForm()">
-                <option value="HTTP" *ngIf="service.type != 'EVENT' && isContractAvailable('HTTP')">HTTP</option>
+                <option value="HTTP" *ngIf="service.type != 'EVENT'">HTTP</option>
                 <option value="SOAP_HTTP" *ngIf="service.type === 'SOAP_HTTP' && isContractAvailable('SOAP_HTTP')">SOAP</option>
                 <option value="SOAP_UI" *ngIf="service.type != 'EVENT' && isContractAvailable('SOAP_UI_PROJECT')">SOAP UI</option>
-                <option value="POSTMAN" *ngIf="service.type === 'REST' && isContractAvailable('POSTMAN_COLLECTION')">POSTMAN</option>
-                <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST' && isContractAvailable('OPEN_API_SCHEMA')">OPEN API SCHEMA</option>
-                <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT' && isContractAvailable('ASYNC_API_SCHEMA')">ASYNC API SCHEMA</option>
+                <option value="POSTMAN" *ngIf="service.type != 'EVENT' && isContractAvailable('POSTMAN_COLLECTION')">POSTMAN</option>
+                <option value="OPEN_API_SCHEMA" *ngIf="service.type === 'REST' && isContractAvailable('OPEN_API_SPEC')">OPEN API SCHEMA</option>
+                <option value="ASYNC_API_SCHEMA" *ngIf="service.type === 'EVENT' && isContractAvailable('ASYNC_API_SPEC')">ASYNC API SCHEMA</option>
                 <option value="GRPC_PROTOBUF" *ngIf="service.type === 'GRPC' && isContractAvailable('PROTOBUF_SCHEMA')">GRPC PROTOBUF</option>
                 <option value="GRAPHQL_SCHEMA" *ngIf="service.type === 'GRAPHQL' && isContractAvailable('GRAPHQL_SCHEMA')">GRAPHQL SCHEMA</option>
               </select>

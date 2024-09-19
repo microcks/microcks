@@ -257,7 +257,7 @@ export class TestCreatePageComponent implements OnInit {
     );
   }
 
-  public isContractAvailable(runner: string) : boolean{
-    return this.contractTypes.includes(runner)
+  public isContractAvailable(contractTye: string) : boolean{
+    return this.contractTypes.includes(contractTye)
   }
 }
