@@ -20,9 +20,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,8 +41,8 @@ class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
+         schemaText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"), StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -61,8 +61,8 @@ class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
+         schemaText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"), StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -81,8 +81,8 @@ class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"));
+         schemaText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/car-schema.json"), StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -112,7 +112,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/car-schema-no-addon.json"));
+               new File("target/test-classes/io/github/microcks/util/openapi/car-schema-no-addon.json"),
+               StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -142,8 +143,9 @@ class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"));
+         schemaText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"),
+               StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -165,7 +167,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load schema from file.
          schemaText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecasts.json"));
+               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecasts.json"),
+               StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText,
                "https://raw.githubusercontent.com/microcks/microcks/1.6.x/commons/util/src/test/resources/io/github/microcks/util/openapi/");
@@ -186,8 +189,9 @@ class OpenAPISchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"));
+         schemaText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/cars-schema.json"),
+               StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = OpenAPISchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -223,7 +227,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -263,7 +268,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -327,7 +333,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-local-ref.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-local-ref.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -343,8 +350,10 @@ class OpenAPISchemaValidatorTest {
       // Now try with an external absolute ref.
       try {
          // Load full specification from file.
-         openAPIText = FileUtils.readFileToString(new File(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml"));
+         openAPIText = FileUtils.readFileToString(
+               new File(
+                     "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-absolute-ref.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -363,8 +372,10 @@ class OpenAPISchemaValidatorTest {
       // Now try with an external relative ref.
       try {
          // Load full specification from file.
-         openAPIText = FileUtils.readFileToString(new File(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
+         openAPIText = FileUtils.readFileToString(
+               new File(
+                     "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -397,8 +408,10 @@ class OpenAPISchemaValidatorTest {
       // Now try with an external relative ref.
       try {
          // Load full specification from file.
-         openAPIText = FileUtils.readFileToString(new File(
-               "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"));
+         openAPIText = FileUtils.readFileToString(
+               new File(
+                     "target/test-classes/io/github/microcks/util/openapi/weather-forecast-openapi-relative-ref.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -425,7 +438,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/response-refs-openapi.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -468,8 +482,9 @@ class OpenAPISchemaValidatorTest {
 
       try {
          // Load full specification from file.
-         openAPIText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/openapi/boba-openapi.json"));
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/boba-openapi.json"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -496,7 +511,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -526,7 +542,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -555,7 +572,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/season-nullable-all-of.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
@@ -603,7 +621,8 @@ class OpenAPISchemaValidatorTest {
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/nullable-fields-openapi.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/nullable-fields-openapi.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);

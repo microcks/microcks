@@ -46,11 +46,13 @@ public class OpenAPISchemaValidator {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(OpenAPISchemaValidator.class);
 
-   private static final String[] STRUCTURES = { "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties" };
-   private static final String[] COMPOSITION_STRUCTURES = { "allOf", "anyOf", "oneOf" };
+   private static final String ONE_OF = "oneOf";
+   private static final String NULLABLE = "nullable";
+   private static final String[] STRUCTURES = { "allOf", "anyOf", ONE_OF, "not", "items", "additionalProperties" };
+   private static final String[] COMPOSITION_STRUCTURES = { "allOf", "anyOf", ONE_OF };
 
-   private static final String[] NOT_SUPPORTED_ATTRIBUTES = { "nullable", "discriminator", "readOnly", "writeOnly",
-         "xml", "externalDocs", "example", "deprecated" };
+   private static final String[] NOT_SUPPORTED_ATTRIBUTES = { NULLABLE, "discriminator", "readOnly", "writeOnly", "xml",
+         "externalDocs", "example", "deprecated" };
 
 
    /** Private constructor to hide the implicit one. */
@@ -360,39 +362,39 @@ public class OpenAPISchemaValidator {
       if (node.has("type") && !node.path("type").asText().equals("object")) {
 
          // Convert nullable in additional type and remove node.
-         if (node.path("nullable").asBoolean()) {
+         if (node.path(NULLABLE).asBoolean()) {
             String type = node.path("type").asText();
             ArrayNode typeArray = ((ObjectNode) node).putArray("type");
             typeArray.add(type).add("null");
          }
       }
 
-      //Handle OneOf, AnyOf & AllOf
-      if (node.path("nullable").asBoolean()) {
+      // Handle OneOf, AnyOf & AllOf.
+      if (node.path(NULLABLE).asBoolean()) {
          Optional<String> maybeStructure = getCompositionStructureType(node);
          if (maybeStructure.isPresent()) {
             String structure = maybeStructure.get();
-            if (structure.equals("oneOf")) {
-               //Append null type to oneOf if it's not already there
-               var oneOf = ((ArrayNode) node.path("oneOf"));
+            if (structure.equals(ONE_OF)) {
+               // Append null type to oneOf if it's not already there.
+               var oneOf = ((ArrayNode) node.path(ONE_OF));
                if (!isOneOfNullable(oneOf)) {
                   ObjectNode nullNode = new ObjectMapper().createObjectNode();
                   nullNode.put("type", "null");
-                  ((ArrayNode) node.path("oneOf")).add(nullNode);
+                  ((ArrayNode) node.path(ONE_OF)).add(nullNode);
                }
             } else {
-               //Nesting current structure inside a OneOf
+               // Nesting current structure inside a OneOf.
                ObjectNode allOfChildObject = new ObjectMapper().createObjectNode();
-               allOfChildObject.put(structure, node.path(structure));
+               allOfChildObject.set(structure, node.path(structure));
                ((ObjectNode) node).remove(structure);
 
-               ((ObjectNode) node).putArray("oneOf");
-               ((ArrayNode) node.path("oneOf")).add(allOfChildObject);
+               ((ObjectNode) node).putArray(ONE_OF);
+               ((ArrayNode) node.path(ONE_OF)).add(allOfChildObject);
 
                //Adding null type to oneOf structure
                ObjectNode nullNode = new ObjectMapper().createObjectNode();
                nullNode.put("type", "null");
-               ((ArrayNode) node.path("oneOf")).add(nullNode);
+               ((ArrayNode) node.path(ONE_OF)).add(nullNode);
             }
          }
       }
