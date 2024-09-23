@@ -1,7 +1,7 @@
 ## Overview
 
-This document contains a list of maintainers in this repo.
-If you're interested in contributing, and becoming a maintainer, see [CONTRIBUTING](CONTRIBUTING.md).
+This document provides an alphabetical list of Microcks' maintainers. 
+If you're interested in contributing and becoming a code owner, please refer to [CONTRIBUTING](CONTRIBUTING.md).
 
 ## Current Maintainers
 
