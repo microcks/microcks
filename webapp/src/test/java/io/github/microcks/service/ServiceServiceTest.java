@@ -66,6 +66,7 @@ class ServiceServiceTest {
    @Autowired
    private ResponseRepository responseRepository;
 
+
    @Test
    void testImportServiceDefinition() {
       List<Service> services = null;
@@ -842,14 +843,14 @@ class ServiceServiceTest {
    }
 
    @Test
-   void testCreateGenericResourceServiceFailure() throws EntityAlreadyExistsException {
+   void testCreateGenericResourceServiceFailure() {
+      try {
+         service.createGenericResourceService("Order Service", "1.0", "order", null);
+      } catch (Exception e) {
+         fail("No exception should be raised on first save()!");
+      }
       assertThrows(EntityAlreadyExistsException.class, () -> {
-         try {
-            Service first = service.createGenericResourceService("Order Service", "1.0", "order", null);
-         } catch (Exception e) {
-            fail("No exception should be raised on first save()!");
-         }
-         Service second = service.createGenericResourceService("Order Service", "1.0", "order", null);
+         service.createGenericResourceService("Order Service", "1.0", "order", null);
       });
    }
 

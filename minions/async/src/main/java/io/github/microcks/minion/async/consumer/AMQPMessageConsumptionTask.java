@@ -31,6 +31,7 @@ import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,7 +76,7 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
 
    private File trustStore;
 
-   private AsyncTestSpecification specification;
+   private final AsyncTestSpecification specification;
 
    protected Map<String, String> optionsMap;
 
@@ -113,70 +114,71 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
       }
       List<ConsumedMessage> messages = new ArrayList<>();
 
-      Channel channel = connection.createChannel();
-      String queueName = destinationName;
+      try (Channel channel = connection.createChannel()) {
+         String queueName = destinationName;
 
-      if (!destinationType.equals(QUEUE_TYPE)) {
-         boolean durable = false;
-         if (optionsMap != null && optionsMap.containsKey(DURABLE_OPTION)) {
-            durable = Boolean.parseBoolean(optionsMap.get(DURABLE_OPTION));
-         }
-         String routingKey = "#";
-         if (optionsMap != null && optionsMap.containsKey(ROUTING_KEY_OPTION)) {
-            routingKey = optionsMap.get(ROUTING_KEY_OPTION);
-         }
+         if (!destinationType.equals(QUEUE_TYPE)) {
+            boolean durable = false;
+            if (optionsMap != null && optionsMap.containsKey(DURABLE_OPTION)) {
+               durable = Boolean.parseBoolean(optionsMap.get(DURABLE_OPTION));
+            }
+            String routingKey = "#";
+            if (optionsMap != null && optionsMap.containsKey(ROUTING_KEY_OPTION)) {
+               routingKey = optionsMap.get(ROUTING_KEY_OPTION);
+            }
 
-         switch (destinationType) {
-            case DIRECT_TYPE:
-               channel.exchangeDeclare(destinationName, "direct", durable);
-               queueName = channel.queueDeclare().getQueue();
-               channel.queueBind(queueName, destinationName, routingKey);
-               break;
-            case TOPIC_TYPE:
-               channel.exchangeDeclare(destinationName, "topic", durable);
-               queueName = channel.queueDeclare().getQueue();
-               channel.queueBind(queueName, destinationName, routingKey);
-               break;
-            case HEADERS_TYPE:
-               channel.exchangeDeclare(destinationName, "headers", durable);
-               queueName = channel.queueDeclare().getQueue();
-               // Specify any header if specified otherwise default to routing key.
-               Map<String, Object> bindingArgs = buildHeaderArgs();
-               if (bindingArgs != null && !bindingArgs.isEmpty()) {
-                  bindingArgs.put("x-match", "any");
-                  channel.queueBind(queueName, destinationName, "", bindingArgs);
-               } else {
+            switch (destinationType) {
+               case DIRECT_TYPE:
+                  channel.exchangeDeclare(destinationName, "direct", durable);
+                  queueName = channel.queueDeclare().getQueue();
                   channel.queueBind(queueName, destinationName, routingKey);
-               }
-               break;
-            case FANOUT_TYPE:
-               channel.exchangeDeclare(destinationName, "fanout", durable);
-               queueName = channel.queueDeclare().getQueue();
-               channel.queueBind(queueName, destinationName, "");
-               break;
+                  break;
+               case HEADERS_TYPE:
+                  channel.exchangeDeclare(destinationName, "headers", durable);
+                  queueName = channel.queueDeclare().getQueue();
+                  // Specify any header if specified otherwise default to routing key.
+                  Map<String, Object> bindingArgs = buildHeaderArgs();
+                  if (bindingArgs != null && !bindingArgs.isEmpty()) {
+                     bindingArgs.put("x-match", "any");
+                     channel.queueBind(queueName, destinationName, "", bindingArgs);
+                  } else {
+                     channel.queueBind(queueName, destinationName, routingKey);
+                  }
+                  break;
+               case FANOUT_TYPE:
+                  channel.exchangeDeclare(destinationName, "fanout", durable);
+                  queueName = channel.queueDeclare().getQueue();
+                  channel.queueBind(queueName, destinationName, "");
+                  break;
+               case TOPIC_TYPE:
+               default:
+                  channel.exchangeDeclare(destinationName, "topic", durable);
+                  queueName = channel.queueDeclare().getQueue();
+                  channel.queueBind(queueName, destinationName, routingKey);
+                  break;
+            }
          }
+
+         String consumerTag = channel.basicConsume(queueName, false, new DefaultConsumer(channel) {
+            @Override
+            public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties,
+                  byte[] body) throws IOException {
+               logger.infof("Received a new AMQP Message: %s", new String(body));
+               // Build a ConsumedMessage from AMQP message.
+               ConsumedMessage message = new ConsumedMessage();
+               message.setReceivedAt(System.currentTimeMillis());
+               message.setHeaders(buildHeaders(properties.getHeaders()));
+               message.setPayload(body);
+               messages.add(message);
+
+               channel.basicAck(envelope.getDeliveryTag(), false);
+            }
+         });
+
+         Thread.sleep(specification.getTimeoutMS());
+
+         channel.basicCancel(consumerTag);
       }
-
-      String consumerTag = channel.basicConsume(queueName, false, new DefaultConsumer(channel) {
-         @Override
-         public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-               throws IOException {
-            logger.info("Received a new AMQP Message: " + new String(body));
-            // Build a ConsumedMessage from AMQP message.
-            ConsumedMessage message = new ConsumedMessage();
-            message.setReceivedAt(System.currentTimeMillis());
-            message.setHeaders(buildHeaders(properties.getHeaders()));
-            message.setPayload(body);
-            messages.add(message);
-
-            channel.basicAck(envelope.getDeliveryTag(), false);
-         }
-      });
-
-      Thread.sleep(specification.getTimeoutMS());
-
-      channel.basicCancel(consumerTag);
-      channel.close();
 
       return messages;
    }
@@ -196,7 +198,7 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
          }
       }
       if (trustStore != null && trustStore.exists()) {
-         trustStore.delete();
+         Files.delete(trustStore.toPath());
       }
    }
 
@@ -224,7 +226,7 @@ public class AMQPMessageConsumptionTask implements MessageConsumptionTask {
       } else {
          factory.setHost(endpointBrokerUrl);
       }
-      if (virtualHost != null && virtualHost.length() > 0) {
+      if (virtualHost != null && !virtualHost.isEmpty()) {
          factory.setVirtualHost(virtualHost);
       }
 

@@ -132,11 +132,13 @@ public class GrpcServerStarter {
             final byte[] privateKeyBytes = extractPrivateKeyIfAny(privateKeyFilePath);
             if (privateKeyBytes != null) {
                log.info("Building a GRPC server with converted key");
-               tlsBuilder = TlsServerCredentials.newBuilder().keyManager(new FileInputStream(certChainFilePath),
-                     new ByteArrayInputStream(privateKeyBytes));
-               grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
-                     .addService(mockHandlerRegistry.getReflectionService())
-                     .fallbackHandlerRegistry(mockHandlerRegistry).build();
+               try (FileInputStream certChainStream = new FileInputStream(certChainFilePath)) {
+                  tlsBuilder = TlsServerCredentials.newBuilder().keyManager(certChainStream,
+                        new ByteArrayInputStream(privateKeyBytes));
+                  grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
+                        .addService(mockHandlerRegistry.getReflectionService())
+                        .fallbackHandlerRegistry(mockHandlerRegistry).build();
+               }
             }
          }
       }
@@ -160,30 +162,30 @@ public class GrpcServerStarter {
    }
 
    private static byte[] extractPrivateKeyIfAny(String privateKeyFilePath) throws IOException {
-      String privateKey = new String(Files.readAllBytes(Path.of(privateKeyFilePath)), StandardCharsets.UTF_8);
+      String privateKey = Files.readString(Path.of(privateKeyFilePath));
       if (privateKey.startsWith(BEGIN_RSA_PRIVATE_KEY)) {
-         PEMParser pemParser = new PEMParser(new FileReader(privateKeyFilePath));
-         Object object = pemParser.readObject();
-         pemParser.close();
-         JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+         try (PEMParser pemParser = new PEMParser(new FileReader(privateKeyFilePath))) {
+            Object object = pemParser.readObject();
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
 
-         PrivateKey privatekey = null;
+            PrivateKey privatekey = null;
 
-         log.debug("Parsed PrivateKey: {}", object);
-         if (object instanceof PEMKeyPair pemKeyPair) {
-            privatekey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
-         }
-         if (object instanceof PrivateKeyInfo privateKeyInfo) {
-            privatekey = converter.getPrivateKey(privateKeyInfo);
-         }
-         if (privatekey != null) {
-            log.debug("Found PrivateKey Algorithm: {}", privatekey.getAlgorithm()); // ex. RSA
-            log.debug("Found PrivateKey Format: {}", privatekey.getFormat()); // ex. PKCS#8
+            log.debug("Parsed PrivateKey: {}", object);
+            if (object instanceof PEMKeyPair pemKeyPair) {
+               privatekey = converter.getPrivateKey(pemKeyPair.getPrivateKeyInfo());
+            }
+            if (object instanceof PrivateKeyInfo privateKeyInfo) {
+               privatekey = converter.getPrivateKey(privateKeyInfo);
+            }
+            if (privatekey != null) {
+               log.debug("Found PrivateKey Algorithm: {}", privatekey.getAlgorithm()); // ex. RSA
+               log.debug("Found PrivateKey Format: {}", privatekey.getFormat()); // ex. PKCS#8
 
-            String privateKeyPem = BEGIN_RSA_PRIVATE_KEY + "\n"
-                  + Base64.getEncoder().encodeToString(privatekey.getEncoded()) + "\n" + END_RSA_PRIVATE_KEY + "\n";
-            log.debug("New PrivateKey PEM is {}", privateKeyPem);
-            return privateKeyPem.getBytes(StandardCharsets.UTF_8);
+               String privateKeyPem = BEGIN_RSA_PRIVATE_KEY + "\n"
+                     + Base64.getEncoder().encodeToString(privatekey.getEncoded()) + "\n" + END_RSA_PRIVATE_KEY + "\n";
+               log.debug("New PrivateKey PEM is {}", privateKeyPem);
+               return privateKeyPem.getBytes(StandardCharsets.UTF_8);
+            }
          }
       }
       return null;
