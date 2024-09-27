@@ -114,7 +114,7 @@ class AsyncAPITestManagerIT {
          }
       };
       SchemaRegistry schemaRegistry = new SchemaRegistry(microcksAPIConnector);
-      schemaRegistry.updateRegistryForService("");
+      schemaRegistry.updateRegistryForService("d3d5a3ed-13bf-493f-a06d-bf93392f420b");
 
       AsyncTestSpecification testSpecification = new AsyncTestSpecification();
       testSpecification.setServiceId("d3d5a3ed-13bf-493f-a06d-bf93392f420b");
@@ -132,12 +132,12 @@ class AsyncAPITestManagerIT {
       // Act.
       manager.launchTest(testSpecification);
 
-      // Wait a bit so that consumption task has actually start.
-      await().during(600, TimeUnit.MILLISECONDS).until(() -> true);
+      // Wait a bit so that consumption task has actually started.
+      await().during(750, TimeUnit.MILLISECONDS).until(() -> true);
       sendTextMessagesOnTopic(5);
 
       // Wait a bit so that consumption task has actually finished.
-      await().during(2, TimeUnit.SECONDS).until(() -> true);
+      await().during(3, TimeUnit.SECONDS).until(() -> true);
 
       // Assert.
       Assertions.assertEquals(1, reportedTestCases.size());
