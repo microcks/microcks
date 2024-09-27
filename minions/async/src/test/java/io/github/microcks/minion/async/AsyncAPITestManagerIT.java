@@ -133,7 +133,7 @@ class AsyncAPITestManagerIT {
       manager.launchTest(testSpecification);
 
       // Wait a bit so that consumption task has actually started.
-      await().during(750, TimeUnit.MILLISECONDS).until(() -> true);
+      await().during(1250, TimeUnit.MILLISECONDS).until(() -> true);
       sendTextMessagesOnTopic(5);
 
       // Wait a bit so that consumption task has actually finished.
