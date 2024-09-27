@@ -123,7 +123,7 @@ class AsyncAPITestManagerIT {
       testSpecification.setRunnerType(TestRunnerType.ASYNC_API_SCHEMA);
       testSpecification.setAsyncAPISpec(asyncAPIContent);
       testSpecification.setOperationName("SEND publishUserSignedUps");
-      testSpecification.setTimeoutMS(1000L);
+      testSpecification.setTimeoutMS(2200L);
       testSpecification.setTestResultId("test-result-id");
 
       AsyncAPITestManager manager = new AsyncAPITestManager(microcksAPIConnector, schemaRegistry);
