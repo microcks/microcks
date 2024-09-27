@@ -23,13 +23,11 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * This is a simple and local registry for Async APIs schemas. It is used as a local proxy to Services Resources that
@@ -43,9 +41,15 @@ public class SchemaRegistry {
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   @Inject
-   @RestClient
-   MicrocksAPIConnector microcksAPIConnector;
+   private final MicrocksAPIConnector microcksAPIConnector;
+
+   /**
+    * Create a new SchemaRegistry instance.
+    * @param microcksAPIConnector The MicrocksAPIConnector to use for retrieving resources
+    */
+   public SchemaRegistry(@RestClient MicrocksAPIConnector microcksAPIConnector) {
+      this.microcksAPIConnector = microcksAPIConnector;
+   }
 
    /** The internal map backing schemas storage. This is an in-memory map. */
    private Map<String, List<SchemaEntry>> schemaEntries = new HashMap<>();
@@ -60,7 +64,7 @@ public class SchemaRegistry {
       logger.infof("Updating schema registry for '%s - %s' with %d entries", service.getName(), service.getVersion(),
             resources.size());
       schemaEntries.put(service.getId(),
-            resources.stream().map(resource -> new SchemaEntry(resource)).collect(Collectors.toList()));
+            resources.stream().map(SchemaEntry::new).toList());
    }
 
    /**
@@ -72,7 +76,7 @@ public class SchemaRegistry {
       List<Resource> resources = microcksAPIConnector.getResources(serviceId);
       logger.infof("Updating schema registry for Service '%s' with %d entries", serviceId, resources.size());
       schemaEntries.put(serviceId,
-            resources.stream().map(resource -> new SchemaEntry(resource)).collect(Collectors.toList()));
+            resources.stream().map(SchemaEntry::new).toList());
    }
 
    /**

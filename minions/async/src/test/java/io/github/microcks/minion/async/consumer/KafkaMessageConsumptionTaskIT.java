@@ -48,6 +48,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
+
 /**
  * This is an integration test case using <a href="https://testcontainers.com/">Testcontainers</a> to test
  * {@link KafkaMessageConsumptionTask} class.
@@ -105,7 +107,7 @@ class KafkaMessageConsumptionTaskIT {
                @Override
                public List<ConsumedMessage> call() throws Exception {
                   // Wait a bit so that consumption task has actually start.
-                  TimeUnit.MILLISECONDS.sleep(500L);
+                  await().during(600, TimeUnit.MILLISECONDS).until(() -> true);
                   sendTextMessagesOnTopic(1);
                   return Collections.emptyList();
                }

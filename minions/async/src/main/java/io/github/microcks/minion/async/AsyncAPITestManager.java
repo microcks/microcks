@@ -39,7 +39,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -57,15 +56,21 @@ import java.util.concurrent.TimeoutException;
 @ApplicationScoped
 public class AsyncAPITestManager {
 
-   @Inject
-   @RestClient
-   MicrocksAPIConnector microcksAPIConnector;
-
-   @Inject
-   SchemaRegistry schemaRegistry;
+   private final MicrocksAPIConnector microcksAPIConnector;
+   private final SchemaRegistry schemaRegistry;
 
    @ConfigProperty(name = "io.github.microcks.minion.async.client.MicrocksAPIConnector/mp-rest/url")
    String microcksUrl;
+
+   /**
+    * Create a new AsyncAPITestManager.
+    * @param microcksAPIConnector The MicrocksAPIConnector to use for reporting test results.
+    * @param schemaRegistry       The SchemaRegistry to use for schema validation.
+    */
+   public AsyncAPITestManager(@RestClient MicrocksAPIConnector microcksAPIConnector, SchemaRegistry schemaRegistry) {
+      this.microcksAPIConnector = microcksAPIConnector;
+      this.schemaRegistry = schemaRegistry;
+   }
 
    /**
     * Launch a new test using this specification. This is a fire and forget operation. Tests results will be reported
@@ -274,11 +279,11 @@ public class AsyncAPITestManager {
          String asyncApi = specificationNode.path("asyncapi").asText("2");
          if (asyncApi.startsWith("3")) {
             // Assume we have an AsyncAPI v3 document.
-            String operationNamePtr = "/operations/" + operationElements[1].replaceAll("/", "~1");
+            String operationNamePtr = "/operations/" + operationElements[1].replace("/", "~1");
             messagePathPointer = operationNamePtr + "/messages";
          } else {
             // Assume we have an AsyncAPI v2 document.
-            String operationNamePtr = "/channels/" + operationElements[1].replaceAll("/", "~1");
+            String operationNamePtr = "/channels/" + operationElements[1].replace("/", "~1");
             if ("SUBSCRIBE".equals(operationElements[0])) {
                operationNamePtr += "/subscribe";
             } else {
