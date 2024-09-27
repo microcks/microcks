@@ -17,7 +17,6 @@ package io.github.microcks.config;
 
 import io.github.microcks.listener.WebSocketServiceChangeEventChannel;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
@@ -34,8 +33,15 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 @Profile("uber")
 public class WebSocketConfiguration implements WebSocketConfigurer {
 
-   @Autowired
-   WebSocketServiceChangeEventChannel channel;
+   private final WebSocketServiceChangeEventChannel channel;
+
+   /**
+    * Build a new WebSocketConfiguration with mandatory dependencies
+    * @param channel The channel to register as a handler
+    */
+   public WebSocketConfiguration(WebSocketServiceChangeEventChannel channel) {
+      this.channel = channel;
+   }
 
    @Override
    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
