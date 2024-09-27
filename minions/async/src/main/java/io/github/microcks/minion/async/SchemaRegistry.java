@@ -63,8 +63,7 @@ public class SchemaRegistry {
       List<Resource> resources = microcksAPIConnector.getResources(service.getId());
       logger.infof("Updating schema registry for '%s - %s' with %d entries", service.getName(), service.getVersion(),
             resources.size());
-      schemaEntries.put(service.getId(),
-            resources.stream().map(SchemaEntry::new).toList());
+      schemaEntries.put(service.getId(), resources.stream().map(SchemaEntry::new).toList());
    }
 
    /**
@@ -75,8 +74,7 @@ public class SchemaRegistry {
       clearRegistryForService(serviceId);
       List<Resource> resources = microcksAPIConnector.getResources(serviceId);
       logger.infof("Updating schema registry for Service '%s' with %d entries", serviceId, resources.size());
-      schemaEntries.put(serviceId,
-            resources.stream().map(SchemaEntry::new).toList());
+      schemaEntries.put(serviceId, resources.stream().map(SchemaEntry::new).toList());
    }
 
    /**
