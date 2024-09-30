@@ -31,6 +31,7 @@ import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.ParameterConstraintUtil;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
@@ -64,8 +65,6 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.parser.Parser;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
@@ -89,6 +88,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A controller for mocking GraphQL responses.
@@ -98,10 +98,12 @@ import java.util.Optional;
 @RequestMapping("/graphql")
 public class GraphQLController {
 
-   /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(GraphQLController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(GraphQLController.class);
 
    private static final String INTROSPECTION_SELECTION = "__schema";
+   private static final String TYPENAME_SELECTION = "__typename";
+   private static final Set<String> IGNORED_HEADERS = Set.of("transfer-encoding", "content-length");
 
    private final ServiceRepository serviceRepository;
    private final ServiceStateRepository serviceStateRepository;
@@ -245,9 +247,9 @@ public class GraphQLController {
       // Deal with response headers.
       HttpHeaders responseHeaders = new HttpHeaders();
       for (GraphQLQueryResponse response : graphqlResponses) {
-         if (response.getResponse().getHeaders() != null) {
+         if (response.getResponse() != null && response.getResponse().getHeaders() != null) {
             for (Header header : response.getResponse().getHeaders()) {
-               if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(header.getName())) {
+               if (!IGNORED_HEADERS.contains(header.getName().toLowerCase())) {
                   responseHeaders.put(header.getName(), new ArrayList<>(header.getValues()));
                }
             }
@@ -262,8 +264,13 @@ public class GraphQLController {
 
       // Publish an invocation event before returning if enabled.
       if (Boolean.TRUE.equals(enableInvocationStats)) {
-         MockControllerCommons.publishMockInvocation(applicationContext, this, service,
-               graphqlResponses.get(0).getResponse(), startTime);
+         for (GraphQLQueryResponse response : graphqlResponses) {
+            // If it's not a __typename query, we might have a response, publish the invocation.
+            if (response.getResponse() != null) {
+               MockControllerCommons.publishMockInvocation(applicationContext, this, service, response.getResponse(),
+                     startTime);
+            }
+         }
       }
 
       String responseContent = null;
@@ -312,6 +319,16 @@ public class GraphQLController {
       result.setOperationName(operationName);
 
       log.debug("Processing a '{}' operation with name '{}'", operationType, operationName);
+
+      if (TYPENAME_SELECTION.equals(operationName)) {
+         log.debug("Handling GraphQL __typename query...");
+         ObjectNode typenameResponse = mapper.createObjectNode();
+         ObjectNode dataNode = typenameResponse.putObject("data");
+         dataNode.put(TYPENAME_SELECTION, "QUERY".equalsIgnoreCase(operationType) ? "Query" : "Mutation");
+         result.setOperationName(TYPENAME_SELECTION);
+         result.setJsonResponse(typenameResponse);
+         return result;
+      }
 
       Operation rOperation = null;
       for (Operation operation : service.getOperations()) {

@@ -321,7 +321,14 @@ public class KafkaMessageConsumptionTask implements MessageConsumptionTask {
       @Override
       public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
          if (startOffset != null) {
-            partitions.forEach(p -> consumer.seek(p, startOffset));
+            partitions.forEach(p -> {
+               if (consumer != null) {
+                  consumer.seek(p, startOffset);
+               }
+               if (avroConsumer != null) {
+                  avroConsumer.seek(p, startOffset);
+               }
+            });
          }
       }
    }

@@ -272,4 +272,30 @@ class ProtobufImporterTest {
          }
       }
    }
+
+   @Test
+   void testProtobufWithEnumDependenciesImport() {
+      ProtobufImporter importer = null;
+      try {
+         importer = new ProtobufImporter(
+               "target/test-classes/io/github/microcks/util/grpc/TestServiceMissingEnum.proto", null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Service definition import should not fail");
+      }
+      assertEquals(1, services.size());
+
+      Service service = services.get(0);
+      assertEquals("hello.TestService", service.getName());
+      assertEquals(ServiceType.GRPC, service.getType());
+      assertEquals("hello", service.getVersion());
+      assertEquals("hello", service.getXmlNS());
+   }
 }

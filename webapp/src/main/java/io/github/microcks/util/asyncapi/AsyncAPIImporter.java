@@ -159,7 +159,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
                               }
 
                               // Extract content using resolver.
-                              String content = referenceResolver.getHttpReferenceContent(ref, StandardCharsets.UTF_8);
+                              String content = referenceResolver.getReferenceContent(ref, StandardCharsets.UTF_8);
                               String resourceName = ref.substring(ref.lastIndexOf('/') + 1);
 
                               // Build a new resource from content. Use the escaped operation path.

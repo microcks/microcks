@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.microcks.minions.async.client;
 
 import io.github.microcks.event.ServiceViewChangeEvent;
@@ -24,7 +23,6 @@ import io.quarkus.arc.Unremovable;
 import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-import jakarta.inject.Inject;
 import jakarta.websocket.ClientEndpoint;
 import jakarta.websocket.ContainerProvider;
 import jakarta.websocket.DeploymentException;
@@ -38,13 +36,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-@Unremovable
-@ApplicationScoped
 /**
- * This is a connector to Microcks app WebScoket endpoints. It listens to /api/services-updates endpoint for incoming
+ * This is a connector to Microcks app WebSocket endpoints. It listens to /api/services-updates endpoint for incoming
  * {@code ServiceViewChangeEvent} and propagate them to the {@code AsyncMockDefinitionUpdater}.
  * @author laurent
  */
+@Unremovable
+@ApplicationScoped
 public class MicrocksWebSocketConnector {
 
    /** Get a JBoss logging logger. */
@@ -76,11 +74,18 @@ public class MicrocksWebSocketConnector {
    @ClientEndpoint
    public static class WebSocketClient {
 
-      @Inject
-      AsyncMockDefinitionUpdater definitionUpdater;
+      private final AsyncMockDefinitionUpdater definitionUpdater;
+      private final ObjectMapper mapper;
 
-      @Inject
-      ObjectMapper mapper;
+      /**
+       * Create a WebSocketClient with mandatory dependencies.
+       * @param definitionUpdater to update Async mocks definition when needed
+       * @param mapper            to deserialize ServiceViewChangeEvents
+       */
+      public WebSocketClient(AsyncMockDefinitionUpdater definitionUpdater, ObjectMapper mapper) {
+         this.definitionUpdater = definitionUpdater;
+         this.mapper = mapper;
+      }
 
       @OnOpen
       public void open(Session session) {

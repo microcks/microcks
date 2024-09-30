@@ -74,6 +74,12 @@ class ExamplesImporterTest {
          fail("Exception should not be thrown");
       }
 
+      // No dispatcher has been seet but we should have at least the resource path pattern.
+      assertNull(operation.getDispatcher());
+      assertNotNull(operation.getResourcePaths());
+      assertEquals(1, operation.getResourcePaths().size());
+      assertTrue(operation.getResourcePaths().contains("/pastry/{name}"));
+
       assertNotNull(exchanges);
       assertEquals(2, exchanges.size());
 
@@ -111,6 +117,60 @@ class ExamplesImporterTest {
             fail("Unknown extracted exchange type");
          }
       }
+   }
+
+   @Test
+   void testPathAndQueryParametersSplitting() {
+      ExamplesImporter importer = null;
+      try {
+         importer = new ExamplesImporter(
+               "target/test-classes/io/github/microcks/util/metadata/weather-forecast-examples.yml");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("WeatherForecast API", service.getName());
+      assertEquals("1.0.0", service.getVersion());
+
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().get(0);
+
+      assertEquals("GET /forecast/{region}", operation.getName());
+
+      // Force the operation dispatcher to URI_ELEMENTS to check if importer correctly
+      // splits the query from the path parameters when computing dispatch criteria.
+      operation.setDispatcher("URI_ELEMENTS");
+      operation.setDispatcherRules("region && apiKey");
+
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+
+      assertNotNull(exchanges);
+      assertEquals(1, exchanges.size());
+
+      Exchange exchange = exchanges.get(0);
+      assertTrue(exchange instanceof RequestResponsePair);
+
+      RequestResponsePair pair = (RequestResponsePair) exchange;
+      assertNotNull(pair.getRequest());
+      assertNotNull(pair.getRequest().getQueryParameters());
+      assertEquals(2, pair.getRequest().getQueryParameters().size());
+
+      assertNotNull(pair.getResponse());
+      assertEquals("/region=north?apiKey=123456", pair.getResponse().getDispatchCriteria());
    }
 
    @Test

@@ -163,6 +163,7 @@ paths:
       security:
       - jwt-bearer:
         - user
+      operationId: GetImportJob
       summary: Get ImportJob
       description: Retrieve an ImportJob using its identifier
     post:
@@ -181,6 +182,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ImportJob'
           description: Updated ImportJob
+      operationId: UpdateImportJob
       summary: Update ImportJob
       description: Update an ImportJob
     delete:
@@ -390,10 +392,21 @@ paths:
       summary: Get Secret
       description: Retrieve a Secret
     put:
+      requestBody:
+        description: The Secret to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+        required: true
       tags:
       - config
       responses:
         "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Secret'
           description: Updated Secret
       security:
       - jwt-bearer:
@@ -756,7 +769,7 @@ paths:
           content:
             application/json: {}
           description: Get features configuration
-      operationId: GetFeaturesConfiguration
+      operationId: GetFeaturesConfig
       summary: Get features configuration
   /import:
     summary: Deals with repository snapshot to import in Microcks
@@ -1102,6 +1115,31 @@ paths:
       operationId: downloadArtifact
       summary: Download an artifact
       description: Ask Microcks to download an artifact and import it
+  /secrets/search:
+    get:
+      tags:
+      - config
+      parameters:
+      - name: name
+        description: Search using this name-like criterion
+        schema:
+          type: string
+        in: query
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Secret'
+          description: List of found Secrets (filtered according search criteria)
+      security:
+      - jwt-bearer:
+        - admin
+      operationId: SearchSecrets
+      summary: Search for Secrets
 components:
   schemas:
     TestCaseResult:
@@ -2189,11 +2227,11 @@ components:
           description: Reserved for future usage
           type: string
         createdDate:
-          format: int32
+          format: int64
           description: Creation timestamp for this ImportJob
           type: integer
         lastImportDate:
-          format: int32
+          format: int64
           description: Timestamp of the last import
           type: integer
         lastImportError:

@@ -18,9 +18,8 @@ package io.github.microcks.web;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.util.SafeLogger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -47,8 +46,8 @@ import java.util.stream.Stream;
 @RequestMapping("/api")
 public class DocumentationController {
 
-   /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(DocumentationController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(DocumentationController.class);
 
    private static final String RESOURCE_URL = "{RESOURCE_URL}";
 

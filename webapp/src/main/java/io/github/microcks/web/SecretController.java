@@ -17,10 +17,8 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Secret;
 import io.github.microcks.repository.SecretRepository;
+import io.github.microcks.util.SafeLogger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -47,12 +45,18 @@ import java.util.Map;
 @RequestMapping("/api")
 public class SecretController {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(SecretController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(SecretController.class);
 
-   @Autowired
-   private SecretRepository secretRepository;
+   private final SecretRepository secretRepository;
 
+   /**
+    * Build a new SecretController with its dependencies.
+    * @param secretRepository to have access to Secrets definition
+    */
+   public SecretController(SecretRepository secretRepository) {
+      this.secretRepository = secretRepository;
+   }
 
    @GetMapping(value = "/secrets")
    public List<Secret> listSecrets(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
@@ -81,8 +85,14 @@ public class SecretController {
       return new ResponseEntity<>(secretRepository.save(secret), HttpStatus.CREATED);
    }
 
+   @GetMapping(value = "/secrets/{id}")
+   public ResponseEntity<Secret> getSecret(@PathVariable("id") String secretId) {
+      log.debug("Getting secret with id {}", secretId);
+      return new ResponseEntity<>(secretRepository.findById(secretId).orElse(null), HttpStatus.OK);
+   }
+
    @PutMapping(value = "/secrets/{id}")
-   public ResponseEntity<Secret> saveSecret(@RequestBody Secret secret) {
+   public ResponseEntity<Secret> saveSecret(@PathVariable("id") String secretId, @RequestBody Secret secret) {
       log.debug("Saving existing secret: {}", secret);
       return new ResponseEntity<>(secretRepository.save(secret), HttpStatus.OK);
    }

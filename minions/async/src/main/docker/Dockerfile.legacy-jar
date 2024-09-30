@@ -14,7 +14,16 @@
 # docker run -i --rm -p 8080:8080 microcks/microcks-async-minion-legacy-jar
 #
 ###
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4-1134
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4-1227.1725849298
+
+# Some version information
+LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.authors="Laurent Broudoux <laurent@microcks.io>" \
+      org.opencontainers.image.title="Microcks Async Minion" \
+      org.opencontainers.image.description="Microcks is Open Source cloud-native native tool for API Mocking and Testing" \
+      org.opencontainers.image.licenses="Apache-2.0" \
+      org.opencontainers.image.documentation="https://github.com/microcks/microcks/tree/master/minions/async" \
+      io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/README.md"
 
 ARG JAVA_PACKAGE=java-17-openjdk-headless
 ARG RUN_JAVA_VERSION=1.3.8

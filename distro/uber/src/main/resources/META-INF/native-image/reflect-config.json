@@ -326,5 +326,10 @@
   {
     "name":"com.github.fge.jsonschema.messages.JsonSchemaValidationBundle",
     "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name": "graphql.ExecutionResult",
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true
   }
 ]

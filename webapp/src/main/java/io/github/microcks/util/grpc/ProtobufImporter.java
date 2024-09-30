@@ -56,13 +56,12 @@ public class ProtobufImporter implements MockRepositoryImporter {
    private static final Logger log = LoggerFactory.getLogger(ProtobufImporter.class);
 
    private static final String BINARY_DESCRIPTOR_EXT = ".pbb";
-
    private static final String BUILTIN_LIBRARY_PREFIX = "google/protobuf";
 
-   private final String specContent;
    private final String protoDirectory;
    private final String protoFileName;
    private final ReferenceResolver referenceResolver;
+   private String specContent;
    private DescriptorProtos.FileDescriptorSet fds;
 
 
@@ -83,13 +82,14 @@ public class ProtobufImporter implements MockRepositoryImporter {
       String[] args = { "-v3.21.8", "--include_std_types", "--include_imports", "--proto_path=" + protoDirectory,
             "--descriptor_set_out=" + protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT, protoFileName };
 
+      // Track resolved imports (must be cleanup after success of failure).
+      List<File> resolvedImportsLocalFiles = null;
       try {
          // Read spec bytes.
          byte[] bytes = Files.readAllBytes(Paths.get(protoFilePath));
          specContent = new String(bytes, StandardCharsets.UTF_8);
 
          // Resolve and retrieve imports if any.
-         List<File> resolvedImportsLocalFiles = null;
          if (referenceResolver != null) {
             resolvedImportsLocalFiles = new ArrayList<>();
             resolveAndPrepareRemoteImports(Paths.get(protoFilePath), resolvedImportsLocalFiles);
@@ -98,16 +98,18 @@ public class ProtobufImporter implements MockRepositoryImporter {
          // Run Protoc.
          int result = Protoc.runProtoc(args);
 
-         File protoFileB = new File(protoDirectory + "/" + protoFileName + BINARY_DESCRIPTOR_EXT);
+         File protoFileB = new File(protoDirectory, protoFileName + BINARY_DESCRIPTOR_EXT);
          fds = DescriptorProtos.FileDescriptorSet.parseFrom(new FileInputStream(protoFileB));
-
+      } catch (InterruptedException ie) {
+         log.error("Protobuf schema compilation has been interrupted on {}", protoFilePath);
+         Thread.currentThread().interrupt();
+      } catch (Exception e) {
+         throw new IOException("Protobuf schema file parsing error on " + protoFilePath + ": " + e.getMessage());
+      } finally {
          // Cleanup locally downloaded dependencies needed by protoc.
          if (resolvedImportsLocalFiles != null) {
             resolvedImportsLocalFiles.forEach(File::delete);
          }
-      } catch (Exception e) {
-         log.error("Exception while parsing Protobuf schema file " + protoFilePath, e);
-         throw new IOException("Protobuf schema file parsing error");
       }
    }
 
@@ -115,6 +117,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
    public List<Service> getServiceDefinitions() throws MockRepositoryImportException {
       List<Service> results = new ArrayList<>();
 
+      // Prepare dependencies.
+      List<Descriptors.FileDescriptor> dependencies = new ArrayList<>();
       for (DescriptorProtos.FileDescriptorProto fdp : fds.getFileList()) {
          // Retrieve version from package name.
          // org.acme package => org.acme version
@@ -125,9 +129,13 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
          Descriptors.FileDescriptor fd = null;
          try {
-            fd = Descriptors.FileDescriptor.buildFrom(fdp, new Descriptors.FileDescriptor[] {}, true);
+            fd = Descriptors.FileDescriptor.buildFrom(fdp,
+                  dependencies.toArray(new Descriptors.FileDescriptor[dependencies.size()]), true);
+            dependencies.add(fd);
          } catch (Descriptors.DescriptorValidationException e) {
-            throw new RuntimeException(e);
+            throw new MockRepositoryImportException(
+                  "Exception while building Protobuf descriptor, probably a missing dependency issue: "
+                        + e.getMessage());
          }
 
          for (Descriptors.ServiceDescriptor sd : fd.getServices()) {
@@ -182,7 +190,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
             try {
                protoResource.setContent(Files.readString(f.toPath(), StandardCharsets.UTF_8));
             } catch (IOException ioe) {
-               log.error("", ioe);
+               log.warn("Exception while setting content of {} Protobuf resource", protoResource.getName(), ioe);
+               log.warn("Pursuing on next resource as it was for information purpose only");
             }
             results.add(protoResource);
          });
@@ -225,8 +234,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
                   Path importPath = protoFilePath.getParent().resolve(importStr);
                   if (!Files.exists(importPath)) {
                      // Not there, so resolve it remotely and write to local file for protoc.
-                     String importContent = referenceResolver.getHttpReferenceContent(importStr,
-                           StandardCharsets.UTF_8);
+                     String importContent = referenceResolver.getReferenceContent(importStr, StandardCharsets.UTF_8);
                      try {
                         Files.createDirectories(importPath.getParent());
                         Files.createFile(importPath);
@@ -235,6 +243,9 @@ public class ProtobufImporter implements MockRepositoryImporter {
                      }
                      Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
                      resolvedImportsLocalFiles.add(importPath.toFile());
+
+                     // Now go down the resource content and resolve its own imports.
+                     resolveAndPrepareRemoteImports(importPath, resolvedImportsLocalFiles);
                   }
                }
             }
@@ -256,14 +267,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
          if (method.getInputType() != null) {
             operation.setInputName("." + method.getInputType().getFullName());
 
-            boolean hasOnlyPrimitiveArgs = true;
-            for (Descriptors.FieldDescriptor field : method.getInputType().getFields()) {
-               Descriptors.FieldDescriptor.Type fieldType = field.getType();
-               if (!isScalarType(fieldType)) {
-                  hasOnlyPrimitiveArgs = false;
-               }
-            }
-
+            boolean hasOnlyPrimitiveArgs = hasOnlyPrimitiveArgs(method);
             if (hasOnlyPrimitiveArgs && !method.getInputType().getFields().isEmpty()) {
                operation.setDispatcher(DispatchStyles.QUERY_ARGS);
                operation.setDispatcherRules(extractOperationParams(method.getInputType().getFields()));
@@ -276,6 +280,17 @@ public class ProtobufImporter implements MockRepositoryImporter {
          results.add(operation);
       }
       return results;
+   }
+
+   /** Check if a method has only primitive arguments. */
+   private static boolean hasOnlyPrimitiveArgs(Descriptors.MethodDescriptor method) {
+      for (Descriptors.FieldDescriptor field : method.getInputType().getFields()) {
+         Descriptors.FieldDescriptor.Type fieldType = field.getType();
+         if (!isScalarType(fieldType)) {
+            return false;
+         }
+      }
+      return true;
    }
 
    /** Defines is a protobuf message field type is a scalar type. s */

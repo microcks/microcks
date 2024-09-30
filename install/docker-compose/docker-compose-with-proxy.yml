@@ -22,7 +22,7 @@ services:
     command: ["start-dev", "--import-realm"]
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:latest
+    image: quay.io/microcks/microcks-postman-runtime:0.6.0
     container_name: microcks-postman-runtime
     platform: linux/amd64
 

@@ -154,10 +154,10 @@ class AvroUtilTest {
          Schema schema = new Schema.Parser()
                .parse(new File("target/test-classes/io/github/microcks/util/user-signedup-bad.avsc"));
 
-         GenericRecord record = AvroUtil.jsonToAvroRecord(jsonText, schema);
-         assertEquals("Laurent Broudoux", record.get("name").toString());
-         assertEquals("laurent@microcks.io", record.get("email").toString());
-         assertEquals(Integer.valueOf(42), Integer.valueOf(record.get("age").toString()));
+         GenericRecord genericRecord = AvroUtil.jsonToAvroRecord(jsonText, schema);
+         assertEquals("Laurent Broudoux", genericRecord.get("name").toString());
+         assertEquals("laurent@microcks.io", genericRecord.get("email").toString());
+         assertEquals(Integer.valueOf(42), Integer.valueOf(genericRecord.get("age").toString()));
       } catch (Exception e) {
          fail("Exception should not be thrown");
       }
@@ -181,8 +181,8 @@ class AvroUtilTest {
          String jsonRepresentation = AvroUtil.avroToJson(avroBinary, readSchema);
          System.err.println("\njsonRepresentation: \n" + jsonRepresentation);
 
-         GenericRecord record = AvroUtil.avroToAvroRecord(avroBinary, readSchema);
-         System.err.println(AvroUtil.validate(readSchema, record));
+         GenericRecord genericRecord = AvroUtil.avroToAvroRecord(avroBinary, readSchema);
+         System.err.println(AvroUtil.validate(readSchema, genericRecord));
 
       } catch (Exception e) {
          fail("Exception should not be thrown");

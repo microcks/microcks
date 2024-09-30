@@ -26,13 +26,17 @@ import static io.github.microcks.security.KeycloakJwtToken.MICROCKS_GROUPS_TOKEN
 import static org.springframework.security.oauth2.core.oidc.StandardClaimNames.*;
 
 /**
- * Simpler mappe for transforming KeyclaokSecurityContext token into UserInfo bean.
+ * Simpler mapper for transforming KeycloakSecurityContext token into UserInfo bean.
  * @author laurent
  */
 public class KeycloakTokenToUserInfoMapper {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(KeycloakTokenToUserInfoMapper.class);
+   private static final Logger log = LoggerFactory.getLogger(KeycloakTokenToUserInfoMapper.class);
+
+   private KeycloakTokenToUserInfoMapper() {
+      // Hide implicit public constructor.
+   }
 
    /**
     * Maps the information from Spring SecurityContext tokens into a UserInfo instance.

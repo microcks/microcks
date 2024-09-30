@@ -22,17 +22,19 @@ import io.github.microcks.repository.CustomDailyStatisticRepository;
 import io.github.microcks.repository.DailyStatisticRepository;
 import io.github.microcks.repository.TestConformanceMetricRepository;
 import io.github.microcks.repository.TestResultRepository;
+import io.github.microcks.util.SafeLogger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -43,19 +45,27 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 public class MetricsController {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(MetricsController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(MetricsController.class);
 
-   @Autowired
-   private DailyStatisticRepository invocationsRepository;
+   private final DailyStatisticRepository invocationsRepository;
+   private final TestConformanceMetricRepository metricRepository;
+   private final TestResultRepository testResultRepository;
 
-   @Autowired
-   TestConformanceMetricRepository metricRepository;
+   /**
+    * Build a new MetricsController with its required dependencies.
+    * @param invocationsRepository The repository for daily statistics.
+    * @param metricRepository      The repository for test conformance metrics.
+    * @param testResultRepository  The repository for test results.
+    */
+   public MetricsController(DailyStatisticRepository invocationsRepository,
+         TestConformanceMetricRepository metricRepository, TestResultRepository testResultRepository) {
+      this.invocationsRepository = invocationsRepository;
+      this.metricRepository = metricRepository;
+      this.testResultRepository = testResultRepository;
+   }
 
-   @Autowired
-   TestResultRepository testResultRepository;
-
-   @RequestMapping(value = "/metrics/invocations/global", method = RequestMethod.GET)
+   @GetMapping(value = "/metrics/invocations/global")
    public DailyStatistic getInvocationStatGlobal(@RequestParam(value = "day", required = false) String day) {
       log.debug("Getting invocations stats for day {}", day);
       if (day == null) {
@@ -64,7 +74,7 @@ public class MetricsController {
       return invocationsRepository.aggregateDailyStatistics(day);
    }
 
-   @RequestMapping(value = "/metrics/invocations/top", method = RequestMethod.GET)
+   @GetMapping(value = "/metrics/invocations/top")
    public List<DailyStatistic> getInvocationTopStats(@RequestParam(value = "day", required = false) String day,
          @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
       log.debug("Getting top {} invocations stats for day {}", limit, day);
@@ -74,7 +84,7 @@ public class MetricsController {
       return invocationsRepository.findTopStatistics(day, limit);
    }
 
-   @RequestMapping(value = "/metrics/invocations/{service}/{version}", method = RequestMethod.GET)
+   @GetMapping(value = "/metrics/invocations/{service}/{version}")
    public DailyStatistic getInvocationStatForService(@PathVariable("service") String serviceName,
          @PathVariable("version") String serviceVersion, @RequestParam(value = "day", required = false) String day) {
       log.debug("Getting invocations stats for service [{}, {}] and day {}", serviceName, serviceVersion, day);
@@ -89,7 +99,7 @@ public class MetricsController {
       return null;
    }
 
-   @RequestMapping(value = "/metrics/invocations/global/latest", method = RequestMethod.GET)
+   @GetMapping(value = "/metrics/invocations/global/latest")
    public Map<String, Long> getLatestInvocationStatGlobal(
          @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
       log.debug("Getting invocations stats for last {} days", limit);
@@ -105,32 +115,30 @@ public class MetricsController {
       return invocations;
    }
 
-
-   @RequestMapping(value = "/metrics/conformance/aggregate", method = RequestMethod.GET)
+   @GetMapping(value = "/metrics/conformance/aggregate")
    public List<WeightedMetricValue> getAggregatedTestCoverageMetrics() {
       log.debug("Computing TestConformanceMetric aggregates");
 
       return metricRepository.aggregateTestConformanceMetric();
    }
 
-   @RequestMapping(value = "/metrics/conformance/service/{serviceId:.+}", method = RequestMethod.GET)
+   @GetMapping(value = "/metrics/conformance/service/{serviceId:.+}")
    public TestConformanceMetric getTestConformanceMetric(@PathVariable("serviceId") String serviceId) {
       log.debug("Retrieving TestConformanceMetric for service with id {}", serviceId);
 
       return metricRepository.findByServiceId(serviceId);
    }
 
-   @RequestMapping(value = "/metrics/tests/latest", method = RequestMethod.GET)
+   @GetMapping(value = "/metrics/tests/latest")
    public List<TestResultSummary> getLatestTestResults(
          @RequestParam(value = "limit", required = false, defaultValue = "7") Integer limit) {
       log.debug("Getting tests trend for last {} days", limit);
 
       // Compute last date and retrieve test results.
       Date lastDate = getPastDate(limit);
-      List<TestResultSummary> summaries = testResultRepository.findAllWithTestDateAfter(lastDate).stream()
+      return testResultRepository.findAllWithTestDateAfter(lastDate).stream()
             .map(res -> new TestResultSummary(res.getId(), res.getTestDate(), res.getServiceId(), res.isSuccess()))
             .collect(Collectors.toList());
-      return summaries;
    }
 
    private String getTodaysDate() {
@@ -158,7 +166,7 @@ public class MetricsController {
       return calendar.get(Calendar.YEAR) + monthStr + dayOfMonthStr;
    }
 
-   class TestResultSummary {
+   public static class TestResultSummary {
       String id;
       Date testDate;
       String serviceId;

@@ -31,7 +31,6 @@ import io.github.microcks.domain.ServiceView;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
@@ -50,16 +49,26 @@ import java.util.Map;
 public class ServiceChangeEventPublisher implements ApplicationListener<ServiceChangeEvent> {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ServiceChangeEventPublisher.class);
+   private static final Logger log = LoggerFactory.getLogger(ServiceChangeEventPublisher.class);
 
-   @Autowired
-   private ServiceRepository serviceRepository;
 
-   @Autowired
-   private MessageService messageService;
+   private final ServiceRepository serviceRepository;
+   private final MessageService messageService;
+   private final ServiceChangeEventChannel channel;
 
-   @Autowired
-   private ServiceChangeEventChannel channel;
+
+   /**
+    * Create a new ServiceChangeEventPublisher with required dependencies.
+    * @param serviceRepository the repository for Service objects
+    * @param messageService    the service for Message objects
+    * @param channel           the channel for ServiceChangeEvent
+    */
+   public ServiceChangeEventPublisher(ServiceRepository serviceRepository, MessageService messageService,
+         ServiceChangeEventChannel channel) {
+      this.serviceRepository = serviceRepository;
+      this.messageService = messageService;
+      this.channel = channel;
+   }
 
    @Override
    @Async

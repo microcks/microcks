@@ -37,11 +37,12 @@ import java.util.Map;
 public class ReferenceResolver {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ReferenceResolver.class);
+   private static final Logger log = LoggerFactory.getLogger(ReferenceResolver.class);
 
    private String baseRepositoryUrl;
-   private Secret repositorySecret;
-   private boolean disableSSLValidation;
+   private final Secret repositorySecret;
+   private final boolean disableSSLValidation;
+   private boolean cleanResolvedFiles = true;
 
    private RelativeReferenceURLBuilder urlBuilder;
 
@@ -94,6 +95,23 @@ public class ReferenceResolver {
    }
 
    /**
+    * Check if resolved files should be cleaned up after usage. Default behavior is true.
+    * @return The current value for this flag.
+    */
+   public boolean isCleanResolvedFiles() {
+      return cleanResolvedFiles;
+   }
+
+   /**
+    * Set if resolved files should be cleaned up after usage. If set to false, resolvedReferences map will be clear but
+    * files will not be deleted from the local filesystem.
+    * @param cleanResolvedFiles The new value for this flag.
+    */
+   public void setCleanResolvedFiles(boolean cleanResolvedFiles) {
+      this.cleanResolvedFiles = cleanResolvedFiles;
+   }
+
+   /**
     * Get the full URL corresponding to a reference relative path
     * @param referenceRelativePath The reference relative path to resolve
     * @return The absolute URL if a relative path, the orginal path/URL otherwise.
@@ -113,14 +131,25 @@ public class ReferenceResolver {
     * @return A string representation of reference content.
     * @throws IOException if access to remote reference fails (not found or connection issues)
     */
-   public String getHttpReferenceContent(String relativePath, Charset encoding) throws IOException {
+   public String getReferenceContent(String relativePath, Charset encoding) throws IOException {
       // Check the file first.
       String remoteUrl = getReferenceURL(relativePath);
       File referenceFile = resolvedReferences.get(remoteUrl);
       if (referenceFile == null) {
          log.info("Downloading a reference file at {}", remoteUrl);
-         // Now download this relative file and store its reference into the cache.
-         referenceFile = HTTPDownloader.handleHTTPDownloadToFile(remoteUrl, repositorySecret, disableSSLValidation);
+
+         if (remoteUrl.startsWith("http")) {
+            // We have a remote URL, let's download it.
+            referenceFile = HTTPDownloader.handleHTTPDownloadToFile(remoteUrl, repositorySecret, disableSSLValidation);
+         } else {
+            // We have a local file, let's just use it.
+            if (remoteUrl.startsWith("file://")) {
+               remoteUrl = remoteUrl.substring("file://".length());
+            }
+            log.debug("Reading local file {}", remoteUrl);
+            referenceFile = new File(remoteUrl);
+         }
+         // Store this relative reference into the cache.
          resolvedReferences.put(remoteUrl, referenceFile);
       }
       // Keep track on how we resolved this relativePath.
@@ -147,8 +176,10 @@ public class ReferenceResolver {
 
    /** Cleans up already resolved references. */
    public void cleanResolvedReferences() {
-      for (File referenceFile : resolvedReferences.values()) {
-         referenceFile.delete();
+      if (cleanResolvedFiles) {
+         for (File referenceFile : resolvedReferences.values()) {
+            referenceFile.delete();
+         }
       }
       resolvedReferences.clear();
       relativeResolvedReferences.clear();

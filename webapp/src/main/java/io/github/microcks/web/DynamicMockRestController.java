@@ -22,24 +22,25 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.event.MockInvocationEvent;
 import io.github.microcks.repository.GenericResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
 import org.bson.Document;
 import org.bson.json.JsonParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.util.UriUtils;
 
@@ -56,24 +57,32 @@ import java.util.stream.Collectors;
 @RequestMapping("/dynarest")
 public class DynamicMockRestController {
 
-   /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(DynamicMockRestController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(DynamicMockRestController.class);
 
    public static final String ID_FIELD = "id";
 
-   @Autowired
-   ServiceRepository serviceRepository;
-
-   @Autowired
-   GenericResourceRepository genericResourceRepository;
-
-   @Autowired
-   private ApplicationContext applicationContext;
+   private final ServiceRepository serviceRepository;
+   private final GenericResourceRepository genericResourceRepository;
+   private final ApplicationContext applicationContext;
 
    @Value("${mocks.enable-invocation-stats}")
    private final Boolean enableInvocationStats = null;
 
-   @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.POST, produces = "application/json")
+   /**
+    * Build a new DynamicMockRestController with required dependencies.
+    * @param serviceRepository         the repository for services
+    * @param genericResourceRepository the repository for generic resources
+    * @param applicationContext        the Spring application context
+    */
+   public DynamicMockRestController(ServiceRepository serviceRepository,
+         GenericResourceRepository genericResourceRepository, ApplicationContext applicationContext) {
+      this.serviceRepository = serviceRepository;
+      this.genericResourceRepository = genericResourceRepository;
+      this.applicationContext = applicationContext;
+   }
+
+   @PostMapping(value = "/{service}/{version}/{resource}", produces = "application/json")
    public ResponseEntity<String> createResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
          @RequestParam(value = "delay", required = false) Long delay, @RequestBody(required = true) String body,
@@ -111,7 +120,7 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}", method = RequestMethod.GET, produces = "application/json")
+   @GetMapping(value = "/{service}/{version}/{resource}", produces = "application/json")
    public ResponseEntity<String> findResources(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
@@ -158,7 +167,7 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.GET, produces = "application/json")
+   @GetMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
    public ResponseEntity<String> getResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
          @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay,
@@ -200,7 +209,7 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.PUT, produces = "application/json")
+   @PutMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
    public ResponseEntity<String> updateResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
          @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay,
@@ -249,7 +258,7 @@ public class DynamicMockRestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   @RequestMapping(value = "/{service}/{version}/{resource}/{resourceId}", method = RequestMethod.DELETE)
+   @DeleteMapping(value = "/{service}/{version}/{resource}/{resourceId}")
    public ResponseEntity<String> deleteResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
          @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay) {
@@ -321,7 +330,7 @@ public class DynamicMockRestController {
       MockControllerCommons.waitForDelay(since, delay);
 
       // Publish an invocation event before returning if enabled.
-      if (enableInvocationStats) {
+      if (Boolean.TRUE.equals(enableInvocationStats)) {
          MockInvocationEvent event = new MockInvocationEvent(this, mockContext.service.getName(),
                mockContext.service.getVersion(), "DynamicMockRestController", new Date(since),
                since - System.currentTimeMillis());

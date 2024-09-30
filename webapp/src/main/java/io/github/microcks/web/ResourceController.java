@@ -24,12 +24,11 @@ import io.github.microcks.repository.GenericResourceRepository;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.ResourceUtil;
+import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -58,8 +57,8 @@ import static io.github.microcks.web.DynamicMockRestController.ID_FIELD;
 @RequestMapping("/api")
 public class ResourceController {
 
-   /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(ResourceController.class);
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(ResourceController.class);
 
    private static final String SWAGGER_20 = "swagger_20";
    private static final String OPENAPI_30 = "openapi_30";
@@ -83,31 +82,24 @@ public class ResourceController {
    }
 
    @GetMapping(value = "/resources/{name}")
-   public ResponseEntity<?> getResourceByName(@PathVariable("name") String name, HttpServletRequest request) {
-      String extension = request.getRequestURI().substring(request.getRequestURI().lastIndexOf('.'));
-
+   public ResponseEntity<Object> getResourceByName(@PathVariable("name") String name, HttpServletRequest request) {
       name = URLDecoder.decode(name, StandardCharsets.UTF_8);
       log.info("Requesting resource named {}", name);
 
       List<Resource> resources = resourceRepository.findByName(name);
       if (!resources.isEmpty()) {
          Optional<Resource> resourceOpt = resources.stream().filter(Resource::isMainArtifact).findFirst();
-         if (resourceOpt.isPresent()) {
-            return responseWithResource(resourceOpt.get(), request);
-         }
+         return resourceOpt.map(this::responseWithResource).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
       }
       return new ResponseEntity<>(HttpStatus.NOT_FOUND);
    }
 
    @GetMapping(value = "/resources/id/{id}")
-   public ResponseEntity<?> getResourceById(@PathVariable("id") String id, HttpServletRequest request) {
+   public ResponseEntity<Object> getResourceById(@PathVariable("id") String id, HttpServletRequest request) {
       log.info("Requesting resource with id {}", id);
       Optional<Resource> resourceOpt = resourceRepository.findById(id);
 
-      if (resourceOpt.isPresent()) {
-         return responseWithResource(resourceOpt.get(), request);
-      }
-      return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+      return resourceOpt.map(this::responseWithResource).orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
    }
 
    @GetMapping(value = "/resources/service/{serviceId}")
@@ -167,7 +159,7 @@ public class ResourceController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-   private ResponseEntity<?> responseWithResource(Resource resource, HttpServletRequest request) {
+   private ResponseEntity<Object> responseWithResource(Resource resource) {
       String extension = resource.getName().substring(resource.getName().lastIndexOf('.'));
       HttpHeaders headers = new HttpHeaders();
 

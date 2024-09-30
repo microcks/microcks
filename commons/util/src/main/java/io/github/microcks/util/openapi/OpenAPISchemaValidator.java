@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static io.github.microcks.util.JsonSchemaValidator.*;
 
@@ -45,9 +46,13 @@ public class OpenAPISchemaValidator {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(OpenAPISchemaValidator.class);
 
-   private static final String[] STRUCTURES = { "allOf", "anyOf", "oneOf", "not", "items", "additionalProperties" };
-   private static final String[] NOT_SUPPORTED_ATTRIBUTES = { "nullable", "discriminator", "readOnly", "writeOnly",
-         "xml", "externalDocs", "example", "deprecated" };
+   private static final String ONE_OF = "oneOf";
+   private static final String NULLABLE = "nullable";
+   private static final String[] STRUCTURES = { "allOf", "anyOf", ONE_OF, "not", "items", "additionalProperties" };
+   private static final String[] COMPOSITION_STRUCTURES = { "allOf", "anyOf", ONE_OF };
+
+   private static final String[] NOT_SUPPORTED_ATTRIBUTES = { NULLABLE, "discriminator", "readOnly", "writeOnly", "xml",
+         "externalDocs", "example", "deprecated" };
 
 
    /** Private constructor to hide the implicit one. */
@@ -210,6 +215,10 @@ public class OpenAPISchemaValidator {
       // Build a schema object with responseNode schema as root and by importing
       // all the common parts that may be referenced by references.
       JsonNode schemaNode = messageNode.path("schema").deepCopy();
+      if (schemaNode == null || schemaNode.isMissingNode()) {
+         log.debug("schema for {} cannot be found into OpenAPI specification", messageNode);
+         return List.of("schemaPathPointer does not represent an existing JSON Pointer in OpenAPI specification");
+      }
       ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT,
             specificationNode.path(JSON_SCHEMA_COMPONENTS_ELEMENT).deepCopy());
 
@@ -328,16 +337,67 @@ public class OpenAPISchemaValidator {
       }
    }
 
+   private static Optional<String> getCompositionStructureType(JsonNode node) {
+      for (var current : COMPOSITION_STRUCTURES) {
+         if (node.has(current)) {
+            return Optional.of(current);
+         }
+      }
+      return Optional.empty();
+   }
+
+   private static boolean isOneOfNullable(ArrayNode oneOf) {
+      for (Iterator<JsonNode> it = oneOf.iterator(); it.hasNext();) {
+         JsonNode current = it.next();
+         if (current.isObject() && ((ObjectNode) current).has("type")
+               && ((ObjectNode) current).get("type").asText().equals("null")) {
+            return true;
+         }
+      }
+      return false;
+   }
+
    /** Deal with converting type of a Json node object. */
    private static void convertType(JsonNode node) {
       if (node.has("type") && !node.path("type").asText().equals("object")) {
 
          // Convert nullable in additional type and remove node.
-         if (node.path("nullable").asBoolean()) {
+         if (node.path(NULLABLE).asBoolean()) {
             String type = node.path("type").asText();
             ArrayNode typeArray = ((ObjectNode) node).putArray("type");
             typeArray.add(type).add("null");
          }
       }
+
+      // Handle OneOf, AnyOf & AllOf.
+      if (node.path(NULLABLE).asBoolean()) {
+         Optional<String> maybeStructure = getCompositionStructureType(node);
+         if (maybeStructure.isPresent()) {
+            String structure = maybeStructure.get();
+            if (structure.equals(ONE_OF)) {
+               // Append null type to oneOf if it's not already there.
+               var oneOf = ((ArrayNode) node.path(ONE_OF));
+               if (!isOneOfNullable(oneOf)) {
+                  ObjectNode nullNode = new ObjectMapper().createObjectNode();
+                  nullNode.put("type", "null");
+                  ((ArrayNode) node.path(ONE_OF)).add(nullNode);
+               }
+            } else {
+               // Nesting current structure inside a OneOf.
+               ObjectNode allOfChildObject = new ObjectMapper().createObjectNode();
+               allOfChildObject.set(structure, node.path(structure));
+               ((ObjectNode) node).remove(structure);
+
+               ((ObjectNode) node).putArray(ONE_OF);
+               ((ArrayNode) node.path(ONE_OF)).add(allOfChildObject);
+
+               //Adding null type to oneOf structure
+               ObjectNode nullNode = new ObjectMapper().createObjectNode();
+               nullNode.put("type", "null");
+               ((ArrayNode) node.path(ONE_OF)).add(nullNode);
+            }
+         }
+      }
+
    }
 }

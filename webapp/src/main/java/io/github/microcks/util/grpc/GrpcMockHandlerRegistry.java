@@ -42,7 +42,7 @@ import javax.annotation.Nullable;
 public class GrpcMockHandlerRegistry extends HandlerRegistry {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(GrpcMockHandlerRegistry.class);
+   private static final Logger log = LoggerFactory.getLogger(GrpcMockHandlerRegistry.class);
 
    private static final String SERVER_REFLECTION_V1_METHOD = "grpc.reflection.v1.ServerReflection/ServerReflectionInfo";
 
@@ -51,8 +51,10 @@ public class GrpcMockHandlerRegistry extends HandlerRegistry {
    private final ProtoReflectionService reflectionService;
 
    /**
-    * Buidl a new GrpcMockHandlerRegistry with a callback handler.
-    * @param serverCallHandler The server callback handler to use
+    * Build a new GrpcMockHandlerRegistry with a callback handler.
+    * @param serverCallHandler  The server callback handler to use
+    * @param serviceRepository  The repository used to get access to service definitions
+    * @param resourceRepository The repository used to get access to resource definitions
     */
    public GrpcMockHandlerRegistry(GrpcServerCallHandler serverCallHandler, ServiceRepository serviceRepository,
          ResourceRepository resourceRepository) {

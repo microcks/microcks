@@ -8,7 +8,7 @@ services:
       - "~/tmp/microcks-data:/data/db"
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:latest
+    image: quay.io/microcks/microcks-postman-runtime:0.6.0
     container_name: microcks-postman-runtime
 
   kafka:

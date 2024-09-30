@@ -30,10 +30,10 @@ import org.apache.avro.io.JsonDecoder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -43,6 +43,10 @@ import java.util.List;
  * @author laurent
  */
 public class AvroUtil {
+
+   private AvroUtil() {
+      // Private constructor to hide implicit public one.
+   }
 
    /**
     * Convert a JSON string into an Avro binary representation using specified schema.
@@ -66,8 +70,8 @@ public class AvroUtil {
     */
    public static byte[] jsonToAvro(String json, Schema avroSchema) throws AvroTypeException, IOException {
       // Prepare reader an input stream from Json string.
-      GenericDatumReader<Object> reader = new GenericDatumReader<>(avroSchema);
-      InputStream input = new ByteArrayInputStream(json.getBytes("UTF-8"));
+      GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
+      InputStream input = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
       JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(avroSchema, input);
 
       // Prepare write and output stream to produce binary encoding.
@@ -75,17 +79,13 @@ public class AvroUtil {
       GenericDatumWriter<Object> writer = new GenericDatumWriter<>(avroSchema);
       Encoder e = EncoderFactory.get().binaryEncoder(baos, null);
 
-      // Fill a datum object from jsonDecoder.
-      Object datum = null;
-      try {
-         while (true) {
-            datum = reader.read(datum, jsonDecoder);
-            writer.write(datum, e);
-            e.flush();
-         }
-      } catch (EOFException eofException) {
-         // Nothing to do here, we just exited the loop.
-      }
+      // Read the data into a GenericRecord.
+      GenericRecord datum = reader.read(null, jsonDecoder);
+
+      // Write the GenericRecord to the Avro binary.
+      writer.write(datum, e);
+      e.flush();
+
       return baos.toByteArray();
    }
 
@@ -112,7 +112,7 @@ public class AvroUtil {
    public static GenericRecord jsonToAvroRecord(String json, Schema avroSchema) throws AvroTypeException, IOException {
       // Prepare reader an input stream from Json string.
       GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
-      InputStream input = new ByteArrayInputStream(json.getBytes("UTF-8"));
+      InputStream input = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
       JsonDecoder jsonDecoder = DecoderFactory.get().jsonDecoder(avroSchema, input);
 
       return reader.read(null, jsonDecoder);
@@ -142,8 +142,8 @@ public class AvroUtil {
       DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(avroSchema);
       Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
 
-      GenericRecord record = datumReader.read(null, decoder);
-      return record.toString();
+      GenericRecord genRecord = datumReader.read(null, decoder);
+      return genRecord.toString();
    }
 
    /**
@@ -185,12 +185,11 @@ public class AvroUtil {
    public static boolean validate(Schema schema, Object datum) {
       switch (schema.getType()) {
          case RECORD:
-            if (datum instanceof GenericRecord) {
-               GenericRecord record = (GenericRecord) datum;
+            if (datum instanceof GenericRecord genericRecord) {
                for (Schema.Field f : schema.getFields()) {
-                  if (!record.hasField(f.name()))
+                  if (!genericRecord.hasField(f.name()))
                      return false;
-                  if (!validate(f.schema(), record.get(f.pos())))
+                  if (!validate(f.schema(), genericRecord.get(f.pos())))
                      return false;
                }
                return true;
@@ -212,29 +211,28 @@ public class AvroUtil {
 
       switch (schema.getType()) {
          case RECORD:
-            if (datum instanceof GenericRecord) {
-               GenericRecord record = (GenericRecord) datum;
+            if (datum instanceof GenericRecord genericRecord) {
                for (Schema.Field f : schema.getFields()) {
                   // Check for defined and required field.
-                  if (!record.hasField(f.name()) && !f.hasDefaultValue()) {
+                  if (!genericRecord.hasField(f.name()) && !f.hasDefaultValue()) {
                      errors.add("Required field " + f.name() + " cannot be found in record");
-                  } else if (record.hasField(f.name())) {
+                  } else if (genericRecord.hasField(f.name())) {
                      // Now add errors for each field if defined at the record level.
-                     errors.addAll(getValidationErrors(f.schema(), record.get(f.pos()), f.name()));
+                     errors.addAll(getValidationErrors(f.schema(), genericRecord.get(f.pos()), f.name()));
                   }
                }
             }
             break;
          case ENUM:
             if (!schema.hasEnumSymbol(datum.toString()))
-               errors.add(datum.toString() + " enum value is not defined in schema");
+               errors.add(datum + " enum value is not defined in schema");
             break;
          case ARRAY:
-            if (!(datum instanceof Collection)) {
+            if (!(datum instanceof Collection<?> collection)) {
                errors.add(fieldName + " is not a valid array");
             } else {
                // Now add errors for each element.
-               for (Object element : (Collection) datum) {
+               for (Object element : collection) {
                   errors.addAll(getValidationErrors(schema.getElementType(), element));
                }
             }

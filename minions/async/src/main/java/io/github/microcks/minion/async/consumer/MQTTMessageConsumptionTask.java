@@ -49,7 +49,7 @@ public class MQTTMessageConsumptionTask implements MessageConsumptionTask {
 
    private File trustStore;
 
-   private AsyncTestSpecification specification;
+   private final AsyncTestSpecification specification;
 
    private IMqttClient subscriber;
 

@@ -1,0 +1,159 @@
+openapi: 3.0.1
+info:
+  title: Season API
+  description: useless API
+  version: v1
+servers:
+- url: /
+tags:
+- name: season-controller
+paths:
+  /seasonAllOf:
+    post:
+      tags:
+      - season-controller
+      operationId: createSeason
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatableSeason'
+            examples:
+              bumpinThat:
+                description: a Season
+                value:
+                  seasonType: "BratSummer"
+        required: true
+      responses:
+        "201":
+          description: season data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonAllOf'
+              examples:
+                bumpinThat:
+                  value: '{"seasonData":null}'
+  /seasonOneOf:
+    post:
+      tags:
+        - season-controller
+      operationId: createSeason
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatableSeason'
+            examples:
+              bumpinThat:
+                description: a Season
+                value:
+                  seasonType: "BratSummer"
+        required: true
+      responses:
+        "201":
+          description: season data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonOneOf'
+              examples:
+                bumpinThat:
+                  value: '{"seasonData":null}'
+  /seasonAnyOf:
+    post:
+      tags:
+        - season-controller
+      operationId: createSeason
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatableSeason'
+            examples:
+              bumpinThat:
+                description: a Season
+                value:
+                  seasonType: "BratSummer"
+        required: true
+      responses:
+        "201":
+          description: season data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SeasonAnyOf'
+              examples:
+                bumpinThat:
+                  value: '{"seasonData":null}'
+components:
+  schemas:
+    SeasonType:
+      type: string
+      enum:
+        - BratSummer
+        - SpookySeason
+        - RustySpring
+        - ColdHeartWinter
+
+    CreatableSeason:
+      title: CreatableSeason
+      type: object
+      properties:
+        seasonType:
+          $ref: '#/components/schemas/SeasonType'
+
+    SeasonData:
+      nullable: true
+      title: SeasonData
+      required:
+      - isTooHot
+      - isTooCold
+      type: object
+      properties:
+        seasonType:
+          $ref: '#/components/schemas/SeasonType'
+        isTooHot:
+          type: boolean
+        isTooCold:
+          type: boolean
+
+    SeasoningData:
+      nullable: true
+      title: SeasoningData
+      required:
+        - isSalty
+        - isUmami
+      type: object
+      properties:
+        isSalty:
+          type: boolean
+        isUmami:
+          type: boolean
+
+    SeasonAllOf:
+      type: object
+      properties:
+        seasonData:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/SeasonData'
+
+    SeasonOneOf:
+      type: object
+      properties:
+        seasonData:
+          nullable: true
+          oneOf:
+            - $ref: '#/components/schemas/SeasonData'
+            - $ref: '#/components/schemas/SeasoningData'
+
+    SeasonAnyOf:
+      type: object
+      properties:
+        seasonData:
+          nullable: true
+          anyOf:
+            - $ref: '#/components/schemas/SeasonData'
+            - $ref: '#/components/schemas/SeasoningData'
+

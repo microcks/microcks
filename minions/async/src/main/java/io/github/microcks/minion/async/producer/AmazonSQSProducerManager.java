@@ -149,7 +149,6 @@ public class AmazonSQSProducerManager {
          // As it may be relative to queue being deleted and recreated so having different id
          // than previous and thus url, we should clean our cache.
          queueUrls.remove(queue);
-         t.printStackTrace();
       }
    }
 

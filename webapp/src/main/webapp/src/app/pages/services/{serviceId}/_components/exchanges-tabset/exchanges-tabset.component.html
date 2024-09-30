@@ -180,12 +180,12 @@
             <dt>Mock URL</dt>
             <dd>
               <div class="input-group">
-                <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria) }}" disabled/>
+                <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria, exchange.request.queryParameters) }}" disabled/>
                 <span class="input-group-addon" style="border-left: 0;">
                   <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                    (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria))"></i>
+                    (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria, exchange.request.queryParameters))"></i>
                 </span>
-                <span class="input-group-addon" *ngIf="view.service.type != 'GRPC'">
+                <span class="input-group-addon">
                   <i class="fa fa-terminal" tooltip="Curl to Clipboard" placement="top"
                     (click)="copyToClipboard(formatCurlCmd(item, exchange))"></i>
                 </span>
