@@ -47,7 +47,7 @@ We use Github to host code, to track issues and feature requests, as well as acc
 
 ## Issues
 
-[Open an issue](https://github.com/microcks/microcks/issues/new) **only** if you want to report a bug or a feature. Don't open issues for questions or support, instead join our [Zulip #user channel](https://microcksio.zulipchat.com/) or our [GitHub discussions](https://github.com/orgs/microcks/discussions) and ask there. 
+[Open an issue](https://github.com/microcks/microcks/issues/new) **only** if you want to report a bug or a feature. Don't open issues for questions or support, instead join our [Discord #support channel](https://microcks.io/discord-invite) or our [GitHub discussions](https://github.com/orgs/microcks/discussions) and ask there. 
 
 ## Bug Reports and Feature Requests
 
@@ -78,7 +78,7 @@ Happy contributing :heart:
 
 ## License
 
-When you submit changes, your submissions are understood to be under the same [Apache 2.0 License](https://github.com/microcks/microcks/blob/master/LICENSE) that covers the project. Feel free to [contact the maintainers](https://microcksio.zulipchat.com/) if that's a concern.
+When you submit changes, your submissions are understood to be under the same [Apache 2.0 License](https://github.com/microcks/microcks/blob/master/LICENSE) that covers the project. Feel free to [contact the maintainers](https://github.com/microcks/.github/blob/main/MAINTAINERS.md) if that's a concern.
 
 ## References
 
