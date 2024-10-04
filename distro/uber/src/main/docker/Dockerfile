@@ -10,14 +10,14 @@ LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
       io.artifacthub.package.readme-url="https://raw.githubusercontent.com/microcks/microcks/master/distro/uber/README.md"
 
 # Install Java runtime
-RUN microdnf install java-17-openjdk-headless openssl curl-minimal ca-certificates -y \
+RUN microdnf install java-21-openjdk-headless openssl curl-minimal ca-certificates -y \
  && microdnf clean all \
  && rm /var/lib/rpm/rpmdb.sqlite \
  && mkdir -p /deployments
 
 # JAVA_APP_DIR is used by run-java.sh for finding the binaries
 ENV JAVA_APP_DIR=/deployments \
-    JAVA_MAJOR_VERSION=8
+    JAVA_MAJOR_VERSION=11
 
 # Set working directory at /deployments
 WORKDIR /deployments
