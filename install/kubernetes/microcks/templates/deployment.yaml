@@ -199,6 +199,14 @@ spec:
           secret:
             secretName: "{{ .Values.microcks.customSecretRef.secret }}"
         {{- end }}
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -269,6 +277,14 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- if and .Values.mongodb.install }}
 ---
 apiVersion: apps/v1
@@ -383,6 +399,14 @@ spec:
           name: "{{ .Values.appName }}-mongodb-init"
       restartPolicy: Always
       dnsPolicy: ClusterFirst
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- end }}
 {{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
@@ -532,6 +556,14 @@ spec:
           name: "{{ .Values.appName }}-keycloak-config"
       restartPolicy: Always
       dnsPolicy: ClusterFirst
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -617,6 +649,14 @@ spec:
         emptyDir:
           medium: ''
         {{- end }}
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- end }}
 {{- if and .Values.features.async.enabled }}
 ---
@@ -833,4 +873,12 @@ spec:
           {{- end }}
           {{- end }}
         {{- end }}
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- end }}

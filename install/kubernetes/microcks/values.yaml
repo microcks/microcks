@@ -361,3 +361,11 @@ commonLabels: {}
 
 # common annotations associated with all resource of this helm chart
 commonAnnotations: {}
+
+# common affinities associated with all resource of this helm chart
+commonAffinities: {}
+
+## Node tolerations for server scheduling to nodes with taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+##
+commonTolerations: []
