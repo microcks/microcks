@@ -21,7 +21,7 @@ microcks:
   image:
     registry: quay.io
     repository: microcks/microcks
-    tag: maintenance
+    tag: 1.10.1
     digest:
   replicas: 1
 
@@ -193,7 +193,7 @@ features:
     image:
       registry: quay.io
       repository: microcks/microcks-async-minion
-      tag: maintenance
+      tag: 1.10.1
       digest:
 
     env:
