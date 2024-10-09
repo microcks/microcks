@@ -86,17 +86,19 @@ public class SecurityConfiguration {
       if (Boolean.TRUE.equals(keycloakEnabled)) {
          log.info("Keycloak is enabled, configuring oauth2 & request authorization");
 
+         // spotless:off
          http.authorizeHttpRequests(registry -> registry
-               .requestMatchers("/api/services", "/api/services/*", "/api/jobs", "/api/jobs/*")
-               .hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN).requestMatchers("/api/services/*/*")
-               .hasAnyRole(ROLE_MANAGER, ROLE_ADMIN).requestMatchers("/api/jobs/*/*")
-               .hasAnyRole(ROLE_MANAGER, ROLE_ADMIN).requestMatchers("/api/artifact/*").hasAnyRole(ROLE_ADMIN)
+               .requestMatchers("/api/services", "/api/services/*", "/api/jobs", "/api/jobs/*").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/services/*/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/jobs/*/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
+               .requestMatchers("/api/artifact/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers("/api/import", "/api/export").hasAnyRole(ROLE_ADMIN)
                .requestMatchers(HttpMethod.GET, "/api/secrets").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers(HttpMethod.GET, "/api/secrets/*").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers(HttpMethod.POST, "/api/secrets").hasAnyRole(ROLE_ADMIN)
                .requestMatchers(HttpMethod.PUT, "/api/secrets/*").hasAnyRole(ROLE_ADMIN)
                .requestMatchers(HttpMethod.DELETE, "/api/secrets/*").hasAnyRole(ROLE_ADMIN).anyRequest().permitAll());
+         // spotless:on
 
          http.oauth2ResourceServer(oauth2Configurer -> oauth2Configurer
                .jwt(jwtConfigurer -> jwtConfigurer.jwtAuthenticationConverter(new MicrocksJwtConverter())));

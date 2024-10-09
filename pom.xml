@@ -109,6 +109,7 @@
         <configuration>
           <!-- define Java language-specific format -->
           <java>
+            <toggleOffOn />
             <eclipse>
               <file>${multi-project.rootdir}/eclipse-formatter.xml</file>
             </eclipse>
