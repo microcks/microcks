@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Microcks API v1.10
-  version: 1.10.0
+  version: 1.10.1
   description: "API offered by Microcks, the Kubernetes native tool for API and microservices\
     \ mocking and testing (microcks.io)"
   contact:
@@ -300,7 +300,7 @@ paths:
           description: Artifact content is invalid and not understood
       security:
       - jwt-bearer:
-        - user
+        - manager
       operationId: uploadArtifact
       summary: Upload an artifact
       description: Uploads an artifact to be imported by Microcks.
