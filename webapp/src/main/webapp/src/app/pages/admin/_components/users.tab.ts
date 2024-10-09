@@ -109,9 +109,8 @@ export class UsersTabComponent implements OnInit {
         this.groups = results
           .filter((group) => group.path === '/microcks')
           .flatMap((group) => group.subGroups);
-
         // We may a direct array of subGroups because of using the new populateHierarchy=false flag.
-        if (this.groups.length == 1 && this.groups[0].subGroups.length == 0) {
+        if (this.groups.length == 0 || (this.groups.length == 1 && this.groups[0].subGroups.length == 0)) {
           this.groups = results.filter((group) =>
             group.path.startsWith('/microcks/manager')
           );
