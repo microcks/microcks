@@ -17,8 +17,6 @@ package io.github.microcks.util.el.function;
 
 import io.github.microcks.util.el.EvaluationContext;
 
-import java.util.Random;
-
 /**
  * Implementation of ELFunction that pick a value among random ones.
  * @author laurent
