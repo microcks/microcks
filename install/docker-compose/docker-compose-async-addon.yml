@@ -2,7 +2,7 @@ version: '2'
 
 services:
   zookeeper:
-    image: quay.io/strimzi/kafka:0.30.0-kafka-3.1.0
+    image: quay.io/strimzi/kafka:0.43.0-kafka-3.8.0
     container_name: microcks-zookeeper
     command: [
       "sh", "-c", "bin/zookeeper-server-start.sh config/zookeeper.properties"
@@ -15,7 +15,7 @@ services:
   kafka:
     depends_on:
       - zookeeper
-    image: quay.io/strimzi/kafka:0.30.0-kafka-3.1.0
+    image: quay.io/strimzi/kafka:0.43.0-kafka-3.8.0
     container_name: microcks-kafka
     command: [
       "sh", "-c",
