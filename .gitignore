@@ -25,3 +25,6 @@ hs_err_pid*
 *.log
 /.vscode/
 *.iml
+
+# OSX
+.DS_Store
