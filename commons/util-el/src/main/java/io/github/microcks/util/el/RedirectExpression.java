@@ -45,7 +45,7 @@ public class RedirectExpression implements Expression {
                String[] clonedArgs = Arrays.copyOf(functionExp.getFunctionArgs(),
                      functionExp.getFunctionArgs().length + 1);
                clonedArgs[clonedArgs.length - 1] = result;
-               FunctionExpression clonedExp = new FunctionExpression(functionExp.getFunction(), clonedArgs);
+               FunctionExpression clonedExp = new FunctionExpression(functionExp.getFunction(), clonedArgs, false);
                clonedExp.getValue(context);
             }
          }
