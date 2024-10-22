@@ -464,7 +464,7 @@ spec:
         - '--db-password=$(KC_DB_PASSWORD)'
         {{- if hasKey .Values.keycloak "privateUrl" }}
         - '--hostname={{ .Values.keycloak.url }}'
-        - '--hostname-strict-backchannel=false'
+        - '--hostname-backchannel-dynamic=true'
         {{- else }}
         - '--hostname={{ .Values.keycloak.url }}'
         {{- end }}

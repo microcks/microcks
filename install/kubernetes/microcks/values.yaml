@@ -102,7 +102,7 @@ keycloak:
   image:
     registry: quay.io
     repository: keycloak/keycloak
-    tag: 24.0.4
+    tag: 26.0.0
     digest:
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
