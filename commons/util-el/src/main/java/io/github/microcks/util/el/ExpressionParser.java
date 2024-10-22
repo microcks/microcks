@@ -55,6 +55,7 @@ public class ExpressionParser {
     */
    public static Expression[] parseExpressions(String template, EvaluationContext context, String expressionPrefix,
          String expressionSuffix) throws ParseException {
+      template = template.replace("\\{", "ESCAPED_OPEN_BRACE").replace("\\}", "ESCAPED_CLOSE_BRACE");
       // Prepare an array for results.
       List<Expression> expressions = new ArrayList<>();
       int startIdx = 0;
@@ -134,6 +135,11 @@ public class ExpressionParser {
     * Depending on expression string, try to guess if it's a Literal, a Function or a VariableReference expression.
     */
    private static Expression doParseSimpleExpression(String expressionString, EvaluationContext context) {
+      boolean hasEscapeBraces = expressionString.contains("ESCAPED_OPEN_BRACE");
+      if (hasEscapeBraces) {
+         expressionString = expressionString.replace("ESCAPED_OPEN_BRACE", "");
+         expressionString = expressionString.replace("ESCAPED_CLOSE_BRACE", "");
+      }
       int argsStart = expressionString.indexOf('(');
       int argsEnd = expressionString.indexOf(')');
       int variableStart = expressionString.indexOf('.');
@@ -187,7 +193,7 @@ public class ExpressionParser {
             log.error("Exception while instantiating the functionClazz " + functionClazz, e);
             return new LiteralExpression("");
          }
-         return new FunctionExpression(function, args);
+         return new FunctionExpression(function, args, hasEscapeBraces);
       }
 
       log.info("No ELFunction or complex VariableReference expressions found... Returning simple VariableReference");

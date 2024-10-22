@@ -40,7 +40,7 @@ class RedirectExpressionTest {
       EvaluationContext context = new EvaluationContext();
 
       Expression[] expressions = new Expression[] { new LiteralExpression("hello"),
-            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting" }) };
+            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting" }, false) };
 
       RedirectExpression exp = new RedirectExpression(expressions);
       String result = exp.getValue(context);
@@ -53,8 +53,8 @@ class RedirectExpressionTest {
       EvaluationContext context = new EvaluationContext();
 
       Expression[] expressions = new Expression[] { new LiteralExpression("hello"),
-            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting1" }),
-            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting2" }) };
+            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting1" }, false),
+            new FunctionExpression(new PutInContextELFunction(), new String[] { "greeting2" }, false) };
 
       RedirectExpression exp = new RedirectExpression(expressions);
       String result = exp.getValue(context);
