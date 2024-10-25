@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Bean defining service operations around Service domain objects.
@@ -255,6 +256,13 @@ public class ServiceService {
                   }
                   if (operation.getDispatcherRules() != null) {
                      existingOp.setDispatcherRules(operation.getDispatcherRules());
+                  }
+                  if (operation.getParameterConstraints() != null) {
+                     if (existingOp.getParameterConstraints() == null) {
+                        existingOp.setParameterConstraints(operation.getParameterConstraints());
+                     } else {
+                        existingOp.getParameterConstraints().addAll(operation.getParameterConstraints());
+                     }
                   }
                }
             }
@@ -509,7 +517,7 @@ public class ServiceService {
     * @return True if operation has been found and updated, false otherwise.
     */
    public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules,
-         Long delay, List<ParameterConstraint> constraints, UserInfo userInfo) {
+         Long delay, Set<ParameterConstraint> constraints, UserInfo userInfo) {
       Service service = serviceRepository.findById(id).orElse(null);
       log.debug("Is user allowed? {}",
             authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));

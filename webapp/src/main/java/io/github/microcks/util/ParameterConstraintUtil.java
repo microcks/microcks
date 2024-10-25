@@ -27,6 +27,11 @@ import java.util.regex.Pattern;
  */
 public class ParameterConstraintUtil {
 
+   /** Private constructor to hide the implicit public one and prevent instantiation. */
+   private ParameterConstraintUtil() {
+      // Hidden constructor
+   }
+
    /**
     * Validate that a parameter constraint it respected or violated. Return a message if violated.
     * @param request    HttpServlet request holding parameters to validate
@@ -42,10 +47,8 @@ public class ParameterConstraintUtil {
       }
 
       if (value != null) {
-         if (constraint.getMustMatchRegexp() != null) {
-            if (!Pattern.matches(constraint.getMustMatchRegexp(), value)) {
-               return "Parameter " + constraint.getName() + " should match " + constraint.getMustMatchRegexp();
-            }
+         if (constraint.getMustMatchRegexp() != null && !Pattern.matches(constraint.getMustMatchRegexp(), value)) {
+            return "Parameter " + constraint.getName() + " should match " + constraint.getMustMatchRegexp();
          }
       } else {
          if (constraint.isRequired()) {

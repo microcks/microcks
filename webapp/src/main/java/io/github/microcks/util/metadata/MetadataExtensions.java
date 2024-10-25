@@ -26,4 +26,9 @@ public class MetadataExtensions {
 
    /** Name of OpenAPI / AsyncAPI operation Microcks extension attribute. */
    public static final String MICROCKS_OPERATION_EXTENSION = "x-microcks-operation";
+
+   /** Private constructor to hide the implicit public one and prevent instantiation. */
+   private MetadataExtensions() {
+      // Hidden constructor
+   }
 }

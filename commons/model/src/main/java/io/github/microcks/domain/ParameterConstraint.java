@@ -15,6 +15,8 @@
  */
 package io.github.microcks.domain;
 
+import java.util.Objects;
+
 /**
  * Companion object for Operation that may be used to express constraints on request parameters.
  * @author laurent
@@ -65,5 +67,20 @@ public class ParameterConstraint {
 
    public void setMustMatchRegexp(String mustMatchRegexp) {
       this.mustMatchRegexp = mustMatchRegexp;
+   }
+
+   @Override
+   public boolean equals(Object o) {
+      if (this == o)
+         return true;
+      if (o == null || getClass() != o.getClass())
+         return false;
+      ParameterConstraint that = (ParameterConstraint) o;
+      return Objects.equals(name, that.name) && in == that.in;
+   }
+
+   @Override
+   public int hashCode() {
+      return Objects.hash(name, in);
    }
 }
