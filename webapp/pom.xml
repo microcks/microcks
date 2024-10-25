@@ -345,6 +345,7 @@
               <includes>
                 <include>**/*IT.java</include>
               </includes>
+              <reuseForks>false</reuseForks>
             </configuration>
           </plugin>
         </plugins>
