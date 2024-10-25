@@ -20,8 +20,7 @@ import org.testcontainers.Testcontainers;
 import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test case for the GrpcServerCallHandler.
@@ -59,6 +58,41 @@ class GrpcServerCallHandlerIT extends AbstractBaseIT {
          grpcurl.stop();
       }
    }
+
+   @Test
+   void testGrpcMockingWithQueryArgsErrors() {
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1-examples-errors.yml", false);
+
+      Testcontainers.exposeHostPorts(9090);
+
+      GenericContainer grpcurl = new GenericContainer(GRPCURL_IMAGE).withAccessToHost(true);
+
+      try {
+         grpcurl.start();
+         Container.ExecResult result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext", "-d", """
+               {"firstname": "Laurent", "lastname": "Broudoux"}
+               """, "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
+
+         // Should be ok but print a warning as we specified a 200 Http code.
+         assertTrue(result.getStdout().contains("\"greeting\": \"Hello Laurent Broudoux !\""));
+
+         result = grpcurl.execInContainer("/bin/grpcurl", "-plaintext", "-d", """
+               {"firstname": "John", "lastname": "Doe"}
+               """, "host.testcontainers.internal:9090", "io.github.microcks.grpc.hello.v1.HelloService/greeting");
+
+         // Should return a NotFound status error.
+         assertNotEquals(0, result.getExitCode());
+         assertTrue(result.getStdout().trim().isEmpty());
+         assertTrue(result.getStderr().contains("Code: NotFound"));
+         assertTrue(result.getStderr().contains("Message: Mocked response status code"));
+      } catch (Exception e) {
+         fail("No exception should be thrown");
+      } finally {
+         grpcurl.stop();
+      }
+   }
+
 
    @Test
    void testGrpcMockingWithCustomDispatcher() {

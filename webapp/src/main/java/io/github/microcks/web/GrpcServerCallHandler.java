@@ -327,8 +327,38 @@ public class GrpcServerCallHandler {
          }
 
          // Send the output message and complete the stream.
-         streamObserver.onNext(outMsg.toByteArray());
-         streamObserver.onCompleted();
+         if (response.getStatus() == null || response.getStatus().trim().equals("0")
+               || statusInHttpRange(response.getStatus())) {
+            streamObserver.onNext(outMsg.toByteArray());
+            streamObserver.onCompleted();
+         } else {
+            streamObserver.onError(getSafeErrorStatus(response.getStatus())
+                  .withDescription("Mocked response status code").asException());
+         }
+      }
+
+      /** Return true if status is in HTTP status range. */
+      private boolean statusInHttpRange(String status) {
+         try {
+            int statusCode = Integer.parseInt(status);
+            if (statusCode >= 200 && statusCode < 600) {
+               log.warn("Response status code in incorrectly in HTTP code range: {}", status);
+               return true;
+            }
+         } catch (NumberFormatException nfe) {
+            log.warn("Invalid status code in response: {}", status);
+         }
+         return false;
+      }
+
+      /** Return a safe gRPC Status from a string. */
+      private Status getSafeErrorStatus(String status) {
+         try {
+            return Status.fromCodeValue(Integer.parseInt(status));
+         } catch (NumberFormatException nfe) {
+            log.warn("Invalid status code in response: {}, using UNKNOWN", status);
+            return Status.UNKNOWN;
+         }
       }
    }
 }
