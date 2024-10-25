@@ -25,7 +25,13 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.MultiValueMapAdapter;
 
 import java.util.UUID;
 
@@ -69,6 +75,39 @@ class RestControllerIT extends AbstractBaseIT {
       } catch (Exception e) {
          fail("No Exception should be thrown here");
       }
+   }
+
+   @Test
+   void testOpenAPIMockingWithValidation() {
+      // Upload PetStore reference artifact.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+
+      // Check its validation endpoint with correct payload
+      String patchedPastry = "{\"price\":2.6}";
+      HttpEntity<String> requestEntity = new HttpEntity<>(patchedPastry, headers);
+      ResponseEntity<String> response = restTemplate.exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe",
+            HttpMethod.PATCH, requestEntity, String.class);
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals(
+               "{\"name\":\"Eclair Cafe\",\"description\":\"Delicieux Eclair au Cafe pas calorique du tout\",\"size\":\"M\",\"price\":2.6,\"status\":\"available\"}",
+               response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // Check its validation endpoint with invalid payload
+      patchedPastry = "{\"price\":\"2.6\"}";
+      requestEntity = new HttpEntity<>(patchedPastry, headers);
+      response = restTemplate.exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe", HttpMethod.PATCH,
+            requestEntity, String.class);
+      assertEquals(400, response.getStatusCode().value());
+      assertEquals(
+            "[format attribute \"double\" not supported, instance type (string) does not match any allowed primitive type (allowed: [\"integer\",\"number\"])]",
+            response.getBody());
    }
 
    @Test
