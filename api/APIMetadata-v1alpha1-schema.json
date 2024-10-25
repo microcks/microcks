@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://microcks.io/schemas/APIMetadata-v1alpha1-schema.json",
+  "title": "The APIMetadata JSON schema",
+  "description": "APIMetadata is a specification for customizing metadata of API.",
+  "required": [
+    "apiVersion",
+    "kind",
+    "metadata",
+    "operations"
+  ],
+  "properties": {
+    "apiVersion": {
+      "$id": "#/properties/apiVersion",
+      "type": "string",
+      "title": "The apiVersion of APIExamples",
+      "description": "The version of APIExamples description.",
+      "const": "mocks.microcks.io/v1alpha1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The APIMetadata kind schema",
+      "description": "Kind marker for APIMetadata",
+      "const": "APIMetadata"
+    },
+    "metadata": {
+      "$id": "#/properties/metadata",
+      "type": "object",
+      "title": "The metadata of APIMetadata",
+      "description": "Holds reference information about this Service/API metadata relate.",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "$id": "#/properties/metadata/properties/name",
+          "type": "string",
+          "title": "The name of API these metadata relate to.",
+          "description": "Human readable name of the target API for metadata."
+        },
+        "version": {
+          "$id": "#/properties/metadata/properties/version",
+          "type": "string",
+          "title": "The version of API these metadata relate to.",
+          "description": "Human readable version of the target API for examples."
+        },
+        "labels": {
+          "$id": "#/properties/metadata/properties/labels",
+          "type": "object",
+          "title": "The metadata labels for API",
+          "description": "The metadata labels to apply on the API.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "operations": {
+      "$id": "#/properties/operations",
+      "type": "object",
+      "title": "The API operations",
+      "description": "The metadata are organized using API operations.",
+      "patternProperties": {
+        "^.": {
+          "$ref": "#/definitions/operationItem"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "operationItem": {
+      "$id": "#/definitions/operationItem",
+      "type": "object",
+      "title": "One API operation metadata",
+      "description": "Metadata for an API operation.",
+      "properties": {
+        "delay": {
+          "$id": "#/definitions/operationItem/properties/delay",
+          "type": "integer",
+          "title": "The delay of the operation",
+          "description": "The response delay of the operation in milliseconds."
+        },
+        "frequency": {
+          "$id": "#/definitions/operationItem/properties/frequency",
+          "type": "integer",
+          "title": "The frequency of the operation",
+          "description": "The publication frequency of the operation in seconds."
+        },
+        "dispatcher": {
+          "$id": "#/definitions/operationItem/properties/dispatcher",
+          "type": "string",
+          "title": "The dispatcher of the operation",
+          "description": "The dispatcher strategy to use for the operation."
+        },
+        "dispatcherRules": {
+          "$id": "#/definitions/operationItem/properties/dispatcherRules",
+          "type": "string",
+          "title": "The dispatcherRules of the operation",
+          "description": "The dispatcher rules to use to configure the dispatcher."
+        },
+        "parameterConstraints": {
+          "$id": "#/definitions/operationItem/properties/parameterConstraints",
+          "type": "array",
+          "title": "The parameterConstraints of the operation",
+          "description": "The constraints to apply on operation parameters.",
+          "items": {
+            "$ref": "#/definitions/parameterConstraint"
+          }
+        }
+      }
+    },
+    "parameterConstraint": {
+      "$id": "#/definitions/parameterConstraint",
+      "type": "object",
+      "title": "A parameter constraint",
+      "description": "A constraint to apply on an operation parameter.",
+      "properties": {
+        "name": {
+          "$id": "#/definitions/parameterConstraint/properties/name",
+          "type": "string",
+          "title": "The name of the parameter",
+          "description": "The name of the parameter constraint applies to."
+        },
+        "in": {
+          "$id": "#/definitions/parameterConstraint/properties/in",
+          "type": "string",
+          "enum": [
+            "path",
+            "query",
+            "header"
+          ],
+          "title": "The location of the parameter",
+          "description": "Whether the parameter is in path, query, header or body."
+        },
+        "required": {
+          "$id": "#/definitions/parameterConstraint/properties/required",
+          "type": "boolean",
+          "title": "Is this parameter required?",
+          "description": "Whether the parameter is required or not."
+        },
+        "recopy": {
+          "$id": "#/definitions/parameterConstraint/properties/recopy",
+          "type": "boolean",
+          "title": "Should this parameter be recopied?",
+          "description": "Whether the parameter should be recopied in response."
+        },
+        "mustMatchRegexp": {
+          "$id": "#/definitions/parameterConstraint/properties/mustMatchRegexp",
+          "type": "string",
+          "title": "A regular expression to match",
+          "description": "A regular expression parameter value must match."
+        }
+      }
+    }
+  }
+}
