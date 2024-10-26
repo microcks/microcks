@@ -20,6 +20,7 @@ import { FileUploader } from 'ng2-file-upload';
 
 import { Service } from '../../../models/service.model';
 import { ServicesService } from '../../../services/services.service';
+import { IAuthenticationService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-snapshots-tab',
@@ -35,7 +36,11 @@ export class SnapshotsTabComponent implements OnInit {
   selectedServices: any = { ids: {} };
   uploader: FileUploader = new FileUploader({url: '/api/import', itemAlias: 'file'});
 
-  constructor(private servicesSvc: ServicesService, private notificationService: NotificationService) {}
+  constructor(
+    private servicesSvc: ServicesService,
+    private authService: IAuthenticationService,
+    private notificationService: NotificationService
+  ) {}
 
   ngOnInit() {
     this.getAllServices();
@@ -62,6 +67,35 @@ export class SnapshotsTabComponent implements OnInit {
     Object.keys(this.selectedServices.ids).forEach(function(element, index, array) {
       downloadPath += '&serviceIds=' + element;
     });
-    window.open(downloadPath, '_blank', '');
+
+    // Just opening a window with the download path is not working
+    // because Authorization header is not sent.
+    //window.open(downloadPath, '_blank', '');
+
+    // So we have to use XMLHttpRequest to send Authorization header and get the file
+    // before triggering the Save as dialog by simulating a click on a link.
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', location.origin + downloadPath, true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + this.authService.getAuthenticationSecret());
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          const blob = new Blob([xhr.response], { type: 'text/plain' });
+          const url = window.URL.createObjectURL(blob);
+
+          var a = document.createElement("a");
+          document.body.appendChild(a);
+          a.href = url;
+          a.download = 'microcks-repository.json';
+          a.click();
+
+          window.URL.revokeObjectURL(url);
+        } else {
+          alert('Problem while retrieving snapshot export');
+        }
+      }
+    };
+    xhr.send();
   }
 }
