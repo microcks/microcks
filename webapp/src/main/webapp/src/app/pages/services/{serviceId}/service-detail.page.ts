@@ -76,6 +76,7 @@ export class ServiceDetailPageComponent implements OnInit {
   selectedOperation: Operation;
   operationsListConfig: ListConfig;
   notifications: Notification[];
+  urlType: string = 'raw';
 
   constructor(
     private servicesSvc: ServicesService,
@@ -421,7 +422,11 @@ export class ServiceDetailPageComponent implements OnInit {
     }
 
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
-      result += '/rest/';
+      if (this.urlType === 'raw') {
+        result += '/rest/';
+      } else {
+        result += '/rest-valid/';
+      }
       result +=
         this.encodeUrl(this.resolvedServiceView.service.name) +
         '/' +

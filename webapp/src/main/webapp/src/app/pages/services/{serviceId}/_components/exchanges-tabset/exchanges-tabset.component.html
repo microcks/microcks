@@ -177,7 +177,15 @@
         <div class="col-md-6">
           <h5 class="subsection-label">Request</h5>
           <dl>
-            <dt>Mock URL</dt>
+            <dt style="width: 100%; display: flex; justify-content: space-between">
+              <span>Mock URL:</span>
+              <span *ngIf="view.service.type === 'REST'" style="font-weight: 500">
+                <select class="tiny-form-control" [(ngModel)]="urlType">
+                  <option>raw</option>
+                  <option>valid</option>
+                </select>
+              </span>
+            </dt>
             <dd>
               <div class="input-group">
                 <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria, exchange.request.queryParameters) }}" disabled/>

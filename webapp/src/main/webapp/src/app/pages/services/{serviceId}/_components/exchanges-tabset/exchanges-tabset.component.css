@@ -1,0 +1,11 @@
+
+.tiny-form-control {
+  color: #363636;
+  background-color: #fff;
+  border: 1px solid #bbb;
+  border-radius: 1px;
+  padding: 0px 1px;
+}
+.tiny-form-control:hover {
+  border-color: #7dc3e8;
+}
