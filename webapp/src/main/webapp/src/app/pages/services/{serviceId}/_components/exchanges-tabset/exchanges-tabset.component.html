@@ -179,7 +179,7 @@
           <dl>
             <dt style="width: 100%; display: flex; justify-content: space-between">
               <span>Mock URL:</span>
-              <span *ngIf="view.service.type === 'REST'" style="font-weight: 500">
+              <span *ngIf="view.service.type === 'REST' || view.service.type === 'SOAP_HTTP'" style="font-weight: 500">
                 <select class="tiny-form-control" [(ngModel)]="urlType">
                   <option>raw</option>
                   <option>valid</option>

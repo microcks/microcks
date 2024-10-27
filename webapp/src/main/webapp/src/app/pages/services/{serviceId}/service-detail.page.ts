@@ -495,6 +495,9 @@ export class ServiceDetailPageComponent implements OnInit {
         this.encodeUrl(this.resolvedServiceView.service.name) +
         '/' +
         this.resolvedServiceView.service.version;
+      if (this.urlType === 'valid') {
+        result += '?validate=true';
+      }
     } else if (
       this.resolvedServiceView.service.type === ServiceType.GENERIC_REST
     ) {
