@@ -663,7 +663,7 @@ export class ServiceDetailPageComponent implements OnInit {
     let cmd;
 
     if (this.resolvedServiceView.service.type != ServiceType.GRPC) {
-      let verb = operation.method.toUpperCase();
+      let verb = operation.method != undefined ? operation.method.toUpperCase() : 'POST';
       if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
         verb = 'POST';
       }
@@ -687,6 +687,8 @@ export class ServiceDetailPageComponent implements OnInit {
           exchange.request.content.startsWith('{')
         ) {
           cmd += ' -H \'Content-Type: application/json\'';
+        } else if (exchange.request.content.startsWith('<')) {
+          cmd += ' -H \'Content-Type: application/xml\'';
         }
       }
     } else {
