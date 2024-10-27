@@ -33,6 +33,7 @@ import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMapAdapter;
 
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -84,6 +85,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
+      headers.setAccept(List.of(MediaType.APPLICATION_JSON));
 
       // Check its validation endpoint with correct payload
       String patchedPastry = "{\"price\":2.6}";
