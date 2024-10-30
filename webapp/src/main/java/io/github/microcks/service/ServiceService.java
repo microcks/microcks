@@ -128,6 +128,26 @@ public class ServiceService {
    }
 
    /**
+    * Retrieve the corresponding Service from its identifier.
+    * @param serviceId The technical or functional (service_name:service_version) identifier of service to retrieve
+    * @return The corresponding Service or null if not found
+    */
+   public Service getServiceById(String serviceId) {
+      // serviceId may have the form of <service_name>:<service_version>
+      if (serviceId.contains(":")) {
+         String name = serviceId.substring(0, serviceId.indexOf(':'));
+         String version = serviceId.substring(serviceId.indexOf(':') + 1);
+
+         // If service name was encoded with '+' instead of '%20', replace them.
+         if (name.contains("+")) {
+            name = name.replace('+', ' ');
+         }
+         return serviceRepository.findByNameAndVersion(name, version);
+      }
+      return serviceRepository.findById(serviceId).orElse(null);
+   }
+
+   /**
     * Import definitions of services and bounded resources and messages into Microcks repository. This uses a
     * MockRepositoryImporter under the hood.
     * @param repositoryUrl        The String representing mock repository url.
@@ -452,7 +472,7 @@ public class ServiceService {
     */
    public Boolean deleteService(String id, UserInfo userInfo) {
       // Get service to remove.
-      Service service = serviceRepository.findById(id).orElse(null);
+      Service service = getServiceById(id);
 
       if (service == null) {
          log.warn("Service [{}] not found for deletion", id);
@@ -493,7 +513,8 @@ public class ServiceService {
     * @return True if service has been found and updated, false otherwise.
     */
    public Boolean updateMetadata(String id, Metadata metadata, UserInfo userInfo) {
-      Service service = serviceRepository.findById(id).orElse(null);
+      // Get service to update.
+      Service service = getServiceById(id);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          service.getMetadata().setLabels(metadata.getLabels());
@@ -521,9 +542,8 @@ public class ServiceService {
     */
    public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules,
          Long delay, Set<ParameterConstraint> constraints, UserInfo userInfo) {
-      Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? {}",
-            authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      // Get service to update.
+      Service service = getServiceById(id);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
@@ -554,9 +574,8 @@ public class ServiceService {
     */
    public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,
          UserInfo userInfo) {
-      Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? {}",
-            authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      // Get service to update.
+      Service service = getServiceById(id);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {

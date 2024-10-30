@@ -148,20 +148,8 @@ public class ServiceController {
          @RequestParam(value = "messages", required = false, defaultValue = "true") boolean messages) {
       log.debug("Retrieving service with id {}", serviceId);
 
-      Service service = null;
-      // serviceId may have the form of <service_name>:<service_version>
-      if (serviceId.contains(":")) {
-         String name = serviceId.substring(0, serviceId.indexOf(':'));
-         String version = serviceId.substring(serviceId.indexOf(':') + 1);
-
-         // If service name was encoded with '+' instead of '%20', replace them.
-         if (name.contains("+")) {
-            name = name.replace('+', ' ');
-         }
-         service = serviceRepository.findByNameAndVersion(name, version);
-      } else {
-         service = serviceRepository.findById(serviceId).orElse(null);
-      }
+      // Just retrieve the service and return it.
+      Service service = serviceService.getServiceById(serviceId);
 
       if (messages) {
          // Put messages into a map where key is operation name.
