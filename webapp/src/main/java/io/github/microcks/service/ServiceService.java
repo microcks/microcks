@@ -448,11 +448,16 @@ public class ServiceService {
     * Remove a Service and its bound documents using the service id.
     * @param id       The identifier of service to remove.
     * @param userInfo The current user information to check if authorized to delete
-    * @return True if service has been found and updated, false otherwise.
+    * @return True if service is not found or found and deleted, false otherwise.
     */
    public Boolean deleteService(String id, UserInfo userInfo) {
       // Get service to remove.
       Service service = serviceRepository.findById(id).orElse(null);
+
+      if (service == null) {
+         log.warn("Service [{}] not found for deletion", id);
+         return true;
+      }
 
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
@@ -463,18 +468,16 @@ public class ServiceService {
          testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
 
          // Delete all requests and responses bound to service operation.
-         if (service != null) {
-            for (Operation operation : service.getOperations()) {
-               String operationId = IdBuilder.buildOperationId(service, operation);
-               requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
-               responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
-               eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
-            }
-
-            // Finally delete service and publish event.
-            serviceRepository.delete(service);
-            publishServiceChangeEvent(service, ChangeType.DELETED);
+         for (Operation operation : service.getOperations()) {
+            String operationId = IdBuilder.buildOperationId(service, operation);
+            requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
+            responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
+            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
          }
+
+         // Finally delete service and publish event.
+         serviceRepository.delete(service);
+         publishServiceChangeEvent(service, ChangeType.DELETED);
          log.info("Service [{}] has been fully deleted", id);
          return true;
       }
