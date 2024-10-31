@@ -27,9 +27,9 @@ import io.github.microcks.domain.TestResult;
 import io.github.microcks.domain.TestRunnerType;
 import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.repository.SecretRepository;
-import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.service.MessageService;
+import io.github.microcks.service.ServiceService;
 import io.github.microcks.service.TestService;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.web.dto.HeaderDTO;
@@ -68,10 +68,10 @@ public class TestController {
    private static final SafeLogger log = SafeLogger.getLogger(TestController.class);
 
    private final TestResultRepository testResultRepository;
-   private final ServiceRepository serviceRepository;
    private final SecretRepository secretRepository;
    private final TestService testService;
    private final MessageService messageService;
+   private final ServiceService serviceService;
 
 
    /**
@@ -79,16 +79,15 @@ public class TestController {
     * @param testService          Service to launch tests and report results
     * @param messageService       Service to report new test messages
     * @param testResultRepository Get access to test results
-    * @param serviceRepository    Get access to Services
+    * @param serviceService       Service to get access to Services
     * @param secretRepository     Get access to Secrets
     */
-   public TestController(TestService testService, MessageService messageService,
-         TestResultRepository testResultRepository, ServiceRepository serviceRepository,
-         SecretRepository secretRepository) {
+   public TestController(TestService testService, MessageService messageService, ServiceService serviceService,
+         TestResultRepository testResultRepository, SecretRepository secretRepository) {
       this.testService = testService;
       this.messageService = messageService;
+      this.serviceService = serviceService;
       this.testResultRepository = testResultRepository;
-      this.serviceRepository = serviceRepository;
       this.secretRepository = secretRepository;
    }
 
@@ -112,15 +111,8 @@ public class TestController {
    @PostMapping(value = "/tests")
    public ResponseEntity<TestResult> createTest(@RequestBody TestRequestDTO test) {
       log.debug("Creating new test for {} on endpoint {}", test.getServiceId(), test.getTestEndpoint());
-      Service service = null;
-      // serviceId may have the form of <service_name>:<service_version>
-      if (test.getServiceId().contains(":")) {
-         String name = test.getServiceId().substring(0, test.getServiceId().indexOf(':'));
-         String version = test.getServiceId().substring(test.getServiceId().indexOf(':') + 1);
-         service = serviceRepository.findByNameAndVersion(name, version);
-      } else {
-         service = serviceRepository.findById(test.getServiceId()).orElse(null);
-      }
+      // serviceId may have the form of <service_name>:<service_version> or just <service_id>
+      Service service = serviceService.getServiceById(test.getServiceId());
       TestRunnerType testRunner = TestRunnerType.valueOf(test.getRunnerType());
 
       // Build additional header entries for operations.
@@ -131,7 +123,7 @@ public class TestController {
       if (test.getSecretName() != null) {
          List<Secret> secrets = secretRepository.findByName(test.getSecretName());
          if (!secrets.isEmpty()) {
-            secretRef = new SecretRef(secrets.get(0).getId(), secrets.get(0).getName());
+            secretRef = new SecretRef(secrets.getFirst().getId(), secrets.getFirst().getName());
          }
          // TODO: should we return an error and refuse creating the test without secret ?
       }
