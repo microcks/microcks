@@ -256,7 +256,6 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
          // or parameter value can be static, expressed as an examples.
          List<AsyncAPIParameter> dynamicParameters = getDynamicParameters(channelNode);
          Map<String, Map<String, String>> parametersByMessage = getParametersByMessage(channelNode);
-
          ObjectMapper mapper = getObjectMapper(true);
 
          for (EventMessage eventMessage : eventMessages) {
@@ -329,7 +328,6 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
             Entry<String, JsonNode> parameterEntry = parameters.next();
             JsonNode parameter = followRefIfAny(parameterEntry.getValue());
             String parameterName = parameterEntry.getKey();
-
             if (!parameter.has(LOCATION_NODE) && parameter.path(EXAMPLES_NODE).isArray()) {
                Iterator<JsonNode> examples = parameter.get(EXAMPLES_NODE).elements();
                while (examples.hasNext()) {
@@ -338,12 +336,12 @@ public class AsyncAPI3Importer extends AbstractJsonRepositoryImporter implements
                      String exampleKey = example.substring(0, example.indexOf(":"));
                      String exampleValue = example.substring(example.indexOf(":") + 1);
 
-                     Map<String, String> exampleParams = results.getOrDefault(exampleKey, new HashMap<>());
-
                      if (log.isDebugEnabled()) {
                         log.debug("Processing param {} for channel {} for message {}", parameterName,
                               channelNode.get("address").asText(), exampleKey);
                      }
+
+                     Map<String, String> exampleParams = results.getOrDefault(exampleKey, new HashMap<>());
                      exampleParams.put(parameterName, exampleValue);
                      results.put(exampleKey, exampleParams);
                   }

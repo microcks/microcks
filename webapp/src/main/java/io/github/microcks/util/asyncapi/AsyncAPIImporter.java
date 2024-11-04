@@ -64,7 +64,7 @@ import static io.github.microcks.util.asyncapi.AsyncAPICommons.*;
 public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AsyncAPIImporter.class);
+   private static final Logger log = LoggerFactory.getLogger(AsyncAPIImporter.class);
 
    private static final String[] MULTI_STRUCTURES = { "allOf", "anyOf", "oneOf" };
    private static final List<String> VALID_VERBS = Arrays.asList("subscribe", "publish");
@@ -306,7 +306,7 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
    }
 
    /** Extract the list of operations from Specification. */
-   private List<Operation> extractOperations() throws MockRepositoryImportException {
+   private List<Operation> extractOperations() {
       List<Operation> results = new ArrayList<>();
 
       // Iterate on specification "channels" nodes.
@@ -496,22 +496,45 @@ public class AsyncAPIImporter extends AbstractJsonRepositoryImporter implements 
          log.debug("Processing param {}", parameterName);
 
          if (parameter.has(SCHEMA_NODE) && parameter.path(SCHEMA_NODE).has(EXAMPLES_NODE)) {
-            Iterator<String> exampleNames = parameter.path(SCHEMA_NODE).path(EXAMPLES_NODE).fieldNames();
+            JsonNode examplesNode = parameter.path(SCHEMA_NODE).path(EXAMPLES_NODE);
 
-            while (exampleNames.hasNext()) {
-               String exampleName = exampleNames.next();
-               log.debug("Processing example {}", exampleName);
+            if (examplesNode.isObject()) {
+               Iterator<String> exampleNames = parameter.path(SCHEMA_NODE).path(EXAMPLES_NODE).fieldNames();
 
-               JsonNode example = parameter.path(SCHEMA_NODE).path(EXAMPLES_NODE).path(exampleName);
-               String exampleValue = getExampleValue(example);
-               log.debug("{} {} {}", parameterName, exampleName, exampleValue);
+               while (exampleNames.hasNext()) {
+                  String exampleName = exampleNames.next();
+                  log.debug("Processing example {}", exampleName);
 
-               Map<String, String> exampleParams = results.get(exampleName);
-               if (exampleParams == null) {
-                  exampleParams = new HashMap<>();
-                  results.put(exampleName, exampleParams);
+                  JsonNode example = parameter.path(SCHEMA_NODE).path(EXAMPLES_NODE).path(exampleName);
+                  String exampleValue = getExampleValue(example);
+                  log.debug("{} {} {}", parameterName, exampleName, exampleValue);
+
+                  Map<String, String> exampleParams = results.computeIfAbsent(exampleName, k -> new HashMap<>());
+                  exampleParams.put(parameterName, exampleValue);
                }
-               exampleParams.put(parameterName, exampleValue);
+            } else if (examplesNode.isArray()) {
+               Iterator<JsonNode> examples = examplesNode.elements();
+               while (examples.hasNext()) {
+                  JsonNode exampleNode = examples.next();
+
+                  String exampleName = null;
+                  String exampleValue = null;
+
+                  // Try processing the "name:value" form
+                  if (exampleNode.asText().contains(":")) {
+                     String example = exampleNode.asText();
+                     exampleName = example.substring(0, example.indexOf(":"));
+                     exampleValue = example.substring(example.indexOf(":") + 1);
+                  } else {
+                     // Try processing the "name: > value: value" form
+                     exampleName = exampleNode.fieldNames().next();
+                     exampleValue = getExampleValue(exampleNode.fields().next().getValue());
+                  }
+                  log.debug("{} {} {}", parameterName, exampleName, exampleValue);
+
+                  Map<String, String> exampleParams = results.computeIfAbsent(exampleName, k -> new HashMap<>());
+                  exampleParams.put(parameterName, exampleValue);
+               }
             }
          }
       }

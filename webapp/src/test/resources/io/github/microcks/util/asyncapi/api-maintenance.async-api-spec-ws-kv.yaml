@@ -132,20 +132,16 @@ components:
         enum:
           - elevator
         examples:
-          - misalignment:
-              value: elevator
-          - doorfailure:
-              value: elevator
+          - 'misalignment:elevator'
+          - 'doorfailure:elevator'
     eventType:
       schema:
         type: string
         enum:
           - maintenace
         examples:
-          - misalignment:
-              value: maintenance
-          - doorfailure:
-              value: maintenance
+          - 'misalignment:maintenance'
+          - 'doorfailure:maintenance'
     resourceType:
       schema:
         type: string
@@ -153,19 +149,15 @@ components:
           - elev-make-1
           - elev-make-2
         examples:
-          - misalignment:
-              value: elev-make-1
-          - doorfailure:
-              value: elev-make-2
+          - 'misalignment:elev-make-1'
+          - 'doorfailure:elev-make-2'
     resourceId:
       schema:
         type: string
         pattern: "^[a-zA-Z0-9-]+$"
         examples:
-          - misalignment:
-              value: abc4711
-          - doorfailure:
-              value: xyz0815
+          - 'misalignment:abc4711'
+          - 'doorfailure:xyz0815'
   securitySchemes:
     userPassword:
       type: userPassword
