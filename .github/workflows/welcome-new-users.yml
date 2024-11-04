@@ -1,4 +1,4 @@
-# Welcome new users by creating a comment in the first time issue/PR.
+# Welcome new users by commenting on the first-time issue/PR.
 # Adding a friendly message in the comment to tip non-stargazers to star our repo.
 #
 # Props to https://github.com/wow-actions/welcome 
@@ -9,19 +9,13 @@ on:
     types: [opened, closed]
   issues:
     types: [opened]
-permissions:
-  contents: read
 jobs:
   run:
-    permissions:
-      issues: write  # for wow-actions/welcome to comment on issues
-      pull-requests: write  # wow-actions/welcome to comment on PRs
     # Do not run on bots and maintainers
     if: ${{ !contains(fromJson('["dependabot[bot]", "dependabot-preview[bot]", "allcontributors[bot]"]'), github.actor) }}
     runs-on: ubuntu-latest
     steps:
-      #- uses: wow-actions/welcome@v1
-      - uses: wow-actions/welcome@72817eb31cda1de60f51893d80e2e82ce57f7e76 # To pin v1.3.0 
+      - uses: wow-actions/welcome@68019c2c271561f63162fea75bb7707ef8a02c85 # To pin v1.3.1
         with:
           # GitHub token as default GITHUB_TOKEN
       
