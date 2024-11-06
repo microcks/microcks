@@ -309,9 +309,17 @@ public class RestController {
          response = getResponseByMediaType(responses, request);
       }
 
+      // Setting delay to default one if not set.
+      if (delay == null && ic.operation.getDefaultDelay() != null) {
+         delay = ic.operation.getDefaultDelay();
+      }
+
       Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
             ic.resourcePath, proxyFallback, request, response);
       if (proxyUrl.isPresent()) {
+         // Delay response.
+         MockControllerCommons.waitForDelay(startTime, delay);
+
          // If we've got a proxyUrl, that's the moment!
          return proxyService.callExternal(proxyUrl.get(), method, headers, body);
       }
@@ -378,10 +386,7 @@ public class RestController {
          String responseContent = MockControllerCommons.renderResponseContent(body, ic.resourcePath, request,
                dispatchContext.requestContext(), response);
 
-         // Setting delay to default one if not set.
-         if (delay == null && ic.operation.getDefaultDelay() != null) {
-            delay = ic.operation.getDefaultDelay();
-         }
+         // Delay response.
          MockControllerCommons.waitForDelay(startTime, delay);
 
          // Publish an invocation event before returning if enabled.
