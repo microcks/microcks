@@ -88,7 +88,7 @@ public class ExpressionParser {
                throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
                      + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
             }
-            if (expr.charAt(0) == '{' || expr.charAt(0) == '(' || expr.charAt(0) == '[' || expr.charAt(0) == '#') {
+            if (expr.charAt(0) == '{') {
                expressions.add(new LiteralExpression(expr.substring(0, 1)));
                expressions.add(doParseExpression(expr.substring(1, expr.length() - 1), context));
                expressions.add(new LiteralExpression(expr.substring(expr.length() - 1)));
