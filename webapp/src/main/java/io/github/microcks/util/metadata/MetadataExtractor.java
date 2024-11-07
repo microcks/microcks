@@ -79,7 +79,7 @@ public class MetadataExtractor {
    private static ParameterConstraint extractParameterConstraint(JsonNode node) {
       ParameterConstraint constraint = new ParameterConstraint();
       constraint.setName(node.get("name").asText());
-      constraint.setIn(ParameterLocation.valueOf(node.get("in").asText()));
+      constraint.setIn(ParameterLocation.valueOf(node.get("in").asText().toUpperCase()));
       constraint.setRequired(node.path("required").asBoolean(false));
       constraint.setRecopy(node.path("recopy").asBoolean(false));
       if (node.has("mustMatchRegexp")) {

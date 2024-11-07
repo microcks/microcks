@@ -555,7 +555,7 @@ public class RestController {
          HttpHeaders responseHeaders) {
       if (rOperation.getParameterConstraints() != null) {
          for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
-            if (ParameterLocation.header == constraint.getIn() && constraint.isRecopy()) {
+            if (ParameterLocation.HEADER == constraint.getIn() && constraint.isRecopy()) {
                String value = request.getHeader(constraint.getName());
                if (value != null) {
                   responseHeaders.set(constraint.getName(), value);

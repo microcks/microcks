@@ -20,7 +20,12 @@ package io.github.microcks.domain;
  * @author laurent
  */
 public enum ParameterLocation {
-   path,
-   query,
-   header
+   PATH,
+   QUERY,
+   HEADER;
+
+   @Override
+   public String toString() {
+      return name().toLowerCase();
+   }
 }
