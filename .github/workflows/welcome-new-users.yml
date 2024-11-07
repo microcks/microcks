@@ -9,8 +9,13 @@ on:
     types: [opened, closed]
   issues:
     types: [opened]
+permissions:
+  contents: read  # Set permissions as read-only by default at the top level
 jobs:
   run:
+    permissions:
+      issues: write  # for wow-actions/welcome to comment on issues
+      pull-requests: write  # wow-actions/welcome to comment on PRs
     # Do not run on bots and maintainers
     if: ${{ !contains(fromJson('["dependabot[bot]", "dependabot-preview[bot]", "allcontributors[bot]"]'), github.actor) }}
     runs-on: ubuntu-latest
