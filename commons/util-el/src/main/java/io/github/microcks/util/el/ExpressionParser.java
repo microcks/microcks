@@ -88,7 +88,12 @@ public class ExpressionParser {
                throw new ParseException(template, prefixIndex, "No expression defined within delimiter '"
                      + expressionPrefix + expressionSuffix + "' at character " + prefixIndex);
             }
-            expressions.add(doParseExpression(expr, context));
+            if (expr.charAt(0) == '{') {
+               expressions.add(new LiteralExpression(expr.substring(0, 1)));
+               expressions.add(doParseExpression(expr.substring(1, expr.length() - 1), context));
+               expressions.add(new LiteralExpression(expr.substring(expr.length() - 1)));
+            } else
+               expressions.add(doParseExpression(expr, context));
             startIdx = suffixIndex + expressionSuffix.length();
             log.debug("Expression accumulated. Pursuing with index {} on {}", startIdx, template.length());
          } else {
@@ -106,6 +111,18 @@ public class ExpressionParser {
       if (nextSuffix == -1) {
          return -1; // the suffix is missing
       }
+
+      // Check if there are more closing curly braces after the found "}}"
+      int lastIndexOfSuffix = nextSuffix + expressionSuffix.length();
+      while (lastIndexOfSuffix < template.length() && template.charAt(lastIndexOfSuffix) == '}') {
+         lastIndexOfSuffix++;
+      }
+
+      // If we found extra closing curly braces, return the position of the first two "}}"
+      if (lastIndexOfSuffix > nextSuffix + expressionSuffix.length()) {
+         return lastIndexOfSuffix - expressionSuffix.length();
+      }
+
       return nextSuffix;
    }
 
