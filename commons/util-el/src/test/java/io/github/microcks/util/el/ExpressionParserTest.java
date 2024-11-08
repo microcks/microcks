@@ -20,7 +20,9 @@ import io.github.microcks.util.el.function.PutInContextELFunction;
 import io.github.microcks.util.el.function.UUIDELFunction;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 /**
  * A TestCase for ExpressionParser class.
