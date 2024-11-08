@@ -20,8 +20,7 @@ import io.github.microcks.util.el.function.PutInContextELFunction;
 import io.github.microcks.util.el.function.UUIDELFunction;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * A TestCase for ExpressionParser class.
@@ -111,5 +110,38 @@ class ExpressionParserTest {
       assertTrue(expressions[3] instanceof FunctionExpression);
 
       assertEquals("Laurent", ((VariableReferenceExpression) expressions[1]).getValue(context));
+   }
+
+   @Test
+   void testParseExpressionWithEscapeCharacter() {
+      String template1 = "id : {{{uuid()}}}";
+      String template2 = "name : #{{request.body/name}}#";
+
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.registerFunction("uuid", UUIDELFunction.class);
+      context.setVariable("request", new EvaluableRequest("{\"name\": \"Laurent\"}", null));
+      Expression[] expressions;
+
+      //Test for template1
+      expressions = ExpressionParser.parseExpressions(template1, context, "{{", "}}");
+      assertEquals(4, expressions.length);
+      assertInstanceOf(LiteralExpression.class, expressions[0]);
+      assertInstanceOf(LiteralExpression.class, expressions[1]);
+      assertInstanceOf(FunctionExpression.class, expressions[2]);
+      assertInstanceOf(LiteralExpression.class, expressions[3]);
+
+      assertEquals("{", ((LiteralExpression) expressions[1]).getValue(context));
+      assertEquals("}", ((LiteralExpression) expressions[3]).getValue(context));
+
+      //Test for template2
+      expressions = ExpressionParser.parseExpressions(template2, context, "{{", "}}");
+      assertEquals(3, expressions.length);
+      assertInstanceOf(LiteralExpression.class, expressions[0]);
+      assertInstanceOf(VariableReferenceExpression.class, expressions[1]);
+      assertInstanceOf(LiteralExpression.class, expressions[2]);
+
+      assertEquals("name : #", ((LiteralExpression) expressions[0]).getValue(context));
+      assertEquals("#", ((LiteralExpression) expressions[2]).getValue(context));
    }
 }
