@@ -17,7 +17,7 @@ info:
 defaultContentType: application/json
 channels:
   service-changes:
-    description: A channel where Services changed are published
+    description: A channel where Services changes are published
     messages:
       serviceChangeEvent:
         $ref: '#/components/messages/serviceChangeEvent'
