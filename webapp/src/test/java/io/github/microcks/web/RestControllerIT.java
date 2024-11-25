@@ -235,6 +235,77 @@ class RestControllerIT extends AbstractBaseIT {
    }
 
    @Test
+   void testProxyFallbackWithDelay() {
+      // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
+            true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-for-proxy-openapi.yaml", true);
+
+      // Set real port to the dispatcher
+      Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
+            .findFirst().orElseThrow();
+      op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
+      serviceRepository.save(service);
+
+      // If we have the mock, we should get the response from the mock.
+      long startTime = System.currentTimeMillis();
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
+            String.class);
+      long mockedResponseTime = System.currentTimeMillis() - startTime;
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // If we don't have the mock, we should get the response from real backend.
+      startTime = System.currentTimeMillis();
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
+      long realResponseTime = System.currentTimeMillis() - startTime;
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // Introduce request delay.
+      long delay = 100l;
+      op.setDefaultDelay(delay);
+      serviceRepository.save(service);
+
+      // If we have the mock, we should get the response from the mock.
+      startTime = System.currentTimeMillis();
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut", String.class);
+      long mockedResponseTimeDelayed = System.currentTimeMillis() - startTime;
+      // Assert that the response time lies within half delay ms of that of the request without delay.
+      assertTrue(Math.abs(mockedResponseTimeDelayed - mockedResponseTime) > delay / 2,
+            "mocked response time: " + mockedResponseTime + "ms, delayed: " + mockedResponseTimeDelayed + "ms");
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Mocked One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+
+      // If we don't have the mock, we should get the response from real backend.
+      startTime = System.currentTimeMillis();
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
+      long realResponseTimeDelayed = System.currentTimeMillis() - startTime;
+      // Assert that the response time lies within half delay ms of that of the request without delay.
+      assertTrue(Math.abs(realResponseTimeDelayed - realResponseTime) > delay / 2,
+            "real response time: " + realResponseTime + "ms, delayed: " + realResponseTimeDelayed + "ms");
+      assertEquals(200, response.getStatusCode().value());
+      try {
+         JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
+      } catch (Exception e) {
+         fail("No Exception should be thrown here");
+      }
+   }
+
+   @Test
    void testProxyFallbackWithEqualsOriginAndExternalUrls() {
       // Upload pastry-with-proxy-fallback and pastry-for-proxy specs
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-proxy-fallback-openapi.yaml",
