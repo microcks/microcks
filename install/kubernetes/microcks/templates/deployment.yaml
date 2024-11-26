@@ -323,9 +323,9 @@ spec:
     spec:
       {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
       securityContext:
-        runAsUser: 184
-        runAsGroup: 184
-        fsGroup: 184
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
       {{- end }}
       containers:
       - name: mongodb
