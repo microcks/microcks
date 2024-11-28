@@ -297,7 +297,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
             ParameterConstraint constraint = new ParameterConstraint();
             constraint.setRequired(true);
             constraint.setName(parameter.path("name").asText());
-            constraint.setIn(ParameterLocation.valueOf(parameter.path("in").asText()));
+            constraint.setIn(ParameterLocation.valueOf(parameter.path("in").asText().toUpperCase()));
             operation.addParameterConstraint(constraint);
          }
       }

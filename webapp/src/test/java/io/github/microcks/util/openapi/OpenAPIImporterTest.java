@@ -1293,7 +1293,7 @@ class OpenAPIImporterTest {
       ParameterConstraint constraint = operation.getParameterConstraints().iterator().next();
       assertEquals("apiKey", constraint.getName());
       assertTrue(constraint.isRequired());
-      assertEquals(ParameterLocation.query, constraint.getIn());
+      assertEquals(ParameterLocation.QUERY, constraint.getIn());
 
       List<Resource> resources = importer.getResourceDefinitions(service);
       assertEquals(2, resources.size());

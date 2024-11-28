@@ -40,9 +40,9 @@ public class ParameterConstraintUtil {
     */
    public static String validateConstraint(HttpServletRequest request, ParameterConstraint constraint) {
       String value = null;
-      if (ParameterLocation.header == constraint.getIn()) {
+      if (ParameterLocation.HEADER == constraint.getIn()) {
          value = request.getHeader(constraint.getName());
-      } else if (ParameterLocation.query == constraint.getIn()) {
+      } else if (ParameterLocation.QUERY == constraint.getIn()) {
          value = request.getParameter(constraint.getName());
       }
 
