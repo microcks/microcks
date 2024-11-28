@@ -31,11 +31,6 @@ public class GrpcMetadataUtil {
 
    /* Key used to pass gRPC metadata from interceptor to server via context */
    public static final Context.Key<Metadata> METADATA_CTX_KEY = Context.key("grpc-metadata");
-   /*
-    * Call Option used to pass gRPC Metadata from client invocation to configurable client interceptor
-    */
-   public static final CallOptions.Key<Metadata> METADATA_CUSTOM_CALL_OPTION = CallOptions.Key
-         .createWithDefault("request-metadata", null);
 
    private GrpcMetadataUtil() {
       // Private constructor to hide the implicit public one.
