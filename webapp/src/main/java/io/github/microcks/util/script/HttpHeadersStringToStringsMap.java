@@ -23,6 +23,7 @@ import java.util.Map;
 /**
  * An implementation of com.eviware.soapui.support.types.StringToStringsMap that implements the RFC 7230 regarding
  * header name case-insensitiveness and to ensure a compatibility layer withe SoapUI scripting.
+ * 
  * @author laurent
  */
 public class HttpHeadersStringToStringsMap extends StringToStringsMap {
@@ -32,6 +33,7 @@ public class HttpHeadersStringToStringsMap extends StringToStringsMap {
 
    /**
     * Override of HashMap get() to implement case-insensitive search of key.
+    * 
     * @param key The Http header name (case-insensitive)
     * @return The value as List of String if nay, or null
     */
@@ -46,7 +48,7 @@ public class HttpHeadersStringToStringsMap extends StringToStringsMap {
          }
 
          stringListEntry = var3.next();
-      } while (!key.toString().equalsIgnoreCase(stringListEntry.getKey()) || (stringListEntry.getValue()).isEmpty());
+      } while (!key.toString().equalsIgnoreCase(stringListEntry.getKey()));
 
       return stringListEntry.getValue();
    }

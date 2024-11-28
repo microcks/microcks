@@ -40,6 +40,7 @@ import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.EvaluableRequest;
+import io.github.microcks.util.http.HttpHeadersUtil;
 import io.github.microcks.util.openapi.OpenAPISchemaValidator;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.openapi.SwaggerSchemaValidator;
@@ -81,6 +82,7 @@ import java.util.Set;
 
 /**
  * A controller for mocking Rest responses.
+ * 
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
@@ -112,6 +114,7 @@ public class RestController {
 
    /**
     * Build a RestController with required dependencies.
+    * 
     * @param serviceRepository      The repository to access services definitions
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
@@ -129,7 +132,6 @@ public class RestController {
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
    }
-
 
    @RequestMapping(value = "/rest/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
@@ -268,7 +270,8 @@ public class RestController {
       }
 
       // We must find dispatcher and its rules. Default to operation ones but
-      // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
+      // if we have a Fallback or Proxy-Fallback this is the one who is holding the
+      // first pass rules.
       String dispatcher = ic.operation.getDispatcher();
       String dispatcherRules = ic.operation.getDispatcherRules();
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation);
@@ -296,7 +299,8 @@ public class RestController {
       response = getResponseByMediaType(responses, request);
 
       if (response == null) {
-         // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
+         // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be
+         // the name of response.
          responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(ic.service, ic.operation),
                dispatchContext.dispatchCriteria());
          response = getResponseByMediaType(responses, request);
@@ -326,15 +330,18 @@ public class RestController {
 
       if (response == null) {
          if (dispatcher == null) {
-            // In case no response found because dispatcher is null, just get one for the operation.
-            // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
+            // In case no response found because dispatcher is null, just get one for the
+            // operation.
+            // This will allow also OPTIONS operations (like pre-flight requests) with no
+            // dispatch criteria to work.
             log.debug("No responses found so far, tempting with just bare operationId...");
             responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(ic.service, ic.operation));
             if (!responses.isEmpty()) {
                response = getResponseByMediaType(responses, request);
             }
          } else {
-            // There is a dispatcher but we found no response => return 400 as per #819 and #1132.
+            // There is a dispatcher but we found no response => return 400 as per #819 and
+            // #1132.
             return new ResponseEntity<>(
                   String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()).getBytes(),
                   HttpStatus.BAD_REQUEST);
@@ -366,7 +373,8 @@ public class RestController {
                if ("Location".equals(renderedHeader.getName())) {
                   String location = renderedHeader.getValues().iterator().next();
                   if (!AbsoluteUrlMatcher.matches(location)) {
-                     // We should process location in order to make relative URI specified an absolute one from
+                     // We should process location in order to make relative URI specified an
+                     // absolute one from
                      // the client perspective.
                      location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
                            + request.getContextPath() + "/rest" + MockControllerCommons
@@ -404,11 +412,11 @@ public class RestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
-
    /** Find the invocation context for this mock request. */
    private MockInvocationContext findInvocationContext(String serviceName, String version, HttpServletRequest request,
          HttpMethod method) {
-      // Extract resourcePath for matching with correct operation and build the encoded URI fragment to retrieve simple resourcePath.
+      // Extract resourcePath for matching with correct operation and build the
+      // encoded URI fragment to retrieve simple resourcePath.
       String serviceAndVersion = MockControllerCommons.composeServiceAndVersion(serviceName, version);
       String resourcePath = MockControllerCommons.extractResourcePath(request, serviceAndVersion);
       log.debug("Found resourcePath: {}", resourcePath);
@@ -451,8 +459,10 @@ public class RestController {
          }
       }
 
-      // We may not have found an Operation because of not exact resource path matching with an operation
-      // using a Fallback dispatcher. Try again, just considering the verb and path pattern of operation.
+      // We may not have found an Operation because of not exact resource path
+      // matching with an operation
+      // using a Fallback dispatcher. Try again, just considering the verb and path
+      // pattern of operation.
       if (result == null) {
          for (Operation operation : service.getOperations()) {
             // Select operation based onto Http verb (GET, POST, PUT, etc ...)
@@ -461,7 +471,7 @@ public class RestController {
                if (operation.getResourcePaths() != null) {
                   // Produce a matching regexp removing {part} and :part from pattern.
                   String operationPattern = getURIPattern(operation.getName());
-                  //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
+                  // operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
                   operationPattern = operationPattern.replaceAll("\\{[\\w-]+\\}", "([^/])+");
                   operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
                   if (resourcePath.matches(operationPattern)) {
@@ -475,7 +485,6 @@ public class RestController {
       return result;
    }
 
-
    /** Get the short content type without charset information. */
    private String getShortContentType(String contentType) {
       // Sanitize charset information from media-type.
@@ -485,7 +494,9 @@ public class RestController {
       return contentType;
    }
 
-   /** Validate the parameter constraints and return a single string with violation message if any. */
+   /**
+    * Validate the parameter constraints and return a single string with violation message if any.
+    */
    private String validateParameterConstraintsIfAny(Operation rOperation, HttpServletRequest request) {
       if (rOperation.getParameterConstraints() != null) {
          for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
@@ -498,7 +509,9 @@ public class RestController {
       return null;
    }
 
-   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
+   /**
+    * Compute a dispatch context with a dispatchCriteria string from type, rules and request elements.
+    */
    private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
          String uriPattern, String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
@@ -518,7 +531,8 @@ public class RestController {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
                   ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()), request);
+                        new ServiceStateStore(serviceStateRepository, service.getId()), request,
+                        HttpHeadersUtil.extractFromHttpServletRequest(request));
                   String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
                   dispatchCriteria = (String) se.eval(script);
                } catch (Exception e) {

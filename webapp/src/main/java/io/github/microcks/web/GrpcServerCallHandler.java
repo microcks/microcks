@@ -40,10 +40,13 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
+
+import io.github.microcks.util.grpc.GrpcMetadataUtil;
 import io.github.microcks.util.grpc.GrpcUtil;
 import io.github.microcks.util.script.ScriptEngineBinder;
+import io.github.microcks.util.script.StringToStringsMap;
 import io.github.microcks.service.ServiceStateStore;
-
+import io.grpc.Metadata;
 import io.grpc.ServerCallHandler;
 import io.grpc.Status;
 import io.grpc.stub.ServerCalls;
@@ -56,13 +59,16 @@ import org.springframework.stereotype.Component;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A Handler for GRPC Server calls invocation that is using Microcks dispatching and mock definitions.
+ * A Handler for GRPC Server calls invocation that is using Microcks dispatching
+ * and mock definitions.
+ * 
  * @author laurent
  */
 @Component
@@ -82,11 +88,15 @@ public class GrpcServerCallHandler {
    private Boolean enableInvocationStats;
 
    /**
-    * Build a new GrpcServerCallHandler with all the repositories it needs and application context.
+    * Build a new GrpcServerCallHandler with all the repositories it needs and
+    * application context.
+    * 
     * @param serviceRepository      Repository for getting service definitions
     * @param serviceStateRepository Repository for getting service state
-    * @param resourceRepository     Repository for getting service resources definitions
-    * @param responseRepository     Repository for getting mock responses definitions
+    * @param resourceRepository     Repository for getting service resources
+    *                               definitions
+    * @param responseRepository     Repository for getting mock responses
+    *                               definitions
     * @param applicationContext     The Spring current application context
     */
    public GrpcServerCallHandler(ServiceRepository serviceRepository, ServiceStateRepository serviceStateRepository,
@@ -101,6 +111,7 @@ public class GrpcServerCallHandler {
 
    /**
     * Create an ServerCallHandler that uses Microcks mocks for unary calls.
+    * 
     * @param fullMethodName The GRPC method full name.
     * @return A ServerCallHandler
     */
@@ -109,8 +120,10 @@ public class GrpcServerCallHandler {
    }
 
    /**
-    * This internal class is handling UnaryMethod calls. It takes care of building a JSON representation from input,
-    * apply a dispatcher to find correct response and serialize response JSON content into binary back.
+    * This internal class is handling UnaryMethod calls. It takes care of building
+    * a JSON representation from input,
+    * apply a dispatcher to find correct response and serialize response JSON
+    * content into binary back.
     */
    protected class MockedUnaryMethod implements ServerCalls.UnaryMethod<byte[], byte[]> {
 
@@ -121,6 +134,7 @@ public class GrpcServerCallHandler {
 
       /**
        * Build a UnaryMethod for handling GRPC call.
+       * 
        * @param fullMethodName The GRPC method full identifier.
        */
       public MockedUnaryMethod(String fullMethodName) {
@@ -172,7 +186,8 @@ public class GrpcServerCallHandler {
                   dispatcherRules = fallback.getDispatcherRules();
                }
 
-               // In order to inspect incoming byte array, we need the Protobuf binary descriptor that should
+               // In order to inspect incoming byte array, we need the Protobuf binary
+               // descriptor that should
                // have been processed while importing the .proto schema for the service.
                List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
                      ResourceType.PROTOBUF_DESCRIPTOR);
@@ -195,8 +210,10 @@ public class GrpcServerCallHandler {
                log.debug("Request body: {}", jsonBody);
 
                //
-               DispatchContext dispatchContext = computeDispatchCriteria(service, dispatcher, dispatcherRules,
-                     jsonBody);
+               Metadata metadata = GrpcMetadataUtil.METADATA_CTX_KEY.get();
+
+               DispatchContext dispatchContext = computeDispatchCriteria(service, dispatcher, dispatcherRules, jsonBody,
+                     metadata);
                log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
                // Trying to retrieve the responses with context elements.
@@ -226,9 +243,12 @@ public class GrpcServerCallHandler {
          }
       }
 
-      /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
+      /**
+       * Compute a dispatch context with a dispatchCriteria string from type, rules
+       * and request elements.
+       */
       private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
-            String jsonBody) {
+            String jsonBody, Metadata metadata) {
          String dispatchCriteria = null;
          Map<String, Object> requestContext = null;
 
@@ -257,11 +277,14 @@ public class GrpcServerCallHandler {
                case DispatchStyles.SCRIPT:
                   ScriptEngineManager sem = new ScriptEngineManager();
                   requestContext = new HashMap<>();
+
                   try {
+                     // Build a map of header values.
+                     StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
                      // Evaluating request with script coming from operation dispatcher rules.
                      ScriptEngine se = sem.getEngineByExtension("groovy");
                      ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext,
-                           new ServiceStateStore(serviceStateRepository, service.getId()));
+                           new ServiceStateStore(serviceStateRepository, service.getId()), null, headers);
                      dispatchCriteria = (String) se.eval(dispatcherRules);
                   } catch (Exception e) {
                      log.error("Error during Script evaluation", e);
@@ -282,7 +305,8 @@ public class GrpcServerCallHandler {
                IdBuilder.buildOperationId(service, grpcOperation), dispatchContext.dispatchCriteria());
 
          if (responses.isEmpty()) {
-            // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
+            // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be
+            // the name of response.
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation),
                   dispatchContext.dispatchCriteria());
          }
@@ -294,19 +318,24 @@ public class GrpcServerCallHandler {
          }
 
          if (responses.isEmpty()) {
-            // In case no response found (because dispatcher is null for example), just get one for the operation.
+            // In case no response found (because dispatcher is null for example), just get
+            // one for the operation.
             log.debug("No responses found so far, tempting with just bare operationId...");
             responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(service, grpcOperation));
          }
          return responses;
       }
 
-      /** Manage the transmission of response on observer + all the common rendering mechanisms. */
+      /**
+       * Manage the transmission of response on observer + all the common rendering
+       * mechanisms.
+       */
       private void manageResponseTransmission(StreamObserver<byte[]> streamObserver, Service service,
             Operation grpcOperation, Descriptors.MethodDescriptor md, TypeRegistry registry,
             DispatchContext dispatchContext, String requestJsonBody, Response response, long startTime)
             throws InvalidProtocolBufferException {
-         // Use a builder for out type with a Json parser to merge content and build outMsg.
+         // Use a builder for out type with a Json parser to merge content and build
+         // outMsg.
          DynamicMessage.Builder outBuilder = DynamicMessage.newBuilder(md.getOutputType());
 
          // Render response content before.
