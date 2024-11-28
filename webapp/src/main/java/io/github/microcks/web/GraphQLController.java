@@ -93,7 +93,6 @@ import java.util.Set;
 
 /**
  * A controller for mocking GraphQL responses.
- * 
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
@@ -122,9 +121,9 @@ public class GraphQLController {
    private final SchemaGenerator schemaGenerator = new SchemaGenerator();
    private final ObjectMapper mapper = new ObjectMapper();
 
+
    /**
     * Build a GraphQLController with required dependencies.
-    * 
     * @param serviceRepository      The repository to access services definitions
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
@@ -142,6 +141,7 @@ public class GraphQLController {
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
    }
+
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.GET, RequestMethod.POST })
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
@@ -184,8 +184,7 @@ public class GraphQLController {
 
       log.debug("Got this graphqlOperation: {}", graphqlOperation);
 
-      // Operation type is direct but name depends on syntax (it can be a composite
-      // one). Better to use the names of selections...
+      // Operation type is direct but name depends on syntax (it can be a composite one). Better to use the names of selections...
       String operationType = graphqlOperation.getOperation().toString();
 
       // Check is it's an introspection query to handle first.
@@ -237,7 +236,7 @@ public class GraphQLController {
 
       /*
        * Optimized parallel version but need to better handle exception. graphqlResponses =
-       * graphqlOperation.getSelectionSet().getSelections().stream().parallel().map( selection -> { try {
+       * graphqlOperation.getSelectionSet().getSelections().stream().parallel().map(selection -> { try {
        * GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
        * graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request); if
        * (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
@@ -267,8 +266,7 @@ public class GraphQLController {
       // Publish an invocation event before returning if enabled.
       if (Boolean.TRUE.equals(enableInvocationStats)) {
          for (GraphQLQueryResponse response : graphqlResponses) {
-            // If it's not a __typename query, we might have a response, publish the
-            // invocation.
+            // If it's not a __typename query, we might have a response, publish the invocation.
             if (response.getResponse() != null) {
                MockControllerCommons.publishMockInvocation(applicationContext, this, service, response.getResponse(),
                      startTime);
@@ -280,10 +278,8 @@ public class GraphQLController {
       JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
 
       // Aggregate GraphQL query responses into a unified response object.
-      // Setting each response under its alias (or operation name if no alias is
-      // provided),
-      // ensures that aliasing applies consistently for both multi and single queries,
-      // matching actual
+      // Setting each response under its alias (or operation name if no alias is provided),
+      // ensures that aliasing applies consistently for both multi and single queries, matching actual
       // GraphQL behavior.
       ObjectNode aggregated = mapper.createObjectNode();
       ObjectNode dataNode = aggregated.putObject("data");
@@ -303,7 +299,6 @@ public class GraphQLController {
 
    /**
     * Process a GraphQL field selection query (an Http query may contain many field selection queries).
-    * 
     * @param service             The Service this query is targeting
     * @param operationType       The type of GraphQL operation (QUERY or MUTATION)
     * @param graphqlField        The Field selection we should apply
@@ -384,8 +379,7 @@ public class GraphQLController {
          }
 
          if (response == null) {
-            // When using the SCRIPT dispatcher, return of evaluation may be the name of
-            // response.
+            // When using the SCRIPT dispatcher, return of evaluation may be the name of response.
             log.debug("No responses with dispatch criteria, trying the name...");
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
                   dispatchContext.dispatchCriteria());
@@ -413,10 +407,8 @@ public class GraphQLController {
          }
 
          if (response == null) {
-            // In case no response found (because dispatcher is null for example), just get
-            // one for the operation.
-            // This will allow also OPTIONS operations (like pre-flight requests) with no
-            // dispatch criteria to work.
+            // In case no response found (because dispatcher is null for example), just get one for the operation.
+            // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
             log.debug("No responses found so far, tempting with just bare operationId...");
             responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(service, rOperation));
             if (!responses.isEmpty()) {
@@ -460,9 +452,7 @@ public class GraphQLController {
       throw new GraphQLQueryProcessingException("No '" + operationName + "' operation found", HttpStatus.NOT_FOUND);
    }
 
-   /**
-    * Validate the parameter constraints and return a single string with violation message if any.
-    */
+   /** Validate the parameter constraints and return a single string with violation message if any. */
    private String validateParameterConstraintsIfAny(Operation rOperation, HttpServletRequest request) {
       if (rOperation.getParameterConstraints() != null) {
          for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
@@ -475,9 +465,7 @@ public class GraphQLController {
       return null;
    }
 
-   /**
-    * Compute a dispatch context with a dispatchCriteria string from type, rules and request elements.
-    */
+   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
    private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
          Selection<?> graphqlSelection, JsonNode requestVariables, HttpServletRequest request, String body) {
 
@@ -494,8 +482,8 @@ public class GraphQLController {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
                   ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()), request,
-                        HttpHeadersUtil.extractFromHttpServletRequest(request));
+                        new ServiceStateStore(serviceStateRepository, service.getId()),
+                        HttpHeadersUtil.extractFromHttpServletRequest(request), request);
                   dispatchCriteria = (String) se.eval(dispatcherRules);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
@@ -532,7 +520,6 @@ public class GraphQLController {
 
    /**
     * Apply a FieldSelection filter on Json node.
-    * 
     * @param selectionSet        The set of selections to apply
     * @param fragmentDefinitions A list of fragment field selection
     * @param node                The Json node to apply on

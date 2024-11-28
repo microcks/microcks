@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for class HttpHeadersStringToStringsMap class.
- * 
  * @author laurent
  */
 class HttpHeadersStringToStringsMapTest {

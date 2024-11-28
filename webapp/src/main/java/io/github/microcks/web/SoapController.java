@@ -70,7 +70,6 @@ import java.util.regex.Pattern;
 
 /**
  * A controller for mocking Soap responses.
- * 
  * @author laurent
  */
 @org.springframework.web.bind.annotation.RestController
@@ -83,9 +82,7 @@ public class SoapController {
    /** Regular expression pattern for capturing Soap Operation name from body. */
    private static final Pattern OPERATION_CAPTURE_PATTERN = Pattern
          .compile("(.*):Body>(\\s*)<((\\w+):|)(?<operation>\\w+)(.*)(/)?>(.*)", Pattern.DOTALL);
-   /**
-    * Regular expression replacement pattern for chnging SoapUI {@code ${}} in Microcks {@code {{}}}.
-    */
+   /** Regular expression replacement pattern for chnging SoapUI {@code ${}} in Microcks {@code {{}}}. */
    private static final Pattern SOAPUI_TEMPLATE_PARAMETER_REPLACE_PATTERN = Pattern
          .compile("\\$\\{\s*([a-zA-Z0-9-_]+)\s*\\}", Pattern.DOTALL);
 
@@ -102,9 +99,9 @@ public class SoapController {
    @Value("${validation.resourceUrl}")
    private String resourceUrl;
 
+
    /**
     * Build a SoapController with required dependencies.
-    * 
     * @param serviceRepository      The repository to access services definitions
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
@@ -122,6 +119,7 @@ public class SoapController {
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
    }
+
 
    @PostMapping(value = "/{service}/{version}/**")
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
@@ -168,8 +166,7 @@ public class SoapController {
       if (rOperation == null) {
          String operationName = extractOperationName(body);
          if (!StringUtils.hasText(action)) {
-            // if the action is not in the header, we override it with the action from the
-            // body
+            // if the action is not in the header, we override it with the action from the body
             action = operationName;
          }
          log.debug("Extracted operation name from payload: {}", operationName);
@@ -287,8 +284,7 @@ public class SoapController {
          }
 
          // Render response content before waiting and returning.
-         // Response coming from SoapUI may contain specific template markers, we have to
-         // convert them first.
+         // Response coming from SoapUI may contain specific template markers, we have to convert them first.
          response.setContent(convertSoapUITemplate(response.getContent()));
          String responseContent = MockControllerCommons.renderResponseContent(body, null, request,
                dispatchContext.requestContext(), response);
@@ -315,7 +311,6 @@ public class SoapController {
 
    /**
     * Check if given SOAP payload has a correct structure for given operation name.
-    * 
     * @param payload       SOAP payload to check structure
     * @param operationName Name of operation to check structure against
     * @return True if payload is correct for operation, false otherwise.
@@ -333,7 +328,6 @@ public class SoapController {
 
    /**
     * Extract operation name from payload. Indeed we extract the wrapping element name inside SOAP body.
-    * 
     * @param payload SOAP payload to extract from
     * @return The wrapping Xml element name with body if matches SOAP. Null otherwise.
     */
@@ -347,7 +341,6 @@ public class SoapController {
 
    /**
     * Extraction Soap Action from request headers if specified.
-    * 
     * @param request The incoming HttpServletRequest to extract from
     * @return The found Soap action if any. Can be null.
     */
@@ -392,9 +385,7 @@ public class SoapController {
       }
    }
 
-   /**
-    * Build a dispatch context after a Groovy script evaluation coming from rules.
-    */
+   /** Build a dispatch context after a Groovy script evaluation coming from rules. */
    private DispatchContext getDispatchCriteriaFromScriptEval(Service service, String dispatcherRules, String body,
          HttpServletRequest request) {
       ScriptEngineManager sem = new ScriptEngineManager();
@@ -403,8 +394,8 @@ public class SoapController {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
          ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-               new ServiceStateStore(serviceStateRepository, service.getId()), request,
-               HttpHeadersUtil.extractFromHttpServletRequest(request));
+               new ServiceStateStore(serviceStateRepository, service.getId()),
+               HttpHeadersUtil.extractFromHttpServletRequest(request), request);
          String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
          return new DispatchContext((String) se.eval(script), requestContext);
       } catch (Exception e) {
@@ -418,7 +409,6 @@ public class SoapController {
     * Convert a SoapUI template like {@code <something>${myParam}</something>} into a Microcks one that could be later
     * rendered through the template engine. ie: {@code <something>{{ myParam }}</something>}. Supports multi-lines and
     * multi-parameters replacement.
-    * 
     * @param responseTemplate The SoapUI template to convert
     * @return The converted template or the original template if not recognized as a SoapUI one.
     */

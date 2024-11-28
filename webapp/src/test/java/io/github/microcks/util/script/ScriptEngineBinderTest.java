@@ -31,7 +31,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class ScriptEngineBinder class.
- * 
  * @author laurent
  */
 class ScriptEngineBinderTest {
@@ -48,7 +47,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, null);
          String result = (String) se.eval(script);
 
          assertEquals(body, result);
@@ -66,8 +65,6 @@ class ScriptEngineBinderTest {
             """;
 
       ScriptEngineManager sem = new ScriptEngineManager();
-      MockHttpServletRequest request = new MockHttpServletRequest();
-      // request.addHeader("foo", "bar");
       String body = "content";
       StringToStringsMap headers = new StringToStringsMap();
       headers.add("foo", "bar");
@@ -75,7 +72,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, request, headers);
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, headers);
          String result = (String) se.eval(script);
 
          assertEquals("bar", result);
@@ -98,7 +95,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null, null);
          String result = (String) se.eval(script);
 
          assertEquals(body, result);
@@ -151,7 +148,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, "body", context, store, null, null);
+         ScriptEngineBinder.bindEnvironment(se, "body", context, store, null);
          String result = (String) se.eval(script);
 
          assertEquals("fooValue", result);
@@ -195,7 +192,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null, null);
          String result = (String) se.eval(script);
 
          assertEquals("Andrew Response", result);
@@ -237,7 +234,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null, null);
          script = ScriptEngineBinder.ensureSoapUICompatibility(script);
          String result = (String) se.eval(script);
 
