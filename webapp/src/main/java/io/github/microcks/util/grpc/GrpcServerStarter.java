@@ -64,11 +64,8 @@ public class GrpcServerStarter {
       @Override
       public <ReqT, RespT> Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers,
             ServerCallHandler<ReqT, RespT> next) {
+         log.info("Found headers for operation {}: {}", call.getMethodDescriptor().getFullMethodName(), headers.keys());
          Context context = Context.current().withValue(GrpcMetadataUtil.METADATA_CTX_KEY, headers);
-
-         // TODO remove debug information as it might contain sensitive data
-         log.info("Found headers for operation {}: {}", call.getMethodDescriptor().getFullMethodName(), headers);
-
          return Contexts.interceptCall(context, call, headers, next);
       }
 
