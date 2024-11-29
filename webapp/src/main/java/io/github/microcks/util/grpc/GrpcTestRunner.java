@@ -33,9 +33,6 @@ import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
-import com.google.rpc.Code;
-import com.google.rpc.Status;
-
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
@@ -48,7 +45,6 @@ import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
-import io.grpc.StatusRuntimeException;
 import io.grpc.TlsChannelCredentials;
 import io.grpc.stub.ClientCalls;
 import org.slf4j.Logger;
@@ -63,7 +59,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -93,11 +88,10 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
             public void start(Listener<RespT> responseListener, Metadata headers) {
                // Extract custom headers from CallOptions
                Metadata customHeaders = callOptions.getOption(METADATA_CUSTOM_CALL_OPTION);
-               log.info("Adding headers to client request: {}", customHeaders.keys()); // TODO: change to debug mode
+               log.debug("Adding headers to client request: {}", customHeaders.keys());
                if (customHeaders != null) {
                   headers.merge(customHeaders);
                }
-               // The headers are passed through custom Call Options
                super.start(responseListener, headers);
             }
          };
