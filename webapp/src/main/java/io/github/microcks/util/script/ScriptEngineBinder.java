@@ -16,6 +16,7 @@
 package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
+import io.github.microcks.util.http.HttpHeadersUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,9 +53,32 @@ public class ScriptEngineBinder {
       bindEnvironment(engine, requestContent, requestContext, stateStore, headers, null);
    }
 
-
    /**
     * Create and bind an environment from Http request for a ScriptEngine.
+    * @param engine         The engine to enrich with binding environment.
+    * @param requestContent The content of request to use as data
+    * @param requestContext The execution context of this request
+    * @param stateStore     A store to save/get state from script
+    * @param request        The wrapped incoming servlet request.
+    */
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
+         StateStore stateStore, HttpServletRequest request) {
+      StringToStringsMap headers = HttpHeadersUtil.extractFromHttpServletRequest(request);
+      // Build a fake request container.
+      FakeScriptMockRequest mockRequest = new FakeScriptMockRequest(requestContent, headers);
+      mockRequest.setRequest(request);
+
+      // Create bindings and put content according to SoapUI binding environment.
+      Bindings bindings = engine.createBindings();
+      bindings.put("mockRequest", mockRequest);
+      bindings.put("log", log);
+      bindings.put("requestContext", requestContext);
+      bindings.put("store", stateStore);
+      engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+   }
+
+   /**
+    * Create and bind an environment for a ScriptEngine.
     * @param engine         The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
     * @param requestContext The execution context of this request

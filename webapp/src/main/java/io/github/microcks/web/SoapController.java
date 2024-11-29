@@ -30,7 +30,6 @@ import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
-import io.github.microcks.util.http.HttpHeadersUtil;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.soap.SoapMessageValidator;
@@ -394,8 +393,7 @@ public class SoapController {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
          ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-               new ServiceStateStore(serviceStateRepository, service.getId()),
-               HttpHeadersUtil.extractFromHttpServletRequest(request), request);
+               new ServiceStateStore(serviceStateRepository, service.getId()), request);
          String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
          return new DispatchContext((String) se.eval(script), requestContext);
       } catch (Exception e) {

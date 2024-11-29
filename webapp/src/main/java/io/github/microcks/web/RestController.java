@@ -40,7 +40,6 @@ import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.EvaluableRequest;
-import io.github.microcks.util.http.HttpHeadersUtil;
 import io.github.microcks.util.openapi.OpenAPISchemaValidator;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.openapi.SwaggerSchemaValidator;
@@ -519,8 +518,7 @@ public class RestController {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
                   ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()),
-                        HttpHeadersUtil.extractFromHttpServletRequest(request), request);
+                        new ServiceStateStore(serviceStateRepository, service.getId()), request);
                   String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
                   dispatchCriteria = (String) se.eval(script);
                } catch (Exception e) {

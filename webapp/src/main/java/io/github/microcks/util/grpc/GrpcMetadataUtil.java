@@ -17,12 +17,13 @@ package io.github.microcks.util.grpc;
 
 import io.github.microcks.util.script.HttpHeadersStringToStringsMap;
 import io.github.microcks.util.script.StringToStringsMap;
-import io.grpc.CallOptions;
 import io.grpc.Context;
 import io.grpc.Metadata;
 
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.util.Set;
+
+import com.nimbusds.jose.util.StandardCharset;
 
 /**
  * Helper class containing utility to deal with GrpcMetadata.
@@ -51,13 +52,13 @@ public class GrpcMetadataUtil {
       for (String key : keys) {
          // Depending on the suffix of the key we either extract binary values or
          // ASCII string values.
-         if (key.endsWith("-bin")) {
+         if (key.endsWith(Metadata.BINARY_HEADER_SUFFIX)) {
             // binary metadata entry
             Metadata.Key<byte[]> metadataKey = Metadata.Key.of(key, Metadata.BINARY_BYTE_MARSHALLER);
             Iterable<byte[]> values = metadata.getAll(metadataKey);
 
             for (byte[] value : values) {
-               String stringValue = new String(value, "UTF-8");
+               String stringValue = new String(value, StandardCharset.UTF_8);
                result.add(key, stringValue);
             }
          } else {

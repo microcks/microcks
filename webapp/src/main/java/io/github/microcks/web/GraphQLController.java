@@ -38,7 +38,6 @@ import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.graphql.GraphQLHttpRequest;
-import io.github.microcks.util.http.HttpHeadersUtil;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.service.ServiceStateStore;
 
@@ -482,8 +481,7 @@ public class GraphQLController {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
                   ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()),
-                        HttpHeadersUtil.extractFromHttpServletRequest(request), request);
+                        new ServiceStateStore(serviceStateRepository, service.getId()), request);
                   dispatchCriteria = (String) se.eval(dispatcherRules);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
