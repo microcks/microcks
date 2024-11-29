@@ -266,7 +266,7 @@ public class GrpcServerCallHandler {
                      // Evaluating request with script coming from operation dispatcher rules.
                      ScriptEngine se = sem.getEngineByExtension("groovy");
                      ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext,
-                           new ServiceStateStore(serviceStateRepository, service.getId()), headers);
+                           new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
                      dispatchCriteria = (String) se.eval(dispatcherRules);
                   } catch (Exception e) {
                      log.error("Error during Script evaluation", e);

@@ -66,31 +66,6 @@ class ScriptEngineBinderTest {
 
       ScriptEngineManager sem = new ScriptEngineManager();
       String body = "content";
-      StringToStringsMap headers = new StringToStringsMap();
-      headers.add("foo", "bar");
-
-      try {
-         // Evaluating request with script coming from operation dispatcher rules.
-         ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, headers);
-         String result = (String) se.eval(script);
-
-         assertEquals("bar", result);
-      } catch (Exception e) {
-         fail("Exception should no be thrown");
-      }
-   }
-
-   @Test
-   void testRequestContentHeadersAreBoundForHttpRequest() {
-      String script = """
-            def headers = mockRequest.getRequestHeaders()
-            log.info("headers: " + headers)
-            return headers.get("foo", "null");
-            """;
-
-      ScriptEngineManager sem = new ScriptEngineManager();
-      String body = "content";
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("foo", "bar");
 

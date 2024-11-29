@@ -41,19 +41,6 @@ public class ScriptEngineBinder {
    }
 
    /**
-    * Create and bind a SoapUI environment for a ScriptEngine.
-    * @param engine         The engine to enrich with binding environment.
-    * @param requestContent The content of request to use as data
-    * @param requestContext The execution context of this request
-    * @param stateStore     A store to save/get state from script
-    * @param headers        The header values of the request
-    */
-   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
-         StateStore stateStore, StringToStringsMap headers) {
-      bindEnvironment(engine, requestContent, requestContext, stateStore, headers, null);
-   }
-
-   /**
     * Create and bind an environment from Http request for a ScriptEngine.
     * @param engine         The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
@@ -64,17 +51,7 @@ public class ScriptEngineBinder {
    public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
          StateStore stateStore, HttpServletRequest request) {
       StringToStringsMap headers = HttpHeadersUtil.extractFromHttpServletRequest(request);
-      // Build a fake request container.
-      FakeScriptMockRequest mockRequest = new FakeScriptMockRequest(requestContent, headers);
-      mockRequest.setRequest(request);
-
-      // Create bindings and put content according to SoapUI binding environment.
-      Bindings bindings = engine.createBindings();
-      bindings.put("mockRequest", mockRequest);
-      bindings.put("log", log);
-      bindings.put("requestContext", requestContext);
-      bindings.put("store", stateStore);
-      engine.setBindings(bindings, ScriptContext.ENGINE_SCOPE);
+      bindEnvironment(engine, requestContent, requestContext, stateStore, headers, request);
    }
 
    /**
