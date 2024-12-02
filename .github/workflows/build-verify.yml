@@ -12,7 +12,10 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - '*.md'
-permissions: read-all
+permissions:
+  contents: read
+  id-token: write # needed for signing the images with GitHub OIDC Token
+
 jobs:
   build-verify-package:
     runs-on: ubuntu-latest
@@ -81,6 +84,9 @@ jobs:
             echo "PACKAGE_IMAGE=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
       - name: Set up QEMU
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         uses: docker/setup-qemu-action@v2
@@ -97,22 +103,38 @@ jobs:
           BUILDER=buildx-multi-arch
           docker buildx inspect $BUILDER || docker buildx create --name=$BUILDER --driver=docker-container --driver-opt=network=host
 
-      - name: Build and push container image for webapp
+      - name: Package webapp in prod mode
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/webapp
           mvn -B -q -Pprod -DskipTests install
-          #docker build -f src/main/docker/Dockerfile -t quay.io/microcks/microcks:$IMAGE_TAG .
-          docker buildx build --push \
-            --platform=linux/amd64,linux/arm64 \
-            --builder=buildx-multi-arch \
-            --provenance=false \
-            --build-arg TAG=$IMAGE_TAG \
-            --file src/main/docker/Dockerfile \
-            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --label "org.opencontainers.image.created=${{ steps.date.outputs.date }}" \
-            --tag=quay.io/microcks/microcks:$IMAGE_TAG \
-            --tag=docker.io/microcks/microcks:$IMAGE_TAG .
+
+      - name: Build and push container image for webapp
+        id: build-and-push-webapp
+        uses: docker/build-push-action@v4.0.0
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        with:
+          context: ${{github.workspace}}/webapp
+          push: true
+          platforms: linux/amd64,linux/arm64
+          builder: buildx-multi-arch
+          file: webapp/src/main/docker/Dockerfile
+          labels: |
+            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+          tags: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
+
+      - name: Sign the images with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build-and-push-webapp.outputs.digest }}
+          TAGS: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
 
       - name: Build and push container for async minion
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
