@@ -297,8 +297,7 @@ class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
       long realResponseTimeDelayed = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
-      assertTrue(realResponseTimeDelayed >= delay,
-            "real response time delayed: " + realResponseTimeDelayed + "ms");
+      assertTrue(realResponseTimeDelayed >= delay, "real response time delayed: " + realResponseTimeDelayed + "ms");
       assertTrue(realResponseTimeDelayed >= realResponseTime,
             "real response time: " + mockedResponseTime + "ms, delayed: " + realResponseTimeDelayed + "ms");
       assertEquals(200, response.getStatusCode().value());
