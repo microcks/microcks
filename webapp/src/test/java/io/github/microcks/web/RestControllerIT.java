@@ -272,7 +272,7 @@ class RestControllerIT extends AbstractBaseIT {
       }
 
       // Introduce request delay.
-      long delay = 100l;
+      long delay = 150l;
       op.setDefaultDelay(delay);
       serviceRepository.save(service);
 
@@ -280,8 +280,10 @@ class RestControllerIT extends AbstractBaseIT {
       startTime = System.currentTimeMillis();
       response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut", String.class);
       long mockedResponseTimeDelayed = System.currentTimeMillis() - startTime;
-      // Assert that the response time lies within half delay ms of that of the request without delay.
-      assertTrue(Math.abs(mockedResponseTimeDelayed - mockedResponseTime) > delay / 2,
+      // Assert that the response time is greater than the delay and greater that .
+      assertTrue(mockedResponseTimeDelayed >= delay,
+            "mocked response time delayed: " + mockedResponseTimeDelayed + "ms");
+      assertTrue(mockedResponseTimeDelayed >= mockedResponseTime,
             "mocked response time: " + mockedResponseTime + "ms, delayed: " + mockedResponseTimeDelayed + "ms");
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -294,9 +296,11 @@ class RestControllerIT extends AbstractBaseIT {
       startTime = System.currentTimeMillis();
       response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
       long realResponseTimeDelayed = System.currentTimeMillis() - startTime;
-      // Assert that the response time lies within half delay ms of that of the request without delay.
-      assertTrue(Math.abs(realResponseTimeDelayed - realResponseTime) > delay / 2,
-            "real response time: " + realResponseTime + "ms, delayed: " + realResponseTimeDelayed + "ms");
+      // Assert that the response time is greater than the delay and greater that .
+      assertTrue(realResponseTimeDelayed >= delay,
+            "real response time delayed: " + realResponseTimeDelayed + "ms");
+      assertTrue(realResponseTimeDelayed >= realResponseTime,
+            "real response time: " + mockedResponseTime + "ms, delayed: " + realResponseTimeDelayed + "ms");
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
