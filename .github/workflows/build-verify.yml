@@ -2,7 +2,7 @@ name: build-verify-package
 on:
   push:
     paths-ignore:
-      - '.github/**'
+      #- '.github/**'
       - '.gitignore'
       - 'LICENSE'
       - '*.md'
@@ -109,7 +109,7 @@ jobs:
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/webapp
-          mvn -B -q -Pprod -DskipTests install
+          mvn -B -q -Pprod -DskipTests package
 
       - name: Build and push container image for webapp
         id: build-and-push-webapp
@@ -126,7 +126,7 @@ jobs:
             org.opencontainers.image.created=${{ steps.date.outputs.date }}
           tags: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
 
-      - name: Sign the images with GitHub OIDC Token
+      - name: Sign the webapp images with GitHub OIDC Token
         env:
           DIGEST: ${{ steps.build-and-push-webapp.outputs.digest }}
           TAGS: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
@@ -138,22 +138,38 @@ jobs:
           done
           cosign sign --yes ${images}
 
-      - name: Build and push container for async minion
+      - name: Package async minion in prod mode
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/minions/async
           mvn -B -q -DskipTests -Dquarkus.package.type=legacy-jar package
-          #docker build -f src/main/docker/Dockerfile.jvm -t quay.io/microcks/microcks-async-minion:$IMAGE_TAG .
-          docker buildx build --push \
-            --platform=linux/amd64,linux/arm64 \
-            --builder=buildx-multi-arch \
-            --provenance=false \
-            --build-arg TAG=$IMAGE_TAG \
-            --file src/main/docker/Dockerfile.legacy-jar \
-            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --label "org.opencontainers.image.created=${{ steps.date.outputs.date }}" \
-            --tag=quay.io/microcks/microcks-async-minion:$IMAGE_TAG \
-            --tag=docker.io/microcks/microcks-async-minion:$IMAGE_TAG .
+
+      - name: Build and push container for async minion
+        id: build-and-push-async
+        uses: docker/build-push-action@v4.0.0
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        with:
+          context: ${{github.workspace}}//minions/async
+          push: true
+          platforms: linux/amd64,linux/arm64
+          builder: buildx-multi-arch
+          file: /minions/async/src/main/docker/Dockerfile.legacy-jar
+          labels: |
+            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+          tags: quay.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}},docker.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}}
+
+      - name: Sign the async minion images with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build-and-push-async.outputs.digest }}
+          TAGS: quay.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}},docker.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
 
       - name: Build and push container image for uber distro
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
