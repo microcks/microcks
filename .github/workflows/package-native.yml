@@ -6,7 +6,9 @@ on:
         description: 'The tag to use for the images'
         type: string
         required: true
-permissions: read-all
+permissions:
+  contents: read
+  id-token: write # needed for signing the images with GitHub OIDC Token
 
 jobs:
   build-native-images:

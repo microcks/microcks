@@ -244,6 +244,10 @@ jobs:
   call-package-native:
     needs: build-verify-package
     if: github.repository_owner == 'microcks' && ${{ needs.build-verify-package.outputs.package-image }} == 'true'
+    permissions:
+      contents: read
+      id-token: write # needed for signing the images with GitHub OIDC Token
+
     uses: ./.github/workflows/package-native.yml
     with:
       image-tag: ${{ needs.build-verify-package.outputs.image-tag }}
