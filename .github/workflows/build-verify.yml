@@ -12,14 +12,16 @@ on:
       - '.gitignore'
       - 'LICENSE'
       - '*.md'
-permissions:
-  contents: read
-  id-token: write # needed for signing the images with GitHub OIDC Token
+permissions: read-all
 
 jobs:
   build-verify-package:
     runs-on: ubuntu-latest
     environment: Build
+    permissions:
+      contents: read
+      id-token: write # needed for signing the images with GitHub OIDC Token
+
     steps:
       - name: Get current date
         id: date
