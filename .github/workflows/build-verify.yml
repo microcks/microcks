@@ -129,7 +129,7 @@ jobs:
       - name: Sign the webapp images with GitHub OIDC Token
         env:
           DIGEST: ${{ steps.build-and-push-webapp.outputs.digest }}
-          TAGS: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
+          TAGS: quay.io/microcks/microcks:${{env.IMAGE_TAG}} docker.io/microcks/microcks:${{env.IMAGE_TAG}}
           COSIGN_EXPERIMENTAL: "true"
         run: |
           images=""
@@ -149,7 +149,7 @@ jobs:
         uses: docker/build-push-action@v4.0.0
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         with:
-          context: ${{github.workspace}}//minions/async
+          context: ${{github.workspace}}/minions/async
           push: true
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
@@ -162,7 +162,7 @@ jobs:
       - name: Sign the async minion images with GitHub OIDC Token
         env:
           DIGEST: ${{ steps.build-and-push-async.outputs.digest }}
-          TAGS: quay.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}},docker.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}}
+          TAGS: quay.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}} docker.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}}
           COSIGN_EXPERIMENTAL: "true"
         run: |
           images=""
@@ -171,21 +171,38 @@ jobs:
           done
           cosign sign --yes ${images}
 
-      - name: Build and push container image for uber distro
+      - name: Package uber distro minion in prod mode
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/distro/uber
           mvn -B -q -Pprod -DskipTests package
-          docker buildx build --push \
-            --platform=linux/amd64,linux/arm64 \
-            --builder=buildx-multi-arch \
-            --provenance=false \
-            --build-arg TAG=$IMAGE_TAG \
-            --file src/main/docker/Dockerfile \
-            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --label "org.opencontainers.image.created=${{ steps.date.outputs.date }}" \
-            --tag=quay.io/microcks/microcks-uber:$IMAGE_TAG \
-            --tag=docker.io/microcks/microcks-uber:$IMAGE_TAG .
+
+      - name: Build and push container image for uber distro
+        id: build-and-push-uber
+        uses: docker/build-push-action@v4.0.0
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        with:
+          context: ${{github.workspace}}/distro/uber
+          push: true
+          platforms: linux/amd64,linux/arm64
+          builder: buildx-multi-arch
+          file: /distro/uber/src/main/docker/Dockerfile
+          labels: |
+            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+          tags: quay.io/microcks/microcks-uber:${{env.IMAGE_TAG}},docker.io/microcks/microcks-uber:${{env.IMAGE_TAG}}
+
+      - name: Sign the uber distro images with GitHub OIDC Token
+        env:
+          DIGEST: ${{ steps.build-and-push-uber.outputs.digest }}
+          TAGS: quay.io/microcks/microcks-uber:${{env.IMAGE_TAG}} docker.io/microcks/microcks-uber:${{env.IMAGE_TAG}}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
 
       - name: Build and push container for async minion in uber distro
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
