@@ -40,10 +40,13 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
+
+import io.github.microcks.util.grpc.GrpcMetadataUtil;
 import io.github.microcks.util.grpc.GrpcUtil;
 import io.github.microcks.util.script.ScriptEngineBinder;
+import io.github.microcks.util.script.StringToStringsMap;
 import io.github.microcks.service.ServiceStateStore;
-
+import io.grpc.Metadata;
 import io.grpc.ServerCallHandler;
 import io.grpc.Status;
 import io.grpc.stub.ServerCalls;
@@ -195,8 +198,9 @@ public class GrpcServerCallHandler {
                log.debug("Request body: {}", jsonBody);
 
                //
-               DispatchContext dispatchContext = computeDispatchCriteria(service, dispatcher, dispatcherRules,
-                     jsonBody);
+               Metadata metadata = GrpcMetadataUtil.METADATA_CTX_KEY.get();
+               DispatchContext dispatchContext = computeDispatchCriteria(service, dispatcher, dispatcherRules, jsonBody,
+                     metadata);
                log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
                // Trying to retrieve the responses with context elements.
@@ -228,7 +232,7 @@ public class GrpcServerCallHandler {
 
       /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
       private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
-            String jsonBody) {
+            String jsonBody, Metadata metadata) {
          String dispatchCriteria = null;
          Map<String, Object> requestContext = null;
 
@@ -258,10 +262,11 @@ public class GrpcServerCallHandler {
                   ScriptEngineManager sem = new ScriptEngineManager();
                   requestContext = new HashMap<>();
                   try {
+                     StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
                      // Evaluating request with script coming from operation dispatcher rules.
                      ScriptEngine se = sem.getEngineByExtension("groovy");
                      ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext,
-                           new ServiceStateStore(serviceStateRepository, service.getId()));
+                           new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
                      dispatchCriteria = (String) se.eval(dispatcherRules);
                   } catch (Exception e) {
                      log.error("Error during Script evaluation", e);

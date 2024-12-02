@@ -16,6 +16,7 @@
 package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
+import io.github.microcks.util.http.HttpHeadersUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
-import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -41,19 +41,6 @@ public class ScriptEngineBinder {
    }
 
    /**
-    * Create and bind a SoapUI environment for a ScriptEngine.
-    * @param engine         The engine to enrich with binding environment.
-    * @param requestContent The content of request to use as data
-    * @param requestContext The execution context of this request
-    * @param stateStore     A store to save/get state from script
-    */
-   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
-         StateStore stateStore) {
-      // Build a map of header values.
-      bindEnvironment(engine, requestContent, requestContext, stateStore, null);
-   }
-
-   /**
     * Create and bind an environment from Http request for a ScriptEngine.
     * @param engine         The engine to enrich with binding environment.
     * @param requestContent The content of request to use as data
@@ -63,14 +50,21 @@ public class ScriptEngineBinder {
     */
    public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
          StateStore stateStore, HttpServletRequest request) {
-      // Build a map of header values.
-      StringToStringsMap headers = new HttpHeadersStringToStringsMap();
-      if (request != null) {
-         for (String headerName : Collections.list(request.getHeaderNames())) {
-            headers.put(headerName, Collections.list(request.getHeaders(headerName)));
-         }
-      }
+      StringToStringsMap headers = HttpHeadersUtil.extractFromHttpServletRequest(request);
+      bindEnvironment(engine, requestContent, requestContext, stateStore, headers, request);
+   }
 
+   /**
+    * Create and bind an environment for a ScriptEngine.
+    * @param engine         The engine to enrich with binding environment.
+    * @param requestContent The content of request to use as data
+    * @param requestContext The execution context of this request
+    * @param stateStore     A store to save/get state from script
+    * @param headers        The header values of the request
+    * @param request        The wrapped incoming servlet request.
+    */
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
+         StateStore stateStore, StringToStringsMap headers, HttpServletRequest request) {
       // Build a fake request container.
       FakeScriptMockRequest mockRequest = new FakeScriptMockRequest(requestContent, headers);
       mockRequest.setRequest(request);

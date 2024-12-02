@@ -16,6 +16,7 @@
 package io.github.microcks.util.script;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -51,16 +52,27 @@ public class HttpHeadersStringToStringsMap extends StringToStringsMap {
       return stringListEntry.getValue();
    }
 
+   /**
+    * Override of HashMap getOrDefault() to implement case-insensitive search of key.
+    * @param key          The Http header name (case-insensitive)
+    * @param defaultValue The default mapping of the key
+    * @return The value as List of String if nay, or null
+    */
+   @Override
+   public List<String> getOrDefault(Object key, List<String> defaultValue) {
+      List<String> value;
+      return (value = this.get(key)) == null ? defaultValue : value;
+   }
+
+
    public boolean hasValues(String key) {
       return this.containsKeyIgnoreCase(key) && ((List) this.get(key)).size() > 0;
    }
 
    public void add(String key, String string) {
-      if (!this.containsKeyIgnoreCase(key)) {
-         this.put(key, new ArrayList<String>());
-      }
-
-      this.get(key).add(string);
+      List<String> updatedValue = this.getOrDefault(key, new ArrayList<String>());
+      updatedValue.add(string);
+      this.put(key, updatedValue);
    }
 
    public String get(String key, String defaultValue) {
