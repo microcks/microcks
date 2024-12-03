@@ -69,7 +69,8 @@ jobs:
               -Dspring-boot.build-image.runImage=$RUNNER_IMAGE
 
       - name: Save native image for ${{ matrix.arch }}
-        uses: ishworkh/docker-image-artifact-upload@v1
+        #uses: ishworkh/docker-image-artifact-upload@v1
+        uses: ishworkh/container-image-artifact-upload@v2.0.1
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -88,7 +89,8 @@ jobs:
           echo "IMAGE_TAG=${{inputs.image-tag}}-native" >> "$GITHUB_ENV"
 
       - name: Get saved images for ${{ matrix.arch }}
-        uses: ishworkh/docker-image-artifact-download@v1
+        #uses: ishworkh/docker-image-artifact-download@v1
+        uses: ishworkh/container-image-artifact-download@v2.0.1
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
