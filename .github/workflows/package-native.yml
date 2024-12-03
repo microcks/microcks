@@ -70,7 +70,7 @@ jobs:
 
       - name: Save native image for ${{ matrix.arch }}
         #uses: ishworkh/docker-image-artifact-upload@v1
-        uses: ishworkh/container-image-artifact-upload@v2.0.1
+        uses: ishworkh/container-image-artifact-upload@v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -90,7 +90,7 @@ jobs:
 
       - name: Get saved images for ${{ matrix.arch }}
         #uses: ishworkh/docker-image-artifact-download@v1
-        uses: ishworkh/container-image-artifact-download@v2.0.1
+        uses: ishworkh/container-image-artifact-download@v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
