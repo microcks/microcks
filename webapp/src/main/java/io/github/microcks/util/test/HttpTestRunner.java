@@ -187,21 +187,8 @@ public class HttpTestRunner extends AbstractTestRunner<HttpMethod> {
     */
    protected Set<Header> prepareRequestHeaders(Operation operation, ClientHttpRequest httpRequest, Request request,
          TestResult testResult) {
-      Set<Header> headers = new HashSet<>();
+      Set<Header> headers = TestRunnerCommons.collectHeaders(testResult, request, operation);
 
-      // Set headers to request if any. Start with those coming from request itself.
-      if (request.getHeaders() != null) {
-         headers.addAll(request.getHeaders());
-      }
-      // Add or override existing headers with test specific ones for operation and globals.
-      if (testResult.getOperationsHeaders() != null) {
-         if (testResult.getOperationsHeaders().getGlobals() != null) {
-            headers.addAll(testResult.getOperationsHeaders().getGlobals());
-         }
-         if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
-            headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
-         }
-      }
       if (!headers.isEmpty()) {
          for (Header header : headers) {
             log.debug("Adding header {} to request", header.getName());
