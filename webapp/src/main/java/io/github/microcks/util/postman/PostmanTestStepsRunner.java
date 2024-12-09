@@ -28,6 +28,7 @@ import io.github.microcks.domain.TestReturn;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.test.AbstractTestRunner;
+import io.github.microcks.util.test.TestRunnerCommons;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -164,19 +165,7 @@ public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
          }
          // Set headers to request if any. Start with those coming from request itself.
          // Add or override existing headers with test specific ones for operation and globals.
-         Set<Header> headers = new HashSet<>();
-
-         if (request.getHeaders() != null) {
-            headers.addAll(request.getHeaders());
-         }
-         if (testResult.getOperationsHeaders() != null) {
-            if (testResult.getOperationsHeaders().getGlobals() != null) {
-               headers.addAll(testResult.getOperationsHeaders().getGlobals());
-            }
-            if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
-               headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
-            }
-         }
+         Set<Header> headers = TestRunnerCommons.collectHeaders(testResult, request, operation);
          if (!headers.isEmpty()) {
             ArrayNode jsonHeaders = buildHeaders(headers);
             jsonRequest.set("headers", jsonHeaders);
