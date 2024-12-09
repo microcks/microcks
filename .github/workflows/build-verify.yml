@@ -128,6 +128,7 @@ jobs:
           tags: quay.io/microcks/microcks:${{env.IMAGE_TAG}},docker.io/microcks/microcks:${{env.IMAGE_TAG}}
 
       - name: Sign the webapp images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         env:
           DIGEST: ${{ steps.build-and-push-webapp.outputs.digest }}
           TAGS: quay.io/microcks/microcks:${{env.IMAGE_TAG}} docker.io/microcks/microcks:${{env.IMAGE_TAG}}
@@ -162,6 +163,7 @@ jobs:
           tags: quay.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}},docker.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}}
 
       - name: Sign the async minion images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         env:
           DIGEST: ${{ steps.build-and-push-async.outputs.digest }}
           TAGS: quay.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}} docker.io/microcks/microcks-async-minion:${{env.IMAGE_TAG}}
@@ -196,6 +198,7 @@ jobs:
           tags: quay.io/microcks/microcks-uber:${{env.IMAGE_TAG}},docker.io/microcks/microcks-uber:${{env.IMAGE_TAG}}
 
       - name: Sign the uber distro images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         env:
           DIGEST: ${{ steps.build-and-push-uber.outputs.digest }}
           TAGS: quay.io/microcks/microcks-uber:${{env.IMAGE_TAG}} docker.io/microcks/microcks-uber:${{env.IMAGE_TAG}}
@@ -230,6 +233,7 @@ jobs:
           tags: quay.io/microcks/microcks-uber-async-minion:${{env.IMAGE_TAG}},docker.io/microcks/microcks-uber-async-minion:${{env.IMAGE_TAG}}
 
       - name: Sign the async minion in uber distro images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         env:
           DIGEST: ${{ steps.build-and-push-uber-async.outputs.digest }}
           TAGS: quay.io/microcks/microcks-uber-async-minion:${{env.IMAGE_TAG}} docker.io/microcks/microcks-uber-async-minion:${{env.IMAGE_TAG}}
