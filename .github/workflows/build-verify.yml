@@ -109,7 +109,8 @@ jobs:
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         run: |
           cd ${{github.workspace}}/webapp
-          mvn -B -q -Pprod -DskipTests package
+          # We should install the webapp to have the JAR with UI, available for the Uber distro
+          mvn -B -q -Pprod -DskipTests install
 
       - name: Build and push container image for webapp
         id: build-and-push-webapp
