@@ -621,6 +621,8 @@ spec:
           initialDelaySeconds: 30
           tcpSocket:
             port: 5432
+        resources:
+          {{- toYaml .Values.keycloak.postgresResources | nindent 10 }}
         env:
         - name: POSTGRES_USER
           valueFrom:
