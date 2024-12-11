@@ -31,3 +31,14 @@ operations:
             <price>2.5</price>
             <status>unknown</status>
           </pastry>
+    Eclair Chocolat Empty Status:
+      request:
+        parameters:
+          name: Eclair Chocolat
+      response:
+        mediaType: application/json
+        body:
+          name: Eclair Chocolat
+          description: Delicieux Eclair Chocolat pas calorique du tout
+          size: M
+          price: 2.5

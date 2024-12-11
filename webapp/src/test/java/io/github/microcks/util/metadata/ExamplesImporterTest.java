@@ -81,7 +81,7 @@ class ExamplesImporterTest {
       assertTrue(operation.getResourcePaths().contains("/pastry/{name}"));
 
       assertNotNull(exchanges);
-      assertEquals(2, exchanges.size());
+      assertEquals(3, exchanges.size());
 
       for (Exchange exchange : exchanges) {
          if (exchange instanceof RequestResponsePair pair) {
@@ -112,6 +112,16 @@ class ExamplesImporterTest {
                      + "  <description>Delicieux Eclair au Chocolat pas calorique du tout</description>\n"
                      + "  <size>M</size>\n" + "  <price>2.5</price>\n" + "  <status>unknown</status>\n" + "</pastry>",
                      pair.getResponse().getContent());
+            } else if ("Eclair Chocolat Empty Status".equals(pair.getRequest().getName())) {
+               assertEquals("Eclair Chocolat", parameter.getValue());
+
+               // Check that content has been transformed in JSON.
+               assertEquals("application/json", pair.getResponse().getMediaType());
+               assertEquals(
+                     "{\"name\":\"Eclair Chocolat\",\"description\":\"Delicieux Eclair Chocolat pas calorique du tout\",\"size\":\"M\",\"price\":2.5}",
+                     pair.getResponse().getContent());
+               // Check that default status value has got set
+               assertEquals("200", pair.getResponse().getStatus());
             }
          } else {
             fail("Unknown extracted exchange type");
