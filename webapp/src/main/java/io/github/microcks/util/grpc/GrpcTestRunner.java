@@ -71,8 +71,9 @@ import java.util.concurrent.TimeUnit;
 public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
    /* Call Option used to pass gRPC Metadata from client invocation to header client interceptor */
+   public static final String CUSTOM_CALL_OPTION_NAME = "request-metadata";
    public static final CallOptions.Key<Metadata> METADATA_CUSTOM_CALL_OPTION = CallOptions.Key
-         .createWithDefault("request-metadata", null);
+         .createWithDefault(CUSTOM_CALL_OPTION_NAME, null);
 
    class HeaderInterceptor implements ClientInterceptor {
 
