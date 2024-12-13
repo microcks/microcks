@@ -88,8 +88,8 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
             public void start(Listener<RespT> responseListener, Metadata headers) {
                // Extract custom headers from CallOptions
                Metadata customHeaders = callOptions.getOption(METADATA_CUSTOM_CALL_OPTION);
-               log.debug("Adding headers to client request: {}", customHeaders.keys());
                if (customHeaders != null) {
+                  log.debug("Adding headers to client request: {}", customHeaders.keys());
                   headers.merge(customHeaders);
                }
                super.start(responseListener, headers);
@@ -272,7 +272,6 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
    private static Metadata convertHeadersToMetadata(Set<Header> headers) {
       Metadata metadata = new Metadata();
       for (Header header : headers) {
-         log.info("Adding header {} to request", header.getName());
          for (String value : header.getValues()) {
             metadata.put(Metadata.Key.of(header.getName(), Metadata.ASCII_STRING_MARSHALLER), value);
          }
