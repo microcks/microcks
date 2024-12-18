@@ -17,6 +17,7 @@ package io.github.microcks.util.el;
 
 import io.github.microcks.util.el.function.NowELFunction;
 import io.github.microcks.util.el.function.PutInContextELFunction;
+import io.github.microcks.util.el.function.RandomBooleanELFunction;
 import io.github.microcks.util.el.function.UUIDELFunction;
 import org.junit.jupiter.api.Test;
 
@@ -42,10 +43,10 @@ class ExpressionParserTest {
       Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
 
       assertEquals(4, expressions.length);
-      assertTrue(expressions[0] instanceof LiteralExpression);
-      assertTrue(expressions[1] instanceof VariableReferenceExpression);
-      assertTrue(expressions[2] instanceof LiteralExpression);
-      assertTrue(expressions[3] instanceof FunctionExpression);
+      assertInstanceOf(LiteralExpression.class, expressions[0]);
+      assertInstanceOf(VariableReferenceExpression.class, expressions[1]);
+      assertInstanceOf(LiteralExpression.class, expressions[2]);
+      assertInstanceOf(FunctionExpression.class, expressions[3]);
 
       assertEquals("Hello ", ((LiteralExpression) expressions[0]).getValue(context));
       assertEquals(" it's ", ((LiteralExpression) expressions[2]).getValue(context));
@@ -63,14 +64,33 @@ class ExpressionParserTest {
       Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
 
       assertEquals(4, expressions.length);
-      assertTrue(expressions[0] instanceof LiteralExpression);
-      assertTrue(expressions[1] instanceof RedirectExpression);
-      assertTrue(expressions[2] instanceof LiteralExpression);
-      assertTrue(expressions[3] instanceof VariableReferenceExpression);
+      assertInstanceOf(LiteralExpression.class, expressions[0]);
+      assertInstanceOf(RedirectExpression.class, expressions[1]);
+      assertInstanceOf(LiteralExpression.class, expressions[2]);
+      assertInstanceOf(VariableReferenceExpression.class, expressions[3]);
 
       String guidValue = expressions[1].getValue(context);
       String contextValue = expressions[3].getValue(context);
       assertEquals(guidValue, contextValue);
+   }
+
+   @Test
+   void testFallbackParseExpression() {
+      String template = "Bar value: {{ request.body/bar || randomBoolean() }}";
+
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.registerFunction("randomBoolean", RandomBooleanELFunction.class);
+      context.setVariable("request", new EvaluableRequest("{\"foo\": \"Foo\"}", null));
+
+      Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
+
+      assertEquals(2, expressions.length);
+      assertInstanceOf(LiteralExpression.class, expressions[0]);
+      assertInstanceOf(FallbackExpression.class, expressions[1]);
+
+      assertEquals("Bar value: ", expressions[0].getValue(context));
+      assertTrue("true".equals(expressions[1].getValue(context)) || "false".equals(expressions[1].getValue(context)));
    }
 
    @Test

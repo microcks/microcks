@@ -132,17 +132,32 @@ public class ExpressionParser {
     */
    private static Expression doParseExpression(String expressionString, EvaluationContext context) {
 
-      boolean hasRedirect = expressionString.indexOf('>') != -1;
+      // Check for special exception like RedirectExpression.
+      boolean hasRedirect = expressionString.indexOf(RedirectExpression.REDIRECT_MARKER) != -1;
       log.debug("hasRedirect:{}", hasRedirect);
 
       if (hasRedirect) {
-         String[] parts = expressionString.split("\\>");
+         String[] parts = expressionString.split(RedirectExpression.REDIRECT_MARKER_SPLIT_REGEX);
          Expression[] expressions = new Expression[parts.length];
          for (int i = 0; i < parts.length; i++) {
             expressions[i] = doParseSimpleExpression(parts[i].trim(), context);
          }
          return new RedirectExpression(expressions);
       }
+
+      // Check for special exception like FallbackExpression.
+      boolean hasFallback = expressionString.contains(FallbackExpression.FALLBACK_MARKER);
+      log.debug("hasFallback:{}", hasFallback);
+
+      if (hasFallback) {
+         String[] parts = expressionString.split(FallbackExpression.FALLBACK_MARKER_SPLIT_REGEX);
+         Expression[] expressions = new Expression[parts.length];
+         for (int i = 0; i < parts.length; i++) {
+            expressions[i] = doParseSimpleExpression(parts[i].trim(), context);
+         }
+         return new FallbackExpression(expressions);
+      }
+
       // Else pare simple expression.
       return doParseSimpleExpression(expressionString, context);
    }
@@ -181,33 +196,37 @@ public class ExpressionParser {
       // Check if it's a ELFunctionExpression
       if (hasArgs || isPostmanFunction) {
          log.debug("Found a function expression {}", expressionString);
-
-         String functionName = null;
-         String[] args = new String[0];
-         // Checking for easier Postman compatibility notation first.
-         if (expressionString.startsWith("$")) {
-            functionName = expressionString.substring(1);
-         } else {
-            functionName = expressionString.substring(0, argsStart);
-            String argsString = expressionString.substring(argsStart + 1, argsEnd);
-            // Parse arguments if non empty string.
-            if (!argsString.isEmpty()) {
-               args = Arrays.stream(argsString.split(",")).map(String::trim).toArray(String[]::new);
-            }
-         }
-
-         Class<ELFunction> functionClazz = context.lookupFunction(functionName);
-         ELFunction function = null;
-         try {
-            function = functionClazz.getDeclaredConstructor().newInstance();
-         } catch (Exception e) {
-            log.error("Exception while instantiating the functionClazz " + functionClazz, e);
-            return new LiteralExpression("");
-         }
-         return new FunctionExpression(function, args);
+         return buildFunctionExpression(expressionString, argsStart, argsEnd, context);
       }
 
       log.info("No ELFunction or complex VariableReference expressions found... Returning simple VariableReference");
       return new VariableReferenceExpression(expressionString);
+   }
+
+   private static Expression buildFunctionExpression(String expressionString, int argsStart, int argsEnd,
+         EvaluationContext context) {
+      String functionName = null;
+      String[] args = new String[0];
+      // Checking for easier Postman compatibility notation first.
+      if (expressionString.startsWith("$")) {
+         functionName = expressionString.substring(1);
+      } else {
+         functionName = expressionString.substring(0, argsStart);
+         String argsString = expressionString.substring(argsStart + 1, argsEnd);
+         // Parse arguments if non empty string.
+         if (!argsString.isEmpty()) {
+            args = Arrays.stream(argsString.split(",")).map(String::trim).toArray(String[]::new);
+         }
+      }
+
+      Class<ELFunction> functionClazz = context.lookupFunction(functionName);
+      ELFunction function = null;
+      try {
+         function = functionClazz.getDeclaredConstructor().newInstance();
+      } catch (Exception e) {
+         log.error("Exception while instantiating the functionClazz " + functionClazz, e);
+         return new LiteralExpression("");
+      }
+      return new FunctionExpression(function, args);
    }
 }
