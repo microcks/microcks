@@ -229,7 +229,7 @@ public class AvroUtil {
             break;
          case ARRAY:
             if (!(datum instanceof Collection<?> collection)) {
-               errors.add(fieldName + " is not a valid array");
+               errors.add(fieldName[0] + " is not a valid array");
             } else {
                // Now add errors for each element.
                for (Object element : collection) {
@@ -239,31 +239,37 @@ public class AvroUtil {
             break;
          case STRING:
             if (!(datum instanceof CharSequence))
-               errors.add(fieldName + " is not a string");
+               errors.add(fieldName[0] + " is not a string");
             break;
          case BYTES:
             if (!(datum instanceof ByteBuffer))
-               errors.add(fieldName + " is not bytes");
+               errors.add(fieldName[0] + " is not bytes");
             break;
          case INT:
             if (!(datum instanceof Integer))
-               errors.add(fieldName + " is not an integer");
+               errors.add(fieldName[0] + " is not an integer");
             break;
          case LONG:
             if (!(datum instanceof Long))
-               errors.add(fieldName + " is not a long");
+               errors.add(fieldName[0] + " is not a long");
             break;
          case FLOAT:
             if (!(datum instanceof Float))
-               errors.add(fieldName + " is not a float");
+               errors.add(fieldName[0] + " is not a float");
             break;
          case DOUBLE:
             if (!(datum instanceof Double))
-               errors.add(fieldName + " is not a double");
+               errors.add(fieldName[0] + " is not a double");
             break;
          case BOOLEAN:
             if (!(datum instanceof Boolean))
-               errors.add(fieldName + " is not a boolean");
+               errors.add(fieldName[0] + " is not a boolean");
+            break;
+         case UNION:
+            // Get validation errors for each type in union.
+            for (Schema unionSchema : schema.getTypes()) {
+               errors.addAll(getValidationErrors(unionSchema, datum));
+            }
             break;
       }
       return errors;

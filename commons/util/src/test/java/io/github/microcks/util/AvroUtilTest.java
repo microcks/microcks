@@ -232,4 +232,25 @@ class AvroUtilTest {
             .forEach(incompatibility -> System.err.println(incompatibility.getMessage()));
       assertEquals(SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
    }
+
+   @Test
+   void testValidationUnionSchema() {
+      Schema cat = SchemaBuilder.record("Cat").fields().requiredString("name").requiredInt("age").endRecord();
+      Schema dog = SchemaBuilder.record("Dog").fields().requiredString("name").requiredInt("age")
+            .optionalString("fluff").endRecord();
+
+      Schema union = SchemaBuilder.unionOf().type(cat).and().type(dog).endUnion();
+
+      GenericRecord tigresse = new GenericData.Record(cat);
+      tigresse.put("name", "Tigresse");
+      tigresse.put("age", "12");
+
+      // Assert that the record is not valid against the union schema.
+      assertFalse(AvroUtil.validate(union, tigresse));
+      List<String> errors = AvroUtil.getValidationErrors(union, tigresse);
+      assertEquals(2, errors.size());
+      for (String error : errors) {
+         assertEquals("age is not an integer", error);
+      }
+   }
 }
