@@ -61,7 +61,7 @@ public class KafkaProducerManager {
    private Producer<String, GenericRecord> registryProducer;
 
    @Inject
-   private Config config;
+   Config config;
 
    @ConfigProperty(name = "kafka.bootstrap.servers")
    String bootstrapServers;

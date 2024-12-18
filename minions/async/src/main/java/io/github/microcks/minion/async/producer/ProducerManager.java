@@ -19,15 +19,21 @@ import io.github.microcks.domain.Binding;
 import io.github.microcks.domain.BindingType;
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.ResourceType;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.Constants;
 import io.github.microcks.minion.async.SchemaRegistry;
 import io.github.microcks.util.AvroUtil;
+import io.github.microcks.util.SchemaMap;
+import io.github.microcks.util.asyncapi.AsyncAPISchemaUtil;
+import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.quarkus.arc.Unremovable;
+import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -41,14 +47,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
-@Unremovable
-@ApplicationScoped
 /**
  * ProducerManager is the responsible for emitting mock event messages when specific frequency triggered is reached.
  * Need to specify it as @Unremovable to avoid Quarkus ARC optimization removing beans that are not injected elsewhere
  * (this one is resolved using Arc.container().instance() method from ProducerScheduler).
  * @author laurent
  */
+@Unremovable
+@ApplicationScoped
 public class ProducerManager {
 
    /** Get a JBoss logging logger. */
@@ -151,34 +157,64 @@ public class ProducerManager {
 
          // Check it Avro binary is expected, we should convert to bytes.
          if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(eventMessage.getMediaType())) {
-            // Build the name of expected schema.
+            // Retrieve an Avro schema for this operation.
+            Schema schema = null;
+
+            // First browse schema entries for this operation.
             List<SchemaRegistry.SchemaEntry> entries = schemaRegistry.getSchemaEntries(definition.getOwnerService())
                   .stream().filter(entry -> entry.getOperations() != null
                         && entry.getOperations().contains(definition.getOperation().getName()))
                   .toList();
 
-            if (!entries.isEmpty()) {
-               logger.debugf("Found an Avro schema '%s' for operation '%s'", entries.get(0).getName(),
+            if (entries.isEmpty()) {
+               // If no entry found for the operation, we have to extract Avro schema from the AsyncAPI spec.
+               entries = schemaRegistry.getSchemaEntries(definition.getOwnerService()).stream()
+                     .filter(entry -> ResourceType.ASYNC_API_SPEC.equals(entry.getType())).toList();
+
+               SchemaMap schemaMap = new SchemaMap();
+               schemaRegistry.getSchemaEntries(definition.getOwnerService())
+                     .forEach(schemaEntry -> schemaMap.putSchemaEntry(schemaEntry.getPath(), schemaEntry.getContent()));
+
+               try {
+                  // Extract embedded Avro schema from AsyncAPI spec.
+                  JsonNode specificationNode = AsyncAPISchemaValidator
+                        .getJsonNodeForSchema(entries.getFirst().getContent());
+                  schema = AsyncAPISchemaUtil.retrieveMessageAvroSchema(specificationNode, AsyncAPISchemaUtil
+                        .findMessagePathPointer(specificationNode, definition.getOperation().getName()), schemaMap);
+
+                  if (schema.isUnion() && schema.getTypes().size() == 1) {
+                     schema = schema.getTypes().getFirst();
+                  }
+               } catch (Exception e) {
+                  logger.errorf("Exception while extracting Avro schema from AsyncAPI spec", e);
+               }
+            } else {
+               // Directly get the Avro schema from one schema entry (.asvc file as external ref).
+               schema = AvroUtil.getSchema(entries.getFirst().getContent());
+            }
+
+            if (schema != null) {
+               logger.debugf("Found an Avro schema '%s' for operation '%s'", schema,
                      definition.getOperation().getName());
-               String schemaContent = entries.get(0).getContent();
 
                try {
                   if (Constants.REGISTRY_AVRO_ENCODING.equals(defaultAvroEncoding)
                         && kafkaProducerManager.isRegistryEnabled()) {
                      logger.debug("Using a registry and converting message to Avro record");
-                     GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schemaContent);
+                     GenericRecord avroRecord = AvroUtil.jsonToAvroRecord(message, schema);
                      kafkaProducerManager.publishMessage(topic, key, avroRecord,
                            kafkaProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
                                  eventMessage.getHeaders()));
                   } else {
                      logger.debug("Converting message to Avro bytes array");
-                     byte[] avroBinary = AvroUtil.jsonToAvro(message, schemaContent);
+                     byte[] avroBinary = AvroUtil.jsonToAvro(message, schema);
                      kafkaProducerManager.publishMessage(topic, key, avroBinary,
                            kafkaProducerManager.renderEventMessageHeaders(TemplateEngineFactory.getTemplateEngine(),
                                  eventMessage.getHeaders()));
                   }
                } catch (Exception e) {
-                  logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schemaContent, e);
+                  logger.errorf("Exception while converting {%s} to Avro using schema {%s}", message, schema.toString(),
+                        e);
                }
             } else {
                logger.warnf("Failed finding a suitable Avro schema for the '%s' operation. No publication done.",

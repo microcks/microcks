@@ -704,8 +704,10 @@ class AsyncAPISchemaValidatorTest {
       String asyncAPIText = null;
       JsonNode asyncAPISpec = null;
 
-      Schema signedupSchema = SchemaBuilder.record("SignupUser").fields().requiredString("displayName").endRecord();
-      Schema loginSchema = SchemaBuilder.record("LoginUser").fields().requiredString("email").endRecord();
+      Schema signedupSchema = SchemaBuilder.record("SignupUser").namespace("microcks.avro").fields()
+            .requiredString("displayName").endRecord();
+      Schema loginSchema = SchemaBuilder.record("LoginUser").namespace("microcks.avro").fields().requiredString("email")
+            .endRecord();
 
       SchemaMap schemaMap = new SchemaMap();
       schemaMap.putSchemaEntry("./user-signedup-signup.avsc",
