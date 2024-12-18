@@ -76,13 +76,13 @@ class KafkaProducerManagerIT {
    @Container
    private static final KafkaContainer kafkaContainer = new KafkaContainer(
          DockerImageName.parse("confluentinc/cp-kafka:7.5.0")).withNetwork(NETWORK).withNetworkAliases("kafka")
-         .withListener(() -> "kafka:19092");
+               .withListener(() -> "kafka:19092");
 
    @Test
    void testProduceAvroMockMessages() throws Exception {
       // Arrange.
-      String asyncAPIContent = Files.readString(
-            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-avro-asyncapi-oneof-2.3.yaml"));
+      String asyncAPIContent = Files.readString(Paths.get("target/test-classes/io/github/microcks/minion/async",
+            "user-signedup-avro-asyncapi-oneof-2.3.yaml"));
 
       // Prepare some event messages.
       EventMessage aliceEvent = new EventMessage();
@@ -107,7 +107,8 @@ class KafkaProducerManagerIT {
 
       // Assemble them into a repository.
       AsyncMockRepository mockRepository = new AsyncMockRepository();
-      AsyncMockDefinition mockDefinition = new AsyncMockDefinition(service, signedupOperation, List.of(aliceEvent, bobEvent));
+      AsyncMockDefinition mockDefinition = new AsyncMockDefinition(service, signedupOperation,
+            List.of(aliceEvent, bobEvent));
       mockRepository.storeMockDefinition(mockDefinition);
 
       MicrocksAPIConnector microcksAPIConnector = new MicrocksAPIConnector() {
@@ -188,8 +189,8 @@ class KafkaProducerManagerIT {
       kafkaProducerManager.bootstrapServers = kafkaContainer.getBootstrapServers();
       kafkaProducerManager.create();
 
-      ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry, kafkaProducerManager,
-            null, null, null, null, null, null);
+      ProducerManager producerManager = new ProducerManager(mockRepository, schemaRegistry, kafkaProducerManager, null,
+            null, null, null, null, null);
 
       // Act.
       producerManager.produceKafkaMockMessages(mockDefinition);
@@ -235,6 +236,7 @@ class KafkaProducerManagerIT {
             @Override
             public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
             }
+
             @Override
             public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
                partitions.forEach(p -> consumer.seek(p, 0));
