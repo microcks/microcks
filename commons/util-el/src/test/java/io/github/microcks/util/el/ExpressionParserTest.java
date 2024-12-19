@@ -90,7 +90,8 @@ class ExpressionParserTest {
       assertInstanceOf(FallbackExpression.class, expressions[1]);
 
       assertEquals("Bar value: ", expressions[0].getValue(context));
-      assertTrue("true".equals(expressions[1].getValue(context)) || "false".equals(expressions[1].getValue(context)));
+      String barValue = expressions[1].getValue(context);
+      assertTrue("true".equals(barValue) || "false".equals(barValue));
    }
 
    @Test

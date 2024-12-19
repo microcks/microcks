@@ -158,7 +158,7 @@ public class ExpressionParser {
          return new FallbackExpression(expressions);
       }
 
-      // Else pare simple expression.
+      // Else parse simple expression.
       return doParseSimpleExpression(expressionString, context);
    }
 
@@ -220,13 +220,16 @@ public class ExpressionParser {
       }
 
       Class<ELFunction> functionClazz = context.lookupFunction(functionName);
-      ELFunction function = null;
-      try {
-         function = functionClazz.getDeclaredConstructor().newInstance();
-      } catch (Exception e) {
-         log.error("Exception while instantiating the functionClazz " + functionClazz, e);
-         return new LiteralExpression("");
+      if (functionClazz != null) {
+         ELFunction function = null;
+         try {
+            function = functionClazz.getDeclaredConstructor().newInstance();
+            return new FunctionExpression(function, args);
+         } catch (Exception e) {
+            log.error("Exception while instantiating the functionClazz " + functionClazz, e);
+         }
       }
-      return new FunctionExpression(function, args);
+      // Fallback on empty literal expression.
+      return new LiteralExpression("");
    }
 }

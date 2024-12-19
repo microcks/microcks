@@ -65,8 +65,8 @@ class TemplateEngineTest {
 
    @Test
    void testPostmanNotationCompatibility() {
-      String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"{{ randomFullName() }}\", \"email\": \"{{ randomEmail() }}\", \"age\": {{ randomInt(20, 99) }}} \n";
-      String postmanTemplate = "{\"signedAt\": \"{{ $timestamp }}\", \"fullName\": \"{{ $randomFullName }}\", \"email\": \"{{ $randomEmail }}\", \"age\": {{ $randomInt }}} \n";
+      String template = "{\"signedAt\": \"{{ now() }}\", \"fullName\": \"{{ randomFullName() }}\", \"email\": \"{{ randomEmail() }}\", \"age\": {{ randomInt(20, 99) }} } \n";
+      String postmanTemplate = "{\"signedAt\": \"{{ $timestamp }}\", \"fullName\": \"{{ $randomFullName }}\", \"email\": \"{{ $randomEmail }}\", \"age\": {{ $randomInt }} } \n";
 
       TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
 
