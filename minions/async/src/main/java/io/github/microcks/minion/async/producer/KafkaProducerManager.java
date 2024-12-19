@@ -212,7 +212,7 @@ public class KafkaProducerManager {
     */
    public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<io.github.microcks.domain.Header> headers) {
       if (headers != null && !headers.isEmpty()) {
-         Set<Header> renderedHeaders = new HashSet<>(headers.size());
+         Set<Header> renderedHeaders = HashSet.newHashSet(headers.size());
 
          for (io.github.microcks.domain.Header header : headers) {
             // For Kafka, header is mono valued so just consider the first value.
@@ -260,7 +260,7 @@ public class KafkaProducerManager {
     * @param kafkaRecord The record to complete
     * @param headers     The set of headers
     */
-   protected void addHeadersToRecord(ProducerRecord kafkaRecord, Set<Header> headers) {
+   protected void addHeadersToRecord(ProducerRecord<?, ?> kafkaRecord, Set<Header> headers) {
       if (headers != null) {
          for (Header header : headers) {
             kafkaRecord.headers().add(header);
