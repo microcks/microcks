@@ -22,27 +22,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@ApplicationScoped
 /**
  * Simple registry for holding WebSocket sessions based on the requested channel path. This registry is intended to be
  * shared by the different WebSocket endpoints that allows client registration. Root producer will then use the registry
  * to select target sessions when a mock get published on a channel path.
  * @author laurent
  */
+@ApplicationScoped
 public class WebSocketSessionRegistry {
 
-   private Map<String, List<Session>> sessions = new ConcurrentHashMap<>();
+   private final Map<String, List<Session>> sessions = new ConcurrentHashMap<>();
 
    /**
     * Store a session within registry according the requested URI.
     * @param session A WebSocket session
     */
    public void putSession(Session session) {
-      List<Session> channelSessions = sessions.get(session.getRequestURI().toString());
-      if (channelSessions == null) {
-         channelSessions = new ArrayList<>();
-         sessions.put(session.getRequestURI().toString(), channelSessions);
+      // As session.getRequestURI() doubles query parameters but session.getQueryString() not,
+      // we need to build the channelURI manually.
+      String channelURI = session.getRequestURI().getPath();
+      if (session.getQueryString() != null) {
+         channelURI += "?" + session.getQueryString();
       }
+
+      List<Session> channelSessions = sessions.computeIfAbsent(channelURI, k -> new ArrayList<>());
       channelSessions.add(session);
    }
 
