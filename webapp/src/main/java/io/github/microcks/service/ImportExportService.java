@@ -30,9 +30,9 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.IdBuilder;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
@@ -46,25 +46,34 @@ import java.util.List;
 public class ImportExportService {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ImportExportService.class);
+   private static final Logger log = LoggerFactory.getLogger(ImportExportService.class);
 
-   @Autowired
-   private RequestRepository requestRepository;
+   private final RequestRepository requestRepository;
+   private final ResourceRepository resourceRepository;
+   private final ResponseRepository responseRepository;
+   private final EventMessageRepository eventMessageRepository;
+   private final ServiceRepository serviceRepository;
+   private final ApplicationContext applicationContext;
 
-   @Autowired
-   private ResourceRepository resourceRepository;
-
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private EventMessageRepository eventMessageRepository;
-
-   @Autowired
-   private ServiceRepository serviceRepository;
-
-   @Autowired
-   private ApplicationContext applicationContext;
+   /**
+    * Create a new ImportExportService with required dependencies.
+    * @param requestRepository      The repository for requests
+    * @param resourceRepository     The repository for resources
+    * @param responseRepository     The repository for responses
+    * @param eventMessageRepository The repository for event messages
+    * @param serviceRepository      The repository for services
+    * @param applicationContext     The Spring application context
+    */
+   public ImportExportService(RequestRepository requestRepository, ResourceRepository resourceRepository,
+         ResponseRepository responseRepository, EventMessageRepository eventMessageRepository,
+         ServiceRepository serviceRepository, ApplicationContext applicationContext) {
+      this.requestRepository = requestRepository;
+      this.resourceRepository = resourceRepository;
+      this.responseRepository = responseRepository;
+      this.eventMessageRepository = eventMessageRepository;
+      this.serviceRepository = serviceRepository;
+      this.applicationContext = applicationContext;
+   }
 
    /**
     * Import a repository from JSON definitions.
@@ -81,15 +90,14 @@ public class ImportExportService {
          log.error("Exception while reading json import", e);
       }
 
-      if (log.isInfoEnabled()) {
-         log.info("Retrieve {} services to import into repository", model != null ? model.getServices().size() : 0);
-         log.info("Retrieve {} resources to import into repository", model != null ? model.getResources().size() : 0);
-         log.info("Retrieve {} responses to import into repository", model != null ? model.getResponses().size() : 0);
-         log.info("Retrieve {} requests to import into repository", model != null ? model.getRequests().size() : 0);
-         log.info("Retrieve {} event messages to import into repository",
-               model != null && model.getEventMessages() != null ? model.getEventMessages().size() : 0);
-      }
       if (model != null) {
+         log.info("Retrieve {} services to import into repository", model.getServices().size());
+         log.info("Retrieve {} resources to import into repository", model.getResources().size());
+         log.info("Retrieve {} responses to import into repository", model.getResponses().size());
+         log.info("Retrieve {} requests to import into repository", model.getRequests().size());
+         log.info("Retrieve {} event messages to import into repository",
+               model.getEventMessages() != null ? model.getEventMessages().size() : 0);
+
          serviceRepository.saveAll(model.getServices());
          resourceRepository.saveAll(model.getResources());
          responseRepository.saveAll(model.getResponses());
@@ -101,19 +109,20 @@ public class ImportExportService {
 
          // Once everything is saved, be sure to fire a change event to allow
          // propagation.
-         for (Service service : model.getServices()) {
-            publishServiceChangeEvent(service);
-         }
+         publishServiceChangeEvent(model);
          return true;
       }
+      log.info("No services, resources or messages to import into repository");
       return false;
    }
 
    /** Publish a ServiceChangeEvent towards minions or some other consumers. */
-   private void publishServiceChangeEvent(Service service) {
-      ServiceChangeEvent event = new ServiceChangeEvent(this, service.getId(), ChangeType.UPDATED);
-      applicationContext.publishEvent(event);
-      log.debug("Service change event has been published");
+   private void publishServiceChangeEvent(ImportExportModel model) {
+      for (Service service : model.getServices()) {
+         ServiceChangeEvent event = new ServiceChangeEvent(this, service.getId(), ChangeType.UPDATED);
+         applicationContext.publishEvent(event);
+         log.debug("Service change event has been published");
+      }
    }
 
    /**

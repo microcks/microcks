@@ -80,8 +80,11 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    protected static final String REST_MOCK_SERVICE_TAG = "restMockService";
    protected static final String MOCK_OPERATION_TAG = "mockOperation";
    protected static final String REST_MOCK_ACTION_TAG = "restMockAction";
+   protected static final String QUERY_TAG = "query";
    protected static final String REQUEST_TAG = "request";
    protected static final String RESPONSE_TAG = "response";
+   protected static final String CONTENT_TAG = "content";
+   protected static final String VALUE_TAG = "value";
 
    private String projectContent;
 
@@ -194,8 +197,8 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                if (DispatchStyles.QUERY_MATCH.equals(operation.getDispatcher())) {
                   // XPath matching rules are under dispatchConfig.query, consider 1st item only.
                   Element dispatchConfig = getConfigUniqueDirectChild(mockOperation, "dispatchConfig");
-                  Element firstQuery = getConfigDirectChildren(dispatchConfig, "query").get(0);
-                  operation.setDispatcherRules(getConfigUniqueDirectChild(firstQuery, "query").getTextContent());
+                  Element firstQuery = getConfigDirectChildren(dispatchConfig, QUERY_TAG).get(0);
+                  operation.setDispatcherRules(getConfigUniqueDirectChild(firstQuery, QUERY_TAG).getTextContent());
                } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
                   // Groovy script is located into dispatchPath element.
                   operation
@@ -219,7 +222,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       List<Element> parts = getConfigDirectChildren(definitionCache, "part");
 
       Element wsdlPart = parts.get(0);
-      Element wsdlContent = getConfigUniqueDirectChild(wsdlPart, "content");
+      Element wsdlContent = getConfigUniqueDirectChild(wsdlPart, CONTENT_TAG);
       String wsdlTextContent = wsdlContent.getTextContent();
 
       Element wsdlDoc = documentBuilder.parse(new InputSource(new StringReader(wsdlTextContent))).getDocumentElement();
@@ -329,7 +332,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
 
          if (!parts.isEmpty()) {
             Element wsdlPart = parts.get(0);
-            Element wsdlContent = getConfigUniqueDirectChild(wsdlPart, "content");
+            Element wsdlContent = getConfigUniqueDirectChild(wsdlPart, CONTENT_TAG);
             String wsdlTextContent = wsdlContent.getTextContent();
 
             for (int i = 1; i < parts.size(); i++) {
@@ -341,7 +344,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                   xsdName = xsdUrl.substring(xsdUrl.lastIndexOf("\\") + 1);
                }
 
-               String xsdContent = getConfigUniqueDirectChild(xsdPart, "content").getTextContent();
+               String xsdContent = getConfigUniqueDirectChild(xsdPart, CONTENT_TAG).getTextContent();
 
                Resource xsdResource = new Resource();
                xsdResource.setName(xsdName);
@@ -468,22 +471,20 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                            result.put(request, response);
                         }
                      } else if (DispatchStyles.RANDOM.equals(operation.getDispatcher())) {
-                        {
-                           if (availableRequests.isEmpty()) {
-                              log.warn(
-                                    "A request is mandatory even for a RANDOM dispatch. Operation {} into SoapUI project  {}",
-                                    operation.getName(), projectElement.getAttribute(NAME_ATTRIBUTE));
-                           } else {
-                              // Use the first one for all the responses
-                              Element mockRequest = availableRequests.values().iterator().next();
+                        if (availableRequests.isEmpty()) {
+                           log.warn(
+                                 "A request is mandatory even for a RANDOM dispatch. Operation {} into SoapUI project  {}",
+                                 operation.getName(), projectElement.getAttribute(NAME_ATTRIBUTE));
+                        } else {
+                           // Use the first one for all the responses
+                           Element mockRequest = availableRequests.values().iterator().next();
 
-                              for (Element mockResponse : mockResponses) {
-                                 // Build response from MockResponse and response from matching one.
-                                 Response response = buildResponse(mockResponse, DispatchStyles.RANDOM);
-                                 Request request = buildRequest(mockRequest);
-                                 request.setName(operation.getName());
-                                 result.put(request, response);
-                              }
+                           for (Element mockResponse : mockResponses) {
+                              // Build response from MockResponse and response from matching one.
+                              Response response = buildResponse(mockResponse, DispatchStyles.RANDOM);
+                              Request request = buildRequest(mockRequest);
+                              request.setName(operation.getName());
+                              result.put(request, response);
                            }
                         }
                      }
@@ -589,7 +590,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       List<Element> propertyList = getConfigDirectChildren(properties, "property");
       for (Element property : propertyList) {
          Element propertyName = getConfigUniqueDirectChild(property, NAME_ATTRIBUTE);
-         Element propertyValue = getConfigUniqueDirectChild(property, "value");
+         Element propertyValue = getConfigUniqueDirectChild(property, VALUE_TAG);
          if (SERVICE_VERSION_PROPERTY.equals(propertyName.getTextContent())) {
             return propertyValue.getTextContent();
          }
@@ -677,7 +678,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
          Element dispatchConfig = getConfigUniqueDirectChild(mockOperation, "dispatchConfig");
 
-         List<Element> queries = SoapUIProjectParserUtils.getConfigDirectChildren(dispatchConfig, "query");
+         List<Element> queries = SoapUIProjectParserUtils.getConfigDirectChildren(dispatchConfig, QUERY_TAG);
          for (Element query : queries) {
             String match = getConfigUniqueDirectChild(query, "match").getTextContent();
             String response = getConfigUniqueDirectChild(query, RESPONSE_TAG).getTextContent();
@@ -725,7 +726,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          for (Element entry : entries) {
             Parameter param = new Parameter();
             param.setName(entry.getAttribute("key"));
-            param.setValue(entry.getAttribute("value"));
+            param.setValue(entry.getAttribute(VALUE_TAG));
             request.addQueryParameter(param);
          }
       }
@@ -756,13 +757,13 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                for (Element entry : entries) {
                   Header header = new Header();
                   header.setName(entry.getAttribute("key"));
-                  header.setValues(Set.of(entry.getAttribute("value")));
+                  header.setValues(Set.of(entry.getAttribute(VALUE_TAG)));
                   headers.add(header);
                }
             } else {
                Header header = new Header();
                header.setName(fragment.getAttribute("key"));
-               header.setValues(Set.of(fragment.getAttribute("value")));
+               header.setValues(Set.of(fragment.getAttribute(VALUE_TAG)));
                headers.add(header);
             }
             return headers;
