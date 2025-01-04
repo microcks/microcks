@@ -209,13 +209,13 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
-      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
-            .findFirst().orElseThrow();
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst()
+            .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
       serviceRepository.save(service);
 
       // If we have the mock, we should get the response from the mock.
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
             String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -225,7 +225,7 @@ class RestControllerIT extends AbstractBaseIT {
       }
 
       // If we don't have the mock, we should get the response from real backend.
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
       assertEquals(200, response.getStatusCode().value());
       try {
          JSONAssert.assertEquals("{\"name\":\"Croissant from Real One\"}", response.getBody(), JSONCompareMode.LENIENT);
@@ -243,14 +243,14 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Set real port to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
-      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
-            .findFirst().orElseThrow();
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst()
+            .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl()));
       serviceRepository.save(service);
 
       // If we have the mock, we should get the response from the mock.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut",
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut",
             String.class);
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       assertEquals(200, response.getStatusCode().value());
@@ -262,7 +262,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we don't have the mock, we should get the response from real backend.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
       long realResponseTime = System.currentTimeMillis() - startTime;
       assertEquals(200, response.getStatusCode().value());
       try {
@@ -278,7 +278,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we have the mock, we should get the response from the mock.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/donut", String.class);
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=donut", String.class);
       long mockedResponseTimeDelayed = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(mockedResponseTimeDelayed >= delay,
@@ -294,7 +294,7 @@ class RestControllerIT extends AbstractBaseIT {
 
       // If we don't have the mock, we should get the response from real backend.
       startTime = System.currentTimeMillis();
-      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/croissant", String.class);
+      response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=croissant", String.class);
       long realResponseTimeDelayed = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
       assertTrue(realResponseTimeDelayed >= delay, "real response time delayed: " + realResponseTimeDelayed + "ms");
@@ -317,14 +317,14 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Set original URL to the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
-      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
-            .findFirst().orElseThrow();
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst()
+            .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
             .replaceFirst("pastry-real", "pastry-proxy"));
       serviceRepository.save(service);
 
       // Check that we don't fall into infinite loop and that we can't locally handle the call (error 400)
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
       assertEquals(400, response.getStatusCode().value());
       verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any());
@@ -339,13 +339,13 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Broke external URL in the dispatcher
       Service service = serviceRepository.findByNameAndVersion("pastry-proxy", "1.0.0");
-      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry/{name}"))
-            .findFirst().orElseThrow();
+      Operation op = service.getOperations().stream().filter(o -> o.getName().endsWith("GET /pastry")).findFirst()
+            .orElseThrow();
       op.setDispatcherRules(op.getDispatcherRules().replaceFirst("http://localhost", getServerUrl())
             .replaceFirst("pastry-real", "not-found"));
       serviceRepository.save(service);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry/realDonut",
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
       assertEquals(404, response.getStatusCode().value());
    }
