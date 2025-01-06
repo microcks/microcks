@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4-1227.1725849298
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1734497536
 
 # Some version information
 LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \

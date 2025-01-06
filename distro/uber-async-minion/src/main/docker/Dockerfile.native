@@ -14,7 +14,7 @@
 # docker run -i --rm -p 8080:8080 microcks/microcks-async-minion
 #
 ###
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.4-212
+FROM registry.access.redhat.com/ubi8/ubi-minimal:9.5-1734497536
 WORKDIR /work/
 COPY --chown=1001:root target/*-runner /work/application
 
