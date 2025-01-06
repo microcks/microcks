@@ -130,7 +130,7 @@ public class RestController {
       this.proxyService = proxyService;
    }
 
-
+   @SuppressWarnings("java:S3752")
    @RequestMapping(value = "/rest/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
    public ResponseEntity<byte[]> execute(@PathVariable("service") String serviceName,
@@ -168,6 +168,7 @@ public class RestController {
       return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
    }
 
+   @SuppressWarnings("java:S3752")
    @RequestMapping(value = "/rest-valid/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
    public ResponseEntity<byte[]> validateAndExecute(@PathVariable("service") String serviceName,
@@ -216,36 +217,7 @@ public class RestController {
                   HttpStatus.PRECONDITION_FAILED);
          }
 
-         boolean isOpenAPIv3 = !ResourceType.SWAGGER.equals(openapiSpecResource.getType());
-
-         JsonNode openApiSpec = null;
-         try {
-            openApiSpec = OpenAPISchemaValidator.getJsonNodeForSchema(openapiSpecResource.getContent());
-         } catch (IOException ioe) {
-            log.debug("OpenAPI specification cannot be transformed into valid JsonNode schema, so failing");
-         }
-
-         // Extract JsonNode corresponding to operation.
-         String verb = ic.operation.getName().split(" ")[0].toLowerCase();
-         String path = ic.operation.getName().split(" ")[1].trim();
-
-         // Get body content as a string.
-         JsonNode contentNode = null;
-         try {
-            contentNode = OpenAPISchemaValidator.getJsonNode(body);
-         } catch (IOException ioe) {
-            log.debug("Response body cannot be accessed or transformed as Json, returning failure");
-         }
-         String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb + "/requestBody";
-
-         List<String> errors = null;
-         if (isOpenAPIv3) {
-            errors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, shortContentType,
-                  validationResourceUrl);
-         } else {
-            errors = SwaggerSchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer,
-                  validationResourceUrl);
-         }
+         List<String> errors = getErrors(body, ic, shortContentType, openapiSpecResource);
 
          log.debug("Schema validation errors: {}", errors.size());
          // Return a 400 http code with errors.
@@ -255,6 +227,42 @@ public class RestController {
       }
 
       return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
+   }
+
+
+   private List<String> getErrors(String body, MockInvocationContext ic, String shortContentType,
+         Resource openapiSpecResource) {
+      boolean isOpenAPIv3 = !ResourceType.SWAGGER.equals(openapiSpecResource.getType());
+
+      JsonNode openApiSpec = null;
+      try {
+         openApiSpec = OpenAPISchemaValidator.getJsonNodeForSchema(openapiSpecResource.getContent());
+      } catch (IOException ioe) {
+         log.debug("OpenAPI specification cannot be transformed into valid JsonNode schema, so failing");
+      }
+
+      // Extract JsonNode corresponding to operation.
+      String verb = ic.operation.getName().split(" ")[0].toLowerCase();
+      String path = ic.operation.getName().split(" ")[1].trim();
+
+      // Get body content as a string.
+      JsonNode contentNode = null;
+      try {
+         contentNode = OpenAPISchemaValidator.getJsonNode(body);
+      } catch (IOException ioe) {
+         log.debug("Response body cannot be accessed or transformed as Json, returning failure");
+      }
+      String jsonPointer = "/paths/" + path.replace("/", "~1") + "/" + verb + "/requestBody";
+
+      List<String> errors = null;
+      if (isOpenAPIv3) {
+         errors = OpenAPISchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer, shortContentType,
+               validationResourceUrl);
+      } else {
+         errors = SwaggerSchemaValidator.validateJsonMessage(openApiSpec, contentNode, jsonPointer,
+               validationResourceUrl);
+      }
+      return errors;
    }
 
    /** Process REST mock invocation. */
@@ -269,38 +277,18 @@ public class RestController {
 
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
-      String dispatcher = ic.operation.getDispatcher();
-      String dispatcherRules = ic.operation.getDispatcherRules();
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation);
-      if (fallback != null) {
-         dispatcher = fallback.getDispatcher();
-         dispatcherRules = fallback.getDispatcherRules();
-      }
       ProxyFallbackSpecification proxyFallback = MockControllerCommons.getProxyFallbackIfAny(ic.operation);
-      if (proxyFallback != null) {
-         dispatcher = proxyFallback.getDispatcher();
-         dispatcherRules = proxyFallback.getDispatcherRules();
-      }
+      String dispatcher = getDispatcher(ic, fallback, proxyFallback);
+      String dispatcherRules = getDispatcherRules(ic, fallback, proxyFallback);
 
       //
       DispatchContext dispatchContext = computeDispatchCriteria(ic.service, dispatcher, dispatcherRules,
             getURIPattern(ic.operation.getName()), UriUtils.decode(ic.resourcePath, "UTF-8"), request, body);
       log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
 
-      Response response = null;
-
-      // Filter depending on requested media type.
-      // TODO: validate dispatchCriteria with dispatcherRules
-      List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
-            IdBuilder.buildOperationId(ic.service, ic.operation), dispatchContext.dispatchCriteria());
-      response = getResponseByMediaType(responses, request);
-
-      if (response == null) {
-         // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
-         responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(ic.service, ic.operation),
-               dispatchContext.dispatchCriteria());
-         response = getResponseByMediaType(responses, request);
-      }
+      List<Response> responses;
+      Response response = getResponse(ic, request, dispatchContext);
 
       if (response == null && fallback != null) {
          // If we've found nothing and got a fallback, that's the moment!
@@ -326,13 +314,7 @@ public class RestController {
 
       if (response == null) {
          if (dispatcher == null) {
-            // In case no response found because dispatcher is null, just get one for the operation.
-            // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
-            log.debug("No responses found so far, tempting with just bare operationId...");
-            responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(ic.service, ic.operation));
-            if (!responses.isEmpty()) {
-               response = getResponseByMediaType(responses, request);
-            }
+            response = getOneForOperation(ic, request, response);
          } else {
             // There is a dispatcher but we found no response => return 400 as per #819 and #1132.
             return new ResponseEntity<>(
@@ -346,53 +328,9 @@ public class RestController {
                : HttpStatus.OK);
 
          // Deal with specific headers (content-type and redirect directive).
-         HttpHeaders responseHeaders = new HttpHeaders();
-         if (response.getMediaType() != null) {
-            responseHeaders.setContentType(MediaType.valueOf(response.getMediaType() + ";charset=UTF-8"));
-         }
+         HttpHeaders responseHeaders = getResponseHeaders(ic, body, request, dispatchContext, response);
 
-         // Deal with headers from parameter constraints if any?
-         recopyHeadersFromParameterConstraints(ic.operation, request, responseHeaders);
-
-         // Adding other generic headers (caching directives and so on...)
-         if (response.getHeaders() != null) {
-            // First check if they should be rendered.
-            EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(body, ic.resourcePath,
-                  request);
-            Set<Header> renderedHeaders = MockControllerCommons.renderResponseHeaders(evaluableRequest,
-                  dispatchContext.requestContext(), response);
-
-            for (Header renderedHeader : renderedHeaders) {
-               if ("Location".equals(renderedHeader.getName())) {
-                  String location = renderedHeader.getValues().iterator().next();
-                  if (!AbsoluteUrlMatcher.matches(location)) {
-                     // We should process location in order to make relative URI specified an absolute one from
-                     // the client perspective.
-                     location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                           + request.getContextPath() + "/rest" + MockControllerCommons
-                                 .composeServiceAndVersion(ic.service.getName(), ic.service.getVersion())
-                           + location;
-                  }
-                  responseHeaders.add(renderedHeader.getName(), location);
-               } else {
-                  if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(renderedHeader.getName())) {
-                     responseHeaders.put(renderedHeader.getName(), new ArrayList<>(renderedHeader.getValues()));
-                  }
-               }
-            }
-         }
-
-         // Render response content before waiting and returning.
-         String responseContent = MockControllerCommons.renderResponseContent(body, ic.resourcePath, request,
-               dispatchContext.requestContext(), response);
-
-         // Delay response.
-         MockControllerCommons.waitForDelay(startTime, delay);
-
-         // Publish an invocation event before returning if enabled.
-         if (Boolean.TRUE.equals(enableInvocationStats)) {
-            MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service, response, startTime);
-         }
+         String responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
 
          // Return response content or just headers.
          if (responseContent != null) {
@@ -402,6 +340,128 @@ public class RestController {
       }
 
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+   }
+
+
+   private String getDispatcherRules(MockInvocationContext ic, FallbackSpecification fallback,
+         ProxyFallbackSpecification proxyFallback) {
+      String dispatcherRules = ic.operation.getDispatcherRules();
+      if (fallback != null) {
+         dispatcherRules = fallback.getDispatcherRules();
+      }
+      if (proxyFallback != null) {
+         dispatcherRules = proxyFallback.getDispatcherRules();
+      }
+      return dispatcherRules;
+   }
+
+
+   private String getDispatcher(MockInvocationContext ic, FallbackSpecification fallback,
+         ProxyFallbackSpecification proxyFallback) {
+      String dispatcher = ic.operation.getDispatcher();
+      if (fallback != null) {
+         dispatcher = fallback.getDispatcher();
+      }
+      if (proxyFallback != null) {
+         dispatcher = proxyFallback.getDispatcher();
+      }
+      return dispatcher;
+   }
+
+
+   private Response getOneForOperation(MockInvocationContext ic, HttpServletRequest request, Response response) {
+      List<Response> responses;
+      // In case no response found because dispatcher is null, just get one for the operation.
+      // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
+      log.debug("No responses found so far, tempting with just bare operationId...");
+      responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(ic.service, ic.operation));
+      if (!responses.isEmpty()) {
+         response = getResponseByMediaType(responses, request);
+      }
+      return response;
+   }
+
+
+   private String getResponseContent(MockInvocationContext ic, long startTime, Long delay, String body,
+         HttpServletRequest request, DispatchContext dispatchContext, Response response) {
+      // Render response content before waiting and returning.
+      String responseContent = MockControllerCommons.renderResponseContent(body, ic.resourcePath, request,
+            dispatchContext.requestContext(), response);
+
+      // Delay response.
+      MockControllerCommons.waitForDelay(startTime, delay);
+
+      // Publish an invocation event before returning if enabled.
+      if (Boolean.TRUE.equals(enableInvocationStats)) {
+         MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service, response, startTime);
+      }
+      return responseContent;
+   }
+
+
+   private HttpHeaders getResponseHeaders(MockInvocationContext ic, String body, HttpServletRequest request,
+         DispatchContext dispatchContext, Response response) {
+      HttpHeaders responseHeaders = new HttpHeaders();
+      if (response.getMediaType() != null) {
+         responseHeaders.setContentType(MediaType.valueOf(response.getMediaType() + ";charset=UTF-8"));
+      }
+
+      // Deal with headers from parameter constraints if any?
+      recopyHeadersFromParameterConstraints(ic.operation, request, responseHeaders);
+
+      // Adding other generic headers (caching directives and so on...)
+      if (response.getHeaders() != null) {
+         // First check if they should be rendered.
+         EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(body, ic.resourcePath,
+               request);
+         Set<Header> renderedHeaders = MockControllerCommons.renderResponseHeaders(evaluableRequest,
+               dispatchContext.requestContext(), response);
+
+         handleHeaders(ic, request, responseHeaders, renderedHeaders);
+      }
+      return responseHeaders;
+   }
+
+
+   private Response getResponse(MockInvocationContext ic, HttpServletRequest request, DispatchContext dispatchContext) {
+      Response response = null;
+
+      // Filter depending on requested media type.
+      // TODO: validate dispatchCriteria with dispatcherRules
+      List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
+            IdBuilder.buildOperationId(ic.service, ic.operation), dispatchContext.dispatchCriteria());
+      response = getResponseByMediaType(responses, request);
+
+      if (response == null) {
+         // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
+         responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(ic.service, ic.operation),
+               dispatchContext.dispatchCriteria());
+         response = getResponseByMediaType(responses, request);
+      }
+      return response;
+   }
+
+
+   private void handleHeaders(MockInvocationContext ic, HttpServletRequest request, HttpHeaders responseHeaders,
+         Set<Header> renderedHeaders) {
+      for (Header renderedHeader : renderedHeaders) {
+         if ("Location".equals(renderedHeader.getName())) {
+            String location = renderedHeader.getValues().iterator().next();
+            if (!AbsoluteUrlMatcher.matches(location)) {
+               // We should process location in order to make relative URI specified an absolute one from
+               // the client perspective.
+               location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
+                     + request.getContextPath() + "/rest"
+                     + MockControllerCommons.composeServiceAndVersion(ic.service.getName(), ic.service.getVersion())
+                     + location;
+            }
+            responseHeaders.add(renderedHeader.getName(), location);
+         } else {
+            if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(renderedHeader.getName())) {
+               responseHeaders.put(renderedHeader.getName(), new ArrayList<>(renderedHeader.getValues()));
+            }
+         }
+      }
    }
 
 
@@ -431,55 +491,65 @@ public class RestController {
 
    @CheckForNull
    private Operation findOperation(Service service, HttpMethod method, String resourcePath) {
-      Operation result = null;
-
       // Remove trailing '/' if any.
-      String trimmedResourcePath = resourcePath;
-      if (trimmedResourcePath.endsWith("/")) {
-         trimmedResourcePath = resourcePath.substring(0, resourcePath.length() - 1);
-      }
+      String trimmedResourcePath = trimResourcePath(resourcePath);
 
-      for (Operation operation : service.getOperations()) {
-         // Select operation based onto Http verb (GET, POST, PUT, etc ...)
-         if (operation.getMethod().equals(method.name())) {
-            // ... then check is we have a matching resource path.
-            if (operation.getResourcePaths() != null && (operation.getResourcePaths().contains(resourcePath)
-                  || operation.getResourcePaths().contains(trimmedResourcePath))) {
-               result = operation;
-               break;
-            }
-         }
-      }
+      Operation result = findOperationByResourcePath(service, method, resourcePath, trimmedResourcePath);
 
-      // We may not have found an Operation because of not exact resource path matching with an operation
-      // using a Fallback dispatcher. Try again, just considering the verb and path pattern of operation.
       if (result == null) {
-         for (Operation operation : service.getOperations()) {
-            // Select operation based onto Http verb (GET, POST, PUT, etc ...)
-            if (operation.getMethod().equals(method.name())) {
-               // ... then check is current resource path matches operation path pattern.
-               if (operation.getResourcePaths() != null) {
-                  // Produce a matching regexp removing {part} and :part from pattern.
-                  String operationPattern = getURIPattern(operation.getName());
-                  //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
-                  operationPattern = operationPattern.replaceAll("\\{[\\w-]+\\}", "([^/])+");
-                  operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
-                  if (resourcePath.matches(operationPattern)) {
-                     result = operation;
-                     break;
-                  }
-               }
-            }
-         }
+         // We may not have found an Operation because of not exact resource path matching with an operation
+         // using a Fallback dispatcher. Try again, just considering the verb and path pattern of operation.
+         result = findOperationByPathPattern(service, method, resourcePath);
       }
       return result;
+   }
+
+   @CheckForNull
+   private Operation findOperationByPathPattern(Service service, HttpMethod method, String resourcePath) {
+      for (Operation operation : service.getOperations()) {
+         // Select operation based onto Http verb (GET, POST, PUT, etc ...)
+         // ... then check is current resource path matches operation path pattern.
+         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null) {
+            // Produce a matching regexp removing {part} and :part from pattern.
+            String operationPattern = getURIPattern(operation.getName());
+            //operationPattern = operationPattern.replaceAll("\\{.+\\}", "([^/])+");
+            operationPattern = operationPattern.replaceAll("\\{[\\w-]+\\}", "([^/])+");
+            operationPattern = operationPattern.replaceAll("(/:[^:^/]+)", "\\/([^/]+)");
+            if (resourcePath.matches(operationPattern)) {
+               return operation;
+            }
+         }
+      }
+      return null;
+   }
+
+   @CheckForNull
+   private Operation findOperationByResourcePath(Service service, HttpMethod method, String resourcePath,
+         String trimmedResourcePath) {
+      for (Operation operation : service.getOperations()) {
+         // Select operation based onto Http verb (GET, POST, PUT, etc ...)
+         // ... then check is we have a matching resource path.
+         if (operation.getMethod().equals(method.name()) && operation.getResourcePaths() != null
+               && (operation.getResourcePaths().contains(resourcePath)
+                     || operation.getResourcePaths().contains(trimmedResourcePath))) {
+            return operation;
+         }
+      }
+      return null;
+   }
+
+   private String trimResourcePath(String resourcePath) {
+      if (resourcePath.endsWith("/")) {
+         return resourcePath.substring(0, resourcePath.length() - 1);
+      }
+      return resourcePath;
    }
 
 
    /** Get the short content type without charset information. */
    private String getShortContentType(String contentType) {
       // Sanitize charset information from media-type.
-      if (contentType != null && contentType.contains("charset=") && contentType.indexOf(";") > 0) {
+      if (contentType != null && contentType.contains("charset=") && contentType.indexOf(";") >= 1) {
          return contentType.substring(0, contentType.indexOf(";"));
       }
       return contentType;
@@ -548,6 +618,9 @@ public class RestController {
                } catch (JsonMappingException jme) {
                   log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
                }
+               break;
+            default:
+               log.error("Unknown dispatcher type: {}", dispatcher);
                break;
          }
       }
