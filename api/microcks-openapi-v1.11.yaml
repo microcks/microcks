@@ -2,7 +2,7 @@
 openapi: 3.0.2
 info:
   title: Microcks API v1.11
-  version: 1.10.1
+  version: 1.11.0
   description: "API offered by Microcks, the Kubernetes native tool for API and microservices\
     \ mocking and testing (microcks.io)"
   contact:
