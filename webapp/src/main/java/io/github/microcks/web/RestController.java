@@ -619,6 +619,11 @@ public class RestController {
                   log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
                }
                break;
+            case DispatchStyles.QUERY_HEADER:
+               // Extract headers from request and put them into a simple map to reuse extractFromParamMap().
+               dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules,
+                     extractRequestHeaders(request));
+               break;
             default:
                log.error("Unknown dispatcher type: {}", dispatcher);
                break;
@@ -626,6 +631,13 @@ public class RestController {
       }
 
       return new DispatchContext(dispatchCriteria, requestContext);
+   }
+
+   /** Extract request headers from request. */
+   private Map<String, String> extractRequestHeaders(HttpServletRequest request) {
+      Map<String, String> headers = new HashMap<>();
+      Collections.list(request.getHeaderNames()).forEach(name -> headers.put(name, request.getHeader(name)));
+      return headers;
    }
 
    /** Recopy headers defined with parameter constraints. */
