@@ -1,0 +1,67 @@
+project:
+  name: Microcks
+  description: Microcks core project
+  longDescription: 'Microcks: easy mocks for your microservices'
+  copyright: The Microcks Authors
+  java:
+    version: 21
+
+signing:
+  active: ALWAYS
+  armored: true
+
+assemble:
+  archive:
+    microcks:
+      active: ALWAYS
+      stereotype: NONE
+      options:
+        longFileMode: POSIX
+      formats:
+        - ZIP
+        - TGZ
+      fileSets:
+        - input: target/staging-deploy
+          includes:
+            - '**/*.*'
+
+files:
+  active: ALWAYS
+  artifacts:
+    - path: 'target/site/microcks-{{projectVersion}}.spdx-sbom.json'
+    - path: 'commons/model/target/site/microcks-model-{{projectVersion}}.spdx-sbom.json'
+    - path: 'commons/util/target/site/microcks-util-{{projectVersion}}.spdx-sbom.json'
+    - path: 'commons/util-el/target/site/microcks-util-el-{{projectVersion}}.spdx-sbom.json'
+    - path: 'webapp/target/site/microcks-app-{{projectVersion}}.spdx-sbom.json'
+    - path: 'minions/async/target/site/microcks-async-minion-{{projectVersion}}.spdx-sbom.json'
+    - path: 'distro/uber/target/site/microcks-uber-{{projectVersion}}.spdx-sbom.json'
+    - path: 'distro/uber-async-minion/target/site/microcks-uber-async-minion-{{projectVersion}}.spdx-sbom.json'
+
+deploy:
+  maven:
+    nexus2:
+      sonatype:
+        active: ALWAYS
+        snapshotSupported: false
+        url: https://oss.sonatype.org/service/local
+        snapshotUrl: https://oss.sonatype.org/content/repositories/snapshots
+        stagingProfileId: c3fae58a8dda9
+        closeRepository: false
+        releaseRepository: false
+        stagingRepositories:
+          - target/staging-deploy
+    pomchecker:
+      failOnWarning: false
+      failOnError: false
+      strict: false
+
+release:
+  github:
+    overwrite: true
+    releaseName: '{{tagName}}'
+    tagName: '{{projectVersion}}'
+    changelog:
+      formatted: ALWAYS
+      preset: conventional-commits
+      contributors:
+        format: '- {{contributorName}}{{#contributorUsernameAsLink}} ({{.}}){{/contributorUsernameAsLink}}'
