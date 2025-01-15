@@ -31,7 +31,7 @@ files:
     - path: 'target/site/microcks-{{projectVersion}}.spdx-sbom.json'
     - path: 'commons/model/target/site/microcks-model-{{projectVersion}}.spdx-sbom.json'
     - path: 'commons/util/target/site/microcks-util-{{projectVersion}}.spdx-sbom.json'
-    - path: 'commons/util-el/target/site/microcks-util-el-{{projectVersion}}.spdx-sbom.json'
+    - path: 'commons/util-el/target/site/microcks-el-{{projectVersion}}.spdx-sbom.json'
     - path: 'webapp/target/site/microcks-app-{{projectVersion}}.spdx-sbom.json'
     - path: 'minions/async/target/site/microcks-async-minion-{{projectVersion}}.spdx-sbom.json'
     - path: 'distro/uber/target/site/microcks-uber-{{projectVersion}}.spdx-sbom.json'
