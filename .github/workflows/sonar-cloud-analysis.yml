@@ -25,6 +25,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           architecture: x64
+          cache: maven
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v3
@@ -32,13 +33,6 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-
-      - name: Cache Maven packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
 
       - name: Test with coverage
         env:
