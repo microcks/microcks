@@ -23,7 +23,7 @@ To get involved with our community, please make sure you are familiar with the p
 
 ## Build Status
 
-The current development version is `1.11.0-SNAPSHOT` on branch `1.11.x`. 
+The current development version is `1.11.1-SNAPSHOT` on branch `1.11.x`. 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.10.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
