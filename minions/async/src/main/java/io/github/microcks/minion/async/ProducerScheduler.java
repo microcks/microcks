@@ -34,31 +34,37 @@ import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@ApplicationScoped
 /**
  * Bean responsible for Async mock messages producers scheduling.
  * @author laurent
  */
+@ApplicationScoped
 public class ProducerScheduler {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
-   private List<TriggerKey> triggerKeys = new ArrayList<>();
+   private final List<TriggerKey> triggerKeys = new ArrayList<>();
 
-   @Inject
-   Scheduler quartz;
-
-   @Inject
-   AsyncMockRepository mockRepository;
+   final Scheduler quartz;
+   final AsyncMockRepository mockRepository;
 
    @ConfigProperty(name = "minion.restricted-frequencies")
    Long[] restrictedFrequencies;
+
+   /**
+    * Create a new ProducerScheduler with required dependencies.
+    * @param quartz         The Quartz scheduler
+    * @param mockRepository The repository for mock definitions
+    */
+   public ProducerScheduler(Scheduler quartz, AsyncMockRepository mockRepository) {
+      this.quartz = quartz;
+      this.mockRepository = mockRepository;
+   }
 
 
    /** Perform a dummy action. This one is actually necessary to activate the injection of Quartz scheduler. */

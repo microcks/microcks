@@ -1,0 +1,79 @@
+name: release
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to release'
+        required: true
+      version:
+        description: 'Release version'
+        required: true
+      nextVersion:
+        description: 'Next version after release (-SNAPSHOT will be added automatically)'
+        required: true
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      contents: write
+      deployments: write
+      id-token: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Set up JDK 21 for x64
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+          cache: maven
+
+      - name: Set release version
+        run: mvn -B -q versions:set -DnewVersion=${{ github.event.inputs.version }}
+
+      - name: Commit, push and tag changes
+        run: |
+          git config user.name "microcks-bot"
+          git config user.email "info@microcks.io"
+          git commit -m "Releasing version ${{ github.event.inputs.version }}" .
+          git tag ${{ github.event.inputs.version }}
+          git push origin ${{ github.event.inputs.version }}
+
+      - name: Stage release artifacts
+        run: mvn -B -Prelease clean deploy -DaltDeploymentRepository=local::default::file://`pwd`/target/staging-deploy
+
+      - name: Publish package with JReleaser
+        env:
+          JRELEASER_NEXUS2_USERNAME: ${{ secrets.JRELEASER_NEXUS2_USERNAME }}
+          JRELEASER_NEXUS2_PASSWORD: ${{ secrets.JRELEASER_NEXUS2_PASSWORD }}
+          JRELEASER_GPG_PASSPHRASE: ${{ secrets.JRELEASER_GPG_PASSPHRASE }}
+          JRELEASER_GPG_SECRET_KEY: ${{ secrets.JRELEASER_GPG_SECRET_KEY }}
+          JRELEASER_GPG_PUBLIC_KEY: ${{ secrets.JRELEASER_GPG_PUBLIC_KEY }}
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mvn -N -Prelease jreleaser:assemble jreleaser:full-release
+
+      # Persist logs
+      - name: JReleaser release output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jreleaser-release
+          path: |
+            target/jreleaser/trace.log
+            target/jreleaser/output.properties
+
+      - name: Set next iteration version
+        run: mvn -B -q versions:set -DnewVersion=${{ github.event.inputs.nextVersion }}-SNAPSHOT
+
+      - name: Commit, push and tag changes
+        run: |
+          git commit -m "Setting SNAPSHOT version ${{ github.event.inputs.nextVersion }}-SNAPSHOT" .
+          git push origin ${{ github.event.inputs.branch }}

@@ -104,7 +104,7 @@
         ],
         "parameters": [
           {
-            "name": "myparam",
+            "name": "page",
             "description": "Description",
             "in": "query",
             "required": true,

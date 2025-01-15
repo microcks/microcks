@@ -25,6 +25,10 @@ import java.util.Arrays;
  */
 public class RedirectExpression implements Expression {
 
+   public static final char REDIRECT_MARKER = '>';
+
+   public static final String REDIRECT_MARKER_SPLIT_REGEX = "\\>";
+
    private final Expression[] expressions;
 
    public RedirectExpression(Expression[] expressions) {
@@ -39,9 +43,8 @@ public class RedirectExpression implements Expression {
          result = expressions[0].getValue(context);
          for (int i = 1; i < expressions.length; i++) {
             Expression exp = expressions[i];
-            if (exp instanceof FunctionExpression) {
+            if (exp instanceof FunctionExpression functionExp) {
                // Clone this expression, enriching args with previous result.
-               FunctionExpression functionExp = (FunctionExpression) exp;
                String[] clonedArgs = Arrays.copyOf(functionExp.getFunctionArgs(),
                      functionExp.getFunctionArgs().length + 1);
                clonedArgs[clonedArgs.length - 1] = result;

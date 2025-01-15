@@ -15,9 +15,16 @@
  */
 package io.github.microcks.util.grpc;
 
+import io.grpc.Context;
+import io.grpc.Contexts;
 import io.grpc.Grpc;
+import io.grpc.Metadata;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.ServerCall;
+import io.grpc.ServerCall.Listener;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
 import io.grpc.TlsServerCredentials;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMKeyPair;
@@ -51,6 +58,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 @Component
 public class GrpcServerStarter {
+
+   class HeaderInterceptor implements ServerInterceptor {
+
+      @Override
+      public <ReqT, RespT> Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers,
+            ServerCallHandler<ReqT, RespT> next) {
+         log.info("Found headers for operation {}: {}", call.getMethodDescriptor().getFullMethodName(), headers.keys());
+         Context context = Context.current().withValue(GrpcMetadataUtil.METADATA_CTX_KEY, headers);
+         return Contexts.interceptCall(context, call, headers, next);
+      }
+
+   }
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(GrpcServerStarter.class);
@@ -89,7 +108,8 @@ public class GrpcServerStarter {
             grpcServer = buildTLSServer();
          } else {
             // Else build a "plain text" server.
-            grpcServer = ServerBuilder.forPort(serverPort).fallbackHandlerRegistry(mockHandlerRegistry).build();
+            grpcServer = ServerBuilder.forPort(serverPort).fallbackHandlerRegistry(mockHandlerRegistry)
+                  .intercept(new HeaderInterceptor()).build();
          }
          grpcServer.start();
          log.info("GRPC Server started on port {}", serverPort);
@@ -121,7 +141,7 @@ public class GrpcServerStarter {
 
       try {
          grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
-               .fallbackHandlerRegistry(mockHandlerRegistry).build();
+               .fallbackHandlerRegistry(mockHandlerRegistry).intercept(new HeaderInterceptor()).build();
       } catch (IllegalArgumentException iae) {
          if (iae.getCause() instanceof NoSuchAlgorithmException || iae.getCause() instanceof InvalidKeySpecException) {
 
@@ -137,7 +157,7 @@ public class GrpcServerStarter {
                         new ByteArrayInputStream(privateKeyBytes));
                   grpcServer = Grpc.newServerBuilderForPort(serverPort, tlsBuilder.build())
                         .addService(mockHandlerRegistry.getReflectionService())
-                        .fallbackHandlerRegistry(mockHandlerRegistry).build();
+                        .fallbackHandlerRegistry(mockHandlerRegistry).intercept(new HeaderInterceptor()).build();
                }
             }
          }

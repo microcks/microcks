@@ -144,25 +144,15 @@ public class ServiceController {
    }
 
    @GetMapping(value = "/services/{id:.+}", produces = "application/json")
-   public ResponseEntity<?> getService(@PathVariable("id") String serviceId,
+   public ResponseEntity<Object> getService(@PathVariable("id") String serviceId,
          @RequestParam(value = "messages", required = false, defaultValue = "true") boolean messages) {
       log.debug("Retrieving service with id {}", serviceId);
 
-      Service service = null;
-      // serviceId may have the form of <service_name>:<service_version>
-      if (serviceId.contains(":")) {
-         String name = serviceId.substring(0, serviceId.indexOf(':'));
-         String version = serviceId.substring(serviceId.indexOf(':') + 1);
-
-         // If service name was encoded with '+' instead of '%20', replace them.
-         if (name.contains("+")) {
-            name = name.replace('+', ' ');
-         }
-         service = serviceRepository.findByNameAndVersion(name, version);
-      } else {
-         service = serviceRepository.findById(serviceId).orElse(null);
+      // Just retrieve the service and return it.
+      Service service = serviceService.getServiceById(serviceId);
+      if (service == null) {
+         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
-
       if (messages) {
          // Put messages into a map where key is operation name.
          Map<String, List<? extends Exchange>> messagesMap = new HashMap<>();
@@ -215,7 +205,7 @@ public class ServiceController {
    }
 
    @PutMapping(value = "/services/{id}/metadata")
-   public ResponseEntity<?> updateMetadata(@PathVariable("id") String serviceId, @RequestBody Metadata metadata,
+   public ResponseEntity<Object> updateMetadata(@PathVariable("id") String serviceId, @RequestBody Metadata metadata,
          UserInfo userInfo) {
       log.debug("Updating the metadata of service {}", serviceId);
       boolean result = serviceService.updateMetadata(serviceId, metadata, userInfo);
@@ -226,7 +216,7 @@ public class ServiceController {
    }
 
    @PutMapping(value = "/services/{id}/operation")
-   public ResponseEntity<?> overrideServiceOperation(@PathVariable("id") String serviceId,
+   public ResponseEntity<Object> overrideServiceOperation(@PathVariable("id") String serviceId,
          @RequestParam(value = "operationName") String operationName,
          @RequestBody OperationOverrideDTO operationOverride, UserInfo userInfo) {
       log.debug("Updating operation {} of service {}", operationName, serviceId);

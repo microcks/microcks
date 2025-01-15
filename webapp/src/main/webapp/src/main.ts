@@ -1,6 +1,7 @@
 import { enableProdMode } from '@angular/core';
 import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
+//import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
+import Keycloak, { KeycloakInitOptions } from './lib/keycloak';
 
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
@@ -64,6 +65,7 @@ getKeycloakConfig(function(err, datums) {
               .catch(err => console.log(err));
       }
     }).catch(function() {
+      console.error('[Microcks launch] Error while initializing Keycloak');
       alert('Failed to initialize authentication subsystem.');
     });
   } else {

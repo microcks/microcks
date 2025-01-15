@@ -17,6 +17,8 @@ package io.github.microcks.util.metadata;
 
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.ParameterLocation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -25,6 +27,11 @@ import com.fasterxml.jackson.databind.JsonNode;
  * @author laurent
  */
 public class MetadataExtractor {
+
+   /** Private constructor to hide the implicit public one and prevent instantiation. */
+   private MetadataExtractor() {
+      // Hidden constructor
+   }
 
    /**
     * Complete a Metadata object with extracted metadata from JsonNode.
@@ -61,5 +68,23 @@ public class MetadataExtractor {
       if (node.has("dispatcherRules")) {
          operation.setDispatcherRules(node.path("dispatcherRules").asText());
       }
+      if (node.has("parameterConstraints")) {
+         node.get("parameterConstraints").elements().forEachRemaining(paramNode -> {
+            ParameterConstraint constraint = extractParameterConstraint(paramNode);
+            operation.addParameterConstraint(constraint);
+         });
+      }
+   }
+
+   private static ParameterConstraint extractParameterConstraint(JsonNode node) {
+      ParameterConstraint constraint = new ParameterConstraint();
+      constraint.setName(node.get("name").asText());
+      constraint.setIn(ParameterLocation.valueOf(node.get("in").asText()));
+      constraint.setRequired(node.path("required").asBoolean(false));
+      constraint.setRecopy(node.path("recopy").asBoolean(false));
+      if (node.has("mustMatchRegexp")) {
+         constraint.setMustMatchRegexp(node.get("mustMatchRegexp").asText());
+      }
+      return constraint;
    }
 }

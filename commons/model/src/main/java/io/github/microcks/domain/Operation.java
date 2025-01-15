@@ -15,10 +15,8 @@
  */
 package io.github.microcks.domain;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -42,7 +40,7 @@ public class Operation {
    private Long defaultDelay;
 
    private Set<String> resourcePaths;
-   private List<ParameterConstraint> parameterConstraints;
+   private Set<ParameterConstraint> parameterConstraints;
 
    public String getName() {
       return name;
@@ -148,17 +146,17 @@ public class Operation {
       }
    }
 
-   public List<ParameterConstraint> getParameterConstraints() {
+   public Set<ParameterConstraint> getParameterConstraints() {
       return parameterConstraints;
    }
 
-   public void setParameterConstraints(List<ParameterConstraint> parameterConstraints) {
+   public void setParameterConstraints(Set<ParameterConstraint> parameterConstraints) {
       this.parameterConstraints = parameterConstraints;
    }
 
    public void addParameterConstraint(ParameterConstraint constraint) {
       if (this.parameterConstraints == null) {
-         this.parameterConstraints = new ArrayList<>();
+         this.parameterConstraints = new HashSet<>();
       }
       parameterConstraints.add(constraint);
    }

@@ -35,21 +35,23 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import static io.github.microcks.util.JsonSchemaValidator.*;
+import static io.github.microcks.util.asyncapi.AsyncAPISchemaUtil.*;
 
 /**
- * Helper class for validating Json objects against their AsyncAPI schema. Supported version of AsyncAPI schema is
- * https://www.asyncapi.com/docs/specifications/2.0.0/.
+ * Helper class for validating Json objects against their AsyncAPI schema. Supported version of AsyncAPI schema are
+ * https://www.asyncapi.com/docs/reference/specification/v3.0.0 and
+ * https://www.asyncapi.com/docs/reference/specification/v2.x.
  * @author laurent
  */
 public class AsyncAPISchemaValidator {
 
-   /** A commons logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(AsyncAPISchemaValidator.class);
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(AsyncAPISchemaValidator.class);
 
    public static final String ASYNC_SCHEMA_PAYLOAD_ELEMENT = "payload";
 
@@ -195,7 +197,7 @@ public class AsyncAPISchemaValidator {
          }
       } catch (Exception e) {
          // Just return exception message as validation message.
-         return Arrays.asList(e.getMessage());
+         return Collections.singletonList(e.getMessage());
       }
       // Import all the common parts that may be referenced by references.
       ((ObjectNode) schemaNode).set(JSON_SCHEMA_COMPONENTS_ELEMENT,
@@ -218,27 +220,25 @@ public class AsyncAPISchemaValidator {
     */
    public static List<String> validateAvroMessage(JsonNode specificationNode, byte[] avroBinary,
          String messagePathPointer, SchemaMap schemaMap) {
-      // Retrieve the schemas to validate binary against.
-      Schema[] avroSchemas;
+      // Retrieve the schema to validate binary against.
+      Schema avroSchema;
       try {
-         avroSchemas = retrieveMessageAvroSchemas(specificationNode, messagePathPointer, schemaMap);
+         avroSchema = retrieveMessageAvroSchema(specificationNode, messagePathPointer, schemaMap);
       } catch (Exception e) {
          return List.of(e.getMessage());
       }
 
       List<String> errors = new ArrayList<>();
-      for (Schema avroSchema : avroSchemas) {
-         try {
-            // Validation is shallow: we cannot detect schema incompatibilities as we do not
-            // have the schema used for writing. Just checking we can read with given schema.
-            AvroUtil.avroToAvroRecord(avroBinary, avroSchema);
-            // We're satisfying at least one schema. Exit here.
-            return List.of();
-         } catch (AvroTypeException ate) {
-            errors.add("Avro schema cannot be used to read message: " + ate.getMessage());
-         } catch (IOException ioe) {
-            errors.add("IOException while trying to validate message: " + ioe.getMessage());
-         }
+      try {
+         // Validation is shallow: we cannot detect schema incompatibilities as we do not
+         // have the schema used for writing. Just checking we can read with given schema.
+         AvroUtil.avroToAvroRecord(avroBinary, avroSchema);
+         // We're satisfying at least one schema. Exit here.
+         return List.of();
+      } catch (AvroTypeException ate) {
+         errors.add("Avro schema cannot be used to read message: " + ate.getMessage());
+      } catch (IOException ioe) {
+         errors.add("IOException while trying to validate message: " + ioe.getMessage());
       }
       return errors;
    }
@@ -257,27 +257,20 @@ public class AsyncAPISchemaValidator {
     */
    public static List<String> validateAvroMessage(JsonNode specificationNode, GenericRecord avroRecord,
          String messagePathPointer, SchemaMap schemaMap) {
-      // Retrieve the schemas to validate record against.
-      Schema[] avroSchemas = null;
+      // Retrieve the schema to validate record against.
+      Schema avroSchema = null;
       try {
-         avroSchemas = retrieveMessageAvroSchemas(specificationNode, messagePathPointer, schemaMap);
+         avroSchema = retrieveMessageAvroSchema(specificationNode, messagePathPointer, schemaMap);
       } catch (Exception e) {
          return List.of(e.getMessage());
       }
 
       // Validation is a deep one. Each element should be checked.
-      // We just need to have conformance to one schema among the different ones.
-      for (Schema avroSchema : avroSchemas) {
-         if (AvroUtil.validate(avroSchema, avroRecord)) {
-            return List.of();
-         }
+      if (AvroUtil.validate(avroSchema, avroRecord)) {
+         return List.of();
       }
       // Produce some insights on what's going wrong. We'll accumulate the errors on different schemas.
-      List<String> errors = new ArrayList<>();
-      for (Schema avroSchema : avroSchemas) {
-         errors.addAll(AvroUtil.getValidationErrors(avroSchema, avroRecord));
-      }
-      return errors;
+      return AvroUtil.getValidationErrors(avroSchema, avroRecord);
    }
 
    /**
@@ -417,103 +410,5 @@ public class AsyncAPISchemaValidator {
       // Build a schema object with messageNode as root.
       // Common parts that may be referenced by references should be imported at a upper level
       return messageNode.deepCopy();
-   }
-
-   /**
-    * Retrieve the Avro schemas corresponding to a message using its JSON pointer in Spec. Complete the
-    * {@code schemaMap} if provided. Raise a simple exception with message if problem while navigating the spec.
-    */
-   private static Schema[] retrieveMessageAvroSchemas(JsonNode specificationNode, String messagePathPointer,
-         SchemaMap schemaMap) throws Exception {
-      // Extract Json node for message pointer.
-      JsonNode messageNode = specificationNode.at(messagePathPointer);
-      if (messageNode == null || messageNode.isMissingNode()) {
-         log.debug("messagePathPointer {} is not a valid JSON Pointer", messagePathPointer);
-         throw new Exception("messagePathPointer does not represent a valid JSON Pointer in AsyncAPI specification");
-      }
-      // Message node can be just a reference.
-      messageNode = followRefIfAny(messageNode, specificationNode);
-
-      if (messageNode.isArray()) {
-         // In the case of AsyncAPI v3, we always got messages even if there's just one element.
-         // Wrapping them in oneOf, make us lose details on validation errors so just do it if necessary.
-         ArrayNode messagesNode = (ArrayNode) messageNode;
-         if (messagesNode.size() > 1) {
-            return buildOneOfMessagesAvroSchemas(specificationNode, (ArrayNode) messageNode, schemaMap);
-         }
-         return new Schema[] { buildSingleMessageAvroSchema(specificationNode,
-               followRefIfAny(messagesNode.get(0), specificationNode), schemaMap) };
-      } else if (messageNode.has(ONE_OF_STRUCT)) {
-         ArrayNode oneOfMessageNode = (ArrayNode) messageNode.get(ONE_OF_STRUCT);
-         return buildOneOfMessagesAvroSchemas(specificationNode, oneOfMessageNode, schemaMap);
-      } else {
-         return new Schema[] { buildSingleMessageAvroSchema(specificationNode, messageNode, schemaMap) };
-      }
-   }
-
-   /** Build an array of Avro schemas for messages expressed as a direct oneOf structure. */
-   private static Schema[] buildOneOfMessagesAvroSchemas(JsonNode specificationNode, ArrayNode oneOfMessageNode,
-         SchemaMap schemaMap) throws Exception {
-      // Initialize a oneOf schema with array.
-      Schema[] schemas = new Schema[oneOfMessageNode.size()];
-
-      // Extract the schema payload for each alternative of the message.
-      for (int i = 0; i < oneOfMessageNode.size(); i++) {
-         JsonNode altMessageNode = oneOfMessageNode.get(i);
-         // Extract the
-         altMessageNode = followRefIfAny(altMessageNode, specificationNode);
-         schemas[i] = buildSingleMessageAvroSchema(specificationNode, altMessageNode, schemaMap);
-      }
-      return schemas;
-   }
-
-   /** Build an Avro schema for spring message definition. */
-   private static Schema buildSingleMessageAvroSchema(JsonNode specificationNode, JsonNode messageNode,
-         SchemaMap schemaMap) throws Exception {
-      // Check that message node has a payload attribute.
-      if (!messageNode.has(ASYNC_SCHEMA_PAYLOAD_ELEMENT)) {
-         log.debug("messageNode {} has no 'payload' attribute", messageNode);
-         throw new Exception("message definition has no valid payload in AsyncAPI specification");
-      }
-
-      // Navigate to payload definition.
-      messageNode = messageNode.path(ASYNC_SCHEMA_PAYLOAD_ELEMENT);
-
-      // Payload node can be just a reference to another schema... But in the case of Avro, this is an external schema
-      // as #/components/schemas can only hold JSON schemas. So we have to use a registry for resolving and accessing
-      // this Avro schema. We'll have to build an Avro Schema either from payload content or registry content.
-      String schemaContent = null;
-
-      if (messageNode.has("$ref")) {
-         // Remove trailing anchor marker if any.
-         // './user-signedup.avsc#/User' => './user-signedup.avsc'
-         String ref = messageNode.path("$ref").asText();
-         log.debug("Looking for an external Avro schema in registry: {}", ref);
-         if (ref.contains("#")) {
-            ref = ref.substring(0, ref.indexOf("#"));
-         }
-         if (schemaMap != null) {
-            schemaContent = schemaMap.getSchemaEntry(ref);
-         }
-         if (schemaContent == null) {
-            log.info("No schema content found in SchemaMap. {} is not found", ref);
-            throw new Exception("no schema content found for " + ref + " in used SchemaMap.");
-         }
-      } else {
-         // Schema is specified within the payload definition.
-         schemaContent = messageNode.toString();
-      }
-
-      // Now build and return the schema.
-      return new Schema.Parser().parse(schemaContent);
-   }
-
-   /** Check if a node has a reference and follow it to target node in the document. */
-   private static JsonNode followRefIfAny(JsonNode referencableNode, JsonNode documentRoot) {
-      if (referencableNode.has("$ref")) {
-         String ref = referencableNode.path("$ref").asText();
-         return followRefIfAny(documentRoot.at(ref.substring(1)), documentRoot);
-      }
-      return referencableNode;
    }
 }

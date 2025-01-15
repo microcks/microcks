@@ -91,7 +91,7 @@
                 <app-grade-index [score]="conformanceMetric.maxPossibleScore"></app-grade-index>
               </div>
               <div style="margin-top: 5px;">
-                <a href="https://microcks.io/documentation/using/tests/#conformance-metrics" target="_blank" rel="noopener">Learn More
+                <a href="https://microcks.io/documentation/explanations/conformance-testing/#conformance-metrics" target="_blank" rel="noopener">Learn More
                   <i class="fa fa-external-link" aria-hidden="true"></i>
                 </a>
               </div>
@@ -196,7 +196,7 @@
                 <dt>Dispatcher:</dt>
                 <dd><code>{{ item.dispatcher }}</code> &nbsp;
                   <span class="learn-more-inline">
-                    <a href="https://microcks.io/documentation/using/dispatching/" target="_blank" rel="noopener">Learn More
+                    <a href="https://microcks.io/documentation/explanations/dispatching/" target="_blank" rel="noopener">Learn More
                       <i class="fa fa-external-link" aria-hidden="true"></i>
                     </a>
                   </span>
@@ -215,7 +215,7 @@
                 <dd>
                   {{ getBindingsList(item) }} &nbsp;
                   <span class="learn-more-inline">
-                    <a href="https://microcks.io/documentation/using/asyncapi/#bindings" target="_blank" rel="noopener">Learn More
+                    <a href="https://microcks.io/documentation/references/artifacts/asyncapi-conventions/#bindings" target="_blank" rel="noopener">Learn More
                       <i class="fa fa-external-link" aria-hidden="true"></i>
                     </a>
                   </span>
@@ -325,7 +325,7 @@
           [formatAsyncDestination]="formatAsyncDestination" [getDestinationOperationPart]="getDestinationOperationPart"
           [formatRequestContent]="formatRequestContent" [formatGraphQLVariables]="formatGraphQLVariables"
           [prettyPrintIfJSON]="prettyPrintIfJSON" [formatCurlCmd]="formatCurlCmd" [copyToClipboard]="copyToClipboard"
-          [removeVerbInUrl]="removeVerbInUrl" [encodeUrl]="encodeUrl"
+          [removeVerbInUrl]="removeVerbInUrl" [encodeUrl]="encodeUrl" [urlType]="urlType"
           [asyncAPIFeatureEndpoint]="asyncAPIFeatureEndpoint" [config]="config"></app-exchanges-tabset>
       </ng-template>
 

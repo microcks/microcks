@@ -18,6 +18,8 @@ package io.github.microcks.util.openapi;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.ParameterLocation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
@@ -1280,15 +1282,23 @@ class OpenAPIImporterTest {
          fail("Exception should not be thrown");
       }
       assertEquals(1, services.size());
-      Service service = services.get(0);
+      Service service = services.getFirst();
       assertEquals("WeatherForecast API", service.getName());
       Assertions.assertEquals(ServiceType.REST, service.getType());
       assertEquals("1.0.0", service.getVersion());
 
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().getFirst();
+      assertEquals(1, operation.getParameterConstraints().size());
+      ParameterConstraint constraint = operation.getParameterConstraints().iterator().next();
+      assertEquals("apiKey", constraint.getName());
+      assertTrue(constraint.isRequired());
+      assertEquals(ParameterLocation.query, constraint.getIn());
+
       List<Resource> resources = importer.getResourceDefinitions(service);
       assertEquals(2, resources.size());
 
-      Resource openAPISpec = resources.get(0);
+      Resource openAPISpec = resources.getFirst();
       assertEquals("WeatherForecast API-1.0.0.yaml", openAPISpec.getName());
       assertEquals(ResourceType.OPEN_API_SPEC, openAPISpec.getType());
       assertFalse(openAPISpec.getContent().contains("WeatherForecast API-1.0.0-weather-forecast-schema.yaml"));

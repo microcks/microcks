@@ -17,8 +17,6 @@ package io.github.microcks.util.el.function;
 
 import io.github.microcks.util.el.EvaluationContext;
 
-import java.util.Random;
-
 /**
  * This is an implementation of ELFunction that generates random integer values. When invoked with no arg a integer
  * between <code>Integer.MIN_VALUE</code> and <code>Integer.MAX_VALUE</code> is generated. When invoked with one

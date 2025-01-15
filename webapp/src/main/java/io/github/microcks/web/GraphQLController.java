@@ -276,16 +276,17 @@ public class GraphQLController {
       String responseContent = null;
       JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
 
-      // If multi-queries and aliases were used, recompose an aggregated result.
-      if (graphqlResponses.size() > 1) {
-         ObjectNode aggregated = mapper.createObjectNode();
-         ObjectNode dataNode = aggregated.putObject("data");
-         for (GraphQLQueryResponse response : graphqlResponses) {
-            dataNode.set(StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
-                  response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy());
-         }
-         responseNode = aggregated;
+      // Aggregate GraphQL query responses into a unified response object.
+      // Setting each response under its alias (or operation name if no alias is provided),
+      // ensures that aliasing applies consistently for both multi and single queries, matching actual
+      // GraphQL behavior.
+      ObjectNode aggregated = mapper.createObjectNode();
+      ObjectNode dataNode = aggregated.putObject("data");
+      for (GraphQLQueryResponse response : graphqlResponses) {
+         dataNode.set(StringUtils.defaultIfBlank(response.getAlias(), response.getOperationName()),
+               response.getJsonResponse().path("data").path(response.getOperationName()).deepCopy());
       }
+      responseNode = aggregated;
       try {
          responseContent = mapper.writeValueAsString(responseNode);
       } catch (JsonProcessingException e) {

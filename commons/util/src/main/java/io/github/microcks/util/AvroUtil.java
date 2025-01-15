@@ -49,6 +49,16 @@ public class AvroUtil {
    }
 
    /**
+    * Convert a Avro schema string into a Schema object.
+    * @param avroSchema String representation of an Avro Schema to use for conversion
+    * @return The Avro Schema to use
+    * @throws org.apache.avro.SchemaParseException if the schema is not valid
+    */
+   public static Schema getSchema(String avroSchema) {
+      return new Schema.Parser().parse(avroSchema);
+   }
+
+   /**
     * Convert a JSON string into an Avro binary representation using specified schema.
     * @param json       A JSON string to convert to Avro
     * @param avroSchema String representation of an Avro Schema to use for conversion
@@ -57,7 +67,7 @@ public class AvroUtil {
     * @throws IOException       if something goes wrong during conversion
     */
    public static byte[] jsonToAvro(String json, String avroSchema) throws AvroTypeException, IOException {
-      return jsonToAvro(json, new Schema.Parser().parse(avroSchema));
+      return jsonToAvro(json, getSchema(avroSchema));
    }
 
    /**
@@ -69,6 +79,17 @@ public class AvroUtil {
     * @throws IOException       if something goes wrong during conversion
     */
    public static byte[] jsonToAvro(String json, Schema avroSchema) throws AvroTypeException, IOException {
+      if (avroSchema.isUnion()) {
+         // If the schema is a union, we need to find the right schema to use.
+         for (Schema schema : avroSchema.getTypes()) {
+            try {
+               return jsonToAvro(json, schema);
+            } catch (AvroTypeException e) {
+               // Ignore and try next schema.
+            }
+         }
+         throw new AvroTypeException("No schema in union matches JSON data");
+      }
       // Prepare reader an input stream from Json string.
       GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
       InputStream input = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
@@ -98,7 +119,7 @@ public class AvroUtil {
     * @throws IOException       if something goes wrong during conversion
     */
    public static GenericRecord jsonToAvroRecord(String json, String avroSchema) throws AvroTypeException, IOException {
-      return jsonToAvroRecord(json, new Schema.Parser().parse(avroSchema));
+      return jsonToAvroRecord(json, getSchema(avroSchema));
    }
 
    /**
@@ -110,6 +131,18 @@ public class AvroUtil {
     * @throws IOException       if something goes wrong during conversion
     */
    public static GenericRecord jsonToAvroRecord(String json, Schema avroSchema) throws AvroTypeException, IOException {
+      if (avroSchema.isUnion()) {
+         // If the schema is a union, we need to find the right schema to use.
+         for (Schema schema : avroSchema.getTypes()) {
+            try {
+               return jsonToAvroRecord(json, schema);
+            } catch (AvroTypeException e) {
+               // Ignore and try next schema.
+            }
+         }
+         throw new AvroTypeException("No schema in union matches JSON data");
+      }
+
       // Prepare reader an input stream from Json string.
       GenericDatumReader<GenericRecord> reader = new GenericDatumReader<>(avroSchema);
       InputStream input = new ByteArrayInputStream(json.getBytes(StandardCharsets.UTF_8));
@@ -127,7 +160,7 @@ public class AvroUtil {
     * @throws IOException       if something goes wrong during conversion
     */
    public static String avroToJson(byte[] avroBinary, String avroSchema) throws AvroTypeException, IOException {
-      return avroToJson(avroBinary, new Schema.Parser().parse(avroSchema));
+      return avroToJson(avroBinary, getSchema(avroSchema));
    }
 
    /**
@@ -139,6 +172,17 @@ public class AvroUtil {
     * @throws IOException       if something goes wrong during conversion
     */
    public static String avroToJson(byte[] avroBinary, Schema avroSchema) throws AvroTypeException, IOException {
+      if (avroSchema.isUnion()) {
+         // If the schema is a union, we need to find the right schema to use.
+         for (Schema schema : avroSchema.getTypes()) {
+            try {
+               return avroToJson(avroBinary, schema);
+            } catch (AvroTypeException e) {
+               // Ignore and try next schema.
+            }
+         }
+         throw new AvroTypeException("No schema in union matches Avro binary data");
+      }
       DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(avroSchema);
       Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
 
@@ -156,7 +200,7 @@ public class AvroUtil {
     */
    public static GenericRecord avroToAvroRecord(byte[] avroBinary, String avroSchema)
          throws AvroTypeException, IOException {
-      return avroToAvroRecord(avroBinary, new Schema.Parser().parse(avroSchema));
+      return avroToAvroRecord(avroBinary, getSchema(avroSchema));
    }
 
    /**
@@ -169,6 +213,17 @@ public class AvroUtil {
     */
    public static GenericRecord avroToAvroRecord(byte[] avroBinary, Schema avroSchema)
          throws AvroTypeException, IOException {
+      if (avroSchema.isUnion()) {
+         // If the schema is a union, we need to find the right schema to use.
+         for (Schema schema : avroSchema.getTypes()) {
+            try {
+               return avroToAvroRecord(avroBinary, schema);
+            } catch (AvroTypeException e) {
+               // Ignore and try next schema.
+            }
+         }
+         throw new AvroTypeException("No schema in union matches Avro binary data");
+      }
       DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(avroSchema);
       Decoder decoder = DecoderFactory.get().binaryDecoder(avroBinary, null);
 
@@ -229,7 +284,7 @@ public class AvroUtil {
             break;
          case ARRAY:
             if (!(datum instanceof Collection<?> collection)) {
-               errors.add(fieldName + " is not a valid array");
+               errors.add(fieldName[0] + " is not a valid array");
             } else {
                // Now add errors for each element.
                for (Object element : collection) {
@@ -239,31 +294,37 @@ public class AvroUtil {
             break;
          case STRING:
             if (!(datum instanceof CharSequence))
-               errors.add(fieldName + " is not a string");
+               errors.add(fieldName[0] + " is not a string");
             break;
          case BYTES:
             if (!(datum instanceof ByteBuffer))
-               errors.add(fieldName + " is not bytes");
+               errors.add(fieldName[0] + " is not bytes");
             break;
          case INT:
             if (!(datum instanceof Integer))
-               errors.add(fieldName + " is not an integer");
+               errors.add(fieldName[0] + " is not an integer");
             break;
          case LONG:
             if (!(datum instanceof Long))
-               errors.add(fieldName + " is not a long");
+               errors.add(fieldName[0] + " is not a long");
             break;
          case FLOAT:
             if (!(datum instanceof Float))
-               errors.add(fieldName + " is not a float");
+               errors.add(fieldName[0] + " is not a float");
             break;
          case DOUBLE:
             if (!(datum instanceof Double))
-               errors.add(fieldName + " is not a double");
+               errors.add(fieldName[0] + " is not a double");
             break;
          case BOOLEAN:
             if (!(datum instanceof Boolean))
-               errors.add(fieldName + " is not a boolean");
+               errors.add(fieldName[0] + " is not a boolean");
+            break;
+         case UNION:
+            // Get validation errors for each type in union.
+            for (Schema unionSchema : schema.getTypes()) {
+               errors.addAll(getValidationErrors(unionSchema, datum));
+            }
             break;
       }
       return errors;

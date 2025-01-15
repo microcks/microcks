@@ -6,7 +6,10 @@ on:
         description: 'The tag to use for the images'
         type: string
         required: true
-permissions: read-all
+permissions:
+  contents: read
+  id-token: write # needed for signing the images with GitHub OIDC Token
+
 jobs:
   build-native-images:
     runs-on: ubuntu-latest-4-cores
@@ -20,10 +23,10 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
           cache: maven
 
@@ -66,7 +69,8 @@ jobs:
               -Dspring-boot.build-image.runImage=$RUNNER_IMAGE
 
       - name: Save native image for ${{ matrix.arch }}
-        uses: ishworkh/docker-image-artifact-upload@v1
+        #uses: ishworkh/docker-image-artifact-upload@v1
+        uses: ishworkh/container-image-artifact-upload@v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -85,7 +89,8 @@ jobs:
           echo "IMAGE_TAG=${{inputs.image-tag}}-native" >> "$GITHUB_ENV"
 
       - name: Get saved images for ${{ matrix.arch }}
-        uses: ishworkh/docker-image-artifact-download@v1
+        #uses: ishworkh/docker-image-artifact-download@v1
+        uses: ishworkh/container-image-artifact-download@v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -108,6 +113,10 @@ jobs:
     needs: push-app-images
     environment: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # needed for signing the images with GitHub OIDC Token
+
     steps:
       - name: Set IMAGE_TAG environment from input
         run: |
@@ -129,3 +138,25 @@ jobs:
             -a docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-amd64 \
             -a docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-arm64
           docker manifest push docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}
+
+      - name: Setup Crane
+        uses: imjasonh/setup-crane@00c9e93efa4e1138c9a7a5c594acd6c75a2fbf0c # v0.3
+        with:
+          version: v0.15.1
+
+      - name: Get Digests for images
+        id: digests
+        # We could probably use the docker-manifest-action output instead of recomputing those with crane
+        run: |
+          echo "microcks-uber=$(crane digest quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }})" >> $GITHUB_OUTPUT
+          
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Sign images with with GitHub OIDC Token
+        env:
+          COSIGN_EXPERIMENTAL: "true"
+          COSIGN_YES: "true"
+        run: |
+          cosign sign quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
+          cosign sign docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}

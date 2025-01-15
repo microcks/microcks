@@ -35,6 +35,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -146,6 +147,32 @@ class AvroUtilTest {
    }
 
    @Test
+   void testJsonToAvroUnionSchema() {
+      String jsonText = "{\"name\":\"Tigresse\"}";
+
+      Schema cat = SchemaBuilder.record("Cat").fields().requiredString("name").endRecord();
+      Schema chat = SchemaBuilder.record("Chat").fields().requiredString("nom").endRecord();
+      Schema union = SchemaBuilder.unionOf().type(cat).and().type(chat).endUnion();
+
+      try {
+         byte[] avroBinary = AvroUtil.jsonToAvro(jsonText, union);
+         System.err.println("binaryEncoding: \n" + new String(avroBinary, StandardCharsets.UTF_8));
+         String jsonRepresentation = AvroUtil.avroToJson(avroBinary, union);
+         System.err.println("\njsonRepresentation: \n" + jsonRepresentation);
+
+         assertTrue(jsonRepresentation.contains("\"Tigresse\""));
+
+         // Deserialize from binary encoding representation.
+         GenericRecord catRecord = AvroUtil.avroToAvroRecord(avroBinary, union);
+         System.err.println("\nCat from binary representation: \n" + catRecord.toString());
+
+         assertEquals("Tigresse", catRecord.get("name").toString());
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+   }
+
+   @Test
    void testJsonToAvroRecord() {
       String jsonText = "{\"name\":\"Laurent Broudoux\", \"email\":\"laurent@microcks.io\", \"age\":42}";
 
@@ -231,5 +258,44 @@ class AvroUtilTest {
             .getIncompatibilities().stream()
             .forEach(incompatibility -> System.err.println(incompatibility.getMessage()));
       assertEquals(SchemaCompatibility.SchemaCompatibilityType.INCOMPATIBLE, compatibility.getType());
+   }
+
+   @Test
+   void testValidUnionSchema() {
+      Schema cat = SchemaBuilder.record("Cat").fields().requiredString("name").endRecord();
+      Schema chat = SchemaBuilder.record("Chat").fields().requiredString("nom").endRecord();
+
+      Schema union = SchemaBuilder.unionOf().type(cat).and().type(chat).endUnion();
+
+      GenericRecord tigresse = new GenericData.Record(cat);
+      tigresse.put("name", "Tigresse");
+
+      // Assert that the record is valid against the union schema.
+      assertTrue(AvroUtil.validate(union, tigresse));
+      List<String> errors = AvroUtil.getValidationErrors(union, tigresse);
+      // There should still be one error regarding the Chat schema conformance.
+      assertEquals(1, errors.size());
+      assertEquals("Required field nom cannot be found in record", errors.getFirst());
+   }
+
+   @Test
+   void testInvalidUnionSchema() {
+      Schema cat = SchemaBuilder.record("Cat").fields().requiredString("name").requiredInt("age").endRecord();
+      Schema dog = SchemaBuilder.record("Dog").fields().requiredString("name").requiredInt("age")
+            .optionalString("fluff").endRecord();
+
+      Schema union = SchemaBuilder.unionOf().type(cat).and().type(dog).endUnion();
+
+      GenericRecord tigresse = new GenericData.Record(cat);
+      tigresse.put("name", "Tigresse");
+      tigresse.put("age", "12");
+
+      // Assert that the record is not valid against the union schema.
+      assertFalse(AvroUtil.validate(union, tigresse));
+      List<String> errors = AvroUtil.getValidationErrors(union, tigresse);
+      assertEquals(2, errors.size());
+      for (String error : errors) {
+         assertEquals("age is not an integer", error);
+      }
    }
 }

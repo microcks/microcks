@@ -21,6 +21,8 @@ import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Metadata;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Parameter;
+import io.github.microcks.domain.ParameterConstraint;
+import io.github.microcks.domain.ParameterLocation;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
@@ -248,31 +250,57 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
                }
 
                // Deal with dispatcher stuffs if needed.
-               if (operation.getDispatcher() == null) {
-                  if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE) && urlHasParts(pathName)) {
-                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName) + " ?? "
-                           + extractOperationParams(verb.getValue()));
-                     operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
-                  } else if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE)) {
-                     operation.setDispatcherRules(extractOperationParams(verb.getValue()));
-                     operation.setDispatcher(DispatchStyles.URI_PARAMS);
-                  } else if (urlHasParts(pathName)) {
-                     operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName));
-                     operation.setDispatcher(DispatchStyles.URI_PARTS);
-                  } else {
-                     operation.addResourcePath(pathName);
-                  }
-               } else {
-                  // If dispatcher has been forced via Metadata, we should still put a generic resourcePath
-                  // (maybe containing {} parts) to later force operation matching at the mock controller level.
-                  operation.addResourcePath(pathName);
-               }
+               completeOperationWithDispatcher(operation, verb, pathName);
+
+               // Deal with parameter constraints if required parameters.
+               completeOperationWithParameterConstraints(operation, verb.getValue());
 
                results.add(operation);
             }
          }
       }
       return results;
+   }
+
+   /** Complete operation with dispatcher rules if not already set. */
+   private void completeOperationWithDispatcher(Operation operation, Entry<String, JsonNode> verb, String pathName) {
+      if (operation.getDispatcher() == null) {
+         if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE) && urlHasParts(pathName)) {
+            operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName) + " ?? "
+                  + extractOperationParams(verb.getValue()));
+            operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
+         } else if (operationHasParameters(verb.getValue(), PARAMETERS_QUERY_VALUE)) {
+            operation.setDispatcherRules(extractOperationParams(verb.getValue()));
+            operation.setDispatcher(DispatchStyles.URI_PARAMS);
+         } else if (urlHasParts(pathName)) {
+            operation.setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(pathName));
+            operation.setDispatcher(DispatchStyles.URI_PARTS);
+         } else {
+            operation.addResourcePath(pathName);
+         }
+      } else {
+         // If dispatcher has been forced via Metadata, we should still put a generic resourcePath
+         // (maybe containing {} parts) to later force operation matching at the mock controller level.
+         operation.addResourcePath(pathName);
+      }
+   }
+
+   /** Add ParameterConstraints to operation if required parameters are found. */
+   private void completeOperationWithParameterConstraints(Operation operation, JsonNode operationNode) {
+      Iterator<JsonNode> parameters = operationNode.path(PARAMETERS_NODE).elements();
+      while (parameters.hasNext()) {
+         JsonNode parameter = followRefIfAny(parameters.next());
+         boolean required = parameter.path("required").asBoolean(false);
+         String location = parameter.path("in").asText();
+
+         if (required && !"path".equals(location)) {
+            ParameterConstraint constraint = new ParameterConstraint();
+            constraint.setRequired(true);
+            constraint.setName(parameter.path("name").asText());
+            constraint.setIn(ParameterLocation.valueOf(parameter.path("in").asText()));
+            operation.addParameterConstraint(constraint);
+         }
+      }
    }
 
    /**
@@ -477,7 +505,7 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
          // Finally, take care about dispatchCriteria and complete operation resourcePaths.
          completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
-               pathParametersByExample, queryParametersByExample, exampleName, response);
+               pathParametersByExample, queryParametersByExample, headerParametersByExample, exampleName, response);
 
          results.put(request, response);
       }
@@ -546,7 +574,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
                // Finally, take care about dispatchCriteria and complete operation resourcePaths.
                completeDispatchCriteriaAndResourcePaths(operation, rootDispatcher, rootDispatcherRules,
-                     pathParametersByExample, queryParametersByExample, exampleName, response);
+                     pathParametersByExample, queryParametersByExample, headerParametersByExample, exampleName,
+                     response);
 
                results.put(request, response);
             }
@@ -591,7 +620,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
 
    private void completeDispatchCriteriaAndResourcePaths(Operation operation, String rootDispatcher,
          String rootDispatcherRules, Map<String, Multimap<String, String>> pathParametersByExample,
-         Map<String, Multimap<String, String>> queryParametersByExample, String exampleName, Response response) {
+         Map<String, Multimap<String, String>> queryParametersByExample,
+         Map<String, Multimap<String, String>> headerParametersByExample, String exampleName, Response response) {
       String dispatchCriteria = null;
       String resourcePathPattern = operation.getName().split(" ")[1];
 
@@ -614,6 +644,11 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          // We should complete resourcePath here.
          String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parts);
          operation.addResourcePath(resourcePath);
+      } else if (DispatchStyles.QUERY_HEADER.equals(rootDispatcher)) {
+         Multimap<String, String> headerParams = headerParametersByExample.get(exampleName);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, headerParams);
+         // We only need the pattern here.
+         operation.addResourcePath(resourcePathPattern);
       }
       response.setDispatchCriteria(dispatchCriteria);
    }

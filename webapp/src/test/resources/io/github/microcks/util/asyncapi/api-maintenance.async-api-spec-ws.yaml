@@ -35,16 +35,16 @@ components:
       type: object
       title: Elevator Co maintenance event payload
       required:
-      - header
-      - body
+        - header
+        - body
       properties:
         header:
           additionalProperties: false
           type: object
           required:
-          - topic
-          - timestamp
-          - tracking_id
+            - topic
+            - timestamp
+            - tracking_id
           properties:
             topic:
               type: string
@@ -57,10 +57,10 @@ components:
           additionalProperties: false
           type: object
           required:
-          - component_id
-          - description
-          - timewindow_days
-          - details
+            - component_id
+            - description
+            - timewindow_days
+            - details
           properties:
             component_id:
               title: component_id that needs maintenance
@@ -84,88 +84,88 @@ components:
       schemaFormat: application/vnd.aai.asyncapi+json;version=2.0.0
       contentType: application/json
       examples:
-      - misalignment:
+        - misalignment:
             payload:
-                header:
-                    topic: apim/elevator-co/api/V1/json/fr/elevator/maintenace/elev-make-1/elevator-id-1
-                    timestamp: 2021-02-15-13:25:27-UTC
-                    tracking_id: 4fd44ed1-1ba9-4f53-87a2-d4f4385c09d5
-                body:
-                    component_id: ABC-1784
-                    description: misalignment car to floor
-                    timewindow_days: 24
-                    probability_of_failure_pct: 90
-                    details:
-                        reasons:
-                        - misalignment car to floor > 8mm
-                        - avg journeys / day > 25
-      - doorfailure:
+              header:
+                topic: apim/elevator-co/api/V1/json/fr/elevator/maintenace/elev-make-1/elevator-id-1
+                timestamp: 2021-02-15-13:25:27-UTC
+                tracking_id: 4fd44ed1-1ba9-4f53-87a2-d4f4385c09d5
+              body:
+                component_id: ABC-1784
+                description: misalignment car to floor
+                timewindow_days: 24
+                probability_of_failure_pct: 90
+                details:
+                  reasons:
+                    - misalignment car to floor > 8mm
+                    - avg journeys / day > 25
+        - doorfailure:
             payload:
-                header:
-                    topic: apim/elevator-co/api/V1/json/fr/elevator/maintenace/elev-make-1/elevator-id-1
-                    timestamp: 2021-03-15-16:25:27-UTC
-                    tracking_id: 1fd11ed1-1ba1-4f53-87a2-d4f4385c11d1
-                body:
-                    component_id: XYZ-1958
-                    description: head stuck in door
-                    timewindow_days: 5
-                    probability_of_failure_pct: 99
-                    details:
-                        reasons:
-                        - head stuck in door
-                        - instructions unclear
+              header:
+                topic: apim/elevator-co/api/V1/json/fr/elevator/maintenace/elev-make-1/elevator-id-1
+                timestamp: 2021-03-15-16:25:27-UTC
+                tracking_id: 1fd11ed1-1ba1-4f53-87a2-d4f4385c11d1
+              body:
+                component_id: XYZ-1958
+                description: head stuck in door
+                timewindow_days: 5
+                probability_of_failure_pct: 99
+                details:
+                  reasons:
+                    - head stuck in door
+                    - instructions unclear
   parameters:
     resource_region_id:
       schema:
         type: string
         enum:
-        - fr
-        - de
+          - fr
+          - de
         examples:
-            misalignment:
-                value: fr
-            doorfailure:
-                value: de
+          - misalignment:
+              value: fr
+          - doorfailure:
+              value: de
     equipmentType:
       schema:
         type: string
         enum:
-        - elevator
+          - elevator
         examples:
-            misalignment:
-                value: elevator
-            doorfailure:
-                value: elevator
+          - misalignment:
+              value: elevator
+          - doorfailure:
+              value: elevator
     eventType:
       schema:
         type: string
         enum:
-        - maintenace
+          - maintenace
         examples:
-            misalignment:
-                value: maintenance
-            doorfailure:
-                value: maintenance
+          - misalignment:
+              value: maintenance
+          - doorfailure:
+              value: maintenance
     resourceType:
       schema:
         type: string
         enum:
-        - elev-make-1
-        - elev-make-2
+          - elev-make-1
+          - elev-make-2
         examples:
-            misalignment:
-                value: elev-make-1
-            doorfailure:
-                value: elev-make-2
+          - misalignment:
+              value: elev-make-1
+          - doorfailure:
+              value: elev-make-2
     resourceId:
       schema:
         type: string
         pattern: "^[a-zA-Z0-9-]+$"
         examples:
-            misalignment:
-                value: abc4711
-            doorfailure:
-                value: xyz0815
+          - misalignment:
+              value: abc4711
+          - doorfailure:
+              value: xyz0815
   securitySchemes:
     userPassword:
       type: userPassword

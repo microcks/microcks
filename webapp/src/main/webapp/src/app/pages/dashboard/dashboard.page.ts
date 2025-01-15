@@ -79,7 +79,7 @@ export class DashboardPageComponent implements OnInit {
     ['GRAPH', 0],
     ['GRPC', 0],
   ];
-  repositoryDonutChargConfig: DonutChartConfig = {
+  repositoryDonutChartConfig: DonutChartConfig = {
     chartId: 'repositoryDonut',
     chartHeight: 220,
     colors: {

@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Bean defining service operations around Service domain objects.
@@ -124,6 +125,26 @@ public class ServiceService {
       this.testResultRepository = testResultRepository;
       this.applicationContext = applicationContext;
       this.authorizationChecker = authorizationChecker;
+   }
+
+   /**
+    * Retrieve the corresponding Service from its identifier.
+    * @param serviceId The technical or functional (service_name:service_version) identifier of service to retrieve
+    * @return The corresponding Service or null if not found
+    */
+   public Service getServiceById(String serviceId) {
+      // serviceId may have the form of <service_name>:<service_version>
+      if (serviceId.contains(":")) {
+         String name = serviceId.substring(0, serviceId.indexOf(':'));
+         String version = serviceId.substring(serviceId.indexOf(':') + 1);
+
+         // If service name was encoded with '+' instead of '%20', replace them.
+         if (name.contains("+")) {
+            name = name.replace('+', ' ');
+         }
+         return serviceRepository.findByNameAndVersion(name, version);
+      }
+      return serviceRepository.findById(serviceId).orElse(null);
    }
 
    /**
@@ -255,6 +276,13 @@ public class ServiceService {
                   }
                   if (operation.getDispatcherRules() != null) {
                      existingOp.setDispatcherRules(operation.getDispatcherRules());
+                  }
+                  if (operation.getParameterConstraints() != null) {
+                     if (existingOp.getParameterConstraints() == null) {
+                        existingOp.setParameterConstraints(operation.getParameterConstraints());
+                     } else {
+                        existingOp.getParameterConstraints().addAll(operation.getParameterConstraints());
+                     }
                   }
                }
             }
@@ -440,11 +468,16 @@ public class ServiceService {
     * Remove a Service and its bound documents using the service id.
     * @param id       The identifier of service to remove.
     * @param userInfo The current user information to check if authorized to delete
-    * @return True if service has been found and updated, false otherwise.
+    * @return True if service is not found or found and deleted, false otherwise.
     */
    public Boolean deleteService(String id, UserInfo userInfo) {
       // Get service to remove.
-      Service service = serviceRepository.findById(id).orElse(null);
+      Service service = getServiceById(id);
+
+      if (service == null) {
+         log.warn("Service [{}] not found for deletion", id);
+         return true;
+      }
 
       if (authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)
             || authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
@@ -455,18 +488,16 @@ public class ServiceService {
          testResultRepository.deleteAll(testResultRepository.findByServiceId(id));
 
          // Delete all requests and responses bound to service operation.
-         if (service != null) {
-            for (Operation operation : service.getOperations()) {
-               String operationId = IdBuilder.buildOperationId(service, operation);
-               requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
-               responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
-               eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
-            }
-
-            // Finally delete service and publish event.
-            serviceRepository.delete(service);
-            publishServiceChangeEvent(service, ChangeType.DELETED);
+         for (Operation operation : service.getOperations()) {
+            String operationId = IdBuilder.buildOperationId(service, operation);
+            requestRepository.deleteAll(requestRepository.findByOperationId(operationId));
+            responseRepository.deleteAll(responseRepository.findByOperationId(operationId));
+            eventMessageRepository.deleteAll(eventMessageRepository.findByOperationId(operationId));
          }
+
+         // Finally delete service and publish event.
+         serviceRepository.delete(service);
+         publishServiceChangeEvent(service, ChangeType.DELETED);
          log.info("Service [{}] has been fully deleted", id);
          return true;
       }
@@ -482,7 +513,8 @@ public class ServiceService {
     * @return True if service has been found and updated, false otherwise.
     */
    public Boolean updateMetadata(String id, Metadata metadata, UserInfo userInfo) {
-      Service service = serviceRepository.findById(id).orElse(null);
+      // Get service to update.
+      Service service = getServiceById(id);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          service.getMetadata().setLabels(metadata.getLabels());
@@ -509,10 +541,9 @@ public class ServiceService {
     * @return True if operation has been found and updated, false otherwise.
     */
    public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules,
-         Long delay, List<ParameterConstraint> constraints, UserInfo userInfo) {
-      Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? {}",
-            authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+         Long delay, Set<ParameterConstraint> constraints, UserInfo userInfo) {
+      // Get service to update.
+      Service service = getServiceById(id);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
@@ -543,9 +574,8 @@ public class ServiceService {
     */
    public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,
          UserInfo userInfo) {
-      Service service = serviceRepository.findById(id).orElse(null);
-      log.debug("Is user allowed? {}",
-            authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service));
+      // Get service to update.
+      Service service = getServiceById(id);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {

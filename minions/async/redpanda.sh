@@ -1,1 +1,1 @@
-docker-compose -f redpanda-docker-compose.yml up
+docker compose -f redpanda-docker-compose.yml up

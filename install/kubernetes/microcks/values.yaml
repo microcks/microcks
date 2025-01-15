@@ -21,7 +21,7 @@ microcks:
   image:
     registry: quay.io
     repository: microcks/microcks
-    tag: 1.10.1
+    tag: nightly
     digest:
   replicas: 1
 
@@ -102,7 +102,7 @@ keycloak:
   image:
     registry: quay.io
     repository: keycloak/keycloak
-    tag: 24.0.4
+    tag: 26.0.0
     digest:
   adminUsername: admin
   # Unless you uncomment following line, admin password will be randomly generated.
@@ -133,10 +133,20 @@ keycloak:
   # Unless you uncomment following line and set class, persistent volume claim is created
   # with no storage class and relies on cluster default one.
   #storageClassName: my-awesome-class
+
   postgresImage:
     registry:
     repository: library/postgres
     tag: 16.3-alpine
+
+  postgresResources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 150m
+      memory: 192Mi
+
   username: userP
   # Unless you uncomment following line, admin password will be randomly generated.
   # Beware that in case of update, new value will be generated and overwrite existing one.
@@ -193,7 +203,7 @@ features:
     image:
       registry: quay.io
       repository: microcks/microcks-async-minion
-      tag: 1.10.1
+      tag: nightly
       digest:
 
     env:
@@ -361,3 +371,11 @@ commonLabels: {}
 
 # common annotations associated with all resource of this helm chart
 commonAnnotations: {}
+
+# common affinities associated with all resource of this helm chart
+commonAffinities: {}
+
+## Node tolerations for server scheduling to nodes with taints
+## Ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
+##
+commonTolerations: []

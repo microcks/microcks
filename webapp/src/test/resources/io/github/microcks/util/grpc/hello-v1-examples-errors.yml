@@ -1,0 +1,24 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIExamples
+metadata:
+  name: io.github.microcks.grpc.hello.v1.HelloService
+  version: v1
+operations:
+  'greeting':
+    Laurent:
+      request:
+        body:
+          firstname: Laurent
+          lastname: Broudoux
+      response:
+        status: 200
+        body:
+          greeting: Hello Laurent Broudoux !
+    John:
+      request:
+        body: |-
+          {"firstname": "John", "lastname": "Doe"}
+      response:
+        status: 5
+        body:
+          greeting: Unknown user

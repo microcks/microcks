@@ -19,9 +19,9 @@ import io.github.microcks.domain.*;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResponseRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,16 +34,24 @@ import java.util.List;
 public class MessageService {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(MessageService.class);
+   private static final Logger log = LoggerFactory.getLogger(MessageService.class);
 
-   @Autowired
-   private RequestRepository requestRepository;
+   private final RequestRepository requestRepository;
+   private final ResponseRepository responseRepository;
+   private final EventMessageRepository eventMessageRepository;
 
-   @Autowired
-   private ResponseRepository responseRepository;
-
-   @Autowired
-   private EventMessageRepository eventMessageRepository;
+   /**
+    * Create a new MessageService with required dependencies.
+    * @param requestRepository      The repository for requests
+    * @param responseRepository     The repository for responses
+    * @param eventMessageRepository The repository for event messages
+    */
+   public MessageService(RequestRepository requestRepository, ResponseRepository responseRepository,
+         EventMessageRepository eventMessageRepository) {
+      this.requestRepository = requestRepository;
+      this.responseRepository = responseRepository;
+      this.eventMessageRepository = eventMessageRepository;
+   }
 
 
    /**
@@ -132,7 +140,7 @@ public class MessageService {
 
    /** */
    private List<RequestResponsePair> associatePairs(List<Request> requests, List<Response> responses) {
-      List<RequestResponsePair> results = new ArrayList<RequestResponsePair>();
+      List<RequestResponsePair> results = new ArrayList<>();
 
       // Browse them to reassociate them.
       for (Request request : requests) {

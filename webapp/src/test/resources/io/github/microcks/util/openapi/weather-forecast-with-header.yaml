@@ -1,0 +1,98 @@
+---
+openapi: 3.0.2
+info:
+  title: WeatherForecast API
+  version: 1.1.12
+  description: A simple API for demonstrating dispatching capabilities in Microcks
+  contact:
+    name: Laurent Broudoux
+    url: https://github.com/lbroudoux
+    email: laurent.broudoux@gmail.com
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+paths:
+  /forecast:
+    get:
+      operationId: GetForecast
+      summary: Get forecast for region
+      x-microcks-operation:
+        dispatcher: QUERY_HEADER
+        dispatcherRules: region
+      parameters:
+        - name: region
+          description: The region to get forecast for
+          schema:
+            type: string
+          in: header
+          required: true
+          examples:
+            unknown:
+              value: other
+            north:
+              value: north
+            west:
+              value: west
+            east:
+              value: east
+            south:
+              value: south
+      responses:
+        "200":
+          description: Weather forecast for region
+          content:
+            application/json:
+              schema:
+                title: Root Type for Forecast
+                description: A weather forecast for a requested region
+                type: object
+                properties:
+                  region:
+                    type: string
+                  temp:
+                    format: double
+                    type: number
+                  weather:
+                    type: string
+                  visibility:
+                    format: int32
+                    type: integer
+                example:
+                  region: west
+                  temp: 25.2
+                  weather: cloudy
+                  visibility: 1000
+              examples:
+                north:
+                  value:
+                    region: north
+                    temp: -1.5
+                    weather: snowy
+                    visibility: 25
+                west:
+                  value:
+                    region: west
+                    temp: 12.2
+                    weather: rainy
+                    visibility: 300
+                east:
+                  value:
+                    region: east
+                    temp: -6.6
+                    weather: frosty
+                    visibility: 523
+                south:
+                  value:
+                    region: south
+                    temp: 28.3
+                    weather: sunny
+                    visibility: 1500
+        "404":
+          description: Region is unknown
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                unknown:
+                  value: "Region is unknown. Choose in north, west, east or south."

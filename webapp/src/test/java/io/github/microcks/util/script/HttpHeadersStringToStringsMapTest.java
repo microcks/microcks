@@ -42,4 +42,22 @@ class HttpHeadersStringToStringsMapTest {
       assertEquals(value, headers.get("jwtportail"));
       assertEquals(value, headers.get("JwTportail"));
    }
+
+   @Test
+   void testAddSingleValue() {
+      StringToStringsMap headers = new HttpHeadersStringToStringsMap();
+      headers.add("foo", "bar");
+      assertTrue(headers.hasValues("foo"));
+      assertEquals(List.of("bar"), headers.get("foo"));
+   }
+
+   @Test
+   void testAddMultipleValues() {
+      StringToStringsMap headers = new HttpHeadersStringToStringsMap();
+      headers.add("foo", "bar1");
+      headers.add("foo", "bar2");
+      assertTrue(headers.hasValues("foo"));
+      assertEquals(List.of("bar1", "bar2"), headers.get("foo"));
+   }
+
 }

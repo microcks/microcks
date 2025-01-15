@@ -30,6 +30,7 @@ import io.github.microcks.minion.async.consumer.MessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.WebSocketMessageConsumptionTask;
 import io.github.microcks.minion.async.consumer.NATSMessageConsumptionTask;
 import io.github.microcks.util.SchemaMap;
+import io.github.microcks.util.asyncapi.AsyncAPISchemaUtil;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -160,7 +161,7 @@ public class AsyncAPITestManager {
 
          // Validate all the received outputs if any.
          if (outputs != null && !outputs.isEmpty()) {
-            validateConsumedMessage(testCaseReturn, outputs);
+            validateConsumedMessages(testCaseReturn, outputs);
          } else {
             logger.infof("No consumed message to validate, test {%s} will be marked as timed-out",
                   specification.getTestResultId());
@@ -175,7 +176,7 @@ public class AsyncAPITestManager {
        * @param testCaseReturn The TestCase to complete with schema validation results
        * @param outputs        The consumed messages from tested endpoint.
        */
-      private void validateConsumedMessage(TestCaseReturnDTO testCaseReturn, List<ConsumedMessage> outputs) {
+      private void validateConsumedMessages(TestCaseReturnDTO testCaseReturn, List<ConsumedMessage> outputs) {
          JsonNode specificationNode = null;
          try {
             specificationNode = AsyncAPISchemaValidator.getJsonNodeForSchema(specification.getAsyncAPISpec());
@@ -185,14 +186,15 @@ public class AsyncAPITestManager {
          }
 
          // Compute message JSON pointer to navigate the spec.
-         String messagePathPointer = findMessagePathPointer(specificationNode);
+         String messagePathPointer = AsyncAPISchemaUtil.findMessagePathPointer(specificationNode,
+               specification.getOperationName());
 
          // Retrieve expected content type from specification and produce a schema registry snapshot.
          String expectedContentType = null;
          SchemaMap schemaMap = new SchemaMap();
          if (specificationNode != null) {
             expectedContentType = getExpectedContentType(specificationNode, messagePathPointer);
-            if (expectedContentType.contains("avro")) {
+            if (Constants.AVRO_BINARY_CONTENT_TYPES.contains(expectedContentType)) {
                logger.debug("Expected content type is Avro so extracting service resources into a SchemaMap");
                schemaRegistry.updateRegistryForService(specification.getServiceId());
                schemaRegistry.getSchemaEntries(specification.getServiceId()).stream()
@@ -269,29 +271,6 @@ public class AsyncAPITestManager {
             }
             testCaseReturn.addTestReturn(testReturn);
          }
-      }
-
-      /** Define the JSON pointer expression to access the operation messages. */
-      private String findMessagePathPointer(JsonNode specificationNode) {
-         String messagePathPointer = "";
-         String[] operationElements = specification.getOperationName().split(" ");
-
-         String asyncApi = specificationNode.path("asyncapi").asText("2");
-         if (asyncApi.startsWith("3")) {
-            // Assume we have an AsyncAPI v3 document.
-            String operationNamePtr = "/operations/" + operationElements[1].replace("/", "~1");
-            messagePathPointer = operationNamePtr + "/messages";
-         } else {
-            // Assume we have an AsyncAPI v2 document.
-            String operationNamePtr = "/channels/" + operationElements[1].replace("/", "~1");
-            if ("SUBSCRIBE".equals(operationElements[0])) {
-               operationNamePtr += "/subscribe";
-            } else {
-               operationNamePtr += "/publish";
-            }
-            messagePathPointer = operationNamePtr + "/message";
-         }
-         return messagePathPointer;
       }
 
       /** Retrieve the expected content type for an AsyncAPI message. */

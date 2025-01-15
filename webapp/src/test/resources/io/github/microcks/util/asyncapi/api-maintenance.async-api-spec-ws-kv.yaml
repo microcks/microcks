@@ -1,0 +1,170 @@
+---
+asyncapi: 2.0.0
+info:
+  x-application-class: unspecified
+  title: ApiEventService:maintenance
+  x-view: consumer
+  version: 0.0.3
+channels:
+  elevator-co/{resource_region_id}/{equipmentType}/{eventType}/{resourceType}/{resourceId}:
+    bindings:
+      ws:
+        method: POST
+    publish:
+      summary: subscribe to maintenance events from elevators
+      description: |
+        Maintenance events indicate recommended maintenance actions to be carried out within a certain timeframe.
+        Each maintenance event must be confirmed with a status_update message using the same tracking_id indicating action is either received or resolved.
+      operationId: onMaintenance
+      message:
+        $ref: "#/components/messages/maintenance"
+    parameters:
+      resource_region_id:
+        $ref: "#/components/parameters/resource_region_id"
+      equipmentType:
+        $ref: "#/components/parameters/equipmentType"
+      eventType:
+        $ref: "#/components/parameters/eventType"
+      resourceType:
+        $ref: "#/components/parameters/resourceType"
+      resourceId:
+        $ref: "#/components/parameters/resourceId"
+components:
+  schemas:
+    maintenance:
+      type: object
+      title: Elevator Co maintenance event payload
+      required:
+        - header
+        - body
+      properties:
+        header:
+          additionalProperties: false
+          type: object
+          required:
+            - topic
+            - timestamp
+            - tracking_id
+          properties:
+            topic:
+              type: string
+            timestamp:
+              type: string
+            tracking_id:
+              type: string
+              pattern: "^[a-zA-Z0-9-]+$"
+        body:
+          additionalProperties: false
+          type: object
+          required:
+            - component_id
+            - description
+            - timewindow_days
+            - details
+          properties:
+            component_id:
+              title: component_id that needs maintenance
+              type: string
+            timewindow_days:
+              title: maintenance time window in days
+              type: integer
+            description:
+              title: maintenance description
+              type: string
+            details:
+              title: maintenance details
+              type: object
+            probability_of_failure_pct:
+              title: probability of fault / urgency of maintenace in %
+              type: integer
+  messages:
+    maintenance:
+      payload:
+        "$ref": "#/components/schemas/maintenance"
+      schemaFormat: application/vnd.aai.asyncapi+json;version=2.0.0
+      contentType: application/json
+      examples:
+        - misalignment:
+            payload:
+              header:
+                topic: apim/elevator-co/api/V1/json/fr/elevator/maintenace/elev-make-1/elevator-id-1
+                timestamp: 2021-02-15-13:25:27-UTC
+                tracking_id: 4fd44ed1-1ba9-4f53-87a2-d4f4385c09d5
+              body:
+                component_id: ABC-1784
+                description: misalignment car to floor
+                timewindow_days: 24
+                probability_of_failure_pct: 90
+                details:
+                  reasons:
+                    - misalignment car to floor > 8mm
+                    - avg journeys / day > 25
+        - doorfailure:
+            payload:
+              header:
+                topic: apim/elevator-co/api/V1/json/fr/elevator/maintenace/elev-make-1/elevator-id-1
+                timestamp: 2021-03-15-16:25:27-UTC
+                tracking_id: 1fd11ed1-1ba1-4f53-87a2-d4f4385c11d1
+              body:
+                component_id: XYZ-1958
+                description: head stuck in door
+                timewindow_days: 5
+                probability_of_failure_pct: 99
+                details:
+                  reasons:
+                    - head stuck in door
+                    - instructions unclear
+  parameters:
+    resource_region_id:
+      schema:
+        type: string
+        enum:
+          - fr
+          - de
+        examples:
+          - misalignment:
+              value: fr
+          - doorfailure:
+              value: de
+    equipmentType:
+      schema:
+        type: string
+        enum:
+          - elevator
+        examples:
+          - 'misalignment:elevator'
+          - 'doorfailure:elevator'
+    eventType:
+      schema:
+        type: string
+        enum:
+          - maintenace
+        examples:
+          - 'misalignment:maintenance'
+          - 'doorfailure:maintenance'
+    resourceType:
+      schema:
+        type: string
+        enum:
+          - elev-make-1
+          - elev-make-2
+        examples:
+          - 'misalignment:elev-make-1'
+          - 'doorfailure:elev-make-2'
+    resourceId:
+      schema:
+        type: string
+        pattern: "^[a-zA-Z0-9-]+$"
+        examples:
+          - 'misalignment:abc4711'
+          - 'doorfailure:xyz0815'
+  securitySchemes:
+    userPassword:
+      type: userPassword
+      description: Username Password
+    httpBasic:
+      type: http
+      description: HTTP Basic
+      scheme: basic
+
+

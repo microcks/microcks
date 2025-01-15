@@ -34,8 +34,9 @@
             "scripts": [
               "./node_modules/jquery/dist/jquery.min.js",
               "./node_modules/bootstrap/dist/js/bootstrap.min.js",
-              "./node_modules/patternfly/dist/js/patternfly.min.js",
-              "./node_modules/keycloak-js/dist/keycloak.min.js"
+              "./node_modules/patternfly/dist/js/patternfly.min.js"
+              //"./node_modules/keycloak-js/dist/keycloak.min.js"
+              //"src/lib/keycloak.js"   // If included, jQuery is no longer working!?
             ]
           },
           "configurations": {

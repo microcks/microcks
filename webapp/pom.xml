@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.10.2-SNAPSHOT</version>
+    <version>1.11.0-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -15,9 +15,7 @@
     <multi-project.rootdir>..</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
-    <java.version>17</java.version>
-    <maven.compiler.source>17</maven.compiler.source>
-    <maven.compiler.target>17</maven.compiler.target>
+    <java.version>21</java.version>
     <bouncycastle.version>1.78</bouncycastle.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <mongo-java-server.version>1.45.0</mongo-java-server.version>
@@ -25,12 +23,12 @@
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <commons-io.version>2.16.1</commons-io.version>
     <commons-codec.version>1.17.1</commons-codec.version>
-    <groovy.version>4.0.13</groovy.version>
-    <protobuf.version>3.25.2</protobuf.version>
+    <groovy.version>4.0.24</groovy.version>
+    <protobuf.version>3.25.5</protobuf.version>
     <grpc.version>1.61.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.14.0</openai-gpt3-java.version>
-    <opentelemetry.version>1.32.0</opentelemetry.version>
+    <opentelemetry.version>1.33.6</opentelemetry.version>
   </properties>
 
   <dependencyManagement>
@@ -347,6 +345,7 @@
               <includes>
                 <include>**/*IT.java</include>
               </includes>
+              <reuseForks>false</reuseForks>
             </configuration>
           </plugin>
         </plugins>
@@ -365,6 +364,7 @@
                 <include>**/*Test.java</include>
                 <include>**/*IT.java</include>
               </includes>
+              <reuseForks>false</reuseForks>
             </configuration>
           </plugin>
         </plugins>

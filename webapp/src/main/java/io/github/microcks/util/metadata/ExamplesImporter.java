@@ -223,6 +223,8 @@ public class ExamplesImporter implements MockRepositoryImporter {
          // Initialize and complete the response.
          Response response = new Response();
          response.setName(exampleName);
+         // Default response status
+         response.setStatus("200");
 
          if (responseNode.has(HEADERS_NODE)) {
             completeWithHeaders(response, responseNode.get(HEADERS_NODE));

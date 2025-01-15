@@ -199,6 +199,14 @@ spec:
           secret:
             secretName: "{{ .Values.microcks.customSecretRef.secret }}"
         {{- end }}
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -269,6 +277,14 @@ spec:
       restartPolicy: Always
       terminationGracePeriodSeconds: 30
       dnsPolicy: ClusterFirst
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- if and .Values.mongodb.install }}
 ---
 apiVersion: apps/v1
@@ -307,9 +323,9 @@ spec:
     spec:
       {{- if not (.Capabilities.APIVersions.Has "route.openshift.io/v1/Route") }}
       securityContext:
-        runAsUser: 184
-        runAsGroup: 184
-        fsGroup: 184
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
       {{- end }}
       containers:
       - name: mongodb
@@ -383,6 +399,14 @@ spec:
           name: "{{ .Values.appName }}-mongodb-init"
       restartPolicy: Always
       dnsPolicy: ClusterFirst
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- end }}
 {{- if and .Values.keycloak.enabled .Values.keycloak.install }}
 ---
@@ -440,7 +464,7 @@ spec:
         - '--db-password=$(KC_DB_PASSWORD)'
         {{- if hasKey .Values.keycloak "privateUrl" }}
         - '--hostname={{ .Values.keycloak.url }}'
-        - '--hostname-strict-backchannel=false'
+        - '--hostname-backchannel-dynamic=true'
         {{- else }}
         - '--hostname={{ .Values.keycloak.url }}'
         {{- end }}
@@ -504,7 +528,7 @@ spec:
         livenessProbe:
           httpGet:
             path: "/health/live"
-            port: 8080
+            port: 9000
             scheme: HTTP
           initialDelaySeconds: 30
           timeoutSeconds: 2
@@ -514,7 +538,7 @@ spec:
         readinessProbe:
           httpGet:
             path: "/health/ready"
-            port: 8080
+            port: 9000
             scheme: HTTP
           initialDelaySeconds: 10
           timeoutSeconds: 2
@@ -532,6 +556,14 @@ spec:
           name: "{{ .Values.appName }}-keycloak-config"
       restartPolicy: Always
       dnsPolicy: ClusterFirst
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -589,6 +621,8 @@ spec:
           initialDelaySeconds: 30
           tcpSocket:
             port: 5432
+        resources:
+          {{- toYaml .Values.keycloak.postgresResources | nindent 10 }}
         env:
         - name: POSTGRES_USER
           valueFrom:
@@ -617,6 +651,14 @@ spec:
         emptyDir:
           medium: ''
         {{- end }}
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- end }}
 {{- if and .Values.features.async.enabled }}
 ---
@@ -833,4 +875,12 @@ spec:
           {{- end }}
           {{- end }}
         {{- end }}
+      {{- if .Values.commonAffinities }}
+      affinity:
+        {{- .Values.commonAffinities | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if .Values.commonTolerations }}
+      tolerations:
+        {{- .Values.commonTolerations | toYaml | nindent 8 }}
+      {{- end }}
 {{- end }}

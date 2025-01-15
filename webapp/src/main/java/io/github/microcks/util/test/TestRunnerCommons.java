@@ -16,8 +16,10 @@
 package io.github.microcks.util.test;
 
 import io.github.microcks.domain.Header;
+import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.Request;
+import io.github.microcks.domain.TestResult;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.el.TemplateEngine;
 import io.github.microcks.util.el.TemplateEngineFactory;
@@ -26,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -76,5 +79,34 @@ public class TestRunnerCommons {
          }
       }
       return request.getContent();
+   }
+
+   /**
+    * Construct set of headers given specification of request, operations and testResult. TestResult operation-specific
+    * headers overrule testResult global headers which overrule request headers.
+    * @param testResult The configured test run containing global and operation-specific headers.
+    * @param request    The example request with headers.
+    * @param operation  The operation to be run.
+    * @return A set of headers for the given operation
+    */
+   public static Set<Header> collectHeaders(TestResult testResult, Request request, Operation operation) {
+      Set<Header> headers = new HashSet<>();
+
+      // Set headers to request if any. Start with those coming from request itself.
+      if (request.getHeaders() != null) {
+         headers.addAll(request.getHeaders());
+      }
+
+      // Add or override existing headers with test specific ones for operation and globals.
+      if (testResult.getOperationsHeaders() != null) {
+         if (testResult.getOperationsHeaders().getGlobals() != null) {
+            headers.addAll(testResult.getOperationsHeaders().getGlobals());
+         }
+         if (testResult.getOperationsHeaders().get(operation.getName()) != null) {
+            headers.addAll(testResult.getOperationsHeaders().get(operation.getName()));
+         }
+      }
+
+      return headers;
    }
 }

@@ -1,7 +1,7 @@
 <img src="./microcks-banner.png" width="600"> 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
-[![Container](https://img.shields.io/badge/dynamic/json?color=blueviolet&logo=docker&style=for-the-badge&label=Quay.io&query=tags[0].name&url=https://quay.io/api/v1/repository/microcks/microcks/tag/?limit=10&page=1&onlyActiveTags=true)](https://quay.io/repository/microcks/microcks?tab=tags)
+[![Container](https://img.shields.io/badge/dynamic/json?color=blueviolet&logo=docker&style=for-the-badge&label=Quay.io&query=tags[1].name&url=https://quay.io/api/v1/repository/microcks/microcks/tag/?limit=10&page=1&onlyActiveTags=true)](https://quay.io/repository/microcks/microcks?tab=tags)
 [![Version](https://img.shields.io/maven-central/v/io.github.microcks/microcks?color=blue&style=for-the-badge)]((https://search.maven.org/artifact/io.github.microcks/microcks))
 [![License](https://img.shields.io/github/license/microcks/microcks?style=for-the-badge&logo=apache)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Project Chat](https://img.shields.io/badge/discord-microcks-pink.svg?color=7289da&style=for-the-badge&logo=discord)](https://microcks.io/discord-invite/)
@@ -43,6 +43,10 @@ The current development version is `1.11.0-SNAPSHOT` on branch `1.11.x`.
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_shield&issueType=security)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fmicrocks%2Fmicrocks?ref=badge_small)
 
+#### Signature, Provenance, SBOM
+
+[![Static Badge](https://img.shields.io/badge/supply_chain-documentation-blue?logo=securityscorecard&label=Supply%20Chain&link=https%3A%2F%2Fmicrocks.io%2Fdocumentation%2Freferences%2Fcontainer-images%23software-supply-chain-security)](https://microcks.io/documentation/references/container-images#software-supply-chain-security)
+
 #### OpenSSF best practices
 
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/7513/badge)](https://bestpractices.coreinfrastructure.org/projects/7513)
@@ -55,8 +59,8 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch   | Container images tags |
 | ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.10.1`          | `master` | `1.10.1`, `latest`    |
-| Dev         | `1.11.0-SNAPSHOT` | `1.11.x` | `nightly`             |
+| Stable      | `1.11.0`          | `master` | `1.11.0`, `latest`    |
+| Dev         | `1.11.1-SNAPSHOT` | `1.11.x` | `nightly`             |
 | Maintenance | `1.10.2-SNAPSHOT` | `1.10.x` | `maintenance`         |
 
 

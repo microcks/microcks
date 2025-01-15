@@ -27,15 +27,14 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import java.util.Arrays;
 
-@ApplicationScoped
 /**
  * This bean is responsible for listening the incoming <code>ServiceViewChangeEvent</code> on
  * <code>microcks-services-updates</code> Kafka topic and updating the AsyncMockRepository accordingly.
  * @author laurent
  */
+@ApplicationScoped
 public class AsyncMockDefinitionUpdater {
 
    /** Get a JBoss logging logger. */
@@ -47,11 +46,18 @@ public class AsyncMockDefinitionUpdater {
    @ConfigProperty(name = "minion.restricted-frequencies")
    Long[] restrictedFrequencies;
 
-   @Inject
-   AsyncMockRepository mockRepository;
+   final AsyncMockRepository mockRepository;
+   final SchemaRegistry schemaRegistry;
 
-   @Inject
-   SchemaRegistry schemaRegistry;
+   /**
+    * Create a new AsyncMockDefinitionUpdater with required dependencies.
+    * @param mockRepository The repository for mock definitions
+    * @param schemaRegistry The registry for schema definitions
+    */
+   public AsyncMockDefinitionUpdater(AsyncMockRepository mockRepository, SchemaRegistry schemaRegistry) {
+      this.mockRepository = mockRepository;
+      this.schemaRegistry = schemaRegistry;
+   }
 
    @Incoming("microcks-services-updates")
    public void onServiceUpdate(ServiceViewChangeEvent serviceViewChangeEvent) {

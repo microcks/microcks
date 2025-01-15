@@ -76,6 +76,7 @@ export class ServiceDetailPageComponent implements OnInit {
   selectedOperation: Operation;
   operationsListConfig: ListConfig;
   notifications: Notification[];
+  urlType: string = 'raw';
 
   constructor(
     private servicesSvc: ServicesService,
@@ -421,7 +422,11 @@ export class ServiceDetailPageComponent implements OnInit {
     }
 
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
-      result += '/rest/';
+      if (this.urlType === 'raw') {
+        result += '/rest/';
+      } else {
+        result += '/rest-valid/';
+      }
       result +=
         this.encodeUrl(this.resolvedServiceView.service.name) +
         '/' +
@@ -459,7 +464,7 @@ export class ServiceDetailPageComponent implements OnInit {
         operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, (_, p1) => {
           return parts[p1];
         });
-        if (paramsCriteria != null) {
+        if (paramsCriteria != null && operation.dispatcher != 'QUERY_HEADER') {
           operationName += '?' + paramsCriteria.replace(/\?/g, '&');
         }
       }
@@ -490,6 +495,9 @@ export class ServiceDetailPageComponent implements OnInit {
         this.encodeUrl(this.resolvedServiceView.service.name) +
         '/' +
         this.resolvedServiceView.service.version;
+      if (this.urlType === 'valid') {
+        result += '?validate=true';
+      }
     } else if (
       this.resolvedServiceView.service.type === ServiceType.GENERIC_REST
     ) {
@@ -655,7 +663,7 @@ export class ServiceDetailPageComponent implements OnInit {
     let cmd;
 
     if (this.resolvedServiceView.service.type != ServiceType.GRPC) {
-      let verb = operation.method.toUpperCase();
+      let verb = operation.method != undefined ? operation.method.toUpperCase() : 'POST';
       if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
         verb = 'POST';
       }
@@ -679,6 +687,8 @@ export class ServiceDetailPageComponent implements OnInit {
           exchange.request.content.startsWith('{')
         ) {
           cmd += ' -H \'Content-Type: application/json\'';
+        } else if (exchange.request.content.startsWith('<')) {
+          cmd += ' -H \'Content-Type: application/xml\'';
         }
       }
     } else {

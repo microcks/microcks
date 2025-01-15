@@ -20,7 +20,6 @@ import io.github.microcks.service.MetricsService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -33,10 +32,17 @@ import org.springframework.stereotype.Component;
 public class TestConformanceMetricUpdater implements ApplicationListener<TestCompletionEvent> {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(TestConformanceMetricUpdater.class);
+   private static final Logger log = LoggerFactory.getLogger(TestConformanceMetricUpdater.class);
 
-   @Autowired
-   private MetricsService metricsService;
+   private final MetricsService metricsService;
+
+   /**
+    * Create a new instance of TestConformanceMetricUpdater with required dependencies.
+    * @param metricsService The service for metrics operations
+    */
+   public TestConformanceMetricUpdater(MetricsService metricsService) {
+      this.metricsService = metricsService;
+   }
 
    @Override
    @Async

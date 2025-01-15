@@ -1,0 +1,18 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIMetadata
+metadata:
+  name: API Pastry - 2.0
+  version: 2.0.0
+operations:
+  'GET /pastry/{name}':
+    delay: 100
+    parameterConstraints:
+      - name: Authorization
+        in: header
+        required: true
+        recopy: false
+        mustMatchRegexp: "^Bearer\\s[a-zA-Z0-9\\._-]+$"
+      - name: x-request-id
+        in: header
+        required: true
+        recopy: true

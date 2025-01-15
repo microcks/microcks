@@ -25,6 +25,7 @@ import { ConfigService } from 'src/app/services/config.service';
 @Component({
   selector: 'app-exchanges-tabset',
   templateUrl: './exchanges-tabset.component.html',
+  styleUrls: ['./exchanges-tabset.component.css'],
 })
 export class ExchangesTabsetComponent {
 
@@ -37,6 +38,7 @@ export class ExchangesTabsetComponent {
   @Input() public resolvedServiceView: ServiceView;
   @Input() public notificationService: NotificationService;
   @Input() public config: ConfigService;
+  @Input() public urlType: string;
 
   @Input() public isEventTypeService: () => void;
   @Input() public getExchangeName: () => void;
