@@ -117,6 +117,57 @@
   },
   {
     "condition": {
+      "typeReachable": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueue"
+    },
+    "name": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueue",
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "queryAllPublicConstructors": true,
+    "queryAllPublicFields": true,
+    "allDeclaredClasses": true,
+    "allPublicClasses": true,
+    "allRecordComponents": true,
+    "allNestMembers": true,
+    "allSigners": true,
+    "allPermittedSubclasses": true
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerIndexField"
+    },
+    "name": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerIndexField",
+    "fields": [
+      {
+        "name": "producerIndex"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueConsumerIndexField"
+    },
+    "name": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueConsumerIndexField",
+    "fields": [
+      {
+        "name": "consumerIndex"
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerLimitField"
+    },
+    "name": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerLimitField",
+    "fields": [
+      {
+        "name": "producerLimit"
+      }
+    ]
+  },
+  {
+    "condition": {
       "typeReachable": "io.grpc.netty.shaded.io.netty.buffer.AbstractByteBufAllocator"
     },
     "name": "io.grpc.netty.shaded.io.netty.buffer.AbstractByteBufAllocator",
