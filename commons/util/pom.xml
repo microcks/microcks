@@ -70,6 +70,14 @@
       <artifactId>json-schema-validator</artifactId>
       <version>2.2.14</version>
     </dependency>
+
+    <!-- import for networknt/json-schema-validator -->
+    <dependency>
+      <groupId>com.networknt</groupId>
+      <artifactId>json-schema-validator</artifactId>
+      <version>1.5.4</version>
+    </dependency>
+
     <dependency>
       <groupId>com.github.java-json-tools</groupId>
       <artifactId>jackson-coreutils</artifactId>

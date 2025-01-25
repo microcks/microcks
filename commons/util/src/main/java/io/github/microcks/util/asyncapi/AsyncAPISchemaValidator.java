@@ -16,7 +16,7 @@
 package io.github.microcks.util.asyncapi;
 
 import io.github.microcks.util.AvroUtil;
-import io.github.microcks.util.JsonSchemaValidator;
+import io.github.microcks.util.JsonSchemaValidatorNetworknt;
 import io.github.microcks.util.SchemaMap;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -39,7 +38,8 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import static io.github.microcks.util.JsonSchemaValidator.*;
+//import static io.github.microcks.util.JsonSchemaValidator.*;
+import static io.github.microcks.util.JsonSchemaValidatorNetworknt.*;
 import static io.github.microcks.util.asyncapi.AsyncAPISchemaUtil.*;
 
 /**
@@ -93,7 +93,7 @@ public class AsyncAPISchemaValidator {
     * @throws IOException if json string representations cannot be parsed
     */
    public static List<String> validateJson(String schemaText, String jsonText) throws IOException {
-      return validateJson(getJsonNodeForSchema(schemaText), JsonSchemaValidator.getJsonNode(jsonText));
+      return validateJson(getJsonNodeForSchema(schemaText), JsonSchemaValidatorNetworknt.getJsonNode(jsonText));
    }
 
    /**
@@ -124,15 +124,7 @@ public class AsyncAPISchemaValidator {
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
       schemaNode = convertAsyncAPISchemaToJsonSchema(schemaNode);
 
-      try {
-         return JsonSchemaValidator.validateJson(schemaNode, jsonNode, namespace);
-      } catch (ProcessingException e) {
-         log.debug("Got a ProcessingException while trying to interpret schemaNode as a real schema");
-         List<String> errors = new ArrayList<>();
-         errors.add("schemaNode does not seem to represent a valid AsyncAPI schema");
-         errors.add("root cause: " + e.getMessage());
-         return errors;
-      }
+      return JsonSchemaValidatorNetworknt.validateJson(schemaNode, jsonNode, namespace);
    }
 
    /**
@@ -280,7 +272,7 @@ public class AsyncAPISchemaValidator {
     * @throws IOException if json string representation cannot be parsed
     */
    public static JsonNode getJsonNode(String jsonText) throws IOException {
-      return JsonSchemaValidator.getJsonNode(jsonText);
+      return JsonSchemaValidatorNetworknt.getJsonNode(jsonText);
    }
 
    /**
