@@ -89,7 +89,7 @@ public class JsonSchemaValidatorNetworknt {
          }
       }
       return errors;
-   }cl
+   }
 
    public static JsonNode getJsonNode(String jsonText) throws IOException {
       return mapper.readTree(jsonText);
