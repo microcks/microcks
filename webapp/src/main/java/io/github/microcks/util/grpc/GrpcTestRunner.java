@@ -307,37 +307,4 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
       return HttpMethod.POST;
    }
 
-   private ManagedChannel setupChannel(String endpointUrl) throws IOException {
-      URL endpoint = new URL(endpointUrl);
-
-      if (endpointUrl.startsWith("https://") || endpoint.getPort() == 443) {
-         TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
-         if (secret != null && secret.getCaCertPem() != null) {
-            // Install a trust manager with custom CA certificate.
-            tlsBuilder.trustManager(new ByteArrayInputStream(secret.getCaCertPem().getBytes(StandardCharsets.UTF_8)));
-         } else {
-            // Install a trust manager that accepts everything and does not validate certificate chains.
-            tlsBuilder.trustManager(new X509TrustManager() {
-               public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                  return null;
-               }
-
-               public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                  // Accept everything.
-               }
-
-               public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                  // Accept everything.
-               }
-            });
-         }
-         // Build a Channel using the TLS Builder.
-         return Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), tlsBuilder.build()).build();
-      }
-
-      // Build a simple Channel using no creds (now default to plain text so usePlainText() is no longer necessary).
-      return Grpc
-            .newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), InsecureChannelCredentials.create())
-            .build();
-   }
 }

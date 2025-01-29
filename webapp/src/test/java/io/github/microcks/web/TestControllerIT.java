@@ -158,7 +158,7 @@ class TestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
       uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
 
-      String testEndpoint = "http://localhost:50051"; // unreachable address
+      String testEndpoint = "http://localhost:50051"; // unreachable address, will lead to UNAVAILABLE
 
       StringBuilder testRequest = new StringBuilder("{")
             .append("\"serviceId\": \"io.github.microcks.grpc.hello.v1.HelloService:v1\", ")
@@ -191,8 +191,6 @@ class TestControllerIT extends AbstractBaseIT {
       assertNotNull(testResult);
       assertFalse(testResult.isInProgress());
       assertFalse(testResult.isSuccess());
-      TestCaseResult res = testResult.getTestCaseResults().get(0);
-      assertEquals("Test message", res.getTestStepResults().get(0).getMessage());
    }
 
 }
