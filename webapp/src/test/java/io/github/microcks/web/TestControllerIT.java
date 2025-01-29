@@ -17,7 +17,6 @@
 package io.github.microcks.web;
 
 import io.github.microcks.domain.RequestResponsePair;
-import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.domain.TestResult;
 
 import org.junit.jupiter.api.Test;
