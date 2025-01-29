@@ -45,7 +45,10 @@ import io.grpc.InsecureChannelCredentials;
 import io.grpc.ManagedChannel;
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.TlsChannelCredentials;
+import io.grpc.Status.Code;
 import io.grpc.stub.ClientCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -221,6 +224,9 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          // Reset status code, message and request each time.
          int code = TestReturn.SUCCESS_CODE;
          String message = null;
+         String contentResponse = null;
+         String statusCode = null;
+
          reqBuilder.clear();
          resBuilder.clear();
 
@@ -235,37 +241,50 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
             callOptions = callOptions
                   .withCallCredentials(new TokenCallCredentials(secret.getToken(), secret.getTokenHeader()));
          }
-
-         // Actually execute request.
-         long startTime = System.currentTimeMillis();
-         byte[] responseBytes = ClientCalls.blockingUnaryCall(channel,
-               GrpcUtil.buildGenericUnaryMethodDescriptor(fullMethodName), callOptions, requestBytes);
-         long duration = System.currentTimeMillis() - startTime;
-
          // Add all headers as customOptions to callOptions
          Set<Header> headers = TestRunnerCommons.collectHeaders(testResult, request, operation);
          callOptions = callOptions.withOption(METADATA_CUSTOM_CALL_OPTION, convertHeadersToMetadata(headers));
 
+         // Actually execute request.
+         long startTime = System.currentTimeMillis();
+         byte[] responseBytes = null;
+         try {
+            responseBytes = ClientCalls.blockingUnaryCall(channel,
+                  GrpcUtil.buildGenericUnaryMethodDescriptor(fullMethodName), callOptions, requestBytes);
+         } catch (StatusRuntimeException sre) {
+            log.error("StatusRuntimeException while executing grpc request {} on {}", fullMethodName, endpointUrl, sre);
+            code = TestReturn.FAILURE_CODE;
+            Status status = sre.getStatus();
+            statusCode = status.getCode().name();
+            message = String.format("Request failed with %s and description %s", statusCode, status.getDescription());
+         }
+         long duration = System.currentTimeMillis() - startTime;
+
+         // If still in success, validate and parse response
+         if (code == TestReturn.SUCCESS_CODE) {
+            statusCode = Code.OK.name();
+            contentResponse = new String(responseBytes, StandardCharsets.UTF_8);
+
+            try {
+               // Validate incoming message parsing a DynamicMessage.
+               DynamicMessage respMsg = DynamicMessage.parseFrom(md.getOutputType(), responseBytes);
+
+               // Now update response content with readable content.
+               contentResponse = printer.print(respMsg);
+            } catch (InvalidProtocolBufferException ipbe) {
+               log.error("Received bytes cannot be transformed in {}", md.getOutputType().getFullName());
+               code = TestReturn.FAILURE_CODE;
+               message = "Received bytes cannot be transformed in " + md.getOutputType().getFullName();
+            }
+         }
+
          // Create a Response object for returning.
          Response response = new Response();
-         response.setStatus("200");
+         response.setStatus(statusCode);
          response.setMediaType("application/x-protobuf");
-         response.setContent(new String(responseBytes, StandardCharsets.UTF_8));
+         response.setContent(contentResponse);
 
-         try {
-            // Validate incoming message parsing a DynamicMessage.
-            DynamicMessage respMsg = DynamicMessage.parseFrom(md.getOutputType(), responseBytes);
-
-            // Now update response content with readable content.
-            String respJson = printer.print(respMsg);
-            response.setContent(respJson);
-
-            results.add(new TestReturn(code, duration, message, request, response));
-         } catch (InvalidProtocolBufferException ipbe) {
-            log.error("Received bytes cannot be transformed in {}", md.getOutputType().getFullName());
-            results.add(new TestReturn(TestReturn.FAILURE_CODE, duration,
-                  "Received bytes cannot be transformed in " + md.getOutputType().getFullName(), request, response));
-         }
+         results.add(new TestReturn(code, duration, message, request, response));
       }
       return results;
    }
@@ -286,5 +305,39 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
    @Override
    public HttpMethod buildMethod(String method) {
       return HttpMethod.POST;
+   }
+
+   private ManagedChannel setupChannel(String endpointUrl) throws IOException {
+      URL endpoint = new URL(endpointUrl);
+
+      if (endpointUrl.startsWith("https://") || endpoint.getPort() == 443) {
+         TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
+         if (secret != null && secret.getCaCertPem() != null) {
+            // Install a trust manager with custom CA certificate.
+            tlsBuilder.trustManager(new ByteArrayInputStream(secret.getCaCertPem().getBytes(StandardCharsets.UTF_8)));
+         } else {
+            // Install a trust manager that accepts everything and does not validate certificate chains.
+            tlsBuilder.trustManager(new X509TrustManager() {
+               public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                  return null;
+               }
+
+               public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                  // Accept everything.
+               }
+
+               public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                  // Accept everything.
+               }
+            });
+         }
+         // Build a Channel using the TLS Builder.
+         return Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), tlsBuilder.build()).build();
+      }
+
+      // Build a simple Channel using no creds (now default to plain text so usePlainText() is no longer necessary).
+      return Grpc
+            .newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), InsecureChannelCredentials.create())
+            .build();
    }
 }
