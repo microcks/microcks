@@ -149,4 +149,47 @@ class TestControllerIT extends AbstractBaseIT {
          assertTrue(pair.getRequest().getName().equals("Laurent") || pair.getRequest().getName().equals("Philippe"));
       }
    }
+
+   @Test
+   void testGRPCTestingFailing() {
+      // Upload GRPC reference artifact.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto", true);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.postman.json", false);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/grpc/HelloService.metadata.yml", false);
+
+      String testEndpoint = "http://localhost:50051"; // unreachable address, will lead to UNAVAILABLE
+
+      StringBuilder testRequest = new StringBuilder("{")
+            .append("\"serviceId\": \"io.github.microcks.grpc.hello.v1.HelloService:v1\", ")
+            .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ")
+            .append("\"runnerType\": \"GRPC_PROTOBUF\", ").append("\"timeout\": 2000").append("}");
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+
+      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatusCode().value());
+
+      TestResult testResult = response.getBody();
+      assertNotNull(testResult);
+      assertNotNull(testResult.getId());
+      assertTrue(testResult.isInProgress());
+      assertEquals(testEndpoint, testResult.getTestedEndpoint());
+
+      // Wait till timeout and re-fetch the result.
+      try {
+         Thread.sleep(2000);
+      } catch (InterruptedException e) {
+         throw new RuntimeException(e);
+      }
+
+      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatusCode().value());
+      testResult = response.getBody();
+      assertNotNull(testResult);
+      assertFalse(testResult.isInProgress());
+      assertFalse(testResult.isSuccess());
+   }
+
 }
