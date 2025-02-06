@@ -18,6 +18,7 @@ package io.github.microcks.minion.async;
 import io.github.microcks.minion.async.producer.ProducerManager;
 
 import io.quarkus.arc.Arc;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import io.quarkus.scheduler.Scheduled;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -92,6 +93,7 @@ public class ProducerScheduler {
    }
 
    /** Inner class implementing Quartz Job and deleting job execution to ProducerManager bean. */
+   @RegisterForReflection
    public static class AsyncMockProducerJob implements Job {
       public void execute(JobExecutionContext context) throws JobExecutionException {
          Long frequency = context.getJobDetail().getJobDataMap().getLong("frequency");

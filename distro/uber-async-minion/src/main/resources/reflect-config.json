@@ -1,0 +1,198 @@
+[
+  {
+    "name":"com.github.fge.jackson.jsonpointer.JsonPointerMessages",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.core.messages.JsonSchemaCoreMessageBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.core.messages.JsonSchemaSyntaxMessageBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.AdditionalItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.AdditionalPropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.DependenciesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.EnumValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MaxItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MaxLengthValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MaximumValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MinItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MinLengthValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.MinimumValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.PatternValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.common.UniqueItemsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.DisallowKeywordValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.DivisibleByValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.DraftV3TypeValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.ExtendsValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv3.PropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.AllOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.AnyOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.DraftV4TypeValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.MaxPropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.MinPropertiesValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.MultipleOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.NotValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.OneOfValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.keyword.validator.draftv4.RequiredKeywordValidator",
+    "methods":[{"name":"<init>","parameterTypes":["com.fasterxml.jackson.databind.JsonNode"] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.messages.JsonSchemaConfigurationBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.github.fge.jsonschema.messages.JsonSchemaValidationBundle",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name": "org.eclipse.paho.client.mqttv3.logging.JSR47Logger",
+    "condition": {
+      "typeReachable": "org.eclipse.paho.client.mqttv3.logging.LoggerFactory"
+    },
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "org.eclipse.paho.client.mqttv3.internal.TCPNetworkModuleFactory",
+    "queryAllDeclaredConstructors" : true,
+    "queryAllPublicConstructors" : true,
+    "queryAllDeclaredMethods" : true,
+    "queryAllPublicMethods" : true,
+    "allDeclaredClasses" : true,
+    "allPublicClasses" : true,
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true
+  },
+  {
+    "name": "org.eclipse.paho.client.mqttv3.internal.TCPNetworkModule",
+    "queryAllDeclaredConstructors" : true,
+    "queryAllPublicConstructors" : true,
+    "queryAllDeclaredMethods" : true,
+    "queryAllPublicMethods" : true,
+    "allDeclaredClasses" : true,
+    "allPublicClasses" : true,
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true
+  },
+  {
+    "name": "org.eclipse.paho.client.mqttv3.internal.SSLNetworkModuleFactory",
+    "queryAllDeclaredConstructors" : true,
+    "queryAllPublicConstructors" : true,
+    "queryAllDeclaredMethods" : true,
+    "queryAllPublicMethods" : true,
+    "allDeclaredClasses" : true,
+    "allPublicClasses" : true,
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true
+  },
+  {
+    "name": "org.eclipse.paho.client.mqttv3.internal.SSLNetworkModule",
+    "queryAllDeclaredConstructors" : true,
+    "queryAllPublicConstructors" : true,
+    "queryAllDeclaredMethods" : true,
+    "queryAllPublicMethods" : true,
+    "allDeclaredClasses" : true,
+    "allPublicClasses" : true,
+    "allDeclaredConstructors" : true,
+    "allPublicConstructors" : true,
+    "allDeclaredMethods" : true,
+    "allPublicMethods" : true,
+    "allDeclaredFields" : true,
+    "allPublicFields" : true
+  }
+]

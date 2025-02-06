@@ -87,6 +87,7 @@ jobs:
           fi
 
       - name: Install Cosign
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         uses: sigstore/cosign-installer@v3.7.0
 
       - name: Set up QEMU
@@ -255,8 +256,8 @@ jobs:
       package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
 
   call-package-native:
-    needs: build-verify-package
     if: github.repository_owner == 'microcks' && ${{ needs.build-verify-package.outputs.package-image }} == 'true'
+    needs: build-verify-package
     permissions:
       contents: read
       id-token: write # needed for signing the images with GitHub OIDC Token
