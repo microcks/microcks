@@ -63,6 +63,7 @@ export class OperationOverridePageComponent implements OnInit {
       { value: 'URI_PARAMS', label: 'URI PARAMS' },
       { value: 'URI_PARTS', label: 'URI PARTS' },
       { value: 'URI_ELEMENTS', label: 'URI ELEMENTS' },
+      { value: 'QUERY_HEADER', label: 'QUERY HEADER' },
       { value: 'SCRIPT', label: 'SCRIPT' },
       { value: 'JSON_BODY', label: 'JSON BODY' },
       { value: 'PROXY', label: 'PROXY' },

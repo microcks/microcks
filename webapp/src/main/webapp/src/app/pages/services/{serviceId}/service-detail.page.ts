@@ -464,7 +464,7 @@ export class ServiceDetailPageComponent implements OnInit {
         operationName = operationName.replace(/:([a-zA-Z0-9-_]+)/g, (_, p1) => {
           return parts[p1];
         });
-        if (paramsCriteria != null) {
+        if (paramsCriteria != null && operation.dispatcher != 'QUERY_HEADER') {
           operationName += '?' + paramsCriteria.replace(/\?/g, '&');
         }
       }

@@ -12,20 +12,20 @@ info:
     name: MIT License
     url: https://opensource.org/licenses/MIT
 paths:
-  /pastry/{name}:
+  /pastry:
     summary: Global operations on pastries
     get:
       x-microcks-operation:
         dispatcher: PROXY_FALLBACK
         dispatcherRules: |
           {
-            "dispatcher": "URI_PARTS",
+            "dispatcher": "URI_PARAMS",
             "dispatcherRules": "name",
             "proxyUrl": "http://localhost/rest/pastry-real/1.0.0/"
           }
       parameters:
         - name: name
-          in: path
+          in: query
           schema:
             type: string
           examples:

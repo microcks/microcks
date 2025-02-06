@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4-1227.1725849298
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1734497536
 
 # Some version information
 LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
@@ -21,14 +21,14 @@ ENV JAVA_APP_DIR=/deployments \
 
 # Opentelemetry Agent Instrumentation
 # By default we deactivate the agent with OTEL_JAVAAGENT_ENABLED=false
-RUN curl https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.32.0/opentelemetry-javaagent.jar -Lo /opt/opentelemetry-javaagent.jar
+RUN curl https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.33.6/opentelemetry-javaagent.jar -Lo /opt/opentelemetry-javaagent.jar
 ENV JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar \
     OTEL_JAVAAGENT_ENABLED=false \
     OTEL_EXPORTER_OTLP_ENDPOINT=http://o11y_otel:4317 \
     OTEL_METRICS_EXPORTER=otlp \
     OTEL_LOGS_EXPORTER=otlp \
     OTEL_TRACES_EXPORTER=otlp \
-    OTEL_RESOURCE_ATTRIBUTES=service.name=microcks,service.namespace=microcks-ns,service.instance.id=microcks-cnt,service.version=1.10.0
+    OTEL_RESOURCE_ATTRIBUTES=service.name=microcks,service.namespace=microcks-ns,service.instance.id=microcks-cnt,service.version=1.11.0
 
 
 # Set working directory at /deployments

@@ -12,6 +12,37 @@ info:
     name: MIT License
     url: https://opensource.org/licenses/MIT
 paths:
+  /pastry:
+    summary: Global operations on pastries
+    get:
+      parameters:
+        - name: name
+          in: query
+          schema:
+            type: string
+          examples:
+            donut:
+              value: 'donut'
+            croissant:
+              value: 'croissant'
+      tags:
+      - pastry
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pastry'
+              examples:
+                donut:
+                  value:
+                    name: Real One
+                croissant:
+                  value:
+                    name: Croissant from Real One
+          description: Get list of pastries
+      operationId: GetPastries
+      summary: Get list of pastries
   /pastry/{name}:
     summary: Global operations on pastries
     get:
