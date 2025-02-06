@@ -279,6 +279,11 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
                   // We should complete resourcePath here.
                   String resourcePath = extractResourcePath(requestUrl, null);
                   operation.addResourcePath(URIBuilder.buildURIFromPattern(resourcePath, parts));
+               } else if (DispatchStyles.QUERY_HEADER.equals(rootDispatcher)) {
+                  Map<String, String> paramsMap = buildRequestHeaders(requestNode);
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(rootDispatcherRules, paramsMap);
+                  // We only need the pattern here.
+                  operation.addResourcePath(extractResourcePath(requestUrl, null));
                } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
                   // This dispatcher is used for GraphQL
                   if (requestNode.path("body").has(GRAPHQL_NODE)) {
@@ -377,6 +382,18 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return parts;
    }
 
+   private Map<String, String> buildRequestHeaders(JsonNode requestNode) {
+      Map<String, String> headers = new HashMap<>();
+      if (requestNode.has("header")) {
+         Iterator<JsonNode> headerNodes = requestNode.path("header").elements();
+         while (headerNodes.hasNext()) {
+            JsonNode headerNode = headerNodes.next();
+            headers.put(headerNode.path("key").asText(), headerNode.path(VALUE_NODE).asText());
+         }
+      }
+      return headers;
+   }
+
    private String extractQueryArgsCriteria(String dispatcherRules, String variables) {
       String dispatchCriteria = "";
       try {
@@ -449,9 +466,7 @@ public class PostmanCollectionImporter implements MockRepositoryImporter {
       return headers;
    }
 
-   /**
-    * Extract the list of operations from Collection.
-    */
+   /** Extract the list of operations from Collection. */
    private List<Operation> extractOperations() throws MockRepositoryImportException {
       if (isV2Collection) {
          return extractOperationsV2();

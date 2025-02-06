@@ -23,7 +23,7 @@ To get involved with our community, please make sure you are familiar with the p
 
 ## Build Status
 
-The current development version is `1.11.0-SNAPSHOT` on branch `1.11.x`. 
+The current development version is `1.11.1-SNAPSHOT` on branch `1.11.x`. 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.10.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
@@ -59,8 +59,8 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch   | Container images tags |
 | ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.10.1`          | `master` | `1.10.1`, `latest`    |
-| Dev         | `1.11.0-SNAPSHOT` | `1.11.x` | `nightly`             |
+| Stable      | `1.11.0`          | `master` | `1.11.0`, `latest`    |
+| Dev         | `1.11.1-SNAPSHOT` | `1.11.x` | `nightly`             |
 | Maintenance | `1.10.2-SNAPSHOT` | `1.10.x` | `maintenance`         |
 
 

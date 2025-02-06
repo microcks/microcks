@@ -22,9 +22,9 @@ import io.github.microcks.domain.ServiceRef;
 import io.github.microcks.repository.ImportJobRepository;
 import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.util.MockRepositoryImportException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Date;
 import java.util.List;
@@ -37,16 +37,24 @@ import java.util.List;
 public class JobService {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(JobService.class);
+   private static final Logger log = LoggerFactory.getLogger(JobService.class);
 
-   @Autowired
-   private ImportJobRepository jobRepository;
+   private final ImportJobRepository jobRepository;
+   private final SecretRepository secretRepository;
+   private final ServiceService serviceService;
 
-   @Autowired
-   private SecretRepository secretRepository;
-
-   @Autowired
-   private ServiceService serviceService;
+   /**
+    * Create a new JobService with required dependencies.
+    * @param jobRepository    The job repository to use.
+    * @param secretRepository The secret repository to use.
+    * @param serviceService   The service service to use.
+    */
+   public JobService(ImportJobRepository jobRepository, SecretRepository secretRepository,
+         ServiceService serviceService) {
+      this.jobRepository = jobRepository;
+      this.secretRepository = secretRepository;
+      this.serviceService = serviceService;
+   }
 
    /**
     * Realize the import of a repository defined into an import job.
@@ -84,5 +92,4 @@ public class JobService {
       jobRepository.save(job);
       log.info("Import of job '{}' done", job.getName());
    }
-
 }

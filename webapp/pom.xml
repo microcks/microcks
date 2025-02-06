@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.11.0-SNAPSHOT</version>
+    <version>1.11.1-SNAPSHOT</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
@@ -23,12 +23,12 @@
     <commons-lang3.version>3.17.0</commons-lang3.version>
     <commons-io.version>2.16.1</commons-io.version>
     <commons-codec.version>1.17.1</commons-codec.version>
-    <groovy.version>4.0.13</groovy.version>
-    <protobuf.version>3.25.2</protobuf.version>
+    <groovy.version>4.0.24</groovy.version>
+    <protobuf.version>3.25.5</protobuf.version>
     <grpc.version>1.61.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.14.0</openai-gpt3-java.version>
-    <opentelemetry.version>1.32.0</opentelemetry.version>
+    <opentelemetry.version>1.33.6</opentelemetry.version>
   </properties>
 
   <dependencyManagement>

@@ -5,7 +5,7 @@
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
   <packaging>pom</packaging>
-  <version>1.11.0-SNAPSHOT</version>
+  <version>1.11.1-SNAPSHOT</version>
   <modules>
     <module>commons/util</module>
     <module>commons/model</module>
@@ -61,7 +61,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>${project.basedir}</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>3.3.4</spring-boot.version>
+    <spring-boot.version>3.3.7</spring-boot.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
     <sonar.organization>microcks</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -175,7 +175,7 @@
       </build>
     </profile>
     <profile>
-      <id>release</id>
+      <id>release-old</id>
       <build>
         <plugins>
           <plugin>
@@ -194,6 +194,66 @@
                 </goals>
               </execution>
             </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.4.1</version>
+            <executions>
+              <execution>
+                <id>attach-javadoc</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>3.2.1</version>
+            <executions>
+              <execution>
+                <id>attach-source</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.spdx</groupId>
+            <artifactId>spdx-maven-plugin</artifactId>
+            <version>0.7.4</version>
+            <executions>
+              <execution>
+                <id>build-spdx</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>createSPDX</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <spdxFile>${project.reporting.outputDirectory}/${project.artifactId}-${project.version}.spdx-sbom.json</spdxFile>
+              <spdxDocumentNamespace>http://spdx.org/spdxpackages/${project.artifactId}-${project.version}</spdxDocumentNamespace>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.jreleaser</groupId>
+            <artifactId>jreleaser-maven-plugin</artifactId>
+            <version>1.15.0</version>
+            <inherited>false</inherited>
+            <configuration>
+              <configFile>jreleaser.yml</configFile>
+            </configuration>
           </plugin>
         </plugins>
       </build>

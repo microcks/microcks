@@ -23,7 +23,6 @@ import io.github.microcks.service.MetricsService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -36,19 +35,25 @@ import org.springframework.stereotype.Component;
 public class TestConformanceMetricConfigurer implements ApplicationListener<ServiceChangeEvent> {
 
    /** A commons logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(TestConformanceMetricConfigurer.class);
+   private static final Logger log = LoggerFactory.getLogger(TestConformanceMetricConfigurer.class);
 
-   @Autowired
-   private ServiceRepository serviceRepository;
+   private final ServiceRepository serviceRepository;
+   private final MetricsService metricsService;
 
-   @Autowired
-   private MetricsService metricsService;
-
+   /**
+    * Create a new instance of TestConformanceMetricConfigurer with required dependencies.
+    * @param serviceRepository The repository for Service entities
+    * @param metricsService    The service for metrics operations
+    */
+   public TestConformanceMetricConfigurer(ServiceRepository serviceRepository, MetricsService metricsService) {
+      this.serviceRepository = serviceRepository;
+      this.metricsService = metricsService;
+   }
 
    @Override
    @Async
    public void onApplicationEvent(ServiceChangeEvent event) {
-      log.debug("Received a ServiceChangeEvent on " + event.getServiceId());
+      log.debug("Received a ServiceChangeEvent on {}", event.getServiceId());
 
       if (event.getChangeType().equals(ChangeType.DELETED)) {
          metricsService.removeTestConformanceMetric(event.getServiceId());

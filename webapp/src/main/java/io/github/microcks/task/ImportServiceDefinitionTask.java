@@ -20,11 +20,10 @@ import io.github.microcks.domain.Secret;
 import io.github.microcks.repository.ImportJobRepository;
 import io.github.microcks.repository.SecretRepository;
 import io.github.microcks.service.JobService;
-import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.HTTPDownloader;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -41,21 +40,26 @@ import java.util.List;
 public class ImportServiceDefinitionTask {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(ImportServiceDefinitionTask.class);
+   private static final Logger log = LoggerFactory.getLogger(ImportServiceDefinitionTask.class);
 
    private static final int CHUNK_SIZE = 20;
 
-   @Autowired
-   private ServiceService serviceService;
+   private final ImportJobRepository jobRepository;
+   private final SecretRepository secretRepository;
+   private final JobService jobService;
 
-   @Autowired
-   private ImportJobRepository jobRepository;
-
-   @Autowired
-   private SecretRepository secretRepository;
-
-   @Autowired
-   private JobService jobService;
+   /**
+    * Build a new ImportServiceDefinitionTask with required dependencies.
+    * @param jobRepository    The job repository to use.
+    * @param secretRepository The secret repository to use.
+    * @param jobService       The job service to use.
+    */
+   public ImportServiceDefinitionTask(ImportJobRepository jobRepository, SecretRepository secretRepository,
+         JobService jobService) {
+      this.jobRepository = jobRepository;
+      this.secretRepository = secretRepository;
+      this.jobService = jobService;
+   }
 
    @Scheduled(cron = "${services.update.interval}")
    public void importServiceDefinition() {
@@ -73,7 +77,7 @@ public class ImportServiceDefinitionTask {
          log.debug("Found {} jobs into chunk {}", jobs.size(), i);
 
          for (ImportJob job : jobs) {
-            log.debug("Dealing with job " + job.getName());
+            log.debug("Dealing with job {}", job.getName());
             if (job.isActive()) {
 
                // Retrieve associated secret if any.
@@ -95,7 +99,7 @@ public class ImportServiceDefinitionTask {
 
                // Test if we must update this service definition.
                if (freshEtag == null || (freshEtag != null && !freshEtag.equals(etag))) {
-                  log.debug("No Etag or fresher one found, updating service definition for " + job.getName());
+                  log.debug("No Etag or fresher one found, updating service definition for {}", job.getName());
 
                   job.setEtag(freshEtag);
                   jobService.doImportJob(job);
@@ -106,6 +110,6 @@ public class ImportServiceDefinitionTask {
          }
       }
       long duration = System.currentTimeMillis() - startTime;
-      log.info("Task end in " + duration + " ms, updating " + updated + " job services definitions");
+      log.info("Task end in {} ms, updating {} job services definitions", duration, updated);
    }
 }

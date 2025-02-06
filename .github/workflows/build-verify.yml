@@ -114,12 +114,13 @@ jobs:
 
       - name: Build and push container image for webapp
         id: build-and-push-webapp
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v6.10.0
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         with:
           context: ${{github.workspace}}/webapp
           sbom: true
           push: true
+          provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
           file: webapp/src/main/docker/Dockerfile
@@ -149,12 +150,13 @@ jobs:
 
       - name: Build and push container for async minion
         id: build-and-push-async
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v6.10.0
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         with:
           context: ${{github.workspace}}/minions/async
           sbom: true
           push: true
+          provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
           file: minions/async/src/main/docker/Dockerfile.legacy-jar
@@ -184,12 +186,13 @@ jobs:
 
       - name: Build and push container image for uber distro
         id: build-and-push-uber
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v6.10.0
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         with:
           context: ${{github.workspace}}/distro/uber
           sbom: true
           push: true
+          provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
           file: distro/uber/src/main/docker/Dockerfile
@@ -219,12 +222,13 @@ jobs:
 
       - name: Build and push container for async minion in uber distro
         id: build-and-push-uber-async
-        uses: docker/build-push-action@v4.0.0
+        uses: docker/build-push-action@v6.10.0
         if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
         with:
           context: ${{github.workspace}}/distro/uber-async-minion
           sbom: true
           push: true
+          provenance: mode=max
           platforms: linux/amd64,linux/arm64
           builder: buildx-multi-arch
           file: distro/uber-async-minion/src/main/docker/Dockerfile.jvm

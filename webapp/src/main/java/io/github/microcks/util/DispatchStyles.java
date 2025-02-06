@@ -27,6 +27,9 @@ public class DispatchStyles {
    /** Constant for QUERY_ARGS dispatch style. */
    public static final String QUERY_ARGS = "QUERY_ARGS";
 
+   /** Constant for QUERY_HEADER dispatch style. */
+   public static final String QUERY_HEADER = "QUERY_HEADER";
+
    /** Constant for SCRIPT dispatch style. */
    public static final String SCRIPT = "SCRIPT";
 
@@ -56,4 +59,8 @@ public class DispatchStyles {
 
    /** Constant for RANDOM dispatch style. */
    public static final String RANDOM = "RANDOM";
+
+   private DispatchStyles() {
+      // Hide default no argument constructor as it's a utility class.
+   }
 }
