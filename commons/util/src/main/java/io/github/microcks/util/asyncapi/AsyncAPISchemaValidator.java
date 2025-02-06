@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import org.apache.avro.AvroTypeException;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
@@ -39,6 +38,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+//import static io.github.microcks.util.JsonSchemaValidator.*;
 import static io.github.microcks.util.JsonSchemaValidator.*;
 import static io.github.microcks.util.asyncapi.AsyncAPISchemaUtil.*;
 
@@ -123,16 +123,7 @@ public class AsyncAPISchemaValidator {
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode, String namespace) {
       schemaNode = convertAsyncAPISchemaToJsonSchema(schemaNode);
-
-      try {
-         return JsonSchemaValidator.validateJson(schemaNode, jsonNode, namespace);
-      } catch (ProcessingException e) {
-         log.debug("Got a ProcessingException while trying to interpret schemaNode as a real schema");
-         List<String> errors = new ArrayList<>();
-         errors.add("schemaNode does not seem to represent a valid AsyncAPI schema");
-         errors.add("root cause: " + e.getMessage());
-         return errors;
-      }
+      return JsonSchemaValidator.validateJson(schemaNode, jsonNode, namespace);
    }
 
    /**
