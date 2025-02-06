@@ -84,6 +84,7 @@
               </profiles>
               <arguments>
                 <argument>--spring.profiles.active=uber</argument>
+                <argument>--spring.aot.enabled=true</argument>
               </arguments>
               <classifier>exec</classifier>
             </configuration>
@@ -92,6 +93,15 @@
                 <goals>
                   <goal>repackage</goal>
                 </goals>
+              </execution>
+              <execution>
+                <id>process-aot</id>
+                <goals>
+                  <goal>process-aot</goal>
+                </goals>
+                <configuration>
+                  <profiles>uber</profiles>
+                </configuration>
               </execution>
             </executions>
           </plugin>
