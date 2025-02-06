@@ -87,7 +87,7 @@ jobs:
           push: false
           provenance: mode=max
           file: distro/uber-async-minion/src/main/docker/Dockerfile.native
-          tags: microcks/microcks-uber-async-minion:$IMAGE_TAG-${{ matrix.arch }}
+          tags: microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
 
       - name: Save async minion native image for ${{ matrix.arch }}
         uses: ishworkh/container-image-artifact-upload@v2.0.0
