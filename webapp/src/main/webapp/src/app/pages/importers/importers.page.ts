@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation, NgZone } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
@@ -55,7 +55,8 @@ export class ImportersPageComponent implements OnInit {
   constructor(private importersSvc: ImportersService, private servicesSvc: ServicesService,
               private modalService: BsModalService, private notificationService: NotificationService,
               protected authService: IAuthenticationService, private config: ConfigService,
-              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) { }
+              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef,
+              private ngZone: NgZone) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
@@ -302,10 +303,11 @@ export class ImportersPageComponent implements OnInit {
           this.notificationService.message(NotificationType.SUCCESS,
               job.name, 'Import job has been forced', false, null, null);
           console.log('ImportJobs in 2 secs');
-          // TODO run this outsize NgZone using zone.runOutsideAngular() : https://angular.io/api/core/NgZone
-          setTimeout(() => {
-            this.getImportJobs();
-          }, 2000);
+          this.ngZone.runOutsideAngular(() => {
+            setTimeout(() => {
+              this.getImportJobs();
+            }, 2000);
+          });
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,

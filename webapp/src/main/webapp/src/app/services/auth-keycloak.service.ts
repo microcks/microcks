@@ -18,6 +18,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { User } from '../models/user.model';
 import { ConfigService } from './config.service';
 import { HttpClient } from '@angular/common/http';
+import { NgZone } from '@angular/core';
 
 /**
  * A version of the authentication service that uses keycloak.js to provide
@@ -36,7 +37,7 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
   /**
    * Constructor.
    */
-  constructor(private http: HttpClient, private config: ConfigService) {
+  constructor(private http: HttpClient, private config: ConfigService, private ngZone: NgZone) {
     super();
     const w: any = window;
     this.keycloak = w.keycloak;
@@ -54,10 +55,11 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
     this.authenticatedUser.next(user);
 
     // Periodically refresh
-    // TODO run this outsize NgZone using zone.runOutsideAngular() : https://angular.io/api/core/NgZone
-    setInterval(() => {
-      this.keycloak.updateToken(30);
-    }, 30000);
+    this.ngZone.runOutsideAngular(() => {
+      setInterval(() => {
+        this.keycloak.updateToken(30);
+      }, 30000);
+    });
   }
 
   /**
