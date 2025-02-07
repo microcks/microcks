@@ -84,8 +84,8 @@ jobs:
         with:
           context: ${{github.workspace}}/distro/uber-async-minion
           sbom: true
-          load: true
           provenance: mode=max
+          outputs: type=oci
           file: distro/uber-async-minion/src/main/docker/Dockerfile.native
           tags: microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
 
