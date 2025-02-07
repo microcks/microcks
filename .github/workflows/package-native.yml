@@ -152,9 +152,10 @@ jobs:
           cd ${{github.workspace}}/distro/uber-async-minion
           mvn -DskipTests package -Dnative \
             -Dquarkus.native.container-build=true \
+            -Dquarkus.native.container-runtime-options=--platform=linux/${{ matrix.arch }} \
             -Dquarkus.container-image.build=true \
             -Dquarkus.container-image.push=false \
-            -Dquarkus.container-image.tag=microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }} \ 
+            -Dquarkus.container-image.tag=microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }} \
             -Dquarkus.docker.buildx.platform=linux/${{ matrix.arch }}
 
       - name: Save native image for ${{ matrix.arch }}
