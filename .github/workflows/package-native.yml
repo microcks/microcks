@@ -108,7 +108,7 @@ jobs:
           docker push quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
           docker push docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
 
-  build-push-native-async-minion-images:
+  build-async-minion-images:
     if: github.repository_owner == 'microcks' && ${{ inputs.image-tag }} != ''
     runs-on: ubuntu-latest-4-cores
     environment: Build
@@ -135,11 +135,6 @@ jobs:
         run: |
           set -x
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
-          
-      - name: Package async minion in native mode for ${{ matrix.arch }}
-        run: |
-          cd ${{github.workspace}}/distro/uber-async-minion
-          mvn -DskipTests package -Dnative -Dquarkus.native.container-build=true -Dquarkus.container-image.build=true
 
       - name: Set up QEMU
         if: matrix.arch == 'arm64'
@@ -151,26 +146,60 @@ jobs:
         uses: docker/setup-buildx-action@v3
         with:
           install: true
+          
+      - name: Package async minion in native mode for ${{ matrix.arch }}
+        run: |
+          cd ${{github.workspace}}/distro/uber-async-minion
+          mvn -DskipTests package -Dnative \
+            -Dquarkus.native.container-build=true \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=false \
+            -Dquarkus.container-image.tag=microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }-${{ matrix.arch }} \ 
+            -Dquarkus.docker.buildx.platform=linux/${{ matrix.arch }}
+
+      - name: Save native image for ${{ matrix.arch }}
+        uses: ishworkh/container-image-artifact-upload@v2.0.0
+        with:
+          image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
+
+  push-async-minion-images:
+    runs-on: ubuntu-latest
+    environment: Build
+    needs: build-async-minion-images
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    steps:
+      - name: Set IMAGE_TAG environment from input
+        run: |
+          echo "IMAGE_TAG=${{inputs.image-tag}}-native" >> "$GITHUB_ENV"
 
       - name: Login to Quay.io and Docker Hub registries
         run: |
           echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
-      - name: Build async minion native image for ${{ matrix.arch }}
-        uses: docker/build-push-action@v6.10.0
+      - name: Get saved image for ${{ matrix.arch }}
+        uses: ishworkh/container-image-artifact-download@v2.0.0
         with:
-          context: ${{github.workspace}}/distro/uber-async-minion
-          sbom: true
-          push: true
-          provenance: mode=max
-          file: distro/uber-async-minion/src/main/docker/Dockerfile.native
-          tags: quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }},docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
+
+      - name: Tag image for ${{ matrix.arch }}
+        run: |
+          docker tag microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }} quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          docker tag microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }} docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+
+      - name: Push image for ${{ matrix.arch }}
+        run: |
+          docker push quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          docker push docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
 
   create-app-multiarch-manifests:
     needs:
       - push-app-images
-      - build-push-native-async-minion-images
+      - push-async-minion-images
     environment: Build
     runs-on: ubuntu-latest
     permissions:

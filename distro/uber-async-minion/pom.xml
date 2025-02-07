@@ -48,6 +48,10 @@
       <artifactId>quarkus-reactive-messaging-http</artifactId>
       <version>2.0.2</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-container-image-docker</artifactId>
+    </dependency>
 
     <!-- Test related dependencies -->
     <dependency>
