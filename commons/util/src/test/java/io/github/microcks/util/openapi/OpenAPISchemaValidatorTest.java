@@ -449,7 +449,6 @@ class OpenAPISchemaValidatorTest {
       List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
             "/paths/~1accounts/get/responses/200", "application/json");
       assertFalse(errors.isEmpty());
-      System.out.println(errors);
       assertEquals(6, errors.size());
 
       // Now try with another message.
