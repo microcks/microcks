@@ -19,7 +19,7 @@ jobs:
         os: [ ubuntu-latest-4-cores, ubuntu-24.04-arm ]
         arch: [ amd64, arm64 ]
         exclude:
-          - os: ubuntu-latest
+          - os: ubuntu-latest-4-cores
             arch: arm64
           - os: ubuntu-24.04-arm
             arch: amd64
@@ -114,7 +114,7 @@ jobs:
         os: [ ubuntu-latest-4-cores, ubuntu-24.04-arm ]
         arch: [ amd64, arm64 ]
         exclude:
-          - os: ubuntu-latest
+          - os: ubuntu-latest-4-cores
             arch: arm64
           - os: ubuntu-24.04-arm
             arch: amd64
