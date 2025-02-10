@@ -463,7 +463,7 @@ spec:
         - '--db-username=$(KC_DB_USER)'
         - '--db-password=$(KC_DB_PASSWORD)'
         {{- if hasKey .Values.keycloak "privateUrl" }}
-        - '--hostname={{ .Values.keycloak.url }}'
+        - '--hostname=https://{{ .Values.keycloak.url }}'
         - '--hostname-backchannel-dynamic=true'
         {{- else }}
         - '--hostname={{ .Values.keycloak.url }}'
