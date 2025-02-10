@@ -13,13 +13,17 @@ permissions:
 jobs:
   build-native-images:
     if: github.repository_owner == 'microcks' && ${{ inputs.image-tag }} != ''
-    runs-on: ubuntu-latest-4-cores
     environment: Build
     strategy:
       matrix:
-        arch:
-          - amd64
-          - arm64
+        os: [ ubuntu-latest-4-cores, ubuntu-24.04-arm ]
+        arch: [ amd64, arm64 ]
+        exclude:
+          - os: ubuntu-latest
+            arch: arm64
+          - os: ubuntu-24.04-arm
+            arch: amd64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -38,12 +42,6 @@ jobs:
         run: |
           set -x
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
-
-      - name: Set up QEMU
-        if: matrix.arch == 'arm64'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: ${{ matrix.arch }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -110,13 +108,17 @@ jobs:
 
   build-async-minion-images:
     if: github.repository_owner == 'microcks' && ${{ inputs.image-tag }} != ''
-    runs-on: ubuntu-latest-4-cores
     environment: Build
     strategy:
       matrix:
-        arch:
-          - amd64
-          - arm64
+        os: [ ubuntu-latest-4-cores, ubuntu-24.04-arm ]
+        arch: [ amd64, arm64 ]
+        exclude:
+          - os: ubuntu-latest
+            arch: arm64
+          - os: ubuntu-24.04-arm
+            arch: amd64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -135,12 +137,6 @@ jobs:
         run: |
           set -x
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
-
-      - name: Set up QEMU
-        if: matrix.arch == 'arm64'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: ${{ matrix.arch }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
