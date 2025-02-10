@@ -46,10 +46,15 @@ export class SnapshotsTabComponent implements OnInit {
     this.getAllServices();
     this.uploader.onAfterAddingFile = (file) => { file.withCredentials = false; };
     this.uploader.onCompleteItem = (item: any, response: any, status: any, headers: any) => {
-      console.log('SnapshotUpload:uploaded:', item, status, response);
-      this.notificationService.message(NotificationType.SUCCESS,
-        'Snapshot', 'File uploaded successfully', false, null, null);
+      if (status == 201) {
+        this.notificationService.message(NotificationType.SUCCESS,
+          'Snapshot', 'File uploaded successfully', false, null, null);
+      } else {
+        this.notificationService.message(NotificationType.DANGER,
+          'Snapshot', 'File uploaded failed with status ' + status, false, null, null);
+      } 
     };
+    this.uploader.authToken = 'Bearer ' + this.authService.getAuthenticationSecret();
   }
 
   getAllServices(): void {
