@@ -274,8 +274,9 @@ class AsyncAPISchemaValidatorTest {
 
       assertEquals(2, errors.size());
       // First error is because payload does not have any ref to components.
-      assertEquals("the following keywords are unknown and will be ignored: [components]", errors.get(0));
-      assertEquals("object instance has properties which are not allowed by the schema: [\"id\",\"name\"]",
+      assertEquals("property 'id' is not defined in the schema and the schema does not allow additional properties",
+            errors.get(0));
+      assertEquals("property 'name' is not defined in the schema and the schema does not allow additional properties",
             errors.get(1));
    }
 
@@ -352,13 +353,14 @@ class AsyncAPISchemaValidatorTest {
       // Validate the content of smartylighting/streetlights/event/lighting/measured subscribe channel.
       List<String> errors = AsyncAPISchemaValidator.validateJsonMessage(asyncAPISpec, contentNode,
             "/channels/smartylighting~1streetlights~1event~1lighting~1measured/subscribe/message");
-
       assertFalse(errors.isEmpty());
-      assertEquals(3, errors.size());
+      assertEquals(2, errors.size());
+      System.out.println(errors);
       // First error is because payload does not have any ref to components.
-      assertEquals("the following keywords are unknown and will be ignored: [components]", errors.get(0));
-      assertEquals("object instance has properties which are not allowed by the schema: [\"location\"]", errors.get(1));
-      assertEquals("object has missing required properties ([\"lumens\"])", errors.get(2));
+      assertEquals(
+            "property 'location' is not defined in the schema and the schema does not allow additional properties",
+            errors.get(0));
+      assertEquals("required property 'lumens' not found", errors.get(1));
    }
 
    @Test

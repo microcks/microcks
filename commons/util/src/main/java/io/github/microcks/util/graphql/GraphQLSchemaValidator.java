@@ -18,7 +18,6 @@ package io.github.microcks.util.graphql;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
 import graphql.analysis.QueryTraverser;
 import graphql.analysis.QueryVisitor;
 import graphql.language.Document;
@@ -85,14 +84,7 @@ public class GraphQLSchemaValidator {
     * @return The list of validation failures. If empty, json object is valid !
     */
    public static List<String> validateJson(JsonNode schemaNode, JsonNode jsonNode) {
-      try {
-         return JsonSchemaValidator.validateJson(schemaNode, jsonNode);
-      } catch (ProcessingException e) {
-         log.debug("Got a ProcessingException while trying to interpret schemaNode as a real schema");
-         List<String> errors = new ArrayList<>();
-         errors.add("schemaNode does not seem to represent a valid Json schema");
-         return errors;
-      }
+      return JsonSchemaValidator.validateJson(schemaNode, jsonNode);
    }
 
    /** Initialize the schema structure of a GraphQL Json response. */

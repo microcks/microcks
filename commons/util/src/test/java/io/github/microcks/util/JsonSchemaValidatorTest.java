@@ -28,7 +28,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author laurent
  */
 class JsonSchemaValidatorTest {
-
    @Test
    void testValidateJsonSuccess() {
       boolean valid = false;
@@ -76,7 +75,7 @@ class JsonSchemaValidatorTest {
          fail("Exception should not be thrown");
       }
       assertEquals(1, errors.size());
-      assertEquals("object has missing required properties ([\"name\"])", errors.get(0));
+      assertEquals("required property 'name' not found", errors.get(0));
    }
 
    @Test
@@ -106,6 +105,7 @@ class JsonSchemaValidatorTest {
          fail("Exception should not be thrown");
       }
       assertEquals(1, errors.size());
-      assertEquals("object instance has properties which are not allowed by the schema: [\"energy\"]", errors.get(0));
+      assertEquals("property 'energy' is not defined in the schema and the schema does not allow additional properties",
+            errors.get(0));
    }
 }

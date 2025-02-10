@@ -64,17 +64,18 @@
         </exclusion>
       </exclusions>
     </dependency>
-
+    <!-- import for networknt/json-schema-validator -->
     <dependency>
-      <groupId>com.github.java-json-tools</groupId>
+      <groupId>com.networknt</groupId>
       <artifactId>json-schema-validator</artifactId>
-      <version>2.2.14</version>
+      <version>1.5.4</version>
     </dependency>
     <dependency>
       <groupId>com.github.java-json-tools</groupId>
       <artifactId>jackson-coreutils</artifactId>
       <version>2.0</version>
     </dependency>
+
     <dependency>
       <groupId>com.github.java-json-tools</groupId>
       <artifactId>json-schema-core</artifactId>

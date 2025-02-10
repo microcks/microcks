@@ -126,7 +126,7 @@ class GraphQLSchemaValidatorTest {
          fail("Exception should not be thrown");
       }
       assertEquals(1, validationErrors.size());
-      assertEquals("object has missing required properties ([\"email\"])", validationErrors.get(0));
+      assertEquals("required property 'email' not found", validationErrors.get(0));
    }
 
    @Test
