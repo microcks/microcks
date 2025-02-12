@@ -18,13 +18,14 @@ import { ConfigService } from './config.service';
 import { KeycloakAuthenticationService } from './auth-keycloak.service';
 import { AnonymousAuthenticationService } from './auth-anonymous.service';
 import { HttpClient } from '@angular/common/http';
+import { NgZone } from '@angular/core';
 
 
-export function AuthenticationServiceFactory(http: HttpClient, config: ConfigService): IAuthenticationService {
+export function AuthenticationServiceFactory(http: HttpClient, config: ConfigService, ngZone: NgZone): IAuthenticationService {
   console.info('[AuthenticationServiceFactory] Creating AuthenticationService...');
   if (config.authType() === 'keycloakjs') {
     console.info('[AuthenticationServiceFactory] Creating keycloak.js auth service.');
-    return new KeycloakAuthenticationService(http, config);
+    return new KeycloakAuthenticationService(http, config, ngZone);
   } else if (config.authType() === 'anonymous') {
     console.info('[AuthenticationServiceFactory] Creating Anonymous auth service.');
     return new AnonymousAuthenticationService(http, config);
