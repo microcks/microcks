@@ -1,0 +1,188 @@
+name: Build and Push Container Images
+
+on:
+  workflow_call:
+    inputs:
+      image-tag:
+        description: "Tag for the built container image"
+        required: true
+        type: string
+permissions:
+  contents: read
+  id-token: write # needed for signing the images with GitHub OIDC Token
+
+jobs:
+  setup-registries:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.7.0
+
+      - name: Set up QEMU
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Quay.io and Docker Hub registries and setup multi-arch builder
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
+          BUILDER=buildx-multi-arch
+          docker buildx inspect $BUILDER || docker buildx create --name=$BUILDER --driver=docker-container --driver-opt=network=host
+
+  build-container:
+    runs-on: ubuntu-latest
+    needs: setup-registries
+
+    steps:
+      - name: Package webapp in prod mode
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/webapp
+          # We should install the webapp to have the JAR with UI, available for the Uber distro
+          mvn -B -q -Pprod -DskipTests install
+
+      - name: Build and push container image for webapp
+        id: build-and-push-webapp
+        uses: docker/build-push-action@v6.10.0
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        with:
+          context: ${{github.workspace}}/webapp
+          sbom: true
+          push: true
+          provenance: mode=max
+          platforms: linux/amd64,linux/arm64
+          builder: buildx-multi-arch
+          file: webapp/src/main/docker/Dockerfile
+          labels: |
+            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+          tags: quay.io/microcks/microcks:${{inputs.IMAGE_TAG}},docker.io/microcks/microcks:${{inputs.IMAGE_TAG}}
+
+      - name: Sign the webapp images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        env:
+          DIGEST: ${{ steps.build-and-push-webapp.outputs.digest }}
+          TAGS: quay.io/microcks/microcks:${{inputs.IMAGE_TAG}} docker.io/microcks/microcks:${{inputs.IMAGE_TAG}}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
+
+      - name: Package async minion in prod mode
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/minions/async
+          mvn -B -q -DskipTests -Dquarkus.package.type=legacy-jar package
+
+      - name: Build and push container for async minion
+        id: build-and-push-async
+        uses: docker/build-push-action@v6.10.0
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        with:
+          context: ${{github.workspace}}/minions/async
+          sbom: true
+          push: true
+          provenance: mode=max
+          platforms: linux/amd64,linux/arm64
+          builder: buildx-multi-arch
+          file: minions/async/src/main/docker/Dockerfile.legacy-jar
+          labels: |
+            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+          tags: quay.io/microcks/microcks-async-minion:${{inputs.IMAGE_TAG}},docker.io/microcks/microcks-async-minion:${{inputs.IMAGE_TAG}}
+
+      - name: Sign the async minion images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        env:
+          DIGEST: ${{ steps.build-and-push-async.outputs.digest }}
+          TAGS: quay.io/microcks/microcks-async-minion:${{inputs.IMAGE_TAG}} docker.io/microcks/microcks-async-minion:${{inputs.IMAGE_TAG}}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
+
+      - name: Package uber distro in prod mode
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/distro/uber
+          mvn -B -q -Pprod -DskipTests package
+
+      - name: Build and push container image for uber distro
+        id: build-and-push-uber
+        uses: docker/build-push-action@v6.10.0
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        with:
+          context: ${{github.workspace}}/distro/uber
+          sbom: true
+          push: true
+          provenance: mode=max
+          platforms: linux/amd64,linux/arm64
+          builder: buildx-multi-arch
+          file: distro/uber/src/main/docker/Dockerfile
+          labels: |
+            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+          tags: quay.io/microcks/microcks-uber:${{inputs.IMAGE_TAG}},docker.io/microcks/microcks-uber:${{inputs.IMAGE_TAG}}
+
+      - name: Sign the uber distro images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        env:
+          DIGEST: ${{ steps.build-and-push-uber.outputs.digest }}
+          TAGS: quay.io/microcks/microcks-uber:${{inputs.IMAGE_TAG}} docker.io/microcks/microcks-uber:${{inputs.IMAGE_TAG}}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
+
+      - name: Package async minion in uber distro in prod mode
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        run: |
+          cd ${{github.workspace}}/distro/uber-async-minion
+          mvn -B -q -DskipTests package
+
+      - name: Build and push container for async minion in uber distro
+        id: build-and-push-uber-async
+        uses: docker/build-push-action@v6.10.0
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        with:
+          context: ${{github.workspace}}/distro/uber-async-minion
+          sbom: true
+          push: true
+          provenance: mode=max
+          platforms: linux/amd64,linux/arm64
+          builder: buildx-multi-arch
+          file: distro/uber-async-minion/src/main/docker/Dockerfile.jvm
+          labels: |
+            org.opencontainers.image.revision=${GITHUB_SHA}
+            org.opencontainers.image.created=${{ steps.date.outputs.date }}
+          tags: quay.io/microcks/microcks-uber-async-minion:${{inputs.IMAGE_TAG}},docker.io/microcks/microcks-uber-async-minion:${{inputs.IMAGE_TAG}}
+
+      - name: Sign the async minion in uber distro images with GitHub OIDC Token
+        if: github.repository_owner == 'microcks' && env.PACKAGE_IMAGE == 'true'
+        env:
+          DIGEST: ${{ steps.build-and-push-uber-async.outputs.digest }}
+          TAGS: quay.io/microcks/microcks-uber-async-minion:${{inputs.IMAGE_TAG}} docker.io/microcks/microcks-uber-async-minion:${{inputs.IMAGE_TAG}}
+          COSIGN_EXPERIMENTAL: "true"
+        run: |
+          images=""
+          for tag in ${TAGS}; do
+            images+="${tag}@${DIGEST} "
+          done
+          cosign sign --yes ${images}
