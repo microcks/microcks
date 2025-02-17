@@ -1,0 +1,90 @@
+name: build-packing
+on:
+  push:
+    branches:
+      # Assumption: on microcks/ there are no branches pushed by any contributors - only maintainers and build are run on update
+      # Assumption: on microcks/ packaging is done only once a branch is merged into below branches
+      - master
+      - 1.10.x
+      - 1.11.x
+    paths-ignore:
+      #- '.github/**'
+      - ".gitignore"
+      - "LICENSE"
+      - "*.md"
+      # Assumption: on microcks/ packaging is done only once a tag is pushed
+    tags:
+      - "**" # all tags
+  pull_request:
+    # By design: pull requests trigger 'build-verify' and skip any jobs related to package
+    paths-ignore:
+      - ".github/**"
+      - ".gitignore"
+      - "LICENSE"
+      - "*.md"
+
+permissions: read-all
+jobs:
+  build-verify:
+    # By design: runs if on.push or on.pull_request
+    runs-on: ubuntu-latest
+    environment: build-${{ github.ref_name }}
+    permissions:
+      contents: read
+      id-token: write # needed for signing the images with GitHub OIDC Token
+    outputs:
+      build-timestamp: ${{ steps.run-build.outputs.build-timestamp}}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build and verify
+        id: run-build
+        uses: ./.github/actions/build-test
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-build
+          path: target/ # TODO indicates where the artifacts are located
+
+  package:
+    # By design: it does not make sense to package if it is a PR, only on push (when a PR is merged)
+    runs-on: ubuntu-latest
+    needs: ["build-verify"]
+    environment: build-${{ github.ref_name }}
+    if: github.repository_owner == 'microcks' && github.event_name == 'push'
+    permissions:
+      contents: read
+      id-token: write # needed for signing the images with GitHub OIDC Token
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: maven-build
+          path: target/
+
+      - name: Package build
+        id: run-package
+        uses: ./.github/actions/package-build
+        with:
+          image-tag: ${{ vars.IMAGE_TAG }}
+          build-timestamp: ${{ needs.build-verify.outputs.build-timestamp }}
+          dockerhub-username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub-token: ${{ secrets.DOCKERHUB_TOKEN }}
+          quay-username: ${{ secrets.QUAY_USERNAME }}
+          quay-token: ${{ secrets.QUAY_PASSWORD }}
+  call-package-native:
+    # By design: runs only if package is a success - eliminating issue 1488 by design
+    needs: ["package"]
+    if: ${{ github.repository_owner }} == 'microcks'
+    permissions:
+      contents: read
+      id-token: write # needed for signing the images with GitHub OIDC Token
+    uses: ./.github/workflows/package-native.yml
+    with:
+      image-tag: ${{ vars.IMAGE_TAG }}
+    secrets: inherit
