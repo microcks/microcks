@@ -218,8 +218,12 @@ class OpenAPISchemaValidatorTest {
    @Test
    void testFullProcedureFromOpenAPIResource() {
       String openAPIText = null;
-      String jsonText = "[\n" + "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n"
-            + "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" + "]";
+      String jsonText = """
+            [
+              { "resourceId": "396be545-e2d4-4497-a5b5-700e89ab99c0" },
+              { "resourceId": "f377afb3-5c62-40cc-8f07-1f4749a780eb" }
+            ]
+            """;
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
@@ -259,8 +263,12 @@ class OpenAPISchemaValidatorTest {
    @Test
    void testFullProcedureFromOpenAPIResourceWithLooseCharsetContentType() {
       String openAPIText = null;
-      String jsonText = "[\n" + "  { \"resourceId\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\" },\n"
-            + "  { \"resourceId\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\" }\n" + "]";
+      String jsonText = """
+            [
+              { "resourceId": "396be545-e2d4-4497-a5b5-700e89ab99c0" },
+              { "resourceId": "f377afb3-5c62-40cc-8f07-1f4749a780eb" }
+            ]
+            """;
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
@@ -322,8 +330,14 @@ class OpenAPISchemaValidatorTest {
    @Test
    void testFullProcedureFromOpenAPIResourceWithRef() {
       String openAPIText = null;
-      String jsonText = "{\n" + "  \"region\": \"north\",\n" + "  \"temp\": -1.5,\n" + "  \"weather\": \"snowy\",\n"
-            + "  \"visibility\": 25\n" + "}";
+      String jsonText = """
+            {
+               "region": "north",
+               "temp": -1.5,
+               "weather": "snowy",
+               "visibility": 25
+            }
+            """;
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
@@ -428,8 +442,12 @@ class OpenAPISchemaValidatorTest {
    @Test
    void testFullProcedureFromOpenAPIResourceFailure() {
       String openAPIText = null;
-      String jsonText = "[\n" + "  { \"resource\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\", \"id\": \"01\" },\n"
-            + "  { \"resource\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\", \"id\": \"01\" }\n" + "]";
+      String jsonText = """
+            [
+              { "resource": "396be545-e2d4-4497-a5b5-700e89ab99c0", "id": "01" },
+              { "resource": "f377afb3-5c62-40cc-8f07-1f4749a780eb", "id": "01" }
+            ]
+            """;
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
@@ -470,11 +488,19 @@ class OpenAPISchemaValidatorTest {
    @Test
    void testFullProcedureFromOpenAPIResourceWithStructures() {
       String openAPIText = null;
-      String jsonText = "{\n" + "          \"id\": \"396be545-e2d4-4497-a5b5-700e89ab99c0\",\n"
-            + "          \"realm_id\": \"f377afb3-5c62-40cc-8f07-1f4749a780eb\",\n" + "          \"slug\": \"gore\",\n"
-            + "          \"tagline\": \"Blood! Blood! Blood!\",\n" + "          \"avatar_url\": \"/gore.png\",\n"
-            + "          \"accent_color\": \"#f96680\",\n" + "          \"delisted\": false,\n"
-            + "          \"logged_in_only\": false,\n" + "          \"descriptions\": []\n" + "        }";
+      String jsonText = """
+            {
+               "id": "396be545-e2d4-4497-a5b5-700e89ab99c0",
+               "realm_id": "f377afb3-5c62-40cc-8f07-1f4749a780eb",
+               "slug": "gore",
+               "tagline": "Blood! Blood! Blood!",
+               "avatar_url": "/gore.png",
+               "accent_color": "#f96680",
+               "delisted": false,
+               "logged_in_only": false,
+               "descriptions": []
+            }
+            """;
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 

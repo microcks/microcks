@@ -43,7 +43,7 @@ import java.util.Set;
 public class JsonSchemaValidator {
 
    /** A commons logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(JsonSchemaValidator.class);
+   private static final Logger log = LoggerFactory.getLogger(JsonSchemaValidator.class);
 
    public static final String JSON_V4_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-04/schema#";
    public static final String JSON_V7_SCHEMA_IDENTIFIER = "http://json-schema.org/draft-07/schema#";
@@ -186,9 +186,8 @@ public class JsonSchemaValidator {
 
    private static JsonSchema extractJsonSchemaNode(JsonNode jsonNode, String namespace) {
       JsonMetaSchema jsonMetaSchema = JsonMetaSchema.builder(JsonMetaSchema.getV202012()).build();
-      JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012, builder -> {
-         builder.metaSchema(jsonMetaSchema);
-      });
+      JsonSchemaFactory jsonSchemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012,
+            builder -> builder.metaSchema(jsonMetaSchema));
 
       if (namespace != null) {
          URI baseUri = URI.create(namespace);

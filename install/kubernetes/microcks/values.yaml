@@ -21,7 +21,7 @@ microcks:
   image:
     registry: quay.io
     repository: microcks/microcks
-    tag: 1.11.0
+    tag: nightly
     digest:
   replicas: 1
 
@@ -188,7 +188,7 @@ mongodb:
   resources:
     requests:
       cpu: 250m
-      memory: 512Mi
+      memory: 256Mi
     limits:
       #cpu: 500m
       memory: 512Mi
@@ -203,7 +203,7 @@ features:
     image:
       registry: quay.io
       repository: microcks/microcks-async-minion
-      tag: 1.11.0
+      tag: nightly
       digest:
 
     env:
