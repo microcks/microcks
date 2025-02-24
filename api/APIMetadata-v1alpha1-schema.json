@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://microcks.io/schemas/APIMetadata-v1alpha1-schema.json",
   "title": "The APIMetadata JSON schema",
   "description": "APIMetadata is a specification for customizing metadata of API.",
