@@ -54,7 +54,7 @@ import java.util.Map;
 public class OpenAICopilot implements AICopilot {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(OpenAICopilot.class);
+   private static final Logger log = LoggerFactory.getLogger(OpenAICopilot.class);
 
 
    /** Configuration parameter holding the OpenAI API key. */
@@ -79,7 +79,7 @@ public class OpenAICopilot implements AICopilot {
    /** Default online URL for OpenAI API. */
    private static final String OPENAI_BASE_URL = "https://api.openai.com/";
 
-   private static final String SECTION_DELIMITER = "\n###\n";
+   private static final String SECTION_DELIMITER = "\n#####\n";
 
    private RestTemplate restTemplate;
 
@@ -189,7 +189,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
-      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(number));
       prompt.append(SECTION_DELIMITER);
       prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(), operation.getName()));
 
@@ -222,7 +222,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
-      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append(AICopilotHelper.getRequestResponseExampleYamlFormattingDirective(number));
       prompt.append(SECTION_DELIMITER);
       prompt.append(contract.getContent());
 
@@ -237,7 +237,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
-      prompt.append(AICopilotHelper.getUnidirectionalEventExampleYamlFormattingDirective(1));
+      prompt.append(AICopilotHelper.getUnidirectionalEventExampleYamlFormattingDirective(number));
       prompt.append(SECTION_DELIMITER);
       prompt.append(AICopilotHelper.removeTokensFromSpec(contract.getContent(), operation.getName()));
 
@@ -253,7 +253,7 @@ public class OpenAICopilot implements AICopilot {
       prompt.append("\n");
       prompt.append(AICopilotHelper.YAML_FORMATTING_PROMPT);
       prompt.append("\n");
-      prompt.append(AICopilotHelper.getGrpcRequestResponseExampleYamlFormattingDirective(1));
+      prompt.append(AICopilotHelper.getGrpcRequestResponseExampleYamlFormattingDirective(number));
       prompt.append(SECTION_DELIMITER);
       prompt.append(contract.getContent());
 

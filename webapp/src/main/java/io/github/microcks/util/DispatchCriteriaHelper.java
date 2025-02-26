@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,7 +67,7 @@ public class DispatchCriteriaHelper {
          for (String parameter : parameters.split("&")) {
             String[] pair = parameter.split("=");
             String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
-            if (params.length() > 0) {
+            if (!params.isEmpty()) {
                params.append(" && ");
             }
             params.append(key);
@@ -82,11 +83,11 @@ public class DispatchCriteriaHelper {
     * @return A string representing the common prefix of given URIs
     */
    public static String extractCommonPrefix(List<String> uris) {
-      String commonURIPath = uris.get(0);
+      String commonURIPath = uris.getFirst();
 
       // 1st pass on collection: find a common prefix.
-      for (int prefixLen = 0; prefixLen < uris.get(0).length(); prefixLen++) {
-         char c = uris.get(0).charAt(prefixLen);
+      for (int prefixLen = 0; prefixLen < uris.getFirst().length(); prefixLen++) {
+         char c = uris.getFirst().charAt(prefixLen);
          for (int i = 1; i < uris.size(); i++) {
             if (prefixLen >= uris.get(i).length() || uris.get(i).charAt(prefixLen) != c) {
                // Mismatch found.
@@ -105,8 +106,8 @@ public class DispatchCriteriaHelper {
     */
    public static String extractCommonSuffix(List<String> uris) {
       // 1st pass on collection: find a common suffix.
-      for (int suffixLen = 0; suffixLen < uris.get(0).length(); suffixLen++) {
-         char c = uris.get(0).charAt(uris.get(0).length() - suffixLen - 1);
+      for (int suffixLen = 0; suffixLen < uris.getFirst().length(); suffixLen++) {
+         char c = uris.getFirst().charAt(uris.getFirst().length() - suffixLen - 1);
          for (int i = 1; i < uris.size(); i++) {
             if (suffixLen >= uris.get(i).length() || uris.get(i).charAt(uris.get(i).length() - suffixLen - 1) != c) {
                // Mismatch found. Have we found at least one common char ?
@@ -292,6 +293,25 @@ public class DispatchCriteriaHelper {
     * @return A string representing dispatch criteria for the corresponding incoming request.
     */
    public static String extractFromURIPattern(String paramsRuleString, String pattern, String realURI) {
+      Map<String, String> criteriaMap = extractMapFromURIPattern(paramsRuleString, pattern, realURI);
+
+      // Just appends sorted entries, separating them with /.
+      StringBuilder result = new StringBuilder();
+      for (Map.Entry<String, String> criteria : criteriaMap.entrySet()) {
+         result.append("/").append(criteria.getKey()).append("=").append(criteria.getValue());
+      }
+      return result.toString();
+   }
+
+   /**
+    * Extract a map of parameters from URI pattern (containing variable parts within {} or prefixed with :), projected
+    * onto a real instanciated URI.
+    * @param paramsRuleString The dispatch rules referencing parameters to consider
+    * @param pattern          The URI pattern containing variables parts ({})
+    * @param realURI          The real URI that should match pattern.
+    * @return A map of parameters extracted from the URI for the corresponding incoming request.
+    */
+   public static Map<String, String> extractMapFromURIPattern(String paramsRuleString, String pattern, String realURI) {
       Map<String, String> criteriaMap = new TreeMap<>();
       pattern = sanitizeURLForRegExp(pattern);
       realURI = sanitizeURLForRegExp(realURI);
@@ -300,7 +320,7 @@ public class DispatchCriteriaHelper {
       // from realURI. Supporting both {id} and :id.
       String partsPattern = null;
       String valuesPattern = null;
-      if (pattern.indexOf("/{") != -1) {
+      if (pattern.contains("/{")) {
          partsPattern = pattern.replaceAll(CURLY_PART_PATTERN, CURLY_PART_EXTRACTION_PATTERN);
          valuesPattern = pattern.replaceAll(CURLY_PART_PATTERN, "(.+)");
       } else {
@@ -335,13 +355,7 @@ public class DispatchCriteriaHelper {
             }
          }
       }
-
-      // Just appends sorted entries, separating them with /.
-      StringBuilder result = new StringBuilder();
-      for (Map.Entry<String, String> criteria : criteriaMap.entrySet()) {
-         result.append("/").append(criteria.getKey()).append("=").append(criteria.getValue());
-      }
-      return result.toString();
+      return criteriaMap;
    }
 
    /**
@@ -425,6 +439,25 @@ public class DispatchCriteriaHelper {
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
    public static String extractFromURIParams(String paramsRule, String uri) {
+      Multimap<String, String> criteriaMap = extractMapFromURIParams(paramsRule, uri);
+
+      // Just appends sorted entries, separating them with ?.
+      StringBuilder result = new StringBuilder();
+      for (Map.Entry<String, String> criteria : criteriaMap.entries()) {
+         if (paramsRule.contains(criteria.getKey())) {
+            result.append("?").append(criteria.getKey()).append("=").append(criteria.getValue());
+         }
+      }
+      return result.toString();
+   }
+
+   /**
+    * Extract a map of parameters from URI parameters
+    * @param paramsRule The dispatch rules referencing parameters to consider
+    * @param uri        The URI from which we should build a specific dispatch criteria
+    * @return A map of parameters extracted from the URI for the corresponding incoming request.
+    */
+   public static Multimap<String, String> extractMapFromURIParams(String paramsRule, String uri) {
       Multimap<String, String> criteriaMap = TreeMultimap.create();
 
       if (uri.contains("?") && uri.contains("=")) {
@@ -435,20 +468,13 @@ public class DispatchCriteriaHelper {
             if (pair.length > 1) {
                String key = URLDecoder.decode(pair[0], StandardCharsets.UTF_8);
                String value = URLDecoder.decode(pair[1], StandardCharsets.UTF_8);
-               criteriaMap.put(key, value);
+               if (paramsRule.contains(key)) {
+                  criteriaMap.put(key, value);
+               }
             }
          }
-
-         // Just appends sorted entries, separating them with ?.
-         StringBuilder result = new StringBuilder();
-         for (Map.Entry<String, String> criteria : criteriaMap.entries()) {
-            if (paramsRule.contains(criteria.getKey())) {
-               result.append("?").append(criteria.getKey()).append("=").append(criteria.getValue());
-            }
-         }
-         return result.toString();
       }
-      return "";
+      return criteriaMap;
    }
 
    /**
@@ -469,6 +495,11 @@ public class DispatchCriteriaHelper {
       return result.toString();
    }
 
+   /**
+    * Get the root dispatcher and dispatcher rules for an operation, taking into account fallback and proxy-fallback
+    * @param operation The operation for which we want to extract dispatcher details
+    * @return A DispatcherDetails object containing root dispatcher and dispatcher rules
+    */
    public static DispatcherDetails extractDispatcherWithRules(Operation operation) {
       String rootDispatcher = operation.getDispatcher();
       String rootDispatcherRules = operation.getDispatcherRules();
