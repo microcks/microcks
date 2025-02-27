@@ -151,7 +151,6 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   private updateAICopilotSamplesFlag(view: ServiceView): void {
-    console.log('Current serviceView: ' + JSON.stringify(view));
     this.aiCopilotSamples = false;
     this.operations.forEach((operation) => {
       view.messagesMap[operation.name].forEach((exchange) => {
@@ -164,7 +163,6 @@ export class ServiceDetailPageComponent implements OnInit {
         }
       });
     });
-    console.log('this.aiCopilotSamples: ' + this.aiCopilotSamples);
   }
 
   private sortOperations(o1: Operation, o2: Operation): number {

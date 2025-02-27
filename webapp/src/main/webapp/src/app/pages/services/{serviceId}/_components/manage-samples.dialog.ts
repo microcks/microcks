@@ -16,7 +16,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
-import { ListConfig, ListEvent } from 'patternfly-ng/list';
+import { ListConfig } from 'patternfly-ng/list';
 
 import { AICopilotService } from '../../../../services/aicopilot.service';
 import { Exchange, RequestResponsePair, ServiceType, ServiceView, UnidirectionalEvent } from '../../../../models/service.model';
@@ -131,6 +131,14 @@ export class ManageSamplesDialogComponent implements OnInit {
   }
 
   public cleanupSelection(): void {
+    // Remove exchanges that are not selected.
+    this.operationsWithAISamples.forEach(operation => {
+      Object.keys(this.selectedExchanges[operation.name]).forEach(exchangeName => {
+        if (this.selectedExchanges[operation.name][exchangeName] === false) {
+          delete this.selectedExchanges[operation.name][exchangeName];
+        }
+      });
+    });
     this.cleanupSelectionAction.emit(this.selectedExchanges);
     this.bsModalRef.hide();
   }
