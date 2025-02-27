@@ -23,13 +23,13 @@ import java.util.Arrays;
  */
 public class UserInfo {
 
-   private String name;
-   private String username;
-   private String givenName;
-   private String familyName;
-   private String email;
-   private String[] roles;
-   private String[] groups;
+   private final String name;
+   private final String username;
+   private final String givenName;
+   private final String familyName;
+   private final String email;
+   private final String[] roles;
+   private final String[] groups;
 
    /**
     * Create a new UserInfo with all required properties.

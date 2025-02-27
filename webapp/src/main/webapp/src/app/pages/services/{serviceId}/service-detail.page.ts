@@ -37,6 +37,7 @@ import { ListConfig, ListEvent } from 'patternfly-ng/list';
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
 import { GenerateSamplesDialogComponent } from './_components/generate-samples.dialog';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
+import { ManageSamplesDialogComponent } from './_components/manage-samples.dialog';
 import {
   Operation,
   ServiceType,
@@ -78,6 +79,8 @@ export class ServiceDetailPageComponent implements OnInit {
   notifications: Notification[];
   urlType: string = 'raw';
 
+  aiCopilotSamples: boolean = false;
+
   constructor(
     private servicesSvc: ServicesService,
     private contractsSvc: ContractsService,
@@ -116,6 +119,7 @@ export class ServiceDetailPageComponent implements OnInit {
       this.operations.sort((o1, o2) => {
         return this.sortOperations(o1, o2);
       });
+      this.updateAICopilotSamplesFlag(view);
     });
 
     // Fallback
@@ -144,6 +148,23 @@ export class ServiceDetailPageComponent implements OnInit {
       showRadioButton: false,
       useExpandItems: true,
     } as ListConfig;
+  }
+
+  private updateAICopilotSamplesFlag(view: ServiceView): void {
+    console.log('Current serviceView: ' + JSON.stringify(view));
+    this.aiCopilotSamples = false;
+    this.operations.forEach((operation) => {
+      view.messagesMap[operation.name].forEach((exchange) => {
+        if (
+          (exchange.request != undefined && exchange.request.sourceArtifact === 'AI Copilot')
+           || (exchange.eventMessage != undefined && exchange.eventMessage.sourceArtifact === 'AI Copilot')
+          ) {
+          this.aiCopilotSamples = true;
+          return;
+        }
+      });
+    });
+    console.log('this.aiCopilotSamples: ' + this.aiCopilotSamples);
   }
 
   private sortOperations(o1: Operation, o2: Operation): number {
@@ -283,6 +304,10 @@ export class ServiceDetailPageComponent implements OnInit {
             this.serviceView = null;
             this.ref.detectChanges();
             this.serviceView = this.servicesSvc.getServiceView(this.serviceId);
+            this.serviceView.subscribe((view) => {
+              this.resolvedServiceView = view;
+              this.updateAICopilotSamplesFlag(view);
+            });
             this.notificationService.message(
               NotificationType.SUCCESS,
               this.resolvedServiceView.service.name,
@@ -299,6 +324,67 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.DANGER,
               this.resolvedServiceView.service.name,
               'Samples cannot be added (' + err.message + ')',
+              false,
+              null,
+              null
+            );
+          },
+          complete: () => console.log('Observer got a complete notification'),
+        });
+    });
+  }
+
+  public openManageAISamples(): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      serviceView: this.resolvedServiceView,
+    };
+    this.modalRef = this.modalService.show(ManageSamplesDialogComponent, {
+      initialState,
+    });
+    this.modalRef.setClass('modal-lg');
+    this.modalRef.content.cleanupSelectionAction.subscribe((selectedExchanges) => {
+      let exchangeSelection = {
+        serviceId: this.resolvedServiceView.service.id,
+        exchanges: {}
+      };
+      Object.keys(selectedExchanges).forEach((operationName) => {
+        exchangeSelection.exchanges[operationName] = [];
+        Object.keys(selectedExchanges[operationName]).forEach((exchangeName) => {
+          exchangeSelection.exchanges[operationName].push(exchangeName)
+        });
+      });
+      this.copilotSvc
+        .removeExchanges(this.resolvedServiceView.service, exchangeSelection)
+        .subscribe({
+          next: (res) => {
+            // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
+            // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
+            // When done multiple times, serviceView re-assignation is not detected... So we have to force
+            // null, redetect and then re-assign a new Observable...
+            this.serviceView = null;
+            this.ref.detectChanges();
+            this.serviceView = this.servicesSvc.getServiceView(this.serviceId);
+            this.serviceView.subscribe((view) => {
+              this.resolvedServiceView = view;
+              this.updateAICopilotSamplesFlag(view);
+            });
+            this.notificationService.message(
+              NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name,
+              'AI Copilot Samples have been removed from Service',
+              false,
+              null,
+              null
+            );
+            // Then trigger view reevaluation to update the samples list and the notifications toaster.
+            this.ref.detectChanges();
+          },
+          error: (err) => {
+            this.notificationService.message(
+              NotificationType.DANGER,
+              this.resolvedServiceView.service.name,
+              'Selected Samples cannot be removed (' + err.message + ')',
               false,
               null,
               null
@@ -808,6 +894,11 @@ export class ServiceDetailPageComponent implements OnInit {
         this.resolvedServiceView.service.type === 'GRPC')
     );
   }
+  public hasAICopilotSamples(): boolean {
+    return (
+      this.hasAICopilotEnabled() && this.aiCopilotSamples
+    );
+  }
 
   public hasRepositoryTenancyFeatureEnabled(): boolean {
     return this.config.hasFeatureEnabled('repository-tenancy');
@@ -824,7 +915,7 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public hasAICopilotEnabled(): boolean {
-    return this.config.hasFeatureEnabled('ai-copilot');
+    return this.hasRole('manager') && this.config.hasFeatureEnabled('ai-copilot');
   }
 
   public asyncAPIFeatureEndpoint(binding: string): string {

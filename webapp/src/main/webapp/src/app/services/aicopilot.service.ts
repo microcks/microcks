@@ -35,4 +35,8 @@ export class AICopilotService {
     const options = { params: new HttpParams().set('operation', operationName) };
     return this.http.post<any>(this.rootUrl + '/copilot/samples/' + service.id, exchanges, options);
   }
+
+  public removeExchanges(service: Service, exchangeSelection: any): Observable<any> {
+    return this.http.post<any>(this.rootUrl + '/copilot/samples/' + service.id + '/cleanup', exchangeSelection);
+  }
 }

@@ -24,6 +24,7 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.security.UserInfo;
+import io.github.microcks.service.ExchangeSelection;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.ai.AICopilot;
@@ -131,9 +132,21 @@ public class AICopilotController {
          @RequestParam(value = "operation") String operationName, @RequestBody List<Exchange> exchanges,
          UserInfo userInfo) {
       log.debug("Adding new AI samples to service {} and operation {}", serviceId, operationName);
-      boolean result = serviceService.addExchangesToServiceOperation(serviceId, operationName, exchanges, userInfo);
+      boolean result = serviceService.addAICopilotExchangesToServiceOperation(serviceId, operationName, exchanges,
+            userInfo);
       if (result) {
          return new ResponseEntity<>(HttpStatus.CREATED);
+      }
+      return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+   }
+
+   @PostMapping(value = "/samples/{id:.+}/cleanup")
+   public ResponseEntity<?> removeExchanges(@PathVariable("id") String serviceId,
+         @RequestBody ExchangeSelection exchangeSelection, UserInfo userInfo) {
+      log.debug("Cleaning AI samples from service {} and multiple operations", serviceId);
+      boolean result = serviceService.removeAICopilotExchangesFromService(serviceId, exchangeSelection, userInfo);
+      if (result) {
+         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
       }
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
    }
