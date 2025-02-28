@@ -27,7 +27,7 @@ import java.util.List;
  * <ul>
  * <li><code>addServiceDefinition()</code> one or many time (some implementation may support multiple services)</li>
  * <li><code>addMessageDefinitions()</code> one or many time (some implementation may support multiple services)</li>
- * <li><code>exportAsString()</code> to get the final export as a String</li>‡
+ * <li><code>exportAsString()</code> to get the final export as a String</li>
  * </ul>
  * @author laurent
  */
