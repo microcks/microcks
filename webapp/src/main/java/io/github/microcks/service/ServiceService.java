@@ -629,7 +629,7 @@ public class ServiceService {
                String operationId = IdBuilder.buildOperationId(service, operation);
                List<String> exchangeNames = exchangeSelection.getExchanges().get(operation.getName());
 
-               if (!service.getType().equals(ServiceType.EVENT)) {
+               if (!ServiceType.EVENT.equals(service.getType())) {
                   // Remove all the requests and responses associated with the operation and AI Copilot.
                   requestRepository
                         .deleteAll(requestRepository.findByOperationIdAndSourceArtifact(operationId, AI_COPILOT_SOURCE)

@@ -18,8 +18,8 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import { ListConfig } from 'patternfly-ng/list';
 
-import { AICopilotService } from '../../../../services/aicopilot.service';
 import { Exchange, RequestResponsePair, ServiceType, ServiceView, UnidirectionalEvent } from '../../../../models/service.model';
+import { IAuthenticationService } from '../../../../services/auth.service';
 
 @Component({
   selector: 'app-manage-samples-dialog',
@@ -37,7 +37,7 @@ export class ManageSamplesDialogComponent implements OnInit {
   selectedExchanges: any = {};
 
   constructor(
-    private copilotSvc: AICopilotService,
+    private authService: IAuthenticationService,
     public bsModalRef: BsModalRef
   ) {}
 
@@ -144,7 +144,57 @@ export class ManageSamplesDialogComponent implements OnInit {
   }
 
   public exportSelection(): void {
-    console.log("exportSelection: " + JSON.stringify(this.selectedExchanges));
+    // Remove exchanges that are not selected.
+    this.operationsWithAISamples.forEach(operation => {
+      Object.keys(this.selectedExchanges[operation.name]).forEach(exchangeName => {
+        if (this.selectedExchanges[operation.name][exchangeName] === false) {
+          delete this.selectedExchanges[operation.name][exchangeName];
+        }
+      });
+    });
+    let exchangeSelection = {
+      serviceId: this.serviceView.service.id,
+      exchanges: {}
+    };
+    Object.keys(this.selectedExchanges).forEach((operationName) => {
+      exchangeSelection.exchanges[operationName] = [];
+      Object.keys(this.selectedExchanges[operationName]).forEach((exchangeName) => {
+        exchangeSelection.exchanges[operationName].push(exchangeName)
+      });
+    });
+
+    // Now download the selected exchanges.
+    let downloadPath = '/api/copilot/samples/' + this.serviceView.service.id + '/export';
+    
+    // Just opening a window with the download path is not working
+    // because Authorization header is not sent.
+    //window.open(downloadPath, '_blank', '');
+
+    // So we have to use XMLHttpRequest to send Authorization header and get the file
+    // before triggering the Save as dialog by simulating a click on a link.
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', location.origin + downloadPath, true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.setRequestHeader('Authorization', 'Bearer ' + this.authService.getAuthenticationSecret());
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState == 4) {
+        if (xhr.status == 200) {
+          const blob = new Blob([xhr.response], { type: 'text/plain' });
+          const url = window.URL.createObjectURL(blob);
+
+          var a = document.createElement("a");
+          document.body.appendChild(a);
+          a.href = url;
+          a.download = 'api-examples.yaml';
+          a.click();
+
+          window.URL.revokeObjectURL(url);
+        } else {
+          alert('Problem while retrieving APIExamples export');
+        }
+      }
+    };
+    xhr.send(JSON.stringify(exchangeSelection));
   }
 
   getOperationAICopilotExchanges(operationName: string): Exchange[] {

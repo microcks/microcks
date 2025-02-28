@@ -25,11 +25,14 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.security.UserInfo;
 import io.github.microcks.service.ExchangeSelection;
+import io.github.microcks.service.ImportExportService;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.ai.AICopilot;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,20 +60,23 @@ public class AICopilotController {
    private AICopilot copilot;
 
    private final ServiceService serviceService;
+   private final ImportExportService importExportService;
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
 
 
    /**
     * Build a AICopilotController with required dependencies.
-    * @param serviceService     The service to managed Services objects
+    * @param serviceService The service to managed Services objects
+    * @parma importExportService The service to manage import/export of data
     * @param serviceRepository  The repository for Services
     * @param resourceRepository The repository for Resources
     * @param copilot            The optional AI Copilot
     */
-   public AICopilotController(ServiceService serviceService, ServiceRepository serviceRepository,
-         ResourceRepository resourceRepository, Optional<AICopilot> copilot) {
+   public AICopilotController(ServiceService serviceService, ImportExportService importExportService,
+         ServiceRepository serviceRepository, ResourceRepository resourceRepository, Optional<AICopilot> copilot) {
       this.serviceService = serviceService;
+      this.importExportService = importExportService;
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       copilot.ifPresent(aiCopilot -> this.copilot = aiCopilot);
@@ -149,5 +156,26 @@ public class AICopilotController {
          return new ResponseEntity<>(HttpStatus.NO_CONTENT);
       }
       return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+   }
+
+   @PostMapping(value = "/samples/{id:.+}/export")
+   public ResponseEntity<Object> exportExchanges(@PathVariable("id") String serviceId,
+         @RequestBody ExchangeSelection exchangeSelection, UserInfo userInfo) {
+      log.debug("Generating AI samples export for service {}", serviceId);
+
+      try {
+         byte[] body = importExportService.exportExchangeSelection(serviceId, exchangeSelection, userInfo)
+               .getBytes(StandardCharsets.UTF_8);
+         HttpHeaders responseHeaders = new HttpHeaders();
+         responseHeaders.setContentType(MediaType.APPLICATION_JSON);
+         responseHeaders.set("Content-Disposition", "attachment; filename=microcks-repository.json");
+         responseHeaders.setContentLength(body.length);
+
+         return new ResponseEntity<>(body, responseHeaders, HttpStatus.OK);
+      } catch (Exception e) {
+         log.error("Exception while exporting the Exchanges selection", e);
+         return new ResponseEntity<>("Exception while exporting the Exchanges selection. Check server logs.",
+               HttpStatus.INTERNAL_SERVER_ERROR);
+      }
    }
 }

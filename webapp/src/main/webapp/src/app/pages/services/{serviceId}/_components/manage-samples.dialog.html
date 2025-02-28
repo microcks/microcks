@@ -66,11 +66,9 @@
 
   <div class="modal-footer">
     <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
-    <!--
     <button class="btn btn-primary" (click)="exportSelection()">
       <span class="fa fa-download"></span> Export
     </button>
-    -->
     <button class="btn btn-warning" (click)="cleanupSelection()" [disabled]="!cleanupEnabled()">
       <span class="fa fa-trash"></span> Clean-up
     </button>
