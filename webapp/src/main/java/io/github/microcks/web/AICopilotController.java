@@ -68,7 +68,7 @@ public class AICopilotController {
    /**
     * Build a AICopilotController with required dependencies.
     * @param serviceService The service to managed Services objects
-    * @parma importExportService The service to manage import/export of data
+    * @param importExportService The service to manage import/export of data
     * @param serviceRepository  The repository for Services
     * @param resourceRepository The repository for Resources
     * @param copilot            The optional AI Copilot
