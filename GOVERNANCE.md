@@ -25,7 +25,14 @@ Microcks follow the [Code of Conduct](CODE_OF_CONDUCT.md), which is aligned with
 Typically, it is assumed that disputes will be resolved amicably by those involved. However, if the situation becomes more serious, conflicts will be resolved through a voting process. A supermajority of votes from project maintainers is required to make a decision, and the project lead has the final say in the ruling.
 
 ## Meetings
-🚧 We **will** hold monthly Open Community Meetings for each region, so we will have bi-weekly meetings to try to be worldwide friendly. Stay tuned, coming soon 🚧.
+[Microcks](https://microcks.io/) hosts two monthly community meetings tailored for different time zones:
+
+- **APAC-friendly Meeting:** Second Thursday of each month  
+  - Time: 9–10 a.m. CET / 1–2 p.m. Bengaluru
+- **America-friendly Meeting:** Fourth Thursday of each month  
+  - Time: 6–7 p.m. CET / 1–2 p.m. EST / 9–10 a.m. PST
+
+Here’s how to join and participate: https://github.com/microcks/community/blob/main/JOIN-OUR-MEETINGS.md
 
 The maintainers will also have closed meetings to discuss security reports or Code of Conduct violations. Any maintainer in charge should schedule such meetings upon receiving a security issue or CoC report. All current Maintainers must be invited to such closed meetings, except for any maintainer accused of a CoC violation.
 
