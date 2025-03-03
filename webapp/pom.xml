@@ -27,7 +27,7 @@
     <protobuf.version>3.25.5</protobuf.version>
     <grpc.version>1.61.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
-    <openai-gpt3-java.version>0.14.0</openai-gpt3-java.version>
+    <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
     <opentelemetry.version>1.33.6</opentelemetry.version>
   </properties>
 

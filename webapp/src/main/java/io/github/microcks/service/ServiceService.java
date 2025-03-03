@@ -626,6 +626,7 @@ public class ServiceService {
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
          for (Operation operation : service.getOperations()) {
             if (exchangeSelection.getExchanges().containsKey(operation.getName())) {
+               log.debug("Removing AI Copilot exchanges for operation {}", operation.getName());
                String operationId = IdBuilder.buildOperationId(service, operation);
                List<String> exchangeNames = exchangeSelection.getExchanges().get(operation.getName());
 
@@ -643,9 +644,11 @@ public class ServiceService {
                         .findByOperationIdAndSourceArtifact(operationId, AI_COPILOT_SOURCE).stream()
                         .filter(eventMessage -> exchangeNames.contains(eventMessage.getName())).toList());
                }
-               return true;
             }
          }
+         // Publish a Service update event before returning.
+         publishServiceChangeEvent(service, ChangeType.UPDATED);
+         return true;
       }
       return false;
    }

@@ -134,11 +134,10 @@
   <div>
     <h3 class="section-label">Operations
       <div class="pull-right" style="padding-right: 20px">
-        <!--
-        <button class="btn btn-warning" *ngIf="allowAICopilotOnSamples()">
+        <span class="spinner spinner-sm spinner-inline" style="vertical-align: text-bottom;" *ngIf="isAIEnrichInProgress()"></span>
+        <button class="btn btn-warning" (click)="enrichWithAICopilot()" *ngIf="allowAICopilotOnSamples()" [disabled]="isAIEnrichInProgress()">
           <span class="pficon pficon-optimize"></span> AI Copilot
         </button>&nbsp;
-        -->
         <button class="btn btn-default" (click)="openManageAISamples()" *ngIf="hasAICopilotSamples()">
           <span class="fa fa-filter"></span> AI Copilot Samples
         </button>

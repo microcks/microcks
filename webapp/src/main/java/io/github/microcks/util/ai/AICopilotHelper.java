@@ -93,7 +93,7 @@ public class AICopilotHelper {
          Use only the provided YAML format to output the list of examples (no other text or markdown):
          """;
    protected static final String REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: %1$d
+         - example: <meaningful example %1$d name>
            request:
              url: <request url>
              headers:
@@ -108,7 +108,7 @@ public class AICopilotHelper {
              body: <response body>
          """;
    protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: %1$d
+         - example: <meaningful example %1$d name>
            message:
              headers:
                <header_name>: <value 1>
@@ -116,7 +116,7 @@ public class AICopilotHelper {
          """;
 
    protected static final String GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: %1$d
+         - example: <meaningful example %1$d name>
            request:
              body: <request body in JSON>
            response:
@@ -196,16 +196,18 @@ public class AICopilotHelper {
       JsonNode root = YAML_MAPPER.readTree(sanitizeYamlContent(content));
       if (root.getNodeType() == JsonNodeType.ARRAY) {
          Iterator<JsonNode> examples = root.elements();
+         int index = 1;
          while (examples.hasNext()) {
             JsonNode example = examples.next();
+            String name = example.path("example").asText("Sample " + index++);
 
             // Deal with parsing request.
             JsonNode requestNode = example.path(REQUEST_NODE);
-            Request request = buildRequest(requestNode);
+            Request request = buildRequest(requestNode, name);
 
             // Deal with parsing response.
             JsonNode responseNode = example.path(RESPONSE_NODE);
-            Response response = buildResponse(responseNode);
+            Response response = buildResponse(responseNode, name);
 
             // Finally, take care about dispatchCriteria and complete operation resourcePaths.
             // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
@@ -299,8 +301,9 @@ public class AICopilotHelper {
       return pseudoYaml;
    }
 
-   private static Request buildRequest(JsonNode requestNode) throws Exception {
+   private static Request buildRequest(JsonNode requestNode, String name) throws Exception {
       Request request = new Request();
+      request.setName(name);
       JsonNode requestHeadersNode = requestNode.path(HEADERS_NODE);
       request.setHeaders(buildHeaders(requestHeadersNode));
       request.setContent(getRequestContent(requestHeadersNode, requestNode.path(BODY_NODE)));
@@ -331,8 +334,9 @@ public class AICopilotHelper {
       return result;
    }
 
-   private static Response buildResponse(JsonNode responseNode) throws Exception {
+   private static Response buildResponse(JsonNode responseNode, String name) throws Exception {
       Response response = new Response();
+      response.setName(name);
       JsonNode responseHeadersNode = responseNode.path(HEADERS_NODE);
       response.setHeaders(buildHeaders(responseHeadersNode));
       response.setContent(getResponseContent(responseHeadersNode, responseNode.path(BODY_NODE)));
