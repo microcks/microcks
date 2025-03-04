@@ -26,6 +26,28 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
+      - name: Set up JDK 21 for x64
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+          cache: maven
+
+      - name: Restore Maven Cache
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: ~/.m2/repository
+          key: maven-repo-${{ github.run_id }}
+          restore-keys: |
+            maven-repo-
+
+      - name: Package webapp in prod mode
+        run: |
+          cd ${{github.workspace}}/webapp
+          # We should install the webapp to have the JAR with UI, available for the Uber distro
+          mvn -B -q -Pprod -DskipTests install
+
       - name: Install Cosign
         uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
 
@@ -41,12 +63,6 @@ jobs:
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
           BUILDER=buildx-multi-arch
           docker buildx inspect $BUILDER || docker buildx create --name=$BUILDER --driver=docker-container --driver-opt=network=host
-
-      - name: Package webapp in prod mode
-        run: |
-          cd ${{github.workspace}}/webapp
-          # We should install the webapp to have the JAR with UI, available for the Uber distro
-          mvn -B -q -Pprod -DskipTests install
 
       - name: Build and push container image for webapp
         id: build-and-push-webapp

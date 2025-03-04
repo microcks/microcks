@@ -71,6 +71,39 @@ jobs:
         run: |
           cd ${{github.workspace}}/webapp
           mvn -B -Pprod -DskipTests package
+          
+      - id: set-environment
+        name: Set environment for branch
+        run: |
+          set -x
+          if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
+            echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=latest" >> "$GITHUB_OUTPUT"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF == 'refs/heads/1.10.x' ]]; then
+            echo "IMAGE_TAG=maintenance" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=maintenance" >> "$GITHUB_OUTPUT"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF == 'refs/heads/1.11.x' ]]; then
+            echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=nightly" >> "$GITHUB_OUTPUT"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
+          elif [[ $GITHUB_REF == "refs/tags/$GITHUB_REF_NAME" ]]; then
+            echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+            echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "PACKAGE_IMAGE=false" >> "$GITHUB_ENV"
+            echo "PACKAGE_IMAGE=false" >> "$GITHUB_OUTPUT"
+          fi
+
+    outputs:
+      image-tag: ${{ steps.set-environment.outputs.IMAGE_TAG }}
+      package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
 
   integration-tests:
     runs-on: ubuntu-latest
@@ -132,50 +165,12 @@ jobs:
       - name: Verify Javadoc completion
         run: mvn -B javadoc:javadoc
 
-  check-environment:
+  container-images-build:
     needs:
       - package-webapp
       - integration-tests
       - javadoc-check
-    runs-on: ubuntu-latest
-    environment: Build
-    steps:
-      - id: set-environment
-        name: Set environment for branch
-        run: |
-          set -x
-          if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
-            echo "IMAGE_TAG=latest" >> "$GITHUB_ENV"
-            echo "IMAGE_TAG=latest" >> "$GITHUB_OUTPUT"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF == 'refs/heads/1.10.x' ]]; then
-            echo "IMAGE_TAG=maintenance" >> "$GITHUB_ENV"
-            echo "IMAGE_TAG=maintenance" >> "$GITHUB_OUTPUT"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF == 'refs/heads/1.11.x' ]]; then
-            echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
-            echo "IMAGE_TAG=nightly" >> "$GITHUB_OUTPUT"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF == "refs/tags/$GITHUB_REF_NAME" ]]; then
-            echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_ENV"
-            echo "IMAGE_TAG=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
-            echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "PACKAGE_IMAGE=false" >> "$GITHUB_ENV"
-            echo "PACKAGE_IMAGE=false" >> "$GITHUB_OUTPUT"
-          fi
-
-    outputs:
-      image-tag: ${{ steps.set-environment.outputs.IMAGE_TAG }}
-      package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
-
-  container-images-build:
-    needs: check-environment
-    if: github.repository_owner == 'microcks' && needs.check-environment.outputs.package-image == 'true' && github.event_name != 'pull_request'
+    if: github.repository_owner == 'microcks' && needs.package-webapp.outputs.package-image == 'true' && github.event_name != 'pull_request'
     permissions:
       contents: read
       id-token: write # needed for signing the images with GitHub OIDC Token
@@ -185,8 +180,11 @@ jobs:
     secrets: inherit
 
   call-package-native:
-    needs: check-environment
-    if: github.repository_owner == 'microcks' && needs.check-environment.outputs.package-image == 'true' && github.event_name != 'pull_request'
+    needs:
+      - package-webapp
+      - integration-tests
+      - javadoc-check
+    if: github.repository_owner == 'microcks' && needs.package-webapp.outputs.package-image == 'true' && github.event_name != 'pull_request'
     permissions:
       contents: read
       id-token: write # needed for signing the images with GitHub OIDC Token
