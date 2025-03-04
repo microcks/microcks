@@ -17,10 +17,10 @@ The Microcks project has four roles. All project members operate in one (or more
 
 | Level | Role | Responsibilities |
 | :---  | :--- | :--- |
-| 1     | **Maintainer** | Vote, Develop roadmap, contribution guidelines; Review, Approve/Reject, Merge, Manage repos. Maintainers are elected or removed by the current maintainers. A Maintainer has authority over the entire Microcks project: the organization and every project, sub-project and repo within the organization.|
+| 1 | **Maintainer** | Vote, Develop roadmap and contribution guidelines; Review, Approve/Reject, Merge, and Manage repositories. Maintainers are elected or removed by the current maintainers. A Maintainer has authority over the entire Microcks project: the organization and every project, sub-project and repo within the organization.|
 | 2     | **Code Owner**| Have special expertise in a particular domain within the Microcks project. The domain may be a sub-project, repo or other responsibility as defined by the Maintainers. The maintainers grant a code owner (alias Domain Maintainers) a set of authorities and responsibilities for the domain. Code owners are expected to join maintainer and community meetings when required. A code owner has no responsibilities for the entire project, organization or projects outside their domain. Code owners role, refer to [GitHub CODEOWNERS](https://docs.github.com/fr/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners) capabilities.|
-| 3     | **Contributor** | Contribute code, test, document the project. A contributor’s authority applies to one or more sub projects. Microcks is a very welcoming community and is eager to onboard and help anyone from the open source community to contribute to the project. |
-| 4     | **Adopter** | Use the Microcks project, with or without contributing to the project. Adopters are encouraged to raise issues, provide feedback, participate in discussions on sub projects within a public forum and community. |
+| 3     | **Contributor** | Contribute code, test and document the project. A contributor’s authority applies to one or more sub-projects. Microcks is a very welcoming community and is eager to onboard and help anyone from the open source community to contribute to the project. |
+| 4     | **Adopter** | Use the Microcks project, with or without contributing to the project. Adopters are encouraged to raise issues, provide feedback and participate in discussions on sub-projects within a public forum and community. |
 
 - Maintainer and Code Owners list: https://github.com/microcks/.github/blob/main/MAINTAINERS.md
 - Contributors list: (DevStats) [new contributors over the last 6 months](https://microcks.devstats.cncf.io/d/52/new-contributors-table?orgId=1&from=now-6M&to=now) / (GitHub) [contributors on Microcks main repo](https://github.com/microcks/microcks/graphs/contributors).
@@ -28,33 +28,33 @@ The Microcks project has four roles. All project members operate in one (or more
 > 📢 If you're using Microcks in your organization, please add your company name to this [list](https://github.com/microcks/.github/blob/main/ADOPTERS.md) 🙏 It really helps the project to gain momentum and credibility. It's a small contribution back to the project with a significant impact.
 
 ## Contributor ladder
-For becoming a maintainer, you need to get involved with the Microcks project on GitHub, and demonstrate commitment and qualities:
+To become a maintainer, you need to get involved with the Microcks project on GitHub and demonstrate commitment and qualities:
 
-   * Participation: For three months or more. For example: participation in discussions, contributions, code or documentation reviews.
-   * Collaboration: Demonstrate the ability to work with others, to take on new ideas and help others succeed.
-   * Availability (ideally full time): Be available on Slack, Discord, GitHub, email so you’re helping move the project forward in a timely way.
+   * Participation: For three months or more. Examples include participation in discussions, contributions and code or documentation reviews.
+   * Collaboration: Demonstrate the ability to work with others, take on new ideas and help others succeed.
+   * Availability (ideally full-time): Be available on Slack, Discord, GitHub, and email so you can help move the project forward in a timely way.
    * Respect: Alignment with Microcks and CNCF code of conduct and guiding principles.
      
-### Voting-in and voting-out maintainers
+### Voting in and voting out maintainers
 
-1. Maintainers make a public announcement during community meeting,
+1. Maintainers make a public announcement during community meetings,
 2. During this meeting, a maintainer nominates to add a new maintainer or remove an existing maintainer,
 3. The nominator will open a PR to the [centralized](https://github.com/microcks/.github/blob/main/MAINTAINERS.md) Maintainer and Code Owners list,
-4. Maintainers vote via GitHub PR comments, with a 2 week deadline. Anyone in the community is welcome to comment. Community comments will be considered, but not counted towards the vote,
+4. Maintainers vote via GitHub PR comments, with a 2 week deadline. Anyone in the community is welcome to comment. Community comments will be considered but not counted toward the vote,
 5. After two weeks, any maintainer who abstains from voting will not be counted towards the vote,
 6. Decision is approved with a super-majority: 66% 2/3) or more of maintainers who have voted within two weeks,
 7. If 66% (2/3) of all maintainers have approved within two weeks, the voting is closed early.
 
-For maintainers voted-in, permissions are immediately added. For maintainers voted-out permissions are immediately removed.
-
-### Remaining a Maintainer
-
-If a maintainer can no longer meet their commitments, they are expected to consult with the other maintainers and either take a sabbatical from maintainership, or resign as a maintainer. It is the responsibility of all maintainers to ensure the maintainer group operates with the same level of commitment. If a maintainer is not meeting their commitments, they may be voted-out by the maintainers and moved to the emeritus status list.
+For maintainers voted in, permissions are immediately added. For maintainers, voted-out permissions are immediately removed.
 
 ### Becoming a Code Owner 
-A Code Owner (alias Domain Maintainers) is appointed by the maintainers to recognize a contributor with expertise and authority in a specific domain. Code Owners are appointed to have elevated privilege, authority and specific responsibilities. The code owner role is part of the Microcks contributor ladder, and is the primary path from contributor to maintainer. Code owners are assigned or removed (moved to the emeritus status list) by the maintainers, by vote with 66% (2/3) approval, and their role and responsibilities are scoped. A person can have one or more code owner responsibilities.
+A Code Owner (alias Domain Maintainers) is appointed by the maintainers to recognize a contributor with expertise and authority in a specific domain. Code Owners are appointed to have elevated privileges, authority and specific responsibilities. The code owner role is part of the Microcks contributor ladder and is the primary path from contributor to maintainer. The roles and responsibilities of code owners are scoped. A person can have one or more code owner responsibilities.
 
-Code onwers are enabled to act independently. They do not have responsibilities or voting rights over the entire project or organization. They are expected to participate with the community, They are not expected to participate in maintainer meetings, unless requested.
+Code owners are enabled to act independently. They do not have responsibilities or voting rights over the entire project or organization. They are expected to participate with the community, but they are not expected to participate in maintainer meetings unless requested.
+
+### Remaining a Maintainer or Code Owner
+
+If a maintainer or code owner can no longer fulfill their commitments, they should consult with the maintainers and either take a sabbatical or step down from their role. All maintainers share the responsibility of ensuring the group operates with consistent dedication. If a maintainer or code owner fails to meet their commitments, they may be voted out by the maintainers and transitioned to emeritus status.
 
 ## Adding or Removing Sub Projects
 Microcks maintainers have the authority to add or remove sub-projects or repositories as needed. We follow a careful approach when making these changes: any new sub-project must serve a long-term purpose that is clearly distinct from existing ones, while sub-projects slated for removal must be shown to have either outlived their usefulness, become deprecated or unmaintainable.
@@ -77,7 +77,7 @@ Here’s how to join and participate: https://github.com/microcks/community/blob
 The maintainers will also have closed meetings to discuss security reports or Code of Conduct violations. Any maintainer in charge should schedule such meetings upon receiving a security issue or CoC report. All current Maintainers must be invited to such closed meetings, except for any maintainer accused of a CoC violation.
 
 ## Governance Changes
-Changes to governance policy and any supporting documents must be agreed and approved by 66% (2/3) of the Maintainers either by vote, or by review and approval of a PR on the document.
+Changes to governance policy and any supporting documents must be agreed upon and approved by 66% (2/3) of the maintainers either by vote or by review and approval of a PR on the document.
 
 This Project Governance is a living document. As the Microcks community and project continue to evolve, maintainers are **committed** to improving and openly sharing our governance model, ensuring transparency and collaboration every step of the way.
 
