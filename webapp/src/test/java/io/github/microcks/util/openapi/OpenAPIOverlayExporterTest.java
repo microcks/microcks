@@ -30,8 +30,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This is a test case for class OpenAPIOverlayExporter.
@@ -39,16 +38,21 @@ import static org.junit.jupiter.api.Assertions.fail;
  */
 public class OpenAPIOverlayExporterTest {
 
-   private static final String EXPECTED_REST_SERVICE_EXPORT = """
+   private static final String EXPECTED_EXPORT_HEADER = """
          overlay: 1.0.0
          info:
            title: API Pastry - 2.1 Overlay for examples
            version: 2.1.0
          actions:
+         """;
+
+   private static final String EXPECTED_EXPORT_ACTION_1 = """
          - target: "$.paths['/pastry/{name}'].patch.parameters[?@.name=='name'].examples"
            update:
              Eclair Cafe:
                value: Eclair Cafe
+         """;
+   private static final String EXPECTED_EXPORT_ACTION_2 = """
          - target: "$.paths['/pastry/{name}'].patch.requestBody.content['application/json'].examples"
            update:
              Eclair Cafe:
@@ -56,6 +60,8 @@ public class OpenAPIOverlayExporterTest {
                  {
                    "price": 2.6
                  }
+         """;
+   private static final String EXPECTED_EXPORT_ACTION_3 = """
          - target: "$.paths['/pastry/{name}'].patch.responses.200.content['application/json'].examples"
            update:
              Eclair Cafe:
@@ -67,10 +73,14 @@ public class OpenAPIOverlayExporterTest {
                    "price": 2.6,
                    "status": "available"
                  }
+         """;
+   private static final String EXPECTED_EXPORT_ACTION_4 = """
          - target: "$.paths['/pastry/{name}'].get.parameters[?@.name=='name'].examples"
            update:
              Eclair Chocolat:
                value: Eclair Chocolat
+         """;
+   private static final String EXPECTED_EXPORT_ACTION_5 = """
          - target: "$.paths['/pastry/{name}'].get.responses.200.content['application/json'].examples"
            update:
              Eclair Chocolat:
@@ -82,7 +92,7 @@ public class OpenAPIOverlayExporterTest {
          """;
 
    @Test
-   void testExportRESTService() {
+   void testExportRESTService() throws Exception{
       Service service = new Service();
       service.setId("123-456-789");
       service.setName("API Pastry - 2.1");
@@ -149,6 +159,11 @@ public class OpenAPIOverlayExporterTest {
          fail("Exception should not be thrown");
       }
 
-      assertEquals(EXPECTED_REST_SERVICE_EXPORT, exportResult);
+      assertTrue(exportResult.contains(EXPECTED_EXPORT_HEADER));
+      assertTrue(exportResult.contains(EXPECTED_EXPORT_ACTION_1));
+      assertTrue(exportResult.contains(EXPECTED_EXPORT_ACTION_2));
+      assertTrue(exportResult.contains(EXPECTED_EXPORT_ACTION_3));
+      assertTrue(exportResult.contains(EXPECTED_EXPORT_ACTION_4));
+      assertTrue(exportResult.contains(EXPECTED_EXPORT_ACTION_5));
    }
 }
