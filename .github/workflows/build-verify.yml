@@ -44,7 +44,7 @@ jobs:
 
   package-webapp:
     runs-on: ubuntu-latest
-    needs: prepare-environment
+    needs: build-install
     permissions:
       contents: read
     steps:
