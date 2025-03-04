@@ -6,7 +6,7 @@
 
 <h1>
   APIs &amp; Services
-  <div class="pull-right">
+  <div class="pull-right" *ngIf="hasRole('admin') || hasRole('manager')">>
     <button class="btn btn-primary" (click)="openCreateDirectAPI(wizardTemplate)">
       <span class="fa fa-plus"></span> Add Direct API
     </button>
