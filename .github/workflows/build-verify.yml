@@ -176,7 +176,7 @@ jobs:
       id-token: write # needed for signing the images with GitHub OIDC Token
     uses: ./.github/workflows/build-container.yml
     with:
-      image-tag: ${{ needs.check-environment.outputs.image-tag }}
+      image-tag: ${{ needs.package-webapp.outputs.image-tag }}
     secrets: inherit
 
   call-package-native:
@@ -190,5 +190,5 @@ jobs:
       id-token: write # needed for signing the images with GitHub OIDC Token
     uses: ./.github/workflows/package-native.yml
     with:
-      image-tag: ${{ needs.check-environment.outputs.image-tag }}
+      image-tag: ${{ needs.package-webapp.outputs.image-tag }}
     secrets: inherit

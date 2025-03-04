@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-containers:
-    if: github.repository_owner == 'microcks' && ${{ inputs.image-tag }} != ''
+    if: github.repository_owner == 'microcks' && inputs.image-tag != ''
     runs-on: ubuntu-latest
     environment: Build
     permissions:

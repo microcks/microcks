@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build-native-images:
-    if: github.repository_owner == 'microcks' && ${{ inputs.image-tag }} != ''
+    if: github.repository_owner == 'microcks' && inputs.image-tag != ''
     environment: Build
     strategy:
       matrix:
