@@ -26,10 +26,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -44,7 +44,7 @@ jobs:
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
         with:
           install: true
 
@@ -68,7 +68,7 @@ jobs:
               -Dspring-boot.build-image.runImage=$RUNNER_IMAGE
 
       - name: Save native image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-upload@v2.0.0
+        uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714 # v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -92,7 +92,7 @@ jobs:
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
       - name: Get saved image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-download@v2.0.0
+        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -121,10 +121,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -139,7 +139,7 @@ jobs:
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
         with:
           install: true
           
@@ -155,7 +155,7 @@ jobs:
             -Dquarkus.docker.buildx.platform=linux/${{ matrix.arch }}
 
       - name: Save native image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-upload@v2.0.0
+        uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714 # v2.0.0
         with:
           image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -179,7 +179,7 @@ jobs:
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
       - name: Get saved image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-download@v2.0.0
+        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
         with:
           image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -246,7 +246,7 @@ jobs:
           echo "microcks-uber-async-minion=$(crane digest quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }})" >> $GITHUB_OUTPUT
           
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.7.0
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
 
       - name: Sign images with with GitHub OIDC Token
         env:

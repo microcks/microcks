@@ -15,14 +15,16 @@ on:
 permissions: read-all
 
 jobs:
-  prepare-environment:
+  build-install:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21 for x64
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -33,27 +35,24 @@ jobs:
         run: mvn -B clean install
 
       - name: Cache Maven dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: ~/.m2/repository
           key: maven-repo-${{ github.run_id }}
           restore-keys: |
             maven-repo-
 
-  build-verify-package:
+  package-webapp:
     runs-on: ubuntu-latest
     needs: prepare-environment
-    environment: Build
     permissions:
       contents: read
-      id-token: write # needed for signing the images with GitHub OIDC Token
-
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21 for x64
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -61,23 +60,86 @@ jobs:
           cache: maven
 
       - name: Restore Maven Cache
-        uses: actions/cache@v3
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: ~/.m2/repository
           key: maven-repo-${{ github.run_id }}
           restore-keys: |
             maven-repo-
 
-      - name: Get current date
-        id: date
-        #run: echo "::set-output name=date::$(date +'%Y-%m-%dT%H:%M:%S')"
-        run: echo "date=$(date +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
-
       - name: Build Angular app
         run: |
           cd ${{github.workspace}}/webapp
           mvn -B -Pprod -DskipTests package
 
+  integration-tests:
+    runs-on: ubuntu-latest
+    needs: build-install
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 21 for x64
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+          cache: maven
+
+      - name: Restore Maven Cache
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: ~/.m2/repository
+          key: maven-repo-${{ github.run_id }}
+          restore-keys: |
+            maven-repo-
+
+      - name: Run Integration tests
+        run: |
+          cd ${{github.workspace}}/webapp
+          mvn -Pit test
+          cd ${{github.workspace}}/minions/async
+          mvn -Pit test
+
+  javadoc-check:
+    runs-on: ubuntu-latest
+    needs: build-install
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 21 for x64
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          architecture: x64
+          cache: maven
+
+      - name: Restore Maven Cache
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+        with:
+          path: ~/.m2/repository
+          key: maven-repo-${{ github.run_id }}
+          restore-keys: |
+            maven-repo-
+
+      - name: Verify Javadoc completion
+        run: mvn -B javadoc:javadoc
+
+  check-environment:
+    needs:
+      - package-webapp
+      - integration-tests
+      - javadoc-check
+    runs-on: ubuntu-latest
+    environment: Build
+    steps:
       - id: set-environment
         name: Set environment for branch
         run: |
@@ -107,85 +169,28 @@ jobs:
             echo "PACKAGE_IMAGE=false" >> "$GITHUB_OUTPUT"
           fi
 
-    outputs:
-      image-tag: ${{ steps.set-environment.outputs.IMAGE_TAG }}
-      package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
+        outputs:
+          image-tag: ${{ steps.set-environment.outputs.IMAGE_TAG }}
+          package-image: ${{ steps.set-environment.outputs.PACKAGE_IMAGE }}
 
-  integration-tests:
-    runs-on: ubuntu-latest
-    needs: prepare-environment
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21 for x64
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          architecture: x64
-          cache: maven
-
-      - name: Restore Maven Cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: maven-repo-${{ github.run_id }}
-          restore-keys: |
-            maven-repo-
-
-      - name: Run Integration tests
-        run: |
-          cd ${{github.workspace}}/webapp
-          mvn -Pit test
-          cd ${{github.workspace}}/minions/async
-          mvn -Pit test
-
-  javadoc-check:
-    runs-on: ubuntu-latest
-    needs: prepare-environment
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21 for x64
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          architecture: x64
-          cache: maven
-
-      - name: Restore Maven Cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.m2/repository
-          key: maven-repo-${{ github.run_id }}
-          restore-keys: |
-            maven-repo-
-
-      - name: Verify Javadoc completion
-        run: mvn -B javadoc:javadoc
-
-  call-package-native:
-    needs: build-verify-package
-    if: github.repository_owner == 'microcks' && needs.build-verify-package.outputs.package-image == 'true'
+  container-images-build:
+    needs: check-environment
+    if: github.repository_owner == 'microcks' && needs.check-environment.outputs.package-image == 'true' && github.event_name != 'pull_request'
     permissions:
       contents: read
       id-token: write # needed for signing the images with GitHub OIDC Token
-
-    uses: ./.github/workflows/package-native.yml
-    with:
-      image-tag: ${{ needs.build-verify-package.outputs.image-tag }}
-    secrets: inherit
-
-  container-image-build:
-    needs: build-verify-package
-    if: needs.build-verify-package.outputs.package-image == 'true' && github.event_name != 'pull_request'
-    permissions:
-      contents: read
-      id-token: write
     uses: ./.github/workflows/build-container.yml
     with:
-      image-tag: ${{ needs.build-verify-package.outputs.image-tag }}
+      image-tag: ${{ needs.check-environment.outputs.image-tag }}
+    secrets: inherit
+
+  call-package-native:
+    needs: check-environment
+    if: github.repository_owner == 'microcks' && needs.check-environment.outputs.package-image == 'true' && github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      id-token: write # needed for signing the images with GitHub OIDC Token
+    uses: ./.github/workflows/package-native.yml
+    with:
+      image-tag: ${{ needs.check-environment.outputs.image-tag }}
     secrets: inherit
