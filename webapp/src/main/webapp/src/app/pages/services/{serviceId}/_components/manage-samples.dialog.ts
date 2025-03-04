@@ -35,6 +35,7 @@ export class ManageSamplesDialogComponent implements OnInit {
   operationsListConfig: ListConfig;
 
   selectedExchanges: any = {};
+  exportFormat: string = 'APIExamples';
 
   constructor(
     private authService: IAuthenticationService,
@@ -164,7 +165,7 @@ export class ManageSamplesDialogComponent implements OnInit {
     });
 
     // Now download the selected exchanges.
-    let downloadPath = '/api/copilot/samples/' + this.serviceView.service.id + '/export';
+    let downloadPath = '/api/copilot/samples/' + this.serviceView.service.id + '/export?format=' + this.exportFormat;
     
     // Just opening a window with the download path is not working
     // because Authorization header is not sent.

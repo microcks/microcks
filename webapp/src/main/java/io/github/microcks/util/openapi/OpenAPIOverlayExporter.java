@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.util.metadata;
+package io.github.microcks.util.openapi;
 
-import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Header;
-import io.github.microcks.domain.Message;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Parameter;
 import io.github.microcks.domain.Request;
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
-import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.util.MockRepositoryExportException;
 import io.github.microcks.util.MockRepositoryExporter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
@@ -42,20 +39,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Mock repository exporter that exports Microcks domain objects definitions into the APIExamples YAML format.
+ * Mock repository exporter that exports Microcks domain objects definitions into the Open API Overlay YAML format.
  * @author laurent
  */
-public class ExamplesExporter implements MockRepositoryExporter {
+public class OpenAPIOverlayExporter implements MockRepositoryExporter {
 
    /** A simple logger for diagnostic messages. */
-   private static final Logger log = LoggerFactory.getLogger(ExamplesExporter.class);
+   private static final Logger log = LoggerFactory.getLogger(OpenAPIOverlayExporter.class);
 
    private final ObjectMapper mapper;
    private Service service;
    private final Map<Operation, List<? extends Exchange>> operationsExchanges = new HashMap<>();
 
-   /** Create a new ExamplesExporter. */
-   public ExamplesExporter() {
+   /** Create a new OpenAPIOverlayExporter. */
+   public OpenAPIOverlayExporter() {
       mapper = new ObjectMapper(new YAMLFactory().disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
             .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES));
    }
@@ -63,7 +60,7 @@ public class ExamplesExporter implements MockRepositoryExporter {
    @Override
    public void addServiceDefinition(Service service) throws MockRepositoryExportException {
       if (this.service != null) {
-         log.error("ExamplesExporter only allows one service definition");
+         log.error("OpenAPIOverlayExporter only allows one service definition");
          throw new MockRepositoryExportException("Service definition already set");
       }
       this.service = service;
@@ -87,20 +84,20 @@ public class ExamplesExporter implements MockRepositoryExporter {
       ObjectNode rootNode = mapper.createObjectNode();
 
       // Initialize header and metadata.
-      rootNode.put("apiVersion", "mocks.microcks.io/v1alpha1");
-      rootNode.put("kind", "APIExamples");
-      rootNode.set("metadata",
-            mapper.createObjectNode().put("name", service.getName()).put("version", service.getVersion()));
+      rootNode.put("overlay", "1.0.0");
+      rootNode.set("info", mapper.createObjectNode().put("title", service.getName() + " Overlay for examples")
+            .put("version", service.getVersion()));
 
-
-      ObjectNode operationsNode = rootNode.putObject("operations");
+      ArrayNode actionsNode = rootNode.putArray("actions");
       for (Operation operation : operationsExchanges.keySet()) {
-         // Initialize a node for the operation.
-         ObjectNode operationNode = operationsNode.putObject(operation.getName());
+         // Each exchange is translated into an update action.
          List<? extends Exchange> exchanges = operationsExchanges.get(operation);
 
          for (Exchange exchange : exchanges) {
-            exportExchange(operationNode, exchange);
+            if (exchange instanceof RequestResponsePair pair) {
+               exportRequest(actionsNode, operation, pair.getRequest());
+               exportResponse(actionsNode, operation, pair.getResponse());
+            }
          }
       }
 
@@ -115,64 +112,57 @@ public class ExamplesExporter implements MockRepositoryExporter {
       return yamlResult;
    }
 
-   private void exportExchange(ObjectNode operationNode, Exchange exchange) {
-      if (ServiceType.EVENT.equals(service.getType())) {
-         UnidirectionalEvent event = (UnidirectionalEvent) exchange;
-         exportUnidirectionalEvent(operationNode, event);
-      } else {
-         RequestResponsePair pair = (RequestResponsePair) exchange;
-         exportRequestResponsePair(operationNode, pair);
-      }
-   }
-
-   private void exportUnidirectionalEvent(ObjectNode operationNode, UnidirectionalEvent event) {
-      EventMessage eventMessage = event.getEventMessage();
-      ObjectNode exchangeNode = operationNode.putObject(eventMessage.getName());
-      ObjectNode messageNode = exchangeNode.putObject("eventMessage");
-
-      exportHeaders(messageNode, eventMessage);
-      messageNode.put("payload", eventMessage.getContent());
-   }
-
-   private void exportRequestResponsePair(ObjectNode operationNode, RequestResponsePair pair) {
-      Request request = pair.getRequest();
-      Response response = pair.getResponse();
-
-      ObjectNode exchangeNode = operationNode.putObject(request.getName());
-      ObjectNode requestNode = exchangeNode.putObject("request");
-      ObjectNode responseNode = exchangeNode.putObject("response");
-
-      // Export the request into the request node.
-      exportHeaders(requestNode, request);
+   private void exportRequest(ArrayNode actions, Operation operation, Request request) {
+      // Export the parameters part of the exchange if present.
       if (request.getQueryParameters() != null && !request.getQueryParameters().isEmpty()) {
-         ObjectNode parametersNode = requestNode.putObject("parameters");
          for (Parameter parameter : request.getQueryParameters()) {
-            parametersNode.put(parameter.getName(), parameter.getValue());
+            // Export the query parameter part of the exchange.
+            ObjectNode parameterNode = actions.addObject();
+
+            String[] operationParts = operation.getName().split(" ");
+
+            parameterNode.put("target", "$.paths['" + operationParts[1] + "']." + operationParts[0].toLowerCase()
+                  + ".parameters[?@.name=='" + parameter.getName() + "'].examples");
+            ObjectNode updateNode = parameterNode.putObject("update");
+            ObjectNode exampleNode = updateNode.putObject(request.getName());
+            exampleNode.put("value", parameter.getValue());
          }
       }
-      if (request.getContent() != null) {
-         requestNode.put("body", request.getContent());
-      }
 
-      // Export the response into the response node.
-      exportHeaders(responseNode, response);
-      if (response.getStatus() != null) {
-         responseNode.put("status", response.getStatus());
-      }
-      if (response.getMediaType() != null) {
-         responseNode.put("mediaType", response.getMediaType());
-      }
-      if (response.getContent() != null) {
-         responseNode.put("body", response.getContent());
+      // Export the requestBody part of the exchange if present.
+      if (request.getContent() != null) {
+         ObjectNode requestNode = actions.addObject();
+         String[] operationParts = operation.getName().split(" ");
+
+         requestNode.put("target", "$.paths['" + operationParts[1] + "']." + operationParts[0].toLowerCase()
+               + ".requestBody.content['" + getContentType(request) + "'].examples");
+         ObjectNode updateNode = requestNode.putObject("update");
+         ObjectNode exampleNode = updateNode.putObject(request.getName());
+         exampleNode.put("value", request.getContent());
       }
    }
 
-   private void exportHeaders(ObjectNode messageNode, Message message) {
-      if (message.getHeaders() != null && !message.getHeaders().isEmpty()) {
-         ObjectNode headersNode = messageNode.putObject("headers");
-         for (Header header : message.getHeaders()) {
-            headersNode.put(header.getName(), header.getValues().stream().findFirst().get());
+   private String getContentType(Request request) {
+      if (request.getHeaders() != null) {
+         for (Header header : request.getHeaders()) {
+            if ("Content-Type".equalsIgnoreCase(header.getName())) {
+               return header.getValues().iterator().next();
+            }
          }
       }
+      return "application/json";
+   }
+
+   private void exportResponse(ArrayNode actions, Operation operation, Response response) {
+      // Export the response part of the exchange.
+      ObjectNode responseNode = actions.addObject();
+
+      String[] operationParts = operation.getName().split(" ");
+
+      responseNode.put("target", "$.paths['" + operationParts[1] + "']." + operationParts[0].toLowerCase()
+            + ".responses." + response.getStatus() + ".content['" + response.getMediaType() + "'].examples");
+      ObjectNode updateNode = responseNode.putObject("update");
+      ObjectNode exampleNode = updateNode.putObject(response.getName());
+      exampleNode.put("value", response.getContent());
    }
 }

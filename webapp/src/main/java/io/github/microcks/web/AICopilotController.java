@@ -28,6 +28,7 @@ import io.github.microcks.service.AICopilotRunnerService;
 import io.github.microcks.service.ExchangeSelection;
 import io.github.microcks.service.ImportExportService;
 import io.github.microcks.service.ServiceService;
+import io.github.microcks.util.MockRepositoryExporterFactory;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.ai.AICopilot;
 
@@ -212,11 +213,12 @@ public class AICopilotController {
 
    @PostMapping(value = "/samples/{id:.+}/export")
    public ResponseEntity<Object> exportExchanges(@PathVariable("id") String serviceId,
+         @RequestParam(value = "format", required = false, defaultValue = MockRepositoryExporterFactory.API_EXAMPLES_FORMAT) String exportFormat,
          @RequestBody ExchangeSelection exchangeSelection, UserInfo userInfo) {
       log.debug("Generating AI samples export for service {}", serviceId);
 
       try {
-         byte[] body = importExportService.exportExchangeSelection(serviceId, exchangeSelection, userInfo)
+         byte[] body = importExportService.exportExchangeSelection(serviceId, exchangeSelection, exportFormat, userInfo)
                .getBytes(StandardCharsets.UTF_8);
          HttpHeaders responseHeaders = new HttpHeaders();
          responseHeaders.setContentType(MediaType.APPLICATION_JSON);

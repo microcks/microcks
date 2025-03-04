@@ -36,6 +36,8 @@ import io.github.microcks.security.AuthorizationChecker;
 import io.github.microcks.security.UserInfo;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.MockRepositoryExportException;
+import io.github.microcks.util.MockRepositoryExporter;
+import io.github.microcks.util.MockRepositoryExporterFactory;
 import io.github.microcks.util.metadata.ExamplesExporter;
 
 import org.slf4j.Logger;
@@ -247,17 +249,18 @@ public class ImportExportService {
     * Export a selection of exchanges for a service.
     * @param serviceId         The unique identifier of the service
     * @param exchangeSelection The selection of exchanges to export
+    * @param exportFormat      The format for this export
     * @param userInfo          The user information
     * @return A string representation of this exchange selection export
     */
-   public String exportExchangeSelection(String serviceId, ExchangeSelection exchangeSelection, UserInfo userInfo)
-         throws MockRepositoryExportException {
+   public String exportExchangeSelection(String serviceId, ExchangeSelection exchangeSelection, String exportFormat,
+         UserInfo userInfo) throws MockRepositoryExportException {
       Service service = serviceService.getServiceById(serviceId);
       if (service != null
             && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
 
          // Create an exporter and add the service definition.
-         ExamplesExporter exporter = new ExamplesExporter();
+         MockRepositoryExporter exporter = MockRepositoryExporterFactory.getMockRepositoryExporter(exportFormat);
          exporter.addServiceDefinition(service);
 
          for (Operation operation : service.getOperations()) {

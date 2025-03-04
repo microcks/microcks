@@ -69,6 +69,16 @@
     <button class="btn btn-primary" (click)="exportSelection()">
       <span class="fa fa-download"></span> Export
     </button>
+    <span class="dropdown" *ngIf="this.serviceView.service.type === 'REST'">
+      <button class="btn btn-primary dropdown-toggle" dropdowntoggle type="button" id="exportOptions" data-toggle="dropdown">
+        As {{exportFormat}}
+        <span class="caret"></span>
+      </button>&nbsp;
+      <ul class="dropdown-menu" role="menu" aria-labelledby="exportOptions">
+        <li role="presentation"><a class="filter-field dropdown-item" (click)="this.exportFormat = 'APIExamples'">As APIExamples</a></li>
+        <li role="presentation"><a class="filter-field dropdown-item" (click)="this.exportFormat = 'OAS Overlay'">As OAS Overlay</a></li>
+      </ul>
+    </span>
     <button class="btn btn-danger" (click)="cleanupSelection()" [disabled]="!cleanupEnabled()">
       Delete
     </button>
