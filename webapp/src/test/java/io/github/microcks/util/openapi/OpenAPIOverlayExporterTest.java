@@ -92,7 +92,7 @@ public class OpenAPIOverlayExporterTest {
          """;
 
    @Test
-   void testExportRESTService() throws Exception{
+   void testExportRESTService() throws Exception {
       Service service = new Service();
       service.setId("123-456-789");
       service.setName("API Pastry - 2.1");
