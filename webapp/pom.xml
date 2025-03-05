@@ -244,6 +244,13 @@
       <version>1.19.3</version>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>com.code-intelligence</groupId>
+      <artifactId>jazzer-junit</artifactId>
+      <version>0.24.0</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -350,6 +357,30 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>fuzz</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${maven-surefire-plugin.version}</version>
+            <configuration>
+              <includes>
+                <include>**/*Fuzz.java</include>
+              </includes>
+              <reuseForks>false</reuseForks>
+              <environmentVariables>
+                <JAZZER_FUZZ>1</JAZZER_FUZZ>
+              </environmentVariables>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+      <properties>
+        <spring.profiles.active>fuzz</spring.profiles.active>
+      </properties>
     </profile>
     <profile>
       <id>coverage</id>
