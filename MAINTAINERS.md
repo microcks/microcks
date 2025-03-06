@@ -23,7 +23,7 @@ The following members are [code owners](https://github.com/microcks/.github/blob
 | Name | GitHub ID | Affiliation | Sub-Projects |
 |----------------------------------------------------------|-------------------------------------------------------------|-------------------|-------------------|
 | Hugo Guerrero | [hguerrero](https://github.com/hguerrero) | Kong (Ex Red Hat) | [Docker Desktop Extension](https://github.com/microcks/microcks-docker-desktop-extension) |
-| Julien Breux | [JulienBreux](https://github.com/JulienBreux) | Google | [Microcks CLI](https://github.com/microcks/microcks-cli) |
+| Julien Breux | [JulienBreux](https://github.com/JulienBreux) | Google | [Microcks CLI](https://github.com/microcks/microcks-cli), [Microcks Go Client](https://github.com/microcks/microcks-go-client) |
 | Sebastien DEGODEZ | [SebastienDegodez](https://github.com/SebastienDegodez) | AXA France | [Testcontainers .NET](https://github.com/microcks/microcks-testcontainers-dotnet) |
 
 ## Emeritus
