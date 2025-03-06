@@ -152,6 +152,9 @@ data:
     <?xml version="1.0" encoding="UTF-8"?>
 
     <configuration scan="true">
+      <!-- Stop output INFO at start -->
+      <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    
       <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
           <charset>utf-8</charset>
@@ -171,17 +174,10 @@ data:
       <logger name="javax.mail" level="WARN"/>
       <logger name="javax.xml.bind" level="WARN"/>
       <logger name="ch.qos.logback" level="WARN"/>
-      <logger name="com.codahale.metrics" level="WARN"/>
-      <logger name="com.ryantenney" level="WARN"/>
       <logger name="com.sun.xml.internal.bind" level="WARN"/>
-      <logger name="com.zaxxer" level="WARN"/>
-      <logger name="io.undertow" level="WARN"/>
       <logger name="org.apache" level="WARN"/>
       <logger name="org.apache.catalina.startup.DigesterFactory" level="OFF"/>
       <logger name="org.bson" level="WARN"/>
-      <logger name="org.hibernate.validator" level="WARN"/>
-      <logger name="org.hibernate" level="WARN"/>
-      <logger name="org.hibernate.ejb.HibernatePersistence" level="OFF"/>
       <logger name="org.springframework" level="WARN"/>
       <logger name="org.springframework.aop" level="WARN"/>
       <logger name="org.springframework.web" level="WARN"/>
