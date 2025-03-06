@@ -17,11 +17,14 @@ package io.github.microcks.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Exchange;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Request;
+import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.domain.ServiceType;
 import io.github.microcks.event.ChangeType;
 import io.github.microcks.event.ServiceChangeEvent;
 import io.github.microcks.repository.EventMessageRepository;
@@ -29,7 +32,13 @@ import io.github.microcks.repository.RequestRepository;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.security.AuthorizationChecker;
+import io.github.microcks.security.UserInfo;
 import io.github.microcks.util.IdBuilder;
+import io.github.microcks.util.MockRepositoryExportException;
+import io.github.microcks.util.MockRepositoryExporter;
+import io.github.microcks.util.MockRepositoryExporterFactory;
+import io.github.microcks.util.metadata.ExamplesExporter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,36 +57,46 @@ public class ImportExportService {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(ImportExportService.class);
 
+   private final ServiceService serviceService;
+   private final MessageService messageService;
    private final RequestRepository requestRepository;
    private final ResourceRepository resourceRepository;
    private final ResponseRepository responseRepository;
    private final EventMessageRepository eventMessageRepository;
    private final ServiceRepository serviceRepository;
    private final ApplicationContext applicationContext;
+   private final AuthorizationChecker authorizationChecker;
 
    /**
     * Create a new ImportExportService with required dependencies.
+    * @param serviceService         The service for services
+    * @param messageService         The service for messages
     * @param requestRepository      The repository for requests
     * @param resourceRepository     The repository for resources
     * @param responseRepository     The repository for responses
     * @param eventMessageRepository The repository for event messages
     * @param serviceRepository      The repository for services
     * @param applicationContext     The Spring application context
+    * @param authorizationChecker   The authorization checker service
     */
-   public ImportExportService(RequestRepository requestRepository, ResourceRepository resourceRepository,
+   public ImportExportService(ServiceService serviceService, MessageService messageService,
+         RequestRepository requestRepository, ResourceRepository resourceRepository,
          ResponseRepository responseRepository, EventMessageRepository eventMessageRepository,
-         ServiceRepository serviceRepository, ApplicationContext applicationContext) {
+         ServiceRepository serviceRepository, ApplicationContext applicationContext,
+         AuthorizationChecker authorizationChecker) {
+      this.serviceService = serviceService;
+      this.messageService = messageService;
       this.requestRepository = requestRepository;
       this.resourceRepository = resourceRepository;
       this.responseRepository = responseRepository;
       this.eventMessageRepository = eventMessageRepository;
       this.serviceRepository = serviceRepository;
       this.applicationContext = applicationContext;
+      this.authorizationChecker = authorizationChecker;
    }
 
    /**
     * Import a repository from JSON definitions.
-    * 
     * @param json A String encoded into json and representing repository object definitions.
     * @return A boolean indicating operation success.
     */
@@ -127,7 +146,6 @@ public class ImportExportService {
 
    /**
     * Get a partial export of repository using the specified services identifiers.
-    * 
     * @param ids    The list of service ids to export
     * @param format The format for this export (reserved for future usage)
     * @return A string representation of this repository export
@@ -225,5 +243,49 @@ public class ImportExportService {
       public void setEventMessages(List<EventMessage> eventMessages) {
          this.eventMessages = eventMessages;
       }
+   }
+
+   /**
+    * Export a selection of exchanges for a service.
+    * @param serviceId         The unique identifier of the service
+    * @param exchangeSelection The selection of exchanges to export
+    * @param exportFormat      The format for this export
+    * @param userInfo          The user information
+    * @return A string representation of this exchange selection export
+    */
+   public String exportExchangeSelection(String serviceId, ExchangeSelection exchangeSelection, String exportFormat,
+         UserInfo userInfo) throws MockRepositoryExportException {
+      Service service = serviceService.getServiceById(serviceId);
+      if (service != null
+            && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+
+         // Create an exporter and add the service definition.
+         MockRepositoryExporter exporter = MockRepositoryExporterFactory.getMockRepositoryExporter(exportFormat);
+         exporter.addServiceDefinition(service);
+
+         for (Operation operation : service.getOperations()) {
+            if (exchangeSelection.getExchanges().containsKey(operation.getName())) {
+               log.debug("Exporting selected exchanges for operation '{}'", operation.getName());
+               String operationId = IdBuilder.buildOperationId(service, operation);
+
+               List<? extends Exchange> selectedExchanges = null;
+               if (ServiceType.EVENT.equals(service.getType())) {
+                  selectedExchanges = messageService.getEventByOperation(operationId).stream()
+                        .filter(unidirectionalEvent -> exchangeSelection.getExchanges().get(operation.getName())
+                              .contains(unidirectionalEvent.getEventMessage().getName()))
+                        .toList();
+               } else {
+                  selectedExchanges = messageService.getRequestResponseByOperation(operationId).stream()
+                        .filter(pair -> exchangeSelection.getExchanges().get(operation.getName())
+                              .contains(pair.getRequest().getName()))
+                        .toList();
+               }
+               exporter.addMessageDefinitions(service, operation, selectedExchanges);
+            }
+         }
+         return exporter.exportAsString();
+      }
+      log.warn("Didn't find any service with id {} to export or unauthorized, returning empty content", serviceId);
+      return "";
    }
 }

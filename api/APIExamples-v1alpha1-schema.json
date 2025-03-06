@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://microcks.io/schemas/APIExamples-v1alpha1-schema.json",
   "title": "The APIExamples JSON schema",
   "description": "APIExamples is a specification for defining examples of API.",

@@ -21,7 +21,7 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, ParamMap } from '@angular/router';
 
-import { Observable } from 'rxjs';
+import { Observable, Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
 import { BsModalService } from 'ngx-bootstrap/modal';
@@ -37,6 +37,7 @@ import { ListConfig, ListEvent } from 'patternfly-ng/list';
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
 import { GenerateSamplesDialogComponent } from './_components/generate-samples.dialog';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
+import { ManageSamplesDialogComponent } from './_components/manage-samples.dialog';
 import {
   Operation,
   ServiceType,
@@ -78,6 +79,10 @@ export class ServiceDetailPageComponent implements OnInit {
   notifications: Notification[];
   urlType: string = 'raw';
 
+  aiCopilotSamples: boolean = false;
+  aiCopilotTaskId: string = null;
+  aiPoller: Subscription;
+
   constructor(
     private servicesSvc: ServicesService,
     private contractsSvc: ContractsService,
@@ -116,6 +121,7 @@ export class ServiceDetailPageComponent implements OnInit {
       this.operations.sort((o1, o2) => {
         return this.sortOperations(o1, o2);
       });
+      this.updateAICopilotSamplesFlag(view);
     });
 
     // Fallback
@@ -144,6 +150,37 @@ export class ServiceDetailPageComponent implements OnInit {
       showRadioButton: false,
       useExpandItems: true,
     } as ListConfig;
+  }
+
+  private refreshServiceView(): void {
+    // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
+    // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
+    // When done multiple times, serviceView re-assignation is not detected... So we have to force
+    // null, redetect and then re-assign a new Observable...
+    this.serviceView = null;
+    this.ref.detectChanges();
+    this.serviceView = this.servicesSvc.getServiceView(this.serviceId);
+    this.serviceView.subscribe((view) => {
+      this.resolvedServiceView = view;
+      this.updateAICopilotSamplesFlag(view);
+    });
+    // Then trigger view reevaluation to update the samples list and the notifications toaster.
+    this.ref.detectChanges();
+  }
+
+  private updateAICopilotSamplesFlag(view: ServiceView): void {
+    this.aiCopilotSamples = false;
+    this.operations.forEach((operation) => {
+      view.messagesMap[operation.name].forEach((exchange) => {
+        if (
+          (exchange.request != undefined && exchange.request.sourceArtifact === 'AI Copilot')
+           || (exchange.eventMessage != undefined && exchange.eventMessage.sourceArtifact === 'AI Copilot')
+          ) {
+          this.aiCopilotSamples = true;
+          return;
+        }
+      });
+    });
   }
 
   private sortOperations(o1: Operation, o2: Operation): number {
@@ -175,10 +212,7 @@ export class ServiceDetailPageComponent implements OnInit {
   public openEditLabels(): void {
     const initialState = {
       closeBtnName: 'Cancel',
-      resourceName:
-        this.resolvedServiceView.service.name +
-        ' - ' +
-        this.resolvedServiceView.service.version,
+      resourceName: this.resolvedServiceView.service.name + ' - ' + this.resolvedServiceView.service.version,
       resourceType: 'Service',
       labels: {},
     };
@@ -212,9 +246,7 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.SUCCESS,
               this.resolvedServiceView.service.name,
               'Labels have been updated',
-              false,
-              null,
-              null
+              false, null, null
             );
             // Then trigger view reevaluation to update the label list component and the notifications toaster.
             this.ref.detectChanges();
@@ -224,12 +256,12 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.DANGER,
               this.resolvedServiceView.service.name,
               'Labels cannot be updated (' + err.message + ')',
-              false,
-              null,
-              null
+              false, null, null
             );
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {
+            //console.log('Observer got a complete notification')
+          },
         });
     });
   }
@@ -245,6 +277,53 @@ export class ServiceDetailPageComponent implements OnInit {
       return "/api/documentation/" + contract.name + "/" + contract.type;
     }
     return "/api/documentation/id/" + contract.id + "/" + contract.type;
+  }
+
+  public enrichWithAICopilot(): void {
+    this.copilotSvc.launchSamplesGeneration(this.resolvedServiceView.service).subscribe((res) => {
+      this.aiCopilotTaskId = res.taskId;
+      console.log('AI Copilot task id: ' + this.aiCopilotTaskId);
+      this.notificationService.message( 
+        NotificationType.INFO,
+        this.resolvedServiceView.service.name,
+        'AI Copilot Samples generation started...',
+        false, null, null
+      );
+      // Then trigger view reevaluation to update the spinner, the button and the notifications toaster.
+      this.ref.detectChanges();
+
+      // Then start polling for the task status and update the view accordingly.
+      console.log('Starting polling for AI Copilot task status...');
+      this.aiPoller = interval(5000).pipe(
+        switchMap(() => this.copilotSvc.getGenerationTaskStatus(this.aiCopilotTaskId))
+      ).subscribe((res) => {
+          console.log("Response: " + JSON.stringify(res));
+          if (res.status === 'SUCCESS') {
+            this.notificationService.message(
+              NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name,
+              'AI Copilot Samples generation finished!',
+              false, null, null
+            );
+            this.aiCopilotTaskId = null;
+            this.aiPoller.unsubscribe();
+          } else if (res.status === 'FAILURE') {
+            this.notificationService.message(
+              NotificationType.DANGER,
+              this.resolvedServiceView.service.name,
+              'AI Copilot Samples generation failed',
+              false, null, null
+            );
+            this.aiCopilotTaskId = null;
+            this.aiPoller.unsubscribe();
+          }
+          // Refresh the view to update the spinner and the notifications toaster.
+          this.refreshServiceView();
+        });
+    });
+  }
+  public isAIEnrichInProgress(): boolean {
+    return this.aiCopilotTaskId != null;
   }
 
   public openResources(): void {
@@ -276,13 +355,6 @@ export class ServiceDetailPageComponent implements OnInit {
         )
         .subscribe({
           next: (res) => {
-            // Because we're using the ChangeDetectionStrategy.OnPush, we have to explicitely
-            // set a new value (and not only mutate) to serviceView to force async pipe evaluation later on.
-            // When done multiple times, serviceView re-assignation is not detected... So we have to force
-            // null, redetect and then re-assign a new Observable...
-            this.serviceView = null;
-            this.ref.detectChanges();
-            this.serviceView = this.servicesSvc.getServiceView(this.serviceId);
             this.notificationService.message(
               NotificationType.SUCCESS,
               this.resolvedServiceView.service.name,
@@ -292,7 +364,7 @@ export class ServiceDetailPageComponent implements OnInit {
               null
             );
             // Then trigger view reevaluation to update the samples list and the notifications toaster.
-            this.ref.detectChanges();
+            this.refreshServiceView();
           },
           error: (err) => {
             this.notificationService.message(
@@ -304,7 +376,57 @@ export class ServiceDetailPageComponent implements OnInit {
               null
             );
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {
+            //console.log('Observer got a complete notification')
+          },
+        });
+    });
+  }
+
+  public openManageAISamples(): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      serviceView: this.resolvedServiceView,
+    };
+    this.modalRef = this.modalService.show(ManageSamplesDialogComponent, {
+      initialState,
+    });
+    this.modalRef.setClass('modal-lg');
+    this.modalRef.content.cleanupSelectionAction.subscribe((selectedExchanges) => {
+      let exchangeSelection = {
+        serviceId: this.resolvedServiceView.service.id,
+        exchanges: {}
+      };
+      Object.keys(selectedExchanges).forEach((operationName) => {
+        exchangeSelection.exchanges[operationName] = [];
+        Object.keys(selectedExchanges[operationName]).forEach((exchangeName) => {
+          exchangeSelection.exchanges[operationName].push(exchangeName)
+        });
+      });
+      this.copilotSvc
+        .removeExchanges(this.resolvedServiceView.service, exchangeSelection)
+        .subscribe({
+          next: (res) => {
+            this.notificationService.message(
+              NotificationType.SUCCESS,
+              this.resolvedServiceView.service.name,
+              'AI Copilot Samples have been removed from Service',
+              false, null, null
+            );
+            // Then trigger view reevaluation to update the samples list and the notifications toaster.
+            this.refreshServiceView();
+          },
+          error: (err) => {
+            this.notificationService.message(
+              NotificationType.DANGER,
+              this.resolvedServiceView.service.name,
+              'Selected Samples cannot be removed (' + err.message + ')',
+              false, null, null
+            );
+          },
+          complete: () => {
+            //console.log('Observer got a complete notification')
+          },
         });
     });
   }
@@ -808,6 +930,11 @@ export class ServiceDetailPageComponent implements OnInit {
         this.resolvedServiceView.service.type === 'GRPC')
     );
   }
+  public hasAICopilotSamples(): boolean {
+    return (
+      this.hasAICopilotEnabled() && this.aiCopilotSamples
+    );
+  }
 
   public hasRepositoryTenancyFeatureEnabled(): boolean {
     return this.config.hasFeatureEnabled('repository-tenancy');
@@ -824,7 +951,7 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public hasAICopilotEnabled(): boolean {
-    return this.config.hasFeatureEnabled('ai-copilot');
+    return this.hasRole('manager') && this.config.hasFeatureEnabled('ai-copilot');
   }
 
   public asyncAPIFeatureEndpoint(binding: string): string {

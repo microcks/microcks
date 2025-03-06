@@ -33,6 +33,7 @@
     <java.version>21</java.version>
     <junit.version>5.10.2</junit.version>
     <jackson.version>2.17.2</jackson.version>
+    <json-schema-validator.version>1.5.5</json-schema-validator.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <avro.version>1.12.0</avro.version>
     <graphql-java.version>21.3</graphql-java.version>
@@ -64,21 +65,11 @@
         </exclusion>
       </exclusions>
     </dependency>
-
+    <!-- import for networknt/json-schema-validator -->
     <dependency>
-      <groupId>com.github.java-json-tools</groupId>
+      <groupId>com.networknt</groupId>
       <artifactId>json-schema-validator</artifactId>
-      <version>2.2.14</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>jackson-coreutils</artifactId>
-      <version>2.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.github.java-json-tools</groupId>
-      <artifactId>json-schema-core</artifactId>
-      <version>1.2.14</version>
+      <version>${json-schema-validator.version}</version>
     </dependency>
 
     <dependency>

@@ -31,8 +31,20 @@ export class AICopilotService {
     return this.http.get<Exchange[]>(this.rootUrl + '/copilot/samples/' + service.id, options);
   }
 
+  public launchSamplesGeneration(service: Service): Observable<any> {
+    return this.http.get<any>(this.rootUrl + '/copilot/samples/' + service.id);
+  }
+
+  public getGenerationTaskStatus(taskId: string): Observable<any> {
+    return this.http.get<any>(this.rootUrl + '/copilot/samples/task/' + taskId + '/status');
+  }
+
   public addSamplesSuggestions(service: Service, operationName: string, exchanges: Exchange[]): Observable<any> {
     const options = { params: new HttpParams().set('operation', operationName) };
     return this.http.post<any>(this.rootUrl + '/copilot/samples/' + service.id, exchanges, options);
+  }
+
+  public removeExchanges(service: Service, exchangeSelection: any): Observable<any> {
+    return this.http.post<any>(this.rootUrl + '/copilot/samples/' + service.id + '/cleanup', exchangeSelection);
   }
 }

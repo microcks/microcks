@@ -34,10 +34,13 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -64,41 +67,48 @@ public class AICopilotHelper {
    protected static final ObjectMapper JSON_MAPPER = new ObjectMapper();
    protected static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
 
+   protected static final String REALISTIC_AND_VALID_EXAMPLES_PROMPT = """
+         Generated examples must be realistic illustrations on how to use the API and must be valid regarding the schema definition.
+         """;
+
    protected static final String OPENAPI_OPERATION_PROMPT_TEMPLATE = """
          Given the OpenAPI specification below, generate %2$d full examples (request and response) for operation '%1$s' strictly (no sub-path).
-         """;
+         """
+         + REALISTIC_AND_VALID_EXAMPLES_PROMPT;
 
    protected static final String GRAPHQL_OPERATION_PROMPT_TEMPLATE = """
          Given the GraphQL schema below, generate %2$d full examples (request and response) for operation '%1$s' only.
-         """;
+         """ + REALISTIC_AND_VALID_EXAMPLES_PROMPT;
 
    protected static final String ASYNCAPI_OPERATION_PROMPT_TEMPLATE = """
          Given the AsyncAPI specification below, generate %2$d full examples for operation '%1$s' only.
-         """;
+         """ + REALISTIC_AND_VALID_EXAMPLES_PROMPT;
 
    protected static final String GRPC_OPERATION_PROMPT_TEMPLATE = """
          Given the gRPC protobuf schema below, generate %3$d full examples (request and response) for operation '%2$s' of service '%1$s'.
-         """;
+         """
+         + REALISTIC_AND_VALID_EXAMPLES_PROMPT;
 
    protected static final String YAML_FORMATTING_PROMPT = """
-         Use only this YAML format for output (no other text or markdown):
+         Use only the provided YAML format to output the list of examples (no other text or markdown):
          """;
    protected static final String REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: %1$d
+         - example: <meaningful example %1$d name>
            request:
              url: <request url>
              headers:
                accept: application/json
+             parameters:
+               <name 1>: <value 1>
              body: <request body>
            response:
-             code: 200
+             code: <response code>
              headers:
                content-type: application/json
              body: <response body>
          """;
-
    protected static final String UNIDIRECTIONAL_EVENT_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: %1$d
+         - example: <meaningful example %1$d name>
            message:
              headers:
                <header_name>: <value 1>
@@ -106,16 +116,20 @@ public class AICopilotHelper {
          """;
 
    protected static final String GRPC_REQUEST_RESPONSE_EXAMPLE_YAML_FORMATTING_TEMPLATE = """
-         - example: %1$d
+         - example: <meaningful example %1$d name>
            request:
              body: <request body in JSON>
            response:
              body: <response body in JSON>
          """;
 
+   private static final String REQUEST_NODE = "request";
+   private static final String RESPONSE_NODE = "response";
+   private static final String PARAMETERS_NODE = "parameters";
    private static final String QUERY_NODE = "query";
    private static final String HEADERS_NODE = "headers";
    private static final String VARIABLES_NODE = "variables";
+   private static final String BODY_NODE = "body";
 
    private AICopilotHelper() {
       // Hides the default implicit one as it's a utility class.
@@ -182,66 +196,29 @@ public class AICopilotHelper {
       JsonNode root = YAML_MAPPER.readTree(sanitizeYamlContent(content));
       if (root.getNodeType() == JsonNodeType.ARRAY) {
          Iterator<JsonNode> examples = root.elements();
+         int index = 1;
          while (examples.hasNext()) {
             JsonNode example = examples.next();
+            String name = example.path("example").asText("Sample " + index++);
 
             // Deal with parsing request.
-            JsonNode requestNode = example.path("request");
-            Request request = new Request();
-            JsonNode requestHeadersNode = requestNode.path(HEADERS_NODE);
-            request.setHeaders(buildHeaders(requestHeadersNode));
-            request.setContent(getRequestContent(requestHeadersNode, requestNode.path("body")));
-
-            String url = requestNode.path("url").asText();
-            if (url.contains("?")) {
-               String[] kvPairs = url.substring(url.indexOf("?") + 1).split("&");
-               for (String kvPair : kvPairs) {
-                  String[] kv = kvPair.split("=");
-                  Parameter param = new Parameter();
-                  param.setName(kv[0]);
-                  param.setValue(kv[1]);
-                  request.addQueryParameter(param);
-               }
-            }
+            JsonNode requestNode = example.path(REQUEST_NODE);
+            Request request = buildRequest(requestNode, name);
 
             // Deal with parsing response.
-            JsonNode responseNode = example.path("response");
-            Response response = new Response();
-            JsonNode responseHeadersNode = responseNode.path(HEADERS_NODE);
-            response.setHeaders(buildHeaders(responseHeadersNode));
-            response.setContent(getResponseContent(responseHeadersNode, responseNode.path("body")));
-            response.setMediaType(responseHeadersNode.path("content-type").asText(null));
-            response.setStatus(responseNode.path("code").asText("200"));
-            response.setFault(response.getStatus().startsWith("4") || response.getStatus().startsWith("5"));
+            JsonNode responseNode = example.path(RESPONSE_NODE);
+            Response response = buildResponse(responseNode, name);
 
-            //
-            String dispatchCriteria = null;
+            // Finally, take care about dispatchCriteria and complete operation resourcePaths.
+            // If we previously override the dispatcher with a Fallback, we must be sure to get wrapped elements.
+            DispatchCriteriaHelper.DispatcherDetails details = DispatchCriteriaHelper
+                  .extractDispatcherWithRules(operation);
 
-            if (DispatchStyles.URI_PARTS.equals(operation.getDispatcher())) {
-               String resourcePathPattern = operation.getName().split(" ")[1];
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(),
-                     resourcePathPattern, url);
-            } else if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())) {
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
-            } else if (DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
-               String resourcePathPattern = operation.getName().split(" ")[1];
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(operation.getDispatcherRules(),
-                     resourcePathPattern, url);
-               dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(operation.getDispatcherRules(), url);
-            } else if (DispatchStyles.QUERY_ARGS.equals(operation.getDispatcher())) {
-               // This dispatcher is used for GraphQL or gRPC
-               if (ServiceType.GRAPHQL.equals(service.getType())) {
-                  Map<String, String> variables = getGraphQLVariables(request.getContent());
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(),
-                        variables);
-               } else if (ServiceType.GRPC.equals(service.getType())) {
-                  Map<String, String> parameters = JSON_MAPPER.readValue(request.getContent(),
-                        TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(),
-                        parameters);
-               }
+            // Finally, take care about dispatchCriteria if dispatching rules are not null.
+            if (details.rootDispatcherRules() != null) {
+               completeDispatchCriteriaAndResourcePaths(service, operation, details.rootDispatcher(),
+                     details.rootDispatcherRules(), requestNode, request, response);
             }
-            response.setDispatchCriteria(dispatchCriteria);
 
             if (service.getType() == ServiceType.GRAPHQL) {
                adaptGraphQLRequestContent(request);
@@ -324,6 +301,119 @@ public class AICopilotHelper {
       return pseudoYaml;
    }
 
+   private static Request buildRequest(JsonNode requestNode, String name) throws Exception {
+      Request request = new Request();
+      request.setName(name);
+      JsonNode requestHeadersNode = requestNode.path(HEADERS_NODE);
+      request.setHeaders(buildHeaders(requestHeadersNode));
+      request.setContent(getRequestContent(requestHeadersNode, requestNode.path(BODY_NODE)));
+      return request;
+   }
+
+   private static Multimap<String, String> buildRequestParameters(Request request, JsonNode parametersNode) {
+      Multimap<String, String> result = ArrayListMultimap.create();
+      Iterator<Map.Entry<String, JsonNode>> parameters = parametersNode.fields();
+      while (parameters.hasNext()) {
+         Map.Entry<String, JsonNode> parameterNode = parameters.next();
+
+         // Depending on node type, extract different representations to MultiMap result.
+         if (parameterNode.getValue().isArray()) {
+            for (JsonNode current : parameterNode.getValue()) {
+               result.put(parameterNode.getKey(), getSerializedValue(current));
+            }
+         } else if (parameterNode.getValue().isObject()) {
+            final var fieldsIterator = parameterNode.getValue().fields();
+            while (fieldsIterator.hasNext()) {
+               var current = fieldsIterator.next();
+               result.put(current.getKey(), getSerializedValue(current.getValue()));
+            }
+         } else {
+            result.put(parameterNode.getKey(), getSerializedValue(parameterNode.getValue()));
+         }
+      }
+      return result;
+   }
+
+   private static Response buildResponse(JsonNode responseNode, String name) throws Exception {
+      Response response = new Response();
+      response.setName(name);
+      JsonNode responseHeadersNode = responseNode.path(HEADERS_NODE);
+      response.setHeaders(buildHeaders(responseHeadersNode));
+      response.setContent(getResponseContent(responseHeadersNode, responseNode.path(BODY_NODE)));
+      response.setMediaType(responseHeadersNode.path("content-type").asText(null));
+      response.setStatus(responseNode.path("code").asText("200"));
+      response.setFault(response.getStatus().startsWith("4") || response.getStatus().startsWith("5"));
+      return response;
+   }
+
+   private static void completeDispatchCriteriaAndResourcePaths(Service service, Operation operation,
+         String rootDispatcher, String rootDispatcherRules, JsonNode requestNode, Request request, Response response)
+         throws Exception {
+
+      String dispatchCriteria = null;
+      String resourcePathPattern = operation.getName().contains(" ") ? operation.getName().split(" ")[1]
+            : operation.getName();
+
+
+      // Extract parameters if LLM provided some.
+      Multimap<String, String> parameters = null;
+      if (requestNode.has(PARAMETERS_NODE)) {
+         parameters = buildRequestParameters(request, requestNode.get(PARAMETERS_NODE));
+      } else {
+         parameters = ArrayListMultimap.create();
+      }
+      // Extract parameters from URL if LLM provided some.
+      if (requestNode.has("url")) {
+         String url = requestNode.get("url").asText();
+         Map<String, String> pathParameters = DispatchCriteriaHelper.extractMapFromURIPattern(rootDispatcherRules,
+               resourcePathPattern, url);
+         Multimap<String, String> queryParameters = DispatchCriteriaHelper.extractMapFromURIParams(rootDispatcherRules,
+               url);
+
+         // Complete parameter map with both content.
+         for (Map.Entry<String, String> entry : pathParameters.entrySet()) {
+            if (!parameters.containsKey(entry.getKey())) {
+               parameters.put(entry.getKey(), entry.getValue());
+            }
+         }
+         for (Map.Entry<String, String> entry : queryParameters.entries()) {
+            if (!parameters.containsKey(entry.getKey())) {
+               parameters.put(entry.getKey(), entry.getValue());
+            }
+         }
+      }
+
+      // Now that we should have all parameters, we can complete the
+      for (Map.Entry<String, String> entry : parameters.entries()) {
+         Parameter parameter = new Parameter();
+         parameter.setName(entry.getKey());
+         parameter.setValue(entry.getValue());
+         request.addQueryParameter(parameter);
+      }
+
+      // Compute a dispatch criteria based on dispatcher and dispatcher rules but
+      // don't update the operation resource path as the request/response has not been reviewed by user yet.
+      if (DispatchStyles.URI_PARAMS.equals(rootDispatcher)) {
+         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
+      } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
+      } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
+         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
+         dispatchCriteria += DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
+      } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
+         // This dispatcher is used for GraphQL or gRPC
+         if (ServiceType.GRAPHQL.equals(service.getType())) {
+            Map<String, String> variables = getGraphQLVariables(request.getContent());
+            dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(), variables);
+         } else if (ServiceType.GRPC.equals(service.getType())) {
+            Map<String, String> bodyAsMap = JSON_MAPPER.readValue(request.getContent(),
+                  TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
+            dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(operation.getDispatcherRules(), bodyAsMap);
+         }
+      }
+      response.setDispatchCriteria(dispatchCriteria);
+   }
+
    private static Set<Header> buildHeaders(JsonNode headersNode) {
       Set<Header> headers = new HashSet<>();
       Iterator<Map.Entry<String, JsonNode>> headerNodes = headersNode.fields();
@@ -360,6 +450,19 @@ public class AICopilotHelper {
       return null;
    }
 
+   /** Get the serialized value of a content node, or null if node is null ;-) */
+   private static String getSerializedValue(JsonNode contentNode) {
+      if (contentNode != null) {
+         // Get string representation if array or object.
+         if (contentNode.getNodeType() == JsonNodeType.ARRAY || contentNode.getNodeType() == JsonNodeType.OBJECT) {
+            return contentNode.toString();
+         }
+         // Else get raw representation.
+         return contentNode.asText();
+      }
+      return null;
+   }
+
    private static Map<String, String> getGraphQLVariables(String requestContent) throws Exception {
       JsonNode graphQL = JSON_MAPPER.readTree(requestContent);
 
@@ -374,7 +477,7 @@ public class AICopilotHelper {
       } else {
          log.warn("GraphQL request do not contain variables...");
       }
-      return new HashMap<>();
+      return Collections.emptyMap();
    }
 
    private static void adaptGraphQLRequestContent(Request request) throws Exception {

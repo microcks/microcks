@@ -107,9 +107,7 @@ class RestControllerIT extends AbstractBaseIT {
       response = restTemplate.exchange("/rest-valid/pastry-details/1.0.0/pastry/Eclair+Cafe", HttpMethod.PATCH,
             requestEntity, String.class);
       assertEquals(400, response.getStatusCode().value());
-      assertEquals(
-            "[format attribute \"double\" not supported, instance type (string) does not match any allowed primitive type (allowed: [\"integer\",\"number\"])]",
-            response.getBody());
+      assertEquals("[string found, number expected]", response.getBody());
    }
 
    @Test

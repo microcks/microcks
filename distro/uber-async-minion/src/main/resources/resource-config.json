@@ -1,0 +1,19 @@
+{
+  "resources": {
+    "includes": [
+      { "pattern": "\\Qproto2/include/google/protobuf/descriptor.proto\\E" },
+      { "pattern": "proto3/include/google/protobuf/.*.proto" },
+      { "pattern": "\\Qproto3/include/google/protobuf/compiler/plugin.proto\\E" },
+      {
+        "pattern": "\\QMETA-INF/services/org.eclipse.paho.client.mqttv3.spi.NetworkModuleFactory\\E",
+        "condition": {
+          "typeReachable": "org.eclipse.paho.client.mqttv3.internal.NetworkModuleService"
+        }
+      }
+    ]
+  },
+  "bundles": [
+    {"name":"org.eclipse.paho.client.mqttv3.internal.nls.logcat"},
+    {"name":"org.eclipse.paho.client.mqttv3.internal.nls.messages"}
+  ]
+}

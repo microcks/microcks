@@ -69,6 +69,7 @@ import { DirectAPIWizardComponent } from './pages/services/_components/direct-ap
 import { OperationOverridePageComponent } from './pages/services/{serviceId}/operation/operation-override.page';
 import { ServiceDetailPageComponent } from './pages/services/{serviceId}/service-detail.page';
 import { GenerateSamplesDialogComponent } from './pages/services/{serviceId}/_components/generate-samples.dialog';
+import { ManageSamplesDialogComponent } from './pages/services/{serviceId}/_components/manage-samples.dialog';
 import { GenericResourcesDialogComponent } from './pages/services/{serviceId}/_components/generic-resources.dialog';
 import { TestsPageComponent } from './pages/tests/tests.page';
 import { TestCreatePageComponent } from './pages/tests/create/test-create.page';
@@ -110,9 +111,9 @@ export function configLoader(configService: ConfigService) {
     ConfirmDeleteDialogComponent, HelpDialogComponent, VerticalNavComponent, DayInvocationsBarChartComponent,
     HourInvocationsBarChartComponent, TestBarChartComponent, LabelListComponent, EditLabelsComponent, EditLabelsDialogComponent,
     ScoreTreemapComponent, GradeIndexComponent, DashboardPageComponent, ServicesPageComponent, DirectAPIWizardComponent,
-    ServiceDetailPageComponent, OperationOverridePageComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
-    TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, AddToCIDialogComponent, TestRunnerPageComponent,
-    InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
+    ServiceDetailPageComponent, OperationOverridePageComponent, GenerateSamplesDialogComponent, ManageSamplesDialogComponent,
+    GenericResourcesDialogComponent, TestsPageComponent, TestCreatePageComponent, TestDetailPageComponent, AddToCIDialogComponent, 
+    TestRunnerPageComponent, InvocationsServicePageComponent, ImportersPageComponent, ServiceRefsDialogComponent, ImporterWizardComponent,
     ArtifactUploaderDialogComponent, AdminPageComponent, SecretsTabComponent, SnapshotsTabComponent, UsersTabComponent,
     GroupsManagementDialogComponent, HubPageComponent, HubPackagePageComponent, HubAPIVersionPageComponent,
     ExchangesTabsetComponent
@@ -148,9 +149,9 @@ export function configLoader(configService: ConfigService) {
   ],
   entryComponents: [
     HelpDialogComponent, DirectAPIWizardComponent, AddToCIDialogComponent,
-    EditLabelsDialogComponent, GenerateSamplesDialogComponent, GenericResourcesDialogComponent,
-    ServiceRefsDialogComponent, ImporterWizardComponent, ArtifactUploaderDialogComponent,
-    GroupsManagementDialogComponent
+    EditLabelsDialogComponent, GenerateSamplesDialogComponent, ManageSamplesDialogComponent,
+    GenericResourcesDialogComponent, ServiceRefsDialogComponent, ImporterWizardComponent, 
+    ArtifactUploaderDialogComponent, GroupsManagementDialogComponent
   ],
   bootstrap: [AppComponent]
 })

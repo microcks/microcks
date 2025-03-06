@@ -1,0 +1,86 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left"><i class="fa fa-filter"></i> Manage AI Copilot Samples</h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <h4>Select Samples to export or clean-up</h4>
+
+  <div class="container-fluid samples-container">
+    <div class="controls">
+      <div class="filter-toolbar">
+        <button class="btn btn-link" (click)="selectAllExchanges()">Select All</button>
+        <button class="btn btn-link" (click)="unselectAllExchanges()">Delesect All</button>
+      </div>
+    </div>
+    <pfng-list id="operationsList" [items]="operationsWithAISamples" [config]="operationsListConfig"
+        [itemTemplate]="operationTemplate" [expandTemplate]="operationDetailTemplate">
+
+      <ng-template #operationTemplate let-item="item" let-index="index">
+        <div class="list-pf-left">
+        </div>
+        <div class="list-pf-content-wrapper">
+          <div class="list-pf-main-content">
+            <div class="list-pf-title">{{ item.name }}</div>
+            <div class="list-pf-description text-overflow-pf">
+              <span [ngSwitch]="item.method">
+                <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
+                <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
+                <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
+                <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
+                <span class="label label-info" *ngSwitchDefault>{{ item.method || 'POST'}}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </ng-template>
+
+      <ng-template #operationDetailTemplate let-item="item" let-index="index">
+        <div class="row">
+          <div class="col-sm-6 first-col">
+            <ul class="unstyled">
+              <li *ngFor="let exchange of halfOperationExchanges(item.name)">
+                <label class="checkbox">
+                  <input type="checkbox" name="exchangeIds" [(ngModel)]="selectedExchanges[item.name][getExchangeName(exchange)]">
+                  {{ getExchangeName(exchange) }}
+                </label>
+              </li>
+            </ul>
+          </div>
+          <div class="col-sm-6">
+            <ul class="unstyled">
+              <li *ngFor="let exchange of secondHalfOperationExchanges(item.name)">
+                <label class="checkbox">
+                  <input type="checkbox" name="exchangeIds" [(ngModel)]="selectedExchanges[item.name][getExchangeName(exchange)]">
+                  {{ getExchangeName(exchange) }}
+                </label>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </ng-template>
+
+    </pfng-list>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+    <button class="btn btn-primary" (click)="exportSelection()">
+      <span class="fa fa-download"></span> Export
+    </button>
+    <span class="dropdown" *ngIf="this.serviceView.service.type === 'REST'">
+      <button class="btn btn-primary dropdown-toggle" dropdowntoggle type="button" id="exportOptions" data-toggle="dropdown">
+        As {{exportFormat}}
+        <span class="caret"></span>
+      </button>&nbsp;
+      <ul class="dropdown-menu" role="menu" aria-labelledby="exportOptions">
+        <li role="presentation"><a class="filter-field dropdown-item" (click)="this.exportFormat = 'APIExamples'">As APIExamples</a></li>
+        <li role="presentation"><a class="filter-field dropdown-item" (click)="this.exportFormat = 'OAS Overlay'">As OAS Overlay</a></li>
+      </ul>
+    </span>
+    <button class="btn btn-danger" (click)="cleanupSelection()" [disabled]="!cleanupEnabled()">
+      Delete
+    </button>
+  </div>
+</div>

@@ -1,4 +1,4 @@
-name: package-native
+name: Build and Push Native Images
 on:
   workflow_call:
     inputs:
@@ -12,40 +12,39 @@ permissions:
 
 jobs:
   build-native-images:
-    runs-on: ubuntu-latest-4-cores
+    if: github.repository_owner == 'microcks' && inputs.image-tag != ''
     environment: Build
     strategy:
       matrix:
-        arch:
-          - amd64
-          - arm64
+        os: [ ubuntu-latest-4-cores, ubuntu-24.04-arm ]
+        arch: [ amd64, arm64 ]
+        exclude:
+          - os: ubuntu-latest-4-cores
+            arch: arm64
+          - os: ubuntu-24.04-arm
+            arch: amd64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: '21'
           distribution: 'temurin'
           cache: maven
 
       - name: Build Java components
-        run: mvn -B -DskipTests -Pprod install
+        run: mvn -B -q -DskipTests -Pprod install
 
       - name: Set IMAGE_TAG environment from input
         run: |
           set -x
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
 
-      - name: Set up QEMU
-        if: matrix.arch == 'arm64'
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: ${{ matrix.arch }}
-
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
         with:
           install: true
 
@@ -69,8 +68,7 @@ jobs:
               -Dspring-boot.build-image.runImage=$RUNNER_IMAGE
 
       - name: Save native image for ${{ matrix.arch }}
-        #uses: ishworkh/docker-image-artifact-upload@v1
-        uses: ishworkh/container-image-artifact-upload@v2.0.0
+        uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714 # v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -88,29 +86,117 @@ jobs:
         run: |
           echo "IMAGE_TAG=${{inputs.image-tag}}-native" >> "$GITHUB_ENV"
 
-      - name: Get saved images for ${{ matrix.arch }}
-        #uses: ishworkh/docker-image-artifact-download@v1
-        uses: ishworkh/container-image-artifact-download@v2.0.0
+      - name: Login to Quay.io and Docker Hub registries
+        run: |
+          echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
+          echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
+
+      - name: Get saved image for ${{ matrix.arch }}
+        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
+
+      - name: Tag image for ${{ matrix.arch }}
+        run: |
+          docker tag microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }} quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          docker tag microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }} docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+
+      - name: Push image for ${{ matrix.arch }}
+        run: |
+          docker push quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          docker push docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+
+  build-async-minion-images:
+    if: github.repository_owner == 'microcks' && ${{ inputs.image-tag }} != ''
+    environment: Build
+    strategy:
+      matrix:
+        os: [ ubuntu-latest-4-cores, ubuntu-24.04-arm ]
+        arch: [ amd64, arm64 ]
+        exclude:
+          - os: ubuntu-latest-4-cores
+            arch: arm64
+          - os: ubuntu-24.04-arm
+            arch: amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build Java components
+        run: mvn -B -q -DskipTests -Pprod install
+
+      - name: Set IMAGE_TAG environment from input
+        run: |
+          set -x
+          echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        with:
+          install: true
+          
+      - name: Package async minion in native mode for ${{ matrix.arch }}
+        run: |
+          cd ${{github.workspace}}/distro/uber-async-minion
+          mvn -DskipTests package -Dnative \
+            -Dquarkus.native.container-build=true \
+            -Dquarkus.native.container-runtime-options=--platform=linux/${{ matrix.arch }} \
+            -Dquarkus.container-image.build=true \
+            -Dquarkus.container-image.push=false \
+            -Dquarkus.container-image.image=microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }} \
+            -Dquarkus.docker.buildx.platform=linux/${{ matrix.arch }}
+
+      - name: Save native image for ${{ matrix.arch }}
+        uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714 # v2.0.0
+        with:
+          image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
+
+  push-async-minion-images:
+    runs-on: ubuntu-latest
+    environment: Build
+    needs: build-async-minion-images
+    strategy:
+      matrix:
+        arch:
+          - amd64
+          - arm64
+    steps:
+      - name: Set IMAGE_TAG environment from input
+        run: |
+          echo "IMAGE_TAG=${{inputs.image-tag}}-native" >> "$GITHUB_ENV"
 
       - name: Login to Quay.io and Docker Hub registries
         run: |
           echo ${{ secrets.QUAY_PASSWORD }} | docker login -u ${{ secrets.QUAY_USERNAME }} --password-stdin quay.io
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
-      - name: Tag image
-        run: |
-          docker tag microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }} quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
-          docker tag microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }} docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+      - name: Get saved image for ${{ matrix.arch }}
+        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
+        with:
+          image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
-      - name: Push image
+      - name: Tag image for ${{ matrix.arch }}
         run: |
-          docker push quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
-          docker push docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          docker tag microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }} quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          docker tag microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }} docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+
+      - name: Push image for ${{ matrix.arch }}
+        run: |
+          docker push quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
+          docker push docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}
 
   create-app-multiarch-manifests:
-    needs: push-app-images
+    needs:
+      - push-app-images
+      - push-async-minion-images
     environment: Build
     runs-on: ubuntu-latest
     permissions:
@@ -138,6 +224,14 @@ jobs:
             -a docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-amd64 \
             -a docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}-arm64
           docker manifest push docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}
+          docker manifest create quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }} \
+            -a quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-amd64 \
+            -a quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-arm64
+          docker manifest push quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}
+          docker manifest create docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }} \
+            -a docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-amd64 \
+            -a docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-arm64
+          docker manifest push docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}
 
       - name: Setup Crane
         uses: imjasonh/setup-crane@00c9e93efa4e1138c9a7a5c594acd6c75a2fbf0c # v0.3
@@ -149,9 +243,10 @@ jobs:
         # We could probably use the docker-manifest-action output instead of recomputing those with crane
         run: |
           echo "microcks-uber=$(crane digest quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }})" >> $GITHUB_OUTPUT
+          echo "microcks-uber-async-minion=$(crane digest quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }})" >> $GITHUB_OUTPUT
           
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.7.0
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
 
       - name: Sign images with with GitHub OIDC Token
         env:
@@ -160,3 +255,5 @@ jobs:
         run: |
           cosign sign quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
           cosign sign docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
+          cosign sign quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
+          cosign sign docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}

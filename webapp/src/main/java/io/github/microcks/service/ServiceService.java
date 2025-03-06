@@ -572,7 +572,7 @@ public class ServiceService {
     * @param userInfo      The current user information to check if authorized to do the update
     * @return True if service operation has been found and updated, false otherwise.
     */
-   public Boolean addExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,
+   public Boolean addAICopilotExchangesToServiceOperation(String id, String operationName, List<Exchange> exchanges,
          UserInfo userInfo) {
       // Get service to update.
       Service service = getServiceById(id);
@@ -610,6 +610,49 @@ public class ServiceService {
       }
       return false;
    }
+
+   /**
+    * Remove sample exchanges from an existing service.
+    * @param id                The identifier of service to remove exchanges for
+    * @param exchangeSelection The selection of exchanges to remove
+    * @param userInfo          The current user information to check if authorized to do the update
+    * @return True if service exchanges have been found and removed, false otherwise.
+    */
+   public Boolean removeAICopilotExchangesFromService(String id, ExchangeSelection exchangeSelection,
+         UserInfo userInfo) {
+      // Get service to update.
+      Service service = getServiceById(id);
+      if (service != null
+            && authorizationChecker.hasRoleForService(userInfo, AuthorizationChecker.ROLE_MANAGER, service)) {
+         for (Operation operation : service.getOperations()) {
+            if (exchangeSelection.getExchanges().containsKey(operation.getName())) {
+               log.debug("Removing AI Copilot exchanges for operation {}", operation.getName());
+               String operationId = IdBuilder.buildOperationId(service, operation);
+               List<String> exchangeNames = exchangeSelection.getExchanges().get(operation.getName());
+
+               if (!ServiceType.EVENT.equals(service.getType())) {
+                  // Remove all the requests and responses associated with the operation and AI Copilot.
+                  requestRepository
+                        .deleteAll(requestRepository.findByOperationIdAndSourceArtifact(operationId, AI_COPILOT_SOURCE)
+                              .stream().filter(request -> exchangeNames.contains(request.getName())).toList());
+                  responseRepository
+                        .deleteAll(responseRepository.findByOperationIdAndSourceArtifact(operationId, AI_COPILOT_SOURCE)
+                              .stream().filter(response -> exchangeNames.contains(response.getName())).toList());
+               } else {
+                  // Remove all the event messages associated with the operation and AI Copilot.
+                  eventMessageRepository.deleteAll(eventMessageRepository
+                        .findByOperationIdAndSourceArtifact(operationId, AI_COPILOT_SOURCE).stream()
+                        .filter(eventMessage -> exchangeNames.contains(eventMessage.getName())).toList());
+               }
+            }
+         }
+         // Publish a Service update event before returning.
+         publishServiceChangeEvent(service, ChangeType.UPDATED);
+         return true;
+      }
+      return false;
+   }
+
 
    /** Recopy overriden operation mutable properties into newService. */
    private void copyOverridenOperations(Service existingService, Service newService) {

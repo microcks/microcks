@@ -48,6 +48,10 @@
       <artifactId>quarkus-reactive-messaging-http</artifactId>
       <version>2.0.2</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-container-image-docker</artifactId>
+    </dependency>
 
     <!-- Test related dependencies -->
     <dependency>
@@ -96,4 +100,27 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>native</id>
+      <activation>
+        <property>
+          <name>native</name>
+        </property>
+      </activation>
+      <properties>
+        <skipITs>false</skipITs>
+        <quarkus.native.enabled>true</quarkus.native.enabled>
+      </properties>
+
+      <dependencies>
+        <dependency>
+          <groupId>org.brotli</groupId>
+          <artifactId>dec</artifactId>
+          <version>0.1.2</version>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
 </project>

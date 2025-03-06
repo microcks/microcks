@@ -44,6 +44,7 @@ USER 1001
 COPY target/*-exec.jar app.jar
 EXPOSE 8080
 
-# Run it in uber mode
+# Run it in uber mode with AOT support
 ENV SPRING_PROFILES_ACTIVE=uber
+ENV JAVA_OPTIONS="-Dspring.aot.enabled=true"
 ENTRYPOINT [ "/deployments/run-java.sh" ]
