@@ -1,4 +1,4 @@
-version: '2'
+version: '2.1'
 
 services:
   mongo:
@@ -6,6 +6,11 @@ services:
     container_name: microcks-db
     volumes:
       - "~/tmp/microcks-data:/data/db"
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.0
@@ -18,10 +23,20 @@ services:
     volumes:
       - "./keycloak-realm/microcks-realm-sample.json:/opt/keycloak/data/import/microcks-realm.json"
     command: ["start-dev", "--hostname=http://localhost:18080", "--import-realm"]
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo > /dev/tcp/localhost/8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:0.6.0
     container_name: microcks-postman-runtime
+    healthcheck:
+      test: ["CMD", "sh", "-c", "echo > /dev/tcp/localhost/3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   app:
     depends_on:
@@ -44,3 +59,8 @@ services:
       - KEYCLOAK_PUBLIC_URL=http://localhost:18080
       - JAVA_OPTIONS=-Dspring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:18080/realms/microcks -Dspring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://keycloak:8080/realms/microcks/protocol/openid-connect/certs
       #- MAX_UPLOAD_FILE_SIZE=3MB
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
