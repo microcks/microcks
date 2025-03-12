@@ -33,5 +33,5 @@ Open a new browser tab and point to the `http://localhost:8080` endpoint. This w
 * **Username:** admin
 * **Password:** microcks123
 
-You will be redirected to the main dashboard page. You can now start [using Microcks](https://microcks.io/documentation/getting-started/#using-microcks).
+You will be redirected to the main dashboard page. You can now start [using Microcks](https://microcks.io/documentation/tutorials/getting-started/#using-microcks).
 
