@@ -393,7 +393,7 @@ public class SoapController {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
          ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-               new ServiceStateStore(serviceStateRepository, service.getId()), request);
+               new ServiceStateStore(serviceStateRepository, service.getId()), request, null);
          String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
          return new DispatchContext((String) se.eval(script), requestContext);
       } catch (Exception e) {

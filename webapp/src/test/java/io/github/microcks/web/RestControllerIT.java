@@ -371,4 +371,28 @@ class RestControllerIT extends AbstractBaseIT {
          fail("No Exception should be thrown here");
       }
    }
+
+   @Test
+   void testScriptDispatcher() {
+      // Upload modified pastry spec
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-script-openapi.yaml", true);
+
+      ObjectMapper mapper = new ObjectMapper();
+
+      // Check operation with a defined mock (name: 'Eclair Cafe')
+      ResponseEntity<String> response = restTemplate
+         .getForEntity("/rest/pastry-script/1.0.0/pastry/Eclair Cafe/taste", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals("Delicious", response.getBody());
+
+      // Check operation with a defined mock (name: 'Millefeuille')
+      response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Millefeuille/taste", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals("Awesome", response.getBody());
+
+      // Check operation with an undefined mock (name: 'Dummy')
+      response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Dummy/taste", String.class);
+      assertEquals(200, response.getStatusCode().value());
+      assertEquals("Ok", response.getBody());
+   }
 }

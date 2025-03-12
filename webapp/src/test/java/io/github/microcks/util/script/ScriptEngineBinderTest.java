@@ -72,7 +72,33 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, request);
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, request, null);
+         String result = (String) se.eval(script);
+
+         assertEquals("bar", result);
+      } catch (Exception e) {
+         fail("Exception should no be thrown");
+      }
+   }
+
+   @Test
+   void testUriParametersAreBound() {
+      String script = """
+            def uriParameters = mockRequest.getUriParameters()
+            log.info("uri parameters: " + uriParameters)
+            return uriParameters.get("foo", "null");
+            """;
+
+      ScriptEngineManager sem = new ScriptEngineManager();
+      String body = "content";
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      Map<String, String> uriParameters = new HashMap<>();
+      uriParameters.put("foo", "bar");
+
+      try {
+         // Evaluating request with script coming from operation dispatcher rules.
+         ScriptEngine se = sem.getEngineByExtension("groovy");
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, request, uriParameters);
          String result = (String) se.eval(script);
 
          assertEquals("bar", result);
