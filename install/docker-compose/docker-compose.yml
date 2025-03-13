@@ -17,14 +17,15 @@ services:
     container_name: microcks-sso
     ports:
       - "18080:8080"
+      - "9000:9000"
     environment:
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
     volumes:
       - "./keycloak-realm/microcks-realm-sample.json:/opt/keycloak/data/import/microcks-realm.json"
-    command: ["start-dev", "--hostname=http://localhost:18080", "--import-realm"]
+    command: ["start-dev", "--hostname=http://localhost:18080", "--import-realm", "--health-enabled=true"]
     healthcheck:
-      test: ["CMD", "sh", "-c", "echo > /dev/tcp/localhost/8080"]
+      test: ["CMD", "sh", "-c", "echo -e 'GET /health/live HTTP/1.1\r\nHost: localhost\r\n\r\n' > /dev/tcp/localhost/9000"]
       interval: 30s
       timeout: 10s
       retries: 3
