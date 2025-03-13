@@ -30,8 +30,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
 /**
  * Test case for the Test controller.
@@ -76,11 +78,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      try {
-         Thread.sleep(2000);
-      } catch (InterruptedException e) {
-         throw new RuntimeException(e);
-      }
+      await().during(2000, TimeUnit.MILLISECONDS).until(() -> true);
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
@@ -126,11 +124,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      try {
-         Thread.sleep(2000);
-      } catch (InterruptedException e) {
-         throw new RuntimeException(e);
-      }
+      await().during(2000, TimeUnit.MILLISECONDS).until(() -> true);
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
@@ -178,11 +172,7 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      try {
-         Thread.sleep(2000);
-      } catch (InterruptedException e) {
-         throw new RuntimeException(e);
-      }
+      await().during(2000, TimeUnit.MILLISECONDS).until(() -> true);
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
