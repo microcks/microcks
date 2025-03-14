@@ -1,0 +1,52 @@
+---
+openapi: 3.0.2
+info:
+   title: pastry-script
+   version: 1.0.0
+   description: API definition of API Pastry sample app
+   contact:
+      name: Laurent Broudoux
+      url: http://github.com/lbroudoux
+      email: laurent.broudoux@gmail.com
+   license:
+      name: MIT License
+      url: https://opensource.org/licenses/MIT
+paths:
+   /pastry/{name}/taste:
+      summary: Specific operation on pastry
+      get:
+         x-microcks-operation:
+            dispatcher: SCRIPT
+            dispatcherRules: |
+               def pastryName = mockRequest.getURIParameters().get("name");
+               if (pastryName == "Eclair Cafe") {
+                  return "Delicious"
+               } else if (pastryName == "Millefeuille") {
+                  return "Awesome"
+               }
+               return "Ok"
+         responses:
+            "200":
+               content:
+                  text/plain:
+                     examples:
+                        Delicious:
+                           value: "Delicious"
+                        Awesome:
+                           value: "Awesome"
+                        Ok:
+                           value: "Ok"
+               description: Pastry taste for specified name
+         operationId: GetPastryTasteByName
+         summary: Get Pastry taste by name
+         description: Get Pastry taste by name
+      parameters:
+         - name: name
+           description: pastry name
+           schema:
+              type: string
+           in: path
+           required: true
+tags:
+   - name: pastry
+     description: Pastry resource

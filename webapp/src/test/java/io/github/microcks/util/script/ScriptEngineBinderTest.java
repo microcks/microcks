@@ -47,7 +47,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, null, (Map<String, String>) null);
          String result = (String) se.eval(script);
 
          assertEquals(body, result);
@@ -72,7 +72,33 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, request);
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, request, null);
+         String result = (String) se.eval(script);
+
+         assertEquals("bar", result);
+      } catch (Exception e) {
+         fail("Exception should no be thrown");
+      }
+   }
+
+   @Test
+   void testUriParametersAreBound() {
+      String script = """
+            def uriParameters = mockRequest.getURIParameters()
+            log.info("uri parameters: " + uriParameters)
+            return uriParameters.get("foo", "null");
+            """;
+
+      ScriptEngineManager sem = new ScriptEngineManager();
+      String body = "content";
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      Map<String, String> uriParameters = new HashMap<>();
+      uriParameters.put("foo", "bar");
+
+      try {
+         // Evaluating request with script coming from operation dispatcher rules.
+         ScriptEngine se = sem.getEngineByExtension("groovy");
+         ScriptEngineBinder.bindEnvironment(se, body, null, null, request, uriParameters);
          String result = (String) se.eval(script);
 
          assertEquals("bar", result);
@@ -95,7 +121,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, (Map<String, String>) null);
          String result = (String) se.eval(script);
 
          assertEquals(body, result);
@@ -148,7 +174,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, "body", context, store, null, null);
+         ScriptEngineBinder.bindEnvironment(se, "body", context, store, null, (Map<String, String>) null);
          String result = (String) se.eval(script);
 
          assertEquals("fooValue", result);
@@ -192,7 +218,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, (Map<String, String>) null);
          String result = (String) se.eval(script);
 
          assertEquals("Andrew Response", result);
@@ -234,7 +260,7 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, null);
+         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, (Map<String, String>) null);
          script = ScriptEngineBinder.ensureSoapUICompatibility(script);
          String result = (String) se.eval(script);
 
