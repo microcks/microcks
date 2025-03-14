@@ -380,8 +380,8 @@ class RestControllerIT extends AbstractBaseIT {
       ObjectMapper mapper = new ObjectMapper();
 
       // Check operation with a defined mock (name: 'Eclair Cafe')
-      ResponseEntity<String> response = restTemplate
-         .getForEntity("/rest/pastry-script/1.0.0/pastry/Eclair Cafe/taste", String.class);
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-script/1.0.0/pastry/Eclair Cafe/taste",
+            String.class);
       assertEquals(200, response.getStatusCode().value());
       assertEquals("Delicious", response.getBody());
 

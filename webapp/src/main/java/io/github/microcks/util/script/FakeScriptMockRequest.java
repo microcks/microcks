@@ -72,11 +72,11 @@ public class FakeScriptMockRequest {
       this.requestHeaders = requestHeaders;
    }
 
-   public void setUriParameters(Map<String, String> uriParameters) {
+   public void setURIParameters(Map<String, String> uriParameters) {
       this.uriParameters = uriParameters;
    }
 
-   public Map<String, String> getUriParameters() {
+   public Map<String, String> getURIParameters() {
       return uriParameters;
    }
 }

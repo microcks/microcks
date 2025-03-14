@@ -48,12 +48,41 @@ public class ScriptEngineBinder {
     * @param requestContext The execution context of this request
     * @param stateStore     A store to save/get state from script
     * @param request        The wrapped incoming servlet request.
+    */
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
+         StateStore stateStore, HttpServletRequest request) {
+      bindEnvironment(engine, requestContent, requestContext, stateStore, request, null);
+   }
+
+   /**
+    * Create and bind an environment from Http request for a ScriptEngine.
+    *
+    * @param engine         The engine to enrich with binding environment.
+    * @param requestContent The content of request to use as data
+    * @param requestContext The execution context of this request
+    * @param stateStore     A store to save/get state from script
+    * @param request        The wrapped incoming servlet request.
     * @param uriParameters  The URI parameters of the request
     */
    public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
-                                      StateStore stateStore, HttpServletRequest request, Map<String, String> uriParameters) {
+         StateStore stateStore, HttpServletRequest request, Map<String, String> uriParameters) {
       StringToStringsMap headers = HttpHeadersUtil.extractFromHttpServletRequest(request);
       bindEnvironment(engine, requestContent, requestContext, stateStore, headers, request, uriParameters);
+   }
+
+   /**
+    * Create and bind an environment for a ScriptEngine.
+    *
+    * @param engine         The engine to enrich with binding environment.
+    * @param requestContent The content of request to use as data
+    * @param requestContext The execution context of this request
+    * @param stateStore     A store to save/get state from script
+    * @param headers        The header values of the request
+    * @param request        The wrapped incoming servlet request.
+    */
+   public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
+         StateStore stateStore, StringToStringsMap headers, HttpServletRequest request) {
+      bindEnvironment(engine, requestContent, requestContext, stateStore, headers, request, null);
    }
 
    /**
@@ -68,12 +97,12 @@ public class ScriptEngineBinder {
     * @param uriParameters  The URI parameters of the request
     */
    public static void bindEnvironment(ScriptEngine engine, String requestContent, Map<String, Object> requestContext,
-                                      StateStore stateStore, StringToStringsMap headers, HttpServletRequest request,
-                                      Map<String, String> uriParameters) {
+         StateStore stateStore, StringToStringsMap headers, HttpServletRequest request,
+         Map<String, String> uriParameters) {
       // Build a fake request container.
       FakeScriptMockRequest mockRequest = new FakeScriptMockRequest(requestContent, headers);
       mockRequest.setRequest(request);
-      mockRequest.setUriParameters(uriParameters);
+      mockRequest.setURIParameters(uriParameters);
 
       // Create bindings and put content according to SoapUI binding environment.
       Bindings bindings = engine.createBindings();

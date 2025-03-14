@@ -323,18 +323,16 @@ public class DispatchCriteriaHelper {
             .collect(Collectors.toUnmodifiableSet());
 
       // Filter the extracted parameter map by the referenced parameters in paramsRule
-      return extractMapFromURIPattern(pattern, realURI)
-         .entrySet()
-         .stream()
-         .filter(entry -> paramsRule.contains(entry.getKey()))
-         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+      return extractMapFromURIPattern(pattern, realURI).entrySet().stream()
+            .filter(entry -> paramsRule.contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
    }
 
    /**
     * Extract a map of parameters from URI pattern (containing variable parts within '{}' or prefixed with ':'),
     * projected onto a real instantiated URI.
-    * @param pattern          The URI pattern containing variables parts ({})
-    * @param realURI          The real URI that should match pattern.
+    * @param pattern The URI pattern containing variables parts ({})
+    * @param realURI The real URI that should match pattern.
     * @return A map of parameters extracted from the URI for the corresponding incoming request.
     * @see #extractMapFromURIPattern(String, String, String)
     */

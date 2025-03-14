@@ -481,7 +481,7 @@ public class GraphQLController {
                   // Evaluating request with script coming from operation dispatcher rules.
                   ScriptEngine se = sem.getEngineByExtension("groovy");
                   ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()), request, null);
+                        new ServiceStateStore(serviceStateRepository, service.getId()), request);
                   dispatchCriteria = (String) se.eval(dispatcherRules);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
