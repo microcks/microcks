@@ -1,0 +1,52 @@
+name: Test Microcks APIs
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+jobs:
+  api-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Start Microcks services
+        run: |
+          docker network create microcks-net
+          docker run -d --rm \
+            --name microcks \
+            --network microcks-net \
+            --network-alias microcks \
+            -p 8585:8080 \
+            quay.io/microcks/microcks-uber:latest-native
+          sleep 10
+
+      - name: Export Environment Variables
+        run: |
+          echo "MICROCKS_TOKEN=whatever" >> $GITHUB_ENV
+          echo "BASE_URL=http://microcks:8080" >> $GITHUB_ENV
+          echo "K6_VERSION=latest" >> $GITHUB_ENV
+
+      - name: Upload API Artifacts to Microcks
+        run: |
+          docker run --rm --network microcks-net \
+            -v "${{ github.workspace }}/samples:/samples" \
+            -v "${{ github.workspace }}/scripts:/scripts" \
+            -e BASE_URL="${{ env.BASE_URL }}" \
+            -e MICROCKS_TOKEN="${{ env.MICROCKS_TOKEN }}" \
+            curlimages/curl:latest sh /scripts/upload_artifacts.sh
+
+      - name: Run API Tests with k6
+        run: |
+          docker run --rm -i --network microcks-net \
+            -v ${{ github.workspace }}/scripts:/scripts \
+            -e BASE_URL="${{ env.BASE_URL }}" \
+            grafana/k6:${{ env.K6_VERSION }} run /scripts/api-tests.js
+
+      - name: Tear Down Microcks services
+        if: always()
+        run: |
+          docker stop microcks
+          docker network rm microcks-net
