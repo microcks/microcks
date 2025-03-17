@@ -17,6 +17,8 @@ package io.github.microcks.util.script;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.util.Map;
+
 /**
  * This is a fake, lightweight implementation of mockRequest objects that are typically available within SoapUI script
  * context (see http://www.soapui.org/Service-Mocking/creating-dynamic-mockservices.html for explanations on how they
@@ -27,12 +29,14 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 public class FakeScriptMockRequest {
 
-   /** The HttpSverletRequest wrapped object. */
+   /** The HttpServletRequest wrapped object. */
    private HttpServletRequest request;
    /** The content of mock Request (request body indeed) */
    private String requestContent;
-   /** The headers of mock Request (http headers most of time !) */
+   /** The headers of mock Request (http headers most of the time !) */
    private StringToStringsMap requestHeaders;
+   /** The URI parameters of mock Request */
+   private Map<String, String> uriParameters;
 
    /**
     * Create a new fake request from content and headers.
@@ -66,5 +70,13 @@ public class FakeScriptMockRequest {
 
    public void setRequestHeaders(StringToStringsMap requestHeaders) {
       this.requestHeaders = requestHeaders;
+   }
+
+   public void setURIParameters(Map<String, String> uriParameters) {
+      this.uriParameters = uriParameters;
+   }
+
+   public Map<String, String> getURIParameters() {
+      return uriParameters;
    }
 }
