@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 
@@ -47,8 +48,8 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, null, (Map<String, String>) null);
-         String result = (String) se.eval(script);
+         ScriptContext sc = ScriptEngineBinder.buildEvaluationContext(se, body, null, null, null);
+         String result = (String) se.eval(script, sc);
 
          assertEquals(body, result);
       } catch (Exception e) {
@@ -72,8 +73,8 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, request, null);
-         String result = (String) se.eval(script);
+         ScriptContext sc = ScriptEngineBinder.buildEvaluationContext(se, body, null, null, request, null);
+         String result = (String) se.eval(script, sc);
 
          assertEquals("bar", result);
       } catch (Exception e) {
@@ -98,8 +99,8 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, null, null, request, uriParameters);
-         String result = (String) se.eval(script);
+         ScriptContext sc = ScriptEngineBinder.buildEvaluationContext(se, body, null, null, request, uriParameters);
+         String result = (String) se.eval(script, sc);
 
          assertEquals("bar", result);
       } catch (Exception e) {
@@ -121,8 +122,8 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, (Map<String, String>) null);
-         String result = (String) se.eval(script);
+         ScriptContext sc = ScriptEngineBinder.buildEvaluationContext(se, body, context, null, null);
+         String result = (String) se.eval(script, sc);
 
          assertEquals(body, result);
          assertTrue(context.containsKey("foo"));
@@ -174,8 +175,8 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, "body", context, store, null, (Map<String, String>) null);
-         String result = (String) se.eval(script);
+         ScriptContext sc = ScriptEngineBinder.buildEvaluationContext(se, "body", context, store, null);
+         String result = (String) se.eval(script, sc);
 
          assertEquals("fooValue", result);
          assertEquals("barValue", store.get("bar"));
@@ -218,8 +219,8 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, (Map<String, String>) null);
-         String result = (String) se.eval(script);
+         ScriptContext sc = ScriptEngineBinder.buildEvaluationContext(se, body, context, null, null);
+         String result = (String) se.eval(script, sc);
 
          assertEquals("Andrew Response", result);
       } catch (Exception e) {
@@ -260,9 +261,9 @@ class ScriptEngineBinderTest {
       try {
          // Evaluating request with script coming from operation dispatcher rules.
          ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, context, null, null, (Map<String, String>) null);
+         ScriptContext sc = ScriptEngineBinder.buildEvaluationContext(se, body, context, null, null);
          script = ScriptEngineBinder.ensureSoapUICompatibility(script);
-         String result = (String) se.eval(script);
+         String result = (String) se.eval(script, sc);
 
          assertEquals("Andrew Response", result);
       } catch (Exception e) {

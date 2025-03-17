@@ -66,6 +66,7 @@ import org.springframework.web.util.UriUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
 import javax.annotation.CheckForNull;
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.io.IOException;
@@ -98,6 +99,8 @@ public class RestController {
 
    private final ProxyService proxyService;
 
+   private ScriptEngine scriptEngine;
+
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
    @Value("${mocks.rest.enable-cors-policy}")
@@ -128,6 +131,7 @@ public class RestController {
       this.resourceRepository = resourceRepository;
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
+      this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
    }
 
    @SuppressWarnings("java:S3752")
@@ -582,16 +586,16 @@ public class RestController {
                      resourcePath);
                break;
             case DispatchStyles.SCRIPT:
-               ScriptEngineManager sem = new ScriptEngineManager();
                requestContext = new HashMap<>();
-               var uriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern, resourcePath);
+               Map<String, String> uriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
+                     resourcePath);
                try {
                   // Evaluating request with script coming from operation dispatcher rules.
-                  ScriptEngine se = sem.getEngineByExtension("groovy");
-                  ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()), request, uriParameters);
                   String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
-                  dispatchCriteria = (String) se.eval(script);
+                  ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
+                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request,
+                        uriParameters);
+                  dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
                }

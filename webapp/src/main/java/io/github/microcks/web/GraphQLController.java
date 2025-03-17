@@ -79,6 +79,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.net.URI;
@@ -112,6 +114,8 @@ public class GraphQLController {
    private final ApplicationContext applicationContext;
    private final ProxyService proxyService;
 
+   private ScriptEngine scriptEngine;
+
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
 
@@ -139,6 +143,7 @@ public class GraphQLController {
       this.resourceRepository = resourceRepository;
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
+      this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
    }
 
 
@@ -374,7 +379,7 @@ public class GraphQLController {
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
                IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
          if (!responses.isEmpty()) {
-            response = responses.get(0);
+            response = responses.getFirst();
          }
 
          if (response == null) {
@@ -383,7 +388,7 @@ public class GraphQLController {
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
                   dispatchContext.dispatchCriteria());
             if (!responses.isEmpty()) {
-               response = responses.get(0);
+               response = responses.getFirst();
             }
          }
 
@@ -393,7 +398,7 @@ public class GraphQLController {
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
                   fallback.getFallback());
             if (!responses.isEmpty()) {
-               response = responses.get(0);
+               response = responses.getFirst();
             }
          }
 
@@ -475,14 +480,12 @@ public class GraphQLController {
       if (dispatcher != null) {
          switch (dispatcher) {
             case DispatchStyles.SCRIPT:
-               ScriptEngineManager sem = new ScriptEngineManager();
                requestContext = new HashMap<>();
                try {
                   // Evaluating request with script coming from operation dispatcher rules.
-                  ScriptEngine se = sem.getEngineByExtension("groovy");
-                  ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()), request);
-                  dispatchCriteria = (String) se.eval(dispatcherRules);
+                  ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
+                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request);
+                  dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
                }
