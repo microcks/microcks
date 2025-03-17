@@ -20,7 +20,7 @@ jobs:
             --network microcks-net \
             --network-alias microcks \
             -p 8585:8080 \
-            quay.io/microcks/microcks-uber:latest-native
+            quay.io/microcks/microcks-uber:1.11.1
           sleep 10
 
       - name: Export Environment Variables

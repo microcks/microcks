@@ -12,13 +12,13 @@ export function browse() {
     });
 
     const services = servicesRes.json();
-    sleep(WAIT_TIME);
+    sleep(0.5);
 
     services.forEach(service => {
         const serviceViewRes = http.get(`${BASE_URL}/api/services/` + service.id + '?messages=true');
-        sleep(WAIT_TIME);
+        sleep(0.5);
         const serviceTestsRes = http.get(`${BASE_URL}/api/tests/service/` + service.id + '?page=0&size=20');
-        sleep(WAIT_TIME);
+        sleep(0.5);
     });
 }
 
@@ -173,6 +173,7 @@ export function invokeSOAPMocks() {
 export default function () {
     invokeRESTMocks();
     invokeGraphQLMocks();
-    // invokeSOAPMocks();
+    invokeSOAPMocks();
+    browse()
     sleep(2); // pause between iterations
 }

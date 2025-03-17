@@ -22,5 +22,7 @@ upload_file "/samples/films-postman.json" false
 upload_file "/samples/films-metadata.yml" false
 # Upload artifacts for REST API
 upload_file "/samples/APIPastry-openapi.yaml" true
+# Upload artifacts for Soap API
+upload_file "/samples/HelloService-soapui-project.xml" true
 
 echo "All files uploaded successfully!"
