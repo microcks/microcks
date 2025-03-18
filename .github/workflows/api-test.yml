@@ -14,24 +14,22 @@ jobs:
 
       - name: Start Microcks services
         run: |
-          docker network create microcks-net
           docker run -d --rm \
+            --add-host=host.docker.internal:host-gateway \
             --name microcks \
-            --network microcks-net \
-            --network-alias microcks \
             -p 8585:8080 \
-            quay.io/microcks/microcks-uber:1.11.1
+            quay.io/microcks/microcks-uber:nightly
           sleep 10
 
       - name: Export Environment Variables
         run: |
           echo "MICROCKS_TOKEN=whatever" >> $GITHUB_ENV
-          echo "BASE_URL=http://microcks:8080" >> $GITHUB_ENV
+          echo "BASE_URL=http://host.docker.internal:8585" >> $GITHUB_ENV
           echo "K6_VERSION=latest" >> $GITHUB_ENV
 
       - name: Upload API Artifacts to Microcks
         run: |
-          docker run --rm --network microcks-net \
+          docker run --rm --add-host=host.docker.internal:host-gateway \
             -v "${{ github.workspace }}/samples:/samples" \
             -v "${{ github.workspace }}/scripts:/scripts" \
             -e BASE_URL="${{ env.BASE_URL }}" \
@@ -40,7 +38,7 @@ jobs:
 
       - name: Run API Tests with k6
         run: |
-          docker run --rm -i --network microcks-net \
+          docker run --rm -i --add-host=host.docker.internal:host-gateway \
             -v ${{ github.workspace }}/scripts:/scripts \
             -e BASE_URL="${{ env.BASE_URL }}" \
             grafana/k6:${{ env.K6_VERSION }} run /scripts/api-tests.js
@@ -49,4 +47,3 @@ jobs:
         if: always()
         run: |
           docker stop microcks
-          docker network rm microcks-net
