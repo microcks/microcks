@@ -1,5 +1,3 @@
-version: '2'
-
 services:
   mongo:
     image: mongo:4.4.29
@@ -38,8 +36,6 @@ services:
     ports:
       - "9092:9092"
       - "19092:19092"
-    networks:
-      - microcks
     healthcheck:
       test: ["CMD-SHELL", "timeout 5 bash -c 'echo > /dev/tcp/localhost/19092'"]
       interval: 10s

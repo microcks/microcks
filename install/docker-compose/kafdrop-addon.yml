@@ -1,7 +1,6 @@
-version: '2'
-
 services:
   kafdrop:
+    container_name: microcks-kafkadrop
     image: obsidiandynamics/kafdrop
     restart: "no"
     ports:
@@ -11,3 +10,10 @@ services:
       JVM_OPTS: "-Xms16M -Xmx48M -XX:-TieredCompilation -XX:+UseStringDeduplication"
     depends_on:
       - "kafka"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - microcks
