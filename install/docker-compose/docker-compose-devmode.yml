@@ -9,8 +9,6 @@ services:
       interval: 30s
       timeout: 1s
       retries: 3
-    networks:
-      - microcks
 
   postman:
     image: quay.io/microcks/microcks-postman-runtime:0.6.0
@@ -21,8 +19,6 @@ services:
       interval: 20s
       timeout: 3s
       retries: 3
-    networks:
-      - microcks
 
   kafka:
     image: redpandadata/redpanda:v24.3.1
@@ -42,8 +38,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    networks:
-      - microcks
 
   app:
     depends_on:
@@ -73,8 +67,6 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-    networks:
-      - microcks
 
   async-minion:
     depends_on:
@@ -94,9 +86,3 @@ services:
       interval: 10s
       timeout: 2s
       retries: 3
-    networks:
-      - microcks
-
-networks:
-  microcks:
-    driver: bridge
