@@ -304,14 +304,39 @@ public class DispatchCriteriaHelper {
    }
 
    /**
-    * Extract a map of parameters from URI pattern (containing variable parts within {} or prefixed with :), projected
-    * onto a real instanciated URI.
+    * Extract a map of parameters from URI pattern (containing variable parts within '{}' or prefixed with ':'),
+    * projected onto a real instantiated URI. The extracted map only contains values for parameters referenced in
+    * {@code paramsRuleString}.
     * @param paramsRuleString The dispatch rules referencing parameters to consider
     * @param pattern          The URI pattern containing variables parts ({})
     * @param realURI          The real URI that should match pattern.
     * @return A map of parameters extracted from the URI for the corresponding incoming request.
+    * @see #extractMapFromURIPattern(String, String)
     */
    public static Map<String, String> extractMapFromURIPattern(String paramsRuleString, String pattern, String realURI) {
+      // Rule string can be a URI_ELEMENT rule and containers ?? elements.
+      // We must remove them before parsing the URI parts.
+      if (paramsRuleString.contains("??")) {
+         paramsRuleString = paramsRuleString.split("\\?\\?")[0];
+      }
+      final var paramsRule = Arrays.stream(paramsRuleString.split("&&")).map(String::trim).distinct()
+            .collect(Collectors.toUnmodifiableSet());
+
+      // Filter the extracted parameter map by the referenced parameters in paramsRule
+      return extractMapFromURIPattern(pattern, realURI).entrySet().stream()
+            .filter(entry -> paramsRule.contains(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+   }
+
+   /**
+    * Extract a map of parameters from URI pattern (containing variable parts within '{}' or prefixed with ':'),
+    * projected onto a real instantiated URI.
+    * @param pattern The URI pattern containing variables parts ({})
+    * @param realURI The real URI that should match pattern.
+    * @return A map of parameters extracted from the URI for the corresponding incoming request.
+    * @see #extractMapFromURIPattern(String, String, String)
+    */
+   public static Map<String, String> extractMapFromURIPattern(String pattern, String realURI) {
       Map<String, String> criteriaMap = new TreeMap<>();
       pattern = sanitizeURLForRegExp(pattern);
       realURI = sanitizeURLForRegExp(realURI);
@@ -337,22 +362,12 @@ public class DispatchCriteriaHelper {
       Pattern valuesP = Pattern.compile(valuesPattern);
       Matcher valuesM = valuesP.matcher(realURI);
 
-      // Rule string can be a URI_ELEMENT rule and containers ?? elements.
-      // We must remove them before parsing the URI parts.
-      if (paramsRuleString.contains("??")) {
-         paramsRuleString = paramsRuleString.split("\\?\\?")[0];
-      }
-      final var paramsRule = Arrays.stream(paramsRuleString.split("&&")).map(String::trim).distinct()
-            .collect(Collectors.toUnmodifiableSet());
-
       // Both should match and have the same group count.
       if (valuesM.matches() && partsM.matches() && valuesM.groupCount() == partsM.groupCount()) {
          for (int i = 1; i < partsM.groupCount() + 1; i++) {
             final String paramName = partsM.group(i);
             final String paramValue = valuesM.group(i);
-            if (paramsRule.contains(paramName)) {
-               criteriaMap.put(paramName, paramValue);
-            }
+            criteriaMap.put(paramName, paramValue);
          }
       }
       return criteriaMap;

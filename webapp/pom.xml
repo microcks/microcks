@@ -160,7 +160,7 @@
     </dependency>
     <dependency>
     <groupId>org.apache.groovy</groupId>
-      <artifactId>groovy-datetime</artifactId>
+      <artifactId>groovy-dateutil</artifactId>
       <version>${groovy.version}</version>
     </dependency>
 

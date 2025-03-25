@@ -54,6 +54,8 @@ import org.springframework.web.server.ResponseStatusException;
 import org.xml.sax.InputSource;
 
 import jakarta.servlet.http.HttpServletRequest;
+
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.xml.namespace.QName;
@@ -92,6 +94,8 @@ public class SoapController {
    private final ApplicationContext applicationContext;
    private final ProxyService proxyService;
 
+   private ScriptEngine scriptEngine;
+
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
 
@@ -117,6 +121,7 @@ public class SoapController {
       this.resourceRepository = resourceRepository;
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
+      this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
    }
 
 
@@ -387,15 +392,14 @@ public class SoapController {
    /** Build a dispatch context after a Groovy script evaluation coming from rules. */
    private DispatchContext getDispatchCriteriaFromScriptEval(Service service, String dispatcherRules, String body,
          HttpServletRequest request) {
-      ScriptEngineManager sem = new ScriptEngineManager();
       Map<String, Object> requestContext = new HashMap<>();
       try {
          // Evaluating request with script coming from operation dispatcher rules.
-         ScriptEngine se = sem.getEngineByExtension("groovy");
-         ScriptEngineBinder.bindEnvironment(se, body, requestContext,
-               new ServiceStateStore(serviceStateRepository, service.getId()), request);
          String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
-         return new DispatchContext((String) se.eval(script), requestContext);
+         ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body, requestContext,
+               new ServiceStateStore(serviceStateRepository, service.getId()), request);
+
+         return new DispatchContext((String) scriptEngine.eval(script, scriptContext), requestContext);
       } catch (Exception e) {
          log.error("Error during Script evaluation", e);
          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,

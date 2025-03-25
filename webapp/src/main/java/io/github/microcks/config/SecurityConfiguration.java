@@ -88,13 +88,13 @@ public class SecurityConfiguration {
 
          // spotless:off
          http.authorizeHttpRequests(registry -> registry
+               .requestMatchers(HttpMethod.GET, "/api/services/*").hasAnyRole(ROLE_USER)
                .requestMatchers("/api/services", "/api/jobs", "/api/jobs/*").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers("/api/services/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers("/api/services/*/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers("/api/jobs/*/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers("/api/artifact/*").hasAnyRole(ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers("/api/import", "/api/export").hasAnyRole(ROLE_ADMIN)
-               .requestMatchers(HttpMethod.GET, "/api/services/*").hasAnyRole(ROLE_USER)
                .requestMatchers(HttpMethod.GET, "/api/secrets").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers(HttpMethod.GET, "/api/secrets/*").hasAnyRole(ROLE_USER, ROLE_MANAGER, ROLE_ADMIN)
                .requestMatchers(HttpMethod.POST, "/api/secrets").hasAnyRole(ROLE_ADMIN)

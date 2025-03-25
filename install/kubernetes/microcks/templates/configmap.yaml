@@ -147,6 +147,9 @@ data:
       {{- if .Values.features.aiCopilot.openai.maxTokens }}
     ai-copilot.openai.maxTokens={{ .Values.features.aiCopilot.openai.maxTokens }}
       {{- end }}
+      {{- if .Values.features.aiCopilot.openai.apiUrl }}
+    ai-copilot.openai.api-url={{ .Values.features.aiCopilot.openai.apiUrl }}
+      {{- end }}
     {{- end }}
   logback.xml: |-
     <?xml version="1.0" encoding="UTF-8"?>

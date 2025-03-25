@@ -59,7 +59,7 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch   | Container images tags |
 | ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.11.1`          | `master` | `1.11.1`, `latest`    |
+| Stable      | `1.11.2`          | `master` | `1.11.2`, `latest`    |
 | Dev         | `1.11.2-SNAPSHOT` | `1.11.x` | `nightly`             |
 | Maintenance | `1.10.2-SNAPSHOT` | `1.10.x` | `maintenance`         |
 

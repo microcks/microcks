@@ -57,6 +57,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.util.HashMap;
@@ -81,6 +82,8 @@ public class GrpcServerCallHandler {
    private final ApplicationContext applicationContext;
    private final ObjectMapper mapper = new ObjectMapper();
 
+   private ScriptEngine scriptEngine;
+
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
 
@@ -100,6 +103,7 @@ public class GrpcServerCallHandler {
       this.resourceRepository = resourceRepository;
       this.responseRepository = responseRepository;
       this.applicationContext = applicationContext;
+      this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
    }
 
    /**
@@ -185,7 +189,7 @@ public class GrpcServerCallHandler {
                         .withDescription("No pre-processed Protobuf binary descriptor found").asException());
                   return;
                }
-               Resource pbResource = resources.get(0);
+               Resource pbResource = resources.getFirst();
 
                // Get the method descriptor and type registry.
                Descriptors.MethodDescriptor md = GrpcUtil.findMethodDescriptor(pbResource.getContent(), serviceName,
@@ -209,7 +213,7 @@ public class GrpcServerCallHandler {
                // No filter to apply, just check that we have a response.
                if (!responses.isEmpty()) {
                   manageResponseTransmission(streamObserver, service, grpcOperation, md, registry, dispatchContext,
-                        jsonBody, responses.get(0), startTime);
+                        jsonBody, responses.getFirst(), startTime);
                } else {
                   // No response found.
                   log.info("No appropriate response found for this input {}, returning an error", jsonBody);
@@ -259,15 +263,14 @@ public class GrpcServerCallHandler {
                   }
                   break;
                case DispatchStyles.SCRIPT:
-                  ScriptEngineManager sem = new ScriptEngineManager();
                   requestContext = new HashMap<>();
                   try {
                      StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
                      // Evaluating request with script coming from operation dispatcher rules.
-                     ScriptEngine se = sem.getEngineByExtension("groovy");
-                     ScriptEngineBinder.bindEnvironment(se, jsonBody, requestContext,
-                           new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
-                     dispatchCriteria = (String) se.eval(dispatcherRules);
+                     ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, jsonBody,
+                           requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), headers,
+                           null);
+                     dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
                   } catch (Exception e) {
                      log.error("Error during Script evaluation", e);
                   }
