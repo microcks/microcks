@@ -15,7 +15,6 @@ services:
     container_name: microcks-sso
     ports:
       - "18080:8080"
-      - "9000:9000"
     environment:
       KEYCLOAK_ADMIN: "admin"
       KEYCLOAK_ADMIN_PASSWORD: "admin"
