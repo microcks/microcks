@@ -1,6 +1,17 @@
 #!/bin/bash
 set -e
 
+# Default value for async flag
+ASYNC=false
+
+# Parse command line arguments
+while [[ "$#" -gt 0 ]]; do
+  case $1 in
+    --async) ASYNC=true; shift ;;
+    *) echo "Unknown parameter passed: $1"; exit 1 ;;
+  esac
+done
+
 # Check if minikube is running
 MINIKUBE_STATUS=$(minikube status --format '{{.Host}}' 2>/dev/null || true)
 if [ "$MINIKUBE_STATUS" != "Running" ]; then
@@ -33,14 +44,27 @@ cd "$SCRIPT_DIR/../install/kubernetes" || { echo "Failed to change directory to 
 #  Add the Microcks Helm repository and update it.
 echo "[INFO] Adding Microcks Helm repository..."
 helm repo add microcks https://microcks.io/helm
+if $ASYNC; then
+  helm repo add strimzi https://strimzi.io/charts/
+fi
 helm repo update
 
 # Install Microcks using Helm with dynamic nip.io URLs based on the minikube IP.
 echo "[INFO] Installing Microcks..."
-helm install microcks ./microcks --namespace microcks \
-   --set microcks.url=microcks.$(minikube ip).nip.io \
-   --set keycloak.url=keycloak.$(minikube ip).nip.io \
-   --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080
+if $ASYNC; then
+  helm install strimzi strimzi/strimzi-kafka-operator --namespace microcks
+  helm install microcks ./microcks --namespace=microcks \
+      --set appName=microcks --set features.async.enabled=true \
+      --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \
+      --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
+      --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
+      --set features.async.kafka.url=${MINIKUBE_IP}.nip.io
+else
+  helm install microcks ./microcks --namespace microcks \
+     --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \
+     --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
+     --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080
+fi
 
 
 # Wait for the Microcks pods to become ready.
