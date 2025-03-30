@@ -137,7 +137,8 @@
                 <!-- This one is multi-arch compatible and works! -->
                 <!-- <builder>lbroudoux/builder-jammy-java-base</builder> -->
 
-                <builder>lbroudoux/builder-jammy-java-tiny</builder>
+                <!-- This one is multi-arch, distroless and works! -->
+                <!-- <builder>lbroudoux/builder-jammy-java-tiny</builder> -->
 
                 <!-- Default one is not multi-arch compatible! -->
                 <!-- <builder>paketobuildpacks/builder-jammy-tiny:latest</builder> -->
@@ -150,8 +151,8 @@
                 <!-- linux/arm64 image -->
                 <!-- <builder>dashaun/builder@sha256:378bdc9fd7bdba105d64f294a8a7ca168dce5e496cad22307ccabb66fb571f9a</builder> -->
                 <env>
-                  <!-- <BP_JVM_VERSION>21</BP_JVM_VERSION> -->
-                  <BP_JVM_VERSION>24</BP_JVM_VERSION>
+                  <BP_JVM_VERSION>21</BP_JVM_VERSION>
+                  <!-- <BP_JVM_VERSION>24</BP_JVM_VERSION> -->
                   <BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
                   <BP_NATIVE_IMAGE_BUILD_ARGUMENTS>--verbose --initialize-at-run-time=io.grpc.netty.shaded.io.netty.bootstrap,io.grpc.netty.shaded.io.netty.buffer,io.grpc.netty.shaded.io.netty.channel,io.grpc.netty.shaded.io.netty.channel.socket.nio,io.grpc.netty.shaded.io.netty.handler,io.grpc.netty.shaded.io.netty.handler.ssl,io.grpc.netty.shaded.io.netty.internal.tcnative,io.grpc.netty.shaded.io.netty.resolver,io.grpc.netty.shaded.io.netty.util.internal,io.grpc.netty.shaded.io.netty.util.internal.logging,io.grpc.netty.shaded.io.netty.util,io.grpc.netty.shaded.io.netty.util.concurrent --trace-class-initialization=ch.qos.logback.classic.PatternLayout,ch.qos.logback.core.subst.Token,ch.qos.logback.core.pattern.parser.Parser,ch.qos.logback.core.model.processor.DefaultProcessor$1,org.springframework.boot.logging.logback.ColorConverter,ch.qos.logback.classic.Level,ch.qos.logback.classic.Logger,ch.qos.logback.core.CoreConstants,ch.qos.logback.core.status.StatusBase,ch.qos.logback.core.model.processor.ChainedModelFilter$1,ch.qos.logback.core.util.StatusPrinter,ch.qos.logback.core.util.Loader,ch.qos.logback.core.status.InfoStatus,ch.qos.logback.classic.model.processor.LogbackClassicDefaultNestedComponentRules,ch.qos.logback.core.util.Duration,ch.qos.logback.core.subst.NodeToStringTransformer$1,org.slf4j.LoggerFactory,ch.qos.logback.core.model.processor.ImplicitModelHandler$1,ch.qos.logback.core.subst.Parser$1</BP_NATIVE_IMAGE_BUILD_ARGUMENTS>
                 </env>
