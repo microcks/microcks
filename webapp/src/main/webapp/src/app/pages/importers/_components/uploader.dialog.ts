@@ -17,22 +17,23 @@ import { Component, OnInit } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import {
-  Notification,
-  NotificationEvent,
   NotificationService,
   NotificationType,
-} from 'patternfly-ng/notification';
-import { FileUploader, FileItem, ParsedResponseHeaders } from 'ng2-file-upload';
+} from '../../../components/patternfly-ng/notification';
+import { FileUploader, FileItem, ParsedResponseHeaders, FileUploadModule } from 'ng2-file-upload';
 import { IAuthenticationService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-uploader-dialog',
   templateUrl: './uploader.dialog.html',
   styleUrls: ['./uploader.dialog.css'],
+  imports: [
+    FileUploadModule
+  ],
 })
 export class ArtifactUploaderDialogComponent implements OnInit {
-  title: string;
-  closeBtnName: string;
+  title?: string;
+  closeBtnName?: string;
 
   mainArtifact = true;
   uploader: FileUploader;
@@ -42,7 +43,7 @@ export class ArtifactUploaderDialogComponent implements OnInit {
     private notificationService: NotificationService,
     protected authService: IAuthenticationService
   ) {
-    if (this.authService.isAuthenticated) {
+    if (this.authService.isAuthenticated()) {
       this.uploader = new FileUploader({
         url: '/api/artifact/upload',
         authToken: 'Bearer ' + this.authService.getAuthenticationSecret(),
@@ -67,11 +68,9 @@ export class ArtifactUploaderDialogComponent implements OnInit {
     ) => {
       this.notificationService.message(
         NotificationType.DANGER,
-        item.file.name,
+        item.file.name ?? 'Unknown file',
         'Importation error on server side (' + response + ')',
-        false,
-        null,
-        null
+        false
       );
     };
     this.uploader.onSuccessItem = (
@@ -82,19 +81,17 @@ export class ArtifactUploaderDialogComponent implements OnInit {
     ) => {
       this.notificationService.message(
         NotificationType.SUCCESS,
-        item.file.name,
+        item.file.name ?? 'Unknown file',
         'Import of ' + response + ' done!',
-        false,
-        null,
-        null
+        false
       );
     };
   }
 
-  private updateMainArtifact(event: any): void {
+  protected updateMainArtifact(event: any): void {
     this.mainArtifact = !event;
   }
-  private upload(): void {
+  protected upload(): void {
     this.uploader.onBuildItemForm = (item: FileItem, form: any) => {
       form.append('mainArtifact', this.mainArtifact);
     };

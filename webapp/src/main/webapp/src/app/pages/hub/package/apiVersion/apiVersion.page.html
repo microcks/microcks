@@ -9,7 +9,7 @@
     <div class="row">
       <ol class="breadcrumb">
         <li><a [routerLink]="['/hub']">Microcks Hub</a></li>
-        <li><a [routerLink]="['/hub/package', resolvedPackage.name]">{{ resolvedPackage.displayName }}</a></li>
+        <li><a [routerLink]="['/hub/package', resolvedPackage!.name]">{{ resolvedPackage!.displayName }}</a></li>
         <li>{{ resolvedAPIVersion.id }} v. {{ resolvedAPIVersion.version }}</li>
       </ol>
     </div>
@@ -32,18 +32,20 @@
       <div class="mh-api-page row" *ngIf="resolvedAPIVersion && resolvedPackageAPI">
         <div class="col-md-3 col-md-push-9 col-sm-3 col-sm-push-9 col-xs-12">
           <div class="mh-api-page_side-panel">
-            <button (click)="onModalEnter()" class="mh-button mh-button-primary" data-toggle="modal" data-target="#mh-api-install-modal">Install</button>
+            <button type="button" (click)="openModal(installModal)" class="mh-button mh-button-primary">Install</button>
+
             <div class="mh-api-page_side-panel_separator"></div>
+            
             <div class="properties-side-panel-pf">
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Version</h5>
                 <div class="properties-side-panel-pf-property-value">
-                  <div class="dropdown btn-group">
-                    <button id="version-dropdown" type="button" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+                  <div class="dropdown btn-group" dropdown>
+                    <button id="version-dropdown" type="button" dropdownToggle aria-controls="dropdown-actions" aria-haspopup="true" aria-expanded="false"
                         class="mh-api-page_side-panel_version-dropdown dropdown-toggle btn btn-default">
                       {{ resolvedAPIVersion.version }} <span *ngIf="resolvedAPIVersion.version === resolvedPackageAPI.currentVersion"> (Current)</span> <span class="caret"></span>
                     </button>
-                    <ul role="menu" class="dropdown-menu" aria-labelledby="version-dropdown">
+                    <ul id="dropdown-actions" role="menu" class="dropdown-menu" aria-labelledby="version-dropdown">
                       <li *ngFor="let apiVersion of resolvedPackageAPI.versions">
                         <a role="dropdown-item" [routerLink]="['..', apiVersion.name]">{{ apiVersion.version }} <span *ngIf="apiVersion.version === resolvedPackageAPI.currentVersion">(Current)</span></a>
                       </li>
@@ -69,8 +71,8 @@
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Provider</h5>
                 <div class="properties-side-panel-pf-property-value">
-                  {{ resolvedAPIVersion.provider }} &nbsp;
-                  <span class="badge" [ngClass]="{'badge-light':resolvedPackage.source=='Community', 'badge-success':resolvedPackage.source=='Enterprise'}">{{ resolvedPackage.source }}</span>
+                  <!-- {{ resolvedAPIVersion.provider }} --> &nbsp;
+                  <span class="badge" [ngClass]="{'badge-light':resolvedPackage!.source=='Community', 'badge-success':resolvedPackage!.source=='Enterprise'}">{{ resolvedPackage!.source }}</span>
                 </div>
               </div>
               <div class="properties-side-panel-pf-property">
@@ -99,7 +101,7 @@
               <div class="properties-side-panel-pf-property">
                 <h5 class="properties-side-panel-pf-property-label">Categories</h5>
                 <div class="properties-side-panel-pf-property-value">
-                  <div *ngFor="let category of resolvedPackage.categories">{{ category }}</div>
+                  <div *ngFor="let category of resolvedPackage!.categories">{{ category }}</div>
                 </div>
               </div>
             </div>
@@ -112,18 +114,22 @@
       </div>
 
       <!-- Modal -->
-      <div class="modal fade mh-api-install-modal" id="mh-api-install-modal" *ngIf="resolvedAPIVersion && resolvedPackage" tabindex="-1" role="dialog" aria-labelledby="mh-api-install-modal-label" aria-hidden="true">
+      <!--
+      <div class="modal fade mh-api-install-modal" bsModal #installModal="bs-modal" *ngIf="resolvedAPIVersion && resolvedPackage" tabindex="-1" role="dialog" aria-labelledby="mh-api-install-modal-label" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
           <div class="modal-content">
+      -->
+            <ng-template #installModal>
+
             <div class="modal-header">
               <header class="catalog-item-header-pf pull-left">
                 <img class="catalog-item-header-pf-icon" src="{{ resolvedAPIVersion.thumbUrl }}" alt="">
                 <div class="catalog-item-header-pf-text">
                   <h1 class="catalog-item-header-pf-title" id="mh-api-install-modal-label">{{ resolvedAPIVersion.displayName }}</h1>
-                  <h5 class="catalog-item-header-pf-subtitle">{{ resolvedAPIVersion.version }} provided by {{ resolvedAPIVersion.provider }}</h5>
+                  <h5 class="catalog-item-header-pf-subtitle">version {{ resolvedAPIVersion.version }} <!-- provided by {{ resolvedAPIVersion.provider }} --></h5>
                 </div>
               </header>
-              <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close">
+              <button type="button" class="close pull-right" data-dismiss="modal" aria-label="Close" (click)="modalRef?.hide()">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
@@ -138,7 +144,7 @@
                   <button class="mh-button mh-button-primary" (click)="installByImporterCreation()"><span class="fa fa-plus"></span> Add an Import Job</button>
                 </div>
                 <div class="col-md-2">
-                  <button class="mh-button mh-button-navig" data-dismiss="modal" [routerLink]="['/importers']" *ngIf="importJobId"><span class="fa fa-check"></span> Go</button>
+                  <button class="mh-button mh-button-navig" data-dismiss="modal" (click)="navigateToImporters()" *ngIf="importJobId"><span class="fa fa-check"></span> Go</button>
                 </div>
               </div>
               <div class="row mh-api-install-modal_row">
@@ -149,16 +155,20 @@
                   <button class="mh-button mh-button-primary" (click)="installByDirectUpload()"><span class="fa fa-plus"></span> Direct import </button>
                 </div>
                 <div class="col-md-2">
-                  <button class="mh-button mh-button-navig" data-dismiss="modal" [routerLink]="['/services', discoveredService]" *ngIf="discoveredService"><span class="fa fa-check"></span> Go</button>
+                  <button class="mh-button mh-button-navig" data-dismiss="modal" (click)="navigateToService()" *ngIf="discoveredService"><span class="fa fa-check"></span> Go</button>
                 </div>
               </div>
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-default" data-dismiss="modal" (click)="modalRef?.hide()">Close</button>
             </div>
+
+            </ng-template>
+          <!--
           </div>
         </div>
       </div>
+      -->  
       
       <!--
       <div id="capability-level-help" role="tooltip" class="fade in mh-capability-level-popover popover left"

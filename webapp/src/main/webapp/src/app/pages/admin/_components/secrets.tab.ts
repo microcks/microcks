@@ -14,34 +14,52 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
-import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
-import { ToolbarConfig } from 'patternfly-ng/toolbar';
-import { FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-ng/filter';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+
+import { NotificationService, NotificationType } from '../../../components/patternfly-ng/notification';
+import { PaginationConfig, PaginationModule, PaginationEvent } from '../../../components/patternfly-ng/pagination';
+import { ToolbarConfig, ToolbarModule } from '../../../components/patternfly-ng/toolbar';
+import {
+  FilterConfig,
+  FilterEvent,
+  FilterField,
+  FilterType
+} from '../../../components/patternfly-ng/filter';
+
+import { ConfirmDeleteDialogComponent } from '../../../components/confirm-delete/confirm-delete.component';
 
 import { Secret } from '../../../models/secret.model';
 import { SecretsService } from '../../../services/secrets.service';
 
-
 @Component({
   selector: 'app-secrets-tab',
   templateUrl: './secrets.tab.html',
-  styleUrls: ['./secrets.tab.css']
+  styleUrls: ['./secrets.tab.css'],
+  imports: [
+    CommonModule,
+    ConfirmDeleteDialogComponent,
+    BsDropdownModule,
+    FormsModule,
+    PaginationModule,
+    ToolbarModule,
+  ]
 })
 export class SecretsTabComponent implements OnInit {
 
-  secrets: Secret[];
-  secretsCount: number;
-  toolbarConfig: ToolbarConfig;
-  filterConfig: FilterConfig;
-  paginationConfig: PaginationConfig;
-  filterTerm: string = null;
+  secrets?: Secret[];
+  secretsCount: number = 0;
+  toolbarConfig: ToolbarConfig = new ToolbarConfig;
+  filterConfig: FilterConfig = new FilterConfig;
+  paginationConfig: PaginationConfig = new PaginationConfig;
+  filterTerm: string | null = null;
   filtersText = '';
 
-  secret: Secret = new Secret();
+  secret: Secret = {} as Secret;
   createOrUpdateBtn = 'Create';
-  authenticationType: string;
+  authenticationType?: string;
 
   constructor(private secretsSvc: SecretsService, private notificationService: NotificationService) {}
 
@@ -101,7 +119,7 @@ export class SecretsTabComponent implements OnInit {
 
   handleFilter($event: FilterEvent): void {
     this.filtersText = '';
-    if ($event.appliedFilters.length == 0) {
+    if (!$event.appliedFilters || $event.appliedFilters.length == 0) {
       this.filterTerm = null;
       this.getSecrets();
     } else {
@@ -109,7 +127,7 @@ export class SecretsTabComponent implements OnInit {
         this.filtersText += filter.field.title + ' : ' + filter.value + '\n';
         this.filterTerm = filter.value;
       });
-      this.filterSecrets(this.filterTerm);
+      this.filterSecrets(this.filterTerm!);
     }
   }
 
@@ -123,7 +141,7 @@ export class SecretsTabComponent implements OnInit {
     }
   }
   resetEditedSecret(): void {
-    this.secret = new Secret();
+    this.secret = {} as Secret;
     this.createOrUpdateBtn = 'Create';
   }
 
@@ -133,13 +151,13 @@ export class SecretsTabComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-              secret.name, 'Secret has been updated', false, null, null);
+              secret.name, 'Secret has been updated', false);
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-              secret.name, 'Secret cannot be updated (' + err.message + ')', false, null, null);
+              secret.name, 'Secret cannot be updated (' + err.message + ')', false);
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {} //console.log('Observer got a complete notification'),
         }
       );
     } else {
@@ -147,16 +165,16 @@ export class SecretsTabComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-              secret.name, 'Secret has been created', false, null, null);
-            this.secret = new Secret();
+              secret.name, 'Secret has been created', false);
+            this.secret = {} as Secret;
             this.createOrUpdateBtn = 'Create';
             this.getSecrets();
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-              secret.name, 'Secret cannot be created (' + err.message + ')', false, null, null);
+              secret.name, 'Secret cannot be created (' + err.message + ')', false);
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {} //console.log('Observer got a complete notification'),
         }
       );
     }
@@ -167,25 +185,25 @@ export class SecretsTabComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-            secret.name, 'Secret has been deleted', false, null, null);
+            secret.name, 'Secret has been deleted', false);
           this.getSecrets();
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              secret.name, 'Secret cannot be deleted (' + err.message + ')', false, null, null);
+              secret.name, 'Secret cannot be deleted (' + err.message + ')', false);
         },
-        complete: () => console.log('Observer got a complete notification'),
+        complete: () => {} //console.log('Observer got a complete notification'),
       }
     );
   }
 
   updateSecretProperties() {
     if (this.authenticationType === 'basic') {
-      this.secret.token = null;
-      this.secret.tokenHeader = null;
+      this.secret.token = undefined;
+      this.secret.tokenHeader = undefined;
     } else if (this.authenticationType === 'token') {
-      this.secret.username = null;
-      this.secret.password = null;
+      this.secret.username = undefined;
+      this.secret.password = undefined;
     }
   }
 }

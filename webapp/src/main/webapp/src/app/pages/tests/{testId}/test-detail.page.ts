@@ -14,40 +14,51 @@
  * limitations under the License.
  */
 import { Component, OnInit, ChangeDetectionStrategy } from '@angular/core';
-import { ActivatedRoute, ParamMap } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, ParamMap, RouterLink } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { BsModalService } from 'ngx-bootstrap/modal';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
-import { ListConfig } from 'patternfly-ng/list';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { TabsModule } from 'ngx-bootstrap/tabs';
+import { HighlightAuto } from 'ngx-highlightjs';
+
+import { ListConfig, ListModule } from '../../../components/patternfly-ng/list';
 
 import { ServicesService } from '../../../services/services.service';
 import { TestsService } from '../../../services/tests.service';
-import { Service, ServiceType } from '../../../models/service.model';
+import { Exchange, RequestResponsePair, Service, ServiceType, UnidirectionalEvent } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
 import { AddToCIDialogComponent } from './_components/add-to-ci.dialog';
+import { TimeAgoPipe } from '../../../components/time-ago.pipe';
 
 @Component({
   selector: 'app-test-detail-page',
   templateUrl: './test-detail.page.html',
   styleUrls: ['./test-detail.page.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    HighlightAuto,
+    ListModule,
+    RouterLink,
+    TabsModule,
+    TimeAgoPipe
+  ]
 })
 export class TestDetailPageComponent implements OnInit {
-
   readonly hlLang: string[] = ['json', 'xml', 'yaml'];
 
-  now: number;
-  test: Observable<TestResult>;
-  service: Observable<Service>;
-  testMessages: any = {};
-  resultsListConfig: ListConfig;
+  now!: number;
+  test!: Observable<TestResult>;
+  service!: Observable<Service>;
+  testMessages: Record<string, Exchange[]> = {};
+  resultsListConfig!: ListConfig;
 
-  resolvedTest: TestResult;
-  resolvedService: Service;
-  modalRef: BsModalRef;
+  resolvedTest!: TestResult;
+  resolvedService!: Service;
+  modalRef?: BsModalRef;
 
   constructor(private servicesSvc: ServicesService, private testsSvc: TestsService,
               private modalService: BsModalService, private route: ActivatedRoute) {
@@ -57,7 +68,7 @@ export class TestDetailPageComponent implements OnInit {
     this.now = Date.now();
     this.test = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.testsSvc.getTestResult(params.get('testId')))
+        this.testsSvc.getTestResult(params.get('testId')!))
     );
     this.test.subscribe(res => {
       this.resolvedTest = res;
@@ -84,7 +95,7 @@ export class TestDetailPageComponent implements OnInit {
 
     this.resultsListConfig = {
       dblClick: false,
-      emptyStateConfig: null,
+      //emptyStateConfig: null,
       multiSelect: false,
       selectItems: false,
       selectionMatchProp: 'name',
@@ -110,7 +121,7 @@ export class TestDetailPageComponent implements OnInit {
       return undefined;
     }
     const result = pairs.filter(function(item, index, array) {
-      return item.request.name == requestName;
+      return (item as RequestResponsePair).request.name == requestName;
     })[0];
     return result;
   }
@@ -120,7 +131,7 @@ export class TestDetailPageComponent implements OnInit {
       return undefined;
     }
     const result = events.filter(function(item, index, array) {
-      return item.eventMessage.name == eventMessageName;
+      return (item as UnidirectionalEvent).eventMessage.name == eventMessageName;
     })[0];
     return result;
   }

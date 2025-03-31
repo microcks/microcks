@@ -21,7 +21,7 @@
   }
 }
 
-:host >>> .tooltip-inner {
+:host > .tooltip-inner {
   max-width: 800px;
   word-wrap: break-word;
 }

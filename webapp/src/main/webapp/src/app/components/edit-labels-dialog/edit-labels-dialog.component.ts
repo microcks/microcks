@@ -17,19 +17,24 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
+import { EditLabelsComponent } from '../edit-labels/edit-labels.component';
+
 @Component({
   selector: 'app-edit-labels-dialog',
   templateUrl: './edit-labels-dialog.component.html',
-  styleUrls: ['./edit-labels-dialog.component.css']
+  styleUrls: ['./edit-labels-dialog.component.css'],
+  imports: [
+    EditLabelsComponent
+  ]
 })
 export class EditLabelsDialogComponent implements OnInit {
   @Output() saveLabelsAction = new EventEmitter<Map<string, string>>();
 
-  title: string;
-  resourceType: string;
-  resourceName: string;
-  labels: any;
-  closeBtnName: string;
+  title?: string;
+  resourceType!: string;
+  resourceName!: string;
+  labels!: Map<string, string>;
+  closeBtnName!: string;
 
   labelKV = '';
 
@@ -37,7 +42,7 @@ export class EditLabelsDialogComponent implements OnInit {
 
   ngOnInit() {
     if (this.labels == null) {
-      this.labels = new Map();
+      this.labels = new Map<string, string>();
     }
   }
 

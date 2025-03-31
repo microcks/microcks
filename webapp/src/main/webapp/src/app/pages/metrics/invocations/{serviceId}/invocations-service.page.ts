@@ -14,29 +14,43 @@
  * limitations under the License.
  */
 import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 
 import { Observable, of } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { DailyInvocations } from 'src/app/models/metric.model';
 
+import { BsDatepickerModule } from 'ngx-bootstrap/datepicker';
+
+import { DayInvocationsBarChartComponent } from '../../../../components/day-invocations-bar-chart/day-invocations-bar-chart.component';
+import { HourInvocationsBarChartComponent } from '../../../../components/hour-invocations-bar-chart/hour-invocations-bar-chart.component';
+
+import { DailyInvocations } from '../../../..//models/metric.model';
 import { MetricsService } from '../../../../services/metrics.service';
+
 
 @Component({
   selector: 'app-invocations-service-page',
   templateUrl: './invocations-service.page.html',
   styleUrls: ['./invocations-service.page.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    RouterLink,
+    BsDatepickerModule,
+    DayInvocationsBarChartComponent,
+    HourInvocationsBarChartComponent
+  ]
 })
 export class InvocationsServicePageComponent implements OnInit {
 
-  serviceName: string;
-  serviceVersion: string;
-  dailyInvocations: Observable<DailyInvocations>;
+  serviceName!: string;
+  serviceVersion!: string;
+  dailyInvocations?: Observable<DailyInvocations>;
 
-  day: Date = null;
-  hour = 0;
-  serviceNameAndVersion: string;
+  day: Date | null = null;
+  hour: number = 0;
+  serviceNameAndVersion!: string;
 
   constructor(private metricsSvc: MetricsService,
               private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) {
@@ -45,10 +59,10 @@ export class InvocationsServicePageComponent implements OnInit {
   ngOnInit() {
     this.dailyInvocations = this.route.paramMap.pipe(
       switchMap((params: ParamMap) => {
-        this.serviceName = params.get('serviceName');
-        this.serviceVersion = params.get('serviceVersion');
+        this.serviceName = params.get('serviceName')!;
+        this.serviceVersion = params.get('serviceVersion')!;
         this.serviceNameAndVersion = this.serviceName + ':' + this.serviceVersion;
-        return this.metricsSvc.getServiceInvocationStats(params.get('serviceName'), params.get('serviceVersion'), new Date());
+        return this.metricsSvc.getServiceInvocationStats(params.get('serviceName')!, params.get('serviceVersion')!, new Date());
       })
     );
   }

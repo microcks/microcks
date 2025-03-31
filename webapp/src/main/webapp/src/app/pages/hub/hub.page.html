@@ -44,11 +44,11 @@
     <div class="mh-page_contents container-sm">
       <div class="mh-page_toolbar">
         <div class="mh-page_toolbar-item mh-page_toolbar-item_left" *ngIf="filteredPackages">
-          {{ filteredPackages.length }} <span class="mh-page_toolbar-item-label">Packages</span>, {{ countFilteredAPIs() }} <span class="mh-page_toolbar-item-label">APIs</span>
+          {{ filteredPackages.length }} <span class="mh-page_toolbar-item-label">Packages</span>, {{ countFilteredAPIs() }} <span class="mh-page_toolbar-item-label">APIs</span>
         </div>
       </div>
       <div class="catalog-tile-view-pf catalog-tile-view-pf-no-categories">
-        <a *ngFor="let package of filteredPackages" id="{{ package.name }}" [routerLink]="['package', package.name]" class="catalog-tile-pf" >
+        <a *ngFor="let package of filteredPackages" id="{{ package.name }}" [routerLink]="['package', package.name]" class="catalog-tile-pf" >
           <div class="catalog-tile-pf-header">
             <img class="catalog-tile-pf-icon" src="{{ package.thumbUrl }}" alt="">
           </div>

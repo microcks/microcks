@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class DailyInvocations {
+export type DailyInvocations = {
   id: string;
   day: string;
   serviceName: string;
   serviceVersion: string;
   dailyCount: number;
 
-  hourlyCount: {string, number};
-  minuteCount: {string, number};
-}
+  hourlyCount: { string: number };
+  minuteCount: { string: number };
+};
 
-export class TestConformanceMetric {
+export type TestConformanceMetric = {
   id: string;
   serviceId: string;
   aggregationLabelValue: string;
@@ -33,25 +33,25 @@ export class TestConformanceMetric {
   lastUpdateDay: string;
   latestTrend: Trend;
 
-  latestScores: {string, number};
-}
+  latestScores: { string: number };
+};
 export enum Trend {
-  DOWN = 'DOWN',
-  LOW_DOWN = 'LOW_DOWN',
-  STABLE = 'STABLE',
-  LOW_UP = 'LOW_UP',
-  UP = 'UP'
+  DOWN = "DOWN",
+  LOW_DOWN = "LOW_DOWN",
+  STABLE = "STABLE",
+  LOW_UP = "LOW_UP",
+  UP = "UP",
 }
 
-export class WeightedMetricValue {
+export type WeightedMetricValue = {
   name: string;
   weight: number;
   value: number;
-}
+};
 
-export class TestResultSummary {
+export type TestResultSummary = {
   id: string;
   testDate: number;
   serviceId: string;
-  success = false;
-}
+  success: boolean;
+};

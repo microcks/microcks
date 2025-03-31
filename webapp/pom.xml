@@ -413,7 +413,7 @@
           <plugin>
             <groupId>com.github.eirslett</groupId>
             <artifactId>frontend-maven-plugin</artifactId>
-            <version>1.6</version>
+            <version>1.15.1</version>
             <executions>
               <execution>
                 <id>install node and npm</id>
@@ -439,13 +439,13 @@
                 </goals>
                 <phase>generate-resources</phase>
                 <configuration>
-                  <arguments>run-script build-prod</arguments>
+                  <arguments>run build</arguments>
                 </configuration>
               </execution>
             </executions>
             <configuration>
-              <nodeVersion>v16.0.0</nodeVersion>
-              <npmVersion>8.0.0</npmVersion>
+              <nodeVersion>v18.20.5</nodeVersion>
+              <npmVersion>10.8.2</npmVersion>
               <workingDirectory>${basedir}/src/main/webapp</workingDirectory>
               <installDirectory>target</installDirectory>
             </configuration>
@@ -483,7 +483,7 @@
                   <outputDirectory>target/classes/public</outputDirectory>
                   <resources>
                     <resource>
-                      <directory>src/main/webapp/dist</directory>
+                      <directory>src/main/webapp/dist/browser</directory>
                       <filtering>false</filtering>
                     </resource>
                     <resource>

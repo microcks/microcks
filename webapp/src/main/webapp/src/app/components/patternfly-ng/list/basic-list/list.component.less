@@ -1,0 +1,122 @@
+// Checkbox placeholder for heading
+.pfng-list-cb-placeholder {
+  width: 12px;
+}
+
+// Container for item heading
+.pfng-list-heading {
+  display: flex;
+  flex-grow: 1;
+}
+
+// Row expansion toggle placeholder for heading and hidden toggles
+.pfng-list-expand-placeholder {
+  width: 8px;
+}
+
+.pfng-list-expand {
+  .fa-angle-right {
+    padding-left: 5px;
+    &.fa-angle-down {
+      padding-left: 0;
+    }
+  }
+}
+
+.list-pf-container {
+  // Add hover style and modify cursor
+  .list-pf-chevron {
+    cursor: pointer;
+    &:hover {
+      color: @color-pf-blue-400;
+    }
+  }
+}
+
+// For displaying close button in expansion area
+.pfng-list-expansion {
+  position: relative;
+  .list-pf-content {
+    flex-grow: 1;
+  }
+}
+
+// For displaying a heading above the list
+.pfng-list-heading {
+  // Hide heading for small screens
+  @media (max-width: 992px) {
+    display: none;
+  }
+  // Heading should not be clickable
+  pointer-events: none;
+
+  // Heading should not highlight on mouse hover
+  &:hover {
+    background-color: @color-pf-white;
+  }
+
+  // Allow info icons to generate events
+  i {
+    pointer-events: auto;
+  }
+
+  // Override top border for heading
+  &.list-pf-item {
+    border-top: none;
+  }
+
+  // Override font for normal heading text
+  .list-pf-title {
+    font-size: inherit;
+    font-weight: normal;
+  }
+
+  // Remove the divider line for heading
+  .list-pf-chevron, .list-pf-select {
+    + .list-pf-content {
+      border-left: none;
+    }
+  }
+}
+
+// Pin
+.pfng-list-pin {
+  align-items: center;
+  align-self: stretch;
+  background-color: @color-pf-black-150;
+  box-shadow: -3px 1px 4px 0 @color-pf-black-200 inset;
+  display: flex;
+  margin-bottom: -20px;
+  margin-left: -20px;
+  margin-right: 20px;
+  margin-top: -20px;
+  padding-bottom: 20px;
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-top: 20px;
+  &.multi-ctrls {
+    margin-right: 10px;
+  }
+  a {
+    color: @color-pf-black;
+    opacity: .7;
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+// Pin constainer to hide/show feature
+.pfng-list-pin-container {
+  align-self: stretch;
+  display: flex;
+}
+
+// Pin placeholder for heading and non-pinned items
+.pfng-list-pin-placeholder {
+  margin-left: -20px;
+  width: 39px;
+  &.multi-ctrls {
+    width: 28px;
+  }
+}

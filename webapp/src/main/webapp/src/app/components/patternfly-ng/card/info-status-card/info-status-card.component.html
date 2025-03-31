@@ -1,0 +1,27 @@
+<div class="card-pf pfng-card-info-status" [class.card-pf-accented]="config.showTopBorder">
+  <div class="pfng-card-info-image">
+    <img *ngIf="config.iconImageSrc" src="{{config.iconImageSrc}}" alt="" class="info-img">
+    <span class="info-icon {{config.iconStyleClass}}"></span>
+  </div>
+  <div class="pfng-card-info-content">
+    <h2 *ngIf="config.title" class="pfng-card-title">
+      <a *ngIf="config.href" href="{{config.href}}">
+        <span>{{config.title}}</span>
+      </a>
+      <span *ngIf="!config.href">
+        <span>{{config.title}}</span>
+      </span>
+    </h2>
+    <ng-container *ngIf="config.htmlContent !== undefined">
+      <div *ngIf="config.htmlContent; then showHtmlContent else showPlainTextContent"></div>
+      <ng-template #showHtmlContent>
+        <div [innerHTML]="item" class="pfng-card-info-item" *ngFor="let item of config.info"></div>
+      </ng-template>
+      <ng-template #showPlainTextContent>
+        <div class="pfng-card-info-item" *ngFor="let item of config.info">
+          {{item}}
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+</div>

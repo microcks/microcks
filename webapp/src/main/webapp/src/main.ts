@@ -1,21 +1,14 @@
-import { enableProdMode } from '@angular/core';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-//import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
-import Keycloak, { KeycloakInitOptions } from './lib/keycloak';
-
-import { AppModule } from './app/app.module';
-import { environment } from './environments/environment';
-
-if (environment.production) {
-  enableProdMode();
-}
+import { bootstrapApplication } from '@angular/platform-browser';
+import Keycloak, { KeycloakInitOptions } from 'keycloak-js';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
 
 // Load Keycloak config from server. Need to do this before invoking
 // keycloak-js constructor to first check the enabled flag.
 let keycloakConfig: any;
 console.log('[Microcks launch] Origin: ' + location.origin);
 
-function getKeycloakConfig(callback) {
+function getKeycloakConfig(callback: any) {
   const xhr = new XMLHttpRequest();
   xhr.open('GET', location.origin + '/api/keycloak/config', true);
   xhr.setRequestHeader('Accept', 'application/json');
@@ -33,7 +26,7 @@ function getKeycloakConfig(callback) {
 }
 
 // Actually call the getKeycloakConfig function and process with startup.
-getKeycloakConfig(function(err, datums) {
+getKeycloakConfig(function(err: any, datums: any) {
   // Deal with error if any.
   if (err) {
     console.error('[Microcks launch] Error while fetching Keycloak config: ' + err);
@@ -61,8 +54,8 @@ getKeycloakConfig(function(err, datums) {
     keycloak.init(loginOptions).then(function(authenticated) {
       if (authenticated) {
           (window as any).keycloak = keycloak;
-          platformBrowserDynamic().bootstrapModule(AppModule)
-              .catch(err => console.log(err));
+          bootstrapApplication(AppComponent, appConfig)
+            .catch((err) => console.error(err));
       }
     }).catch(function() {
       console.error('[Microcks launch] Error while initializing Keycloak');
@@ -70,11 +63,11 @@ getKeycloakConfig(function(err, datums) {
     });
   } else {
     console.log('[Microcks launch] Keycloak is disabled so running in dev mode with anonymous authent');
-    platformBrowserDynamic().bootstrapModule(AppModule)
-        .catch(err => console.log(err));
+    bootstrapApplication(AppComponent, appConfig)
+      .catch((err) => console.error(err));
   }
 });
 
-function fileLoaded(xhr) {
+function fileLoaded(xhr: any) {
   return xhr.status == 0 && xhr.responseText && xhr.responseURL.startsWith('file:');
 }

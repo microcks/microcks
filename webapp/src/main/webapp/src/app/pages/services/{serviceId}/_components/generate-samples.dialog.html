@@ -66,16 +66,16 @@
         </div>
         <div class="col-md-6 sample-container" *ngIf="!isEventTypeService()">
           <h5 class="subsection-label">Request</h5>
-          <dl class="dl-horizontal left" *ngIf="exchange.request.queryParameters">
+          <dl class="dl-horizontal left" *ngIf="getReqRespPair(exchange).request.queryParameters">
             <dt>Request parameters:</dt>
             <dd>
-              <span *ngFor="let parameter of exchange.request.queryParameters">
+              <span *ngFor="let parameter of getReqRespPair(exchange).request.queryParameters">
                 <code><small>{{parameter.name}}={{parameter.value}}</small></code> &nbsp;
               </span>
             </dd>
           </dl>
-          <pre *ngIf="exchange.request.content"><code [highlight]="exchange.request.content"></code></pre>
-          <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
+          <pre *ngIf="getReqRespPair(exchange).request.content"><code [highlightAuto]="getReqRespPair(exchange).request.content"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="getReqRespPair(exchange).request.headers">
             <thead>
               <tr>
                 <th>Header name</th>
@@ -83,7 +83,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let header of exchange.request.headers">
+              <tr *ngFor="let header of getReqRespPair(exchange).request.headers">
                 <td>{{ header.name }}</td>
                 <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
               </tr>
@@ -95,11 +95,11 @@
           <dl class="dl-horizontal left" *ngIf="service.type === 'REST' || service.type === 'GRAPHQL'">
             <dt>Response Code and Type:</dt>
             <dd>
-              <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
+              <code><small>{{ getReqRespPair(exchange).response.status }}: {{getReqRespPair(exchange).response.mediaType}}</small></code>
             </dd>
           </dl>
-          <pre *ngIf="exchange.response.content"><code [highlight]="exchange.response.content"></code></pre>
-          <table class="table table-condensed" width="100%" *ngIf="exchange.response.headers">
+          <pre *ngIf="getReqRespPair(exchange).response.content"><code [highlightAuto]="getReqRespPair(exchange).response.content"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="getReqRespPair(exchange).response.headers">
             <thead>
               <tr>
                 <th>Header name</th>
@@ -107,7 +107,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let header of exchange.response.headers">
+              <tr *ngFor="let header of getReqRespPair(exchange).response.headers">
                 <td>{{ header.name }}</td>
                 <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
               </tr>
@@ -116,8 +116,8 @@
         </div>
         <div class="col-md-12 sample-container" *ngIf="isEventTypeService()">
           <h5 class="subsection-label">Event Message</h5>
-          <pre *ngIf="exchange.eventMessage.content"><code [highlight]="exchange.eventMessage.content"></code></pre>
-          <table class="table table-condensed" width="100%" *ngIf="exchange.eventMessage.headers">
+          <pre *ngIf="getUnidirEvent(exchange).eventMessage.content"><code [highlightAuto]="getUnidirEvent(exchange).eventMessage.content"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="getUnidirEvent(exchange).eventMessage.headers">
             <thead>
               <tr>
                 <th>Header name</th>
@@ -125,7 +125,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let header of exchange.eventMessage.headers">
+              <tr *ngFor="let header of getUnidirEvent(exchange).eventMessage.headers">
                 <td>{{ header.name }}</td>
                 <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
               </tr>

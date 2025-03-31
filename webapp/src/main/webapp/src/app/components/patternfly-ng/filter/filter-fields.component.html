@@ -1,0 +1,111 @@
+<div class="filter-pf filter-fields">
+  <div class="input-group form-group">
+    <div class="input-group-btn" dropdown>
+      <button type="button" class="btn btn-default filter-fields dropdown-toggle" dropdownToggle
+              tooltip="Filter by" placement="top"
+              [disabled]="config?.disabled === true">
+        {{currentField.title}}
+        <span aria-hidden="true" class="caret"></span>
+      </button>
+      <ul class="dropdown-menu" role="menu" *dropdownMenu>
+        <li role="menuitem" *ngFor="let field of config?.fields"
+            [ngClass]="{'disabled': isFieldDisabled(field), 'divider dropdown-divider': field.separator}">
+          <a class="filter-field dropdown-item" href="javascript:void(0);" role="menuitem" tabindex="-1"
+             (click)="selectField(field)"
+             *ngIf="!field?.separator && !isFieldDisabled(field)">{{field?.title}}</a>
+          <a class="filter-field dropdown-item" href="javascript:void(0);" role="menuitem"
+             onclick="return false;"
+             *ngIf="!field?.separator && isFieldDisabled(field)">{{field?.title}}</a>
+        </li>
+      </ul>
+    </div>
+    <div *ngIf="!currentField?.type || currentField.type === 'text' || currentField.type === 'default'">
+      <input class="form-control" type="{{currentField.type}}" [(ngModel)]="currentValue"
+             placeholder="{{currentField.placeholder}}"
+             [disabled]="config?.disabled === true"
+             (keypress)="fieldInputKeyPress($event)"/>
+    </div>
+    <div *ngIf="currentField?.type === 'select'">
+      <div class="btn-group bootstrap-select form-control filter-select" dropdown>
+        <button type="button" class="btn btn-default dropdown-toggle" dropdownToggle
+                [disabled]="config?.disabled === true">
+          <span class="filter-option pull-left"
+                [ngClass]="{'placeholder': !currentValue}">
+            {{currentValue || currentField.placeholder}}
+          </span>
+          <span aria-hidden="true" class="caret"></span>
+        </button>
+        <ul class="dropdown-menu" role="menu" *dropdownMenu>
+          <li role="menuitem" *ngFor="let query of currentField?.queries"
+              [ngClass]="{'selected': query?.value === currentValue, 'divider dropdown-divider': query?.separator}">
+            <a class="dropdown-item" href="javascript:void(0);" tabindex="-1"
+               (click)="selectQuery(query)"
+               *ngIf="!query?.separator">
+              <span class="{{query?.iconStyleClass}}" *ngIf="query?.iconStyleClass"></span>
+              <img class="avatar" [attr.src]="query?.imageUrl" *ngIf="query?.imageUrl"/>
+              {{query.value}}
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div *ngIf="currentField?.type === 'typeahead'">
+      <div class="btn-group bootstrap-select form-control filter-select"
+           *ngIf="config?.disabled === true">
+        <div class="pull-left typeahead-input-container disabled">
+          <input class="form-control" type="text" placeholder="{{currentField.placeholder}}"
+                 [disabled]="config?.disabled === true">
+          <span class="caret"></span>
+        </div>
+      </div>
+      <div class="btn-group bootstrap-select form-control filter-select" dropdown
+           (isOpenChange)="hideDeleteConfirm(true)"
+           *ngIf="config?.disabled !== true">
+        <div class="pull-left typeahead-input-container dropdown-toggle" dropdownToggle>
+          <input #queryInput class="form-control" type="text" placeholder="{{currentField.placeholder}}"
+                 [(ngModel)]="currentValue"
+                 (ngModelChange)="queryInputChange($event)">
+          <span (click)="queryInput.focus()" class="caret"></span>
+        </div>
+        <ul class="dropdown-menu" role="menu" *dropdownMenu>
+          <li role="menuitem" *ngFor="let query of currentField?.queries"
+              [ngClass]="{'selected': query.value === currentValue,
+                          'divider dropdown-divider': query?.separator,
+                          'pfng-filter-delete-wrapper': query?.showDelete}">
+            <div class="pfng-filter-delete-slide"
+                 [ngClass]="{'slide-in': query?.showDeleteConfirm}"
+                 *ngIf="query?.showDelete">
+              <span class="pfng-filter-delete-text">Delete filter?</span>
+              <span class="pfng-filter-delete-confirm close">
+                <a class="padding-right-5" href="javascript:void(0);" tabindex="-1"
+                   (click)="deleteQueryConfirm($event, query)">
+                  <span class="fa fa-check"></span>
+                </a>
+              </span>
+              <span class="pfng-filter-delete-confirm close">
+                <a class="padding-right-5" href="javascript:void(0);" tabindex="-1"
+                   (click)="deleteQueryCancel($event, query)">
+                  <span class="fa fa-remove"></span>
+                </a>
+              </span>
+            </div>
+            <a #blurable class="dropdown-item" href="javascript:void(0);" tabindex="-1"
+               (click)="selectQuery(query)"
+               *ngIf="!query?.separator">
+              <span class="pfng-filter-delete close" *ngIf="query?.showDelete">
+                <a href="javascript:void(0);" tabindex="-1"
+                   [ngClass]="{'hidden': query?.showDeleteConfirm}"
+                   (click)="deleteQuery($event, query, blurable)">
+                  <span class="pficon pficon-remove"></span>
+                </a>
+              </span>
+              <span class="{{query?.iconStyleClass}}" *ngIf="query?.iconStyleClass"></span>
+              <img class="avatar" [attr.src]="query?.imageUrl" *ngIf="query?.imageUrl"/>
+              <span [innerHTML]="query.value | truncate: 20 | searchHighlight: queryInput.value"></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

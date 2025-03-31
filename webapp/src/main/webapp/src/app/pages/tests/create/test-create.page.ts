@@ -14,12 +14,19 @@
  * limitations under the License.
  */
 import { Component, OnInit} from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import {
+  Notification,
+  NotificationService,
+  NotificationType,
+  ToastNotificationListComponent
+} from '../../../components/patternfly-ng/notification';
 
 import { ContractsService } from "../../../services/contracts.service";
 import { ServicesService } from '../../../services/services.service';
@@ -32,29 +39,35 @@ import { Secret } from '../../../models/secret.model';
 @Component({
   selector: 'app-test-create-page',
   templateUrl: 'test-create.page.html',
-  styleUrls: ['test-create.page.css']
+  styleUrls: ['test-create.page.css'],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ToastNotificationListComponent
+  ]
 })
 export class TestCreatePageComponent implements OnInit {
 
-  service: Observable<Service>;
-  resolvedService: Service;
-  serviceId: string;
-  testEndpoint: string;
-  runnerType: TestRunnerType;
-  contractTypes: string[]
+  service!: Observable<Service>;
+  resolvedService!: Service;
+  serviceId!: string;
+  testEndpoint!: string;
+  runnerType!: TestRunnerType;
+  contractTypes!: string[]
   showAdvanced = false;
   submitEnabled = false;
-  notifications: Notification[];
+  notifications: Notification[] = [];
   timeout = 10000;
-  secretId: string;
-  secretName: string;
+  secretId: string | null = null;
+  secretName: string | null = null;
   operationsHeaders: any = {
     globals: []
   };
-  secrets: Secret[];
-  oAuth2ClientContext: OAuth2ClientContext = new OAuth2ClientContext();
+  secrets!: Secret[];
+  oAuth2ClientContext: OAuth2ClientContext | undefined = {} as OAuth2ClientContext;
 
-  filteredOperation: string;
+  filteredOperation?: string;
   removedOperationsNames: string[] = [];
 
   constructor(private servicesSvc: ServicesService, private contractsSvc: ContractsService, public testsSvc: TestsService, private secretsSvc: SecretsService,
@@ -63,11 +76,11 @@ export class TestCreatePageComponent implements OnInit {
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
-    let fromTestId = null;
+    let fromTestId: string | null = null;
     this.service = this.route.paramMap.pipe(
       switchMap((params: ParamMap) => {
         // (+) before `params.get()` turns the string into a number
-        this.serviceId = params.get('serviceId');
+        this.serviceId = params.get('serviceId')!;
         if (params.has('fromTest')) {
           fromTestId = params.get('fromTest');
         }
@@ -82,7 +95,7 @@ export class TestCreatePageComponent implements OnInit {
     });
     this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.contractsSvc.listByServiceId(params.get('serviceId'))
+        this.contractsSvc.listByServiceId(params.get('serviceId')!)
       )
     ).subscribe((contracts: Contract[]) => {
       this.contractTypes = contracts.map((contract : Contract) => contract.type.toString());
@@ -99,7 +112,7 @@ export class TestCreatePageComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              'New Test', 'Test has been initialized from ' + testId, false, null, null);
+              'New Test', 'Test has been initialized from ' + testId, false);
           this.testEndpoint = res.testedEndpoint;
           this.runnerType = res.runnerType;
           // Complete with optional properties.
@@ -114,6 +127,7 @@ export class TestCreatePageComponent implements OnInit {
             this.secretName = res.secretRef.name;
           }
           if (res.authorizedClient) {
+            this.oAuth2ClientContext = {} as OAuth2ClientContext;
             this.oAuth2ClientContext.grantType = res.authorizedClient.grantType;
             this.oAuth2ClientContext.tokenUri = res.authorizedClient.tokenUri;
             if (res.authorizedClient.scopes && res.authorizedClient.scopes.length > 0) {
@@ -135,9 +149,9 @@ export class TestCreatePageComponent implements OnInit {
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              'New Test', 'Test cannot be initialized from ' + testId, false, null, null);
+              'New Test', 'Test cannot be initialized from ' + testId, false);
         },
-        complete: () => console.log('Observer got a complete notification'),
+        complete: () => {} //console.log('Observer got a complete notification'),
       }
     );
   }
@@ -162,9 +176,10 @@ export class TestCreatePageComponent implements OnInit {
     }
   }
   public updateGrantType(event: any): void {
-      const secretId = event.target.value;
       if ('undefined' === event.target.value) {
-        this.oAuth2ClientContext.grantType = undefined;
+        if (this.oAuth2ClientContext != undefined) {
+          this.oAuth2ClientContext.grantType = undefined;
+        }
         this.checkForm();
       }
     }
@@ -205,12 +220,12 @@ export class TestCreatePageComponent implements OnInit {
     this.submitEnabled = (this.testEndpoint !== undefined && this.testEndpoint.length > 0 && this.runnerType !== undefined)
         && (this.resolvedService.type != 'EVENT' || (this.filteredOperation !== undefined));
     // Check also the OAuth2 parameters.
-    if (this.submitEnabled && this.oAuth2ClientContext.grantType !== undefined) {
+    if (this.submitEnabled && this.oAuth2ClientContext != undefined && this.oAuth2ClientContext.grantType !== undefined) {
       this.submitEnabled = (this.oAuth2ClientContext.tokenUri !== undefined && this.oAuth2ClientContext.tokenUri.length > 0
           && this.oAuth2ClientContext.clientId !== undefined && this.oAuth2ClientContext.clientId.length > 0
           && this.oAuth2ClientContext.clientSecret !== undefined && this.oAuth2ClientContext.clientSecret.length > 0);
     }
-    console.log('[createTest] submitEnabled: ' + this.submitEnabled);
+    //console.log('[createTest] submitEnabled: ' + this.submitEnabled);
   }
 
   public cancel(): void {
@@ -232,7 +247,7 @@ export class TestCreatePageComponent implements OnInit {
       }
     }
     // Reset OAuth2 parameters if not set.
-    if (this.oAuth2ClientContext.grantType === undefined) {
+    if (this.oAuth2ClientContext?.grantType === undefined) {
       this.oAuth2ClientContext = undefined;
     }
     // Then, create thee test invoking the API.
@@ -240,19 +255,19 @@ export class TestCreatePageComponent implements OnInit {
         timeout: this.timeout, secretName: this.secretName,
         filteredOperations, operationsHeaders: this.operationsHeaders,
         oAuth2Context: this.oAuth2ClientContext};
-    console.log('[createTest] test: ' + JSON.stringify(test));
+    //console.log('[createTest] test: ' + JSON.stringify(test));
     this.testsSvc.create(test).subscribe(
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              String(res.id), 'Test #' + res.id + ' has been launched', false, null, null);
+              String(res.id), 'Test #' + res.id + ' has been launched', false);
           this.router.navigate(['/tests/runner', res.id]);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              'New test', 'New test cannot be launched (' + err.message + ')', false, null, null);
+              'New test', 'New test cannot be launched (' + err.message + ')', false);
         },
-        complete: () => console.log('Observer got a complete notification')
+        complete: () => {} //console.log('Observer got a complete notification')
       }
     );
   }

@@ -13,18 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { Component, OnInit, TemplateRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
+
+import { Observable, concat } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 
 import {
   Notification,
   NotificationEvent,
   NotificationService,
   NotificationType,
-} from 'patternfly-ng/notification';
+  ToastNotificationListComponent,
+} from '../../../../components/patternfly-ng/notification';
 
-import { Observable, concat } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
+import { markdownConverter } from '../../../../components/markdown';
 
 import { HubService } from '../../../../services/hub.service';
 import { ImportersService } from '../../../../services/importers.service';
@@ -35,29 +42,37 @@ import {
 } from '../../../../models/hub.model';
 import { ImportJob } from '../../../../models/importer.model';
 
-import { markdownConverter } from '../../../../components/markdown';
-
 @Component({
   selector: 'app-hub-api-version-page',
   templateUrl: './apiVersion.page.html',
   styleUrls: ['./apiVersion.page.css'],
+  imports: [
+    CommonModule,
+    BsDropdownModule,
+    RouterLink,
+    ToastNotificationListComponent
+  ]
 })
 export class HubAPIVersionPageComponent implements OnInit {
-  package: Observable<APIPackage>;
-  packageAPIVersion: Observable<APIVersion>;
-  resolvedPackage: APIPackage;
-  resolvedPackageAPI: APISummary;
-  resolvedAPIVersion: APIVersion;
-  notifications: Notification[];
+  
+  modalRef?: BsModalRef;
+  package: Observable<APIPackage> | null = null;
+  packageAPIVersion: Observable<APIVersion> | null = null;
+  resolvedPackage?: APIPackage;
+  resolvedPackageAPI?: APISummary;
+  resolvedAPIVersion?: APIVersion;
+  notifications: Notification[] = [];
 
-  importJobId: string;
-  discoveredService: string;
+  importJobId: string | null = null;
+  discoveredService: string | null = null;
 
   constructor(
     private packagesSvc: HubService,
     private importersSvc: ImportersService,
+    private modalService: BsModalService,
+    private notificationService: NotificationService,
     private route: ActivatedRoute,
-    private notificationService: NotificationService
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -65,22 +80,22 @@ export class HubAPIVersionPageComponent implements OnInit {
 
     this.package = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.packagesSvc.getPackage(params.get('packageId'))
+        this.packagesSvc.getPackage(params.get('packageId')!)
       )
     );
     this.packageAPIVersion = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
         this.packagesSvc.getAPIVersion(
-          params.get('packageId'),
-          params.get('apiVersionId')
+          params.get('packageId')!,
+          params.get('apiVersionId')!
         )
       )
     );
 
     this.package.subscribe((result) => {
       this.resolvedPackage = result;
-      this.packageAPIVersion.subscribe((apiVersion) => {
-        this.resolvedPackage.apis.forEach((api) => {
+      this.packageAPIVersion!.subscribe((apiVersion) => {
+        this.resolvedPackage!.apis.forEach((api) => {
           if (api.name === apiVersion.id) {
             this.resolvedPackageAPI = api;
           }
@@ -93,22 +108,22 @@ export class HubAPIVersionPageComponent implements OnInit {
   }
 
   renderDescription(): string {
-    return markdownConverter.makeHtml(this.resolvedAPIVersion.description);
+    return markdownConverter.makeHtml(this.resolvedAPIVersion!.description);
   }
 
   renderCapabilityLevel(): string {
-    if ('Full Mocks' === this.resolvedAPIVersion.capabilityLevel) {
+    if ('Full Mocks' === this.resolvedAPIVersion!.capabilityLevel) {
       return '/assets/images/mocks-level-2.svg';
     } else if (
-      'Mocks + Assertions' === this.resolvedAPIVersion.capabilityLevel
+      'Mocks + Assertions' === this.resolvedAPIVersion!.capabilityLevel
     ) {
       return '/assets/images/mocks-level-2.svg';
     }
     return '/assets/images/mocks-level-1.svg';
   }
 
-  onModalEnter(): void {
-    // Nothing to do here.
+  openModal(template: TemplateRef<void>) {
+    this.modalRef = this.modalService.show(template, { class: 'modal-lg' });
   }
 
   handleCloseNotification($event: NotificationEvent): void {
@@ -118,61 +133,52 @@ export class HubAPIVersionPageComponent implements OnInit {
   installByDirectUpload(): void {
     this.notificationService.message(
       NotificationType.INFO,
-      this.resolvedAPIVersion.name,
+      this.resolvedAPIVersion!.name,
       'Starting install in Microcks. Hold on...',
-      false,
-      null,
-      null
+      false
     );
 
     const uploadBatch = [];
-    for (let i = 0; i < this.resolvedAPIVersion.contracts.length; i++) {
+    for (let i = 0; i < this.resolvedAPIVersion!.contracts.length; i++) {
+      console.log('Uploading contract: ' + this.resolvedAPIVersion!.contracts[i].url);
       uploadBatch.push(
         this.packagesSvc.importAPIVersionContractContent(
-          this.resolvedAPIVersion.contracts[i].url,
+          this.resolvedAPIVersion!.contracts[i].url,
           i == 0
         )
       );
     }
 
     // Concat all the observables to run them in sequence.
-    concat.apply(null, uploadBatch).subscribe({
-      next: (res) => {
+    concat(...uploadBatch).subscribe({
+      next: (res: any) => {
         this.discoveredService = res.name;
         this.notificationService.message(
           NotificationType.SUCCESS,
-          this.discoveredService,
-          'Import and discovery of service has been done',
-          false,
-          null,
-          null
+          this.discoveredService!,
+          'Import and discovery of service has been done', false
         );
       },
       error: (err) => {
         this.notificationService.message(
           NotificationType.DANGER,
-          this.resolvedAPIVersion.name,
-          'Importation error on server side (' + err.error.text + ')',
-          false,
-          null,
-          null
+          this.resolvedAPIVersion!.name, 
+          'Importation error on server side (' + err.error.text + ')', false
         );
       },
-      complete: () => console.log('Observer got a complete notification'),
+      complete: () => {} //console.log('Observer got a complete notification'),
     });
   }
 
   installByImporterCreation(): void {
-    for (let i = 0; i < this.resolvedAPIVersion.contracts.length; i++) {
-      const job = new ImportJob();
+    for (let i = 0; i < this.resolvedAPIVersion!.contracts.length; i++) {
+      const job = {} as ImportJob;
       job.name =
-        this.resolvedAPIVersion.id +
+        this.resolvedAPIVersion!.id +
         ' - v. ' +
-        this.resolvedAPIVersion.version +
-        ' [' +
-        i +
-        ']';
-      job.repositoryUrl = this.resolvedAPIVersion.contracts[i].url;
+        this.resolvedAPIVersion!.version +
+        ' [' + i + ']';
+      job.repositoryUrl = this.resolvedAPIVersion!.contracts[i].url;
       // Mark is as secondary artifact if not the first.
       if (i > 0) {
         job.mainArtifact = false;
@@ -181,11 +187,7 @@ export class HubAPIVersionPageComponent implements OnInit {
         next: (res) => {
           this.notificationService.message(
             NotificationType.SUCCESS,
-            job.name,
-            'Import job has been created',
-            false,
-            null,
-            null
+            job.name, 'Import job has been created', false
           );
           // Retrieve job id before activating.
           job.id = res.id;
@@ -195,14 +197,10 @@ export class HubAPIVersionPageComponent implements OnInit {
         error: (err) => {
           this.notificationService.message(
             NotificationType.DANGER,
-            job.name,
-            'Import job cannot be created (' + err.message + ')',
-            false,
-            null,
-            null
+            job.name, 'Import job cannot be created (' + err.message + ')', false
           );
         },
-        complete: () => console.log('Observer got a complete notification'),
+        complete: () => {} //console.log('Observer got a complete notification'),
       });
     }
   }
@@ -213,25 +211,17 @@ export class HubAPIVersionPageComponent implements OnInit {
         job.active = true;
         this.notificationService.message(
           NotificationType.SUCCESS,
-          job.name,
-          'Import job has been started/activated',
-          false,
-          null,
-          null
+          job.name, 'Import job has been started/activated', false
         );
         this.startImportJob(job);
       },
       error: (err) => {
         this.notificationService.message(
           NotificationType.DANGER,
-          job.name,
-          'Import job cannot be started/activated (' + err.message + ')',
-          false,
-          null,
-          null
+          job.name, 'Import job cannot be started/activated (' + err.message + ')', false
         );
       },
-      complete: () => console.log('Observer got a complete notification'),
+      complete: () => {} //console.log('Observer got a complete notification'),
     });
   }
 
@@ -240,24 +230,25 @@ export class HubAPIVersionPageComponent implements OnInit {
       next: (res) => {
         this.notificationService.message(
           NotificationType.SUCCESS,
-          job.name,
-          'Import job has been forced',
-          false,
-          null,
-          null
+          job.name, 'Import job has been forced', false
         );
       },
       error: (err) => {
         this.notificationService.message(
           NotificationType.DANGER,
-          job.name,
-          'Import job cannot be forced now',
-          false,
-          null,
-          null
+          job.name, 'Import job cannot be forced now', false
         );
       },
-      complete: () => console.log('Observer got a complete notification'),
+      complete: () => {} //console.log('Observer got a complete notification'),
     });
+  }
+
+  navigateToImporters(): void {
+    this.modalRef?.hide();
+    this.router.navigate(['/importers']);
+  }
+  navigateToService(): void {
+    this.modalRef?.hide();
+    this.router.navigate(['/services', this.discoveredService]);
   }
 }

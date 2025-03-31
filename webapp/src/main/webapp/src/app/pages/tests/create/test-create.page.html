@@ -106,7 +106,7 @@
             <div class="control-group">
               <label class="control-label" for="grantType">OAuth2 Grant</label>
               <div class="controls">
-                <select class="form-control" id="grantType" name="grantType" [(ngModel)]="oAuth2ClientContext.grantType" (ngModelChange)="checkForm()" (change)="updateGrantType($event)">
+                <select class="form-control" id="grantType" name="grantType" [(ngModel)]="oAuth2ClientContext!.grantType" (ngModelChange)="checkForm()" (change)="updateGrantType($event)">
                   <option value="undefined">None</option>
                   <option value="CLIENT_CREDENTIALS">Client credentials</option>
                   <option value="REFRESH_TOKEN">Refresh token</option>
@@ -114,39 +114,39 @@
                 </select>
                 <p class="help-block">Select the OAuth2 grant type that allows retrieving a token for connecting the test endpoint.</p>
               </div>
-              <div class="row" *ngIf="oAuth2ClientContext.grantType">
+              <div class="row" *ngIf="oAuth2ClientContext?.grantType">
                 <div class="col-md-12">
                   <label class="control-label" for="tokenUri">OAuth2 Token URI</label>
                   <div class="controls">
-                    <input id="tokenUri" name="tokenUri" class="form-control" [(ngModel)]="oAuth2ClientContext.tokenUri" (ngModelChange)="checkForm()" placeholder="eg. https://idp.acme.org/realms/my-app/protocol/openid-connect/token" />
+                    <input id="tokenUri" name="tokenUri" class="form-control" [(ngModel)]="oAuth2ClientContext!.tokenUri" (ngModelChange)="checkForm()" placeholder="eg. https://idp.acme.org/realms/my-app/protocol/openid-connect/token" />
                     <p class="help-block">The OAuth2 token URI that will be used for OAuth2 flow token retrieval.</p>
                   </div>
                 </div>
               </div>
-              <div class="row" *ngIf="oAuth2ClientContext.grantType">
+              <div class="row" *ngIf="oAuth2ClientContext?.grantType">
                 <div class="col-md-6">
                   <label class="control-label" for="clientId">Client Id</label>
                   <div class="controls">
-                    <input id="clientId" name="clientId" class="form-control" [(ngModel)]="oAuth2ClientContext.clientId" (ngModelChange)="checkForm()"/>
+                    <input id="clientId" name="clientId" class="form-control" [(ngModel)]="oAuth2ClientContext!.clientId" (ngModelChange)="checkForm()"/>
                     <p class="help-block">Your OAuth2 client identifier.</p>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <label class="control-label" for="clientSecret">Client Secret</label>
                   <div class="controls">
-                    <input type="password" id="clientSecret" name="clientSecret" class="form-control" [(ngModel)]="oAuth2ClientContext.clientSecret" (ngModelChange)="checkForm()"/>
+                    <input type="password" id="clientSecret" name="clientSecret" class="form-control" [(ngModel)]="oAuth2ClientContext!.clientSecret" (ngModelChange)="checkForm()"/>
                     <p class="help-block">Your OAuth2 client secret.</p>
                   </div>
                 </div>
                 <div class="col-md-6">
                   <label class="control-label" for="scopes">Scopes</label>
                   <div class="controls">
-                    <input id="scopes" name="scopes" class="form-control" [(ngModel)]="oAuth2ClientContext.scopes" (ngModelChange)="checkForm()"/>
+                    <input id="scopes" name="scopes" class="form-control" [(ngModel)]="oAuth2ClientContext!.scopes" (ngModelChange)="checkForm()"/>
                     <p class="help-block">Optional OAuth2 scopes (separated using space). <code>openid</code> is always included.</p>
                   </div>
                 </div>
               </div>
-              <div class="row" *ngIf="oAuth2ClientContext.grantType === 'PASSWORD'">
+              <div class="row" *ngIf="oAuth2ClientContext?.grantType === 'PASSWORD'">
                 <div class="col-md-6">
                   <label class="control-label" for="username">Username</label>
                   <div class="controls">
@@ -201,7 +201,7 @@
                     <div class="key-value-editor-header key-header">Name</div>
                     <div class="key-value-editor-header value-header">Values</div>
                   </div>
-                  <div class="key-value-editor" *ngFor="let header of operationsHeaders['globals']">
+                  <div class="key-value-editor" *ngFor="let header of operationsHeaders['globals']; index as i">
                     <div class="key-value-editor-entry">
                       <div class="key-value-editor-input">
                         <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="header.name">
@@ -290,7 +290,7 @@
 
           <p>Kafka Test Endpoints have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
 
-          <pre><code [highlight]>kafka://kafka.broker.url:port/kafka.topic.name[?param1=value1&param2=value2]</code></pre>
+          <pre><code>kafka://kafka.broker.url:port/kafka.topic.name[?param1=value1&param2=value2]</code></pre>
 
           <p>Here are the optional parameters available:</p>
           <ul>
@@ -307,7 +307,7 @@
               <span class="fa fa-paste"></span> Copy
             </button>
           </div>
-          <pre><code highlight>kafka://mybroker.example.com:443/test-topic?startOffset=28&endOffset=30</code></pre>
+          <pre><code>kafka://mybroker.example.com:443/test-topic?startOffset=28&endOffset=30</code></pre>
 
           <p>Here's below a sample endpoint with access to a registry:</p>
           <div style="position: absolute; right: 20px">
@@ -315,7 +315,7 @@
               <span class="fa fa-paste"></span> Copy
             </button>
           </div>
-          <pre><code highlight>kafka://mybroker.example.com:443/test-topic?registryUrl=https://schema-registry.example.com&registryUsername=fred:letmein&registryAuthCredSource=USER_INFO</code></pre>
+          <pre><code>kafka://mybroker.example.com:443/test-topic?registryUrl=https://schema-registry.example.com&registryUsername=fred:letmein&registryAuthCredSource=USER_INFO</code></pre>
         </div>
       </div>
 
@@ -325,7 +325,7 @@
 
         <p>MQTT Test Endpoint have the following form with no optional parameters:</p>
 
-        <pre><code [highlight]>mqtt://mqtt.broker.url:port/mqtt.topic.name</code></pre>
+        <pre><code>mqtt://mqtt.broker.url:port/mqtt.topic.name</code></pre>
       </div>
 
       <div *ngIf="testEndpoint && testEndpoint.startsWith('ws:')">
@@ -334,7 +334,7 @@
 
         <p>WebSocket Test Endpoint have the following form with no optional parameters:</p>
 
-        <pre><code [highlight]>ws://ws.endpoint.url:port/channel.name</code></pre>
+        <pre><code>ws://ws.endpoint.url:port/channel.name</code></pre>
       </div>
 
       <div *ngIf="testEndpoint && testEndpoint.startsWith('amqp:')">
@@ -343,7 +343,7 @@
 
         <p>AMQP 0.9.1 Test Endpoint have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
 
-        <pre><code [highlight]>amqp://amqp.broker.url:port/[amqp.vhost/]amqp.destination.type/amqp.destination.name[?param1=value1&param2=value2]</code></pre>
+        <pre><code>amqp://amqp.broker.url:port/[amqp.vhost/]amqp.destination.type/amqp.destination.name[?param1=value1&param2=value2]</code></pre>
 
         <p>Here are the optional parameters available:</p>
         <ul>
@@ -358,7 +358,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>amqp://rabbitmq.example.com:5672/my-vhost/t/my-exchange-topic?routingKey=foo</code></pre>
+        <pre><code>amqp://rabbitmq.example.com:5672/my-vhost/t/my-exchange-topic?routingKey=foo</code></pre>
 
         <p>Here's below a sample endpoint for headers-typed exchange including 2 headers <code>h1</code> and <code>h2</code>:</p>
         <div style="position: absolute; right: 20px">
@@ -366,7 +366,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>amqp://rabbitmq.example.com:5672/h/my-exchange-headers?h.h1=v1&h.h2=v2</code></pre>
+        <pre><code>amqp://rabbitmq.example.com:5672/h/my-exchange-headers?h.h1=v1&h.h2=v2</code></pre>
       </div>
 
       <div *ngIf="testEndpoint && testEndpoint.startsWith('nats:')">
@@ -375,7 +375,7 @@
 
         <p>NATS Test Endpoint have the following form with no optional parameters:</p>
 
-        <pre><code [highlight]>nats://nats.endpoint.url:port/queue-or-subject.name</code></pre>
+        <pre><code>nats://nats.endpoint.url:port/queue-or-subject.name</code></pre>
       </div>
 
       <div *ngIf="testEndpoint && testEndpoint.startsWith('googlepubsub:')">
@@ -384,7 +384,7 @@
 
         <p>Google PubSub Test Endpoint have the following form with no optional parameters:</p>
 
-        <pre><code [highlight]>googlepubsub://google-platform-project.name/topic.name</code></pre>
+        <pre><code>googlepubsub://google-platform-project.name/topic.name</code></pre>
       </div>
 
       <div *ngIf="testEndpoint && testEndpoint.startsWith('sqs:')">
@@ -393,7 +393,7 @@
 
         <p>Amazon Simple Queue Service Test Endpoint have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
 
-        <pre><code [highlight]>sqs://aws.region/sqs.queue.name[?param1=value1]</code></pre>
+        <pre><code>sqs://aws.region/sqs.queue.name[?param1=value1]</code></pre>
 
         <p>Here are the optional parameters available:</p>
         <ul>
@@ -407,7 +407,7 @@
 
         <p>Amazon Simple Notification Service Test Endpoint have the following form with optional parameters placed just after a <code>?</code> and separated using <code>&</code> character:</p>
 
-        <pre><code [highlight]>sns://aws.region/sns.topic.name[?param1=value1]</code></pre>
+        <pre><code>sns://aws.region/sns.topic.name[?param1=value1]</code></pre>
 
         <p>Here are the optional parameters available:</p>
         <ul>
@@ -415,7 +415,7 @@
         </ul>
       </div>
 
-      <div id="operationsHeaders-help" *ngIf="showAdvanced && type != 'EVENT'">
+      <div id="operationsHeaders-help" *ngIf="showAdvanced && resolvedService.type != 'EVENT'">
         <br/>
         <h4>Additional Operations Headers</h4>
 

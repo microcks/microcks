@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class APIPackage {
+export type APIPackage = {
   name: string;
   displayName: string;
   categories: string[];
@@ -29,18 +29,18 @@ export class APIPackage {
   apis: APISummary[];
 }
 
-export class APISummary {
+export type APISummary = {
   name: string;
   currentVersion: string;
   versions: APINameVersion[];
 }
 
-export class APINameVersion {
+export type APINameVersion = {
   name: string;
   version: string;
 }
 
-export class APIVersion {
+export type APIVersion = {
   id: string;
   name: string;
   displayName: string;
@@ -59,17 +59,17 @@ export class APIVersion {
   packageName: string;
 }
 
-export class Contract {
+export type Contract = {
   type: string;
   url: string;
 }
 
-export class Link {
+export type Link = {
   name: string;
   url: string;
 }
 
-export class Maintainer {
+export type Maintainer = {
   name: string;
   email: string;
 }

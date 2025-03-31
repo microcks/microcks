@@ -1,0 +1,34 @@
+<div class="pfng-card card-pf"
+     [ngClass]="{'card-pf-accented': config.topBorder, 'pfng-card-no-padding': config.noPadding}">
+  <div [ngClass]="config.titleBorder ? 'card-pf-heading' : 'pfng-card-heading-no-bottom'" *ngIf="showHeader">
+    <div *ngIf="headerTemplate; then showHeaderTemplate else showHeader"></div>
+    <ng-template #showHeaderTemplate>
+      <ng-template [ngTemplateOutlet]="headerTemplate || null"></ng-template>
+    </ng-template>
+    <ng-template #showHeader>
+      <div *ngIf="showFilterInHeader">
+        <pfng-card-filter [filters]="config.filters" (onFilterSelect)="handleFilterSelect($event)"></pfng-card-filter>
+      </div>
+      <h2 class="card-pf-title">{{config.title}}</h2>
+    </ng-template>
+  </div>
+  <span *ngIf="config?.subTitle" class="card-pf-subtitle">{{config.subTitle}}</span>
+  <div class="card-pf-body">
+    <ng-content></ng-content>
+  </div>
+  <div class="card-pf-footer" *ngIf="showFooter">
+    <div *ngIf="footerTemplate; then showFooterTemplate else showFooter"></div>
+    <ng-template #showFooterTemplate>
+      <ng-template [ngTemplateOutlet]="footerTemplate || null"></ng-template>
+    </ng-template>
+    <ng-template #showFooter>
+      <div *ngIf="showFilterInFooter">
+        <pfng-card-filter [filters]="config.filters" (onFilterSelect)="handleFilterSelect($event)"></pfng-card-filter>
+      </div>
+      <p>
+        <pfng-card-action [action]="config.action"
+                          (onActionSelect)="handleActionSelect($event)"></pfng-card-action>
+      </p>
+    </ng-template>
+  </div>
+</div>
