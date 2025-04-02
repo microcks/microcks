@@ -24,14 +24,9 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
 
-/*
-import { MatButtonModule } from '@angular/material/button';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-*/
-
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
 
 import { PaginationConfig, PaginationEvent, PaginationModule } from '../../components/patternfly-ng/pagination';
 import { ToolbarConfig, ToolbarModule } from '../../components/patternfly-ng/toolbar';
@@ -58,7 +53,6 @@ import { Api, Service, ServiceType } from '../../models/service.model';
 import { IAuthenticationService } from '../../services/auth.service';
 import { ConfigService } from '../../services/config.service';
 import { ServicesService } from '../../services/services.service';
-import { MatDialog } from '@angular/material/dialog';
 import { DirectAPIWizardComponent } from './_components/direct-api.wizard';
 
 @Component({
@@ -72,12 +66,10 @@ import { DirectAPIWizardComponent } from './_components/direct-api.wizard';
     BsDropdownModule,
     DatePipe,
     FormsModule,
-    //MatButtonModule,
-    //MatFormFieldModule,
-    //MatInputModule,
     RouterLink,
     PaginationModule,
     ToolbarModule,
+    TooltipModule,
     ToastNotificationListComponent,
   ],
 })
