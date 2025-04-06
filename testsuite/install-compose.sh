@@ -58,7 +58,7 @@ case $MODE in
     proxy)
         MAIN_COMPOSE="${METHOD}-with-proxy.yml"
         ;;
-    dev)
+    devmode)
         MAIN_COMPOSE="${METHOD}-devmode.yml"
         ;;
     *)
