@@ -140,6 +140,8 @@
                 <!-- This one is multi-arch, distroless and works! -->
                 <!-- <builder>lbroudoux/builder-jammy-java-tiny</builder> -->
 
+                <builder>microcks/builder-noble-java-tiny</builder>
+
                 <!-- Default one is not multi-arch compatible! -->
                 <!-- <builder>paketobuildpacks/builder-jammy-tiny:latest</builder> -->
                 <!-- Dashaun tiny is multi-arch but doesn't contain libc++6 needed for protoc -->
