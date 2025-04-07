@@ -66,7 +66,7 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 ## How to build Microcks
 
-The build instructions are available in the [contribution guide](CONTRIBUTING.md).
+The build instructions are available in the [building guide](BUILDING.md).
 
 ## Thanks to community!
 
