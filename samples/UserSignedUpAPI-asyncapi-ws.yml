@@ -1,0 +1,72 @@
+asyncapi: 3.0.0
+id: 'urn:io.microcks.example.user-signedup'
+info:
+  title: User signed-up API
+  version: 0.1.50
+  description: Sample AsyncAPI for user signedup events
+defaultContentType: application/json
+channels:
+  userSignedUpChannel:
+    address: user/signedup
+    description: The topic on which user signed up events may be consumed
+    bindings:
+      ws:
+        method: POST
+    messages:
+      receivedUserSignedUp.message:
+        description: An event describing that a user just signed up.
+        traits:
+          - $ref: '#/components/messageTraits/commonHeaders'
+        payload:
+          type: object
+          additionalProperties: false
+          properties:
+            id:
+              type: string
+            sendAt:
+              type: string
+            fullName:
+              type: string
+            email:
+              type: string
+              format: email
+            age:
+              type: integer
+              minimum: 18
+        examples:
+          - name: laurent
+            summary: Example for Laurent user
+            headers:
+              {"my-app-header": 23}
+            payload:
+              {"id": "{{randomString(32)}}", "sendAt": "{{now()}}",
+              "fullName": "Laurent Broudoux", "email": "laurent@microcks.io",
+              "age": 41}
+          - name: john
+            summary: Example for John Doe user
+            headers:
+              my-app-header: 24
+            payload:
+              id: '{{randomString(32)}}'
+              sendAt: '{{now()}}'
+              fullName: John Doe
+              email: john@microcks.io
+              age: 36
+operations:
+  consumeUserSignedUp:
+    action: receive
+    channel:
+      $ref: '#/channels/userSignedUpChannel'
+    summary: Receive information about user signed up
+    messages:
+      - $ref: '#/channels/userSignedUpChannel/messages/receivedUserSignedUp.message'
+components:
+  messageTraits:
+    commonHeaders:
+      headers:
+        type: object
+        properties:
+          my-app-header:
+            type: integer
+            minimum: 0
+            maximum: 100
