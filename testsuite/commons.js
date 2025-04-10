@@ -1,8 +1,13 @@
 import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 
+// Define the wait time of browse scenario
+const WAIT_TIME = parseFloat(__ENV.WAIT_TIME) || 0.5;
+
 // Define the base URL for Microcks (adjust as needed)
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+
+const only500Callback = http.expectedStatuses(500);
 
 /* Simulate users browsing the API repository and getting details. */
 export function browse() {
@@ -12,13 +17,13 @@ export function browse() {
     });
 
     const services = servicesRes.json();
-    sleep(0.5);
+    sleep(WAIT_TIME);
 
     services.forEach(service => {
         const serviceViewRes = http.get(`${BASE_URL}/api/services/` + service.id + '?messages=true');
-        sleep(0.5);
+        sleep(WAIT_TIME);
         const serviceTestsRes = http.get(`${BASE_URL}/api/tests/service/` + service.id + '?page=0&size=20');
-        sleep(0.5);
+        sleep(WAIT_TIME);
     });
 }
 
@@ -160,20 +165,11 @@ export function invokeSOAPMocks() {
                 </hel:sayHello>
             </soapenv:Body>
         </soapenv:Envelope>`;
-        let laurentCall = http.post(`${BASE_URL}/soap/HelloService+Mock/0.9`, laurentBody, { headers: laurentHeaders });
+        let laurentCall = http.post(`${BASE_URL}/soap/HelloService+Mock/0.9`, laurentBody, { headers: laurentHeaders, responseCallback: only500Callback })
         check(laurentCall, {
             'laurentCall status is 500': (r) => r.status === 500,
             'laurentCall body contains a Fault element': (r) => r.body.includes("<soapenv:Fault>"),
         });
         sleep(1);
     });
-}
-
-// The default function runs all tests in sequence
-export default function () {
-    invokeRESTMocks();
-    invokeGraphQLMocks();
-    invokeSOAPMocks();
-    browse()
-    sleep(2); // pause between iterations
 }
