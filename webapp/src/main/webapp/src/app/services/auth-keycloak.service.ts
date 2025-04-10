@@ -28,7 +28,7 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
   private authenticated: BehaviorSubject<boolean> = new BehaviorSubject(false);
   public authenticated$: Observable<boolean> = this.authenticated.asObservable();
 
-  private authenticatedUser: BehaviorSubject<User> = new BehaviorSubject(null);
+  private authenticatedUser: BehaviorSubject<User> = new BehaviorSubject(new User());
   public authenticatedUser$: Observable<User> = this.authenticatedUser.asObservable();
 
   private keycloak: any;
@@ -99,7 +99,7 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
     if (!this.keycloak.resourceAccess) {
       return false;
     }
-    const access = this.keycloak.resourceAccess['microcks-app' || this.keycloak.clientId];
+    const access = this.keycloak.resourceAccess['microcks-app'] || this.keycloak.resourceAccess[this.keycloak.clientId];
     return !!access && access.roles.indexOf(role) >= 0;
 
     // Don't know why but this fail as the code above is just copy-pasted from implementations...
@@ -113,7 +113,7 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
     const rolePathPrefix = '/microcks/' + role + '/';
     const groups = this.keycloak.tokenParsed['microcks-groups'];
 
-    return !!groups && groups.filter(element => element.startsWith(rolePathPrefix)).length > 0;
+    return !!groups && groups.filter((element: string) => element.startsWith(rolePathPrefix)).length > 0;
   }
 
   /**
@@ -138,7 +138,7 @@ export class KeycloakAuthenticationService extends IAuthenticationService {
    */
   public injectAuthHeaders(headers: { [header: string]: string }): void {
     const authHeader: string = 'Bearer ' + this.keycloak.token;
-    headers.Authorization = authHeader;
+    headers['Authorization'] = authHeader;
   }
 
   /**

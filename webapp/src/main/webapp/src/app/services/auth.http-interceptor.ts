@@ -24,17 +24,15 @@ export class AuthenticationHttpInterceptor implements HttpInterceptor {
 
   constructor(protected authService: IAuthenticationService) { }
 
-  // constructor() { }
-
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    console.log('[AuthenticationHttpInterceptor] intercept for ' + req.method);
+    //console.log('[AuthenticationHttpInterceptor] intercept for ' + req.method);
 
     if (req.method === 'OPTIONS') {
       return next.handle(req);
     }
 
     // Build new set of headers for authentication purpose.
-    if (this.authService.isAuthenticated) {
+    if (this.authService.isAuthenticated()) {
       const authHeaders: {[header: string]: string} = {};
       this.authService.injectAuthHeaders(authHeaders);
       const changedReq = req.clone({setHeaders: authHeaders});

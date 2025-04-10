@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-export class Secret {
+export type Secret = {
   id: string;
   name: string;
   description: string;
-  username: string;
-  password: string;
-  token: string;
-  tokenHeader: string;
-  caCertPem: string;
+  username?: string;
+  password?: string;
+  token?: string;
+  tokenHeader?: string;
+  caCertPem?: string;
 }
 
 export class SecretRef {

@@ -14,24 +14,34 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import { NotificationService, NotificationType } from '../../../../components/patternfly-ng/notification';
 
-import { User } from '../../../../models/user.model';
 import { UsersService } from '../../../../services/users.service';
+
+export type KeycloakUser = {
+  id: string;
+  username: string;
+}
 
 @Component({
   selector: 'app-groups-management-dialog',
   templateUrl: './groups-management.dialog.html',
-  styleUrls: ['./groups-management.dialog.css']
+  styleUrls: ['./groups-management.dialog.css'],
+  imports: [
+    CommonModule
+  ]
 })
 export class GroupsManagementDialogComponent implements OnInit {
-  title: string;
-  closeBtnName: string;
-  user: User;
-  userGroups: any[];
-  groups: any[];
+  
+  closeBtnName?: string;
+  
+  //user: User;
+  user!: KeycloakUser;
+  userGroups!: any[];
+  groups!: any[];
   availableGroups: any[] = [];
 
   memberSelected: any[] = [];
@@ -75,11 +85,11 @@ export class GroupsManagementDialogComponent implements OnInit {
           this.userGroups.splice(this.userGroups.indexOf(memberOfGroup), 1);
           this.availableGroups.push(memberOfGroup);
           this.notificationService.message(NotificationType.SUCCESS,
-            this.user.username, this.user.username + ' is no longer member of ' + memberOfGroup.path, false, null, null);
+            this.user.username, this.user.username + ' is no longer member of ' + memberOfGroup.path, false);
           },
           error: err => {
           this.notificationService.message(NotificationType.DANGER,
-            this.user.username, this.user.username + ' cannot leave ' + memberOfGroup.path + ' (' + err.message + ')', false, null, null);
+            this.user.username, this.user.username + ' cannot leave ' + memberOfGroup.path + ' (' + err.message + ')', false);
           },
           complete: () => console.log('Observer got a complete notification'),
         }
@@ -95,13 +105,13 @@ export class GroupsManagementDialogComponent implements OnInit {
             this.availableGroups.splice(this.availableGroups.indexOf(availableGroup), 1);
             this.userGroups.push(availableGroup);
             this.notificationService.message(NotificationType.SUCCESS,
-              this.user.username, this.user.username + ' is now member of ' + availableGroup.path, false, null, null);
+              this.user.username, this.user.username + ' is now member of ' + availableGroup.path, false);
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-              this.user.username, this.user.username + ' cannot join ' + availableGroup.path + ' (' + err.message + ')', false, null, null);
+              this.user.username, this.user.username + ' cannot join ' + availableGroup.path + ' (' + err.message + ')', false);
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {} //console.log('Observer got a complete notification'),
         }
       );
     }

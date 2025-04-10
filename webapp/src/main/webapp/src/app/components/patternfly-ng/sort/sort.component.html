@@ -1,0 +1,21 @@
+<div class="sort-pf" *ngIf="config?.visible !== false">
+  <div class="btn-group dropdown" dropdown>
+    <button type="button" class="btn btn-default dropdown-toggle" dropdownToggle
+            [disabled]="config?.disabled === true">
+      {{currentField.title}}
+      <span aria-hidden="true" class="caret"></span>
+    </button>
+    <ul class="dropdown-menu" role="menu" *dropdownMenu>
+      <li role="menuitem" *ngFor="let item of config?.fields" [ngClass]="{'selected': item === currentField}">
+        <a href="javascript:void(0);" class="sortfield sort-field dropdown-item" tabindex="-1"
+           (click)="selectField(item)">{{item?.title}}</a>
+      </li>
+    </ul>
+  </div>
+  <button class="btn btn-link" type="button"
+          aria-label="Sort Direction"
+          [disabled]="config?.disabled === true"
+          (click)="onChangeDirection()">
+    <span class="sort-direction" [ngClass]="getIconStyleClass()"></span>
+  </button>
+</div>

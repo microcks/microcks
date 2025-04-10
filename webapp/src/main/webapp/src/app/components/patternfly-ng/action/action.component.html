@@ -1,0 +1,48 @@
+<!-- primary actions -->
+<button class="btn btn-default primary-action {{action.styleClass}}" title="{{action.tooltip}}" type="button"
+        *ngFor="let action of config?.primaryActions"
+        [disabled]="action.disabled"
+        [ngClass]="{'invisible': action.visible === false}"
+        (click)="handleAction(action)">
+  <div *ngIf="action.template; then showButtonTemplate else showButton"></div>
+  <ng-template #showButtonTemplate let-action="action"
+               [ngTemplateOutlet]="action.template || null"
+               [ngTemplateOutletContext]="{ action: action }"></ng-template>
+  <ng-template #showButton>
+    {{action.title}}
+  </ng-template>
+
+  <!-- custom actions -->
+  <ng-template *ngIf="template !== undefined" let-action="action"
+      [ngTemplateOutlet]="template"
+      [ngTemplateOutletContext]="{ action: action }">
+  </ng-template>
+</button>
+
+<!-- more actions kebab -->
+<div class="dropdown-kebab-pf pull-right {{config.moreActionsStyleClass}}" dropdown
+     [ngClass]="{'dropdown': !isMoreActionsDropup, 'dropup': isMoreActionsDropup, 'invisible': config.moreActionsVisible === false}"
+     *ngIf="config && config.moreActions && config.moreActions.length > 0">
+  <button class="btn btn-link dropdown-toggle" type="button" dropdownToggle
+          [ngClass]="{'disabled': config.moreActionsDisabled}"
+          (click)="initMoreActionsDropup($event)"
+          [attr.aria-label]="config.moreActionsAriaLabel">
+    <span class="fa fa-ellipsis-v"></span>
+  </button>
+  <ul class="dropdown-menu-right dropdown-menu" aria-labelledby="dropdownKebab" *dropdownMenu>
+    <li *ngFor="let action of config?.moreActions" class="{{action.styleClass}}"
+        [attr.role]="action.separator === true ? 'separator' : 'menuitem'"
+        [ngClass]="{'divider': action.separator === true, 'disabled': action.disabled === true, 'hidden': action.visible === false}">
+      <a *ngIf="action.disabled !== true && action.separator !== true"
+         class="dropdown-item secondary-action"
+         href="javascript:void(0)"
+         title="{{action.tooltip}}"
+         (click)="handleAction(action)">{{action.title}}</a>
+      <a *ngIf="action.disabled === true && action.separator !== true"
+         class="dropdown-item secondary-action"
+         href="javascript:void(0)"
+         title="{{action.tooltip}}"
+         onclick="return false;">{{action.title}}</a>
+    </li>
+  </ul>
+</div>

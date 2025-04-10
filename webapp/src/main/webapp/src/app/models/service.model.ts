@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Metadata } from './commons.model';
+import type { Metadata } from "./commons.model";
 
-export class Api {
+export type Api = {
+  type: ServiceType;
   name: string;
   version: string;
   resource: string;
   referencePayload: string;
-}
+};
 
-export class Service {
+export type Service = {
   id: string;
   name: string;
   version: string;
@@ -31,38 +32,39 @@ export class Service {
   operations: Operation[];
   metadata: Metadata;
   sourceArtifact: string;
-}
+};
 export enum ServiceType {
-  SOAP_HTTP = 'SOAP_HTTP',
-  REST = 'REST',
-  EVENT = 'EVENT',
-  GRPC = 'GRPC',
-  GENERIC_REST = 'GENERIC_REST',
-  GENERIC_EVENT = 'GENERIC_EVENT',
-  GRAPHQL = 'GRAPHQL'
+  SOAP_HTTP = "SOAP_HTTP",
+  REST = "REST",
+  EVENT = "EVENT",
+  GRPC = "GRPC",
+  GENERIC_REST = "GENERIC_REST",
+  GENERIC_EVENT = "GENERIC_EVENT",
+  GRAPHQL = "GRAPHQL",
 }
 
-export class Operation {
+export type Operation = {
   name: string;
   method: string;
   action: string;
   inputName: string;
   outputName: string;
-  bindings: {string: Binding[]};
+  bindings: { [key: string]: Binding };
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
   resourcePaths: string[];
   parameterConstraints: ParameterConstraint[];
-}
+};
 
-export class OperationMutableProperties {
+export type OperationMutableProperties = {
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
   parameterConstraints: ParameterConstraint[];
-}
-export class Binding {
+};
+
+export type Binding = {
   type: BindingType;
   keyType: string;
   destinationType: string;
@@ -70,7 +72,7 @@ export class Binding {
   method: string;
   qoS: string;
   persistent: boolean;
-}
+};
 export enum BindingType {
   KAFKA,
   MQTT,
@@ -79,22 +81,23 @@ export enum BindingType {
   AMQP,
   AMQP1,
   GOOGLEPUBSUB,
-  SQS
+  SQS,
 }
-export class ParameterConstraint {
+
+export type ParameterConstraint = {
   name: string;
   in: ParameterLocation;
   required: boolean;
   recopy: boolean;
   mustMatchRegexp: string;
-}
+};
 export enum ParameterLocation {
   path,
   query,
-  header
+  header,
 }
 
-export class Contract {
+export type Contract = {
   id: string;
   name: string;
   content: string;
@@ -102,81 +105,81 @@ export class Contract {
   serviceId: string;
   sourceArtifact: string;
   mainArtifact: boolean;
-}
+};
 export enum ContractType {
-  WSDL,
-  XSD,
-  JSON_SCHEMA,
-  SWAGGER,
-  RAML,
-  OPEN_API_SPEC,
-  OPEN_API_SCHEMA,
-  ASYNC_API_SPEC,
-  ASYNC_API_SCHEMA,
-  AVRO_SCHEMA,
-  PROTOBUF_SCHEMA,
-  PROTOBUF_DESCRIPTOR,
-  GRAPHQL_SCHEMA,
-  POSTMAN_COLLECTION,
-  SOAP_UI_PROJECT,
-  JSON_FRAGMENT
+  WSDL = "WSDL",
+  XSD = "XSD",
+  JSON_SCHEMA = "JSON_SCHEMA",
+  SWAGGER = "SWAGGER",
+  RAML = "RAML",
+  OPEN_API_SPEC = "OPEN_API_SPEC",
+  OPEN_API_SCHEMA = "OPEN_API_SCHEMA",
+  ASYNC_API_SPEC = "ASYNC_API_SPEC",
+  ASYNC_API_SCHEMA = "ASYNC_API_SCHEMA",
+  AVRO_SCHEMA = "AVRO_SCHEMA",
+  PROTOBUF_SCHEMA = "PROTOBUF_SCHEMA",
+  PROTOBUF_DESCRIPTOR = "PROTOBUF_DESCRIPTOR",
+  GRAPHQL_SCHEMA = "GRAPHQL_SCHEMA",
+  POSTMAN_COLLECTION = "POSTMAN_COLLECTION",
+  SOAP_UI_PROJECT = "SOAP_UI_PROJECT",
+  JSON_FRAGMENT = "JSON_FRAGMENT"
 }
 
-export class Header {
+export type Header = {
   name: string;
   values: string[];
-}
+};
 
-export class Parameter {
+export type Parameter = {
   name: string;
   value: string;
-}
+};
 
-abstract class Message {
+type Message = {
   name: string;
   content: string;
   operationId: string;
   testCaseId: string;
   sourceArtifact: string;
   headers: Header[];
-}
-export class Request extends Message {
+};
+export interface Request extends Message {
   id: string;
   responseId: string;
   queryParameters: Parameter[];
 }
-export class Response extends Message {
+export interface Response extends Message {
   id: string;
   status: string;
   mediaType: string;
   dispatchCriteria: string;
-  isFault = false;
+  isFault: boolean;
 }
-export class EventMessage extends Message {
+export interface EventMessage extends Message {
   id: string;
   mediaType: string;
   dispatchCriteria: string;
 }
 
-export abstract class Exchange {
-  type?: string;
-  eventMessage?: EventMessage;
-}
-export class UnidirectionalEvent extends Exchange {
+export type Exchange = {
+  type: string;
+};
+export interface UnidirectionalEvent extends Exchange {
   eventMessage: EventMessage;
 }
-export class RequestResponsePair extends Exchange {
+export interface RequestResponsePair extends Exchange {
   request: Request;
   response: Response;
 }
 
-export class ServiceView {
+export type ServiceView = {
   service: Service;
-  messagesMap: {string: Exchange[]};
-}
+  //messagesMap: { string: Exchange[] };
+  messagesMap: Record<string, Exchange[]>;
+};
 
-export class GenericResource {
+export type GenericResource = {
   id: string;
   serviceId: string;
   payload: any;
-}
+};

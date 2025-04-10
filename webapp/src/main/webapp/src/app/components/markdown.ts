@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 import sanitizeHtml from 'sanitize-html';
-import { Converter } from 'showdown';
+import markdownit from 'markdown-it'
 
 export const markdownConverter = {
-  makeHtml: markdown => {
-    const unsafeHtml = new Converter({
-      tables: true,
-      openLinksInNewWindow: true,
-      strikethrough: true,
-      emoji: true
-    }).makeHtml(markdown);
+  makeHtml: (markdown: any) => {
+    const md = markdownit({
+      html: true,
+      linkify: true,
+      typographer: true,
+      breaks: true,
+    })
+    const unsafeHtml = md.render(markdown);
 
     return sanitizeHtml(unsafeHtml, {
       allowedTags: [

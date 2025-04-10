@@ -1,0 +1,30 @@
+.dropdown-kebab-pf.invisible {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toolbar-pf-actions {
+  .btn { min-width: unset; }
+  .toolbar-pf-view-selector {
+    a { cursor: pointer; }
+  }
+  .dropdown-menu {
+    a { cursor: pointer; }
+  }
+  .dropdown-kebab-pf { float: right; }
+  .toolbar-apf-filter {
+    /* stylelint-disable */
+    padding-left: 0 !important;
+    /* stylelint-enable */
+    @media (min-width: 768px) {
+      padding-left: 0;
+    }
+  }
+}
+
+.toolbar-pf-include-actions {
+  display: inline-block;
+  margin: 0 5px;
+}
+
+.toolbar-pf-actions.no-filter-results { margin-bottom: 10px; }

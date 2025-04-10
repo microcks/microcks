@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
 import { BsModalRef } from 'ngx-bootstrap/modal';
-import { ServiceRef } from 'src/app/models/importer.model';
+
+import type { ServiceRef } from '../../models/importer.model';
 
 @Component({
   selector: 'app-servicerefs-dialog',
@@ -29,18 +32,21 @@ import { ServiceRef } from 'src/app/models/importer.model';
     <div class="modal-body">
       <ul *ngIf="serviceRefs.length">
         <li *ngFor="let serviceRef of serviceRefs">
-        <a [routerLink]="['/services', serviceRef.serviceId]">{{ serviceRef.name }} - {{ serviceRef.version }}</a>
+        <a routerLink="['/services', serviceRef.serviceId]">{{ serviceRef.name }} - {{ serviceRef.version }}</a>
         </li>
       </ul>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
     </div>
-  `
+  `,
+  imports: [
+    CommonModule
+  ],
 })
 export class ServiceRefsDialogComponent implements OnInit {
-  title: string;
-  closeBtnName: string;
+  title?: string;
+  closeBtnName?: string;
   serviceRefs: ServiceRef[] = [];
 
   constructor(public bsModalRef: BsModalRef) {}

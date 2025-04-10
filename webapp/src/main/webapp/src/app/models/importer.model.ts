@@ -13,28 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Metadata } from './commons.model';
+import type { Metadata } from './commons.model';
 import { SecretRef } from './secret.model';
 
-export class ImportJob {
+export type ImportJob = {
   id: string;
   name: string;
   repositoryUrl: string;
-  mainArtifact = true;
-  repositoryDisableSSLValidation = false;
+  mainArtifact: boolean;
+  repositoryDisableSSLValidation: boolean;
   frequency: string;
   createdDate: Date;
   lastImportDate: Date;
   lastImportError: string;
-  active = false;
+  active: boolean;
   etag: string;
 
   metadata: Metadata;
-  secretRef: SecretRef;
+  secretRef?: SecretRef;
   serviceRefs: ServiceRef[];
 }
 
-export class ServiceRef {
+export type ServiceRef = {
   serviceId: string;
   name: string;
   version: string;

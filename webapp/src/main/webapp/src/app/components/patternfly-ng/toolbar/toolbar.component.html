@@ -1,0 +1,43 @@
+<div class="row toolbar-pf">
+  <div class="col-sm-12">
+    <form class="toolbar-pf-actions"
+          [ngClass]="{'no-filter-results': config.filterConfig?.resultsCount === 0 && config.filterConfig?.appliedFilters?.length !== 0}"
+          (submit)="$event.preventDefault()">
+      <div class="form-group toolbar-apf-filter">
+        <pfng-filter-fields [config]="config.filterConfig" #filterFields
+                            (onAdd)="filterAdded($event)"
+                            (onFieldSelect)="handleFilterFieldSelect($event)"
+                            (onSave)="handleFilterSave($event)"
+                            (onTypeAhead)="handleFilterTypeAhead($event)"
+                            *ngIf="config.filterConfig?.fields"></pfng-filter-fields>
+      </div>
+      <div class="form-group" *ngIf="config.sortConfig?.fields && config.sortConfig?.visible !== false">
+        <pfng-sort [config]="config.sortConfig" (onChange)="sortChange($event)"></pfng-sort>
+      </div>
+      <div class="form-group toolbar-actions"
+           *ngIf="config.actionConfig !== undefined || actionTemplate !== undefined">
+        <pfng-action [config]="config.actionConfig"
+                     [template]="actionTemplate"
+                     (onActionSelect)="handleAction($event)">
+        </pfng-action>
+      </div>
+      <div class="toolbar-pf-action-right">
+        <div class="form-group toolbar-pf-view-selector"
+             *ngIf="viewTemplate !== undefined || (config.views)">
+          <ng-template [ngTemplateOutlet]="viewTemplate" [ngTemplateOutletContext]="{}"></ng-template>
+          <span *ngIf="config.views">
+            <button *ngFor="let view of config.views"
+                    class="btn btn-link"
+                    [ngClass]="{'active': isViewSelected(view), 'disabled': view.disabled === true}"
+                    [attr.aria-label]="view.ariaLabel || view.tooltip"
+                    title={{view.tooltip}}
+                    (click)="viewSelected(view)">
+              <i class="{{view.iconStyleClass}}"></i>
+            </button>
+          </span>
+        </div>
+      </div>
+    </form>
+    <pfng-filter-results [config]="config.filterConfig" (onClear)="clearFilter($event)"></pfng-filter-results>
+  </div>
+</div>

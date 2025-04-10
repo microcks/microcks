@@ -31,7 +31,7 @@
           <div class="constraint-editor-header recopy-header text-center">Recopy?</div>
           <div class="constraint-editor-header regexp-header text-center">Match Regexp?</div>
         </div>
-        <div class="constraint-editor" *ngFor="let constraint of paramConstraints['query']">
+        <div class="constraint-editor" *ngFor="let constraint of paramConstraints['query'], let i = index">
           <div class="constraint-editor-entry">
             <div class="constraint-editor-input">
               <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="constraint.name"/>
@@ -62,7 +62,7 @@
           <div class="constraint-editor-header recopy-header text-center">Recopy?</div>
           <div class="constraint-editor-header regexp-header text-center">Match Regexep?</div>
         </div>
-        <div class="constraint-editor" *ngFor="let constraint of paramConstraints['header']">
+        <div class="constraint-editor" *ngFor="let constraint of paramConstraints['header'], let i = index">
           <div class="constraint-editor-entry">
             <div class="constraint-editor-input">
               <input class="form-control" type="text" placeHolder="Name" name="name" [(ngModel)]="constraint.name"/>
@@ -87,7 +87,7 @@
       </div>
       <div class="pull-right" *ngIf="view.service.type === 'REST'">
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
-        <button type="submit" class="btn btn-primary" (click)="saveOperationProperties(secret)" ng-disabled="form.$invalid">Save</button>
+        <button type="submit" class="btn btn-primary" (click)="saveOperationProperties()" ng-disabled="form.$invalid">Save</button>
       </div>
       <br/><br/><br/>
 
@@ -98,10 +98,10 @@
           <dl class="dl-horizontal left">
           <span *ngIf="view.service.type === 'SOAP_HTTP'">
             <dt>SOAP Action:</dt>
-            <dd><code>{{ operation.action }}</code></dd>
+            <dd><code>{{ operation!.action }}</code></dd>
           </span>
           <dt>Dispatcher:</dt>
-          <dd><code>{{ operation.dispatcher }}</code> &nbsp;
+          <dd><code>{{ operation!.dispatcher }}</code> &nbsp;
             <span class="learn-more-inline">
               <a href="https://microcks.github.io">Learn More
                 <i class="fa fa-external-link" aria-hidden="true"></i>
@@ -109,33 +109,33 @@
             </span>
           </dd>
           <dt>Dispatching rules:</dt>
-          <dd><code class="code-block">{{ operation.dispatcherRules }}</code></dd>
+          <dd><code class="code-block">{{ operation!.dispatcherRules }}</code></dd>
           </dl>
         </div>
         <div class="col-md-6">
           <dl class="dl-horizontal left">
             <span *ngIf="view.service.type === 'SOAP_HTTP'">
               <dt>Message Output Name:</dt>
-              <dd><code>{{ operation.outputName }}</code></dd>
+              <dd><code>{{ operation!.outputName }}</code></dd>
             </span>
             <dt *ngIf="!isEventTypeService()">HTTP Verb:</dt>
             <dt *ngIf="isEventTypeService()">Type:</dt>
             <dd>
-              <div [ngSwitch]="operation.method">
+              <div [ngSwitch]="operation!.method">
                 <span class="label label-success" *ngSwitchCase="'GET'">GET</span>
                 <span class="label label-primary" *ngSwitchCase="'PUT'">PUT</span>
                 <span class="label label-danger" *ngSwitchCase="'DELETE'">DELETE</span>
                 <span class="label label-warning" *ngSwitchCase="'POST'">POST</span>
-                <span class="label label-info" *ngSwitchDefault>{{ operation.method }}</span>
+                <span class="label label-info" *ngSwitchDefault>{{ operation!.method }}</span>
               </div>
             </dd>
             <span *ngIf="!isEventTypeService()">
               <dt>Default delay:</dt>
-              <dd>{{ operation.defaultDelay || 0 }} ms</dd>
+              <dd>{{ operation?.defaultDelay || 0 }} ms</dd>
             </span>
             <span *ngIf="isEventTypeService()">
               <dt>Frequency:</dt>
-              <dd>{{ operation.defaultDelay || 0 }} sec</dd>
+              <dd>{{ operation?.defaultDelay || 0 }} sec</dd>
             </span>
           </dl>
         </div>
@@ -149,14 +149,14 @@
             <span *ngIf="!isEventTypeService()">
               <label class="control-label" for="defaultDelay">Default delay</label>
               <div class="controls">
-                <input class="form-control" id="defaultDelay" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay"/> ms
+                <input class="form-control" id="defaultDelay" name="defaultDelay" [(ngModel)]="newOperation!.defaultDelay"/> ms
                 <p class="help-block">The delay to wait before returning response.</p>
               </div>
             </span>
             <span *ngIf="isEventTypeService()">
               <label class="control-label" for="defaultDelay">Frequency</label>
               <div class="controls">
-                <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation.defaultDelay" [disabled]="!isAsyncMockEnabled()">
+                <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation!.defaultDelay" [disabled]="!isAsyncMockEnabled()">
                   <option *ngFor="let frequency of frequencies" [value]="frequency">{{ frequency }} </option>
                 </select> &nbsp; sec
                 <div class="pull-right">
@@ -170,7 +170,7 @@
           <div class="control-group">
             <label class="control-label" for="dispatcher">Dispatcher</label>
             <div class="controls">
-              <select class="form-control" name="dispatcher" [(ngModel)]="newOperation.dispatcher">
+              <select class="form-control" name="dispatcher" [(ngModel)]="newOperation!.dispatcher">
                 <option *ngFor="let dispatcher of dispatchersByServiceType[view.service.type]" [value]="dispatcher.value">{{ dispatcher.value }} </option>
               </select>
               <p class="help-block">The dispatcher used by Operation.</p>
@@ -179,7 +179,7 @@
           <div class="control-group">
             <label class="control-label" for="dispatcherRules">Dispatcher rules</label>
             <div class="controls">
-              <textarea class="form-control" rows="10" id="dispatcherRules" name="dispatcherRules" [(ngModel)]="newOperation.dispatcherRules">
+              <textarea class="form-control" rows="10" id="dispatcherRules" name="dispatcherRules" [(ngModel)]="newOperation!.dispatcherRules">
               </textarea>
               <p class="help-block">The dispatcher rules for above dispatcher.</p>
             </div>
@@ -191,10 +191,10 @@
 
           <div class="text-right" *ngFor="let exchange of view.messagesMap[operationName]">
             <span *ngIf="!isEventTypeService()">
-              <h2><span class="label label-primary">{{ exchange.response.name }} - {{ exchange.response.dispatchCriteria }}</span></h2>
+              <h2><span class="label label-primary">{{ getReqRespPair(exchange).response.name }} - {{ getReqRespPair(exchange).response.dispatchCriteria }}</span></h2>
             </span>
             <span *ngIf="isEventTypeService()">
-              <h2><span class="label label-primary">{{ exchange.eventMessage.name }} </span></h2>
+              <h2><span class="label label-primary">{{ getUnidirEvent(exchange).eventMessage.name }} </span></h2>
             </span>
           </div>
         </div>
@@ -202,7 +202,7 @@
       <br/><br/>
       <div class="pull-right">
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
-        <button type="submit" class="btn btn-primary" (click)="saveOperationProperties(secret)" ng-disabled="form.$invalid">Save</button>
+        <button type="submit" class="btn btn-primary" (click)="saveOperationProperties()" ng-disabled="form.$invalid">Save</button>
       </div>
     </div>
     <div class="col-md-4 help-bar">
@@ -220,7 +220,7 @@
         <li><code>match</code> parameter value using a `regular expression` (think of Authorization token validation for example)</li>
       </ul>
 
-      <div id="fallback-help" *ngIf="newOperation.dispatcher === 'FALLBACK'">
+      <div id="fallback-help" *ngIf="newOperation?.dispatcher === 'FALLBACK'">
         <br/>
         <h4>Fallback Dispatcher</h4>
         <p>
@@ -244,7 +244,7 @@
         <pre><code highlight>{{ fallback }}</code></pre>
       </div>
 
-      <div id="proxy-fallback-help" *ngIf="newOperation.dispatcher === 'PROXY_FALLBACK'">
+      <div id="proxy-fallback-help" *ngIf="newOperation?.dispatcher === 'PROXY_FALLBACK'">
         <br/>
         <h4>Proxy-Fallback Dispatcher</h4>
         <p>
@@ -268,7 +268,7 @@
         <pre><code highlight>{{ proxyFallback }}</code></pre>
       </div>
 
-      <div id="json-body-help" *ngIf="newOperation.dispatcher === 'JSON_BODY'">
+      <div id="json-body-help" *ngIf="newOperation?.dispatcher === 'JSON_BODY'">
         <br/>
         <h4>JSON Body Dispatcher</h4>
         <p>

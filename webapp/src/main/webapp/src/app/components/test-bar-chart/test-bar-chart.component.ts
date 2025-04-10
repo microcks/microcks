@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 import { Component, OnInit, Input } from '@angular/core';
-import { Router } from '@angular/router';
 
 import { TestResult } from '../../models/test.model';
 
@@ -29,16 +28,15 @@ import * as d3 from 'd3';
 })
 export class TestBarChartComponent implements OnInit {
   @Input()
-  data: TestResult[];
+  data!: TestResult[];
 
   minValues = 10;
   displayThreshold = 3;
 
-  width: number;
   height = 140;
   margin = {top: 5, right: 5, bottom: 5, left: 5};
 
-  constructor(private router: Router) {
+  constructor() {
   }
 
   ngOnInit() {
@@ -113,26 +111,21 @@ export class TestBarChartComponent implements OnInit {
         .attr('data-placement', 'left').attr('title', function(d) {
           return '[' + d.testDate.toISOString() + '] : ' + d.elapsedTime + ' ms';
         })
-        .on('click', function(d) {
+        .on('click', (event, d) => {
           document.location.href = '/#/tests/' + d.id.toString();
-          // this.navigateToTest(d.id.toString());
         });
 
     d3.selectAll('#testBarChart > .test-box-container > .bar').each(function(d) {
       const div = document.createElement('div');
       div.setAttribute('class', 'text-center');
-      if (d.testNumber != 0) {
-        div.innerText = 'Test #' + d.testNumber;
+      if ((d as any)['testNumber'] != 0) {
+        div.innerText = 'Test #' + (d as any)['testNumber'];
       } else {
         div.innerText = '-';
       }
-      this.parentNode.insertBefore(div, this.nextSibling);
+      (this as any).parentNode.insertBefore(div, (this as any).nextSibling);
     });
 
     vis.exit().remove();
-  }
-
-  public navigateToTest(testId: string): void {
-    this.router.navigate(['/tests', testId]);
   }
 }

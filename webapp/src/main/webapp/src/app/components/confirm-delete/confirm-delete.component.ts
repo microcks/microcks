@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, Output, EventEmitter, ViewChildren, QueryList } from '@angular/core';
 
-import { ModalDirective } from 'ngx-bootstrap/modal';
+import { Component, Output, EventEmitter, ViewChildren, QueryList, Provider } from '@angular/core';
+import { NgIf } from '@angular/common';
+
+import { ModalDirective, ModalModule } from 'ngx-bootstrap/modal';
 
 @Component({
   selector: 'app-confirm-delete-dialog',
-  templateUrl: 'confirm-delete.component.html'
+  templateUrl: 'confirm-delete.component.html',
+  imports: [NgIf, ModalModule]
 })
 export class ConfirmDeleteDialogComponent {
 
   @Output() delete: EventEmitter<any> = new EventEmitter<any>();
 
-  @ViewChildren('confirmDeleteModal') confirmDeleteModal: QueryList<ModalDirective>;
+  @ViewChildren('confirmDeleteModal') confirmDeleteModal?: QueryList<ModalDirective>;
 
   private objectToDelete: any;
   protected isOpenBF = false;
@@ -47,8 +50,8 @@ export class ConfirmDeleteDialogComponent {
   public open(objectToDelete: any): void {
     this.isOpen = true;
     this.objectToDelete = objectToDelete;
-    this.confirmDeleteModal.changes.subscribe(thing => {
-      if (this.confirmDeleteModal.first) {
+    this.confirmDeleteModal?.changes.subscribe(thing => {
+      if (this.confirmDeleteModal?.first) {
         this.confirmDeleteModal.first.show();
       }
     });
@@ -74,6 +77,6 @@ export class ConfirmDeleteDialogComponent {
    */
   public cancel(): void {
     this.objectToDelete = false;
-    this.confirmDeleteModal.first.hide();
+    this.confirmDeleteModal?.first.hide();
   }
 }

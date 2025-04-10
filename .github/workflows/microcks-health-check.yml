@@ -1,0 +1,48 @@
+name: Microcks Health Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - method: docker
+            mode: default
+            addons: ""
+          - method: docker
+            mode: proxy
+            addons: ""
+          - method: docker
+            mode: devmode
+            addons: ""
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update && sudo apt-get install -y docker-compose
+
+      - name: Install Microcks (${{ matrix.method }}/${{ matrix.mode }})
+        run: |
+          ARGS=(--method "${{ matrix.method }}" --mode "${{ matrix.mode }}")
+          [[ -n "${{ matrix.addons }}" ]] && ARGS+=(--addons "${{ matrix.addons }}")
+          ./testsuite/install-compose.sh "${ARGS[@]}"
+
+      - name: Health‑check containers
+        run: |
+          # We're already cd'ed into install/<method>-compose by the installer
+          ./testsuite/check-health.sh --method "${{ matrix.method }}"
+
+      - name: Tear down
+        if: always()
+        run: |
+          cd install/${{ matrix.method }}-compose
+          ${{ matrix.method }}-compose down -v --remove-orphans

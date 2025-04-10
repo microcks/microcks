@@ -13,29 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
+import { Highlight } from 'ngx-highlightjs';
+
 import {
-  Notification,
-  NotificationEvent,
   NotificationService,
-  NotificationType,
-} from 'patternfly-ng/notification';
+  NotificationType
+} from '../../../../components/patternfly-ng/notification';
 
 import { TestResult } from '../../../../models/test.model';
-import { Service } from 'src/app/models/service.model';
+import { Service } from '../../../../models/service.model';
+
 
 @Component({
   selector: 'app-add-to-ci-dialog',
   templateUrl: './add-to-ci.dialog.html',
   styleUrls: ['./add-to-ci.dialog.css'],
+  imports: [
+    CommonModule,
+    FormsModule,
+    Highlight
+  ]
 })
 export class AddToCIDialogComponent implements OnInit {
-  ciType: string;
-  closeBtnName: string;
-  test: TestResult;
-  service: Service;
+  
+  closeBtnName!: string;
+  test!: TestResult;
+  service!: Service;
+
+  ciType?: string;
 
   constructor(
     public bsModalRef: BsModalRef,
@@ -239,11 +249,9 @@ export class AddToCIDialogComponent implements OnInit {
     document.body.removeChild(selBox);
     this.notificationService.message(
       NotificationType.INFO,
-      this.ciType.toUpperCase(),
+      this.ciType!.toUpperCase(),
       'Code has been copied to clipboard',
-      false,
-      null,
-      null
+      false
     );
   }
 }

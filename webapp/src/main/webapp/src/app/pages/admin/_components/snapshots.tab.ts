@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
-import { FileUploader } from 'ng2-file-upload';
+import { NotificationService, NotificationType, } from '../../../components/patternfly-ng/notification';
+import { FileUploader, FileUploadModule } from 'ng2-file-upload';
 
 import { Service } from '../../../models/service.model';
 import { ServicesService } from '../../../services/services.service';
@@ -25,13 +27,18 @@ import { IAuthenticationService } from '../../../services/auth.service';
 @Component({
   selector: 'app-snapshots-tab',
   templateUrl: './snapshots.tab.html',
-  styleUrls: ['./snapshots.tab.css']
+  styleUrls: ['./snapshots.tab.css'],
+  imports: [
+    CommonModule,
+    FormsModule,
+    FileUploadModule
+  ]
 })
 export class SnapshotsTabComponent implements OnInit {
 
-  halfServices: Service[];
-  secondHalfServices: Service[];
-  servicesCount: number;
+  halfServices?: Service[];
+  secondHalfServices?: Service[];
+  servicesCount: number = 0;
 
   selectedServices: any = { ids: {} };
   uploader: FileUploader = new FileUploader({url: '/api/import', itemAlias: 'file'});
@@ -48,10 +55,10 @@ export class SnapshotsTabComponent implements OnInit {
     this.uploader.onCompleteItem = (item: any, response: any, status: any, headers: any) => {
       if (status == 201) {
         this.notificationService.message(NotificationType.SUCCESS,
-          'Snapshot', 'File uploaded successfully', false, null, null);
+          'Snapshot', 'File uploaded successfully', false);
       } else {
         this.notificationService.message(NotificationType.DANGER,
-          'Snapshot', 'File uploaded failed with status ' + status, false, null, null);
+          'Snapshot', 'File uploaded failed with status ' + status, false);
       } 
     };
     this.uploader.authToken = 'Bearer ' + this.authService.getAuthenticationSecret();

@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
+import { PaginationConfig, PaginationEvent, PaginationModule } from '../../components/patternfly-ng/pagination';
+
+import { TestBarChartComponent } from '../../components/test-bar-chart/test-bar-chart.component';
+import { TimeAgoPipe } from '../../components/time-ago.pipe';
 
 import { ServicesService } from '../../services/services.service';
 import { TestsService } from '../../services/tests.service';
@@ -29,18 +33,24 @@ import { TestResult } from '../../models/test.model';
 @Component({
   selector: 'app-tests-page',
   templateUrl: './tests.page.html',
-  styleUrls: ['./tests.page.css']
+  styleUrls: ['./tests.page.css'],
+  imports: [
+    CommonModule,
+    PaginationModule,
+    RouterLink,
+    TestBarChartComponent,
+    TimeAgoPipe
+  ]
 })
 export class TestsPageComponent implements OnInit {
 
-  now: number;
-  service: Service;
-  testResults: Observable<TestResult[]>;
-  testResultsCount: number;
-  closeBtnName: string;
+  now!: number;
+  service!: Service;
+  testResults!: Observable<TestResult[]>;
+  testResultsCount: number = 0;
 
-  resolvedTestResults: TestResult[];
-  paginationConfig: PaginationConfig;
+  resolvedTestResults!: TestResult[];
+  paginationConfig: PaginationConfig = new PaginationConfig;
 
   constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private route: ActivatedRoute) {
   }
@@ -49,7 +59,7 @@ export class TestsPageComponent implements OnInit {
     this.now = Date.now();
     const serviceViewObs = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.servicesSvc.getService(params.get('serviceId')))
+        this.servicesSvc.getService(params.get('serviceId')!))
     );
     serviceViewObs.subscribe(result => {
       this.service = result;
@@ -57,11 +67,11 @@ export class TestsPageComponent implements OnInit {
 
     this.testResults = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.testsSvc.listByServiceId(params.get('serviceId')))
+        this.testsSvc.listByServiceId(params.get('serviceId')!))
     );
     const testResultsCountObs = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.testsSvc.countByServiceId(params.get('serviceId')))
+        this.testsSvc.countByServiceId(params.get('serviceId')!))
     );
     testResultsCountObs.subscribe(result => {
       this.testResultsCount = result.counter;

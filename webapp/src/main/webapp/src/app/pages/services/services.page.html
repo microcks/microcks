@@ -6,18 +6,14 @@
 
 <h1>
   APIs &amp; Services
-  <div class="pull-right" *ngIf="hasRole('admin') || hasRole('manager')">
-    <button class="btn btn-primary" (click)="openCreateDirectAPI(wizardTemplate)">
+  <div class="pull-right">
+    <button class="btn btn-primary" (click)="openCreateDirectAPI()">
       <span class="fa fa-plus"></span> Add Direct API
     </button>
   </div>
 </h1>
 <small> These are the APIs | Services managed by Microcks. You can discover new ones adding Import Job or creating a new
   Direct API...</small>
-
-<ng-template #wizardTemplate>
-  <app-direct-api-wizard></app-direct-api-wizard>
-</ng-template>
 
 <div class="container-fluid">
   <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">
@@ -44,7 +40,7 @@
         <div class="list-view-pf-body">
           <div class="list-view-pf-description">
             <div class="list-group-item-heading serviceName">
-              <h4><a [routerLink]="[service.id]">{{ service.name }}</a></h4>
+              <h4><a routerLink="{{service.id}}">{{ service.name }}</a></h4>
             </div>
             <div class="list-group-item-text serviceMetadata">
               <span class="label label-primary" *ngIf="service.type === 'SOAP_HTTP'">SOAP</span>
@@ -72,14 +68,12 @@
         </div>
 
         <div class="list-view-pf-actions">
-          <a [routerLink]="[service.id]"><button class="btn btn-default" type="button">Details</button></a>
-          <div class="dropdown pull-right dropdown-kebab-pf"
-            *ngIf="hasRole('admin') || hasRoleForService('manager', service)">
-            <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown"
-              aria-haspopup="true" aria-expanded="true">
+          <a routerLink="{{service.id}}"><button class="btn btn-default" type="button">Details</button></a>
+          <div class="dropdown pull-right dropdown-kebab-pf" dropdown *ngIf="hasRole('admin') || hasRoleForService('manager', service)">
+            <button id="dropdownKebabRight" class="btn btn-link dropdown-toggle" type="button" dropdownToggle aria-controls="dropdown-actions">
               <span class="fa fa-ellipsis-v"></span>
             </button>
-            <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
+            <ul id="dropdown-actions" *dropdownMenu class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight">
               <!-- <li><a>Edit</a></li> -->
               <li><a (click)="confirmDeleteDialog.open(service)">Delete</a></li>
             </ul>
@@ -98,6 +92,7 @@
     (onPageSizeChange)="handlePageSize($event)">
   </pfng-pagination>
 </div>
+
 
 <app-confirm-delete-dialog #confirmDeleteDialog (delete)="deleteService($event)">
   <p>Do you really want to delete the selected API or Service ?</p>

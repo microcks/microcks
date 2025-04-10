@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
@@ -24,16 +26,17 @@ import {
   NotificationEvent,
   NotificationService,
   NotificationType,
-} from 'patternfly-ng/notification';
+  ToastNotificationListComponent,
+} from '../../../../components/patternfly-ng/notification';
 
 import {
   Operation,
-  Service,
   ServiceType,
   ServiceView,
   OperationMutableProperties,
-  ParameterConstraint,
-  ParameterLocation,
+  Exchange,
+  UnidirectionalEvent,
+  RequestResponsePair,
 } from '../../../../models/service.model';
 import { ServicesService } from '../../../../services/services.service';
 import { ConfigService } from '../../../../services/config.service';
@@ -42,16 +45,22 @@ import { ConfigService } from '../../../../services/config.service';
   selector: 'app-operation-override-page',
   templateUrl: './operation-override.page.html',
   styleUrls: ['./operation-override.page.css'],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    ToastNotificationListComponent
+  ],
 })
 export class OperationOverridePageComponent implements OnInit {
-  serviceId: string;
-  operationName: string;
-  serviceView: Observable<ServiceView>;
-  resolvedServiceView: ServiceView;
-  operation: Operation;
-  newOperation: Operation;
-  notifications: Notification[];
-  frequencies: string[];
+  serviceId!: string;
+  operationName!: string;
+  serviceView: Observable<ServiceView> | null = null;
+  resolvedServiceView!: ServiceView;
+  operation?: Operation;
+  newOperation?: Operation;
+  notifications: Notification[] = [];
+  frequencies: string[] = [];
   paramConstraints: any = {
     header: [],
     query: [],
@@ -174,10 +183,10 @@ export class OperationOverridePageComponent implements OnInit {
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
-    this.operationName = this.route.snapshot.paramMap.get('name');
+    this.operationName = this.route.snapshot.paramMap.get('name')!;
     this.serviceView = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.servicesSvc.getServiceView(params.get('serviceId'))
+        this.servicesSvc.getServiceView(params.get('serviceId')!)
       )
     );
     this.serviceView.subscribe((view) => {
@@ -187,9 +196,9 @@ export class OperationOverridePageComponent implements OnInit {
         if (this.operationName === operation.name) {
           this.operation = operation;
           // Clone mutable properties from operation.
-          this.newOperation = new Operation();
+          this.newOperation = {} as Operation;
           this.newOperation.defaultDelay = this.operation.defaultDelay || 0;
-          this.newOperation.dispatcher = this.operation.dispatcher;
+          this.newOperation.dispatcher = this.operation?.dispatcher ?? '';
           this.newOperation.dispatcherRules = this.operation.dispatcherRules;
           this.newOperation.parameterConstraints =
             this.operation.parameterConstraints;
@@ -207,17 +216,28 @@ export class OperationOverridePageComponent implements OnInit {
       .split(',');
   }
 
+  getReqRespPair(exchange: Exchange): RequestResponsePair {
+    return exchange as RequestResponsePair;
+  }
+  getUnidirEvent(exchange: Exchange): UnidirectionalEvent {
+    return exchange as UnidirectionalEvent;
+  }
+
   public resetOperationProperties() {
-    this.newOperation = new Operation();
-    this.newOperation.defaultDelay = this.operation.defaultDelay;
-    this.newOperation.dispatcher = this.operation.dispatcher;
-    this.newOperation.dispatcherRules = this.operation.dispatcherRules;
+    this.newOperation = {} as Operation;
+    if (this.operation) {
+      this.newOperation.defaultDelay = this.operation?.defaultDelay ?? 0;
+      this.newOperation.dispatcher = this.operation?.dispatcher ?? '';
+      this.newOperation.dispatcherRules = this.operation.dispatcherRules;
+    }
   }
   public saveOperationProperties() {
-    const operationProperties = new OperationMutableProperties();
-    operationProperties.defaultDelay = this.newOperation.defaultDelay;
-    operationProperties.dispatcher = this.newOperation.dispatcher;
-    operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
+    const operationProperties = {} as OperationMutableProperties;
+    if (this.newOperation) {
+      operationProperties.defaultDelay = this.newOperation.defaultDelay;
+      operationProperties.dispatcher = this.newOperation.dispatcher;
+      operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
+    }
     operationProperties.parameterConstraints = [];
     // Now recopy parameter constraints.
     for (let i = 0; i < this.paramConstraints.header.length; i++) {
@@ -243,9 +263,7 @@ export class OperationOverridePageComponent implements OnInit {
             NotificationType.SUCCESS,
             this.operationName,
             'Dispatch properies have been updated',
-            false,
-            null,
-            null
+            false
           );
         },
         error: (err) => {
@@ -253,9 +271,7 @@ export class OperationOverridePageComponent implements OnInit {
             NotificationType.DANGER,
             this.operationName,
             'Dispatch properties cannot be updated (' + err.message + ')',
-            false,
-            null,
-            null
+            false
           );
         },
         complete: () => console.log('Observer got a complete notification'),
@@ -263,7 +279,9 @@ export class OperationOverridePageComponent implements OnInit {
   }
 
   public copyDispatcherRules(operator: string): void {
-    this.newOperation.dispatcherRules = operator;
+    if (this.newOperation) {
+      this.newOperation.dispatcherRules = operator;
+    }
   }
 
   public addParameterConstraint(location: string): void {
@@ -306,14 +324,18 @@ export class OperationOverridePageComponent implements OnInit {
   public isAsyncMockEnabled(): boolean {
     return (
       this.config.getFeatureProperty('async-api', 'enabled').toLowerCase() ===
-        'true' && this.newOperation.defaultDelay != 0
+        'true' && this.newOperation?.defaultDelay != 0
     );
   }
   public disableAsyncMock(): void {
-    this.newOperation.defaultDelay = 0;
+    if (this.newOperation) {
+      this.newOperation.defaultDelay = 0;
+    }
   }
   public enableAsyncMock(): void {
-    this.newOperation.defaultDelay = parseInt(this.frequencies[0]);
+    if (this.newOperation) {
+      this.newOperation.defaultDelay = parseInt(this.frequencies[0]);
+    }
   }
 
   handleCloseNotification($event: NotificationEvent): void {

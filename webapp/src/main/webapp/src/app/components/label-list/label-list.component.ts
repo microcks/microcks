@@ -14,21 +14,24 @@
  * limitations under the License.
  */
 import { Component, OnInit, ViewEncapsulation, ChangeDetectionStrategy, Input} from '@angular/core';
+import { NgFor } from '@angular/common';
 
 import { Metadata } from '../../../app/models/commons.model';
+
 
 @Component({
   selector: 'app-label-list',
   encapsulation: ViewEncapsulation.None,
   templateUrl: './label-list.component.html',
   styleUrls: ['./label-list.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [NgFor]
 })
 export class LabelListComponent implements OnInit {
 
-  @Input() metadata: Metadata;
+  @Input() metadata: Metadata | null = null;
 
-  @Input() filter: string;
+  @Input() filter: string | null = null;
 
   private labels: any = null;
 
@@ -43,7 +46,7 @@ export class LabelListComponent implements OnInit {
         this.labels = {};
         const filteredLabels = this.filter.split(',');
         filteredLabels.forEach(label => {
-          if (this.metadata.labels && this.metadata.labels[label]) {
+          if (this.metadata?.labels && this.metadata.labels[label]) {
             this.labels[label] = this.metadata.labels[label];
           }
         });
@@ -53,13 +56,13 @@ export class LabelListComponent implements OnInit {
     }
   }
 
-  getLabelsKeys(): string[] {
+  getLabelsKeys(): string[] | null {
     if (this.metadata) {
       if (this.filter) {
         this.labels = {};
         const filteredLabels = this.filter.split(',');
         filteredLabels.forEach(label => {
-          if (this.metadata.labels && this.metadata.labels[label]) {
+          if (this.metadata?.labels && this.metadata.labels[label]) {
             this.labels[label] = this.metadata.labels[label];
           }
         });
@@ -72,7 +75,7 @@ export class LabelListComponent implements OnInit {
     }
     return Object.keys(this.labels);
   }
-  getLabelValue(label: string): string {
+  getLabelValue(label: string): string | null {
     if (this.labels == null) {
       return null;
     }

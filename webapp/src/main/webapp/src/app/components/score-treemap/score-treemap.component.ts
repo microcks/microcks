@@ -15,8 +15,10 @@
  */
 import { Component, OnInit, Input } from '@angular/core';
 import { Router } from '@angular/router';
-
 import * as d3 from 'd3';
+import { HierarchyRectangularNode } from 'd3-hierarchy';
+
+const phi: number = (1 + Math.sqrt(5)) / 2;
 
 @Component({
   selector: 'app-score-treemap',
@@ -36,27 +38,33 @@ import * as d3 from 'd3';
   `
 })
 export class ScoreTreemapComponent implements OnInit {
+  
   @Input()
-  data: d3.layout.treemap.Node;
+  data!: HierarchyRectangularNode<any>;
+  //data: d3.layout.treemap.Node;
 
   @Input()
-  scoreAttr: string;
+  scoreAttr!: string;
 
   @Input()
-  block: string;
+  block!: string;
 
   @Input()
-  elements: string;
+  elements!: string;
 
   @Input()
-  legend: string;
+  legend!: string;
 
   margin = {top: 5, right: 5, bottom: 5, left: 5};
-  width: number;
-  height: number;
+  width: number = 30;
+  height: number = 10;
+  
 
-  treemap: d3.layout.Treemap<d3.layout.treemap.Node>;
-  tooltip: d3.Selection<any>;
+  treemap: d3.TreemapLayout<any> = {} as d3.TreemapLayout<any>;
+  tooltip: d3.Selection<any, unknown, HTMLElement, any> = {} as d3.Selection<any, unknown, HTMLElement, any>;
+  
+  //treemap: d3.layout.Treemap<d3.layout.treemap.Node>;
+  //tooltip: d3.Selection<any>;
 
   constructor(private router: Router) {
   }
@@ -81,58 +89,78 @@ export class ScoreTreemapComponent implements OnInit {
       .append('g')
         .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
-    this.treemap = d3.layout.treemap().round(false)
-      .size([this.width, this.height]).value((d) => d.value);
+    this.treemap = d3.treemap()
+      .round(false)
+      .size([this.width, this.height])
+      .padding(1)
+      //.tile(d3.treemapBinary);
+      //.tile(d3.treemapSquarify);
+      //.tile(d3.treemapResquarify.ratio(phi));
 
-    const nodes: d3.layout.treemap.Node[] = this.treemap.nodes(this.data)
-      .filter((d) => !d.children)
-      .sort((a, b) => b[this.scoreAttr] - a[this.scoreAttr]);
+    const nodes: HierarchyRectangularNode<any>[] = this.treemap(
+      d3.hierarchy(this.data)
+        .sum((d) => (d.value || 0))
+        .sort((a, b) => (b.data as any)[this.scoreAttr] - (a.data as any)[this.scoreAttr])
+    ).leaves();
+
+    /*
+    for (let i = 0; i < nodes.length; i++) {
+      console.log("nodes[" + i + "]: data.name: " + nodes[i].data.name + ", data.value: " + nodes[i].data.value + ", data.score: " + (nodes[i].data as any).score);
+      console.log("  x0: " + nodes[i].x0 + ", y0: " + nodes[i].y0 + ", x1: " + nodes[i].x1 + ", y1: " + nodes[i].y1);
+    }
+    */
 
     const cell = svg.selectAll('g')
       .data(nodes)
       .enter().append('g')
         .attr('class', 'cell')
-        .attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
+        .attr('transform', (d) => 'translate(' + d.x0 + ',' + d.y0 + ')');
 
     this.initializeTreemap(cell);
   }
 
-  private initializeTreemap(cell: d3.Selection<any>): void {
+  private initializeTreemap(cell: d3.Selection<SVGGElement, HierarchyRectangularNode<any>, SVGGElement, unknown>): void {
     const tooltip = this.tooltip;
     const scoreAttr = this.scoreAttr;
     const block = this.block;
     const elements = this.elements;
 
     cell.append('rect')
-      .attr('id', (d) => d.name)
-      .attr('width', (d) => d.dx - 1)
-      .attr('height', (d) => d.dy - 1)
-      .on('mouseover', (d) => {
-        tooltip.text(d.value + ' ' + elements + ' - ' + d[scoreAttr] + ' %');
+      .attr('id', (d) => d.data.name)
+      .attr('width', (d) => {
+        return d.x1 - d.x0
+      })
+      .attr('height', (d) => d.y1 - d.y0)
+      .on('mouseover', (event, d) => {
+        tooltip.text(d.value + ' ' + elements + ' - ' + (d.data as any)[scoreAttr] + ' %');
         cell.selectAll('rect')
-          .filter(function(item) { return item.name !== this.id; })
+          .filter(function(item) { 
+            return (item as any).data.name !== d.data.name; 
+          })
           .classed('rect-defocused', true);
         return tooltip.style('visibility', 'visible');
       })
-      .on('mousemove', () => tooltip
-        .style('top', ((d3.event as any).pageY - 10) + 'px')
-        .style('left', ((d3.event as any).pageX + 10) + 'px')
+      .on('mousemove', (event) => tooltip
+        .style('top', (event.pageY - 10) + 'px')
+        .style('left', (event.pageX + 10) + 'px')
       )
       .on('mouseout', () => {
         cell.selectAll('rect')
-          .filter(function(d) { return d.name !== this.id; })
+          .filter(function(d) { 
+            return true;
+          })
           .classed('rect-defocused', false);
         return tooltip.style('visibility', 'hidden');
       })
-      .style('fill', d => this.colorGradient(1 - (d[scoreAttr] / 100)) );
+      .style('fill', d => this.colorGradient(1 - ((d.data as any)[scoreAttr] / 100)) );
 
     cell.append('text')
-      .attr('x', (d) => d.dx / 2)
-      .attr('y', (d) => d.dy / 2)
+      .attr('x', (d) => (d.x1 - d.x0) / 2)
+      .attr('y', (d) => (d.y1 - d.y0) / 2)
       .attr('dy', '.35em')
       .attr('text-anchor', 'middle')
-      .attr('fill', d => d[scoreAttr] < 50 ? 'white' : 'black')
-      .text(d => block + ':' + d.name );
+      .attr('fill', d => (d.data as any)[scoreAttr] < 50 ? 'white' : 'black')
+      .text(d => block + ':' + d.data.name );
 
     d3.select(window).on('resize', () =>
       this.resizeTreemap()
@@ -147,26 +175,31 @@ export class ScoreTreemapComponent implements OnInit {
       .attr('width', this.width + this.margin.left + this.margin.right)
       .attr('height', this.height + this.margin.top + this.margin.bottom);
 
-    this.treemap.size([this.width, this.height]);
+    this.treemap.round(false)
+      .size([this.width, this.height])
+      .padding(1)
+      .tile(d3.treemapSquarify);
 
-    const nodes: d3.layout.treemap.Node[] = this.treemap.nodes(this.data)
-      .filter((d) => !d.children)
-      .sort((a, b) => b[this.scoreAttr] - a[this.scoreAttr]);
+    const nodes: HierarchyRectangularNode<any>[] = this.treemap(
+      d3.hierarchy(this.data)
+        .sum((d) => (d.value || 0))
+        .sort((a, b) => (b.data as any)[this.scoreAttr] - (a.data as any)[this.scoreAttr])
+    ).leaves();
 
     // Reinitialize graphics in svg.
     let cell = svg.selectAll('g');
     cell.remove();
 
-    svg = svg.append('g')
+    let newSvg = svg.append('g')
       .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
 
-    cell = svg.selectAll('g')
+    let newCell = newSvg.selectAll('g')
       .data(nodes)
       .enter().append('g')
         .attr('class', 'cell')
-        .attr('transform', (d) => 'translate(' + d.x + ',' + d.y + ')');
+        .attr('transform', (d) => 'translate(' + d.x0 + ',' + d.y0 + ')');
 
-    this.initializeTreemap(cell);
+    this.initializeTreemap(newCell);
   }
 
   private colorGradient(fadeFraction: number): string {

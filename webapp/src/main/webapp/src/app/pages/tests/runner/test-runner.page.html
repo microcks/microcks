@@ -3,8 +3,8 @@
   </pfng-toast-notification-list>
 </div>
 
-<div *ngIf="test | async as test">
-  <div *ngIf="service | async as service">
+<div *ngIf="test | async as test">
+  <div *ngIf="service | async as service">
     <div class="container-fluid breadcrumb-bar">
       <div class="row">
         <ol class="breadcrumb">
@@ -17,7 +17,7 @@
     </div>
 
     <h1>Test {{ test.id }}</h1>
-    <small>Created {{ test.testDate | date | timeAgo }}</small>
+    <small>Created {{ test.testDate.toString() | timeAgo }}</small>
 
     <h3 class="section-label">Properties</h3>
 
@@ -47,16 +47,11 @@
     </div>
 
     <div class="container-fluid">
-      <pfng-list id="resultsList"
-          [actionTemplate]="actionTemplate"
+      <pfng-list id="resultsList" 
           [config]="resultsListConfig"
           [expandTemplate]="resultDetailTemplate"
           [items]="test.testCaseResults"
-          [itemTemplate]="resultTemplate"
-          (onActionSelect)="handleAction($event, null)"
-          (onClick)="handleClick($event)"
-          (onDblClick)="handleDblClick($event)"
-          (onSelectionChange)="handleSelectionChange($event)">
+          [itemTemplate]="resultTemplate">
 
         <ng-template #resultTemplate let-item="item" let-index="index">
           <div class="list-pf-left">

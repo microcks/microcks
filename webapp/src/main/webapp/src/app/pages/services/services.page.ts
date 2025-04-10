@@ -13,51 +13,78 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
-import { ActivatedRoute, Router, Params } from '@angular/router';
-
-import { BsModalService } from 'ngx-bootstrap/modal';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { CommonModule, DatePipe } from '@angular/common';
 import {
-  Notification,
-  NotificationEvent,
-  NotificationService,
-  NotificationType,
-} from 'patternfly-ng/notification';
-import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
-import { ToolbarConfig } from 'patternfly-ng/toolbar';
+  Component,
+  inject,
+  model,
+  OnInit,
+  signal
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
+
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
+
+import { PaginationConfig, PaginationEvent, PaginationModule } from '../../components/patternfly-ng/pagination';
+import { ToolbarConfig, ToolbarModule } from '../../components/patternfly-ng/toolbar';
 import {
   FilterConfig,
   FilterEvent,
   FilterField,
   FilterType,
   Filter,
-} from 'patternfly-ng/filter';
+  FilterQuery,
+} from '../../components/patternfly-ng/filter';
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  NotificationType,
+  ToastNotificationListComponent,
+} from '../../components/patternfly-ng/notification';
+
+import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete/confirm-delete.component';
+import { LabelListComponent } from '../../components/label-list/label-list.component';
 
 import { Api, Service, ServiceType } from '../../models/service.model';
 import { IAuthenticationService } from '../../services/auth.service';
-import { ServicesService } from '../../services/services.service';
 import { ConfigService } from '../../services/config.service';
+import { ServicesService } from '../../services/services.service';
+import { DirectAPIWizardComponent } from './_components/direct-api.wizard';
 
 @Component({
   selector: 'app-services-page',
   templateUrl: './services.page.html',
   styleUrls: ['./services.page.css'],
+  imports: [
+    CommonModule,
+    ConfirmDeleteDialogComponent,
+    LabelListComponent,
+    BsDropdownModule,
+    DatePipe,
+    FormsModule,
+    RouterLink,
+    PaginationModule,
+    ToolbarModule,
+    TooltipModule,
+    ToastNotificationListComponent,
+  ],
 })
 export class ServicesPageComponent implements OnInit {
-  @ViewChild('wizardTemplate', { static: true })
-  wizardTemplate: TemplateRef<any>;
-
-  modalRef: BsModalRef;
-  services: Service[];
-  servicesCount: number;
-  servicesLabels: Map<string, string[]>;
-  toolbarConfig: ToolbarConfig;
-  filterConfig: FilterConfig;
-  paginationConfig: PaginationConfig;
-  nameFilterTerm: string = null;
-  repositoryFilter: string = null;
-  notifications: Notification[];
+  
+  modalRef?: BsModalRef;
+  services?: Service[];
+  servicesCount: number = 0;
+  servicesLabels?: Map<string, string[]>;
+  toolbarConfig: ToolbarConfig = new ToolbarConfig;
+  filterConfig: FilterConfig = new FilterConfig;
+  paginationConfig: PaginationConfig = new PaginationConfig;
+  nameFilterTerm: string | null = null;
+  repositoryFilter: string | null = null;
+  notifications: Notification[] = [];
 
   html = '';
 
@@ -77,6 +104,7 @@ export class ServicesPageComponent implements OnInit {
     const filterFieldsConfig = [];
     if (this.hasRepositoryFilterFeatureEnabled()) {
       this.getServicesLabels();
+      
       filterFieldsConfig.push({
         id: this.repositoryFilterFeatureLabelKey(),
         title: this.repositoryFilterFeatureLabelLabel(),
@@ -86,6 +114,7 @@ export class ServicesPageComponent implements OnInit {
         queries: [],
       });
     }
+    
     filterFieldsConfig.push({
       id: 'name',
       title: 'Name',
@@ -99,7 +128,7 @@ export class ServicesPageComponent implements OnInit {
       pageSizeIncrements: [],
       totalItems: 20,
     } as PaginationConfig;
-
+    
     this.filterConfig = {
       fields: filterFieldsConfig as FilterField[],
       resultsCount: 20,
@@ -112,12 +141,12 @@ export class ServicesPageComponent implements OnInit {
       sortConfig: undefined,
       views: [],
     } as ToolbarConfig;
-
+    
     this.route.queryParams.subscribe((queryParams) => {
       // Look at query parameters to apply filters.
       this.filterConfig.appliedFilters = [];
-      if (queryParams.name) {
-        this.nameFilterTerm = queryParams.name;
+      if (queryParams['name']) {
+        this.nameFilterTerm = queryParams['name'];
         this.filterConfig.appliedFilters.push({
           field: { title: 'Name' } as FilterField,
           value: this.nameFilterTerm,
@@ -134,7 +163,7 @@ export class ServicesPageComponent implements OnInit {
         } as Filter);
       }
       if (this.nameFilterTerm != null || this.repositoryFilter != null) {
-        this.filterServices(this.repositoryFilter, this.nameFilterTerm);
+        this.filterServices(this.repositoryFilter!, this.nameFilterTerm!);
       } else {
         // Default - retrieve all the services
         this.getServices();
@@ -168,7 +197,7 @@ export class ServicesPageComponent implements OnInit {
         this.filterConfig.resultsCount = results.length;
       });
     // Update browser URL to make the page bookmarkable.
-    const queryParams = { name: nameFilterTerm };
+    const queryParams: any = { name: nameFilterTerm };
     for (const key of Array.from(labelsFilter.keys())) {
       queryParams['labels.' + key] = labelsFilter.get(key);
     }
@@ -189,30 +218,28 @@ export class ServicesPageComponent implements OnInit {
   getServicesLabels(): void {
     this.servicesSvc.getServicesLabels().subscribe((results) => {
       this.servicesLabels = results;
-      const queries = [];
+      const queries: any[] = [];
       // Get only the label values corresponding to key used for filtering, then transform them for Patternfly.
       if (
-        this.servicesLabels[this.repositoryFilterFeatureLabelKey()] != undefined
+        this.servicesLabels && (this.servicesLabels as any)[this.repositoryFilterFeatureLabelKey()] != undefined
       ) {
-        this.servicesLabels[this.repositoryFilterFeatureLabelKey()].map(
-          (label) => queries.push({ id: label, value: label })
+        (this.servicesLabels as any)[this.repositoryFilterFeatureLabelKey()].map(
+          (label: any) => queries.push({ id: label, value: label })
         );
       }
-      this.filterConfig.fields[0].queries = queries;
+      this.filterConfig.fields[0].queries = queries as FilterQuery[];
     });
   }
 
   deleteService(service: Service) {
-    console.log('[deleteService]: ' + JSON.stringify(service));
+    //console.log('[deleteService]: ' + JSON.stringify(service));
     this.servicesSvc.deleteService(service).subscribe({
       next: (res) => {
         this.notificationService.message(
           NotificationType.SUCCESS,
-          service.name,
+          service.name, 
           'Service has been fully deleted',
-          false,
-          null,
-          null
+          false
         );
         this.getServices();
         this.servicesCount--;
@@ -220,14 +247,12 @@ export class ServicesPageComponent implements OnInit {
       error: (err) => {
         this.notificationService.message(
           NotificationType.DANGER,
-          service.name,
+          service.name, 
           'Service cannot be deleted (' + err.message + ')',
-          false,
-          null,
-          null
+          false
         );
       },
-      complete: () => console.log('Observer got a complete notification'),
+      complete: () => {}, //console.log('Observer got a complete notification'),
     });
   }
 
@@ -248,7 +273,7 @@ export class ServicesPageComponent implements OnInit {
   }
 
   handleFilter($event: FilterEvent): void {
-    if ($event.appliedFilters.length == 0) {
+    if (!$event.appliedFilters || $event.appliedFilters.length == 0) {
       this.nameFilterTerm = null;
       this.repositoryFilter = null;
       this.getServices();
@@ -263,12 +288,16 @@ export class ServicesPageComponent implements OnInit {
           this.nameFilterTerm = filter.value;
         }
       });
-      this.filterServices(this.repositoryFilter, this.nameFilterTerm);
+      this.filterServices(this.repositoryFilter!, this.nameFilterTerm!);
     }
   }
 
-  openCreateDirectAPI(template: TemplateRef<any>): void {
-    this.modalRef = this.modalService.show(template, { class: 'modal-lg' });
+  openCreateDirectAPI(): void {
+    this.modalRef = this.modalService.show(DirectAPIWizardComponent, { class: 'modal-lg' });
+
+    this.modalRef.content.saveDirectAPIAction.subscribe((api: Api) => {
+      this.createDirectAPI(api.type, api);
+    });
   }
 
   createDirectAPI(apiType: ServiceType, api: Api): void {
@@ -280,9 +309,7 @@ export class ServicesPageComponent implements OnInit {
               NotificationType.SUCCESS,
               api.name,
               'Direct REST API "' + api.name + '" has been created',
-              false,
-              null,
-              null
+              false
             );
             this.getServices();
             this.countServices();
@@ -291,16 +318,11 @@ export class ServicesPageComponent implements OnInit {
             this.notificationService.message(
               NotificationType.DANGER,
               api.name,
-              'Service or API "' +
-                api.name +
-                '"already exists with version ' +
-                api.version,
-              false,
-              null,
-              null
+              'Service or API "' + api.name + '"already exists with version ' + api.version,
+              false
             );
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {}, //console.log('Observer got a complete notification'),
         });
         break;
       case ServiceType.GENERIC_EVENT:
@@ -310,9 +332,7 @@ export class ServicesPageComponent implements OnInit {
               NotificationType.SUCCESS,
               api.name,
               'Direct EVENT API "' + api.name + '" has been created',
-              false,
-              null,
-              null
+              false
             );
             this.getServices();
             this.countServices();
@@ -325,12 +345,10 @@ export class ServicesPageComponent implements OnInit {
                 api.name +
                 '"already exists with version ' +
                 api.version,
-              false,
-              null,
-              null
+              false
             );
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {}, //console.log('Observer got a complete notification'),
         });
         break;
       default:
@@ -338,7 +356,9 @@ export class ServicesPageComponent implements OnInit {
   }
 
   closeDirectAPIWizardModal($event: any): void {
-    this.modalRef.hide();
+    if (this.modalRef) {
+      this.modalRef.hide();
+    }
   }
 
   handleCloseNotification($event: NotificationEvent): void {

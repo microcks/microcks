@@ -218,3 +218,143 @@ ul.unstyled {
 .tooltip-break {
   word-break: break-word;
 }
+
+/* You can add global styles to this file, and also import other style files */
+
+pre.hljs {
+  overflow-x: auto;
+  padding: 0.5em;
+}
+
+/* Missing from patternfly.css to ensure compatibility with ngx-bootstrap */
+/* It was .modal-backdrop.in before */
+.modal-backdrop.show {
+  opacity: .5;
+}
+.modal-backdrop.fade.show {
+  opacity: .5;
+}
+
+.fade.show {
+  opacity: 1;
+}
+.modal.show .modal-dialog {
+  transform: translate(0, 0);
+}
+
+/** Missing from patterfly-ng.css that is no longer imported */
+.toolbar-pf .form-group:last-child {
+  border-right: 0;
+  margin-bottom: 0;
+  padding-right: 0;
+}
+
+.toolbar-pf-actions .toolbar-apf-filter {
+  padding-left: 0 !important;
+}
+.toolbar-pf-actions .btn {
+  min-width: unset;
+}
+
+@media (min-width: 768px) {
+  .toolbar-pf-actions .toolbar-apf-filter {
+    padding-left: 0;
+  }
+}
+
+.filter-pf.filter-fields .form-group {
+  padding-left: 0;
+  width: 275px;
+}
+.filter-pf-active-label {
+  margin-right: 5px;
+}
+
+.filter-select .btn-default {
+  background-color: #fff;
+  background-image: none;
+}
+.filter-select .btn {
+  border-left: 0;
+}
+
+.bootstrap-select>.dropdown-toggle {
+  width: 100%;
+  padding-right: 25px;
+  z-index: 1;
+}
+.bootstrap-select.btn-group .dropdown-toggle .filter-option {
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+  text-align: left;
+}
+.filter-select .btn-default .placeholder {
+  color: #8b8d8f;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.margin-left-10 {
+  margin-left: 10px !important;
+}
+.padding-right-10 {
+  padding-right: 10px !important;
+}
+
+/* Angular material icons for the stepper */
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: url(./lib/fonts/MaterialIcons.woff2) format('woff2');
+}
+
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/** Reajust the Material elements style on Patternly */
+.mat-stepper-horizontal {
+  background-color: #fff !important;
+  font-family: "Open Sans", Helvetica, Arial, sans-serif !important;
+}
+.mat-stepper-horizontal-line {
+  border-top-width: 1px;
+  border-top-style: solid;
+  flex: auto;
+  height: 0;
+  margin: 0 -16px;
+  min-width: 32px;
+  border-top-color: #bbb;
+}
+.mat-horizontal-content-container {
+  padding-top: 3em !important;
+}
+.mat-step-icon {
+  background-color: #fff !important;
+  border-color: #bbb !important;
+  border-style: solid !important;
+  border-width: 1px;
+  color: #bbb !important;
+}
+.mat-step-icon-selected {
+  background-color: #39a5dc !important;
+  color: #fff !important;
+}
+.mat-step-text-label {
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+}
