@@ -12,13 +12,30 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # docker-compose config
           - method: docker
             mode: default
             addons: ""
           - method: docker
+            mode: default
+            addons: "async"
+          - method: docker
             mode: proxy
             addons: ""
           - method: docker
+            mode: proxy
+            addons: "async"
+          - method: docker
+            mode: devmode
+            addons: ""
+          # podman-compose config
+          - method: podman
+            mode: default
+            addons: ""
+          - method: podman
+            mode: default
+            addons: "async"
+          - method: podman
             mode: devmode
             addons: ""
 
@@ -26,9 +43,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install prerequisites
+      - name: Install docker-compose
+        if: matrix.method == 'docker'
         run: |
           sudo apt-get update && sudo apt-get install -y docker-compose
+
+      - name: Install podman and podman-compose
+        if: matrix.method == 'podman'
+        run: |
+          sudo apt-get update && sudo apt-get install -y podman python3-pip
+          pip3 install --user podman-compose
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Install Microcks (${{ matrix.method }}/${{ matrix.mode }})
         run: |
