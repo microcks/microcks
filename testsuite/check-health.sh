@@ -1,11 +1,16 @@
 #!/bin/bash
 
-set -e
+set -euo pipefail
 
 METHOD="docker"
 
 usage() {
-  echo "Usage: $0 [--method docker|podman]"
+  cat <<EOF
+Usage: $0 [--method docker|podman|helm]
+  --method    Which backend to check.
+              docker/podman: container healthchecks
+              helm:          check Deployments in the 'microcks' namespace
+EOF
   exit 1
 }
 
@@ -22,8 +27,8 @@ while [[ "$#" -gt 0 ]]; do
   esac
 done
 
-if [[ "$METHOD" != "docker" && "$METHOD" != "podman" ]]; then
-  echo "Error: Invalid method '$METHOD'. Use 'docker' or 'podman'."
+if [[ "$METHOD" != "docker" && "$METHOD" != "podman" && "$METHOD" != "helm" ]]; then
+  echo "Error: Invalid method '$METHOD'. Use docker, podman or helm."
   usage
 fi
 
@@ -31,41 +36,77 @@ INSPECT_CMD="$METHOD"
 
 unhealthy=()
 
-to_seconds() {
-  local value="$1"
-  echo "${value//[a-zA-Z]/}"
-}
+if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
+  to_seconds() {
+    local value="$1"
+    echo "${value//[a-zA-Z]/}"
+  }
 
-for cname in $($INSPECT_CMD ps --format '{{.Names}}'); do
-  echo "Inspecting container: $cname"
+  for cname in $($INSPECT_CMD ps --format '{{.Names}}'); do
+    echo "Inspecting container: $cname"
 
-  interval=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Interval}}' "$cname")
-  timeout=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Timeout}}' "$cname")
-  start_period=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.StartPeriod}}' "$cname")
+    interval=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Interval}}' "$cname")
+    timeout=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Timeout}}' "$cname")
+    start_period=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.StartPeriod}}' "$cname")
 
-  echo "Interval=${interval}, timeout=${timeout}, start-period=${start_period}"
+    echo "Interval=${interval}, timeout=${timeout}, start-period=${start_period}"
 
-  elapsed=0
-  sleep $start_period
-  timeout_val=$(to_seconds "$timeout")
-  interval_val=$(to_seconds "$interval")
-  while [[ $elapsed -lt $timeout_val ]]; do
-    status=$($INSPECT_CMD inspect -f '{{.State.Health.Status}}' "$cname")
-    echo "Status after ${elapsed}s: $status"
+    elapsed=0
+    sleep $start_period
+    timeout_val=$(to_seconds "$timeout")
+    interval_val=$(to_seconds "$interval")
+    while [[ $elapsed -lt $timeout_val ]]; do
+      status=$($INSPECT_CMD inspect -f '{{.State.Health.Status}}' "$cname")
+      echo "Status after ${elapsed}s: $status"
 
-    if [[ "$status" == "healthy" ]]; then
-      echo "$cname is healthy!"
-      break
+      if [[ "$status" == "healthy" ]]; then
+        echo "$cname is healthy!"
+        break
+      fi
+
+      sleep "$interval"
+      elapsed=$((elapsed + interval_val))
+    done
+
+    if [[ "$status" != "healthy" ]]; then
+      unhealthy+=("$cname:$status")
     fi
-
-    sleep "$interval"
-    elapsed=$((elapsed + interval_val))
   done
 
-  if [[ "$status" != "healthy" ]]; then
-    unhealthy+=("$cname:$status")
+else
+  mapfile -t deps < <(
+    kubectl -n microcks get deploy \
+      -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
+  )
+
+  if [[ ${#deps[@]} -eq 0 ]]; then
+    echo "No Deployments found in namespace 'microcks'"
+    unhealthy+=("microcks:no-deployments")
+  else
+    for d in "${deps[@]}"; do
+      status_line=$(kubectl -n microcks get deploy "$d" \
+        -o jsonpath='{.spec.replicas}{" "}{.status.availableReplicas}{"\n"}' 2>/dev/null) \
+        || status_line=""
+
+      if [[ -z "$status_line" ]]; then
+        echo "Could not fetch status for $d"
+        unhealthy+=("microcks/$d:fetch-failed")
+        continue
+      fi
+
+      # split into desired & available
+      desired=${status_line%% *}
+      available=${status_line##* }
+      available=${available:-0}
+
+      echo "- $d: $available/$desired available"
+
+      if (( available < desired )); then
+        unhealthy+=("microcks/$d:$available/$desired")
+      fi
+    done
   fi
-done
+fi
 
 if [[ ${#unhealthy[@]} -eq 0 ]]; then
   echo "All containers are healthy!"
