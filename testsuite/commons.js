@@ -1,13 +1,19 @@
 import http from 'k6/http';
+import grpc from 'k6/net/grpc';
 import { check, sleep, group } from 'k6';
 
 // Define the wait time of browse scenario
 const WAIT_TIME = parseFloat(__ENV.WAIT_TIME) || 0.5;
 
 // Define the base URL for Microcks (adjust as needed)
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const HOST = __ENV.HOST || 'localhost';
+const PORT = __ENV.PORT || '8080';
+const BASE_URL = __ENV.BASE_URL || `http://${HOST}:${PORT}`;
 
 const only500Callback = http.expectedStatuses(500);
+
+const client = new grpc.Client();
+client.load(['../samples/'], 'hello-v1.proto');
 
 /* Simulate users browsing the API repository and getting details. */
 export function browse() {
@@ -173,3 +179,29 @@ export function invokeSOAPMocks() {
         sleep(1);
     });
 }
+
+// Function to test GRPC endpoints
+export function invokeGRPCMocks() {
+    client.connect(`${HOST}:${PORT}`, { plaintext: true });
+
+    const payloads = [
+        { firstname: 'Laurent', lastname: 'Broudoux' },
+        { firstname: 'John', lastname: 'Doe' },
+    ];
+
+    payloads.forEach((payload) => {
+        const response = client.invoke(
+            'io.github.microcks.grpc.hello.v1.HelloService/greeting',
+            payload
+        );
+
+        check(response, {
+            'status is OK': (r) => r && r.status === grpc.StatusOK,
+            'response contains greeting': (r) =>
+                r && r.message && r.message.greeting.includes(payload.firstname),
+        });
+    });
+
+    client.close();
+    sleep(1);
+};
