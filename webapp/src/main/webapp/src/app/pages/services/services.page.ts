@@ -38,6 +38,7 @@ import { Api, Service, ServiceType } from '../../models/service.model';
 import { IAuthenticationService } from '../../services/auth.service';
 import { ServicesService } from '../../services/services.service';
 import { ConfigService } from '../../services/config.service';
+import { tick } from '@angular/core/testing';
 
 @Component({
   selector: 'app-services-page',
@@ -198,7 +199,13 @@ export class ServicesPageComponent implements OnInit {
           (label) => queries.push({ id: label, value: label })
         );
       }
-      this.filterConfig.fields[0].queries = queries;
+        if (queries.length === 0) {
+          this.filterConfig.fields = this.filterConfig.fields.filter(
+            (field) => field.id === 'name'
+          );
+        } else {
+          this.filterConfig.fields[0].queries = queries;
+        }   
     });
   }
 
