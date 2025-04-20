@@ -254,3 +254,40 @@ export function invokeREST_HelloAPIMocks() {
     });
   });
 }
+
+export function invokeREST_PetStoreAPI() {
+  group('Petstore API', () => {
+    const userKeys = {
+        1: '998bac0775b1d5f588e0a6ca7c11b852',
+        2: '70f735676ec46351c6699c4bb767878a',
+    };
+
+    // Test for petId = 1 (expected 404)
+    const petRes1 = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/1?user_key=${userKeys[1]}`);
+    check(petRes1, {
+        'GET /v2/pet/1 - status is 404': (r) => r.status === 404,
+    });
+    sleep(1);
+
+    // Test for petId = 2 (expected 200 + content validation)
+    const petRes2 = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/2?user_key=${userKeys[2]}`);
+    check(petRes2, {
+        'GET /v2/pet/2 - status is 200': (r) => r.status === 200,
+        'GET /v2/pet/2 - has name "cat"': (r) => r.json().name === 'cat',
+    });
+    sleep(1);
+
+    // Test GET /v2/pet/findByStatus for status=available
+    const status = 'available';
+    const response = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/findByStatus?status=${status}&user_key=70f735676ec46351c6699c4bb767878a`);
+    check(response, {
+        'status is 200': (r) => r.status === 200,
+        'response is non-empty array': (r) => Array.isArray(r.json()) && r.json().length > 0,
+        'first pet has id and name': (r) => {
+            const data = r.json();
+            return data.length > 0 && data[0].id !== undefined && data[0].name !== undefined;
+        },
+    });
+    sleep(1);
+  });
+}
