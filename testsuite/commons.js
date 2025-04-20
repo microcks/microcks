@@ -205,3 +205,52 @@ export function invokeGRPCMocks() {
     client.close();
     sleep(1);
 };
+
+// Function to test REST API endpoints for HelloAPIMock
+export function invokeREST_HelloAPIMocks() {
+  group('Hello API REST Mocks', () => {
+    const MOCK_NAME = 'Hello%20API%20Mock';
+    const VERSION   = '0.8';
+    const RESOURCE  = 'v1/hello';
+
+    const TEST_CASES = [
+      { name: 'David', expStatus: 200, expGreeting: 'Hello David !' },
+      { name: 'Gavin', expStatus: 200, expGreeting: 'Hello Gavin !' },
+      { name: 'Nobody', expStatus: 405, expGreeting: null          },
+    ];
+    TEST_CASES.forEach(({ name, expStatus, expGreeting }) => {
+      const url = `${BASE_URL}/rest/${MOCK_NAME}/${VERSION}/${RESOURCE}?name=${encodeURIComponent(name)}`;
+      const res = http.get(url);
+
+      // Status code
+      check(res, {
+        [`${name}Call status is ${expStatus}`]: (r) => r.status === expStatus,
+      });
+
+      // Header
+      if (expStatus === 200) {
+        check(res, {
+          [`${name}Call response is JSON`]: (r) =>
+            r.headers['Content-Type'] &&
+            r.headers['Content-Type'].includes('application/json'),
+        });
+      }
+
+      // Body assertion by substring
+      if (expGreeting) {
+        check(res, {
+          [`${name}Call body contains "${expGreeting}"`]: (r) =>
+            r.body.includes(expGreeting),
+        });
+      }
+      sleep(1);
+    });
+
+    const url = `${BASE_URL}/rest/${MOCK_NAME}/${VERSION}/`;
+    const res = http.get(url);
+    check(res, {
+      [`Empty body`]: (r) =>
+        !r.body || r.body.trim().length === 0,
+    });
+  });
+}
