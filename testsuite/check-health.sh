@@ -38,7 +38,14 @@ if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
     echo "${value//[a-zA-Z]/}"
   }
 
-  for cname in $($INSPECT_CMD ps --format '{{.Names}}'); do
+  containers=($($INSPECT_CMD ps --format '{{.Names}}'))
+
+  if [[ ${#containers[@]} -eq 0 ]]; then
+    echo "Error: No containers found"
+    exit 1
+  fi
+
+  for cname in "${containers[@]}"; do
     echo "Inspecting container: $cname"
 
     interval=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Interval}}' "$cname")
