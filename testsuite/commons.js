@@ -216,7 +216,7 @@ export function invokeREST_HelloAPIMocks() {
     const TEST_CASES = [
       { name: 'David', expStatus: 200, expGreeting: 'Hello David !' },
       { name: 'Gavin', expStatus: 200, expGreeting: 'Hello Gavin !' },
-      { name: 'Nobody', expStatus: 405, expGreeting: null          },
+      { name: 'Nobody', expStatus: 400, expGreeting: null          },
     ];
     TEST_CASES.forEach(({ name, expStatus, expGreeting }) => {
       const url = `${BASE_URL}/rest/${MOCK_NAME}/${VERSION}/${RESOURCE}?name=${encodeURIComponent(name)}`;
