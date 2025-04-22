@@ -83,9 +83,8 @@ public class NativeConfiguration {
                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
          hints.reflection().registerType(TypeReference.of(DispatchCases.class), MemberCategory.DECLARED_FIELDS,
                MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(TypeReference.of(FallbackSpecification.class),
-               MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
-               MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         hints.reflection().registerType(TypeReference.of(FallbackSpecification.class), MemberCategory.DECLARED_FIELDS,
+               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
          hints.reflection().registerType(TypeReference.of(JsonEvaluationSpecification.class),
                MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
