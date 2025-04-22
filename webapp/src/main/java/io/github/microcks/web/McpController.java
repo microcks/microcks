@@ -23,6 +23,7 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
+import io.github.microcks.util.ai.McpError;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.ai.McpToolConverter;
 //import io.github.microcks.util.grpc.GrpcMcpToolConverter;
@@ -30,7 +31,6 @@ import io.github.microcks.util.ai.McpToolConverter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.modelcontextprotocol.spec.McpError;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
