@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 
 import { BsModalRef } from 'ngx-bootstrap/modal';
 import {
@@ -28,7 +32,9 @@ import { IAuthenticationService } from '../../../services/auth.service';
   templateUrl: './uploader.dialog.html',
   styleUrls: ['./uploader.dialog.css'],
   imports: [
-    FileUploadModule
+    FileUploadModule,
+    FormsModule,
+    ReactiveFormsModule
   ],
 })
 export class ArtifactUploaderDialogComponent implements OnInit {
