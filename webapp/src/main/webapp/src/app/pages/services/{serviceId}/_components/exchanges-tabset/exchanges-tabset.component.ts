@@ -63,7 +63,7 @@ export class ExchangesTabsetComponent {
   @Input() public formatGraphQLVariables!: (requestContent: string) => string;
   @Input() public prettyPrintIfJSON!: (content: string) => string;
   @Input() public formatCurlCmd!: (operation: Operation, exchange: RequestResponsePair) => string;
-  @Input() public copyToClipboard!: (url: string) => void;
+  @Input() public copyToClipboard!: (url: string, what?: string) => void;
   @Input() public encodeUrl!: (url: string) => string;
   @Input() public removeVerbInUrl!: (operationName: string) => string;
   @Input() public asyncAPIFeatureEndpoint!: (binding: string) => string;

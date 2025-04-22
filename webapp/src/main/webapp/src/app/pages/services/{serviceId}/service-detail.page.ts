@@ -554,6 +554,28 @@ export class ServiceDetailPageComponent implements OnInit {
     return null;
   }
 
+  public isMCPAvailable(): boolean {
+    //return this.resolvedServiceView.service.type === ServiceType.REST;
+    return false;
+  }
+  public formatMCPUrl(): string {
+    let result = document.location.origin;
+
+    // Manage dev mode.
+    if (result.endsWith('localhost:4201')) {
+      result = 'http://localhost:8080';
+    } else if (result.includes('localhost:')) {
+      result = 'http://localhost' + result.substring(result.indexOf(':'));
+    }
+
+    result += '/mcp/';
+    result += this.encodeUrl(this.resolvedServiceView.service.name) + '/';
+    result += this.resolvedServiceView.service.version;
+    result += '/sse';
+
+    return result;
+  }
+
   public formatMockUrl(operation: Operation, dispatchCriteria: string | null, queryParameters: Parameter[] | null): string {
     // console.log("[ServiceDetailPageComponent.formatMockUrl()]");
     let result = document.location.origin;
@@ -561,6 +583,8 @@ export class ServiceDetailPageComponent implements OnInit {
     // Manage dev mode.
     if (result.endsWith('localhost:4200')) {
       result = 'http://localhost:8080';
+    } else if (result.includes('localhost:')) {
+      result = 'http://localhost' + result.substring(result.indexOf(':'));
     }
 
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
@@ -859,7 +883,7 @@ export class ServiceDetailPageComponent implements OnInit {
     return cmd;
   }
 
-  public copyToClipboard(url: string): void {
+  public copyToClipboard(url: string, what: string = 'Mock URL'): void {
     const selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
     selBox.style.left = '0';
@@ -874,7 +898,7 @@ export class ServiceDetailPageComponent implements OnInit {
     this.notificationService.message(
       NotificationType.INFO,
       this.resolvedServiceView.service.name,
-      'Mock URL has been copied to clipboard',
+      what + ' has been copied to clipboard',
       false
     );
   }

@@ -76,6 +76,15 @@
           <a [routerLink]="['/metrics/invocations', view.service.name, view.service.version]">Mocks invocations <i
               class="glyphicon glyphicon-signal"></i></a>
         </dd>
+        <span *ngIf="isMCPAvailable()">
+          <dt>MCP Server:</dt>
+          <dd>
+            <a tooltip="Copy to Clipboard" placement="top"
+                (click)="copyToClipboard(formatMCPUrl(), 'MCP URL')">
+              HTTP SSE Endpoint <i class="pficon pficon-optimize"></i>
+            </a>
+          </dd>
+        </span>
       </dl>
     </div>
     <div class="col-md-4">
