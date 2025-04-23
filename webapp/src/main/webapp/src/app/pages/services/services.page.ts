@@ -227,7 +227,13 @@ export class ServicesPageComponent implements OnInit {
           (label: any) => queries.push({ id: label, value: label })
         );
       }
-      this.filterConfig.fields[0].queries = queries as FilterQuery[];
+      if (queries.length === 0) {
+        this.filterConfig.fields = this.filterConfig.fields.filter(
+          (field) => field.id === 'name'
+        );
+      } else {
+        this.filterConfig.fields[0].queries = queries as FilterQuery[];
+      } 
     });
   }
 
