@@ -363,7 +363,7 @@ public class McpSchema {
    @JsonInclude(JsonInclude.Include.NON_ABSENT)
    @JsonIgnoreProperties(ignoreUnknown = true)
    public record EmbeddedResource(
-        @JsonProperty("audience") List<io.modelcontextprotocol.spec.McpSchema.Role> audience,
+        @JsonProperty("audience") List<Role> audience,
         @JsonProperty("priority") Double priority,
         @JsonProperty("resource") ResourceContents resource) implements Content {
    }

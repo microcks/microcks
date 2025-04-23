@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.github.microcks.web;
 
 import io.github.microcks.domain.Operation;
@@ -27,7 +26,7 @@ import io.github.microcks.util.ai.McpError;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.ai.McpToolConverter;
 //import io.github.microcks.util.grpc.GrpcMcpToolConverter;
-//import io.github.microcks.util.openapi.OpenAPIMcpToolConverter;
+import io.github.microcks.util.openapi.OpenAPIMcpToolConverter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -62,7 +61,7 @@ public class McpController {
 
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
-   //private final RestController restController;
+   private final RestInvocationProcessor restInvocationProcessor;
 
    private final ConcurrentHashMap<String, SseTransportChannel> channelsBySessionId = new ConcurrentHashMap<>();
    private final ExecutorService sseMvcExecutor = Executors.newSingleThreadExecutor();
@@ -70,17 +69,16 @@ public class McpController {
 
    /**
     * Build a McpController with required dependencies.
-    * @param serviceRepository  The repository to access services definitions
-    * @param resourceRepository The repository to access resources definitions
-    * @param restController     The controller to access REST dispatching logic
+    * @param serviceRepository       The repository to access services definitions
+    * @param resourceRepository      The repository to access resources definitions
+    * @param restInvocationProcessor The invocation processor to apply REST mocks dispatching logic
     */
    public McpController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         RestController restController) {
+         RestInvocationProcessor restInvocationProcessor) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
-      //this.restController = restController;
+      this.restInvocationProcessor = restInvocationProcessor;
    }
-
 
    /**
     * Handle the initalization of a SSE connection for the MCP protocol.
@@ -292,25 +290,23 @@ public class McpController {
    }
 
    private McpToolConverter buildMcpToolConverter(Service service, Resource resource) {
+      McpToolConverter converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
+
+      //      switch (service.getType()) {
+      //         case GRPC -> converter = new GrpcMcpToolConverter(service, resource);
+      //      }
+
       /*
-       * McpToolConverter converter = new OpenAPIMcpToolConverter(service, resource, restController, mapper); switch
-       * (service.getType()) { case GRPC -> converter = new GrpcMcpToolConverter(service, resource); } return converter;
+       * return new McpToolConverter(service, resource) {
+       * 
+       * @Override public String getToolDescription(Operation operation) { return "Fake description"; }
+       * 
+       * @Override public McpSchema.JsonSchema getInputSchema(Operation operation) { return null; }
+       * 
+       * @Override public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) { return
+       * null; } };
        */
-      return new McpToolConverter(service, resource) {
-         @Override
-         public String getToolDescription(Operation operation) {
-            return "Fake description";
-         }
 
-         @Override
-         public McpSchema.JsonSchema getInputSchema(Operation operation) {
-            return null;
-         }
-
-         @Override
-         public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
-            return null;
-         }
-      };
+      return converter;
    }
 }

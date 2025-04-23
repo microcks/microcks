@@ -388,7 +388,6 @@ public class DispatchCriteriaHelper {
       return "";
    }
 
-
    /**
     * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
     * @param partsRule The dispatch rules referencing parts to consider

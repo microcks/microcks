@@ -15,45 +15,24 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.ParameterConstraint;
-import io.github.microcks.domain.ParameterLocation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
-import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.repository.ServiceStateRepository;
-import io.github.microcks.service.ProxyService;
-import io.github.microcks.util.AbsoluteUrlMatcher;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.ParameterConstraintUtil;
 import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
-import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
-import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.openapi.OpenAPISchemaValidator;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
 import io.github.microcks.util.openapi.SwaggerSchemaValidator;
-import io.github.microcks.util.script.ScriptEngineBinder;
-import io.github.microcks.service.ServiceStateStore;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,24 +40,15 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.util.UriUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import javax.annotation.CheckForNull;
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.io.IOException;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * A controller for mocking Rest responses.
@@ -91,18 +61,9 @@ public class RestController {
    private static final SafeLogger log = SafeLogger.getLogger(RestController.class);
 
    private final ServiceRepository serviceRepository;
-   private final ServiceStateRepository serviceStateRepository;
-   private final ResponseRepository responseRepository;
    private final ResourceRepository resourceRepository;
+   private final RestInvocationProcessor invocationProcessor;
 
-   private final ApplicationContext applicationContext;
-
-   private final ProxyService proxyService;
-
-   private ScriptEngine scriptEngine;
-
-   @Value("${mocks.enable-invocation-stats}")
-   private Boolean enableInvocationStats;
    @Value("${mocks.rest.enable-cors-policy}")
    private Boolean enableCorsPolicy;
    @Value("${mocks.rest.cors.allowedOrigins}")
@@ -115,23 +76,15 @@ public class RestController {
 
    /**
     * Build a RestController with required dependencies.
-    * @param serviceRepository      The repository to access services definitions
-    * @param serviceStateRepository The repository to access service state
-    * @param responseRepository     The repository to access responses definitions
-    * @param resourceRepository     The repository to access resources definitions
-    * @param applicationContext     The Spring application context
-    * @param proxyService           The proxy to external URLs or services
+    * @param serviceRepository   The repository to access services definitions
+    * @param resourceRepository  The repository to access resources definitions
+    * @param invocationProcessor The invocation processor to apply REST mocks dispatching logic
     */
-   public RestController(ServiceRepository serviceRepository, ServiceStateRepository serviceStateRepository,
-         ResponseRepository responseRepository, ResourceRepository resourceRepository,
-         ApplicationContext applicationContext, ProxyService proxyService) {
+   public RestController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
+         RestInvocationProcessor invocationProcessor) {
       this.serviceRepository = serviceRepository;
-      this.serviceStateRepository = serviceStateRepository;
-      this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
-      this.applicationContext = applicationContext;
-      this.proxyService = proxyService;
-      this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
+      this.invocationProcessor = invocationProcessor;
    }
 
    @SuppressWarnings("java:S3752")
@@ -150,14 +103,14 @@ public class RestController {
 
       // Find matching service and operation.
       MockInvocationContext ic = findInvocationContext(serviceName, version, request, method);
-      if (ic.service == null) {
+      if (ic.service() == null) {
          return new ResponseEntity<>(
                String.format("The service %s with version %s does not exist!", serviceName, version).getBytes(),
                HttpStatus.NOT_FOUND);
       }
 
       // Check matching operation.
-      if (ic.operation == null) {
+      if (ic.operation() == null) {
          // Handle OPTIONS request if CORS policy is enabled.
          if (Boolean.TRUE.equals(enableCorsPolicy) && HttpMethod.OPTIONS.equals(method)) {
             log.debug("No valid operation found but Microcks configured to apply CORS policy");
@@ -167,7 +120,8 @@ public class RestController {
          log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
          return new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
-      log.debug("Found a valid operation {} with rules: {}", ic.operation.getName(), ic.operation.getDispatcherRules());
+      log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
+            ic.operation().getDispatcherRules());
 
       return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
    }
@@ -188,14 +142,14 @@ public class RestController {
 
       // Find matching service and operation.
       MockInvocationContext ic = findInvocationContext(serviceName, version, request, method);
-      if (ic.service == null) {
+      if (ic.service() == null) {
          return new ResponseEntity<>(
                String.format("The service %s with version %s does not exist!", serviceName, version).getBytes(),
                HttpStatus.NOT_FOUND);
       }
 
       // Check matching operation.
-      if (ic.operation == null) {
+      if (ic.operation() == null) {
          // Handle OPTIONS request if CORS policy is enabled.
          if (Boolean.TRUE.equals(enableCorsPolicy) && HttpMethod.OPTIONS.equals(method)) {
             log.debug("No valid operation found but Microcks configured to apply CORS policy");
@@ -205,7 +159,8 @@ public class RestController {
          log.debug("No valid operation found and Microcks configured to not apply CORS policy...");
          return new ResponseEntity<>(HttpStatus.NOT_FOUND);
       }
-      log.debug("Found a valid operation {} with rules: {}", ic.operation.getName(), ic.operation.getDispatcherRules());
+      log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
+            ic.operation().getDispatcherRules());
 
       // Try to validate request payload (bnody) if we have one.
       String shortContentType = getShortContentType(request.getContentType());
@@ -213,7 +168,7 @@ public class RestController {
             && OpenAPITestRunner.APPLICATION_JSON_TYPES_PATTERN.matcher(shortContentType).matches()) {
          log.debug("Looking for an OpenAPI/Swagger schema to validate request body");
 
-         Resource openapiSpecResource = findResourceCandidate(ic.service);
+         Resource openapiSpecResource = findResourceCandidate(ic.service());
          if (openapiSpecResource == null) {
             return new ResponseEntity<>(
                   String.format("The service %s with version %s does not have an OpenAPI/Swagger schema!", serviceName,
@@ -233,7 +188,7 @@ public class RestController {
       return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
    }
 
-
+   /** Get the errors from OpenAPI/Swagger schema validation. */
    private List<String> getErrors(String body, MockInvocationContext ic, String shortContentType,
          Resource openapiSpecResource) {
       boolean isOpenAPIv3 = !ResourceType.SWAGGER.equals(openapiSpecResource.getType());
@@ -246,8 +201,8 @@ public class RestController {
       }
 
       // Extract JsonNode corresponding to operation.
-      String verb = ic.operation.getName().split(" ")[0].toLowerCase();
-      String path = ic.operation.getName().split(" ")[1].trim();
+      String verb = ic.operation().getName().split(" ")[0].toLowerCase();
+      String path = ic.operation().getName().split(" ")[1].trim();
 
       // Get body content as a string.
       JsonNode contentNode = null;
@@ -273,201 +228,15 @@ public class RestController {
    private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime, Long delay,
          String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
 
-      String violationMsg = validateParameterConstraintsIfAny(ic.operation, request);
+      String violationMsg = validateParameterConstraintsIfAny(ic.operation(), request);
       if (violationMsg != null) {
          return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(),
                HttpStatus.BAD_REQUEST);
       }
 
-      // We must find dispatcher and its rules. Default to operation ones but
-      // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
-      FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation);
-      ProxyFallbackSpecification proxyFallback = MockControllerCommons.getProxyFallbackIfAny(ic.operation);
-      String dispatcher = getDispatcher(ic, fallback, proxyFallback);
-      String dispatcherRules = getDispatcherRules(ic, fallback, proxyFallback);
-
-      //
-      DispatchContext dispatchContext = computeDispatchCriteria(ic.service, dispatcher, dispatcherRules,
-            getURIPattern(ic.operation.getName()), UriUtils.decode(ic.resourcePath, "UTF-8"), request, body);
-      log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
-
-      List<Response> responses;
-      Response response = getResponse(ic, request, dispatchContext);
-
-      if (response == null && fallback != null) {
-         // If we've found nothing and got a fallback, that's the moment!
-         responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(ic.service, ic.operation),
-               fallback.getFallback());
-         response = getResponseByMediaType(responses, request);
-      }
-
-      // Setting delay to default one if not set.
-      if (delay == null && ic.operation.getDefaultDelay() != null) {
-         delay = ic.operation.getDefaultDelay();
-      }
-
-      Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
-            ic.resourcePath, proxyFallback, request, response);
-      if (proxyUrl.isPresent()) {
-         // Delay response.
-         MockControllerCommons.waitForDelay(startTime, delay);
-
-         // If we've got a proxyUrl, that's the moment!
-         return proxyService.callExternal(proxyUrl.get(), method, headers, body);
-      }
-
-      if (response == null) {
-         if (dispatcher == null) {
-            response = getOneForOperation(ic, request, response);
-         } else {
-            // There is a dispatcher but we found no response => return 400 as per #819 and #1132.
-            return new ResponseEntity<>(
-                  String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()).getBytes(),
-                  HttpStatus.BAD_REQUEST);
-         }
-      }
-
-      if (response != null) {
-         HttpStatus status = (response.getStatus() != null ? HttpStatus.valueOf(Integer.parseInt(response.getStatus()))
-               : HttpStatus.OK);
-
-         // Deal with specific headers (content-type and redirect directive).
-         HttpHeaders responseHeaders = getResponseHeaders(ic, body, request, dispatchContext, response);
-
-         String responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
-
-         // Return response content or just headers.
-         if (responseContent != null) {
-            return new ResponseEntity<>(responseContent.getBytes(StandardCharsets.UTF_8), responseHeaders, status);
-         }
-         return new ResponseEntity<>(responseHeaders, status);
-      }
-
-      return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+      ResponseResult response = invocationProcessor.processInvocation(ic, startTime, delay, body, headers, request);
+      return new ResponseEntity<>(response.content(), response.headers(), response.status());
    }
-
-
-   private String getDispatcherRules(MockInvocationContext ic, FallbackSpecification fallback,
-         ProxyFallbackSpecification proxyFallback) {
-      String dispatcherRules = ic.operation.getDispatcherRules();
-      if (fallback != null) {
-         dispatcherRules = fallback.getDispatcherRules();
-      }
-      if (proxyFallback != null) {
-         dispatcherRules = proxyFallback.getDispatcherRules();
-      }
-      return dispatcherRules;
-   }
-
-
-   private String getDispatcher(MockInvocationContext ic, FallbackSpecification fallback,
-         ProxyFallbackSpecification proxyFallback) {
-      String dispatcher = ic.operation.getDispatcher();
-      if (fallback != null) {
-         dispatcher = fallback.getDispatcher();
-      }
-      if (proxyFallback != null) {
-         dispatcher = proxyFallback.getDispatcher();
-      }
-      return dispatcher;
-   }
-
-
-   private Response getOneForOperation(MockInvocationContext ic, HttpServletRequest request, Response response) {
-      List<Response> responses;
-      // In case no response found because dispatcher is null, just get one for the operation.
-      // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
-      log.debug("No responses found so far, tempting with just bare operationId...");
-      responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(ic.service, ic.operation));
-      if (!responses.isEmpty()) {
-         response = getResponseByMediaType(responses, request);
-      }
-      return response;
-   }
-
-
-   private String getResponseContent(MockInvocationContext ic, long startTime, Long delay, String body,
-         HttpServletRequest request, DispatchContext dispatchContext, Response response) {
-      // Render response content before waiting and returning.
-      String responseContent = MockControllerCommons.renderResponseContent(body, ic.resourcePath, request,
-            dispatchContext.requestContext(), response);
-
-      // Delay response.
-      MockControllerCommons.waitForDelay(startTime, delay);
-
-      // Publish an invocation event before returning if enabled.
-      if (Boolean.TRUE.equals(enableInvocationStats)) {
-         MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service, response, startTime);
-      }
-      return responseContent;
-   }
-
-
-   private HttpHeaders getResponseHeaders(MockInvocationContext ic, String body, HttpServletRequest request,
-         DispatchContext dispatchContext, Response response) {
-      HttpHeaders responseHeaders = new HttpHeaders();
-      if (response.getMediaType() != null) {
-         responseHeaders.setContentType(MediaType.valueOf(response.getMediaType() + ";charset=UTF-8"));
-      }
-
-      // Deal with headers from parameter constraints if any?
-      recopyHeadersFromParameterConstraints(ic.operation, request, responseHeaders);
-
-      // Adding other generic headers (caching directives and so on...)
-      if (response.getHeaders() != null) {
-         // First check if they should be rendered.
-         EvaluableRequest evaluableRequest = MockControllerCommons.buildEvaluableRequest(body, ic.resourcePath,
-               request);
-         Set<Header> renderedHeaders = MockControllerCommons.renderResponseHeaders(evaluableRequest,
-               dispatchContext.requestContext(), response);
-
-         handleHeaders(ic, request, responseHeaders, renderedHeaders);
-      }
-      return responseHeaders;
-   }
-
-
-   private Response getResponse(MockInvocationContext ic, HttpServletRequest request, DispatchContext dispatchContext) {
-      Response response = null;
-
-      // Filter depending on requested media type.
-      // TODO: validate dispatchCriteria with dispatcherRules
-      List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
-            IdBuilder.buildOperationId(ic.service, ic.operation), dispatchContext.dispatchCriteria());
-      response = getResponseByMediaType(responses, request);
-
-      if (response == null) {
-         // When using the SCRIPT or JSON_BODY dispatchers, return of evaluation may be the name of response.
-         responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(ic.service, ic.operation),
-               dispatchContext.dispatchCriteria());
-         response = getResponseByMediaType(responses, request);
-      }
-      return response;
-   }
-
-
-   private void handleHeaders(MockInvocationContext ic, HttpServletRequest request, HttpHeaders responseHeaders,
-         Set<Header> renderedHeaders) {
-      for (Header renderedHeader : renderedHeaders) {
-         if ("Location".equals(renderedHeader.getName())) {
-            String location = renderedHeader.getValues().iterator().next();
-            if (!AbsoluteUrlMatcher.matches(location)) {
-               // We should process location in order to make relative URI specified an absolute one from
-               // the client perspective.
-               location = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort()
-                     + request.getContextPath() + "/rest"
-                     + MockControllerCommons.composeServiceAndVersion(ic.service.getName(), ic.service.getVersion())
-                     + location;
-            }
-            responseHeaders.add(renderedHeader.getName(), location);
-         } else {
-            if (!HttpHeaders.TRANSFER_ENCODING.equalsIgnoreCase(renderedHeader.getName())) {
-               responseHeaders.put(renderedHeader.getName(), new ArrayList<>(renderedHeader.getValues()));
-            }
-         }
-      }
-   }
-
 
    /** Find the invocation context for this mock request. */
    private MockInvocationContext findInvocationContext(String serviceName, String version, HttpServletRequest request,
@@ -542,13 +311,13 @@ public class RestController {
       return null;
    }
 
+   /** Trim the resource path if it ends with a '/'. */
    private String trimResourcePath(String resourcePath) {
       if (resourcePath.endsWith("/")) {
          return resourcePath.substring(0, resourcePath.length() - 1);
       }
       return resourcePath;
    }
-
 
    /** Get the short content type without charset information. */
    private String getShortContentType(String contentType) {
@@ -568,107 +337,6 @@ public class RestController {
                return violationMsg;
             }
          }
-      }
-      return null;
-   }
-
-   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
-   private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
-         String uriPattern, String resourcePath, HttpServletRequest request, String body) {
-      String dispatchCriteria = null;
-      Map<String, Object> requestContext = null;
-
-      // Depending on dispatcher, evaluate request with rules.
-      if (dispatcher != null) {
-         switch (dispatcher) {
-            case DispatchStyles.SEQUENCE:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
-                     resourcePath);
-               break;
-            case DispatchStyles.SCRIPT:
-               requestContext = new HashMap<>();
-               Map<String, String> uriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
-                     resourcePath);
-               try {
-                  // Evaluating request with script coming from operation dispatcher rules.
-                  String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
-                  ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
-                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request,
-                        uriParameters);
-                  dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
-               } catch (Exception e) {
-                  log.error("Error during Script evaluation", e);
-               }
-               break;
-            case DispatchStyles.URI_PARAMS:
-               String fullURI = request.getRequestURL() + "?" + request.getQueryString();
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-               break;
-            case DispatchStyles.URI_PARTS:
-               // /tenantId?t1/userId=x
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
-                     resourcePath);
-               break;
-            case DispatchStyles.URI_ELEMENTS:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
-                     resourcePath);
-               fullURI = request.getRequestURL() + "?" + request.getQueryString();
-               dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-               break;
-            case DispatchStyles.JSON_BODY:
-               try {
-                  JsonEvaluationSpecification specification = JsonEvaluationSpecification
-                        .buildFromJsonString(dispatcherRules);
-                  dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
-               } catch (JsonMappingException jme) {
-                  log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
-               }
-               break;
-            case DispatchStyles.QUERY_HEADER:
-               // Extract headers from request and put them into a simple map to reuse extractFromParamMap().
-               dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules,
-                     extractRequestHeaders(request));
-               break;
-            default:
-               log.error("Unknown dispatcher type: {}", dispatcher);
-               break;
-         }
-      }
-
-      return new DispatchContext(dispatchCriteria, requestContext);
-   }
-
-   /** Extract request headers from request. */
-   private Map<String, String> extractRequestHeaders(HttpServletRequest request) {
-      Map<String, String> headers = new HashMap<>();
-      Collections.list(request.getHeaderNames()).forEach(name -> headers.put(name, request.getHeader(name)));
-      return headers;
-   }
-
-   /** Recopy headers defined with parameter constraints. */
-   private void recopyHeadersFromParameterConstraints(Operation rOperation, HttpServletRequest request,
-         HttpHeaders responseHeaders) {
-      if (rOperation.getParameterConstraints() != null) {
-         for (ParameterConstraint constraint : rOperation.getParameterConstraints()) {
-            if (ParameterLocation.header == constraint.getIn() && constraint.isRecopy()) {
-               String value = request.getHeader(constraint.getName());
-               if (value != null) {
-                  responseHeaders.set(constraint.getName(), value);
-               }
-            }
-         }
-      }
-   }
-
-   /**
-    * Filter responses using the Accept header for content-type, default to the first. Return null if no responses to
-    * filter.
-    */
-   private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {
-      if (!responses.isEmpty()) {
-         String accept = request.getHeader("Accept");
-         return responses.stream().filter(r -> !StringUtils.isNotEmpty(accept) || accept.equals(r.getMediaType()))
-               .findFirst().orElse(responses.get(0));
       }
       return null;
    }
@@ -720,8 +388,5 @@ public class RestController {
       return resources.stream()
             .filter(r -> ResourceType.OPEN_API_SPEC.equals(r.getType()) || ResourceType.SWAGGER.equals(r.getType()))
             .findFirst();
-   }
-
-   private record MockInvocationContext(Service service, Operation operation, String resourcePath) {
    }
 }

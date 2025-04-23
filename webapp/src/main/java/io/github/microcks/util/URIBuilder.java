@@ -123,19 +123,15 @@ public class URIBuilder {
    }
 
    /** Utility method for getting URL encoding of query parameter. */
-   private static final String encodeValue(String value) {
-      try {
-         return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-      } catch (UnsupportedEncodingException ex) {
-         throw new RuntimeException(ex.getCause());
-      }
+   private static String encodeValue(String value) {
+      return URLEncoder.encode(value, StandardCharsets.UTF_8);
    }
 
    /**
     * Utility method for getting URL encoding of path parameter. We cannot use JDK method that only deal with query
     * parameters value. See https://stackoverflow.com/a/2678602 and https://www.baeldung.com/java-url-encoding-decoding.
     */
-   private static final String encodePath(String path) {
-      return UriUtils.encodePath(path, "UTF-8");
+   private static String encodePath(String path) {
+      return UriUtils.encodePath(path, StandardCharsets.UTF_8);
    }
 }

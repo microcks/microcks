@@ -555,14 +555,13 @@ export class ServiceDetailPageComponent implements OnInit {
   }
 
   public isMCPAvailable(): boolean {
-    //return this.resolvedServiceView.service.type === ServiceType.REST;
-    return false;
+    return this.resolvedServiceView.service.type === ServiceType.REST;
   }
   public formatMCPUrl(): string {
     let result = document.location.origin;
 
     // Manage dev mode.
-    if (result.endsWith('localhost:4201')) {
+    if (result.endsWith('localhost:4200')) {
       result = 'http://localhost:8080';
     } else if (result.includes('localhost:')) {
       result = 'http://localhost' + result.substring(result.indexOf(':'));
