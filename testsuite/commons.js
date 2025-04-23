@@ -1,13 +1,19 @@
 import http from 'k6/http';
+import grpc from 'k6/net/grpc';
 import { check, sleep, group } from 'k6';
 
 // Define the wait time of browse scenario
 const WAIT_TIME = parseFloat(__ENV.WAIT_TIME) || 0.5;
 
 // Define the base URL for Microcks (adjust as needed)
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const HOST = __ENV.HOST || 'localhost';
+const PORT = __ENV.PORT || '8080';
+const BASE_URL = __ENV.BASE_URL || `http://${HOST}:${PORT}`;
 
 const only500Callback = http.expectedStatuses(500);
+
+const client = new grpc.Client();
+client.load(['../samples/'], 'hello-v1.proto');
 
 /* Simulate users browsing the API repository and getting details. */
 export function browse() {
@@ -172,4 +178,116 @@ export function invokeSOAPMocks() {
         });
         sleep(1);
     });
+}
+
+// Function to test GRPC endpoints
+export function invokeGRPCMocks() {
+    client.connect(`${HOST}:${PORT}`, { plaintext: true });
+
+    const payloads = [
+        { firstname: 'Laurent', lastname: 'Broudoux' },
+        { firstname: 'John', lastname: 'Doe' },
+    ];
+
+    payloads.forEach((payload) => {
+        const response = client.invoke(
+            'io.github.microcks.grpc.hello.v1.HelloService/greeting',
+            payload
+        );
+
+        check(response, {
+            'status is OK': (r) => r && r.status === grpc.StatusOK,
+            'response contains greeting': (r) =>
+                r && r.message && r.message.greeting.includes(payload.firstname),
+        });
+    });
+
+    client.close();
+    sleep(1);
+};
+
+// Function to test REST API endpoints for HelloAPIMock
+export function invokeREST_HelloAPIMocks() {
+  group('Hello API REST Mocks', () => {
+    const MOCK_NAME = 'Hello%20API%20Mock';
+    const VERSION   = '0.8';
+    const RESOURCE  = 'v1/hello';
+
+    const TEST_CASES = [
+      { name: 'David', expStatus: 200, expGreeting: 'Hello David !' },
+      { name: 'Gavin', expStatus: 200, expGreeting: 'Hello Gavin !' },
+      { name: 'Nobody', expStatus: 400, expGreeting: null          },
+    ];
+    TEST_CASES.forEach(({ name, expStatus, expGreeting }) => {
+      const url = `${BASE_URL}/rest/${MOCK_NAME}/${VERSION}/${RESOURCE}?name=${encodeURIComponent(name)}`;
+      const res = http.get(url);
+
+      // Status code
+      check(res, {
+        [`${name}Call status is ${expStatus}`]: (r) => r.status === expStatus,
+      });
+
+      // Header
+      if (expStatus === 200) {
+        check(res, {
+          [`${name}Call response is JSON`]: (r) =>
+            r.headers['Content-Type'] &&
+            r.headers['Content-Type'].includes('application/json'),
+        });
+      }
+
+      // Body assertion by substring
+      if (expGreeting) {
+        check(res, {
+          [`${name}Call body contains "${expGreeting}"`]: (r) =>
+            r.body.includes(expGreeting),
+        });
+      }
+      sleep(1);
+    });
+
+    const url = `${BASE_URL}/rest/${MOCK_NAME}/${VERSION}/`;
+    const res = http.get(url);
+    check(res, {
+      [`Empty body`]: (r) =>
+        !r.body || r.body.trim().length === 0,
+    });
+  });
+}
+
+export function invokeREST_PetStoreAPI() {
+  group('Petstore API', () => {
+    const userKeys = {
+        1: '998bac0775b1d5f588e0a6ca7c11b852',
+        2: '70f735676ec46351c6699c4bb767878a',
+    };
+
+    // Test for petId = 1 (expected 404)
+    const petRes1 = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/1?user_key=${userKeys[1]}`);
+    check(petRes1, {
+        'GET /v2/pet/1 - status is 404': (r) => r.status === 404,
+    });
+    sleep(1);
+
+    // Test for petId = 2 (expected 200 + content validation)
+    const petRes2 = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/2?user_key=${userKeys[2]}`);
+    check(petRes2, {
+        'GET /v2/pet/2 - status is 200': (r) => r.status === 200,
+        'GET /v2/pet/2 - has name "cat"': (r) => r.json().name === 'cat',
+    });
+    sleep(1);
+
+    // Test GET /v2/pet/findByStatus for status=available
+    const status = 'available';
+    const response = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/findByStatus?status=${status}&user_key=70f735676ec46351c6699c4bb767878a`);
+    check(response, {
+        'status is 200': (r) => r.status === 200,
+        'response is non-empty array': (r) => Array.isArray(r.json()) && r.json().length > 0,
+        'first pet has id and name': (r) => {
+            const data = r.json();
+            return data.length > 0 && data[0].id !== undefined && data[0].name !== undefined;
+        },
+    });
+    sleep(1);
+  });
 }
