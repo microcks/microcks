@@ -2,12 +2,13 @@ name: health-check-tests
 on:
   workflow_dispatch:
     inputs:
-      description: 'Branch to check'
-      required: true
+      branch:
+        description: 'Branch to release'
+        required: true
   schedule:
     - cron: '0 4 * * *'  # Everyday at 4am UTC
-
 permissions: read-all
+
 jobs:
   check:
     runs-on: ubuntu-latest
