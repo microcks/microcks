@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to release'
+        description: 'Branch to check'
         required: true
   schedule:
     - cron: '0 4 * * *'  # Everyday at 4am UTC

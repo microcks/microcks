@@ -51,14 +51,16 @@ if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
     interval=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Interval}}' "$cname")
     timeout=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Timeout}}' "$cname")
     start_period=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.StartPeriod}}' "$cname")
+    retries=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Retries}}' "$cname")
 
-    echo "Interval=${interval}, timeout=${timeout}, start-period=${start_period}"
+    echo "Interval=${interval}, timeout=${timeout}, start-period=${start_period}, retries=${retries}"
 
+    try=0
     elapsed=0
     sleep $start_period
     timeout_val=$(to_seconds "$timeout")
     interval_val=$(to_seconds "$interval")
-    while [[ $elapsed -lt $timeout_val ]]; do
+    while [[ $elapsed -lt $timeout_val ]] || [[ $try -lt $retries ]]; do
       status=$($INSPECT_CMD inspect -f '{{.State.Health.Status}}' "$cname")
       echo "Status after ${elapsed}s: $status"
 
@@ -68,6 +70,7 @@ if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
       fi
 
       sleep "$interval"
+      try=$((try + 1))
       elapsed=$((elapsed + interval_val))
     done
 
