@@ -1,0 +1,81 @@
+name: health-check-tests
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to release'
+        required: true
+  schedule:
+    - cron: '0 4 * * *'  # Everyday at 4am UTC
+permissions: read-all
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # docker-compose config
+          - method: docker
+            mode: default
+            addons: ""
+          - method: docker
+            mode: default
+            addons: "async"
+          - method: docker
+            mode: proxy
+            addons: ""
+          - method: docker
+            mode: proxy
+            addons: "async"
+          - method: docker
+            mode: devmode
+            addons: ""
+          # podman-compose config
+          - method: podman
+            mode: default
+            addons: ""
+          - method: podman
+            mode: default
+            addons: "async"
+          - method: podman
+            mode: devmode
+            addons: ""
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch || '1.12.x' }}
+
+      - name: Install docker-compose
+        if: matrix.method == 'docker'
+        run: |
+          sudo apt-get update && sudo apt-get install -y docker-compose
+
+      - name: Install podman and podman-compose
+        if: matrix.method == 'podman'
+        run: |
+          sudo apt-get update && sudo apt-get install -y podman python3-pip
+          pip3 install --user podman-compose
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install Microcks (${{ matrix.method }}/${{ matrix.mode }})
+        run: |
+          ARGS=(--method "${{ matrix.method }}" --mode "${{ matrix.mode }}")
+          [[ -n "${{ matrix.addons }}" ]] && ARGS+=(--addons "${{ matrix.addons }}")
+          ./testsuite/install-compose.sh "${ARGS[@]}"
+
+      - name: Health‑check containers
+        run: |
+          # We're already cd'ed into install/<method>-compose by the installer
+          ./testsuite/check-health.sh --method "${{ matrix.method }}"
+
+      - name: Tear down
+        if: always()
+        run: |
+          cd install/${{ matrix.method }}-compose
+          ${{ matrix.method }}-compose down -v --remove-orphans
