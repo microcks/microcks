@@ -302,6 +302,10 @@ pre.hljs {
   padding-right: 10px !important;
 }
 
+.input-group-btn{
+  display: table-cell !important;
+}
+
 /* Angular material icons for the stepper */
 @font-face {
   font-family: 'Material Icons';
@@ -358,3 +362,4 @@ pre.hljs {
   font-family: "Open Sans", Helvetica, Arial, sans-serif;
   font-size: 16px;
 }
+
