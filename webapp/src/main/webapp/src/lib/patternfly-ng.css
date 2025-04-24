@@ -787,9 +787,6 @@
   margin-right: 5px;
 }
 /* stylelint-disable */
-.input-group-btn{
-  display: table-cell !important;
-}
 .input-group .input-group-btn .dropdown-menu > .selected > a {
   background-color: #0088ce !important;
   border-color: #0088ce !important;
