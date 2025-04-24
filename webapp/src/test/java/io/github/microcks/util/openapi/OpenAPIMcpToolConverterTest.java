@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author laurent
  */
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ControllerTestsConfiguration.class})
+@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ControllerTestsConfiguration.class })
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenAPIMcpToolConverterTest {
@@ -67,12 +67,14 @@ class OpenAPIMcpToolConverterTest {
    void setUp() throws Exception {
       // Import the petstore service definition from the REST tutorial.
       File artifactFile = new File("target/test-classes/io/github/microcks/util/openapi/petstore-1.0.0-openapi.yaml");
-      List<Service> services = serviceService.importServiceDefinition(artifactFile, null, new ArtifactInfo("petstore-1.0.0-openapi.yaml", true));
+      List<Service> services = serviceService.importServiceDefinition(artifactFile, null,
+            new ArtifactInfo("petstore-1.0.0-openapi.yaml", true));
       // Extract service and resource.
       service = services.getFirst();
       List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.OPEN_API_SPEC);
       // Prepare the tool converter.
-      toolConverter = new OpenAPIMcpToolConverter(service, resources.getFirst(), restInvocationProcessor, new ObjectMapper());
+      toolConverter = new OpenAPIMcpToolConverter(service, resources.getFirst(), restInvocationProcessor,
+            new ObjectMapper());
    }
 
    @Test
@@ -133,5 +135,4 @@ class OpenAPIMcpToolConverterTest {
       }
    }
 }
-
 

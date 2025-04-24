@@ -38,12 +38,13 @@ import java.util.concurrent.Executors;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Test case for the  MCP controller.
+ * Test case for the MCP controller.
  * @author laurent
  */
 class McpControllerIT extends AbstractBaseIT {
 
-   record McpSSEFrame(String key, String value) {}
+   record McpSSEFrame(String key, String value) {
+   }
 
    private final ObjectMapper mapper = new ObjectMapper();
 
@@ -145,7 +146,8 @@ class McpControllerIT extends AbstractBaseIT {
             assertEquals("message", frame.value());
          } else if (frame.key().equals("data")) {
             McpSchema.JSONRPCResponse rpcResponse = mapper.readValue(frame.value(), McpSchema.JSONRPCResponse.class);
-            McpSchema.InitializeResult result = mapper.convertValue(rpcResponse.result(), McpSchema.InitializeResult.class);
+            McpSchema.InitializeResult result = mapper.convertValue(rpcResponse.result(),
+                  McpSchema.InitializeResult.class);
             assertEquals("Petstore API MCP server", result.serverInfo().name());
             assertEquals("1.0.0", result.serverInfo().version());
          } else if (frame.key().equals("id")) {
@@ -164,8 +166,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(toolsListRequest, headers), String.class);
+      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsListRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
@@ -178,7 +179,8 @@ class McpControllerIT extends AbstractBaseIT {
             assertEquals("message", frame.value());
          } else if (frame.key().equals("data")) {
             McpSchema.JSONRPCResponse rpcResponse = mapper.readValue(frame.value(), McpSchema.JSONRPCResponse.class);
-            McpSchema.ListToolsResult result = mapper.convertValue(rpcResponse.result(), McpSchema.ListToolsResult.class);
+            McpSchema.ListToolsResult result = mapper.convertValue(rpcResponse.result(),
+                  McpSchema.ListToolsResult.class);
             assertEquals(4, result.tools().size());
          } else if (frame.key().equals("id")) {
             // Got and id frame, ignore it.
@@ -202,8 +204,7 @@ class McpControllerIT extends AbstractBaseIT {
             }
             """;
 
-      response = restTemplate.postForEntity(messageEndpoint,
-            new HttpEntity<>(toolsCallRequest, headers), String.class);
+      response = restTemplate.postForEntity(messageEndpoint, new HttpEntity<>(toolsCallRequest, headers), String.class);
 
       // SSE emitter is async so wait a few millis before checking.
       Thread.sleep(200);
