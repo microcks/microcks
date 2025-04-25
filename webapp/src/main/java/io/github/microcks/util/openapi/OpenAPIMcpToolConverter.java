@@ -31,37 +31,15 @@ import io.github.microcks.web.RestInvocationProcessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.AsyncContext;
-import jakarta.servlet.DispatcherType;
-import jakarta.servlet.RequestDispatcher;
-import jakarta.servlet.ServletConnection;
-import jakarta.servlet.ServletContext;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-import jakarta.servlet.http.HttpUpgradeHandler;
-import jakarta.servlet.http.Part;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.security.Principal;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -79,16 +57,16 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
    private JsonNode schemaNode;
 
    /**
-    *
-    * @param service
-    * @param resource
-    * @param invocationHandler
-    * @param mapper
+    * Build a new instance of OpenAPIMcpToolConverter.
+    * @param service             The service to which this converter is attached
+    * @param resource            The resource used for OpenAPI service conversion
+    * @param invocationProcessor The invocation processor to use for processing the call
+    * @param mapper              The ObjectMapper to use for JSON serialization
     */
-   public OpenAPIMcpToolConverter(Service service, Resource resource, RestInvocationProcessor invocationHandler,
+   public OpenAPIMcpToolConverter(Service service, Resource resource, RestInvocationProcessor invocationProcessor,
          ObjectMapper mapper) {
       super(service, resource);
-      this.invocationProcessor = invocationHandler;
+      this.invocationProcessor = invocationProcessor;
       this.mapper = mapper;
    }
 
@@ -244,6 +222,9 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          response.setStatus(result.status().toString());
          response.setHeaders(null);
          response.setContent(new String(result.content(), StandardCharsets.UTF_8));
+         if (result.status().isError()) {
+            response.setFault(true);
+         }
          return response;
       } catch (Exception e) {
          log.error("Exception while processing the MCP call invocation", e);

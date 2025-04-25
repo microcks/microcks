@@ -53,6 +53,7 @@ public class BasicHttpServletRequest implements HttpServletRequest {
    private final String pathInfo;
    private final String queryString;
    private final Map<String, String> uriParameters;
+   private final Map<String, List<String>> headers = Map.of();
 
    public BasicHttpServletRequest(String urlPrefix, String method, String pathInfo, String queryString,
          Map<String, String> uriParameters) {
@@ -80,17 +81,23 @@ public class BasicHttpServletRequest implements HttpServletRequest {
 
    @Override
    public String getHeader(String s) {
-      return "";
+      if (headers.containsKey(s)) {
+         return headers.get(s).getFirst();
+      }
+      return null;
    }
 
    @Override
    public Enumeration<String> getHeaders(String s) {
+      if (headers.containsKey(s)) {
+         return Collections.enumeration(headers.get(s));
+      }
       return null;
    }
 
    @Override
    public Enumeration<String> getHeaderNames() {
-      return null;
+      return Collections.enumeration(headers.keySet());
    }
 
    @Override

@@ -290,9 +290,11 @@ public class MockControllerCommons {
       evaluableRequest.setParams(evaluableParams);
       // Adding headers...
       Map<String, String> evaluableHeaders = new HashMap<>();
-      List<String> headerNames = Collections.list(request.getHeaderNames());
-      for (String header : headerNames) {
-         evaluableHeaders.put(header, request.getHeader(header));
+      if (request.getHeaderNames() != null) {
+         List<String> headerNames = Collections.list(request.getHeaderNames());
+         for (String header : headerNames) {
+            evaluableHeaders.put(header, request.getHeader(header));
+         }
       }
       evaluableRequest.setHeaders(evaluableHeaders);
 
