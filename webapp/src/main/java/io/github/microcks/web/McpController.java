@@ -25,7 +25,7 @@ import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.ai.McpError;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.ai.McpToolConverter;
-//import io.github.microcks.util.grpc.GrpcMcpToolConverter;
+import io.github.microcks.util.grpc.GrpcMcpToolConverter;
 import io.github.microcks.util.openapi.OpenAPIMcpToolConverter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -62,6 +62,7 @@ public class McpController {
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
    private final RestInvocationProcessor restInvocationProcessor;
+   private final GrpcInvocationProcessor grpcInvocationProcessor;
 
    private final ConcurrentHashMap<String, SseTransportChannel> channelsBySessionId = new ConcurrentHashMap<>();
    private final ExecutorService sseMvcExecutor = Executors.newSingleThreadExecutor();
@@ -72,12 +73,14 @@ public class McpController {
     * @param serviceRepository       The repository to access services definitions
     * @param resourceRepository      The repository to access resources definitions
     * @param restInvocationProcessor The invocation processor to apply REST mocks dispatching logic
+    * @param grpcInvocationProcessor The invocation processor to apply GRPC mocks dispatching logic
     */
    public McpController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         RestInvocationProcessor restInvocationProcessor) {
+         RestInvocationProcessor restInvocationProcessor, GrpcInvocationProcessor grpcInvocationProcessor) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.restInvocationProcessor = restInvocationProcessor;
+      this.grpcInvocationProcessor = grpcInvocationProcessor;
    }
 
    /**
@@ -125,7 +128,7 @@ public class McpController {
 
    /**
     * Handle a MCP message request.
-    * @param serviceName Thge name of the service to connect to.
+    * @param serviceName The name of the service to connect to.
     * @param version     The version of the service to connect to.
     * @param sessionId   The MCP session ID of the connection.
     * @param request     The MCP request to handle.
@@ -249,7 +252,8 @@ public class McpController {
 
       Response response = converter.getCallResponse(callOperation, toolRequest);
 
-      return new McpSchema.CallToolResult(List.of(new McpSchema.TextContent(response.getContent())), false);
+      return new McpSchema.CallToolResult(List.of(new McpSchema.TextContent(response.getContent())),
+            response.isFault());
    }
 
    /** Send a JSONRCPResponse as an SSE event. */
@@ -290,23 +294,12 @@ public class McpController {
    }
 
    private McpToolConverter buildMcpToolConverter(Service service, Resource resource) {
-      McpToolConverter converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
+      McpToolConverter converter = null;
 
-      //      switch (service.getType()) {
-      //         case GRPC -> converter = new GrpcMcpToolConverter(service, resource);
-      //      }
-
-      /*
-       * return new McpToolConverter(service, resource) {
-       * 
-       * @Override public String getToolDescription(Operation operation) { return "Fake description"; }
-       * 
-       * @Override public McpSchema.JsonSchema getInputSchema(Operation operation) { return null; }
-       * 
-       * @Override public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) { return
-       * null; } };
-       */
-
+      switch (service.getType()) {
+         case GRPC -> converter = new GrpcMcpToolConverter(service, resource, grpcInvocationProcessor, mapper);
+         default -> converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
+      }
       return converter;
    }
 }
