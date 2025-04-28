@@ -96,7 +96,7 @@ public class McpController {
       String sessionId = UUID.randomUUID().toString();
       log.debug("Creating new SSE connection for session: {}", sessionId);
 
-      SseEmitter emitter = new SseEmitter(Duration.ofSeconds(60).toMillis());
+      SseEmitter emitter = new SseEmitter(Duration.ofSeconds(600).toMillis());
       emitter.onCompletion(() -> {
          log.debug("SSE connection completed for session: {}", sessionId);
          channelsBySessionId.remove(sessionId);
@@ -172,8 +172,14 @@ public class McpController {
          }
       }
 
-      McpSchema.JSONRPCResponse response = new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(),
-            result, null);
+      McpSchema.JSONRPCResponse response = null;
+      if (result != null) {
+         response = new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(), result, null);
+      } else {
+         response = new McpSchema.JSONRPCResponse(McpSchema.JSONRPC_VERSION, request.id(), null,
+               new McpSchema.JSONRPCResponse.JSONRPCError(McpSchema.ErrorCodes.METHOD_NOT_FOUND,
+                     "Unsupported method: " + request.method(), null));
+      }
       sendSseMessage(channel, response);
 
       return ResponseEntity.ok().build();
@@ -211,7 +217,9 @@ public class McpController {
          McpSchema.ClientCapabilities clientCapabilities = initializeRequest.capabilities();
          McpSchema.Implementation clientInfo = initializeRequest.clientInfo();
 
-         McpSchema.ServerCapabilities serverCapabilities = new McpSchema.ServerCapabilities(null, null, null, null,
+         McpSchema.ServerCapabilities serverCapabilities = new McpSchema.ServerCapabilities(null, null,
+               new McpSchema.ServerCapabilities.PromptCapabilities(false),
+               new McpSchema.ServerCapabilities.ResourceCapabilities(false, false),
                new McpSchema.ServerCapabilities.ToolCapabilities(false));
 
          return new McpSchema.InitializeResult(initializeRequest.protocolVersion(), serverCapabilities,
