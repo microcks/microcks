@@ -192,7 +192,7 @@ class McpControllerIT extends AbstractBaseIT {
                "jsonrpc": "2.0",
                "method": "tools/call",
                "params": {
-                  "name": "GET__pets_id",
+                  "name": "get_pets_id",
                   "arguments": {
                      "id": "2"
                   }
