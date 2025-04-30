@@ -28,6 +28,7 @@ import io.github.microcks.web.ControllerTestsConfiguration;
 import io.github.microcks.web.RestInvocationProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -60,35 +61,45 @@ class OpenAPIMcpToolConverterTest {
    @Autowired
    private RestInvocationProcessor restInvocationProcessor;
 
-   private Service service;
-   private OpenAPIMcpToolConverter toolConverter;
+   private Service servicev1;
+   private Service servicev2;
+   private OpenAPIMcpToolConverter toolConverterv1;
+   private OpenAPIMcpToolConverter toolConverterv2;
 
    @BeforeAll
    void setUp() throws Exception {
       // Import the petstore service definition from the REST tutorial.
-      File artifactFile = new File("target/test-classes/io/github/microcks/util/openapi/petstore-1.0.0-openapi.yaml");
-      List<Service> services = serviceService.importServiceDefinition(artifactFile, null,
+      File artifactFilev1 = new File("target/test-classes/io/github/microcks/util/openapi/petstore-1.0.0-openapi.yaml");
+      File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/openapi/petstore-2.0.0-openapi.yaml");
+      // Extract service and resource. + tool converters.
+      List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
             new ArtifactInfo("petstore-1.0.0-openapi.yaml", true));
-      // Extract service and resource.
-      service = services.getFirst();
-      List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(), ResourceType.OPEN_API_SPEC);
-      // Prepare the tool converter.
-      toolConverter = new OpenAPIMcpToolConverter(service, resources.getFirst(), restInvocationProcessor,
+      servicev1 = services.getFirst();
+      List<Resource> resources = resourceRepository.findByServiceIdAndType(servicev1.getId(),
+            ResourceType.OPEN_API_SPEC);
+      toolConverterv1 = new OpenAPIMcpToolConverter(servicev1, resources.getFirst(), restInvocationProcessor,
+            new ObjectMapper());
+      // For v2.
+      services = serviceService.importServiceDefinition(artifactFilev2, null,
+            new ArtifactInfo("petstore-2.0.0-openapi.yaml", true));
+      servicev2 = services.getFirst();
+      resources = resourceRepository.findByServiceIdAndType(servicev2.getId(), ResourceType.OPEN_API_SPEC);
+      toolConverterv2 = new OpenAPIMcpToolConverter(servicev2, resources.getFirst(), restInvocationProcessor,
             new ObjectMapper());
    }
 
    @Test
    void testGetToolName() {
-      for (Operation operation : service.getOperations()) {
-         String toolName = toolConverter.getToolName(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         String toolName = toolConverterv1.getToolName(operation);
          if ("GET /my/pets".equals(operation.getName())) {
-            assertEquals("GET__my_pets", toolName);
+            assertEquals("get_my_pets", toolName);
          } else if ("GET /pets".equals(operation.getName())) {
-            assertEquals("GET__pets", toolName);
+            assertEquals("get_pets", toolName);
          } else if ("POST /pets".equals(operation.getName())) {
-            assertEquals("POST__pets", toolName);
+            assertEquals("post_pets", toolName);
          } else if ("GET /pets/{id}".equals(operation.getName())) {
-            assertEquals("GET__pets_id", toolName);
+            assertEquals("get_pets_id", toolName);
          } else {
             fail("Unknown operation name: " + operation.getName());
          }
@@ -97,8 +108,8 @@ class OpenAPIMcpToolConverterTest {
 
    @Test
    void testGetToolDescription() {
-      for (Operation operation : service.getOperations()) {
-         String toolDescription = toolConverter.getToolDescription(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         String toolDescription = toolConverterv1.getToolDescription(operation);
          if ("GET /my/pets".equals(operation.getName())) {
             assertEquals("A list of pets owned by the user", toolDescription);
          } else if ("GET /pets".equals(operation.getName())) {
@@ -115,8 +126,8 @@ class OpenAPIMcpToolConverterTest {
 
    @Test
    void testGetInputSchema() {
-      for (Operation operation : service.getOperations()) {
-         McpSchema.JsonSchema inputSchema = toolConverter.getInputSchema(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         McpSchema.JsonSchema inputSchema = toolConverterv1.getInputSchema(operation);
          assertEquals("object", inputSchema.type());
          if ("GET /my/pets".equals(operation.getName())) {
             assertTrue(inputSchema.properties().isEmpty());
@@ -131,6 +142,43 @@ class OpenAPIMcpToolConverterTest {
             assertTrue(inputSchema.properties().containsKey("id"));
          } else {
             fail("Unknown operation name: " + operation.getName());
+         }
+      }
+
+      String expectedPostPetsSchema = """
+            ---
+            type: "object"
+            properties:
+              name:
+                type: "string"
+              coat:
+                type: "object"
+                properties:
+                  name:
+                    type: "string"
+                  tint:
+                    type: "string"
+                    enum:
+                    - "light"
+                    - "dark"
+                required:
+                - "name"
+                additionalProperties: false
+            required:
+            - "name"
+            additionalProperties: false
+            """;
+
+      for (Operation operation : servicev2.getOperations()) {
+         if ("POST /pets".equals(operation.getName())) {
+            McpSchema.JsonSchema inputSchema = toolConverterv2.getInputSchema(operation);
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            try {
+               String result = mapper.writeValueAsString(inputSchema);
+               assertEquals(expectedPostPetsSchema, result);
+            } catch (Exception e) {
+               fail("Failed to serialize input schema for operation " + operation.getName(), e);
+            }
          }
       }
    }

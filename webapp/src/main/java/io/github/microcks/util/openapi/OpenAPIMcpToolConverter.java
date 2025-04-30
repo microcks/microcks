@@ -31,16 +31,18 @@ import io.github.microcks.web.RestInvocationProcessor;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+
+import static io.github.microcks.util.JsonSchemaValidator.*;
 
 /**
  * Implementation of McpToolConverter for OpenAPI services.
@@ -50,6 +52,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(OpenAPIMcpToolConverter.class);
+
+   private static final String OPEN_API_PATHS_ELEMENT = "/paths/";
 
    private final RestInvocationProcessor invocationProcessor;
    private final ObjectMapper mapper;
@@ -73,7 +77,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
    @Override
    public String getToolName(Operation operation) {
       // Anthropic Claude tools must respect ^[a-zA-Z0-9_-]{1,64}$ regular expression that doesn't match with our URI.
-      return operation.getName().replace(" ", "_").replace("/", "_").replace("{", "").replace("}", "");
+      return operation.getName().replace(" ", "_").replace("/", "_").replace("{", "").replace("}", "")
+            .replace("__", "_").toLowerCase();
    }
 
    @Override
@@ -87,7 +92,7 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          String verb = operation.getName().split(" ")[0].toLowerCase();
          String path = operation.getName().split(" ")[1].trim().replace("/", "~1");
 
-         String operationPointer = "/paths/" + path + "/" + verb;
+         String operationPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb;
          JsonNode operationNode = schemaNode.at(operationPointer);
          if (operationNode.has("description")) {
             return operationNode.path("description").asText();
@@ -103,9 +108,15 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
    @Override
    public McpSchema.JsonSchema getInputSchema(Operation operation) {
-      Map<String, Object> properties = new HashMap<>();
-      List<String> requiredProperties = new ArrayList<>();
+      ObjectNode inputSchemaNode = mapper.createObjectNode();
+      ObjectNode schemaPropertiesNode = mapper.createObjectNode();
+      ArrayNode requiredPropertiesNode = mapper.createArrayNode();
 
+      // Initialize input schema with empty object.
+      inputSchemaNode.put("type", "object");
+      inputSchemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, schemaPropertiesNode);
+      inputSchemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredPropertiesNode);
+      inputSchemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
       try {
          if (schemaNode == null) {
             schemaNode = OpenAPISchemaValidator.getJsonNodeForSchema(resource.getContent());
@@ -115,47 +126,38 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          String verb = operation.getName().split(" ")[0].toLowerCase();
          String path = operation.getName().split(" ")[1].trim().replace("/", "~1");
 
-         String schemaPointer = "/paths/" + path + "/" + verb + "/requestBody/content/application~1json/schema";
+         String schemaPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb + "/requestBody/content/application~1json/schema";
          JsonNode requestSchemaNode = schemaNode.at(schemaPointer);
          if (!requestSchemaNode.isMissingNode()) {
-            // TODO: we must follow ref here...
-            if (requestSchemaNode.has("$ref")) {
-               String ref = requestSchemaNode.path("$ref").asText();
-               if (ref.startsWith("#/")) {
-                  requestSchemaNode = schemaNode.at(ref.substring(1));
-               }
-            }
+            requestSchemaNode = followRefIfAny(requestSchemaNode);
 
-            // Recopy all simple and required properties to MCP input schema.
-            JsonNode requiredNode = requestSchemaNode.path("required");
-            Iterator<Map.Entry<String, JsonNode>> propertiesList = requestSchemaNode.path("properties").fields();
-            while (propertiesList.hasNext()) {
-               Map.Entry<String, JsonNode> property = propertiesList.next();
-               properties.put(property.getKey(), property.getValue());
-               if (!requiredNode.isMissingNode() && requiredNode.isArray() && requiredNode.has(property.getKey())) {
-                  requiredProperties.add(property.getKey());
-               }
+            // May be null if not resolved.
+            if (requestSchemaNode != null) {
+               visitNodeWithProperties(requestSchemaNode, schemaPropertiesNode, requiredPropertiesNode);
             }
          }
 
          // Add parameters to input schema.
-         String paramsPointer = "/paths/" + path + "/" + verb + "/parameters";
+         String paramsPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb + "/parameters";
          JsonNode paramsNode = schemaNode.at(paramsPointer);
 
          Iterator<JsonNode> parameters = paramsNode.elements();
          while (parameters.hasNext()) {
-            // TODO: we must follow ref here...
-            JsonNode parameter = parameters.next();
+            JsonNode parameter = followRefIfAny(parameters.next());
             String paramName = parameter.path("name").asText();
-            properties.put(paramName, Map.of("type", "string"));
-            if (parameter.path("required").asBoolean(false)) {
-               requiredProperties.add(paramName);
+
+            // Create a property node for the parameter.
+            ObjectNode propertyNode = mapper.createObjectNode();
+            propertyNode.put("type", "string");
+            schemaPropertiesNode.set(paramName, propertyNode);
+            if (parameter.path(JSON_SCHEMA_REQUIRED_ELEMENT).asBoolean(false)) {
+               requiredPropertiesNode.add(paramName);
             }
          }
       } catch (Exception e) {
          log.error("Exception while trying to get input schema", e);
       }
-      return new McpSchema.JsonSchema("object", properties, requiredProperties, false);
+      return mapper.convertValue(inputSchemaNode, McpSchema.JsonSchema.class);
    }
 
    @Override
@@ -174,13 +176,12 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          // Extract JsonNode corresponding to request parameters.
          String path = resourcePath.replace("/", "~1");
 
-         String paramsPointer = "/paths/" + path + "/" + verb.toLowerCase() + "/parameters";
+         String paramsPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb.toLowerCase() + "/parameters";
          JsonNode paramsNode = schemaNode.at(paramsPointer);
 
          Iterator<JsonNode> parameters = paramsNode.elements();
          while (parameters.hasNext()) {
-            // TODO: we must follow ref here...
-            JsonNode parameter = parameters.next();
+            JsonNode parameter = followRefIfAny(parameters.next());
             String paramName = parameter.path("name").asText();
             if (request.arguments().containsKey(paramName)) {
                uriParams.put(paramName, request.arguments().remove(paramName).toString());
@@ -230,5 +231,67 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          log.error("Exception while processing the MCP call invocation", e);
       }
       return null;
+   }
+
+   /** Follow the $ref if we have one. Otherwise, return given node. */
+   protected JsonNode followRefIfAny(JsonNode referencableNode) {
+      if (referencableNode.has("$ref")) {
+         String ref = referencableNode.path("$ref").asText();
+         return getNodeForRef(ref);
+      }
+      return referencableNode;
+   }
+
+   /** Get the JsonNode for reference within the specification. */
+   private JsonNode getNodeForRef(String reference) {
+      if (reference.startsWith("#/")) {
+         return schemaNode.at(reference.substring(1));
+      }
+      // TODO: handle external references reusing imported resources?
+      return null;
+   }
+
+   /** Visit a node and extract its properties. */
+   private void visitNodeWithProperties(JsonNode node, ObjectNode propertiesNode, ArrayNode requiredPropertiesNode) {
+      JsonNode requiredNode = node.path(JSON_SCHEMA_REQUIRED_ELEMENT);
+      Iterator<Map.Entry<String, JsonNode>> propertiesList = node.path(JSON_SCHEMA_PROPERTIES_ELEMENT).fields();
+
+      while (propertiesList.hasNext()) {
+         Map.Entry<String, JsonNode> property = propertiesList.next();
+         String propertyName = property.getKey();
+         JsonNode propertyValue = followRefIfAny(property.getValue());
+
+         if (propertyValue.has(JSON_SCHEMA_PROPERTIES_ELEMENT)) {
+            // Initialize a new subschema node we must visit to resolve all possible references.
+            ObjectNode subschemaNode = mapper.createObjectNode();
+            ObjectNode subpropertiesNode = mapper.createObjectNode();
+            ArrayNode requiredSubpropertiesNode = mapper.createArrayNode();
+
+            subschemaNode.put("type", "object");
+            subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subpropertiesNode);
+            subschemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredSubpropertiesNode);
+            subschemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
+            propertiesNode.set(propertyName, subschemaNode);
+
+            visitNodeWithProperties(propertyValue, subpropertiesNode, requiredSubpropertiesNode);
+         } else {
+            propertiesNode.set(propertyName, propertyValue);
+            if (!requiredNode.isMissingNode() && requiredNode.isArray()
+                  && arrayNodeContains((ArrayNode) requiredNode, property.getKey())) {
+               requiredPropertiesNode.add(property.getKey());
+            }
+         }
+      }
+   }
+
+   /** Check if the arrayNode contains the given value. */
+   private boolean arrayNodeContains(ArrayNode arrayNode, String value) {
+      // Iterate over arrayNode elements and check if any element matches the value.
+      for (JsonNode element : arrayNode) {
+         if (element.asText().equals(value)) {
+            return true;
+         }
+      }
+      return false;
    }
 }
