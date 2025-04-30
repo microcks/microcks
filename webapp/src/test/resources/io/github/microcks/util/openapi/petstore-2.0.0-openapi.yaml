@@ -28,6 +28,10 @@ components:
           type: string
         coat:
           $ref: '#/components/schemas/Coat'
+        bugs:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bug'
       required:
           - name
     Coat:
@@ -42,6 +46,11 @@ components:
             - dark
       required:
         - name
+    Bug:
+      type: string
+      enum:
+        - tick
+        - flea
 paths:
   /my/pets:
     get:

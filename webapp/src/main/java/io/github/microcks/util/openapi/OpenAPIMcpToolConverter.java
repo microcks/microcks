@@ -276,13 +276,32 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
             visitNodeWithProperties(propertyValue, subpropertiesNode, requiredSubpropertiesNode);
          } else {
-            propertiesNode.set(propertyName, propertyValue);
+            propertiesNode.set(propertyName, dereferencedNode(propertyValue));
             if (!requiredNode.isMissingNode() && requiredNode.isArray()
                   && arrayNodeContains((ArrayNode) requiredNode, property.getKey())) {
                requiredPropertiesNode.add(property.getKey());
             }
          }
       }
+   }
+
+   private JsonNode dereferencedNode(JsonNode node) {
+      Iterator<String> fieldNames = node.fieldNames();
+      while (fieldNames.hasNext()) {
+         String fieldName = fieldNames.next();
+         JsonNode fieldValue = node.get(fieldName);
+         if (node.isObject() && fieldValue.has("$ref")) {
+            JsonNode target = followRefIfAny(fieldValue);
+            if (target != null) {
+               // Replace the field value with the dereferenced node.
+               ((ObjectNode) node).replace(fieldName, dereferencedNode(target));
+            } else {
+               // If the target is null, remove the field.
+               ((ObjectNode) node).remove(fieldName);
+            }
+         }
+      }
+      return node;
    }
 
    /** Check if the arrayNode contains the given value. */

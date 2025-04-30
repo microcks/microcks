@@ -164,6 +164,13 @@ class OpenAPIMcpToolConverterTest {
                 required:
                 - "name"
                 additionalProperties: false
+              bugs:
+                type: "array"
+                items:
+                  type: "string"
+                  enum:
+                  - "tick"
+                  - "flea"
             required:
             - "name"
             additionalProperties: false
