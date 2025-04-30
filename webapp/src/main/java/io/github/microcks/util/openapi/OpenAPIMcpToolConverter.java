@@ -126,7 +126,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          String verb = operation.getName().split(" ")[0].toLowerCase();
          String path = operation.getName().split(" ")[1].trim().replace("/", "~1");
 
-         String schemaPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb + "/requestBody/content/application~1json/schema";
+         String schemaPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb
+               + "/requestBody/content/application~1json/schema";
          JsonNode requestSchemaNode = schemaNode.at(schemaPointer);
          if (!requestSchemaNode.isMissingNode()) {
             requestSchemaNode = followRefIfAny(requestSchemaNode);
