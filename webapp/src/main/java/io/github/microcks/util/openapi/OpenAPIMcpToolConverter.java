@@ -168,7 +168,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
       String queryString = "";
       String verb = operation.getName().split(" ")[0];
       String resourcePath = operation.getName().split(" ")[1].trim();
-      Map<String, String> uriParams = new HashMap<>();
+      Map<String, String> pathParams = new HashMap<>();
+      Map<String, String> queryParams = new HashMap<>();
 
       // Unwrap the request parameters and remove them from request.
       try {
@@ -178,7 +179,6 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
          // Extract JsonNode corresponding to request parameters.
          String path = resourcePath.replace("/", "~1");
-
          String paramsPointer = OPEN_API_PATHS_ELEMENT + path + "/" + verb.toLowerCase() + "/parameters";
          JsonNode paramsNode = schemaNode.at(paramsPointer);
 
@@ -186,8 +186,15 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          while (parameters.hasNext()) {
             JsonNode parameter = followRefIfAny(parameters.next());
             String paramName = parameter.path("name").asText();
+            String paramIn = parameter.path("in").asText(); // Check if it's "path" or "query"
+
             if (request.arguments().containsKey(paramName)) {
-               uriParams.put(paramName, request.arguments().remove(paramName).toString());
+               String paramValue = request.arguments().remove(paramName).toString();
+               if ("path".equals(paramIn)) {
+                  pathParams.put(paramName, paramValue);
+               } else if ("query".equals(paramIn)) {
+                  queryParams.put(paramName, paramValue);
+               }
             }
          }
       } catch (Exception e) {
@@ -196,12 +203,12 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
       // Re-build the resource path with parameters if needed.
       if (operation.getName().contains("{")) {
-         resourcePath = URIBuilder.buildURIFromPattern(resourcePath, uriParams);
+         resourcePath = URIBuilder.buildURIFromPattern(resourcePath, pathParams);
       }
       // Re-build the query string with parameters if needed.
       if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())
             || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
-         queryString = URIBuilder.buildURIFromPattern("", uriParams);
+         queryString = URIBuilder.buildURIFromPattern("", queryParams);
          if (queryString.startsWith("?")) {
             queryString = queryString.substring(1);
          }
@@ -219,7 +226,7 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
                new BasicHttpServletRequest(
                      "http://localhost:8080/rest/"
                            + MockControllerCommons.composeServiceAndVersion(service.getName(), service.getVersion()),
-                     verb, resourcePath, queryString, uriParams));
+                     verb, resourcePath, queryString, queryParams));
 
          // Build a Microcks Response from the result.
          Response response = new Response();
