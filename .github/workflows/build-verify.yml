@@ -69,6 +69,7 @@ jobs:
 
       - name: Build Angular app
         run: |
+          mvn -B -DskipTests install
           cd ${{github.workspace}}/webapp
           mvn -B -Pprod -DskipTests install
           
@@ -195,7 +196,9 @@ jobs:
             maven-repo-
 
       - name: Verify Javadoc completion
-        run: mvn -B javadoc:javadoc
+        run: |
+          mvn -B -DskipTests install
+          mvn -B javadoc:javadoc
 
   container-images-build:
     needs:
