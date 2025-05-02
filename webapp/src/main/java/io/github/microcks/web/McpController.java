@@ -33,7 +33,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -89,7 +88,7 @@ public class McpController {
     * @param version     The version of the service to connect to.
     * @return The SSE emitter to use for the connection.
     */
-   @GetMapping(value = "/mcp/{service}/{version}/sse")
+   @RequestMapping(value = "/mcp/{service}/{version}/sse", method = { RequestMethod.GET, RequestMethod.POST })
    public SseEmitter handleSSE(@PathVariable("service") String serviceName, @PathVariable("version") String version) {
       log.info("Handling a Mcp SSE for service {} and version {}", serviceName, version);
 
