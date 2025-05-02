@@ -398,8 +398,8 @@ public class AICopilotHelper {
       } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
          dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
       } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
-         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
-         dispatchCriteria += DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
+         dispatchCriteria += DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
       } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
          // This dispatcher is used for GraphQL or gRPC
          if (ServiceType.GRAPHQL.equals(service.getType())) {

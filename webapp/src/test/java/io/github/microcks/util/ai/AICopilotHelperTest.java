@@ -23,11 +23,14 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.util.DispatchStyles;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -261,7 +264,7 @@ class AICopilotHelperTest {
                 url: /pastry/ChocolateCroissant
                 headers:
                   accept: application/json
-                body:\s
+                body:
               response:
                 code: 200
                 headers:
@@ -313,6 +316,96 @@ class AICopilotHelperTest {
       assertNotNull(results);
       assertEquals(2, results.size());
 
+      for (RequestResponsePair pair : results) {
+         assertNull(pair.getRequest().getContent());
+         assertEquals(1, pair.getRequest().getHeaders().size());
+
+         // Check that response has been correctly parsed.
+         assertEquals("200", pair.getResponse().getStatus());
+         assertNotNull(pair.getResponse().getContent());
+         assertEquals(1, pair.getResponse().getHeaders().size());
+
+         if ("1".equals(pair.getResponse().getName())) {
+            assertEquals("/name=ChocolateCroissant", pair.getResponse().getDispatchCriteria());
+         } else if ("2".equals(pair.getResponse().getName())) {
+            assertEquals("/name=BlueberryMuffin", pair.getResponse().getDispatchCriteria());
+         } else {
+            fail("Unknown example pair name");
+         }
+      }
+   }
+
+   @Test
+   void testParseURIElementsDispatchCriteria() {
+      String aiResponse = """
+            ### Example 1
+
+            ```yaml
+            - example: 1
+              request:
+                url: /customer/12345/accounts?filter=portfolio
+                headers:
+                  accept: application/json
+                parameters:
+                  customerId: 12345
+                  filter: portfolio
+                body:
+              response:
+                code: 200
+                headers:
+                  content-type: application/json
+                body:
+                  id: 12345-portfolio
+                  description: "Portfolio account"
+            ```
+
+            ### Example 2
+
+            ```yaml
+            - example: 2
+              request:
+                url: /customer/67890/accounts
+                headers:
+                  accept: application/json
+                parameters:
+                  filter: standard
+                body:
+              response:
+                code: 200
+                headers:
+                  content-type: application/json
+                body:
+                  id: 67890-standard
+                  description: "Standard account"
+            ```
+            """;
+
+      Service service = new Service();
+      service.setType(ServiceType.REST);
+      Operation operation = new Operation();
+      operation.setName("GET /customer/{customerId}/accounts");
+      operation.setDispatcher(DispatchStyles.URI_ELEMENTS);
+      operation.setDispatcherRules("customerId ?? filter");
+
+      List<RequestResponsePair> results = null;
+      try {
+         results = AICopilotHelper.parseRequestResponseTemplateOutput(service, operation, aiResponse);
+      } catch (Exception e) {
+         fail("Exception should not be thrown here");
+      }
+
+      assertNotNull(results);
+      assertEquals(2, results.size());
+
+      for (RequestResponsePair pair : results) {
+         if ("1".equals(pair.getResponse().getName())) {
+            assertEquals("/customerId=12345?filter=portfolio", pair.getResponse().getDispatchCriteria());
+         } else if ("2".equals(pair.getResponse().getName())) {
+            assertEquals("/customerId=67890?filter=standard", pair.getResponse().getDispatchCriteria());
+         } else {
+            fail("Unknown example pair name");
+         }
+      }
    }
 
    @Test
@@ -926,4 +1019,16 @@ class AICopilotHelperTest {
       // Verify the result
       assertEquals(expectedResult, result);
    }
+
+   //   @Test
+   //   void testRemoveTokenFromComplexSpec() throws Exception {
+   //      String specification = FileUtils.readFileToString(
+   //            new File("target/test-classes/io/github/microcks/util/ai/openwealth-custodyServicesAPI.yaml"),
+   //            StandardCharsets.UTF_8);
+   //
+   //      String operationName = "GET /accounts/{accountId}/positions";
+   //      // Call the removeTagsFromOpenAPISpec method
+   //      String result = AICopilotHelper.removeTokensFromSpec(specification, operationName);
+   //      System.err.println("Result: " + result);
+   //   }
 }
