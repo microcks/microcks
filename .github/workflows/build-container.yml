@@ -43,7 +43,6 @@ jobs:
 
       - name: Package webapp in prod mode
         run: |
-          cd ${{github.workspace}}/webapp
           # We should install the webapp to have the JAR with UI, available for the Uber distro
           mvn -B -q -Pprod -DskipTests install
 
