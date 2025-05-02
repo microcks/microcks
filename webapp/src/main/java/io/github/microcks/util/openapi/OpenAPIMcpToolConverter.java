@@ -288,18 +288,41 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
    }
 
    private JsonNode dereferencedNode(JsonNode node) {
-      Iterator<String> fieldNames = node.fieldNames();
-      while (fieldNames.hasNext()) {
-         String fieldName = fieldNames.next();
-         JsonNode fieldValue = node.get(fieldName);
-         if (node.isObject() && fieldValue.has("$ref")) {
-            JsonNode target = followRefIfAny(fieldValue);
-            if (target != null) {
-               // Replace the field value with the dereferenced node.
-               ((ObjectNode) node).replace(fieldName, dereferencedNode(target));
-            } else {
-               // If the target is null, remove the field.
-               ((ObjectNode) node).remove(fieldName);
+      if (node.isObject()) {
+         Iterator<String> fieldNames = node.fieldNames();
+         while (fieldNames.hasNext()) {
+            String fieldName = fieldNames.next();
+            JsonNode fieldValue = node.get(fieldName);
+            if (fieldValue.has("$ref")) {
+               JsonNode target = followRefIfAny(fieldValue);
+               if (target != null) {
+                  // Replace the field value with the dereferenced node.
+                  ((ObjectNode) node).replace(fieldName, dereferencedNode(target));
+               } else {
+                  // If the target is null, remove the field.
+                  ((ObjectNode) node).remove(fieldName);
+               }
+            } else if (fieldValue.isObject() || fieldValue.isArray()) {
+               // Recursively process nested objects or arrays.
+               dereferencedNode(fieldValue);
+            }
+         }
+      } else if (node.isArray()) {
+         for (int i = 0; i < node.size(); i++) {
+            JsonNode arrayElement = node.get(i);
+            if (arrayElement.has("$ref")) {
+               JsonNode target = followRefIfAny(arrayElement);
+               if (target != null) {
+                  JsonNode dereferencedTarget = dereferencedNode(target);
+                  // Replace the array element with the dereferenced node.
+                  ((ArrayNode) node).set(i, dereferencedTarget);
+               } else {
+                  // If the target is null, remove the array element.
+                  ((ArrayNode) node).remove(i);
+               }
+            } else if (arrayElement.isObject() || arrayElement.isArray()) {
+               // Recursively process nested objects or arrays.
+               dereferencedNode(arrayElement);
             }
          }
       }
