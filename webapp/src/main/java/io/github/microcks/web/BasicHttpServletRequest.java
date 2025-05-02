@@ -52,16 +52,16 @@ public class BasicHttpServletRequest implements HttpServletRequest {
    private final String method;
    private final String pathInfo;
    private final String queryString;
-   private final Map<String, String> uriParameters;
+   private final Map<String, String> queryParameters;
    private final Map<String, List<String>> headers = Map.of();
 
    public BasicHttpServletRequest(String urlPrefix, String method, String pathInfo, String queryString,
-         Map<String, String> uriParameters) {
+         Map<String, String> queryParameters) {
       this.urlPrefix = urlPrefix;
       this.method = method;
       this.pathInfo = pathInfo;
       this.queryString = queryString;
-      this.uriParameters = uriParameters;
+      this.queryParameters = queryParameters;
    }
 
    @Override
@@ -268,12 +268,12 @@ public class BasicHttpServletRequest implements HttpServletRequest {
 
    @Override
    public String getParameter(String s) {
-      return uriParameters.getOrDefault(s, null);
+      return queryParameters.getOrDefault(s, null);
    }
 
    @Override
    public Enumeration<String> getParameterNames() {
-      return Collections.enumeration(uriParameters.keySet());
+      return Collections.enumeration(queryParameters.keySet());
    }
 
    @Override
