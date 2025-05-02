@@ -42,7 +42,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-import static io.github.microcks.util.JsonSchemaValidator.*;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
 
 /**
  * Implementation of McpToolConverter for OpenAPI services.
