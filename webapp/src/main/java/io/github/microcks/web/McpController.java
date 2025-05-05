@@ -63,6 +63,7 @@ public class McpController {
    private final ResourceRepository resourceRepository;
    private final RestInvocationProcessor restInvocationProcessor;
    private final GrpcInvocationProcessor grpcInvocationProcessor;
+   private final GraphQLInvocationProcessor graphQLInvocationProcessor;
 
    private final ConcurrentHashMap<String, SseTransportChannel> channelsBySessionId = new ConcurrentHashMap<>();
    private final ExecutorService sseMvcExecutor = Executors.newSingleThreadExecutor();
@@ -70,17 +71,20 @@ public class McpController {
 
    /**
     * Build a McpController with required dependencies.
-    * @param serviceRepository       The repository to access services definitions
-    * @param resourceRepository      The repository to access resources definitions
-    * @param restInvocationProcessor The invocation processor to apply REST mocks dispatching logic
-    * @param grpcInvocationProcessor The invocation processor to apply GRPC mocks dispatching logic
+    * @param serviceRepository          The repository to access services definitions
+    * @param resourceRepository         The repository to access resources definitions
+    * @param restInvocationProcessor    The invocation processor to apply REST mocks dispatching logic
+    * @param grpcInvocationProcessor    The invocation processor to apply GRPC mocks dispatching logic
+    * @param graphQLInvocationProcessor The incocation processor to apply GraphQL mocks dispatching logic
     */
    public McpController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         RestInvocationProcessor restInvocationProcessor, GrpcInvocationProcessor grpcInvocationProcessor) {
+         RestInvocationProcessor restInvocationProcessor, GrpcInvocationProcessor grpcInvocationProcessor,
+         GraphQLInvocationProcessor graphQLInvocationProcessor) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.restInvocationProcessor = restInvocationProcessor;
       this.grpcInvocationProcessor = grpcInvocationProcessor;
+      this.graphQLInvocationProcessor = graphQLInvocationProcessor;
    }
 
    /**
@@ -295,8 +299,8 @@ public class McpController {
    private ResourceType getResourceType(Service service) {
       ResourceType resourceType = ResourceType.OPEN_API_SPEC;
       switch (service.getType()) {
-         case GRAPHQL -> resourceType = ResourceType.GRAPHQL_SCHEMA;
          case GRPC -> resourceType = ResourceType.PROTOBUF_DESCRIPTOR;
+         case GRAPHQL -> resourceType = ResourceType.GRAPHQL_SCHEMA;
       }
       return resourceType;
    }
@@ -305,8 +309,8 @@ public class McpController {
       McpToolConverter converter = null;
 
       switch (service.getType()) {
-         case GRAPHQL -> converter = new GraphQLMcpToolConverter(service, resource, mapper);
          case GRPC -> converter = new GrpcMcpToolConverter(service, resource, grpcInvocationProcessor, mapper);
+         case GRAPHQL -> converter = new GraphQLMcpToolConverter(service, resource, graphQLInvocationProcessor, mapper);
          default -> converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
       }
       return converter;

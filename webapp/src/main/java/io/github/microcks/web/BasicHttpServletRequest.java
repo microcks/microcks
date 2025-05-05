@@ -203,12 +203,12 @@ public class BasicHttpServletRequest implements HttpServletRequest {
 
    @Override
    public void login(String s, String s1) throws ServletException {
-
+      // Our basic implementation does not support this method.
    }
 
    @Override
    public void logout() throws ServletException {
-
+      // Our basic implementation does not support this method.
    }
 
    @Override
@@ -243,7 +243,7 @@ public class BasicHttpServletRequest implements HttpServletRequest {
 
    @Override
    public void setCharacterEncoding(String s) throws UnsupportedEncodingException {
-
+      // Our basic implementation does not support this method.
    }
 
    @Override
@@ -323,12 +323,12 @@ public class BasicHttpServletRequest implements HttpServletRequest {
 
    @Override
    public void setAttribute(String s, Object o) {
-
+      // Our basic implementation does not support this method.
    }
 
    @Override
    public void removeAttribute(String s) {
-
+      // Our basic implementation does not support this method.
    }
 
    @Override

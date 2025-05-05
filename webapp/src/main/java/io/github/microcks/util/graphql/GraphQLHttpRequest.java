@@ -69,6 +69,20 @@ public class GraphQLHttpRequest {
       return parameters;
    }
 
+   /**
+    * Build a simple GraphQLHttpRequest with a query and variables.
+    * @param operationName Is used as both query and operationName.
+    * @param variables     The variables to use for the query.
+    * @return The wrapper object
+    */
+   public static GraphQLHttpRequest from(String operationName, JsonNode variables) {
+      GraphQLHttpRequest parameters = new GraphQLHttpRequest();
+      parameters.query = operationName;
+      parameters.operationName = operationName;
+      parameters.variables = variables;
+      return parameters;
+   }
+
    private static JsonNode getVariables(ObjectMapper mapper, String variables) throws Exception {
       if (variables != null) {
          return mapper.readTree(variables);

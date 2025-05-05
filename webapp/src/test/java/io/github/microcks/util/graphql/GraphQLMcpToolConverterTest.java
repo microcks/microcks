@@ -25,6 +25,7 @@ import io.github.microcks.service.ArtifactInfo;
 import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.web.ControllerTestsConfiguration;
+import io.github.microcks.web.GraphQLInvocationProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -57,6 +58,9 @@ public class GraphQLMcpToolConverterTest {
    @Autowired
    private ResourceRepository resourceRepository;
 
+   @Autowired
+   private GraphQLInvocationProcessor graphQLInvocationProcessor;
+
    private Service service;
    private GraphQLMcpToolConverter toolConverter;
 
@@ -70,7 +74,8 @@ public class GraphQLMcpToolConverterTest {
       service = services.getFirst();
       List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
             ResourceType.GRAPHQL_SCHEMA);
-      toolConverter = new GraphQLMcpToolConverter(service, resources.getFirst(), new ObjectMapper());
+      toolConverter = new GraphQLMcpToolConverter(service, resources.getFirst(), graphQLInvocationProcessor,
+            new ObjectMapper());
    }
 
    @Test

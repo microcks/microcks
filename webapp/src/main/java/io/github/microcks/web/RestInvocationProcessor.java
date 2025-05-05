@@ -85,7 +85,7 @@ public class RestInvocationProcessor {
    private Boolean enableInvocationStats;
 
    /**
-    * Build a RestMockInvocationHandler with required dependencies.
+    * Build a RestMockInvocationProcessor with required dependencies.
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
     * @param applicationContext     The Spring application context

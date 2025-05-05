@@ -21,11 +21,16 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.ai.McpToolConverter;
+import io.github.microcks.web.BasicHttpServletRequest;
+import io.github.microcks.web.GraphQLInvocationProcessor;
+import io.github.microcks.web.MockControllerCommons;
+import io.github.microcks.web.MockInvocationContext;
+import io.github.microcks.web.ResponseResult;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import graphql.language.Comment;
 import graphql.language.Definition;
 import graphql.language.Document;
 import graphql.language.FieldDefinition;
@@ -39,6 +44,11 @@ import graphql.schema.idl.TypeInfo;
 import graphql.schema.idl.TypeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEMENT;
@@ -55,18 +65,22 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(GraphQLMcpToolConverter.class);
 
+   private final GraphQLInvocationProcessor invocationProcessor;
    private final ObjectMapper mapper;
 
    private Document graphqlDocument;
 
    /**
     * Build a new instance of GraphQLMcpToolConverter.
-    * @param service  The service to which this converter is attached
-    * @param resource The resource used for GraphQL service conversion
-    * @param mapper   The ObjectMapper to use for JSON serialization
+    * @param service             The service to which this converter is attached
+    * @param resource            The resource used for GraphQL service conversion
+    * @param invocationProcessor The invocation processor to use for processing the call
+    * @param mapper              The ObjectMapper to use for JSON serialization
     */
-   public GraphQLMcpToolConverter(Service service, Resource resource, ObjectMapper mapper) {
+   public GraphQLMcpToolConverter(Service service, Resource resource, GraphQLInvocationProcessor invocationProcessor,
+         ObjectMapper mapper) {
       super(service, resource);
+      this.invocationProcessor = invocationProcessor;
       this.mapper = mapper;
    }
 
@@ -124,6 +138,51 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
 
    @Override
    public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
+      // Build a mock invocation context needed for the invocation processor.
+      MockInvocationContext ic = new MockInvocationContext(service, operation, null);
+
+      try {
+         // De-serialize remaining arguments as the body variables.
+         String body = "{\"variables\": " + mapper.writeValueAsString(request.arguments()) + ", \"query\": \""
+               + operation.getName() + "\" }";
+
+         ObjectNode variables = mapper.convertValue(request.arguments(), ObjectNode.class);
+         GraphQLHttpRequest graphqlRequest = GraphQLHttpRequest.from(operation.getName(), variables);
+
+         // Query parameters are actually the body but simplified to a map of string values.
+         Map<String, String> queryParams = request.arguments().entrySet().stream()
+               .map(entry -> Map.entry(entry.getKey(), entry.getValue().toString()))
+               .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+         // Execute the invocation processor.
+         ResponseResult result = invocationProcessor.processInvocation(ic, System.currentTimeMillis(), queryParams,
+               body, graphqlRequest, new HttpHeaders(),
+               new BasicHttpServletRequest(
+                     "http://localhost:8080/graphql/"
+                           + MockControllerCommons.composeServiceAndVersion(service.getName(), service.getVersion()),
+                     "POST", "", "", Map.of()));
+
+         // Build a Microcks Response from the result.
+         Response response = new Response();
+         response.setStatus(result.status().toString());
+         response.setHeaders(null);
+
+         // As we're no longer tied to the GraphQL semantics, we can get rid of the data/<operationName> wrapper.
+         JsonNode responseNode = mapper.readTree(result.content());
+         if (responseNode.has("data") && responseNode.get("data").has(operation.getName())) {
+            response.setContent(mapper.writeValueAsString(responseNode.get("data").get(operation.getName())));
+         } else {
+            // Default to the full response.
+            response.setContent(new String(result.content(), StandardCharsets.UTF_8));
+         }
+
+         if (result.status().isError()) {
+            response.setFault(true);
+         }
+         return response;
+      } catch (Exception e) {
+         log.error("Exception while processing the MCP call invocation", e);
+      }
       return null;
    }
 
