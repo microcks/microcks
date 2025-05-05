@@ -565,8 +565,6 @@ export class ServiceDetailPageComponent implements OnInit {
     // Manage dev mode.
     if (result.endsWith('localhost:4200')) {
       result = 'http://localhost:8080';
-    } else if (result.includes('localhost:')) {
-      result = 'http://localhost' + result.substring(result.indexOf(':'));
     }
 
     result += '/mcp/';
@@ -584,8 +582,6 @@ export class ServiceDetailPageComponent implements OnInit {
     // Manage dev mode.
     if (result.endsWith('localhost:4200')) {
       result = 'http://localhost:8080';
-    } else if (result.includes('localhost:')) {
-      result = 'http://localhost' + result.substring(result.indexOf(':'));
     }
 
     if (this.resolvedServiceView.service.type === ServiceType.REST) {
