@@ -25,6 +25,7 @@ import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.ai.McpError;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.ai.McpToolConverter;
+import io.github.microcks.util.graphql.GraphQLMcpToolConverter;
 import io.github.microcks.util.grpc.GrpcMcpToolConverter;
 import io.github.microcks.util.openapi.OpenAPIMcpToolConverter;
 
@@ -304,6 +305,7 @@ public class McpController {
       McpToolConverter converter = null;
 
       switch (service.getType()) {
+         case GRAPHQL -> converter = new GraphQLMcpToolConverter(service, resource, mapper);
          case GRPC -> converter = new GrpcMcpToolConverter(service, resource, grpcInvocationProcessor, mapper);
          default -> converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
       }

@@ -557,6 +557,7 @@ export class ServiceDetailPageComponent implements OnInit {
   public isMCPAvailable(): boolean {
     return this.resolvedServiceView.service.type === ServiceType.REST
         || this.resolvedServiceView.service.type === ServiceType.GRPC
+        || this.resolvedServiceView.service.type === ServiceType.GRAPHQL
   }
   public formatMCPUrl(): string {
     let result = document.location.origin;

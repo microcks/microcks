@@ -1,0 +1,251 @@
+/*
+ * Copyright The Microcks Authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.github.microcks.util.graphql;
+
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Resource;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.util.ai.McpSchema;
+import io.github.microcks.util.ai.McpToolConverter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import graphql.language.Comment;
+import graphql.language.Definition;
+import graphql.language.Document;
+import graphql.language.FieldDefinition;
+import graphql.language.InputObjectTypeDefinition;
+import graphql.language.InputValueDefinition;
+import graphql.language.ObjectTypeDefinition;
+import graphql.language.Type;
+import graphql.parser.Parser;
+import graphql.schema.idl.ScalarInfo;
+import graphql.schema.idl.TypeInfo;
+import graphql.schema.idl.TypeUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
+import static io.github.microcks.util.graphql.GraphQLImporter.VALID_OPERATION_TYPES;
+
+/**
+ * Implementation of McpToolConverter for GraphQL services.
+ * @author laurent
+ */
+public class GraphQLMcpToolConverter extends McpToolConverter {
+
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(GraphQLMcpToolConverter.class);
+
+   private final ObjectMapper mapper;
+
+   private Document graphqlDocument;
+
+   /**
+    * Build a new instance of GraphQLMcpToolConverter.
+    * @param service  The service to which this converter is attached
+    * @param resource The resource used for GraphQL service conversion
+    * @param mapper   The ObjectMapper to use for JSON serialization
+    */
+   public GraphQLMcpToolConverter(Service service, Resource resource, ObjectMapper mapper) {
+      super(service, resource);
+      this.mapper = mapper;
+   }
+
+   @Override
+   public String getToolDescription(Operation operation) {
+      try {
+         if (graphqlDocument == null) {
+            graphqlDocument = new Parser().parseDocument(resource.getContent());
+         }
+
+         FieldDefinition operationDefinition = getOperationDefinition(graphqlDocument, operation.getName());
+
+         if (operationDefinition != null && operationDefinition.getComments() != null
+               && !operationDefinition.getComments().isEmpty()) {
+            StringBuilder result = new StringBuilder();
+            operationDefinition.getComments().forEach(comment -> { result.append(comment.getContent()); });
+            return result.toString();
+         }
+      } catch (Exception e) {
+         log.error("Exception while trying to get tool description", e);
+      }
+      return null;
+   }
+
+   @Override
+   public McpSchema.JsonSchema getInputSchema(Operation operation) {
+      ObjectNode inputSchemaNode = mapper.createObjectNode();
+      ObjectNode schemaPropertiesNode = mapper.createObjectNode();
+      ArrayNode requiredPropertiesNode = mapper.createArrayNode();
+
+      // Initialize input schema with empty object.
+      inputSchemaNode.put("type", "object");
+      inputSchemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, schemaPropertiesNode);
+      inputSchemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredPropertiesNode);
+      inputSchemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
+
+      try {
+         if (graphqlDocument == null) {
+            graphqlDocument = new Parser().parseDocument(resource.getContent());
+         }
+         FieldDefinition operationDefinition = getOperationDefinition(graphqlDocument, operation.getName());
+
+         if (operationDefinition != null && operationDefinition.getInputValueDefinitions() != null
+               && !operationDefinition.getInputValueDefinitions().isEmpty()) {
+            for (InputValueDefinition inputValueDef : operationDefinition.getInputValueDefinitions()) {
+               visitProperty(inputValueDef.getName(), inputValueDef.getType(), schemaPropertiesNode,
+                     requiredPropertiesNode);
+            }
+         }
+      } catch (Exception e) {
+         log.error("Exception while trying to get input schema", e);
+      }
+      return mapper.convertValue(inputSchemaNode, McpSchema.JsonSchema.class);
+   }
+
+   @Override
+   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
+      return null;
+   }
+
+   /** Retrieve the correct operation definition in GraphQL schema document. */
+   private static FieldDefinition getOperationDefinition(Document graphqlDocument, String operationName) {
+      for (Definition definition : graphqlDocument.getDefinitions()) {
+         if (definition instanceof ObjectTypeDefinition typeDefinition) {
+            if (VALID_OPERATION_TYPES.contains(typeDefinition.getName().toLowerCase())) {
+               for (FieldDefinition fieldDef : typeDefinition.getFieldDefinitions()) {
+                  if (fieldDef.getName().equals(operationName)) {
+                     return fieldDef;
+                  }
+               }
+            }
+         }
+      }
+      return null;
+   }
+
+   /** Retrieve the correct type definition in GraphQL schema document. */
+   private static ObjectTypeDefinition getTypeDefinition(Document graphqlDocument, String typeName) {
+      for (Definition definition : graphqlDocument.getDefinitions()) {
+         if (definition instanceof ObjectTypeDefinition typeDefinition) {
+            if (typeDefinition.getName().equals(typeName)) {
+               return typeDefinition;
+            }
+         }
+      }
+      return null;
+   }
+
+   /** Retrieve the correct input value definition in GraphQL schema document. */
+   private static InputObjectTypeDefinition getInputValueDefinition(Document graphqlDocument, String typeName) {
+      for (Definition definition : graphqlDocument.getDefinitions()) {
+         if (definition instanceof InputObjectTypeDefinition inputObjectTypeDefinition) {
+            if (inputObjectTypeDefinition.getName().equals(typeName)) {
+               return inputObjectTypeDefinition;
+            }
+         }
+      }
+      return null;
+   }
+
+   /** Visit a property and add it to the input schema eleemnts (properties and required properties). */
+   private void visitProperty(String propertyName, Type propertyType, ObjectNode propertiesNode,
+         ArrayNode requiredPropertiesNode) {
+      if (TypeUtil.isNonNull(propertyType)) {
+         requiredPropertiesNode.add(propertyName);
+         propertyType = TypeUtil.unwrapOne(propertyType);
+      }
+
+      TypeInfo propertyTypeInfo = TypeInfo.typeInfo(propertyType);
+
+      // Check if the field is a scalar.
+      if (ScalarInfo.isGraphqlSpecifiedScalar(propertyTypeInfo.getName())) {
+         ObjectNode propertySchemaNode = mapper.createObjectNode();
+         propertySchemaNode.put("type", "string");
+         if (propertyName != null) {
+            propertiesNode.set(propertyName, propertySchemaNode);
+         } else {
+            // We may have no name if inside an array items.
+            propertiesNode.setAll(propertySchemaNode);
+         }
+
+      } else if (TypeUtil.isList(propertyType)) {
+         // We must convert to a type array.
+         ObjectNode arraySchemaNode = mapper.createObjectNode();
+         ObjectNode subitemsNode = mapper.createObjectNode();
+
+         arraySchemaNode.put("type", "array");
+         arraySchemaNode.set(JSON_SCHEMA_ITEMS_ELEMENT, subitemsNode);
+         propertiesNode.set(propertyName, arraySchemaNode);
+
+         visitProperty(null, TypeUtil.unwrapAll(propertyType), subitemsNode, requiredPropertiesNode);
+      } else {
+         // We must convert to a type object or an input one...
+
+         // Initialize a new subschema node we must visit to resolve all possible references.
+         ObjectNode subschemaNode = mapper.createObjectNode();
+         ObjectNode subpropertiesNode = mapper.createObjectNode();
+         ArrayNode requiredSubpropertiesNode = mapper.createArrayNode();
+
+         subschemaNode.put("type", "object");
+         subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subpropertiesNode);
+         subschemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredSubpropertiesNode);
+         subschemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
+         if (propertyName != null) {
+            propertiesNode.set(propertyName, subschemaNode);
+         } else {
+            // We may have no name if inside an array items.
+            propertiesNode.setAll(subschemaNode);
+         }
+
+         ObjectTypeDefinition typeDef = getTypeDefinition(graphqlDocument, propertyTypeInfo.getName());
+         if (typeDef != null) {
+            visitObjectTypeDefinition(typeDef, subpropertiesNode, requiredSubpropertiesNode);
+         } else {
+            // It could be an input type definition.
+            InputObjectTypeDefinition inputTypeDef = getInputValueDefinition(graphqlDocument,
+                  propertyTypeInfo.getName());
+            if (inputTypeDef != null) {
+               visitInputObjectTypeDefinition(inputTypeDef, subpropertiesNode, requiredSubpropertiesNode);
+            } else {
+               log.warn("Cannot find type definition for " + propertyTypeInfo.getName());
+            }
+         }
+      }
+   }
+
+   /** Visit a GraphQL object type definition and add its properties to the input schema. */
+   private void visitObjectTypeDefinition(ObjectTypeDefinition typeDefinition, ObjectNode propertiesNode,
+         ArrayNode requiredPropertiesNode) {
+      for (FieldDefinition fieldDef : typeDefinition.getFieldDefinitions()) {
+         visitProperty(fieldDef.getName(), fieldDef.getType(), propertiesNode, requiredPropertiesNode);
+      }
+   }
+
+   /** Visit a GraphQL input object type definition and add its properties to the input schema. */
+   private void visitInputObjectTypeDefinition(InputObjectTypeDefinition typeDefinition, ObjectNode propertiesNode,
+         ArrayNode requiredPropertiesNode) {
+      for (InputValueDefinition fieldDef : typeDefinition.getInputValueDefinitions()) {
+         visitProperty(fieldDef.getName(), fieldDef.getType(), propertiesNode, requiredPropertiesNode);
+      }
+   }
+}
