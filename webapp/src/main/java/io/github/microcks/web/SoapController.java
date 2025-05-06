@@ -294,6 +294,7 @@ public class SoapController {
                dispatchContext.requestContext(), response);
 
          // Setting delay to default one if not set.
+         delay = MockControllerCommons.getDelay(headers, delay);
          if (delay == null && rOperation.getDefaultDelay() != null) {
             delay = rOperation.getDefaultDelay();
          }

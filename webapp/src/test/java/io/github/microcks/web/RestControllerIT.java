@@ -403,11 +403,11 @@ class RestControllerIT extends AbstractBaseIT {
 
       // Check a delayed mocked operations.
       long startTime = System.currentTimeMillis();
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200", String.class);
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200",
+            String.class);
       long mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
-      assertTrue(mockedResponseTime >= 200,
-            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertTrue(mockedResponseTime >= 200, "mocked response time delayed: " + mockedResponseTime + "ms");
       assertEquals(200, response.getStatusCode().value());
 
       // Now use a header to specify mock response time.
@@ -416,11 +416,11 @@ class RestControllerIT extends AbstractBaseIT {
       HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
 
       startTime = System.currentTimeMillis();
-      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity, String.class);
+      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity,
+            String.class);
       mockedResponseTime = System.currentTimeMillis() - startTime;
       // Assert that the response time is greater than the delay and greater that .
-      assertTrue(mockedResponseTime >= 400,
-            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertTrue(mockedResponseTime >= 400, "mocked response time delayed: " + mockedResponseTime + "ms");
       assertEquals(200, response.getStatusCode().value());
    }
 }
