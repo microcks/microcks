@@ -395,4 +395,32 @@ class RestControllerIT extends AbstractBaseIT {
       assertEquals(200, response.getStatusCode().value());
       assertEquals("Ok", response.getBody());
    }
+
+   @Test
+   void testDelay() {
+      // Upload PetStore reference artifact.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+
+      // Check a delayed mocked operations.
+      long startTime = System.currentTimeMillis();
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200", String.class);
+      long mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is greater than the delay and greater that .
+      assertTrue(mockedResponseTime >= 200,
+            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+
+      // Now use a header to specify mock response time.
+      HttpHeaders headers = new HttpHeaders();
+      headers.set("x-microcks-delay", "400");
+      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+      startTime = System.currentTimeMillis();
+      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200", HttpMethod.GET, requestEntity, String.class);
+      mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is greater than the delay and greater that .
+      assertTrue(mockedResponseTime >= 400,
+            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+   }
 }
