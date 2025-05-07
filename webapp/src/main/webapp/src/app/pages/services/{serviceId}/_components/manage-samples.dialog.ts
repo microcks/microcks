@@ -163,15 +163,14 @@ export class ManageSamplesDialogComponent implements OnInit {
         }
       });
     });
-    let exchangeSelection = {
+    let exchangeSelection: { serviceId: string; exchanges: Record<string, string[]> } = {
       serviceId: this.serviceView.service.id,
-      //exchanges: {}
-      exchanges: new Map<string, string[]>()
+      exchanges: {}
     };
     Object.keys(this.selectedExchanges).forEach((operationName) => {
-      exchangeSelection.exchanges.set(operationName, []);
+      exchangeSelection.exchanges[operationName] = [];
       Object.keys(this.selectedExchanges[operationName]).forEach((exchangeName) => {
-        exchangeSelection.exchanges.get(operationName)!.push(exchangeName);
+        exchangeSelection.exchanges[operationName]!.push(exchangeName);
       });
     });
 
