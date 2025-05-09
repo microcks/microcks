@@ -17,6 +17,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
 import { ListConfig, ListModule } from '../../../../components/patternfly-ng/list';
@@ -30,6 +31,7 @@ import { IAuthenticationService } from '../../../../services/auth.service';
   styleUrls: ['./manage-samples.dialog.css'],
   imports: [
     CommonModule,
+    BsDropdownModule,
     FormsModule,
     ListModule
   ]
