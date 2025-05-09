@@ -1,5 +1,6 @@
 import http from 'k6/http';
 import grpc from 'k6/net/grpc';
+import ws from 'k6/ws';
 import { check, sleep, group } from 'k6';
 
 // Define the wait time of browse scenario
@@ -289,5 +290,29 @@ export function invokeREST_PetStoreAPI() {
         },
     });
     sleep(1);
+  });
+}
+
+export function asyncAPI_websocketMocks() {
+  group('User Signed-Up WebSocket Test', () => {
+    const url = `ws://${HOST}:8081/api/ws/User+signed-up+API/0.1.50/consumeUserSignedUp`;
+    let messages = [];
+
+    const res = ws.connect(url, {}, (socket) => {
+      socket.on('message', (m) => {
+        messages.push(m);
+      });
+
+      socket.setTimeout(function () {
+        console.log(`Closing the socket forcefully`);
+        socket.close();
+      }, 3000);
+    });
+
+    check(res, { 'handshake 101': (r) => r && r.status === 101 });
+    check(messages, {
+      'contains Laurent Broudoux':    (arr) => arr.some(m => m.includes('Laurent Broudoux')),
+      'contains John Doe':            (arr) => arr.some(m => m.includes('John Doe')),
+    });
   });
 }

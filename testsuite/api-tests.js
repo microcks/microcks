@@ -1,4 +1,4 @@
-import { browse, invokeRESTMocks, invokeGraphQLMocks, invokeSOAPMocks, invokeGRPCMocks, invokeREST_HelloAPIMocks, invokeREST_PetStoreAPI  } from './commons.js';
+import { browse, invokeRESTMocks, invokeGraphQLMocks, invokeSOAPMocks, invokeGRPCMocks, invokeREST_HelloAPIMocks, invokeREST_PetStoreAPI, asyncAPI_websocketMocks } from './commons.js';
 import { sleep } from 'k6';
 
 // The default function runs all tests in sequence
@@ -10,5 +10,6 @@ export default function () {
     invokeGRPCMocks();
     invokeREST_HelloAPIMocks();
     invokeREST_PetStoreAPI();
+    asyncAPI_websocketMocks();
     sleep(2);
 }
