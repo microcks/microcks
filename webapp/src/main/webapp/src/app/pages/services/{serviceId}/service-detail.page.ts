@@ -412,15 +412,14 @@ export class ServiceDetailPageComponent implements OnInit {
     });
     this.modalRef.setClass('modal-lg');
     this.modalRef.content.cleanupSelectionAction.subscribe((selectedExchanges: Record<string, Record<string, boolean>>) => {
-      let exchangeSelection = {
+      let exchangeSelection: { serviceId: string; exchanges: Record<string, string[]> } = {
         serviceId: this.resolvedServiceView.service.id,
-        //exchanges: {}
-        exchanges: new Map<string, string[]>()
+        exchanges: {}
       };
       Object.keys(selectedExchanges).forEach((operationName) => {
-        exchangeSelection.exchanges.set(operationName, []);
+        exchangeSelection.exchanges[operationName] = [];
         Object.keys(selectedExchanges[operationName]).forEach((exchangeName) => {
-          exchangeSelection.exchanges.get(operationName)!.push(exchangeName);
+          exchangeSelection.exchanges[operationName]!.push(exchangeName);
         });
       });
       this.copilotSvc
