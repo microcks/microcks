@@ -87,7 +87,6 @@ export class ImporterWizardComponent implements OnInit, AfterViewInit {
         } as Metadata,
       } as ImportJob;
     }
-    console.log('initialized job', JSON.stringify(this.job));
   }
 
   ngAfterViewInit() {
@@ -143,6 +142,13 @@ export class ImporterWizardComponent implements OnInit, AfterViewInit {
 
   close(): void {
     this.bsModalRef.hide()
+  }
+
+  isNoSecretSelected(): boolean {
+    return this.job.secretRef == undefined || this.job.secretRef?.secretId === 'none';
+  }
+  isSecretSelected(secret: Secret): boolean {
+    return secret.id === this.job.secretRef?.secretId;
   }
 
   isNextDisabled(): boolean {
