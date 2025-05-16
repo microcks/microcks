@@ -26,6 +26,8 @@ import io.github.microcks.service.ServiceService;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.web.ControllerTestsConfiguration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -55,27 +57,35 @@ public class GrpcMcpToolConverterTest {
    @Autowired
    private ResourceRepository resourceRepository;
 
-   private Service service;
-   private GrpcMcpToolConverter toolConverter;
+   private Service servicev1;
+   private Service servicev2;
+   private GrpcMcpToolConverter toolConverterv1;
+   private GrpcMcpToolConverter toolConverterv2;
 
    @BeforeAll
    void setUp() throws Exception {
       // Import the petstore service definition from the GRPC tutorial.
-      File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/petstore-v1.proto");
-      List<Service> services = serviceService.importServiceDefinition(artifactFile, null,
+      File artifactFilev1 = new File("target/test-classes/io/github/microcks/util/grpc/petstore-v1.proto");
+      File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/grpc/petstore-v2.proto");
+      // Extract service and resource. + tool converters.
+      List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
             new ArtifactInfo("petstore-v1.proto", true));
-      // Extract service and resource.
-      service = services.getFirst();
-      List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
+      servicev1 = services.getFirst();
+      List<Resource> resources = resourceRepository.findByServiceIdAndType(servicev1.getId(),
             ResourceType.PROTOBUF_DESCRIPTOR);
-      // Prepare the tool converter.
-      toolConverter = new GrpcMcpToolConverter(service, resources.getFirst(), null, null);
+      toolConverterv1 = new GrpcMcpToolConverter(servicev1, resources.getFirst(), null, new ObjectMapper());
+      // For v2.
+      services = serviceService.importServiceDefinition(artifactFilev2, null,
+            new ArtifactInfo("petstore-v2.proto", true));
+      servicev2 = services.getFirst();
+      resources = resourceRepository.findByServiceIdAndType(servicev2.getId(), ResourceType.PROTOBUF_DESCRIPTOR);
+      toolConverterv2 = new GrpcMcpToolConverter(servicev2, resources.getFirst(), null, new ObjectMapper());
    }
 
    @Test
    void testGetToolName() {
-      for (Operation operation : service.getOperations()) {
-         String toolName = toolConverter.getToolName(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         String toolName = toolConverterv1.getToolName(operation);
          if ("getPets".equals(operation.getName())) {
             assertEquals("getPets", toolName);
          } else if ("searchPets".equals(operation.getName())) {
@@ -91,16 +101,16 @@ public class GrpcMcpToolConverterTest {
    @Test
    void testGetToolDescription() {
       // Tool description is not implemented in GrpcMcpToolConverter.
-      for (Operation operation : service.getOperations()) {
-         String toolDescription = toolConverter.getToolDescription(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         String toolDescription = toolConverterv1.getToolDescription(operation);
          assertNull(toolDescription);
       }
    }
 
    @Test
-   void testGetInputSchema() {
-      for (Operation operation : service.getOperations()) {
-         McpSchema.JsonSchema inputSchema = toolConverter.getInputSchema(operation);
+   void testGetInputSchema() throws Exception {
+      for (Operation operation : servicev1.getOperations()) {
+         McpSchema.JsonSchema inputSchema = toolConverterv1.getInputSchema(operation);
          assertEquals("object", inputSchema.type());
          if ("getPets".equals(operation.getName())) {
             assertTrue(inputSchema.properties().isEmpty());
@@ -112,6 +122,61 @@ public class GrpcMcpToolConverterTest {
             assertTrue(inputSchema.properties().containsKey("name"));
          } else {
             fail("Unknown operation name: " + operation.getName());
+         }
+      }
+
+      String expectedCreatePetSchema = """
+            ---
+            type: "object"
+            properties:
+              name:
+                type: "string"
+              coat:
+                type: "object"
+                properties:
+                  name:
+                    type: "string"
+                  tint:
+                    type: "string"
+                    enum:
+                    - "LIGHT"
+                    - "DARK"
+                required: []
+                additionalProperties: false
+              bugs:
+                type: "array"
+                items:
+                  type: "string"
+                  enum:
+                  - "TICK"
+                  - "FLEA"
+              tags:
+                type: "array"
+                items:
+                  type: "string"
+              foobars:
+                type: "array"
+                items:
+                  type: "object"
+                  properties:
+                    foo:
+                      type: "string"
+                    bar:
+                      type: "string"
+            required: []
+            additionalProperties: false
+            """;
+
+      for (Operation operation : servicev2.getOperations()) {
+         if ("createPet".equals(operation.getName())) {
+            McpSchema.JsonSchema inputSchema = toolConverterv2.getInputSchema(operation);
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            try {
+               String result = mapper.writeValueAsString(inputSchema);
+               assertEquals(expectedCreatePetSchema, result);
+            } catch (Exception e) {
+               fail("Failed to serialize input schema for operation " + operation.getName(), e);
+            }
          }
       }
    }

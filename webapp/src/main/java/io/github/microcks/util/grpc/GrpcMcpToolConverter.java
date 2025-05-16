@@ -26,14 +26,16 @@ import io.github.microcks.web.GrpcResponseResult;
 import io.github.microcks.web.MockInvocationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.Descriptors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
 
 /**
  * Implementation of McpToolConverter for gRPC services.
@@ -70,9 +72,15 @@ public class GrpcMcpToolConverter extends McpToolConverter {
 
    @Override
    public McpSchema.JsonSchema getInputSchema(Operation operation) {
-      Map<String, Object> properties = new HashMap<>();
-      List<String> requiredProperties = new ArrayList<>();
+      ObjectNode inputSchemaNode = mapper.createObjectNode();
+      ObjectNode schemaPropertiesNode = mapper.createObjectNode();
+      ArrayNode requiredPropertiesNode = mapper.createArrayNode();
 
+      // Initialize input schema with empty object.
+      inputSchemaNode.put("type", "object");
+      inputSchemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, schemaPropertiesNode);
+      inputSchemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredPropertiesNode);
+      inputSchemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
       try {
          if (sd == null) {
             sd = GrpcUtil.findServiceDescriptor(resource.getContent(), service.getName());
@@ -80,29 +88,13 @@ public class GrpcMcpToolConverter extends McpToolConverter {
 
          Descriptors.MethodDescriptor md = sd.findMethodByName(operation.getName());
          if (md.getInputType() != null) {
-            // Get the input type descriptor.
-            Descriptors.Descriptor inputType = md.getInputType();
-            for (Descriptors.FieldDescriptor fd : inputType.getFields()) {
-               // Get the field name and type.
-               String fieldName = fd.getName();
-               String fieldType = fd.getType().name();
-
-               // Check if the field is required.
-               if (fd.isRequired()) {
-                  requiredProperties.add(fieldName);
-               }
-               // Check if the field is a scalar type.
-               if (isScalarType(fd.getType())) {
-                  properties.put(fieldName, Map.of("type", toMcpJsonType(fd.getType())));
-               } else {
-                  properties.put(fieldName, new McpSchema.JsonSchema(fieldType, null, null, false));
-               }
-            }
+            // Visit the input type descriptor.
+            visitDescriptor(md.getInputType(), schemaPropertiesNode, requiredPropertiesNode);
          }
       } catch (Exception e) {
          log.error("Exception while trying to get input schema", e);
       }
-      return new McpSchema.JsonSchema("object", properties, requiredProperties, false);
+      return mapper.convertValue(inputSchemaNode, McpSchema.JsonSchema.class);
    }
 
    @Override
@@ -134,11 +126,108 @@ public class GrpcMcpToolConverter extends McpToolConverter {
       return null;
    }
 
+   /** Visit a protobuf message descriptor and extract its properties. */
+   private void visitDescriptor(Descriptors.Descriptor inputType, ObjectNode propertiesNode,
+         ArrayNode requiredPropertiesNode) {
+      for (Descriptors.FieldDescriptor fd : inputType.getFields()) {
+
+         // Get the field name and type.
+         String fieldName = fd.getName();
+
+         // Check if the field is required.
+         if (fd.isRequired()) {
+            requiredPropertiesNode.add(fieldName);
+         }
+
+         // Check if the field is an array/a repeated field.
+         if (fd.isRepeated()) {
+            // We must convert to a type array.
+            ObjectNode arraySchemaNode = mapper.createObjectNode();
+
+            arraySchemaNode.put("type", "array");
+            propertiesNode.set(fieldName, arraySchemaNode);
+
+            if (isMessageType(fd.getType())) {
+               ObjectNode subschemaNode = mapper.createObjectNode();
+               ObjectNode subitemsNode = mapper.createObjectNode();
+               ArrayNode requiredSubitemsPropertiesNode = mapper.createArrayNode();
+
+               visitDescriptor(fd.getMessageType(), subitemsNode, requiredSubitemsPropertiesNode);
+
+               // Add the required properties to the subschema.
+               subschemaNode.put("type", "object");
+               subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subitemsNode);
+
+               // Add the items definition to the current property.
+               arraySchemaNode.set(JSON_SCHEMA_ITEMS_ELEMENT, subschemaNode);
+               propertiesNode.set(fieldName, arraySchemaNode);
+            } else if (isEnumType(fd.getType())) {
+               arraySchemaNode.set(JSON_SCHEMA_ITEMS_ELEMENT, buildEnumTypeNode(fd));
+            } else if (isScalarType(fd.getType())) {
+               arraySchemaNode.set(JSON_SCHEMA_ITEMS_ELEMENT, buildScalarTypeNode(fd));
+            }
+         } else {
+            // Check if the field is an object/message type.
+            if (isMessageType(fd.getType())) {
+               // Initialize a new subschema node we must visit to resolve message fields.
+               ObjectNode subschemaNode = mapper.createObjectNode();
+               ObjectNode subpropertiesNode = mapper.createObjectNode();
+               ArrayNode requiredSubpropertiesNode = mapper.createArrayNode();
+
+               subschemaNode.put("type", "object");
+               subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subpropertiesNode);
+               subschemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredSubpropertiesNode);
+               subschemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
+               propertiesNode.set(fieldName, subschemaNode);
+
+               visitDescriptor(fd.getMessageType(), subpropertiesNode, requiredSubpropertiesNode);
+            } else if (isEnumType(fd.getType())) {
+               propertiesNode.set(fieldName, buildEnumTypeNode(fd));
+            } else if (isScalarType(fd.getType())) {
+               propertiesNode.set(fieldName, buildScalarTypeNode(fd));
+            }
+         }
+      }
+   }
+
+   /** Defines is a protobuf message field type is an message type. */
+   private static boolean isMessageType(Descriptors.FieldDescriptor.Type fieldType) {
+      return fieldType == Descriptors.FieldDescriptor.Type.MESSAGE
+            || fieldType == Descriptors.FieldDescriptor.Type.GROUP;
+   }
+
+   /** Defines is a protobuf message field type is an enum type. */
+   private static boolean isEnumType(Descriptors.FieldDescriptor.Type fieldType) {
+      return fieldType == Descriptors.FieldDescriptor.Type.ENUM;
+   }
+
    /** Defines is a protobuf message field type is a scalar type. */
    private static boolean isScalarType(Descriptors.FieldDescriptor.Type fieldType) {
       return fieldType != Descriptors.FieldDescriptor.Type.MESSAGE
             && fieldType != Descriptors.FieldDescriptor.Type.GROUP
             && fieldType != Descriptors.FieldDescriptor.Type.BYTES;
+   }
+
+   /** Build a leaf node that is an enum type. */
+   private ObjectNode buildEnumTypeNode(Descriptors.FieldDescriptor fd) {
+      ObjectNode subschemaNode = mapper.createObjectNode();
+      ArrayNode enumsArrayNode = mapper.createArrayNode();
+
+      subschemaNode.put("type", toMcpJsonType(fd.getType()));
+      subschemaNode.set("enum", enumsArrayNode);
+
+      // Put the enum values in enum array.
+      for (Descriptors.EnumValueDescriptor evd : fd.getEnumType().getValues()) {
+         enumsArrayNode.add(evd.getName());
+      }
+      return subschemaNode;
+   }
+
+   /** Build a leaf node that is a scalar type. */
+   private ObjectNode buildScalarTypeNode(Descriptors.FieldDescriptor fd) {
+      ObjectNode subschemaNode = mapper.createObjectNode();
+      subschemaNode.put("type", toMcpJsonType(fd.getType()));
+      return subschemaNode;
    }
 
    /** Convert a scalar Field Protobuf type into a MCP Json compatible one. */
