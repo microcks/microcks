@@ -15,6 +15,7 @@
  */
 package io.github.microcks.web;
 
+import io.github.microcks.domain.Header;
 import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
@@ -47,6 +48,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -318,5 +320,12 @@ public class McpController {
          default -> converter = new OpenAPIMcpToolConverter(service, resource, restInvocationProcessor, mapper);
       }
       return converter;
+   }
+
+   private Header getHeader(String name, Set<Header> headers) {
+      if (headers != null) {
+         return headers.stream().filter(header -> header.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
+      }
+      return null;
    }
 }

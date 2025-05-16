@@ -19,9 +19,17 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.web.ResponseResult;
 
+import org.springframework.http.HttpHeaders;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Utility base class for converting a Microcks Service and Operation into an MCP Tool.
@@ -68,4 +76,23 @@ public abstract class McpToolConverter {
     */
    public abstract Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
          Map<String, List<String>> headers);
+
+
+   protected String extractResponseContent(ResponseResult result) throws IOException {
+      String responseContent = null;
+      // Response content can be compressed with gzip if we used the proxy.
+      List<String> encodings = result.headers().get(HttpHeaders.CONTENT_ENCODING);
+      if (encodings != null && encodings.contains("gzip")) {
+         // Unzip the response content.
+         try (BufferedInputStream bis = new BufferedInputStream(
+               new GZIPInputStream(new ByteArrayInputStream(result.content())))) {
+            byte[] uncompressedContent = bis.readAllBytes();
+            responseContent = new String(uncompressedContent, StandardCharsets.UTF_8);
+         }
+      } else {
+         // If no content-encoding header, we can assume it's not compressed.
+         responseContent = new String(result.content(), StandardCharsets.UTF_8);
+      }
+      return responseContent;
+   }
 }

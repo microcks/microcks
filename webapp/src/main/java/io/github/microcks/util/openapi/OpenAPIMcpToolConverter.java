@@ -35,9 +35,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -234,7 +232,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          Response response = new Response();
          response.setStatus(result.status().toString());
          response.setHeaders(null);
-         response.setContent(new String(result.content(), StandardCharsets.UTF_8));
+         response.setContent(extractResponseContent(result));
+
          if (result.status().isError()) {
             response.setFault(true);
          }

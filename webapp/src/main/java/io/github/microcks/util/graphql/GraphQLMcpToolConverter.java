@@ -44,9 +44,7 @@ import graphql.schema.idl.TypeInfo;
 import graphql.schema.idl.TypeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -169,13 +167,15 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
          response.setStatus(result.status().toString());
          response.setHeaders(null);
 
+         String resultContent = extractResponseContent(result);
+
          // As we're no longer tied to the GraphQL semantics, we can get rid of the data/<operationName> wrapper.
-         JsonNode responseNode = mapper.readTree(result.content());
+         JsonNode responseNode = mapper.readTree(resultContent);
          if (responseNode.has("data") && responseNode.get("data").has(operation.getName())) {
             response.setContent(mapper.writeValueAsString(responseNode.get("data").get(operation.getName())));
          } else {
             // Default to the full response.
-            response.setContent(new String(result.content(), StandardCharsets.UTF_8));
+            response.setContent(resultContent);
          }
 
          if (result.status().isError()) {
