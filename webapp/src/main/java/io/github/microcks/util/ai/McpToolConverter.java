@@ -20,6 +20,9 @@ import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * Utility base class for converting a Microcks Service and Operation into an MCP Tool.
  * @author laurent
@@ -60,7 +63,9 @@ public abstract class McpToolConverter {
     * Invoke the tool with the given request and return the response in Microcks domain object.
     * @param operation The operation to invoke the tool on.
     * @param request   The request to send to the tool.
+    * @param headers   Simple representation of headers transmitted at the protocol level.
     * @return The response from the tool in Microcks domain object.
     */
-   public abstract Response getCallResponse(Operation operation, McpSchema.CallToolRequest request);
+   public abstract Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
+         Map<String, List<String>> headers);
 }

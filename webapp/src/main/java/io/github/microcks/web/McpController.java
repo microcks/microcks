@@ -33,10 +33,12 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -44,6 +46,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -141,7 +144,7 @@ public class McpController {
    @PostMapping(value = "/mcp/{service}/{version}/message", produces = "text/event-stream")
    public ResponseEntity<?> handleMessage(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "sessionId") String sessionId,
-         @RequestBody McpSchema.JSONRPCRequest request) {
+         @RequestBody McpSchema.JSONRPCRequest request, @RequestHeader HttpHeaders headers) {
 
       log.info("Handling a {} Mcp request for service {} and version {}", request.method(), serviceName, version);
 
@@ -172,7 +175,7 @@ public class McpController {
             result = handleToolsListRequest(request, service);
          }
          case McpSchema.METHOD_TOOLS_CALL -> {
-            result = handleToolsCallRequest(request, service);
+            result = handleToolsCallRequest(request, headers, service);
          }
       }
 
@@ -247,7 +250,8 @@ public class McpController {
    }
 
    /** Handle the MCP tools/call request. */
-   private Object handleToolsCallRequest(McpSchema.JSONRPCRequest request, Service service) {
+   private Object handleToolsCallRequest(McpSchema.JSONRPCRequest request, Map<String, List<String>> headers,
+         Service service) {
       McpSchema.CallToolRequest toolRequest = mapper.convertValue(request.params(),
             new TypeReference<McpSchema.CallToolRequest>() {
             });
@@ -262,7 +266,7 @@ public class McpController {
          return new McpError("Unknown tool name: " + toolRequest.name());
       }
 
-      Response response = converter.getCallResponse(callOperation, toolRequest);
+      Response response = converter.getCallResponse(callOperation, toolRequest, headers);
 
       return new McpSchema.CallToolResult(List.of(new McpSchema.TextContent(response.getContent())),
             response.isFault());

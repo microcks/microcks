@@ -40,6 +40,7 @@ import org.springframework.http.HttpHeaders;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
@@ -164,7 +165,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
    }
 
    @Override
-   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
+   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
+         Map<String, List<String>> headers) {
       String queryString = "";
       String verb = operation.getName().split(" ")[0];
       String resourcePath = operation.getName().split(" ")[1].trim();
@@ -222,11 +224,11 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
 
          // Create a mock request to pass to the invocation processor.
          ResponseResult result = invocationProcessor.processInvocation(ic, System.currentTimeMillis(), null, body,
-               new HttpHeaders(),
+               headers,
                new BasicHttpServletRequest(
                      "http://localhost:8080/rest/"
                            + MockControllerCommons.composeServiceAndVersion(service.getName(), service.getVersion()),
-                     verb, resourcePath, queryString, queryParams));
+                     verb, resourcePath, queryString, queryParams, headers));
 
          // Build a Microcks Response from the result.
          Response response = new Response();

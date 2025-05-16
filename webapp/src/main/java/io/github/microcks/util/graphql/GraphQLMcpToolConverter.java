@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -137,7 +138,8 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
    }
 
    @Override
-   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
+   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
+         Map<String, List<String>> headers) {
       // Build a mock invocation context needed for the invocation processor.
       MockInvocationContext ic = new MockInvocationContext(service, operation, null);
 
@@ -156,11 +158,11 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
 
          // Execute the invocation processor.
          ResponseResult result = invocationProcessor.processInvocation(ic, System.currentTimeMillis(), queryParams,
-               body, graphqlRequest, new HttpHeaders(),
+               body, graphqlRequest, headers,
                new BasicHttpServletRequest(
                      "http://localhost:8080/graphql/"
                            + MockControllerCommons.composeServiceAndVersion(service.getName(), service.getVersion()),
-                     "POST", "", "", Map.of()));
+                     "POST", "", "", Map.of(), headers));
 
          // Build a Microcks Response from the result.
          Response response = new Response();

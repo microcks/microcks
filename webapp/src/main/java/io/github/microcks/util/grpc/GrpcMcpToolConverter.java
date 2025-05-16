@@ -32,6 +32,9 @@ import com.google.protobuf.Descriptors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+import java.util.Map;
+
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEMENT;
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
@@ -98,7 +101,8 @@ public class GrpcMcpToolConverter extends McpToolConverter {
    }
 
    @Override
-   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
+   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
+         Map<String, List<String>> headers) {
       // Build a mock invocation context needed for the invocation processor.
       MockInvocationContext ic = new MockInvocationContext(service, operation, null);
 
