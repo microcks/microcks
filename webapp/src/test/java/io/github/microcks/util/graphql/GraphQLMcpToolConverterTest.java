@@ -29,6 +29,7 @@ import io.github.microcks.web.GraphQLInvocationProcessor;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import graphql.parser.ParserOptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -61,27 +62,42 @@ public class GraphQLMcpToolConverterTest {
    @Autowired
    private GraphQLInvocationProcessor graphQLInvocationProcessor;
 
-   private Service service;
-   private GraphQLMcpToolConverter toolConverter;
+   private Service servicev1;
+   private Service servicev2;
+   private GraphQLMcpToolConverter toolConverterv1;
+   private GraphQLMcpToolConverter toolConverterv2;
 
    @BeforeAll
    void setUp() throws Exception {
       // Import the petstore service definition from the GraphQL tutorial.
-      File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/petstore-1.0.graphql");
+      File artifactFilev1 = new File("target/test-classes/io/github/microcks/util/graphql/petstore-1.0.graphql");
+      File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/graphql/github.graphql");
       // Extract service and resource. + tool converters.
-      List<Service> services = serviceService.importServiceDefinition(artifactFile, null,
+      List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
             new ArtifactInfo("petstore-1.0.graphql", true));
-      service = services.getFirst();
-      List<Resource> resources = resourceRepository.findByServiceIdAndType(service.getId(),
+      servicev1 = services.getFirst();
+      List<Resource> resources = resourceRepository.findByServiceIdAndType(servicev1.getId(),
             ResourceType.GRAPHQL_SCHEMA);
-      toolConverter = new GraphQLMcpToolConverter(service, resources.getFirst(), graphQLInvocationProcessor,
+      toolConverterv1 = new GraphQLMcpToolConverter(servicev1, resources.getFirst(), graphQLInvocationProcessor,
+            new ObjectMapper());
+
+      // For v2, we need to override parser default settings.
+      ParserOptions.setDefaultParserOptions(
+            ParserOptions.getDefaultParserOptions().transform(opts -> opts.maxCharacters(10000000)));
+      ParserOptions
+            .setDefaultParserOptions(ParserOptions.getDefaultParserOptions().transform(opts -> opts.maxTokens(100000)));
+
+      services = serviceService.importServiceDefinition(artifactFilev2, null, new ArtifactInfo("github.graphql", true));
+      servicev2 = services.getFirst();
+      resources = resourceRepository.findByServiceIdAndType(servicev2.getId(), ResourceType.GRAPHQL_SCHEMA);
+      toolConverterv2 = new GraphQLMcpToolConverter(servicev2, resources.getFirst(), graphQLInvocationProcessor,
             new ObjectMapper());
    }
 
    @Test
    void testGetToolName() {
-      for (Operation operation : service.getOperations()) {
-         String toolName = toolConverter.getToolName(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         String toolName = toolConverterv1.getToolName(operation);
          if ("allPets".equals(operation.getName())) {
             assertEquals("allPets", toolName);
          } else if ("searchPets".equals(operation.getName())) {
@@ -98,10 +114,10 @@ public class GraphQLMcpToolConverterTest {
 
    @Test
    void testGetToolDescription() {
-      for (Operation operation : service.getOperations()) {
-         String toolDescription = toolConverter.getToolDescription(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         String toolDescription = toolConverterv1.getToolDescription(operation);
          if ("allPets".equals(operation.getName())) {
-            assertEquals(" Retrieve all pets from the store. This is not a paginated query.", toolDescription);
+            assertEquals("Retrieve all pets from the store. This is not a paginated query.", toolDescription);
          } else if ("searchPets".equals(operation.getName())) {
             assertNull(toolDescription);
          } else if ("advancedSearchPets".equals(operation.getName())) {
@@ -112,14 +128,21 @@ public class GraphQLMcpToolConverterTest {
             fail("Unknown operation name: " + operation.getName());
          }
       }
+
+      for (Operation operation : servicev2.getOperations()) {
+         String toolDescription = toolConverterv2.getToolDescription(operation);
+         if ("addEnterpriseOrganizationMember".equals(operation.getName())) {
+            assertEquals("Adds enterprise members to an organization within the enterprise.", toolDescription);
+         }
+      }
    }
 
    @Test
    void testGetInputSchema() throws Exception {
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
-      for (Operation operation : service.getOperations()) {
-         McpSchema.JsonSchema inputSchema = toolConverter.getInputSchema(operation);
+      for (Operation operation : servicev1.getOperations()) {
+         McpSchema.JsonSchema inputSchema = toolConverterv1.getInputSchema(operation);
 
          if ("allPets".equals(operation.getName())) {
             assertTrue(inputSchema.properties().isEmpty());
@@ -198,6 +221,44 @@ public class GraphQLMcpToolConverterTest {
                   """, mapper.writeValueAsString(inputSchema));
          } else {
             fail("Unknown operation name: " + operation.getName());
+         }
+      }
+
+      for (Operation operation : servicev2.getOperations()) {
+         McpSchema.JsonSchema inputSchema = toolConverterv2.getInputSchema(operation);
+
+         if ("addEnterpriseOrganizationMember".equals(operation.getName())) {
+            assertFalse(inputSchema.properties().isEmpty());
+
+            assertEquals("""
+                  ---
+                  type: "object"
+                  properties:
+                    input:
+                      type: "object"
+                      properties:
+                        clientMutationId:
+                          type: "string"
+                        enterpriseId:
+                          type: "string"
+                        organizationId:
+                          type: "string"
+                        role:
+                          type: "string"
+                          enum:
+                          - "ADMIN"
+                          - "MEMBER"
+                        userIds:
+                          type: "string"
+                      required:
+                      - "enterpriseId"
+                      - "organizationId"
+                      - "userIds"
+                      additionalProperties: false
+                  required:
+                  - "input"
+                  additionalProperties: false
+                  """, mapper.writeValueAsString(inputSchema));
          }
       }
    }

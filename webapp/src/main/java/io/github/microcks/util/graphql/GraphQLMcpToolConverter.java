@@ -31,12 +31,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import graphql.language.Definition;
 import graphql.language.Document;
+import graphql.language.EnumTypeDefinition;
+import graphql.language.EnumValueDefinition;
 import graphql.language.FieldDefinition;
 import graphql.language.InputObjectTypeDefinition;
 import graphql.language.InputValueDefinition;
 import graphql.language.ObjectTypeDefinition;
+import graphql.language.ScalarTypeDefinition;
 import graphql.language.Type;
 import graphql.parser.Parser;
 import graphql.schema.idl.ScalarInfo;
@@ -54,6 +56,7 @@ import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEM
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
 import static io.github.microcks.util.graphql.GraphQLImporter.VALID_OPERATION_TYPES;
+import static io.github.microcks.util.graphql.JsonSchemaBuilderQueryVisitor.JSON_SCHEMA_ENUM;
 
 /**
  * Implementation of McpToolConverter for GraphQL services.
@@ -89,14 +92,18 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
          if (graphqlDocument == null) {
             graphqlDocument = new Parser().parseDocument(resource.getContent());
          }
+         FieldDefinition operationDefinition = getOperationDefinition(operation.getName());
 
-         FieldDefinition operationDefinition = getOperationDefinition(graphqlDocument, operation.getName());
-
-         if (operationDefinition != null && operationDefinition.getComments() != null
-               && !operationDefinition.getComments().isEmpty()) {
-            StringBuilder result = new StringBuilder();
-            operationDefinition.getComments().forEach(comment -> { result.append(comment.getContent()); });
-            return result.toString();
+         if (operationDefinition != null) {
+            // #1 Look for a description in the operation definition.
+            if (operationDefinition.getDescription() != null) {
+               return operationDefinition.getDescription().content;
+            } else if (operationDefinition.getComments() != null && !operationDefinition.getComments().isEmpty()) {
+               // #2 Look for comments in the operation definition.
+               StringBuilder result = new StringBuilder();
+               operationDefinition.getComments().forEach(comment -> { result.append(comment.getContent()); });
+               return result.toString().trim();
+            }
          }
       } catch (Exception e) {
          log.error("Exception while trying to get tool description", e);
@@ -120,7 +127,7 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
          if (graphqlDocument == null) {
             graphqlDocument = new Parser().parseDocument(resource.getContent());
          }
-         FieldDefinition operationDefinition = getOperationDefinition(graphqlDocument, operation.getName());
+         FieldDefinition operationDefinition = getOperationDefinition(operation.getName());
 
          if (operationDefinition != null && operationDefinition.getInputValueDefinitions() != null
                && !operationDefinition.getInputValueDefinitions().isEmpty()) {
@@ -199,14 +206,12 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
    }
 
    /** Retrieve the correct operation definition in GraphQL schema document. */
-   private static FieldDefinition getOperationDefinition(Document graphqlDocument, String operationName) {
-      for (Definition definition : graphqlDocument.getDefinitions()) {
-         if (definition instanceof ObjectTypeDefinition typeDefinition) {
-            if (VALID_OPERATION_TYPES.contains(typeDefinition.getName().toLowerCase())) {
-               for (FieldDefinition fieldDef : typeDefinition.getFieldDefinitions()) {
-                  if (fieldDef.getName().equals(operationName)) {
-                     return fieldDef;
-                  }
+   private FieldDefinition getOperationDefinition(String operationName) {
+      for (ObjectTypeDefinition typeDefinition : graphqlDocument.getDefinitionsOfType(ObjectTypeDefinition.class)) {
+         if (VALID_OPERATION_TYPES.contains(typeDefinition.getName().toLowerCase())) {
+            for (FieldDefinition fieldDef : typeDefinition.getFieldDefinitions()) {
+               if (fieldDef.getName().equals(operationName)) {
+                  return fieldDef;
                }
             }
          }
@@ -214,31 +219,45 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
       return null;
    }
 
+   /** Check if the type is a scalar type. */
+   private boolean isScalarType(String typeName) {
+      return ScalarInfo.isGraphqlSpecifiedScalar(typeName)
+            || graphqlDocument.getDefinitionsOfType(ScalarTypeDefinition.class).stream()
+                  .anyMatch(scalarTypeDefinition -> scalarTypeDefinition.getName().equals(typeName));
+   }
+
    /** Retrieve the correct type definition in GraphQL schema document. */
-   private static ObjectTypeDefinition getTypeDefinition(Document graphqlDocument, String typeName) {
-      for (Definition definition : graphqlDocument.getDefinitions()) {
-         if (definition instanceof ObjectTypeDefinition typeDefinition) {
-            if (typeDefinition.getName().equals(typeName)) {
-               return typeDefinition;
-            }
+   private ObjectTypeDefinition getTypeDefinition(String typeName) {
+      for (ObjectTypeDefinition typeDefinition : graphqlDocument.getDefinitionsOfType(ObjectTypeDefinition.class)) {
+         if (typeDefinition.getName().equals(typeName)) {
+            return typeDefinition;
+         }
+      }
+      return null;
+   }
+
+   /** Retrieve the correct enum type definition in GraphQL schema document. */
+   private EnumTypeDefinition getEnumTypeDefinition(String typeName) {
+      for (EnumTypeDefinition enumTypeDefinition : graphqlDocument.getDefinitionsOfType(EnumTypeDefinition.class)) {
+         if (enumTypeDefinition.getName().equals(typeName)) {
+            return enumTypeDefinition;
          }
       }
       return null;
    }
 
    /** Retrieve the correct input value definition in GraphQL schema document. */
-   private static InputObjectTypeDefinition getInputValueDefinition(Document graphqlDocument, String typeName) {
-      for (Definition definition : graphqlDocument.getDefinitions()) {
-         if (definition instanceof InputObjectTypeDefinition inputObjectTypeDefinition) {
-            if (inputObjectTypeDefinition.getName().equals(typeName)) {
-               return inputObjectTypeDefinition;
-            }
+   private InputObjectTypeDefinition getInputValueDefinition(String typeName) {
+      for (InputObjectTypeDefinition inputObjectTypeDefinition : graphqlDocument
+            .getDefinitionsOfType(InputObjectTypeDefinition.class)) {
+         if (inputObjectTypeDefinition.getName().equals(typeName)) {
+            return inputObjectTypeDefinition;
          }
       }
       return null;
    }
 
-   /** Visit a property and add it to the input schema eleemnts (properties and required properties). */
+   /** Visit a property and add it to the input schema elements (properties and required properties). */
    private void visitProperty(String propertyName, Type propertyType, ObjectNode propertiesNode,
          ArrayNode requiredPropertiesNode) {
       if (TypeUtil.isNonNull(propertyType)) {
@@ -249,7 +268,7 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
       TypeInfo propertyTypeInfo = TypeInfo.typeInfo(propertyType);
 
       // Check if the field is a scalar.
-      if (ScalarInfo.isGraphqlSpecifiedScalar(propertyTypeInfo.getName())) {
+      if (isScalarType(propertyTypeInfo.getName())) {
          ObjectNode propertySchemaNode = mapper.createObjectNode();
          propertySchemaNode.put("type", "string");
          if (propertyName != null) {
@@ -270,35 +289,51 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
 
          visitProperty(null, TypeUtil.unwrapAll(propertyType), subitemsNode, requiredPropertiesNode);
       } else {
-         // We must convert to a type object or an input one...
-
-         // Initialize a new subschema node we must visit to resolve all possible references.
-         ObjectNode subschemaNode = mapper.createObjectNode();
-         ObjectNode subpropertiesNode = mapper.createObjectNode();
-         ArrayNode requiredSubpropertiesNode = mapper.createArrayNode();
-
-         subschemaNode.put("type", "object");
-         subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subpropertiesNode);
-         subschemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredSubpropertiesNode);
-         subschemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
-         if (propertyName != null) {
-            propertiesNode.set(propertyName, subschemaNode);
-         } else {
-            // We may have no name if inside an array items.
-            propertiesNode.setAll(subschemaNode);
-         }
-
-         ObjectTypeDefinition typeDef = getTypeDefinition(graphqlDocument, propertyTypeInfo.getName());
-         if (typeDef != null) {
-            visitObjectTypeDefinition(typeDef, subpropertiesNode, requiredSubpropertiesNode);
-         } else {
-            // It could be an input type definition.
-            InputObjectTypeDefinition inputTypeDef = getInputValueDefinition(graphqlDocument,
-                  propertyTypeInfo.getName());
-            if (inputTypeDef != null) {
-               visitInputObjectTypeDefinition(inputTypeDef, subpropertiesNode, requiredSubpropertiesNode);
+         // We must check if it's an enum type.
+         EnumTypeDefinition enumTypeDefinition = getEnumTypeDefinition(propertyTypeInfo.getName());
+         if (enumTypeDefinition != null) {
+            ObjectNode enumSchemaNode = mapper.createObjectNode();
+            enumSchemaNode.put("type", "string");
+            ArrayNode enumValuesNode = mapper.createArrayNode();
+            for (EnumValueDefinition valueDef : enumTypeDefinition.getEnumValueDefinitions()) {
+               enumValuesNode.add(valueDef.getName());
+            }
+            enumSchemaNode.set(JSON_SCHEMA_ENUM, enumValuesNode);
+            if (propertyName != null) {
+               propertiesNode.set(propertyName, enumSchemaNode);
             } else {
-               log.warn("Cannot find type definition for " + propertyTypeInfo.getName());
+               // We may have no name if inside an array items.
+               propertiesNode.setAll(enumSchemaNode);
+            }
+         } else {
+            // So finally, it should be an object type.
+            // Initialize a new subschema node we must visit to resolve all possible references.
+            ObjectNode subschemaNode = mapper.createObjectNode();
+            ObjectNode subpropertiesNode = mapper.createObjectNode();
+            ArrayNode requiredSubpropertiesNode = mapper.createArrayNode();
+
+            subschemaNode.put("type", "object");
+            subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subpropertiesNode);
+            subschemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredSubpropertiesNode);
+            subschemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
+            if (propertyName != null) {
+               propertiesNode.set(propertyName, subschemaNode);
+            } else {
+               // We may have no name if inside an array items.
+               propertiesNode.setAll(subschemaNode);
+            }
+
+            ObjectTypeDefinition typeDef = getTypeDefinition(propertyTypeInfo.getName());
+            if (typeDef != null) {
+               visitObjectTypeDefinition(typeDef, subpropertiesNode, requiredSubpropertiesNode);
+            } else {
+               // It could be an input type definition.
+               InputObjectTypeDefinition inputTypeDef = getInputValueDefinition(propertyTypeInfo.getName());
+               if (inputTypeDef != null) {
+                  visitInputObjectTypeDefinition(inputTypeDef, subpropertiesNode, requiredSubpropertiesNode);
+               } else {
+                  log.warn("Cannot find type definition for {}", propertyTypeInfo.getName());
+               }
             }
          }
       }
@@ -320,16 +355,16 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
       }
    }
 
-   /** */
+   /** Build a complete a query with all the fields to fetch. */
    private String buildCompleteGraphQLQuery(Operation operation, McpSchema.CallToolRequest request) {
       // Extract the type information from the operation.
       if (graphqlDocument == null) {
          graphqlDocument = new Parser().parseDocument(resource.getContent());
       }
-      FieldDefinition operationDefinition = getOperationDefinition(graphqlDocument, operation.getName());
+      FieldDefinition operationDefinition = getOperationDefinition(operation.getName());
       Type operationOutputType = operationDefinition.getType();
       TypeInfo operationOutputTypeInfo = TypeInfo.typeInfo(operationOutputType);
-      ObjectTypeDefinition typeDef = getTypeDefinition(graphqlDocument, operationOutputTypeInfo.getName());
+      ObjectTypeDefinition typeDef = getTypeDefinition(operationOutputTypeInfo.getName());
 
       StringBuilder queryBuilder = new StringBuilder();
       queryBuilder.append("query {");
@@ -344,8 +379,14 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
       if (typeDef != null) {
          for (FieldDefinition fd : typeDef.getFieldDefinitions()) {
             TypeInfo fdTypeInfo = TypeInfo.typeInfo(fd.getType());
-            if (ScalarInfo.isGraphqlSpecifiedScalar(fdTypeInfo.getName())) {
+            if (isScalarType(fdTypeInfo.getName())) {
                queryBuilder.append(fd.getName()).append("\\n");
+            } else {
+               // We must check if it's an enum type.
+               EnumTypeDefinition enumTypeDefinition = getEnumTypeDefinition(fdTypeInfo.getName());
+               if (enumTypeDefinition != null) {
+                  queryBuilder.append(fd.getName()).append("\\n");
+               }
             }
          }
       }
