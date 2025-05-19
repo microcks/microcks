@@ -17,6 +17,8 @@ package io.github.microcks.config;
 
 import graphql.parser.ParserOptions;
 import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +30,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class GraphQLParserConfiguration {
 
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(GraphQLParserConfiguration.class);
+
    @Value("${graphql.parser.max-characters:#{null}}")
    private Integer maxCharacters;
 
@@ -38,10 +43,12 @@ public class GraphQLParserConfiguration {
    public void configureGraphQLParser() {
       // Override the default ParserOptions with the ones defined in application.properties.
       if (maxCharacters != null) {
+         log.info("Setting GraphQLParser maxChart to: {}", maxCharacters);
          ParserOptions.setDefaultParserOptions(
                ParserOptions.getDefaultParserOptions().transform(opts -> opts.maxCharacters(maxCharacters)));
       }
       if (maxTokens != null) {
+         log.info("Setting GraphQLParser maxTokens to: {}", maxTokens);
          ParserOptions.setDefaultParserOptions(
                ParserOptions.getDefaultParserOptions().transform(opts -> opts.maxTokens(maxTokens)));
       }
