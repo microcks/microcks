@@ -293,6 +293,77 @@ export function invokeREST_PetStoreAPI() {
   });
 }
 
+export function authenticate() {
+  const url = 'http://localhost:18080/realms/microcks/protocol/openid-connect/token';
+  const authHeader = 'Basic bWljcm9ja3Mtc2VydmljZWFjY291bnQ6YWI1NGQzMjktZTQzNS00MWFlLWE5MDAtZWM2YjNmZTE1YzU0Cg=';
+
+  const headers = {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': authHeader,
+  };
+
+  const payload = {
+      grant_type: 'client_credentials',
+  };
+
+  const response = http.post(url, payload, { headers: headers });
+
+  check(response, {
+      'authentication successful': (r) => r.status === 200,
+      'access token is present': (r) => r.json('access_token') !== '',
+  });
+
+  return response.json('access_token');
+}
+
+const TESTS = [
+  { path: '/api/features/config', expect: 200 },
+  { path: '/api/keycloak/config', expect: 200 },
+  { path: '/api/services', expect: 401 },
+  { path: '/api/jobs',     expect: 401 },
+];
+
+export function ownAPIsNoAuth () {
+  group("Microcks' own APIs without authentication", () => {
+    const responses = http.batch(
+      TESTS.map((t) => ['GET', BASE_URL + t.path])
+    );
+
+    TESTS.forEach((t, i) => {
+      check(responses[i], {
+        [`GET ${t.path} returns 200`]: (r) => r.status === 200,
+      });
+    });
+  });
+}
+
+export function ownAPIsAuth () {
+  group("Microcks' own APIs with authentication", () => {
+    const responses = http.batch(
+      TESTS.map((t) => ['GET', BASE_URL + t.path])
+    );
+
+    TESTS.forEach((t, i) => {
+      check(responses[i], {
+        [`GET ${t.path} returns ${t.expect}`]: (r) => r.status === t.expect,
+      });
+    });
+
+    const token = authenticate();
+    const authHeaders = { headers: { Authorization: `Bearer ${token}` } };
+
+    const auth_responses = http.batch(
+      TESTS.map((t) => ['GET', `${BASE_URL}${t.path}`, null, authHeaders])
+    );
+
+    TESTS.forEach((t, i) => {
+      check(auth_responses[i], {
+        [`GET ${t.path} auth returns 200`]: (r) => r.status === 200,
+      });
+    });
+  });
+}
+
 export function asyncAPI_websocketMocks() {
   group('User Signed-Up WebSocket Test', () => {
     const url = `ws://${HOST}:8081/api/ws/User+signed-up+API/0.1.50/consumeUserSignedUp`;
