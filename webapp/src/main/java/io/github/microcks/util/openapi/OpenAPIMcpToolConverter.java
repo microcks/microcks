@@ -214,13 +214,15 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          }
       }
 
+      // Create a mock request to pass to the invocation processor.
       MockInvocationContext ic = new MockInvocationContext(service, operation, resourcePath);
 
       try {
          // Serialize remaining arguments as the request body.
          String body = mapper.writeValueAsString(request.arguments());
 
-         // Create a mock request to pass to the invocation processor.
+         // Execute the invocation processor after having cleaned the headers to propagate.
+         headers = sanitizeHttpHeaders(headers);
          ResponseResult result = invocationProcessor.processInvocation(ic, System.currentTimeMillis(), null, body,
                headers,
                new BasicHttpServletRequest(

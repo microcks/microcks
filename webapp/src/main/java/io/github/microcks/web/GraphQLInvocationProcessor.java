@@ -153,6 +153,7 @@ public class GraphQLInvocationProcessor {
       Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules, "",
             proxyFallback, request, response);
       if (proxyUrl.isPresent()) {
+         // Translate generic headers into Spring ones.
          HttpHeaders httpHeaders = new HttpHeaders();
          httpHeaders.putAll(headers);
 

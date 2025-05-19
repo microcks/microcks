@@ -149,6 +149,7 @@ public class RestInvocationProcessor {
          // Delay response here as the returning content will be returned directly.
          MockControllerCommons.waitForDelay(startTime, delay);
 
+         // Translate generic headers into Spring ones.
          HttpHeaders httpHeaders = new HttpHeaders();
          httpHeaders.putAll(headers);
 

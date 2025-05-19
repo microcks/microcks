@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -77,7 +78,13 @@ public abstract class McpToolConverter {
    public abstract Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
          Map<String, List<String>> headers);
 
+   /** Prepare the Http headers by sanitizing them. */
+   protected Map<String, List<String>> sanitizeHttpHeaders(Map<String, List<String>> headers) {
+      return headers.entrySet().stream().filter(entry -> !"content-length".equalsIgnoreCase(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+   }
 
+   /** Depending on result encoding, extract the response content as a string. */
    protected String extractResponseContent(ResponseResult result) throws IOException {
       String responseContent = null;
       // Response content can be compressed with gzip if we used the proxy.
