@@ -60,9 +60,6 @@ public class RestController {
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
    private static final SafeLogger log = SafeLogger.getLogger(RestController.class);
 
-   /** The header name used to specify a wait delay in the request. */
-   public static final String X_MICROCKS_DELAY_HEADER = "x-microcks-delay";
-
    private final ServiceRepository serviceRepository;
    private final ResourceRepository resourceRepository;
    private final RestInvocationProcessor invocationProcessor;
@@ -126,7 +123,8 @@ public class RestController {
       log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
             ic.operation().getDispatcherRules());
 
-      return processMockInvocationRequest(ic, startTime, getDelay(headers, delay), body, headers, request, method);
+      return processMockInvocationRequest(ic, startTime, MockControllerCommons.getDelay(headers, delay), body, headers,
+            request, method);
    }
 
    @SuppressWarnings("java:S3752")
@@ -188,7 +186,8 @@ public class RestController {
          }
       }
 
-      return processMockInvocationRequest(ic, startTime, getDelay(headers, delay), body, headers, request, method);
+      return processMockInvocationRequest(ic, startTime, MockControllerCommons.getDelay(headers, delay), body, headers,
+            request, method);
    }
 
    /** Get the errors from OpenAPI/Swagger schema validation. */
@@ -225,19 +224,6 @@ public class RestController {
                validationResourceUrl);
       }
       return errors;
-   }
-
-   /** Retrieve delay header or default to the one provided as parameter. */
-   private Long getDelay(HttpHeaders headers, Long delayParameter) {
-      if (headers.containsKey(X_MICROCKS_DELAY_HEADER)) {
-         String delayHeader = headers.getFirst(X_MICROCKS_DELAY_HEADER);
-         try {
-            return Long.parseLong(delayHeader);
-         } catch (NumberFormatException nfe) {
-            log.debug("Invalid delay header value: {}", delayHeader);
-         }
-      }
-      return delayParameter;
    }
 
    /** Process REST mock invocation. */

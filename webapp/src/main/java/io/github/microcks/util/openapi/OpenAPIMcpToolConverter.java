@@ -35,11 +35,10 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
@@ -164,7 +163,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
    }
 
    @Override
-   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
+   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
+         Map<String, List<String>> headers) {
       String queryString = "";
       String verb = operation.getName().split(" ")[0];
       String resourcePath = operation.getName().split(" ")[1].trim();
@@ -214,25 +214,28 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          }
       }
 
+      // Create a mock request to pass to the invocation processor.
       MockInvocationContext ic = new MockInvocationContext(service, operation, resourcePath);
 
       try {
          // Serialize remaining arguments as the request body.
          String body = mapper.writeValueAsString(request.arguments());
 
-         // Create a mock request to pass to the invocation processor.
+         // Execute the invocation processor after having cleaned the headers to propagate.
+         headers = sanitizeHttpHeaders(headers);
          ResponseResult result = invocationProcessor.processInvocation(ic, System.currentTimeMillis(), null, body,
-               new HttpHeaders(),
+               headers,
                new BasicHttpServletRequest(
                      "http://localhost:8080/rest/"
                            + MockControllerCommons.composeServiceAndVersion(service.getName(), service.getVersion()),
-                     verb, resourcePath, queryString, queryParams));
+                     verb, resourcePath, queryString, queryParams, headers));
 
          // Build a Microcks Response from the result.
          Response response = new Response();
          response.setStatus(result.status().toString());
          response.setHeaders(null);
-         response.setContent(new String(result.content(), StandardCharsets.UTF_8));
+         response.setContent(extractResponseContent(result));
+
          if (result.status().isError()) {
             response.setFault(true);
          }

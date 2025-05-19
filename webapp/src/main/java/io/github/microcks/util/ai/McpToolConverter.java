@@ -19,6 +19,18 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
+import io.github.microcks.web.ResponseResult;
+
+import org.springframework.http.HttpHeaders;
+
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Utility base class for converting a Microcks Service and Operation into an MCP Tool.
@@ -60,7 +72,34 @@ public abstract class McpToolConverter {
     * Invoke the tool with the given request and return the response in Microcks domain object.
     * @param operation The operation to invoke the tool on.
     * @param request   The request to send to the tool.
+    * @param headers   Simple representation of headers transmitted at the protocol level.
     * @return The response from the tool in Microcks domain object.
     */
-   public abstract Response getCallResponse(Operation operation, McpSchema.CallToolRequest request);
+   public abstract Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
+         Map<String, List<String>> headers);
+
+   /** Prepare the Http headers by sanitizing them. */
+   protected Map<String, List<String>> sanitizeHttpHeaders(Map<String, List<String>> headers) {
+      return headers.entrySet().stream().filter(entry -> !"content-length".equalsIgnoreCase(entry.getKey()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+   }
+
+   /** Depending on result encoding, extract the response content as a string. */
+   protected String extractResponseContent(ResponseResult result) throws IOException {
+      String responseContent = null;
+      // Response content can be compressed with gzip if we used the proxy.
+      List<String> encodings = result.headers().get(HttpHeaders.CONTENT_ENCODING);
+      if (encodings != null && encodings.contains("gzip")) {
+         // Unzip the response content.
+         try (BufferedInputStream bis = new BufferedInputStream(
+               new GZIPInputStream(new ByteArrayInputStream(result.content())))) {
+            byte[] uncompressedContent = bis.readAllBytes();
+            responseContent = new String(uncompressedContent, StandardCharsets.UTF_8);
+         }
+      } else {
+         // If no content-encoding header, we can assume it's not compressed.
+         responseContent = new String(result.content(), StandardCharsets.UTF_8);
+      }
+      return responseContent;
+   }
 }

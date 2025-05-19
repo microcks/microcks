@@ -29,7 +29,7 @@
             </div>
           </div>
           <div class="control-group">
-            <h5>Is a Secondary Artifact ?</h5>
+            <h5>Is a Secondary Artifact?</h5>
             <label class="control-label" for="mainArtifact">
               <input type="checkbox" id="mainArtifact" name="mainArtifact" (ngModel)="!job.mainArtifact"
                 (ngModelChange)="updateMainArtifact($event)" /> &nbsp; Just merge examples into existing API | Service
@@ -52,7 +52,7 @@
             </label>
           </div>
           <div class="control-group">
-            <h5>Use Authentication secret ?</h5>
+            <h5>Use Authentication secret?</h5>
             <label for="useSecret">
               <input type="checkbox" id="useSecret" name="useSecret" [(ngModel)]="useSecret"
                 (change)="updateJobProperties()" /> &nbsp; Select an Authentication Secret (should be an existing one).
@@ -62,8 +62,8 @@
             <div class="controls">
               <select class="form-control" name="secret"
                 (change)="updateSecretProperties($event)">
-                <option value="none">None</option>
-                <option *ngFor="let secret of secrets" [value]="secret.id">{{ secret.name }} </option>
+                <option value="none" [selected]="isNoSecretSelected()">None</option>
+                <option *ngFor="let secret of secrets" [value]="secret.id" [selected]="isSecretSelected(secret)">{{ secret.name }} </option>
               </select>
               <p class="help-block">Pick the authentication secret that will be associated to this Import Job.</p>
             </div>

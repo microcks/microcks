@@ -44,9 +44,8 @@ import graphql.schema.idl.TypeInfo;
 import graphql.schema.idl.TypeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 
-import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -137,14 +136,24 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
    }
 
    @Override
-   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request) {
+   public Response getCallResponse(Operation operation, McpSchema.CallToolRequest request,
+         Map<String, List<String>> headers) {
       // Build a mock invocation context needed for the invocation processor.
       MockInvocationContext ic = new MockInvocationContext(service, operation, null);
 
       try {
+         String query = null;
+         if (operation.getDispatcher() != null && !operation.getDispatcher().startsWith("PROXY")) {
+            // We target Microcks so query can be simple due to permissive parsing.
+            query = operation.getName();
+         } else {
+            // We target a real GraphQL service so query, we must build a full and correct query.
+            query = buildCompleteGraphQLQuery(operation, request).replace("\"", "\\\"");
+         }
+
          // De-serialize remaining arguments as the body variables.
-         String body = "{\"variables\": " + mapper.writeValueAsString(request.arguments()) + ", \"query\": \""
-               + operation.getName() + "\" }";
+         String body = "{\"variables\": " + mapper.writeValueAsString(request.arguments()) + ", \"query\": \"" + query
+               + "\" }";
 
          ObjectNode variables = mapper.convertValue(request.arguments(), ObjectNode.class);
          GraphQLHttpRequest graphqlRequest = GraphQLHttpRequest.from(operation.getName(), variables);
@@ -154,26 +163,29 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
                .map(entry -> Map.entry(entry.getKey(), entry.getValue().toString()))
                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
-         // Execute the invocation processor.
+         // Execute the invocation processor after having cleaned the headers to propagate.
+         headers = sanitizeHttpHeaders(headers);
          ResponseResult result = invocationProcessor.processInvocation(ic, System.currentTimeMillis(), queryParams,
-               body, graphqlRequest, new HttpHeaders(),
+               body, graphqlRequest, headers,
                new BasicHttpServletRequest(
                      "http://localhost:8080/graphql/"
                            + MockControllerCommons.composeServiceAndVersion(service.getName(), service.getVersion()),
-                     "POST", "", "", Map.of()));
+                     "POST", "", "", Map.of(), headers));
 
          // Build a Microcks Response from the result.
          Response response = new Response();
          response.setStatus(result.status().toString());
          response.setHeaders(null);
 
+         String resultContent = extractResponseContent(result);
+
          // As we're no longer tied to the GraphQL semantics, we can get rid of the data/<operationName> wrapper.
-         JsonNode responseNode = mapper.readTree(result.content());
+         JsonNode responseNode = mapper.readTree(resultContent);
          if (responseNode.has("data") && responseNode.get("data").has(operation.getName())) {
             response.setContent(mapper.writeValueAsString(responseNode.get("data").get(operation.getName())));
          } else {
             // Default to the full response.
-            response.setContent(new String(result.content(), StandardCharsets.UTF_8));
+            response.setContent(resultContent);
          }
 
          if (result.status().isError()) {
@@ -306,5 +318,40 @@ public class GraphQLMcpToolConverter extends McpToolConverter {
       for (InputValueDefinition fieldDef : typeDefinition.getInputValueDefinitions()) {
          visitProperty(fieldDef.getName(), fieldDef.getType(), propertiesNode, requiredPropertiesNode);
       }
+   }
+
+   /** */
+   private String buildCompleteGraphQLQuery(Operation operation, McpSchema.CallToolRequest request) {
+      // Extract the type information from the operation.
+      if (graphqlDocument == null) {
+         graphqlDocument = new Parser().parseDocument(resource.getContent());
+      }
+      FieldDefinition operationDefinition = getOperationDefinition(graphqlDocument, operation.getName());
+      Type operationOutputType = operationDefinition.getType();
+      TypeInfo operationOutputTypeInfo = TypeInfo.typeInfo(operationOutputType);
+      ObjectTypeDefinition typeDef = getTypeDefinition(graphqlDocument, operationOutputTypeInfo.getName());
+
+      StringBuilder queryBuilder = new StringBuilder();
+      queryBuilder.append("query {");
+      queryBuilder.append("  ").append(operation.getName()).append("(");
+
+      // Append the arguments to the operation.
+      queryBuilder.append(request.arguments().entrySet().stream()
+            .map(entry -> entry.getKey() + ": \"" + entry.getValue() + "\"").collect(Collectors.joining(", ", "", "")));
+
+      queryBuilder.append("){\\n");
+
+      if (typeDef != null) {
+         for (FieldDefinition fd : typeDef.getFieldDefinitions()) {
+            TypeInfo fdTypeInfo = TypeInfo.typeInfo(fd.getType());
+            if (ScalarInfo.isGraphqlSpecifiedScalar(fdTypeInfo.getName())) {
+               queryBuilder.append(fd.getName()).append("\\n");
+            }
+         }
+      }
+
+      // Finalize query before returning it.
+      queryBuilder.append("}}");
+      return queryBuilder.toString();
    }
 }

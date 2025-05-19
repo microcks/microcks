@@ -15,6 +15,8 @@
  */
 package io.github.microcks.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -23,6 +25,7 @@ import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -30,6 +33,8 @@ import java.util.List;
  */
 @org.springframework.stereotype.Service
 public class ProxyService {
+
+   private static final Logger log = LoggerFactory.getLogger(ProxyService.class);
 
    private static final RestTemplate restTemplate = new RestTemplate();
 
@@ -43,8 +48,22 @@ public class ProxyService {
     */
    public ResponseEntity<byte[]> callExternal(URI externalUrl, HttpMethod method, HttpHeaders headers, String body) {
       headers.put("Host", List.of(externalUrl.getHost()));
+
+      if (log.isDebugEnabled()) {
+         log.debug("Proxy request headers: {}", headers);
+         log.debug("Proxy request body: {}", body);
+      }
+
       try {
-         return restTemplate.exchange(externalUrl, method, new HttpEntity<>(body, headers), byte[].class);
+         ResponseEntity<byte[]> response = restTemplate.exchange(externalUrl, method, new HttpEntity<>(body, headers),
+               byte[].class);
+
+         if (log.isDebugEnabled()) {
+            log.debug("Proxy returned: {}", response.getStatusCode());
+            log.debug("Proxy response headers: {}", response.getHeaders());
+            log.debug("Proxy response body: {}", new String(response.getBody(), StandardCharsets.UTF_8));
+         }
+         return response;
       } catch (RestClientResponseException ex) {
          return new ResponseEntity<>(ex.getResponseBodyAsByteArray(), ex.getResponseHeaders(), ex.getStatusCode());
       }

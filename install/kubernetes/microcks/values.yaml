@@ -1,23 +1,49 @@
 appName: microcks
 ingresses: true
 
+# You can disable ingresses and use HTTPRoute + GRPCRoutes resources instead.
+gatewayRoutes: false
+# When using HTTPRoute resources, you can set the Gateway to use.
+gatewayRefName: default
+# No value for namespace means current namespace.
+gatewayRefNamespace:
+gatewayRefSectionName: https
+grpcGatewayRefSectionName: grpc
+
 microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
+
   #ingressSecretRef: my-secret-for-microcks-ingress
+  #ingressClassName: nginx
+
+  # Ingress annotations are also used for HTTPRoute resources.
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
-  #ingressClassName: nginx
+
+  # Uncomment to use a custom Gateway for Microcks HTTPRoute.
+  #gatewayRefName: my-gateway
+  #gatewayRefNamespace:
+  #gatewayRefSectionName: https
 
   grpcEnableTLS: true
   #grpcSecretRef: my-secret-for-microcks-grpc
   #grpcIngressClassName: nginx
-    #grpcIngressAnnotations:
-  #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
-  #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
 
+  # gRPC ingress annotations are also used for GRPCRoute resources.
+  #grpcIngressAnnotations:
+    #myclass.ingress.kubernetes.io/backend-protocol: "GRPC"
+    #myclass.ingress.kubernetes.io/ssl-passthrough: "true"
+
+  # Uncomment to use a custom Gateway for Microcks GRPCRoute.
+  #grpcGatewayRefName: my-gateway
+  #grpcGatewayRefNamespace:
+  #grpcGatewayRefSectionName: https
+
+  # Useless if gatewayRoutes are enabled instead of ingresses.
   generateCert: true
+
   image:
     registry: quay.io
     repository: microcks/microcks
@@ -60,7 +86,7 @@ microcks:
   mockInvocationStats: true
 
   # Custom secret for Microcks
-  # It can be usec to deploy a keystore to add certificats to trust sso connection with keycloak.
+  # It can be used to deploy a keystore to add certificate to trust sso connection with keycloak.
   # In this case: Use an existing secret with the provided keystore.
   # Don't forget to add java options like that if your secret is a keystore:
   # JAVA_OPTIONS: "-Djavax.net.ssl.trustStore=/deployments/config/custom/secret/KEYSTORE -Djavax.net.ssl.trustStorePassword=XXXXX"
@@ -91,14 +117,26 @@ keycloak:
   # If you use an older external Keycloak instance, url must include the '/auth' path
   url: keycloak-microcks.192.168.99.100.nip.io
   #privateUrl: http://microcks-keycloak.microcks.svc.cluster.local:8080
+
   #ingressSecretRef: my-secret-for-keycloak-ingress
+  #ingressClassName: nginx
+
+  # Ingress annotations are also used for HTTPRoute resources.
   #ingressAnnotations:
     #cert-manager.io/issuer: my-cert-issuer
     #kubernetes.io/tls-acme: "true"
-  #ingressClassName: nginx
+
+  # Uncomment to use a custom Gateway for Keycloak HTTPRoute.
+  #gatewayRefName: my-gateway
+  #gatewayRefNamespace:
+  #gatewayRefSectionName: https
+
+  # Useless if gatewayRoutes are enabled instead of ingresses.
+  generateCert: true
+
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
-  generateCert: true
+
   image:
     registry: quay.io
     repository: keycloak/keycloak
@@ -337,10 +375,19 @@ features:
 
     ws:
       #ingressSecretRef: my-secret-for-microcks-ws-ingress
+      #ingressClassName: nginx
+
+      # Ingress annotations are also used for HTTPRoute resources.
       #ingressAnnotations:
         #cert-manager.io/issuer: my-ws-cert-issuer
         #kubernetes.io/tls-acme: "true"
-      #ingressClassName: nginx
+
+      # Uncomment to use a custom Gateway for Async Minion WS HTTPRoute.
+      #gatewayRefName: my-gateway
+      #gatewayRefNamespace:
+      #gatewayRefSectionName: https
+
+      # Useless if gatewayRoutes are enabled instead of ingresses.
       generateCert: true
 
   repositoryFilter:

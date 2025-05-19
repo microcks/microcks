@@ -107,7 +107,8 @@ public class GraphQLInvocationProcessor {
     * @return A ResponseResult containing the status, headers, and body of the response
     */
    public ResponseResult processInvocation(MockInvocationContext ic, long startTime, Map<String, String> queryParams,
-         String body, GraphQLHttpRequest graphqlHttpReq, HttpHeaders headers, HttpServletRequest request) {
+         String body, GraphQLHttpRequest graphqlHttpReq, Map<String, List<String>> headers,
+         HttpServletRequest request) {
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation());
@@ -152,9 +153,13 @@ public class GraphQLInvocationProcessor {
       Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules, "",
             proxyFallback, request, response);
       if (proxyUrl.isPresent()) {
+         // Translate generic headers into Spring ones.
+         HttpHeaders httpHeaders = new HttpHeaders();
+         httpHeaders.putAll(headers);
+
          // If we've got a proxyUrl, that's the moment to tell about it!
          ResponseEntity<byte[]> proxyResponse = proxyService.callExternal(proxyUrl.get(),
-               HttpMethod.valueOf(request.getMethod()), headers, body);
+               HttpMethod.valueOf(request.getMethod()), httpHeaders, body);
          return new ResponseResult(proxyResponse.getStatusCode(), proxyResponse.getHeaders(), proxyResponse.getBody());
       }
 

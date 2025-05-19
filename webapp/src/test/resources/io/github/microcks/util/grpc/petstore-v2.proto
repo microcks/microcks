@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package org.acme.petstore.v2;
+
+message Pet {
+    int32 id = 1;
+    string name = 2;
+    Coat coat = 3;
+    repeated Bug bugs = 4;
+}
+
+message Coat {
+    string name = 1;
+    Tint tint = 2;
+}
+
+enum Tint {
+    LIGHT = 0;
+    DARK = 1;
+}
+
+enum Bug {
+    TICK = 0;
+    FLEA = 1;
+}
+
+message AllPetsRequest {}
+
+message PetsResponse {
+    repeated Pet pets = 1;
+}
+
+message PetSearchRequest {
+    string name = 1;
+}
+
+message PetNameRequest {
+    string name = 1;
+    Coat coat = 2;
+    repeated Bug bugs = 3;
+    repeated string tags = 4;
+    repeated FooBar foobars = 5;
+}
+
+message FooBar {
+    string foo = 1;
+    string bar = 2;
+}
+
+service PetstoreService {
+    rpc getPets(AllPetsRequest) returns (PetsResponse);
+    rpc searchPets(PetSearchRequest) returns (PetsResponse);
+    rpc createPet(PetNameRequest) returns (Pet);
+}

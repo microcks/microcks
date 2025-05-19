@@ -17,6 +17,7 @@ import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef } from 'ngx-bootstrap/modal';
 
 import { ListConfig, ListModule } from '../../../../components/patternfly-ng/list';
@@ -30,6 +31,7 @@ import { IAuthenticationService } from '../../../../services/auth.service';
   styleUrls: ['./manage-samples.dialog.css'],
   imports: [
     CommonModule,
+    BsDropdownModule,
     FormsModule,
     ListModule
   ]
@@ -163,15 +165,14 @@ export class ManageSamplesDialogComponent implements OnInit {
         }
       });
     });
-    let exchangeSelection = {
+    let exchangeSelection: { serviceId: string; exchanges: Record<string, string[]> } = {
       serviceId: this.serviceView.service.id,
-      //exchanges: {}
-      exchanges: new Map<string, string[]>()
+      exchanges: {}
     };
     Object.keys(this.selectedExchanges).forEach((operationName) => {
-      exchangeSelection.exchanges.set(operationName, []);
+      exchangeSelection.exchanges[operationName] = [];
       Object.keys(this.selectedExchanges[operationName]).forEach((exchangeName) => {
-        exchangeSelection.exchanges.get(operationName)!.push(exchangeName);
+        exchangeSelection.exchanges[operationName]!.push(exchangeName);
       });
     });
 

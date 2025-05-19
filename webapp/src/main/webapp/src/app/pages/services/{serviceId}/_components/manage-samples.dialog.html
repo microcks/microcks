@@ -64,17 +64,17 @@
     </pfng-list>
   </div>
 
-  <div class="modal-footer">
+  <div class="modal-footer" style="display: flex; justify-content: flex-end;">
     <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
     <button class="btn btn-primary" (click)="exportSelection()">
       <span class="fa fa-download"></span> Export
     </button>
-    <span class="dropdown" *ngIf="this.serviceView.service.type === 'REST'">
-      <button class="btn btn-primary dropdown-toggle" dropdowntoggle type="button" id="exportOptions" data-toggle="dropdown">
+    <span class="dropdown" dropdown *ngIf="this.serviceView.service.type === 'REST'">
+      <button class="btn btn-primary dropdown-toggle" type="button" id="exportOptions" dropdownToggle aria-controls="dropdown-actions">
         As {{exportFormat}}
         <span class="caret"></span>
       </button>&nbsp;
-      <ul class="dropdown-menu" role="menu" aria-labelledby="exportOptions">
+      <ul id="dropdown-actions" *dropdownMenu class="dropdown-menu dropdown-menu-right" aria-labelledby="exportOptions">
         <li role="presentation"><a class="filter-field dropdown-item" (click)="this.exportFormat = 'APIExamples'">As APIExamples</a></li>
         <li role="presentation"><a class="filter-field dropdown-item" (click)="this.exportFormat = 'OAS Overlay'">As OAS Overlay</a></li>
       </ul>

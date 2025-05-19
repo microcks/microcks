@@ -112,7 +112,7 @@ public class RestInvocationProcessor {
     * @return A ResponseResult containing the status, headers, and body of the response
     */
    public ResponseResult processInvocation(MockInvocationContext ic, long startTime, Long delay, String body,
-         HttpHeaders headers, HttpServletRequest request) {
+         Map<String, List<String>> headers, HttpServletRequest request) {
 
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
@@ -149,9 +149,13 @@ public class RestInvocationProcessor {
          // Delay response here as the returning content will be returned directly.
          MockControllerCommons.waitForDelay(startTime, delay);
 
+         // Translate generic headers into Spring ones.
+         HttpHeaders httpHeaders = new HttpHeaders();
+         httpHeaders.putAll(headers);
+
          // If we've got a proxyUrl, that's the moment!
          ResponseEntity<byte[]> proxyResponse = proxyService.callExternal(proxyUrl.get(),
-               HttpMethod.valueOf(ic.operation().getMethod()), headers, body);
+               HttpMethod.valueOf(ic.operation().getMethod()), httpHeaders, body);
          return new ResponseResult(proxyResponse.getStatusCode(), proxyResponse.getHeaders(), proxyResponse.getBody());
       }
 
