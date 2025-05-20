@@ -10,6 +10,8 @@ const WAIT_TIME = parseFloat(__ENV.WAIT_TIME) || 0.5;
 const HOST = __ENV.HOST || 'localhost';
 const PORT = __ENV.PORT || '8080';
 const BASE_URL = __ENV.BASE_URL || `http://${HOST}:${PORT}`;
+const GRPC_PORT = __ENV.GRPC_PORT || '9090';
+const KEYCLOAK_URL = __ENV.KEYCLOAK_URL || `http://${HOST}:18080`;
 
 const only500Callback = http.expectedStatuses(500);
 
@@ -39,28 +41,40 @@ export function invokeRESTMocks() {
     group('REST API Tests', function () {
         // Test fetching all pastries
         let pastryCall = http.get(`${BASE_URL}/rest/API+Pastry+-+2.0/2.0.0/pastry`);
-        check(pastryCall, {
+        let ok = check(pastryCall, {
             'pastryCall status is 200': (r) => r.status === 200,
         });
+        if (!ok) {
+          console.error(`Unexpected status ${pastryCall.status} from pastryCall:\n${pastryCall.body}`);
+        }
 
         // Test fetching a specific pastry in JSON
         let eclairCall = http.get(`${BASE_URL}/rest/API+Pastry+-+2.0/2.0.0/pastry/Eclair%20Cafe`);
-        check(eclairCall, {
+        ok = check(eclairCall, {
             'eclairCall status is 200': (r) => r.status === 200,
         });
+        if (!ok) {
+          console.error(`Unexpected status ${eclairCall.status} from eclairCall:\n${eclairCall.body}`);
+        }
 
         // Test fetching the same pastry in XML
         let eclairXmlCall = http.get(`${BASE_URL}/rest/API+Pastry+-+2.0/2.0.0/pastry/Eclair%20Cafe`, { headers: {'Accept': 'text/xml'} });
-        check(eclairXmlCall, {
+        ok = check(eclairXmlCall, {
             'eclairXmlCall status is 200': (r) => r.status === 200,
             'eclairXmlCall response is XML': (r) => r.body.includes("<pastry>"),
         });
+        if (!ok) {
+          console.error(`Unexpected status ${eclairXmlCall.status} from eclairXmlCall:\n${eclairXmlCall.body}`);
+        }
 
         // Test fetching another pastry
         let millefeuilleCall = http.get(`${BASE_URL}/rest/API+Pastry+-+2.0/2.0.0/pastry/Millefeuille`);
-        check(millefeuilleCall, {
+        ok = check(millefeuilleCall, {
             'millefeuilleCall status is 200': (r) => r.status === 200,
         });
+        if (!ok) {
+          console.error(`Unexpected status ${millefeuilleCall.status} from millefeuilleCall:\n${millefeuilleCall.body}`);
+        }
     });
 }
 
@@ -80,9 +94,12 @@ export function invokeGraphQLMocks() {
         }`;
         const allFilmsBody = { query: allFilmsQuery };
         let allFilmsCall = http.post(`${BASE_URL}/graphql/Movie+Graph+API/1.0`, JSON.stringify(allFilmsBody), { headers: jsonHeaders });
-        check(allFilmsCall, {
+        let ok = check(allFilmsCall, {
             'allFilmsCall status is 200': (r) => r.status === 200,
         });
+        if (!ok) {
+          console.error(`Unexpected status ${allFilmsCall.status} from allFilmsCall:\n${allFilmsCall.body}`);
+        }
 
         // Test a query to fetch a specific film
         const aFilmQuery = `query film($id: String) {
@@ -94,9 +111,12 @@ export function invokeGraphQLMocks() {
         }`;
         const aFilmBody = { query: aFilmQuery };
         let aFilmCall = http.post(`${BASE_URL}/graphql/Movie+Graph+API/1.0`, JSON.stringify(aFilmBody), { headers: jsonHeaders });
-        check(aFilmCall, {
+        ok = check(aFilmCall, {
             'aFilmCall status is 200': (r) => r.status === 200,
         });
+        if (!ok) {
+          console.error(`Unexpected status ${aFilmCall.status} from aFilmCall:\n${aFilmCall.body}`);
+        }
 
         // Test a query using fragments
         const aFilmFragmentsQuery = `query film($id: String) {
@@ -112,9 +132,12 @@ export function invokeGraphQLMocks() {
         }`;
         const aFilmFragmentBody = { query: aFilmFragmentsQuery };
         let aFilmFragmentCall = http.post(`${BASE_URL}/graphql/Movie+Graph+API/1.0`, JSON.stringify(aFilmFragmentBody), { headers: jsonHeaders });
-        check(aFilmFragmentCall, {
+        ok = check(aFilmFragmentCall, {
             'aFilmFragmentCall status is 200': (r) => r.status === 200,
         });
+        if (!ok) {
+          console.error(`Unexpected status ${aFilmFragmentCall.status} from aFilmFragmentCall:\n${aFilmFragmentCall.body}`);
+        }
     });
 }
 
@@ -136,9 +159,12 @@ export function invokeSOAPMocks() {
             'SOAPAction': 'sayHello'
         };
         let andrewCall = http.post(`${BASE_URL}/soap/HelloService+Mock/0.9`, andrewBody, { headers: andrewHeaders });
-        check(andrewCall, {
+        let ok = check(andrewCall, {
             'andrewCall status is 200': (r) => r.status === 200,
         });
+        if (!ok) {
+          console.error(`Unexpected status ${andrewCall.status} from andrewCall:\n${andrewCall.body}`);
+        }
         sleep(1);
 
         // Define a SOAP envelope for "Karla" with SOAP 1.2 headers
@@ -154,10 +180,13 @@ export function invokeSOAPMocks() {
             'Content-Type': 'text/xml; charset=utf-8; action=sayHello'
         };
         let karlaCall = http.post(`${BASE_URL}/soap/HelloService+Mock/0.9`, karlaBody, { headers: karlaHeaders });
-        check(karlaCall, {
+        ok = check(karlaCall, {
             'karlaCall status is 200': (r) => r.status === 200,
             'karlaCall body contains expected fault or message': (r) => r.body.includes("Hello Karla") || r.body.includes("Fault"),
         });
+        if (!ok) {
+          console.error(`Unexpected status ${karlaCall.status} from karlaCall:\n${karlaCall.body}`);
+        }
         sleep(1);
 
         // Define a SOAP envelope for "Laurent" expecting a fault (500)
@@ -173,17 +202,20 @@ export function invokeSOAPMocks() {
             </soapenv:Body>
         </soapenv:Envelope>`;
         let laurentCall = http.post(`${BASE_URL}/soap/HelloService+Mock/0.9`, laurentBody, { headers: laurentHeaders, responseCallback: only500Callback })
-        check(laurentCall, {
+        ok = check(laurentCall, {
             'laurentCall status is 500': (r) => r.status === 500,
             'laurentCall body contains a Fault element': (r) => r.body.includes("<soapenv:Fault>"),
         });
+        if (!ok) {
+          console.error(`Unexpected status ${laurentCall.status} from laurentCall:\n${laurentCall.body}`);
+        }
         sleep(1);
     });
 }
 
 // Function to test GRPC endpoints
 export function invokeGRPCMocks() {
-    client.connect(`${HOST}:${PORT}`, { plaintext: true });
+    client.connect(`${HOST}:${GRPC_PORT}`, { plaintext: true });
 
     const payloads = [
         { firstname: 'Laurent', lastname: 'Broudoux' },
@@ -196,11 +228,14 @@ export function invokeGRPCMocks() {
             payload
         );
 
-        check(response, {
+        let ok = check(response, {
             'status is OK': (r) => r && r.status === grpc.StatusOK,
             'response contains greeting': (r) =>
                 r && r.message && r.message.greeting.includes(payload.firstname),
         });
+        if (!ok) {
+          console.error(`Unexpected status ${response.status} from ${payload.firstname}`);
+        }
     });
 
     client.close();
@@ -224,9 +259,12 @@ export function invokeREST_HelloAPIMocks() {
       const res = http.get(url);
 
       // Status code
-      check(res, {
+      let ok = check(res, {
         [`${name}Call status is ${expStatus}`]: (r) => r.status === expStatus,
       });
+      if (!ok) {
+        console.error(`Unexpected status ${res.status} for ${name}:\n${res.body}`);
+      }
 
       // Header
       if (expStatus === 200) {
@@ -249,10 +287,13 @@ export function invokeREST_HelloAPIMocks() {
 
     const url = `${BASE_URL}/rest/${MOCK_NAME}/${VERSION}/`;
     const res = http.get(url);
-    check(res, {
+    let ok = check(res, {
       [`Empty body`]: (r) =>
         !r.body || r.body.trim().length === 0,
     });
+    if (!ok) {
+      console.error(`Unexpected status ${res.status} for Empty Body:\n${res.body}`);
+    }
   });
 }
 
@@ -265,23 +306,29 @@ export function invokeREST_PetStoreAPI() {
 
     // Test for petId = 1 (expected 404)
     const petRes1 = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/1?user_key=${userKeys[1]}`);
-    check(petRes1, {
+    let ok = check(petRes1, {
         'GET /v2/pet/1 - status is 404': (r) => r.status === 404,
     });
+    if (!ok) {
+      console.error(`Unexpected status ${petRes1.status} for Pet 1:\n${petRes1.body}`);
+    }
     sleep(1);
 
     // Test for petId = 2 (expected 200 + content validation)
     const petRes2 = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/2?user_key=${userKeys[2]}`);
-    check(petRes2, {
+    ok = check(petRes2, {
         'GET /v2/pet/2 - status is 200': (r) => r.status === 200,
         'GET /v2/pet/2 - has name "cat"': (r) => r.json().name === 'cat',
     });
+    if (!ok) {
+      console.error(`Unexpected status ${petRes2.status} for Pet 2:\n${petRes2.body}`);
+    }
     sleep(1);
 
     // Test GET /v2/pet/findByStatus for status=available
     const status = 'available';
     const response = http.get(`${BASE_URL}/rest/Petstore+API/1.0/v2/pet/findByStatus?status=${status}&user_key=70f735676ec46351c6699c4bb767878a`);
-    check(response, {
+    ok = check(response, {
         'status is 200': (r) => r.status === 200,
         'response is non-empty array': (r) => Array.isArray(r.json()) && r.json().length > 0,
         'first pet has id and name': (r) => {
@@ -289,12 +336,15 @@ export function invokeREST_PetStoreAPI() {
             return data.length > 0 && data[0].id !== undefined && data[0].name !== undefined;
         },
     });
+    if (!ok) {
+      console.error(`Unexpected status ${response.status} from /v2/pet/findByStatus:\n${response.body}`);
+    }
     sleep(1);
   });
 }
 
 export function authenticate() {
-  const url = 'http://localhost:18080/realms/microcks/protocol/openid-connect/token';
+  const url = `${KEYCLOAK_URL}/realms/microcks/protocol/openid-connect/token`;
   const authHeader = 'Basic bWljcm9ja3Mtc2VydmljZWFjY291bnQ6YWI1NGQzMjktZTQzNS00MWFlLWE5MDAtZWM2YjNmZTE1YzU0Cg=';
 
   const headers = {
@@ -308,10 +358,13 @@ export function authenticate() {
 
   const response = http.post(url, payload, { headers: headers });
 
-  check(response, {
+  let ok = check(response, {
       'authentication successful': (r) => r.status === 200,
       'access token is present': (r) => r.json('access_token') !== '',
   });
+  if (!ok) {
+    console.error(`Unexpected status ${response.status} from authentication:\n${response.body}`);
+  }
 
   return response.json('access_token');
 }
@@ -330,9 +383,12 @@ export function ownAPIsNoAuth () {
     );
 
     TESTS.forEach((t, i) => {
-      check(responses[i], {
+      let ok = check(responses[i], {
         [`GET ${t.path} returns 200`]: (r) => r.status === 200,
       });
+      if (!ok) {
+        console.error(`Unexpected status ${responses[i].status} from ${t.path}:\n${responses[i].body}`);
+      }
     });
   });
 }
@@ -344,9 +400,12 @@ export function ownAPIsAuth () {
     );
 
     TESTS.forEach((t, i) => {
-      check(responses[i], {
+      let ok = check(responses[i], {
         [`GET ${t.path} returns ${t.expect}`]: (r) => r.status === t.expect,
       });
+      if (!ok) {
+        console.error(`Unexpected status ${responses[i].status} from ${t.path}:\n${responses[i].body}`);
+      }
     });
 
     const token = authenticate();
@@ -355,11 +414,13 @@ export function ownAPIsAuth () {
     const auth_responses = http.batch(
       TESTS.map((t) => ['GET', `${BASE_URL}${t.path}`, null, authHeaders])
     );
-
     TESTS.forEach((t, i) => {
-      check(auth_responses[i], {
+      let ok = check(auth_responses[i], {
         [`GET ${t.path} auth returns 200`]: (r) => r.status === 200,
       });
+      if (!ok) {
+        console.error(`Unexpected status ${auth_responses[i].status} from ${t.path}:\n${auth_responses[i].body}`);
+      }
     });
   });
 }
@@ -380,7 +441,10 @@ export function asyncAPI_websocketMocks() {
       }, 3000);
     });
 
-    check(res, { 'handshake 101': (r) => r && r.status === 101 });
+    let ok = check(res, { 'handshake 101': (r) => r && r.status === 101 });
+    if (!ok) {
+      console.error(`Unexpected status ${res.status} from handshake:\n${res.body}`);
+    }
     check(messages, {
       'contains Laurent Broudoux':    (arr) => arr.some(m => m.includes('Laurent Broudoux')),
       'contains John Doe':            (arr) => arr.some(m => m.includes('John Doe')),
