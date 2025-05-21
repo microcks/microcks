@@ -309,6 +309,10 @@ public class RestController {
                      || operation.getResourcePaths().contains(trimmedResourcePath))) {
             return operation;
          }
+         // Check by simple name comparison if no resource path is defined.
+         if (operation.getName().equals(method.name().toUpperCase() + " " + resourcePath)) {
+            return operation;
+         }
       }
       return null;
    }
