@@ -171,7 +171,7 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
       Map<String, String> pathParams = new HashMap<>();
       Map<String, String> queryParams = new HashMap<>();
 
-      // Unwrap the request parameters and remove them from request.
+      // Unwrap the request parameters and headers and remove them from request.
       try {
          if (schemaNode == null) {
             schemaNode = OpenAPISchemaValidator.getJsonNodeForSchema(resource.getContent());
@@ -194,6 +194,8 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
                   pathParams.put(paramName, paramValue);
                } else if ("query".equals(paramIn)) {
                   queryParams.put(paramName, paramValue);
+               } else if ("header".equals(paramIn)) {
+                  headers.put(paramName, List.of(paramValue));
                }
             }
          }
