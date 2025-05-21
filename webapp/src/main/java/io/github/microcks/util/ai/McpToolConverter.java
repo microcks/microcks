@@ -87,17 +87,20 @@ public abstract class McpToolConverter {
    /** Depending on result encoding, extract the response content as a string. */
    protected String extractResponseContent(ResponseResult result) throws IOException {
       String responseContent = null;
-      // Response content can be compressed with gzip if we used the proxy.
-      List<String> encodings = result.headers().get(HttpHeaders.CONTENT_ENCODING);
-      if (encodings != null && encodings.contains("gzip")) {
-         // Unzip the response content.
-         try (BufferedInputStream bis = new BufferedInputStream(
-               new GZIPInputStream(new ByteArrayInputStream(result.content())))) {
-            byte[] uncompressedContent = bis.readAllBytes();
-            responseContent = new String(uncompressedContent, StandardCharsets.UTF_8);
+      if (result.headers() != null) {
+         // Response content can be compressed with gzip if we used the proxy.
+         List<String> encodings = result.headers().get(HttpHeaders.CONTENT_ENCODING);
+         if (encodings != null && encodings.contains("gzip")) {
+            // Unzip the response content.
+            try (BufferedInputStream bis = new BufferedInputStream(
+                  new GZIPInputStream(new ByteArrayInputStream(result.content())))) {
+               byte[] uncompressedContent = bis.readAllBytes();
+               responseContent = new String(uncompressedContent, StandardCharsets.UTF_8);
+            }
          }
-      } else {
-         // If no content-encoding header, we can assume it's not compressed.
+      }
+      if (responseContent == null) {
+         // If no response content here, we can assume it's not compressed and can be read directly.
          responseContent = new String(result.content(), StandardCharsets.UTF_8);
       }
       return responseContent;
