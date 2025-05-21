@@ -19,7 +19,6 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
-import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.URIBuilder;
 import io.github.microcks.util.ai.McpSchema;
 import io.github.microcks.util.ai.McpToolConverter;
@@ -208,8 +207,7 @@ public class OpenAPIMcpToolConverter extends McpToolConverter {
          resourcePath = URIBuilder.buildURIFromPattern(resourcePath, pathParams);
       }
       // Re-build the query string with parameters if needed.
-      if (DispatchStyles.URI_PARAMS.equals(operation.getDispatcher())
-            || DispatchStyles.URI_ELEMENTS.equals(operation.getDispatcher())) {
+      if (!queryParams.isEmpty()) {
          queryString = URIBuilder.buildURIFromPattern("", queryParams);
          if (queryString.startsWith("?")) {
             queryString = queryString.substring(1);

@@ -159,7 +159,11 @@ public class BasicHttpServletRequest implements HttpServletRequest {
    @Override
    public StringBuffer getRequestURL() {
       StringBuffer url = new StringBuffer(urlPrefix);
-      return url.append(pathInfo);
+      url.append(pathInfo);
+      if (queryString != null) {
+         url.append("?").append(queryString);
+      }
+      return url;
    }
 
    @Override
