@@ -50,6 +50,7 @@ public class ProxyService {
       headers.put("Host", List.of(externalUrl.getHost()));
 
       if (log.isDebugEnabled()) {
+         log.debug("Proxy request url: {}", externalUrl);
          log.debug("Proxy request headers: {}", headers);
          log.debug("Proxy request body: {}", body);
       }
