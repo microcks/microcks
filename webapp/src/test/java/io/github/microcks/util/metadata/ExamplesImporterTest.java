@@ -184,6 +184,59 @@ class ExamplesImporterTest {
    }
 
    @Test
+   void testHeadersDispatcherExtractiong() {
+      ExamplesImporter importer = null;
+      try {
+         importer = new ExamplesImporter(
+               "target/test-classes/io/github/microcks/util/metadata/weather-forecast-headers-examples.yml");
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      assertEquals("WeatherForecast API", service.getName());
+      assertEquals("1.0.0", service.getVersion());
+
+      assertEquals(1, service.getOperations().size());
+      Operation operation = service.getOperations().get(0);
+
+      assertEquals("GET /forecast", operation.getName());
+
+      // Force the operation dispatcher to URI_ELEMENTS to check if importer correctly
+      // splits the query from the path parameters when computing dispatch criteria.
+      operation.setDispatcher("QUERY_HEADER");
+      operation.setDispatcherRules("region");
+
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+
+      assertNotNull(exchanges);
+      assertEquals(1, exchanges.size());
+
+      Exchange exchange = exchanges.get(0);
+      assertTrue(exchange instanceof RequestResponsePair);
+
+      RequestResponsePair pair = (RequestResponsePair) exchange;
+      assertNotNull(pair.getRequest());
+      assertNull(pair.getRequest().getQueryParameters());
+
+      assertNotNull(pair.getResponse());
+      assertEquals("?region=north", pair.getResponse().getDispatchCriteria());
+   }
+
+   @Test
    void testGRPCAPIExamplesImporter() {
       ExamplesImporter importer = null;
       try {

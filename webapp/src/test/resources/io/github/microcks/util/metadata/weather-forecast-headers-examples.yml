@@ -1,0 +1,21 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIExamples
+metadata:
+  name: WeatherForecast API
+  version: 1.0.0
+operations:
+  'GET /forecast':
+    north:
+      request:
+        headers:
+          region: north
+      response:
+        status: 200
+        mediaType: application/json
+        body: |-
+          {
+            "region": "north",
+            "temp": -1.5,
+            "weather": "snowy",
+            "visibility": 25
+          }
