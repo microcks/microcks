@@ -25,12 +25,6 @@ jobs:
             mode: default
             addons: "async"
           - method: docker
-            mode: proxy
-            addons: ""
-          - method: docker
-            mode: proxy
-            addons: "async"
-          - method: docker
             mode: devmode
             addons: ""
           # podman-compose config
