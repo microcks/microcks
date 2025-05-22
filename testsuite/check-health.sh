@@ -82,10 +82,13 @@ else
   echo "Checking Helm in namespace '$NAMESPACE'"
 
   mapfile -t deployments < <(
-    kubectl get deployments \
-      -n "$NAMESPACE" \
-      -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}'
+    kubectl get deployments -n "$NAMESPACE" -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{end}' \
+    | sort -u | grep -v '^microcks-async-minion$'
   )
+  # Append async one at the end if it exists
+  if kubectl get deployment microcks-async-minion -n "$NAMESPACE" &>/dev/null; then
+    deployments+=("microcks-async-minion")
+  fi
 
   if [[ ${#deployments[@]} -eq 0 ]]; then
     echo "Error: No deployments found in namespace '$NAMESPACE'"
@@ -94,10 +97,25 @@ else
 
   for dep in "${deployments[@]}"; do
     echo "Waiting for deployment '$dep' to roll out (timeout: 60s)..."
-    if ! kubectl rollout status deployment/"$dep" \
-         -n "$NAMESPACE" \
-         --timeout=60s; then
-      echo "Deployment '$dep' failed to roll out in 60s"
+    retries=3
+    attempt=1
+    success=false
+    while [[ $attempt -le $retries ]]; do
+      if kubectl rollout status deployment/"$dep" -n "$NAMESPACE" --timeout=60s; then
+        success=true
+        break
+      else
+        echo "Attempt $attempt for deployment '$dep' failed."
+        ((attempt++))
+        if [[ $attempt -le $retries ]]; then
+          echo "Retrying in 5 seconds..."
+          sleep 5
+        fi
+      fi
+    done
+
+    if ! $success; then
+      echo "Deployment '$dep' failed to roll out after $retries attempts."
       unhealthy+=("$dep")
     fi
   done
