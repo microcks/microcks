@@ -66,6 +66,10 @@ public class ProxyService {
          }
          return response;
       } catch (RestClientResponseException ex) {
+         if (log.isDebugEnabled()) {
+            log.debug("Proxy raised: {}", ex.getStatusCode());
+            log.debug("Proxy exception body: {}", ex.getResponseBodyAsString());
+         }
          return new ResponseEntity<>(ex.getResponseBodyAsByteArray(), ex.getResponseHeaders(), ex.getStatusCode());
       }
    }
