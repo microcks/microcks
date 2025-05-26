@@ -80,8 +80,12 @@
           <dt>MCP Server:</dt>
           <dd>
             <a tooltip="Copy to Clipboard" placement="top"
-                (click)="copyToClipboard(formatMCPUrl(), 'MCP URL')">
+                (click)="copyToClipboard(formatMCPUrl('/sse'), 'MCP URL')">
               HTTP SSE Endpoint <i class="pficon pficon-optimize"></i>
+            </a><br/>
+            <a tooltip="Copy to Clipboard" placement="top"
+               (click)="copyToClipboard(formatMCPUrl(), 'MCP URL')">
+              HTTP Streamable Endpoint <i class="pficon pficon-optimize"></i>
             </a>
           </dd>
         </span>

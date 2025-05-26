@@ -558,7 +558,7 @@ export class ServiceDetailPageComponent implements OnInit {
         || this.resolvedServiceView.service.type === ServiceType.GRPC
         || this.resolvedServiceView.service.type === ServiceType.GRAPHQL
   }
-  public formatMCPUrl(): string {
+  public formatMCPUrl(suffix: string = ''): string {
     let result = document.location.origin;
 
     // Manage dev mode.
@@ -569,7 +569,7 @@ export class ServiceDetailPageComponent implements OnInit {
     result += '/mcp/';
     result += this.encodeUrl(this.resolvedServiceView.service.name) + '/';
     result += this.resolvedServiceView.service.version;
-    result += '/sse';
+    result += suffix;
 
     return result;
   }

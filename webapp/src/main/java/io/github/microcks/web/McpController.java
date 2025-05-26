@@ -93,12 +93,12 @@ public class McpController {
    }
 
    /**
-    * Handle the initalization of a SSE connection for the MCP protocol.
+    * Handle the initialization of a SSE connection for the MCP protocol.
     * @param serviceName The name of the service to connect to.
     * @param version     The version of the service to connect to.
     * @return The SSE emitter to use for the connection.
     */
-   @RequestMapping(value = "/mcp/{service}/{version}/sse", method = { RequestMethod.GET, RequestMethod.POST })
+   @RequestMapping(value = "/mcp/{service}/{version}/sse", method = { RequestMethod.GET })
    public SseEmitter handleSSE(@PathVariable("service") String serviceName, @PathVariable("version") String version) {
       log.info("Handling a Mcp SSE for service {} and version {}", serviceName, version);
 
@@ -157,6 +157,42 @@ public class McpController {
          return ResponseEntity.badRequest().body(new McpError("Session not found: " + sessionId));
       }
 
+      McpSchema.JSONRPCResponse response = null;
+      try {
+         response = handleMcpRequest(serviceName, version, request, headers);
+      } catch (McpError e) {
+         return ResponseEntity.badRequest().body(e);
+      }
+      sendSseMessage(channel, response);
+
+      return ResponseEntity.ok().build();
+   }
+
+   /**
+    * Reserved for future usage when HTTP Streamable transport specification will be frozen and implemented.
+    * @param serviceName The name of the service to connect to.
+    * @param version     The version of the service to connect to.
+    * @param request     The MCP request to handle.
+    * @return The response entity.
+    */
+   @PostMapping(value = "/mcp/{service}/{version}", produces = { "application/json" })
+   public ResponseEntity<?> handleHttpStreamable(@PathVariable("service") String serviceName,
+         @PathVariable("version") String version, @RequestBody McpSchema.JSONRPCRequest request,
+         @RequestHeader HttpHeaders headers) {
+
+      log.info("Handling a Mcp Http streamable call for service {} and version {}", serviceName, version);
+
+      try {
+         McpSchema.JSONRPCResponse response = handleMcpRequest(serviceName, version, request, headers);
+         return ResponseEntity.ok(response);
+      } catch (McpError e) {
+         return ResponseEntity.badRequest().body(e);
+      }
+   }
+
+   /** Logic of handling Mcp Request. */
+   private McpSchema.JSONRPCResponse handleMcpRequest(String serviceName, String version,
+         McpSchema.JSONRPCRequest request, HttpHeaders headers) throws McpError {
       // If serviceName was encoded with '+' instead of '%20', remove them.
       if (serviceName.contains("+")) {
          serviceName = serviceName.replace('+', ' ');
@@ -165,7 +201,7 @@ public class McpController {
       Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       if (service == null) {
          log.debug("Service {}:{} not found", serviceName, version);
-         return ResponseEntity.badRequest().body(new McpError("Invalid service name or version"));
+         throw new McpError("Invalid service name or version");
       }
 
       Object result = null;
@@ -189,27 +225,8 @@ public class McpController {
                new McpSchema.JSONRPCResponse.JSONRPCError(McpSchema.ErrorCodes.METHOD_NOT_FOUND,
                      "Unsupported method: " + request.method(), null));
       }
-      sendSseMessage(channel, response);
 
-      return ResponseEntity.ok().build();
-   }
-
-   /**
-    * Reserved for future usage when HTTP Streamable transport specification will be frozen and implemented.
-    * @param serviceName Thge name of the service to connect to.
-    * @param version     The version of the service to connect to.
-    * @param sessionId   The MCP session ID of the connection.
-    * @param request     The MCP request to handle.
-    * @return The response entity.
-    */
-   @RequestMapping(value = "/mcp/{service}/{version}/", method = { RequestMethod.GET, RequestMethod.POST })
-   public ResponseEntity<?> handleHttpStreamable(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "sessionId", required = false) String sessionId,
-         @RequestBody McpSchema.JSONRPCMessage request) {
-
-      log.info("Handling a Mcp call for service {} and version {}", serviceName, version);
-
-      return ResponseEntity.ok().build();
+      return response;
    }
 
    /** Internal record to hold a SSE transport channel with its emitter. */
@@ -222,7 +239,8 @@ public class McpController {
             new TypeReference<McpSchema.InitializeRequest>() {
             });
 
-      if (initializeRequest.protocolVersion().equals(McpSchema.LATEST_PROTOCOL_VERSION)) {
+      if (initializeRequest.protocolVersion().equals(McpSchema.LATEST_PROTOCOL_VERSION)
+            || initializeRequest.protocolVersion().equals(McpSchema.FIRST_PROTOCOL_VERSION)) {
          McpSchema.ClientCapabilities clientCapabilities = initializeRequest.capabilities();
          McpSchema.Implementation clientInfo = initializeRequest.clientInfo();
 
