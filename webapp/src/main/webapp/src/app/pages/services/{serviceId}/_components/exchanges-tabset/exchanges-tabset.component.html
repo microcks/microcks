@@ -15,7 +15,7 @@
             <dt>Content Type:</dt>
             <dd><code><small>{{ getUnidirEvent(exchange).eventMessage.mediaType }}</small></code></dd>
           </dl>
-          <pre *ngIf="getUnidirEvent(exchange).eventMessage.content"><code [highlightAuto]="prettyPrintIfJSON(getUnidirEvent(exchange).eventMessage.content)" [languages]="hlLang"></code></pre>
+          <pre *ngIf="getUnidirEvent(exchange).eventMessage.content" class="hljs"><code [highlightAuto]="prettyPrintIfJSON(getUnidirEvent(exchange).eventMessage.content)" [languages]="hlLang"></code></pre>
           <table class="table table-condensed" width="100%" *ngIf="getUnidirEvent(exchange).eventMessage.headers">
             <thead>
               <tr>
@@ -200,11 +200,11 @@
               </div>
             </dd>
           </dl>
-          <pre *ngIf="getReqRespPair(exchange).request.content"><code [highlightAuto]="formatRequestContent(getReqRespPair(exchange).request.content)" [languages]="hlLang"></code></pre>
+          <pre *ngIf="getReqRespPair(exchange).request.content" class="hljs"><code [highlightAuto]="formatRequestContent(getReqRespPair(exchange).request.content)" [languages]="hlLang"></code></pre>
           <dl *ngIf="view.service.type === 'GRAPHQL'">
             <dt>Variables</dt>
             <dd>
-              <pre><code [highlightAuto]="formatGraphQLVariables(getReqRespPair(exchange).request.content)" [languages]="hlLang"></code></pre>
+              <pre class="hljs"><code [highlightAuto]="formatGraphQLVariables(getReqRespPair(exchange).request.content)" [languages]="hlLang"></code></pre>
             </dd>
           </dl>
 

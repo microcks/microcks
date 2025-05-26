@@ -74,7 +74,7 @@
               </span>
             </dd>
           </dl>
-          <pre *ngIf="getReqRespPair(exchange).request.content"><code [highlightAuto]="getReqRespPair(exchange).request.content"></code></pre>
+          <pre *ngIf="getReqRespPair(exchange).request.content" class="hljs"><code [highlightAuto]="getReqRespPair(exchange).request.content"></code></pre>
           <table class="table table-condensed" width="100%" *ngIf="getReqRespPair(exchange).request.headers">
             <thead>
               <tr>
@@ -98,7 +98,7 @@
               <code><small>{{ getReqRespPair(exchange).response.status }}: {{getReqRespPair(exchange).response.mediaType}}</small></code>
             </dd>
           </dl>
-          <pre *ngIf="getReqRespPair(exchange).response.content"><code [highlightAuto]="getReqRespPair(exchange).response.content"></code></pre>
+          <pre *ngIf="getReqRespPair(exchange).response.content" class="hljs"><code [highlightAuto]="getReqRespPair(exchange).response.content"></code></pre>
           <table class="table table-condensed" width="100%" *ngIf="getReqRespPair(exchange).response.headers">
             <thead>
               <tr>
@@ -116,7 +116,7 @@
         </div>
         <div class="col-md-12 sample-container" *ngIf="isEventTypeService()">
           <h5 class="subsection-label">Event Message</h5>
-          <pre *ngIf="getUnidirEvent(exchange).eventMessage.content"><code [highlightAuto]="getUnidirEvent(exchange).eventMessage.content"></code></pre>
+          <pre *ngIf="getUnidirEvent(exchange).eventMessage.content" class="hljs"><code [highlightAuto]="getUnidirEvent(exchange).eventMessage.content"></code></pre>
           <table class="table table-condensed" width="100%" *ngIf="getUnidirEvent(exchange).eventMessage.headers">
             <thead>
               <tr>
