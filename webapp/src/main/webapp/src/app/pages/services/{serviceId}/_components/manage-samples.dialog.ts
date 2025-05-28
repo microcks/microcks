@@ -14,9 +14,13 @@
  * limitations under the License.
  */
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef } from 'ngx-bootstrap/modal';
-import { ListConfig } from 'patternfly-ng/list';
+
+import { ListConfig, ListModule } from '../../../../components/patternfly-ng/list';
 
 import { Exchange, RequestResponsePair, ServiceType, ServiceView, UnidirectionalEvent } from '../../../../models/service.model';
 import { IAuthenticationService } from '../../../../services/auth.service';
@@ -25,16 +29,24 @@ import { IAuthenticationService } from '../../../../services/auth.service';
   selector: 'app-manage-samples-dialog',
   templateUrl: './manage-samples.dialog.html',
   styleUrls: ['./manage-samples.dialog.css'],
+  imports: [
+    CommonModule,
+    BsDropdownModule,
+    FormsModule,
+    ListModule
+  ]
 })
 export class ManageSamplesDialogComponent implements OnInit {
-  @Output() cleanupSelectionAction = new EventEmitter<any>();
+  //@Output() cleanupSelectionAction = new EventEmitter<any>();
+  @Output() cleanupSelectionAction = new EventEmitter<Record<string, Record<string, boolean>>>();
 
-  closeBtnName: string;
-  serviceView: ServiceView;
+  closeBtnName!: string;
+  serviceView!: ServiceView;
   operationsWithAISamples: any[] = [];
-  operationsListConfig: ListConfig;
+  operationsListConfig!: ListConfig;
 
-  selectedExchanges: any = {};
+  //selectedExchanges: any = {};
+  selectedExchanges: Record<string, Record<string, boolean>> = {};
   exportFormat: string = 'APIExamples';
 
   constructor(
@@ -45,7 +57,7 @@ export class ManageSamplesDialogComponent implements OnInit {
   ngOnInit() {
     this.operationsListConfig = {
       dblClick: false,
-      emptyStateConfig: null,
+      //emptyStateConfig: null,
       multiSelect: false,
       selectItems: false,
       selectionMatchProp: 'name',
@@ -153,14 +165,14 @@ export class ManageSamplesDialogComponent implements OnInit {
         }
       });
     });
-    let exchangeSelection = {
+    let exchangeSelection: { serviceId: string; exchanges: Record<string, string[]> } = {
       serviceId: this.serviceView.service.id,
       exchanges: {}
     };
     Object.keys(this.selectedExchanges).forEach((operationName) => {
       exchangeSelection.exchanges[operationName] = [];
       Object.keys(this.selectedExchanges[operationName]).forEach((exchangeName) => {
-        exchangeSelection.exchanges[operationName].push(exchangeName)
+        exchangeSelection.exchanges[operationName]!.push(exchangeName);
       });
     });
 
@@ -201,8 +213,9 @@ export class ManageSamplesDialogComponent implements OnInit {
   getOperationAICopilotExchanges(operationName: string): Exchange[] {
     let exchanges = this.serviceView.messagesMap[operationName];
     return exchanges.filter(exchange => 
-      (exchange.request != undefined && exchange.request.sourceArtifact === 'AI Copilot')
-      || (exchange.eventMessage != undefined && exchange.eventMessage.sourceArtifact === 'AI Copilot')
+      this.isEventTypeService() ?
+        (exchange as UnidirectionalEvent).eventMessage.sourceArtifact === 'AI Copilot'
+        : (exchange as RequestResponsePair).request.sourceArtifact === 'AI Copilot'
     );
   }
 }

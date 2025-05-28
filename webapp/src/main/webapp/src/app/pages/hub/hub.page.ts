@@ -14,14 +14,17 @@
  * limitations under the License.
  */
 import { Component, OnInit, Renderer2 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
 import { HubService } from '../../services/hub.service';
 import { APIPackage } from '../../models/hub.model';
+import { RouterLink } from '@angular/router';
 
 const OTHER_CATEGORY = 'Other';
 const IGNORED_PROVIDER_TAILS = [', Inc.', ', Inc', ' Inc.', ' Inc', ', LLC', ' LLC'];
 
-const sanitizeProviderValue = value => {
+const sanitizeProviderValue = (value: string) => {
   if (!value) {
     return value;
   }
@@ -40,20 +43,25 @@ const sanitizeProviderValue = value => {
 @Component({
   selector: 'app-hub-page',
   templateUrl: './hub.page.html',
-  styleUrls: ['./hub.page.css']
+  styleUrls: ['./hub.page.css'],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink
+  ]
 })
 export class HubPageComponent implements OnInit {
 
-  categories: any = [];
-  providers: any = [];
-  packages: APIPackage[];
+  categories: string[] = [];
+  providers: string[] = [];
+  packages: APIPackage[] = [];
   maxProviders = 6;
 
-  filterString: string;
-  selectedCategory: string;
+  filterString: string | null = null;
+  selectedCategory: string | null = null;
   selectedProviders: string[] = [];
-  filteredPackages: APIPackage[];
-  sortType: string;
+  filteredPackages: APIPackage[] = [];
+  sortType: string | null = null;
 
   constructor(private renderer: Renderer2, private packagesSvc: HubService) { }
 
@@ -138,7 +146,7 @@ export class HubPageComponent implements OnInit {
   }
 
   private initializeAvailableCategories(): void {
-    const unsortedCategories = {};
+    const unsortedCategories: Record<string, APIPackage[]> = {};
     this.packages.forEach((apiPackage, index, packs) => {
       if (apiPackage.categories.length > 0) {
         apiPackage.categories.forEach((category, packageIndex, cats) => {
@@ -166,7 +174,7 @@ export class HubPageComponent implements OnInit {
   }
 
   private initializeAvailableProviders(): void {
-    const unsortedProviders = {};
+    const unsortedProviders: Record<string, APIPackage[]> = {};
     this.packages.forEach((apiPackage, index, packs) => {
       const provider = sanitizeProviderValue(apiPackage.provider);
       if (!unsortedProviders[provider]) {

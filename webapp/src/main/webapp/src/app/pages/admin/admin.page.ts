@@ -15,17 +15,34 @@
  */
 import { Component, OnInit } from '@angular/core';
 
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
+import { TabsModule } from 'ngx-bootstrap/tabs';
 
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  ToastNotificationListComponent
+} from '../../components/patternfly-ng/notification';
+
+import { SecretsTabComponent } from './_components/secrets.tab';
+import { UsersTabComponent } from './_components/users.tab';
+import { SnapshotsTabComponent } from './_components/snapshots.tab';
 
 @Component({
   selector: 'app-admin-page',
   templateUrl: './admin.page.html',
-  styleUrls: ['./admin.page.css']
+  styleUrls: ['./admin.page.css'],
+  imports: [
+    UsersTabComponent,
+    SecretsTabComponent,
+    SnapshotsTabComponent,
+    TabsModule,
+    ToastNotificationListComponent
+  ]
 })
 export class AdminPageComponent implements OnInit {
 
-  notifications: Notification[];
+  notifications: Notification[] = [];
 
   constructor(private notificationService: NotificationService) {}
 

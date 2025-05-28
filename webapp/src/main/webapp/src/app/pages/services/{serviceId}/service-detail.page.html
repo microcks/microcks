@@ -8,14 +8,14 @@
   <div class="container-fluid breadcrumb-bar">
     <div class="row">
       <ol class="breadcrumb">
-        <li><a [routerLink]="['/services']">Services &amp; APIs</a></li>
+        <li><a routerLink="/services">Services &amp; APIs</a></li>
         <li>{{ view.service.name }} - {{ view.service.version }}</li>
       </ol>
     </div>
   </div>
 
   <h1>{{ view.service.name }} - {{ view.service.version }}</h1>
-  <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn | timeAgo }}, last update on {{
+  <small *ngIf="view.service.metadata">Created {{ view.service.metadata.createdOn.toString() | timeAgo }}, last update on {{
     view.service.metadata.lastUpdate | date : 'medium' }}</small>
 
   <div *ngIf="view.service.metadata" class="metadata-labels">
@@ -45,7 +45,7 @@
         <dt>Contracts:</dt>
         <dd>
           <span *ngIf="contracts | async as contracts$; else loadingc">
-            <ng-container *ngIf="contracts$.length; else noContracts">
+            <ng-container *ngIf="contracts$.length || view.service.type != 'GENERIC_REST'; else noContracts">
               <span *ngFor="let contract of contracts$">
                 <a href="{{ getContractLink(contract) }}" target="new" title="{{ contract.name }}">
                   {{ contract.name }} {{ contract.type }} <i tooltip="Source artifact: {{ contract.sourceArtifact }}" containerClass="tooltip-break" class="glyphicon glyphicon-globe"></i>
@@ -58,7 +58,7 @@
                   *ngIf="contract.type === 'OPEN_API_SPEC' || contract.type === 'ASYNC_API_SPEC' || contract.type === 'SWAGGER'" />
               </span>
             </ng-container>
-            <ng-template *ngIf="view.service.type != 'GENERIC_REST'" #noContracts>No contracts attached</ng-template>
+            <ng-template #noContracts>No contracts attached</ng-template>
           </span>
           <ng-template #loadingc>Loading contracts...</ng-template>
 
@@ -76,6 +76,19 @@
           <a [routerLink]="['/metrics/invocations', view.service.name, view.service.version]">Mocks invocations <i
               class="glyphicon glyphicon-signal"></i></a>
         </dd>
+        <span *ngIf="isMCPAvailable()">
+          <dt>MCP Server:</dt>
+          <dd>
+            <a tooltip="Copy to Clipboard" placement="top"
+                (click)="copyToClipboard(formatMCPUrl('/sse'), 'MCP URL')">
+              HTTP SSE Endpoint <i class="pficon pficon-optimize"></i>
+            </a><br/>
+            <a tooltip="Copy to Clipboard" placement="top"
+               (click)="copyToClipboard(formatMCPUrl(), 'MCP URL')">
+              HTTP Streamable Endpoint <i class="pficon pficon-optimize"></i>
+            </a>
+          </dd>
+        </span>
       </dl>
     </div>
     <div class="col-md-4">
@@ -98,7 +111,7 @@
             </div>
             <div class="col-xs-5">
               <dt>Conformance score</dt>
-              <span class="conformance-score">{{ conformanceMetric.currentScore | number: '.1-2' || '0.0' }}</span>%
+              <span class="conformance-score">{{ (conformanceMetric.currentScore | number:'.1-2') || '0.0' }}</span>%
               <i class="fa fa-arrow-up conformance-trend"
                 [class.fa-arrow-right]="conformanceMetric.latestTrend === 'STABLE' || conformanceMetric.latestTrend === null"
                 [class.fa-arrow-up]="conformanceMetric.latestTrend === 'UP' || conformanceMetric.latestTrend === 'LOW_UP'"
@@ -146,10 +159,8 @@
   </div>
 
   <div class="container-fluid">
-    <pfng-list id="operationsList" [actionTemplate]="actionTemplate" [config]="operationsListConfig"
-      [expandTemplate]="operationDetailTemplate" [items]="operations" [itemTemplate]="operationTemplate"
-      (onActionSelect)="handleAction($event, null)" (onDblClick)="handleDblClick($event)"
-      (onSelectionChange)="handleSelectionChange($event)">
+    <pfng-list id="operationsList" [config]="operationsListConfig" [expandTemplate]="operationDetailTemplate" 
+        [items]="operations!" [itemTemplate]="operationTemplate">
 
       <ng-template #operationTemplate let-item="item" let-index="index">
         <div class="list-pf-left">
@@ -178,12 +189,11 @@
           </div>
 
           <div class="list-view-pf-actions">
-            <div class="dropdown pull-right dropdown-kebab-pf" *ngIf="allowOperationsPropertiesEdit()">
-              <button class="btn btn-link dropdown-toggle" type="button" id="dropdownKebabRight9" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="true">
+            <div class="dropdown pull-right dropdown-kebab-pf" dropdown *ngIf="allowOperationsPropertiesEdit()">
+              <button id="dropdownKebabRight" class="btn btn-link dropdown-toggle" type="button" dropdownToggle aria-controls="dropdown-actions">
                 <span class="fa fa-ellipsis-v"></span>
               </button>
-              <ul class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight9">
+              <ul id="dropdown-actions" *dropdownMenu class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownKebabRight">
                 <li><a [routerLink]="['operation', item.name]">Edit Properties</a></li>
                 <li><a (click)="openGenerateSamples(item.name)" *ngIf="allowAICopilotOnSamples()">AI Copilot Samples <i
                       class="pficon pficon-optimize"></i></a></li>

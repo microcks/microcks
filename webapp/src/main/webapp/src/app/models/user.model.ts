@@ -14,12 +14,10 @@
  * limitations under the License.
  */
 export class User {
-  id: string;
-  username: string;
-  login: string;
-  name: string;
-  email: string;
-  avatar: string;
+  username?: string;
+  login?: string;
+  name?: string;
+  email?: string;
 
   constructor() {
     this.login = '';

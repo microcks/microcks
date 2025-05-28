@@ -39,7 +39,7 @@ export class ImportersService {
     }
     if (labelsFilter != null) {
       for (const key of Array.from( labelsFilter.keys() )) {
-        httpParams = httpParams.set('labels.' + key, labelsFilter.get(key));
+        httpParams = httpParams.set('labels.' + key, labelsFilter.get(key) as string);
       }
     }
 

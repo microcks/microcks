@@ -96,7 +96,7 @@ public class ServiceService {
    private final String defaultAsyncBinding = null;
 
    @Value("${async-api.default-frequency}")
-   private final Long defaultAsyncFrequency = 30l;
+   private final Long defaultAsyncFrequency = 30L;
 
 
    /**
@@ -219,7 +219,7 @@ public class ServiceService {
          // If it's the main artifact: retrieve previous id and props if update, save anyway.
          if (artifactInfo.isMainArtifact()) {
             if (existingService != null) {
-               // Retrieve its previous identifier and metadatas
+               // Retrieve its previous identifier and metadata
                // (backup metadata that may have been imported with extensions).
                Metadata backup = service.getMetadata();
                service.setId(existingService.getId());
@@ -239,7 +239,7 @@ public class ServiceService {
             }
 
             // For services of type EVENT, we should put default values on frequency and bindings.
-            if (service.getType().equals(ServiceType.EVENT)) {
+            if (ServiceType.EVENT.equals(service.getType())) {
                manageEventServiceDefaults(service);
             }
 

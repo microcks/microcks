@@ -46,7 +46,7 @@ export class ConfigService {
 
       // Check Keycloak realm configuration.
       const keycloak = w.keycloak;
-      console.log('[ConfigService] w[\'keycloak\']: ' + JSON.stringify(w.keycloak));
+      //console.log('[ConfigService] w[\'keycloak\']: ' + JSON.stringify(w.keycloak));
       if (!keycloak || !keycloak.realm) {
         console.info('[ConfigService] No Keycloak realm found. Switching to anonymous auth type.');
         this.config.auth.type = ANONYMOUS_AUTH_TYPE;
@@ -56,35 +56,35 @@ export class ConfigService {
 
   public authType(): string {
     if (!this.config.auth) {
-      return null;
+      return '';
     }
     return this.config.auth.type;
   }
 
   public authToken(): string {
     if (!this.config.auth) {
-      return null;
+      return '';
     }
     return this.config.auth.token;
   }
 
   public authRefreshPeriod(): number {
     if (!this.config.auth) {
-      return null;
+      return 10000;
     }
     return this.config.auth.tokenRefreshPeriod;
   }
 
   public authData(): any {
     if (!this.config.auth) {
-      return null;
+      return '';
     }
     return this.config.auth.data;
   }
 
   public logoutUrl(): string {
     if (!this.config.auth) {
-      return null;
+      return '';
     }
     return this.config.auth.logoutUrl;
   }
@@ -98,7 +98,7 @@ export class ConfigService {
     const featurePromise = this.http.get<any>('/api/features/config')
       .toPromise().then(results => {
         this.config.features = results;
-        console.info('[ConfigService] Got config: ' + JSON.stringify(this.config.features));
+        //console.info('[ConfigService] Got config: ' + JSON.stringify(this.config.features));
         return results;
       });
     return featurePromise;
@@ -117,6 +117,6 @@ export class ConfigService {
       const featureConfig = this.config.features[feature];
       return featureConfig[property];
     }
-    return null;
+    return '';
   }
 }

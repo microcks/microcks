@@ -23,7 +23,7 @@ import { APIPackage, APIVersion } from '../models/hub.model';
 @Injectable({ providedIn: 'root' })
 export class HubService {
 
-  private rootUrl: string = null;
+  private rootUrl: string | null = null;
   // private rootUrl: string = 'http://localhost:4000/api';
   // private rootUrl: string = 'http://microcks-hub/api';
 

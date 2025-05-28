@@ -44,23 +44,23 @@ export class TestsService {
     return this.http.post<TestResult>(this.rootUrl +  '/tests', testRequest);
   }
 
-  public getMessages(test: TestResult, operation: string): Observable<RequestResponsePair> {
+  public getMessages(test: TestResult, operation: string): Observable<RequestResponsePair[]> {
     // operation may contain / that are forbidden within encoded URI.
     // Replace them by "!" and implement same protocole on server-side.
     // Switched from _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
     operation = operation.replace(/\//g, '!');
     const testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
-    console.log('[getMessages] called for ' + testCaseId);
-    return this.http.get<RequestResponsePair>(this.rootUrl + '/tests/' + test.id + '/messages/' + testCaseId);
+    //console.log('[getMessages] called for ' + testCaseId);
+    return this.http.get<RequestResponsePair[]>(this.rootUrl + '/tests/' + test.id + '/messages/' + testCaseId);
   }
 
-  public getEventMessages(test: TestResult, operation: string): Observable<UnidirectionalEvent> {
+  public getEventMessages(test: TestResult, operation: string): Observable<UnidirectionalEvent[]> {
     // operation may contain / that are forbidden within encoded URI.
     // Replace them by "!" and implement same protocole on server-side.
     // Switched from _ to ! in replacement as less commonly used in URL parameters, in line with other frameworks e.g. Drupal
     operation = operation.replace(/\//g, '!');
     const testCaseId = test.id + '-' + test.testNumber + '-' + encodeURIComponent(operation);
-    console.log('[getEventMessages] called for ' + testCaseId);
-    return this.http.get<UnidirectionalEvent>(this.rootUrl + '/tests/' + test.id + '/events/' + testCaseId);
+    //console.log('[getEventMessages] called for ' + testCaseId);
+    return this.http.get<UnidirectionalEvent[]>(this.rootUrl + '/tests/' + test.id + '/events/' + testCaseId);
   }
 }

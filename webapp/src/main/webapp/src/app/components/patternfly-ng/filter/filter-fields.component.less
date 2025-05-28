@@ -1,0 +1,129 @@
+.filter-pf {
+  a { cursor: pointer; }
+  &.filter-fields {
+    .form-group {
+      padding-left: 0;
+      width: 275px;
+    }
+    .tooltip {
+      white-space: nowrap;
+    }
+    .typeahead-input-container {
+      &.disabled {
+        width: 100%;
+        .caret {
+          top: 8px;
+        }
+      }
+      position: relative;
+      padding-right: 0;
+      .caret {
+        color: @color-pf-black-500;
+        font-style: italic;
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        z-index: 2;
+      }
+    }
+  }
+}
+
+.filter-select {
+  .btn-default {
+    background-color: @color-pf-white;
+    background-image: none;
+    .placeholder {
+      color: @color-pf-black-500;
+      font-style: italic;
+      font-weight: 400;
+    }
+  }
+  .avatar {
+    height: 20px;
+    margin-right: 5px;
+  }
+}
+
+/* stylelint-disable */
+.input-group {
+  .input-group-btn {
+    .dropdown-menu>.selected>a {
+      background-color: @color-pf-blue !important;
+      border-color: @color-pf-blue-400 !important; // was #0076b7
+      color: @color-pf-white;
+    }
+  }
+}
+/* styleint-enable */
+
+.pfng-filter-delete {
+  font-size: 12px;
+  opacity: 0;
+  padding-top: 4px;
+  a {
+    color: @color-pf-black;
+    opacity: .7;
+    &:hover {
+      opacity: 1;
+    }
+  }
+  .dropdown-item:hover & {
+    opacity: 1;
+    transition-duration: .5s;
+    transition-property: opacity;
+    transition-timing-function: ease-in;
+  }
+}
+
+.pfng-filter-delete-confirm {
+  font-size: 12px;
+  padding-bottom: 5px;
+  padding-right: 5px;
+  padding-top: 5px;
+  a {
+    color: @color-pf-white;
+    opacity: .9;
+    .fa:before {
+      color: @color-pf-white;
+    }
+    &:hover {
+      opacity: 1;
+    }
+  }
+}
+
+.pfng-filter-delete-slide {
+  background-color: @color-pf-red;
+  right: -100%;
+  position: absolute;
+  transition-duration: 1s;
+  width: 100%;
+  z-index: 1000;
+  &.slide-in {
+    right: 0;
+    .close {
+      opacity: .9;
+      transition-delay: .5s;
+      transition-duration: .5s;
+      transition-property: opacity;
+      transition-timing-function: ease-in;
+    }
+  }
+}
+
+.pfng-filter-delete-text {
+  color: @color-pf-white;
+  padding-left: 10px;
+  padding-top: 2px;
+  position: absolute;
+}
+
+.pfng-filter-delete-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.table-view-pf-select-results {
+  padding-top: 10px;
+}

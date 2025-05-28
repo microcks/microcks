@@ -38,6 +38,27 @@ public class GrpcUtil {
    }
 
    /**
+    * Find a Protobuf service descriptor using a base64 encoded representation of the proto descriptor + service name.
+    * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
+    * @param serviceName              The name of the service to get method for.
+    * @return A Protobuf ServiceDescriptor
+    * @throws InvalidProtocolBufferException            If representation is not understood as protobuf descriptor.
+    * @throws Descriptors.DescriptorValidationException If included FileDescriptor cannot be validated.
+    */
+   public static Descriptors.ServiceDescriptor findServiceDescriptor(String base64ProtobufDescriptor,
+         String serviceName) throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
+      // Now we may have serviceName as being the FQDN. We have to find short version to later findServiceByName().
+      String shortServiceName = serviceName;
+      if (serviceName.contains(".")) {
+         shortServiceName = serviceName.substring(serviceName.lastIndexOf(".") + 1);
+      }
+
+      // Find descriptor with this service name as symbol.
+      Descriptors.FileDescriptor fd = findFileDescriptorBySymbol(base64ProtobufDescriptor, shortServiceName);
+      return fd.findServiceByName(shortServiceName);
+   }
+
+   /**
     * Find a Protobuf method descriptor using a base64 encoded representation of the proto descriptor + service and
     * method name.
     * @param base64ProtobufDescriptor The encoded representation of proto descriptor as produced by protoc.
@@ -50,16 +71,8 @@ public class GrpcUtil {
    public static Descriptors.MethodDescriptor findMethodDescriptor(String base64ProtobufDescriptor, String serviceName,
          String methodName) throws InvalidProtocolBufferException, Descriptors.DescriptorValidationException {
 
-      // Now we may have serviceName as being the FQDN. We have to find short version to later findServiceByName().
-      String shortServiceName = serviceName;
-      if (serviceName.contains(".")) {
-         shortServiceName = serviceName.substring(serviceName.lastIndexOf(".") + 1);
-      }
-
-      // Find descriptor with this service name as symbol.
-      Descriptors.FileDescriptor fd = findFileDescriptorBySymbol(base64ProtobufDescriptor, shortServiceName);
-      Descriptors.ServiceDescriptor sd = fd.findServiceByName(shortServiceName);
-
+      // Retrieve service descriptor first.
+      Descriptors.ServiceDescriptor sd = findServiceDescriptor(base64ProtobufDescriptor, serviceName);
       return sd.findMethodByName(methodName);
    }
 

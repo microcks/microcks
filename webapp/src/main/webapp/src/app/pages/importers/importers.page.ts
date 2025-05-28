@@ -13,14 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild, ViewEncapsulation } from '@angular/core';
+import { CommonModule, DatePipe } from '@angular/common';
+import { 
+  ChangeDetectorRef, 
+  Component, 
+  Injectable,
+  OnInit, 
+  TemplateRef, 
+  ViewChild, 
+  ViewEncapsulation
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 
+/*
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+*/
+
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
-import { Filter, FilterConfig, FilterEvent, FilterField, FilterType } from 'patternfly-ng/filter';
-import { Notification, NotificationEvent, NotificationService, NotificationType } from 'patternfly-ng/notification';
-import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
-import { ToolbarConfig } from 'patternfly-ng/toolbar';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
+
+import { PaginationConfig, PaginationEvent, PaginationModule } from '../../components/patternfly-ng/pagination';
+import { ToolbarConfig, ToolbarModule } from '../../components/patternfly-ng/toolbar';
+import {
+  FilterConfig,
+  FilterEvent,
+  FilterField,
+  FilterType,
+  Filter,
+} from '../../components/patternfly-ng/filter';
+import {
+  Notification,
+  NotificationEvent,
+  NotificationService,
+  NotificationType,
+  ToastNotificationListComponent,
+} from '../../components/patternfly-ng/notification';
+
+import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete/confirm-delete.component';
+import { LabelListComponent } from '../../components/label-list/label-list.component';
 
 import { ImportJob, ServiceRef } from '../../models/importer.model';
 import { IAuthenticationService } from '../../services/auth.service';
@@ -28,29 +62,45 @@ import { ConfigService } from '../../services/config.service';
 import { ImportersService } from '../../services/importers.service';
 import { ServicesService } from '../../services/services.service';
 import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
+import { ImporterWizardComponent} from './_components/importer.wizard';
 import { ServiceRefsDialogComponent } from './service-refs.dialog';
 
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-importers-page',
   templateUrl: './importers.page.html',
-  styleUrls: ['./importers.page.css']
+  styleUrls: ['./importers.page.css'],
+  imports: [
+    CommonModule,
+    ConfirmDeleteDialogComponent,
+    LabelListComponent,
+    BsDropdownModule,
+    DatePipe,
+    FormsModule,
+    //MatButtonModule,
+    //MatFormFieldModule,
+    //MatInputModule,
+    PaginationModule,
+    ToolbarModule,
+    ToastNotificationListComponent,
+    TooltipModule
+  ],
+  providers: [ImportersPageComponent]
 })
 export class ImportersPageComponent implements OnInit {
-  @ViewChild('wizardTemplate', {static: true}) wizardTemplate: TemplateRef<any>;
 
-  modalRef: BsModalRef;
-  importJobs: ImportJob[];
-  importJobsCount: number;
-  servicesLabels: Map<string, string[]>;
-  toolbarConfig: ToolbarConfig;
-  filterConfig: FilterConfig;
-  paginationConfig: PaginationConfig;
-  nameFilterTerm: string = null;
-  repositoryFilter: string = null;
+  modalRef?: BsModalRef;
+  importJobs?: ImportJob[];
+  importJobsCount: number = 0;
+  servicesLabels?: Map<string, string[]>;
+  toolbarConfig: ToolbarConfig = new ToolbarConfig;
+  filterConfig: FilterConfig = new FilterConfig;
+  paginationConfig: PaginationConfig = new PaginationConfig;
+  nameFilterTerm: string | null = null;
+  repositoryFilter: string | null = null;
   filtersText = '';
-  selectedJob: ImportJob;
-  notifications: Notification[];
+  selectedJob?: ImportJob | null;
+  notifications: Notification[] = [];
 
   constructor(private importersSvc: ImportersService, private servicesSvc: ServicesService,
               private modalService: BsModalService, private notificationService: NotificationService,
@@ -103,8 +153,8 @@ export class ImportersPageComponent implements OnInit {
     this.route.queryParams.subscribe(queryParams => {
       // Look at query parameters to apply filters.
       this.filterConfig.appliedFilters = [];
-      if (queryParams.name) {
-        this.nameFilterTerm = queryParams.name;
+      if (queryParams['name']) {
+        this.nameFilterTerm = queryParams['name'];
         this.filterConfig.appliedFilters.push({
           field: {title: 'Name'} as FilterField,
           value: this.nameFilterTerm
@@ -118,7 +168,7 @@ export class ImportersPageComponent implements OnInit {
         } as Filter);
       }
       if (this.nameFilterTerm != null || this.repositoryFilter != null) {
-        this.filterImportJobs(this.repositoryFilter, this.nameFilterTerm);
+        this.filterImportJobs(this.repositoryFilter!, this.nameFilterTerm!);
       } else {
         // Default - retrieve all the jobs
         this.getImportJobs();
@@ -140,7 +190,7 @@ export class ImportersPageComponent implements OnInit {
       this.filterConfig.resultsCount = results.length;
     });
     // Update browser URL to make the page bookmarkable.
-    const queryParams = { name: nameFilterTerm };
+    const queryParams: any = { name: nameFilterTerm };
     for (const key of Array.from( labelsFilter.keys() )) {
       queryParams['labels.' + key] = labelsFilter.get(key);
     }
@@ -157,10 +207,14 @@ export class ImportersPageComponent implements OnInit {
   getServicesLabels(): void {
     this.servicesSvc.getServicesLabels().subscribe(results => {
       this.servicesLabels = results;
-      const queries = [];
+      const queries: any[] = [];
       // Get only the label values corresponding to key used for filtering, then transform them for Patternfly.
-      if (this.servicesLabels[this.repositoryFilterFeatureLabelKey()] != undefined) {
-        this.servicesLabels[this.repositoryFilterFeatureLabelKey()].map(label => queries.push({id: label, value: label}));
+      if (
+        this.servicesLabels && (this.servicesLabels as any)[this.repositoryFilterFeatureLabelKey()] != undefined
+      ) {
+        (this.servicesLabels as any)[this.repositoryFilterFeatureLabelKey()].map(
+          (label: any) => queries.push({ id: label, value: label })
+        );
       }
       this.filterConfig.fields[0].queries = queries;
     });
@@ -176,7 +230,7 @@ export class ImportersPageComponent implements OnInit {
 
   handleFilter($event: FilterEvent): void {
     this.filtersText = '';
-    if ($event.appliedFilters.length == 0) {
+    if (!$event.appliedFilters || $event.appliedFilters.length == 0) {
       this.nameFilterTerm = null;
       this.repositoryFilter = null;
       this.getImportJobs();
@@ -188,7 +242,7 @@ export class ImportersPageComponent implements OnInit {
           this.nameFilterTerm = filter.value;
         }
       });
-      this.filterImportJobs(this.repositoryFilter, this.nameFilterTerm);
+      this.filterImportJobs(this.repositoryFilter!, this.nameFilterTerm!);
     }
   }
 
@@ -207,17 +261,25 @@ export class ImportersPageComponent implements OnInit {
     this.modalRef.content.closeBtnName = 'Close';
   }
 
-  createImportJob(template: TemplateRef<any>): void {
-    this.modalRef = this.modalService.show(template, { class: 'modal-lg' });
-  }
-  editImportJob(template: TemplateRef<any>, job: ImportJob): void {
-    this.selectedJob = job;
-    this.modalRef = this.modalService.show(template, { class: 'modal-lg' });
-  }
+  createImportJob(): void {
+    this.modalRef = this.modalService.show(ImporterWizardComponent, { class: 'modal-lg' });
 
-  closeImportJobWizardModal($event: any): void {
-    this.selectedJob = null;
-    this.modalRef.hide();
+    this.modalRef.content.saveImportJobAction.subscribe((job: ImportJob) => {
+      this.saveOrUpdateImportJob(job);
+    });
+  }
+  editImportJob(job: ImportJob): void {
+    this.selectedJob = job;
+    this.modalRef = this.modalService.show(ImporterWizardComponent, { 
+      class: 'modal-lg', 
+      initialState: {
+        job: this.selectedJob
+      }
+    });
+
+    this.modalRef.content.saveImportJobAction.subscribe((job: ImportJob) => {
+      this.saveOrUpdateImportJob(job);
+    });
   }
 
   saveOrUpdateImportJob(job: ImportJob): void {
@@ -226,16 +288,16 @@ export class ImportersPageComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-                job.name, 'Import job has been updated', false, null, null);
+                job.name, 'Import job has been updated', false);
             // Trigger view reevaluation to update the label list component.
             this.importJobs = JSON.parse(JSON.stringify(this.importJobs));
             this.ref.detectChanges();
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-                job.name, 'Import job cannot be updated (' + err.message + ')', false, null, null);
+                job.name, 'Import job cannot be updated (' + err.message + ')', false);
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {}, //console.log('Observer got a complete notification'),
         }
       );
     } else {
@@ -243,7 +305,7 @@ export class ImportersPageComponent implements OnInit {
         {
           next: res => {
             this.notificationService.message(NotificationType.SUCCESS,
-                job.name, 'Import job has been created', false, null, null);
+                job.name, 'Import job has been created', false);
             this.getImportJobs();
             // Retrieve job id before activating.
             job.id = res.id;
@@ -251,9 +313,9 @@ export class ImportersPageComponent implements OnInit {
           },
           error: err => {
             this.notificationService.message(NotificationType.DANGER,
-                job.name, 'Import job cannot be created (' + err.message + ')', false, null, null);
+                job.name, 'Import job cannot be created (' + err.message + ')', false);
           },
-          complete: () => console.log('Observer got a complete notification'),
+          complete: () => {}, //console.log('Observer got a complete notification'),
         }
       );
     }
@@ -265,14 +327,14 @@ export class ImportersPageComponent implements OnInit {
         next: res => {
           job.active = true;
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, 'Import job has been deleted', false, null, null);
+              job.name, 'Import job has been deleted', false);
           this.getImportJobs();
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, 'Import job cannot be deleted (' + err.message + ')', false, null, null);
+              job.name, 'Import job cannot be deleted (' + err.message + ')', false);
         },
-        complete: () => console.log('Observer got a complete notification'),
+        complete: () => {}, //console.log('Observer got a complete notification'),
       }
     );
   }
@@ -283,14 +345,14 @@ export class ImportersPageComponent implements OnInit {
         next: res => {
           job.active = true;
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, 'Import job has been started/activated', false, null, null);
+              job.name, 'Import job has been started/activated', false);
           this.startImportJob(job);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, 'Import job cannot be started/activated (' + err.message + ')', false, null, null);
+              job.name, 'Import job cannot be started/activated (' + err.message + ')', false);
         },
-        complete: () => console.log('Observer got a complete notification'),
+        complete: () => {}, //console.log('Observer got a complete notification'),
       }
     );
   }
@@ -300,7 +362,7 @@ export class ImportersPageComponent implements OnInit {
       {
         next: res => {
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, 'Import job has been forced', false, null, null);
+              job.name, 'Import job has been forced', false);
           console.log('ImportJobs in 2 secs');
           // TODO run this outsize NgZone using zone.runOutsideAngular() : https://angular.io/api/core/NgZone
           setTimeout(() => {
@@ -309,9 +371,9 @@ export class ImportersPageComponent implements OnInit {
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, 'Import job cannot be forced now', false, null, null);
+              job.name, 'Import job cannot be forced now', false);
         },
-        complete: () => console.log('Observer got a complete notification'),
+        complete: () => {}, //console.log('Observer got a complete notification'),
       }
     );
   }
@@ -322,13 +384,13 @@ export class ImportersPageComponent implements OnInit {
         next: res => {
           job.active = false;
           this.notificationService.message(NotificationType.SUCCESS,
-              job.name, 'Import job has been stopped/desactivated', false, null, null);
+              job.name, 'Import job has been stopped/desactivated', false);
         },
         error: err => {
           this.notificationService.message(NotificationType.DANGER,
-              job.name, 'Import job cannot be stopped/desactivated (' + err.message + ')', false, null, null);
+              job.name, 'Import job cannot be stopped/desactivated (' + err.message + ')', false);
         },
-        complete: () => console.log('Observer got a complete notification'),
+        complete: () => {}, //console.log('Observer got a complete notification'),
       }
     );
   }

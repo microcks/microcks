@@ -1,0 +1,55 @@
+<div class="filter-pf"
+     *ngIf="config && ((config.appliedFilters && config.appliedFilters.length > 0) || (config.totalCount && config.totalCount > 0))">
+  <div class="row toolbar-pf-results">
+    <div [ngClass]="{'col-sm-9': config!.totalCount !== undefined, 'col-sm-12': config.totalCount === undefined}">
+      <h5 *ngIf="config.appliedFilters!.length > 0 && config.resultsCount! >= 0">{{config.resultsCount}} Results</h5>
+      <p *ngIf="config.appliedFilters!.length > 0" class="filter-pf-active-label">Active filters:</p>
+      <ul class="list-inline">
+        <li *ngFor="let filter of config.appliedFilters">
+          <span class="active-filter label label-info">
+            {{filter.field.title}}: {{filter.value}}
+            <span class="margin-left-5 pficon pficon-close"
+                  (click)="clearFilter(filter)"
+                  *ngIf="config.disabled !== true"></span>
+          </span>
+        </li>
+      </ul>
+      <p>
+        <a class="clear-filters" href="javascript:void(0)"
+           [class.disabled]="config.disabled === true"
+           (click)="config.disabled !== true && clearAllFilters()"
+           *ngIf="config.appliedFilters!.length > 0">Clear All Filters</a>
+      </p>
+      <p class="pfng-save-filter margin-left-10">
+        <ng-template #saveFilterTemplate>
+          <label class="control-label required-pf margin-right-15" for="saveFilterName">Name your filter</label>
+          <span class="pfng-save-filter-close close">
+            <span class="pficon pficon-close" (click)="saveFilterPop.hide(); saveFilterName = ''"></span>
+          </span>
+          <div class="margin-top-5">
+            <input class="form-control" id="saveFilterName" name="saveFilterName" type="text"
+                   [(ngModel)]="saveFilterName">
+          </div>
+          <div class="pfng-save-filter-divider"></div>
+          <div class="pfng-save-filter-footer">
+            <button class="btn btn-default" (click)="saveFilterPop.hide(); saveFilterName = ''">Cancel</button>
+            <span class="margin-left-5">
+              <button class="btn btn-primary"
+                      [disabled]="saveFilterName === undefined || saveFilterName.length === 0"
+                      (click)="saveAllFilters(); saveFilterPop.hide()">Save</button>
+            </span>
+          </div>
+        </ng-template>
+        <span placement="bottom" [popover]="saveFilterTemplate" #saveFilterPop="bs-popover">
+          <a *ngIf="config.showSaveFilter && config.disabled !== true">Save Filter</a>
+        </span>
+        <a href="javascript:void(0)"
+           [class.disabled]="config.disabled === true"
+           *ngIf="config.showSaveFilter && config.disabled === true">Save Filter</a>
+      </p>
+    </div>
+    <div class="col-sm-3 table-view-pf-select-results" *ngIf="config.totalCount! > 0">
+      <strong>{{config.selectedCount}}</strong> of <strong>{{config.totalCount}}</strong> selected
+    </div>
+  </div>
+</div>

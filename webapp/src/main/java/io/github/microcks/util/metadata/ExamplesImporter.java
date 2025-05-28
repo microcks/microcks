@@ -53,6 +53,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -333,6 +334,15 @@ public class ExamplesImporter implements MockRepositoryImporter {
          // We should complete resourcePath here.
          String resourcePath = URIBuilder.buildURIFromPattern(resourcePathPattern, parameters);
          operation.addResourcePath(resourcePath);
+      } else if (DispatchStyles.QUERY_HEADER.equals(rootDispatcher)) {
+         if (requestNode.has(HEADERS_NODE)) {
+            JsonNode headersNode = requestNode.get(HEADERS_NODE);
+            Map<String, String> headersMap = extractHeaders(headersNode);
+            log.debug("Headers map for dispatchCriteria computation: {}", headersMap);
+            dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(rootDispatcherRules, headersMap);
+         } else {
+            log.debug("Missing headers node in request node");
+         }
       } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
          if (ServiceType.GRAPHQL.equals(service.getType()) && requestNode.has(BODY_NODE)) {
             JsonNode variables = requestNode.get(BODY_NODE).path("variables");
@@ -388,5 +398,16 @@ public class ExamplesImporter implements MockRepositoryImporter {
          return contentNode.asText();
       }
       return null;
+   }
+
+   /** Extract headers from a node to be processed for dispatch criteria computing. */
+   private Map<String, String> extractHeaders(JsonNode headersNode) {
+      Map<String, String> result = new HashMap<>();
+      Iterator<Map.Entry<String, JsonNode>> headers = headersNode.fields();
+      while (headers.hasNext()) {
+         Map.Entry<String, JsonNode> headerNode = headers.next();
+         result.put(headerNode.getKey(), getSerializedValue(headerNode.getValue()));
+      }
+      return result;
    }
 }

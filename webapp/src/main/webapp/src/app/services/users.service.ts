@@ -27,7 +27,7 @@ export class UsersService {
 
   private rootUrl = '/api';
 
-  private microcksAppClientId: string;
+  private microcksAppClientId: string | null = null;
 
   constructor(private http: HttpClient, protected authService: IAuthenticationService) {
     if (authService instanceof KeycloakAuthenticationService) {
@@ -40,10 +40,10 @@ export class UsersService {
     this.http.get<any[]>(this.rootUrl + '/clients?clientId=microcks-app&max=2&search=true').subscribe(
       {
         next: res => {
-            const client = res.find(c => c.clientId === 'microcks-app');
-            if (client) {
+          const client = res.find(c => c.clientId === 'microcks-app');
+          if (client) {
             this.microcksAppClientId = client.id;
-            }
+          }
         },
         error: err => {
           console.warn('Unable to retrieve microcksAppClientId from Keycloak. Maybe you do not have correct roles?');
@@ -53,7 +53,7 @@ export class UsersService {
     );
   }
 
-  getRealmName(): string {
+  getRealmName(): string | null {
     if (this.authService instanceof KeycloakAuthenticationService) {
       return (this.authService as KeycloakAuthenticationService).getRealmName();
     }
@@ -82,7 +82,7 @@ export class UsersService {
     return this.http.get<User[]>(this.rootUrl + '/users', options);
   }
 
-  getMicrocksAppClientId(): string {
+  getMicrocksAppClientId(): string | null {
     return this.microcksAppClientId;
   }
 

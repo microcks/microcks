@@ -322,6 +322,11 @@ public class DispatchCriteriaHelper {
       final var paramsRule = Arrays.stream(paramsRuleString.split("&&")).map(String::trim).distinct()
             .collect(Collectors.toUnmodifiableSet());
 
+      // Ensure realURI does not contain query string.
+      if (realURI.contains("?")) {
+         realURI = realURI.substring(0, realURI.indexOf('?'));
+      }
+
       // Filter the extracted parameter map by the referenced parameters in paramsRule
       return extractMapFromURIPattern(pattern, realURI).entrySet().stream()
             .filter(entry -> paramsRule.contains(entry.getKey()))
@@ -388,7 +393,6 @@ public class DispatchCriteriaHelper {
       return "";
    }
 
-
    /**
     * Build a dispatch criteria string from map of parts (key is part name, value is part real value)
     * @param partsRule The dispatch rules referencing parts to consider
@@ -396,6 +400,11 @@ public class DispatchCriteriaHelper {
     * @return A string representing dispatch criteria for the corresponding incoming request.
     */
    public static String buildFromPartsMap(String partsRule, Multimap<String, String> partsMap) {
+      // We may have a partsRule for URI_ELEMENT with params parts, ignore this part.
+      if (partsRule.contains("??")) {
+         partsRule = partsRule.split("\\?\\?")[0];
+      }
+
       if (partsMap != null && !partsMap.isEmpty()) {
          Multimap<String, String> criteriaMap = TreeMultimap.create(partsMap);
 
@@ -425,6 +434,11 @@ public class DispatchCriteriaHelper {
     * @return A string representing a dispatch criteria for the corresponding incoming request.
     */
    public static String buildFromParamsMap(String paramsRule, Multimap<String, String> paramsMap) {
+      // We may have a paramsRule for URI_ELEMENT with path parts, ignore this part.
+      if (paramsRule.contains("??")) {
+         paramsRule = paramsRule.split("\\?\\?")[1];
+      }
+
       if (paramsMap != null && !paramsMap.isEmpty()) {
          Multimap<String, String> criteriaMap = TreeMultimap.create(paramsMap);
 

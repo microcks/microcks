@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, ParamMap, Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
 
 import { Observable, Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { ListConfig } from 'patternfly-ng/list';
+import {
+  Notification,
+  NotificationService,
+  ToastNotificationListComponent,
+} from '../../../components/patternfly-ng/notification';
+import { ListConfig, ListModule } from '../../../components/patternfly-ng/list';
 
-import { Notification, NotificationService } from 'patternfly-ng/notification';
+import { TimeAgoPipe } from '../../../components/time-ago.pipe';
 
 import { Service } from '../../../models/service.model';
 import { TestResult } from '../../../models/test.model';
@@ -31,16 +37,23 @@ import { TestsService } from '../../../services/tests.service';
 @Component({
   selector: 'app-test-runner-page',
   templateUrl: 'test-runner.page.html',
-  styleUrls: ['test-runner.page.css']
+  styleUrls: ['test-runner.page.css'],
+  imports: [
+    CommonModule,
+    ListModule,
+    RouterLink,
+    TimeAgoPipe,
+    ToastNotificationListComponent
+  ]
 })
 export class TestRunnerPageComponent implements OnInit, OnDestroy {
 
-  testId: string;
-  test: Observable<TestResult>;
-  service: Observable<Service>;
-  notifications: Notification[];
-  poller: Subscription;
-  resultsListConfig: ListConfig;
+  testId!: string;
+  test!: Observable<TestResult>;
+  service!: Observable<Service>;
+  notifications: Notification[] = [];
+  poller!: Subscription;
+  resultsListConfig!: ListConfig;
 
   constructor(private servicesSvc: ServicesService, public testsSvc: TestsService, private notificationService: NotificationService,
               private route: ActivatedRoute, private router: Router) {
@@ -51,7 +64,7 @@ export class TestRunnerPageComponent implements OnInit, OnDestroy {
     this.test = this.route.paramMap.pipe(
       switchMap((params: ParamMap) => {
         // (+) before `params.get()` turns the string into a number
-        this.testId = params.get('testId');
+        this.testId = params.get('testId')!;
         return this.testsSvc.getTestResult(this.testId);
       })
     );
@@ -69,7 +82,7 @@ export class TestRunnerPageComponent implements OnInit, OnDestroy {
 
     this.resultsListConfig = {
       dblClick: false,
-      emptyStateConfig: null,
+      //emptyStateConfig: null,
       multiSelect: false,
       selectItems: false,
       selectionMatchProp: 'name',

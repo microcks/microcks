@@ -18,7 +18,7 @@
         </button>
       </div>
     </h1>
-    <small>Created {{ test.testDate | timeAgo }}, ran on {{ test.testDate | date:'medium' }}</small>
+    <small>Created {{ test.testDate.toString() | timeAgo }}, ran on {{ test.testDate | date:'medium' }}</small>
 
     <h3 class="section-label">Properties</h3>
 
@@ -61,15 +61,10 @@
 
     <div class="container-fluid">
       <pfng-list id="resultsList"
-          [actionTemplate]="actionTemplate"
           [config]="resultsListConfig"
           [expandTemplate]="resultDetailTemplate"
           [items]="test.testCaseResults"
-          [itemTemplate]="resultTemplate"
-          (onActionSelect)="handleAction($event, null)"
-          (onClick)="handleClick($event)"
-          (onDblClick)="handleDblClick($event)"
-          (onSelectionChange)="handleSelectionChange($event)">
+          [itemTemplate]="resultTemplate">
 
         <ng-template #resultTemplate let-item="item" let-index="index">
           <div class="list-pf-left">
@@ -98,7 +93,7 @@
 
         <ng-template #resultDetailTemplate let-item="item" let-index="index">
           <tabset>
-            <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName || testStep.eventMessageName }}" (select)="onTestStepSelect(testStep, $event)">
+            <tab *ngFor="let testStep of item.testStepResults" heading="{{ testStep.requestName || testStep.eventMessageName }}">
               <ng-template tabHeading>
                 <i *ngIf="test.inProgress && testStep.success === undefined" class="fa fa-fw fa-refresh fa-spin"></i>
                 <i *ngIf="testStep.success" class="fa fa-fw fa-check-circle"></i>
@@ -108,7 +103,7 @@
                 <div class="col-md-6" *ngIf="service.type != 'EVENT'">
                   <h5 class="subsection-label">Request</h5>
 
-                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).request.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).request.content" [languages]="hlLang"></code></pre>
+                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).request.content" class="hljs"><code [highlightAuto]="messagePairFor(item.operationName, testStep.requestName).request.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="messagePairFor(item.operationName, testStep.requestName).request.headers">
                     <thead>
                       <tr>
@@ -143,7 +138,7 @@
                       </dd>
                     </span>
                   </dl>
-                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).response.content"><code [highlight]="messagePairFor(item.operationName, testStep.requestName).response.content" [languages]="hlLang"></code></pre>
+                  <pre *ngIf="messagePairFor(item.operationName, testStep.requestName).response.content" class="hljs"><code [highlightAuto]="messagePairFor(item.operationName, testStep.requestName).response.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="messagePairFor(item.operationName, testStep.requestName).response.headers">
                     <thead>
                       <tr>
@@ -178,7 +173,7 @@
                       </dd>
                     </span>
                   </dl>
-                  <pre *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content"><code [highlight]="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content" [languages]="hlLang"></code></pre>
+                  <pre *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content" class="hljs"><code [highlightAuto]="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.content" [languages]="hlLang"></code></pre>
                   <table class="table table-condensed" width="100%" *ngIf="eventMessageFor(item.operationName, testStep.eventMessageName).eventMessage.headers">
                     <thead>
                       <tr>

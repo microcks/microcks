@@ -354,7 +354,6 @@ public class AICopilotHelper {
       String resourcePathPattern = operation.getName().contains(" ") ? operation.getName().split(" ")[1]
             : operation.getName();
 
-
       // Extract parameters if LLM provided some.
       Multimap<String, String> parameters = null;
       if (requestNode.has(PARAMETERS_NODE)) {
@@ -398,8 +397,14 @@ public class AICopilotHelper {
       } else if (DispatchStyles.URI_PARTS.equals(rootDispatcher)) {
          dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
       } else if (DispatchStyles.URI_ELEMENTS.equals(rootDispatcher)) {
-         dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
-         dispatchCriteria += DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
+         dispatchCriteria = DispatchCriteriaHelper.buildFromPartsMap(rootDispatcherRules, parameters);
+         dispatchCriteria += DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
+      } else if (DispatchStyles.QUERY_HEADER.equals(rootDispatcher)) {
+         if (requestNode.has(HEADERS_NODE)) {
+            JsonNode headersNode = requestNode.get(HEADERS_NODE);
+            Map<String, String> headersMap = extractHeaders(headersNode);
+            dispatchCriteria = DispatchCriteriaHelper.buildFromParamsMap(rootDispatcherRules, parameters);
+         }
       } else if (DispatchStyles.QUERY_ARGS.equals(rootDispatcher)) {
          // This dispatcher is used for GraphQL or gRPC
          if (ServiceType.GRAPHQL.equals(service.getType())) {
@@ -461,6 +466,17 @@ public class AICopilotHelper {
          return contentNode.asText();
       }
       return null;
+   }
+
+   /** Extract headers from a node to be processed for dispatch criteria computing. */
+   private static Map<String, String> extractHeaders(JsonNode headersNode) {
+      Map<String, String> result = new HashMap<>();
+      Iterator<Map.Entry<String, JsonNode>> headers = headersNode.fields();
+      while (headers.hasNext()) {
+         Map.Entry<String, JsonNode> headerNode = headers.next();
+         result.put(headerNode.getKey(), getSerializedValue(headerNode.getValue()));
+      }
+      return result;
    }
 
    private static Map<String, String> getGraphQLVariables(String requestContent) throws Exception {

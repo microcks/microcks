@@ -30,7 +30,8 @@ export function AuthenticationServiceFactory(http: HttpClient, config: ConfigSer
     return new AnonymousAuthenticationService(http, config);
   } else {
     console.error('[AuthenticationServiceFactory] Unsupported auth type: %s', config.authType());
-    return null;
+    //return null;
+    return new AnonymousAuthenticationService(http, config);
   }
 }
 

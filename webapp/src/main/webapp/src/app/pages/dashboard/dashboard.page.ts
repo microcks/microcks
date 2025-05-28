@@ -19,43 +19,79 @@ import {
   Component,
   OnInit,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
-import { DonutChartConfig } from 'patternfly-ng/chart';
 import {
-  CardAction,
   CardConfig,
   CardFilter,
-  CardFilterPosition,
-} from 'patternfly-ng/card';
-import {
-  SparklineChartConfig,
-  SparklineChartData,
-} from 'patternfly-ng/chart/sparkline-chart';
+  CardModule,
+} from '../../components/patternfly-ng/card';
+import { DonutChartConfig, DonutChartModule } from '../../components/patternfly-ng/chart';
+import { SparklineChartData, SparklineChartConfig, SparklineChartModule } from '../../components/patternfly-ng/chart/sparkline-chart';
+
+import { ScoreTreemapComponent } from '../../components/score-treemap/score-treemap.component';
 
 import { ConfigService } from '../../services/config.service';
 import { MetricsService } from '../../services/metrics.service';
 import { ServicesService } from '../../services/services.service';
-import { DailyInvocations } from '../../models/metric.model';
 
 @Component({
   selector: 'app-dashboard-page',
   templateUrl: 'dashboard.page.html',
   styleUrls: ['dashboard.page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    CardModule,
+    DonutChartModule,
+    ScoreTreemapComponent,
+    SparklineChartModule
+  ]
 })
 export class DashboardPageComponent implements OnInit {
   aDayLong: number = 1000 * 60 * 60 * 24;
   today = new Date();
-  todayStr: string = this.metricsSvc.formatDayDate(new Date());
+  todayStr: string;
 
   servicesCount = 0;
   aggregatesCount = 0;
 
-  chartCardConfig: CardConfig;
-  topCardConfig: CardConfig;
-  repositoryCardConfig: CardConfig;
-  testConformanceCardConfig: CardConfig;
-  testResultsCardConfig: CardConfig;
+  chartCardConfig: CardConfig = {
+    action: {
+      hypertext: 'View All Events',
+      iconStyleClass: 'fa fa-flag',
+    },
+    filters: [
+      { title: 'Last 50 Days', value: '50' },
+      { default: true, title: 'Last 20 Days', value: '20' },
+      { title: 'Last 10 Days', value: '10' }
+    ],
+    title: 'APIs | Services Mocks Invocations',
+  } as CardConfig;
+
+  topCardConfig: CardConfig = {
+    filters: [
+      { default: true, title: 'Today', value: 'today' },
+      { title: 'Yesterday', value: 'yesterday' }
+    ],
+    title: 'Most Used APIs | Services',
+  } as CardConfig;
+
+  repositoryCardConfig: CardConfig = {
+    title: 'APIs | Services Repository',
+  } as CardConfig;
+
+  testConformanceCardConfig: CardConfig = {
+    title: 'API | Services Conformance Risks',
+  } as CardConfig;
+
+  testResultsCardConfig: CardConfig = {
+    filters: [
+      { default: true, title: 'Last 7 Days', value: '7' },
+      { title: 'Last 15 Days', value: '15', }
+    ],
+    title: 'API | Services Tests',
+  } as CardConfig;
 
   actionsText = '';
   chartDates: any[] = ['dates'];
@@ -116,7 +152,7 @@ export class DashboardPageComponent implements OnInit {
     legend: { show: true },
   };
 
-  topInvocations: DailyInvocations[];
+  topInvocations: any; //DailyInvocations[];
   conformanceScores: any;
 
   constructor(
@@ -124,7 +160,9 @@ export class DashboardPageComponent implements OnInit {
     private config: ConfigService,
     private metricsSvc: MetricsService,
     private ref: ChangeDetectorRef
-  ) {}
+  ) {
+    this.todayStr = metricsSvc.formatDayDate(this.today);
+  }
 
   ngOnInit() {
     this.getServicesMap();
@@ -132,67 +170,6 @@ export class DashboardPageComponent implements OnInit {
     this.getInvocationsTrend();
     this.getAggregatedTestConformanceMetrics();
     this.getLatestTestsTrend();
-
-    this.chartCardConfig = {
-      action: {
-        hypertext: 'View All Events',
-        iconStyleClass: 'fa fa-flag',
-      },
-      filters: [
-        {
-          title: 'Last 50 Days',
-          value: '50',
-        },
-        {
-          default: true,
-          title: 'Last 20 Days',
-          value: '20',
-        },
-        {
-          title: 'Last 10 Days',
-          value: '10',
-        },
-      ],
-      title: 'APIs | Services Mocks Invocations',
-    } as CardConfig;
-
-    this.topCardConfig = {
-      filters: [
-        {
-          default: true,
-          title: 'Today',
-          value: 'today',
-        },
-        {
-          title: 'Yesterday',
-          value: 'yesterday',
-        },
-      ],
-      title: 'Most Used APIs | Services',
-    } as CardConfig;
-
-    this.repositoryCardConfig = {
-      title: 'APIs | Services Repository',
-    } as CardConfig;
-
-    this.testConformanceCardConfig = {
-      title: 'API | Services Conformance Risks',
-    } as CardConfig;
-
-    this.testResultsCardConfig = {
-      filters: [
-        {
-          default: true,
-          title: 'Last 7 Days',
-          value: '7',
-        },
-        {
-          title: 'Last 15 Days',
-          value: '15',
-        },
-      ],
-      title: 'API | Services Tests',
-    } as CardConfig;
   }
 
   isRepositoryPanelDisplayed(): boolean {
@@ -217,17 +194,24 @@ export class DashboardPageComponent implements OnInit {
       for (const key in results) {
         if (key === 'GENERIC_REST' || key === 'GENERIC_EVENT') {
           directCount += results[key];
-          this.repositoryDonutChartData.push(['DIRECT', directCount]);
+          this.addServiceCountToDonutTuple('DIRECT', results[key]);
         } else if (key === 'SOAP_HTTP') {
-          this.repositoryDonutChartData.push(['SOAP', results[key]]);
+          this.addServiceCountToDonutTuple('SOAP', results[key]);
         } else if (key === 'GRAPHQL') {
-          this.repositoryDonutChartData.push(['GRAPH', results[key]]);
+          this.addServiceCountToDonutTuple('GRAPH', results[key]);
         } else {
-          this.repositoryDonutChartData.push([key, results[key]]);
+          this.addServiceCountToDonutTuple(key, results[key]);
         }
       }
       this.ref.detectChanges();
     });
+  }
+
+  private addServiceCountToDonutTuple(tupleName: string, results: number): void {
+    let tuple = this.repositoryDonutChartData.find((tuple) => tuple[0] === tupleName);
+    if (tuple) {
+      tuple[1] += results;
+    }
   }
 
   getTopInvocations(day: Date = this.today): void {
@@ -318,7 +302,7 @@ export class DashboardPageComponent implements OnInit {
   handleTestsFilterSelect($event: CardFilter): void {
     this.getLatestTestsTrend(+$event.value);
   }
-
+  
   repositoryFilterFeatureLabelKey(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-key');
   }

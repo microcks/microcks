@@ -2,10 +2,10 @@ version: '2'
 
 services:
   redpanda:
-    image: vectorized/redpanda:v22.2.2
+    image: redpandadata/redpanda:v24.3.1
     command: [
       "redpanda", "start",
-      "--overprovisioned --smp 1  --memory 1G --reserve-memory 0M --node-id 0 --check=false",
+      "--overprovisioned --smp 1 --memory 1G --reserve-memory 0M --node-id 0 --check=false",
       "--kafka-addr PLAINTEXT://0.0.0.0:19092,EXTERNAL://0.0.0.0:9092",
       "--advertise-kafka-addr PLAINTEXT://kafka:19092,EXTERNAL://localhost:9092"
     ]

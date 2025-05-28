@@ -52,6 +52,9 @@ public class JsonSchemaValidator {
 
    public static final String JSON_SCHEMA_COMPONENTS_ELEMENT = "components";
    public static final String JSON_SCHEMA_PROPERTIES_ELEMENT = "properties";
+   public static final String JSON_SCHEMA_REQUIRED_ELEMENT = "required";
+   public static final String JSON_SCHEMA_ITEMS_ELEMENT = "items";
+   public static final String JSON_SCHEMA_ADD_PROPERTIES_ELEMENT = "additionalProperties";
 
    private static final ObjectMapper mapper = new ObjectMapper()
          .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)

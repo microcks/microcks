@@ -13,128 +13,60 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, ViewChild, ViewEncapsulation, Host } from '@angular/core';
+import { Component, OnInit, viewChild, ViewEncapsulation, Output, EventEmitter } from '@angular/core';
+import {
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { MatStepper, MatStepperModule } from '@angular/material/stepper';
 
-import { WizardComponent, WizardConfig, WizardEvent, WizardStep, WizardStepComponent, WizardStepConfig } from 'patternfly-ng/wizard';
+import { BsModalRef } from 'ngx-bootstrap/modal';
 
-import { Api, Service, ServiceType } from '../../../models/service.model';
+import { Api, ServiceType } from '../../../models/service.model';
 import { ServicesPageComponent } from '../services.page';
+
+const API_TYPE = {
+  GENERIC_EVENT: 'GENERIC_EVENT',
+  GENERIC_REST: 'GENERIC_REST',
+} as const;
 
 @Component({
   encapsulation: ViewEncapsulation.None,
   selector: 'app-direct-api-wizard',
   templateUrl: './direct-api.wizard.html',
-  styleUrls: ['./direct-api.wizard.css']
+  styleUrls: ['./direct-api.wizard.css'],
+  imports: [FormsModule, MatStepperModule, ReactiveFormsModule]
 })
 export class DirectAPIWizardComponent implements OnInit {
-  @ViewChild('wizard', {static: true}) wizard: WizardComponent;
+  private stepper = viewChild<MatStepper>('stepper');
+
+  @Output() saveDirectAPIAction = new EventEmitter<Api>();
+
+  API_TYPE = API_TYPE;
+  selectedApiType: keyof typeof API_TYPE | undefined;
 
   formInvalid = true;
-  api: Api = new Api();
-  apiType: ServiceType = null;
+  api: Api = {} as Api;
+  apiType: ServiceType | undefined;
 
-  // Wizard Step 1
-  step1Config: WizardStepConfig;
-  step2Config: WizardStepConfig;
-  step3Config: WizardStepConfig;
-  step4Config: WizardStepConfig;
-
-  // Wizard
-  wizardConfig: WizardConfig;
-  wizardHost: ServicesPageComponent;
-
-  constructor(@Host() wizardHost: ServicesPageComponent) {
-    this.wizardHost = wizardHost;
+  wizardHost: ServicesPageComponent | undefined;
+ 
+  constructor(public bsModalRef: BsModalRef) {
   }
-
+ 
   ngOnInit() {
-    const wizardTitle = 'Add a new Direct API';
-
-    // Step 1
-    this.step1Config = {
-      id: 'step1',
-      priority: 0,
-      title: 'Direct API type',
-      expandReviewDetails: true,
-      nextEnabled: false
-    } as WizardStepConfig;
-
-    // Step 2
-    this.step2Config = {
-      id: 'step2',
-      priority: 0,
-      title: 'API properties',
-      expandReviewDetails: true,
-      nextEnabled: true
-    } as WizardStepConfig;
-
-    // Step 3
-    this.step3Config = {
-      id: 'step3',
-      priority: 0,
-      title: 'Reference payload',
-      expandReviewDetails: true,
-      nextEnabled: true
-    } as WizardStepConfig;
-
-    // Step 4
-    this.step4Config = {
-      id: 'step4',
-      priority: 2,
-      title: 'Review'
-    } as WizardStepConfig;
-
-    // Wizard
-    this.wizardConfig = {
-      title: wizardTitle,
-      sidebarStyleClass: 'example-wizard-sidebar',
-      stepStyleClass: 'example-wizard-step'
-    } as WizardConfig;
-
-    this.setNavAway(false);
   }
 
-  nextClicked($event: WizardEvent): void {
-    if ($event.step.config.id === 'step4') {
-      //
-      this.wizardHost.createDirectAPI(this.apiType, this.api);
-      this.wizardHost.closeDirectAPIWizardModal($event);
-    }
-  }
-
-  stepChanged($event: WizardEvent) {
-    const flatSteps = this.flattenWizardSteps(this.wizard);
-    const currentStep = flatSteps.filter(step => step.config.id === $event.step.config.id);
-    if (currentStep && currentStep.length > 0) {
-      currentStep[0].config.nextEnabled = true;
-    }
-    if ($event.step.config.id === 'step1') {
-      this.updateApiType();
-    } else if ($event.step.config.id === 'step2') {
-      this.updateApiProperties();
-    } else if ($event.step.config.id === 'step3') {
-      this.updateApiReference();
-    } else {
-      this.wizardConfig.nextTitle = 'Next >';
-    }
-  }
-
-  changeApiType(type: ServiceType): void {
-    this.apiType = type;
-    this.updateApiType();
-  }
-  updateApiType(): void {
-    this.step1Config.nextEnabled =
-      (this.apiType !== undefined && this.apiType != null &&
-        (this.apiType == ServiceType.GENERIC_REST || this.apiType == ServiceType.GENERIC_EVENT));
-    this.setNavAway(this.step1Config.nextEnabled);
+  changeApiType(value: keyof typeof API_TYPE) {
+    this.selectedApiType = value;
+    this.apiType = value === 'GENERIC_EVENT' ? ServiceType.GENERIC_EVENT : ServiceType.GENERIC_REST;
+    this.stepper && this.stepper()?.next();
   }
   updateApiProperties(): void {
     this.formInvalid = false;
     if (this.api.name == null || this.api.version == null || this.api.resource == null) {
       this.formInvalid = true;
     }
-    this.step2Config.nextEnabled = !this.formInvalid;
   }
   updateApiReference(): void {
     this.formInvalid = false;
@@ -149,27 +81,43 @@ export class DirectAPIWizardComponent implements OnInit {
         ((this.api.referencePayload == null || this.api.referencePayload.trim() === ''))) {
       this.formInvalid = true;
     }
-    this.step3Config.nextEnabled = !this.formInvalid;
   }
 
-  private setNavAway(allow: boolean) {
-    this.step1Config.allowClickNav = allow;
-    this.step2Config.allowClickNav = allow;
-    this.step3Config.allowClickNav = allow;
-    this.step4Config.allowClickNav = allow;
+  save($event: any) {
+    /*
+    if (this.wizardHost) {
+      this.wizardHost.createDirectAPI(this.apiType || ServiceType.GENERIC_REST, this.api);
+      this.wizardHost.closeDirectAPIWizardModal($event);
+    }
+    */
+    this.api.type = this.apiType || ServiceType.GENERIC_REST;
+    this.saveDirectAPIAction.emit(this.api);
+    this.close();
   }
 
-  private flattenWizardSteps(wizard: WizardComponent): WizardStep[] {
-    const flatWizard: WizardStep[] = [];
-    wizard.steps.forEach((step: WizardStepComponent) => {
-      if (step.hasSubsteps) {
-        step.steps.forEach(substep => {
-          flatWizard.push(substep);
-        });
-      } else {
-        flatWizard.push(step);
+  close(): void {
+    this.bsModalRef.hide()
+  }
+
+  isNextDisabled(): boolean {
+    return this.formInvalid;
+  }
+  next($event: any): void {
+    if (this.stepper && this.stepper()?.selectedIndex) {
+      if (this.stepper()?.selectedIndex === 3) {
+        this.save($event);
       }
-    });
-    return flatWizard;
+    }
+    this.stepper && this.stepper()?.next();
+  }
+
+  isPreviousDisabled(): boolean {
+    if (this.stepper && this.stepper()?.selectedIndex) {
+      return this.stepper()?.selectedIndex === 0;
+    }
+    return true;
+  }
+  previous(): void {
+    this.stepper && this.stepper()?.previous();
   }
 }

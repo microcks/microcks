@@ -1,0 +1,15 @@
+<div class="card-pf-time-frame-filter">
+  <div class="dropdown primary-action" dropdown>
+    <button class="btn btn-default dropdown-toggle" type="button" dropdownToggle>
+      {{currentFilter.title}}<span class="caret"></span>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-right" role="menu" *dropdownMenu>
+      <li role="menuitem" *ngFor="let filter of filters"
+          [ngClass]="{'selected': filter === currentFilter}">
+        <a class="dropdown-item" role="menuitem" tabindex="-1" (click)="select(filter)">
+          {{filter?.title}}
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>

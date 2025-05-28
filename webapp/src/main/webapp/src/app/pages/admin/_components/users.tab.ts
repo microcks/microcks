@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
 
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalService, BsModalRef } from 'ngx-bootstrap/modal';
-import {
-  Notification,
-  NotificationEvent,
-  NotificationService,
-  NotificationType,
-} from 'patternfly-ng/notification';
-import { PaginationConfig, PaginationEvent } from 'patternfly-ng/pagination';
-import { ToolbarConfig } from 'patternfly-ng/toolbar';
+
+import { NotificationService, NotificationType } from '../../../components/patternfly-ng/notification';
+import { PaginationConfig, PaginationModule, PaginationEvent } from '../../../components/patternfly-ng/pagination';
+import { ToolbarConfig, ToolbarModule } from '../../../components/patternfly-ng/toolbar';
 import {
   FilterConfig,
   FilterEvent,
   FilterField,
   FilterType,
-} from 'patternfly-ng/filter';
+} from '../../../components/patternfly-ng/filter';
 
 import { User } from '../../../models/user.model';
 import { IAuthenticationService } from '../../../services/auth.service';
@@ -39,24 +37,38 @@ import { ServicesService } from '../../../services/services.service';
 import { UsersService } from '../../../services/users.service';
 import { GroupsManagementDialogComponent } from './_components/groups-management.dialog';
 
+type KeycloakUser = {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+}
+
 @Component({
   selector: 'app-users-tab',
   templateUrl: './users.tab.html',
   styleUrls: ['./users.tab.css'],
+  imports: [
+    CommonModule,
+    BsDropdownModule,
+    PaginationModule,
+    ToolbarModule,
+  ]
 })
 export class UsersTabComponent implements OnInit {
-  modalRef: BsModalRef;
+  
+  modalRef?: BsModalRef;
   allowedToManageUsers = true;
-  users: User[];
-  usersCount: number;
-  usersRoles: {};
-  groups: any[];
+  users?: User[];
+  usersCount: number = 0;
+  usersRoles: Record<string, any[]> = {};
+  groups?: any[];
   managerGroup: any;
-  tenants: string[];
-  toolbarConfig: ToolbarConfig;
-  filterConfig: FilterConfig;
-  paginationConfig: PaginationConfig;
-  filterTerm: string = null;
+  tenants?: string[];
+  toolbarConfig: ToolbarConfig = new ToolbarConfig;
+  filterConfig: FilterConfig = new FilterConfig;
+  paginationConfig: PaginationConfig = new PaginationConfig;
+  filterTerm: string | null = null;
   filtersText = '';
 
   constructor(
@@ -137,18 +149,14 @@ export class UsersTabComponent implements OnInit {
             NotificationType.DANGER,
             'Authorization Error',
             'Current user does not appear to have the **manage-groups** role from **realm-management** client. Please contact your administrator to setup correct role.',
-            false,
-            null,
-            null
+            false
           );
         } else {
           this.notificationService.message(
             NotificationType.WARNING,
             'Unknown Error',
             err.message,
-            false,
-            null,
-            null
+            false
           );
         }
       },
@@ -158,8 +166,8 @@ export class UsersTabComponent implements OnInit {
     this.servicesSvc.getServicesLabels().subscribe((results) => {
       this.tenants = results[this.repositoryFilterFeatureLabelKey()];
       // Check that each tenant has correct groups, otherwise create them.
-      this.tenants.forEach((tenant) => {
-        const mGroup = this.groups.find(
+      this.tenants!.forEach((tenant) => {
+        const mGroup = this.groups?.find(
           (g) => g.path === '/microcks/manager/' + tenant
         );
         if (mGroup == null) {
@@ -167,6 +175,10 @@ export class UsersTabComponent implements OnInit {
         }
       });
     });
+  }
+
+  kUser(user: User): KeycloakUser {
+    return user as KeycloakUser;
   }
 
   getUsers(page: number = 1): void {
@@ -181,18 +193,14 @@ export class UsersTabComponent implements OnInit {
             NotificationType.DANGER,
             'Authorization Error',
             'Current user does not appear to have the **manage-users** role from **realm-management** client. Please contact your administrator to setup correct role.',
-            false,
-            null,
-            null
+            false
           );
         } else {
           this.notificationService.message(
             NotificationType.WARNING,
             'Unknown Error',
             err.message,
-            false,
-            null,
-            null
+            false
           );
         }
       },
@@ -229,18 +237,13 @@ export class UsersTabComponent implements OnInit {
             NotificationType.DANGER,
             'Authorization Error',
             'Current user does not appear to have the **manage-clients** role from **realm-management** client. Please contact your administrator to setup correct role.',
-            false,
-            null,
-            null
+            false
           );
         } else {
           this.notificationService.message(
             NotificationType.WARNING,
-            'Unknown Error',
-            err.message,
-            false,
-            null,
-            null
+            'Unknown Error', err.message,
+            false
           );
         }
       },
@@ -266,25 +269,19 @@ export class UsersTabComponent implements OnInit {
       next: (res) => {
         this.notificationService.message(
           NotificationType.SUCCESS,
-          userName,
-          userName + ' is now ' + role,
-          false,
-          null,
-          null
+          userName, userName + ' is now ' + role,
+          false
         );
         this.getUserRoles(userId);
       },
       error: (err) => {
         this.notificationService.message(
           NotificationType.DANGER,
-          userName,
-          userName + ' cannot be made ' + role + ' (' + err.message + ')',
-          false,
-          null,
-          null
+          userName, userName + ' cannot be made ' + role + ' (' + err.message + ')',
+          false
         );
       },
-      complete: () => console.log('Observer got a complete notification'),
+      complete: () => {} //console.log('Observer got a complete notification'),
     });
   }
   removeRoleFromUser(userId: string, userName: string, role: string) {
@@ -292,32 +289,29 @@ export class UsersTabComponent implements OnInit {
       next: (res) => {
         this.notificationService.message(
           NotificationType.SUCCESS,
-          userName,
-          userName + ' is no more ' + role,
-          false,
-          null,
-          null
+          userName, userName + ' is no more ' + role,
+          false
         );
         this.getUserRoles(userId);
       },
       error: (err) => {
         this.notificationService.message(
           NotificationType.DANGER,
-          userName,
-          userName + ' cannot be downgraded ' + role + ' (' + err.message + ')',
-          false,
-          null,
-          null
+          userName, userName + ' cannot be downgraded ' + role + ' (' + err.message + ')',
+          false
         );
       },
-      complete: () => console.log('Observer got a complete notification'),
+      complete: () => {} //console.log('Observer got a complete notification'),
     });
   }
 
   openGroupsManagementDialog(user: User): void {
-    this.usersSvc.getUserGroups(user.id).subscribe((userGroups) => {
+    this.usersSvc.getUserGroups((user as any).id).subscribe((userGroups) => {
       const initialState = {
-        user,
+        user: {
+          id: (user as any).id,
+          username: (user as any).username,
+        },
         userGroups: userGroups.filter((group) =>
           group.path.startsWith('/microcks/manager/')
         ),
@@ -340,7 +334,7 @@ export class UsersTabComponent implements OnInit {
 
   handleFilter($event: FilterEvent): void {
     this.filtersText = '';
-    if ($event.appliedFilters.length == 0) {
+    if (!$event.appliedFilters || $event.appliedFilters.length == 0) {
       this.filterTerm = null;
       this.getUsers();
     } else {
@@ -348,7 +342,7 @@ export class UsersTabComponent implements OnInit {
         this.filtersText += filter.field.title + ' : ' + filter.value + '\n';
         this.filterTerm = filter.value;
       });
-      this.filterUsers(this.filterTerm);
+      this.filterUsers(this.filterTerm!);
     }
   }
 

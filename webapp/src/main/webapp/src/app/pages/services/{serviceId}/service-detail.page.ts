@@ -19,25 +19,35 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
 } from '@angular/core';
-import { ActivatedRoute, Router, ParamMap } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 
 import { Observable, Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
-import { BsModalService } from 'ngx-bootstrap/modal';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
+
 import {
   Notification,
   NotificationEvent,
   NotificationService,
   NotificationType,
-} from 'patternfly-ng/notification';
-import { ListConfig, ListEvent } from 'patternfly-ng/list';
+  ToastNotificationListComponent,
+} from '../../../components/patternfly-ng/notification';
+import { ListConfig, ListModule } from '../../../components/patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
+import { GradeIndexComponent } from '../../../components/grade-index/grade-index.component';
+import { LabelListComponent } from '../../../components/label-list/label-list.component';
+import { TimeAgoPipe } from '../../../components/time-ago.pipe';
+
+import { ExchangesTabsetComponent } from './_components/exchanges-tabset/exchanges-tabset.component';
 import { GenerateSamplesDialogComponent } from './_components/generate-samples.dialog';
 import { GenericResourcesDialogComponent } from './_components/generic-resources.dialog';
 import { ManageSamplesDialogComponent } from './_components/manage-samples.dialog';
+
 import {
   Operation,
   ServiceType,
@@ -50,12 +60,12 @@ import {
   RequestResponsePair,
   EventMessage,
 } from '../../../models/service.model';
-import { TestConformanceMetric } from 'src/app/models/metric.model';
+import { TestConformanceMetric } from '../../../models/metric.model';
 import { AICopilotService } from '../../../services/aicopilot.service';
 import { IAuthenticationService } from '../../../services/auth.service';
 import { ConfigService } from '../../../services/config.service';
 import { ContractsService } from '../../../services/contracts.service';
-import { MetricsService } from 'src/app/services/metrics.service';
+import { MetricsService } from '../../../services/metrics.service';
 import { ServicesService } from '../../../services/services.service';
 
 @Component({
@@ -63,35 +73,47 @@ import { ServicesService } from '../../../services/services.service';
   templateUrl: './service-detail.page.html',
   styleUrls: ['./service-detail.page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    CommonModule,
+    BsDropdownModule,
+    ExchangesTabsetComponent,
+    GradeIndexComponent,
+    LabelListComponent,
+    ListModule,
+    RouterLink,
+    TimeAgoPipe,
+    ToastNotificationListComponent,
+    TooltipModule,
+  ],
 })
 export class ServiceDetailPageComponent implements OnInit {
   readonly hlLang: string[] = ['json', 'xml', 'yaml'];
 
-  modalRef: BsModalRef;
-  serviceId: string;
-  serviceView: Observable<ServiceView>;
-  resolvedServiceView: ServiceView;
-  contracts: Observable<Contract[]>;
-  serviceTestConformanceMetric: Observable<TestConformanceMetric>;
-  operations: Operation[];
-  selectedOperation: Operation;
-  operationsListConfig: ListConfig;
-  notifications: Notification[];
+  modalRef?: BsModalRef;
+  serviceId!: string;
+  serviceView: Observable<ServiceView> | null = null;
+  resolvedServiceView!: ServiceView;
+  contracts?: Observable<Contract[]>;
+  serviceTestConformanceMetric?: Observable<TestConformanceMetric>;
+  operations?: Operation[];
+  selectedOperation?: Operation;
+  operationsListConfig!: ListConfig;
+  notifications: Notification[] = [];
   urlType: string = 'raw';
 
   aiCopilotSamples: boolean = false;
-  aiCopilotTaskId: string = null;
-  aiPoller: Subscription;
+  aiCopilotTaskId: string | null = null;
+  aiPoller?: Subscription;
 
   constructor(
     private servicesSvc: ServicesService,
     private contractsSvc: ContractsService,
     private metricsSvc: MetricsService,
     private authService: IAuthenticationService,
-    private config: ConfigService,
+    protected config: ConfigService,
     private copilotSvc: AICopilotService,
     private modalService: BsModalService,
-    private notificationService: NotificationService,
+    protected notificationService: NotificationService,
     private route: ActivatedRoute,
     private router: Router,
     private ref: ChangeDetectorRef
@@ -101,17 +123,17 @@ export class ServiceDetailPageComponent implements OnInit {
     this.notifications = this.notificationService.getNotifications();
     this.serviceView = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.servicesSvc.getServiceView(params.get('serviceId'))
+        this.servicesSvc.getServiceView(params.get('serviceId')!)
       )
     );
     this.contracts = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.contractsSvc.listByServiceId(params.get('serviceId'))
+        this.contractsSvc.listByServiceId(params.get('serviceId')!)
       )
     );
     this.serviceTestConformanceMetric = this.route.paramMap.pipe(
       switchMap((params: ParamMap) =>
-        this.metricsSvc.getServiceTestConformanceMetric(params.get('serviceId'))
+        this.metricsSvc.getServiceTestConformanceMetric(params.get('serviceId')!)
       )
     );
     this.serviceView.subscribe((view) => {
@@ -129,8 +151,8 @@ export class ServiceDetailPageComponent implements OnInit {
       // In case the <service_name>:<service_version> was used, contracts, tests and
       // conformance metrics fail because they can just resolve the technical identifier
       // of service. Relaunch everything here.
-      const idParam = params.get('serviceId');
-      if (idParam.includes(':')) {
+      const idParam = params.get('serviceId')!;
+      if (idParam.includes(':') && this.serviceView != null) {
         this.serviceView.subscribe((view) => {
           console.log('Got serviceId for ' + idParam + ': ' + view.service.id);
           this.contracts = this.contractsSvc.listByServiceId(view.service.id);
@@ -142,7 +164,7 @@ export class ServiceDetailPageComponent implements OnInit {
 
     this.operationsListConfig = {
       dblClick: false,
-      emptyStateConfig: null,
+      //emptyStateConfig: null,
       multiSelect: false,
       selectItems: false,
       selectionMatchProp: 'name',
@@ -170,11 +192,12 @@ export class ServiceDetailPageComponent implements OnInit {
 
   private updateAICopilotSamplesFlag(view: ServiceView): void {
     this.aiCopilotSamples = false;
-    this.operations.forEach((operation) => {
+    this.operations!.forEach((operation) => {
       view.messagesMap[operation.name].forEach((exchange) => {
+        let anyExchange = exchange as any;
         if (
-          (exchange.request != undefined && exchange.request.sourceArtifact === 'AI Copilot')
-           || (exchange.eventMessage != undefined && exchange.eventMessage.sourceArtifact === 'AI Copilot')
+          (anyExchange.request != undefined && anyExchange.request.sourceArtifact === 'AI Copilot')
+            || (anyExchange.eventMessage != undefined && anyExchange.eventMessage.sourceArtifact === 'AI Copilot')
           ) {
           this.aiCopilotSamples = true;
           return;
@@ -214,7 +237,7 @@ export class ServiceDetailPageComponent implements OnInit {
       closeBtnName: 'Cancel',
       resourceName: this.resolvedServiceView.service.name + ' - ' + this.resolvedServiceView.service.version,
       resourceType: 'Service',
-      labels: {},
+      labels: new Map<string, string>(),
     };
     if (this.resolvedServiceView.service.metadata.labels != undefined) {
       initialState.labels = JSON.parse(
@@ -224,7 +247,7 @@ export class ServiceDetailPageComponent implements OnInit {
     this.modalRef = this.modalService.show(EditLabelsDialogComponent, {
       initialState,
     });
-    this.modalRef.content.saveLabelsAction.subscribe((labels) => {
+    this.modalRef.content.saveLabelsAction.subscribe((labels: Map<string, string>) => {
       this.resolvedServiceView.service.metadata.labels = labels;
       this.servicesSvc
         .updateServiceMetadata(
@@ -246,7 +269,7 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.SUCCESS,
               this.resolvedServiceView.service.name,
               'Labels have been updated',
-              false, null, null
+              false
             );
             // Then trigger view reevaluation to update the label list component and the notifications toaster.
             this.ref.detectChanges();
@@ -256,7 +279,7 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.DANGER,
               this.resolvedServiceView.service.name,
               'Labels cannot be updated (' + err.message + ')',
-              false, null, null
+              false
             );
           },
           complete: () => {
@@ -287,7 +310,7 @@ export class ServiceDetailPageComponent implements OnInit {
         NotificationType.INFO,
         this.resolvedServiceView.service.name,
         'AI Copilot Samples generation started...',
-        false, null, null
+        false
       );
       // Then trigger view reevaluation to update the spinner, the button and the notifications toaster.
       this.ref.detectChanges();
@@ -295,7 +318,7 @@ export class ServiceDetailPageComponent implements OnInit {
       // Then start polling for the task status and update the view accordingly.
       console.log('Starting polling for AI Copilot task status...');
       this.aiPoller = interval(5000).pipe(
-        switchMap(() => this.copilotSvc.getGenerationTaskStatus(this.aiCopilotTaskId))
+        switchMap(() => this.copilotSvc.getGenerationTaskStatus(this.aiCopilotTaskId!))
       ).subscribe((res) => {
           console.log("Response: " + JSON.stringify(res));
           if (res.status === 'SUCCESS') {
@@ -303,19 +326,19 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.SUCCESS,
               this.resolvedServiceView.service.name,
               'AI Copilot Samples generation finished!',
-              false, null, null
+              false
             );
             this.aiCopilotTaskId = null;
-            this.aiPoller.unsubscribe();
+            this.aiPoller!.unsubscribe();
           } else if (res.status === 'FAILURE') {
             this.notificationService.message(
               NotificationType.DANGER,
               this.resolvedServiceView.service.name,
               'AI Copilot Samples generation failed',
-              false, null, null
+              false
             );
             this.aiCopilotTaskId = null;
-            this.aiPoller.unsubscribe();
+            this.aiPoller!.unsubscribe();
           }
           // Refresh the view to update the spinner and the notifications toaster.
           this.refreshServiceView();
@@ -346,7 +369,7 @@ export class ServiceDetailPageComponent implements OnInit {
       initialState,
     });
     this.modalRef.setClass('modal-lg');
-    this.modalRef.content.saveSamplesAction.subscribe((exchanges) => {
+    this.modalRef.content.saveSamplesAction.subscribe((exchanges: Exchange[]) => {
       this.copilotSvc
         .addSamplesSuggestions(
           this.resolvedServiceView.service,
@@ -359,9 +382,7 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.SUCCESS,
               this.resolvedServiceView.service.name,
               'Samples have been added to ' + operationName,
-              false,
-              null,
-              null
+              false
             );
             // Then trigger view reevaluation to update the samples list and the notifications toaster.
             this.refreshServiceView();
@@ -371,9 +392,7 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.DANGER,
               this.resolvedServiceView.service.name,
               'Samples cannot be added (' + err.message + ')',
-              false,
-              null,
-              null
+              false
             );
           },
           complete: () => {
@@ -392,15 +411,15 @@ export class ServiceDetailPageComponent implements OnInit {
       initialState,
     });
     this.modalRef.setClass('modal-lg');
-    this.modalRef.content.cleanupSelectionAction.subscribe((selectedExchanges) => {
-      let exchangeSelection = {
+    this.modalRef.content.cleanupSelectionAction.subscribe((selectedExchanges: Record<string, Record<string, boolean>>) => {
+      let exchangeSelection: { serviceId: string; exchanges: Record<string, string[]> } = {
         serviceId: this.resolvedServiceView.service.id,
         exchanges: {}
       };
       Object.keys(selectedExchanges).forEach((operationName) => {
         exchangeSelection.exchanges[operationName] = [];
         Object.keys(selectedExchanges[operationName]).forEach((exchangeName) => {
-          exchangeSelection.exchanges[operationName].push(exchangeName)
+          exchangeSelection.exchanges[operationName]!.push(exchangeName);
         });
       });
       this.copilotSvc
@@ -411,7 +430,7 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.SUCCESS,
               this.resolvedServiceView.service.name,
               'AI Copilot Samples have been removed from Service',
-              false, null, null
+              false
             );
             // Then trigger view reevaluation to update the samples list and the notifications toaster.
             this.refreshServiceView();
@@ -421,7 +440,7 @@ export class ServiceDetailPageComponent implements OnInit {
               NotificationType.DANGER,
               this.resolvedServiceView.service.name,
               'Selected Samples cannot be removed (' + err.message + ')',
-              false, null, null
+              false
             );
           },
           complete: () => {
@@ -469,7 +488,7 @@ export class ServiceDetailPageComponent implements OnInit {
     return result;
   }
 
-  public getBindingsList(operation: Operation): string {
+  public getBindingsList(operation: Operation): string | null {
     // console.log("[ServiceDetailPageComponent.getBindingsList()]");
     if (operation.bindings != null) {
       let result = '';
@@ -523,18 +542,39 @@ export class ServiceDetailPageComponent implements OnInit {
     operation: Operation,
     binding: string,
     property: string
-  ): string {
+  ): string | null {
     // console.log("[ServiceDetailPageComponent.getBindingProperty()]");
     if (operation.bindings != null) {
       const b = operation.bindings[binding];
       if (b.hasOwnProperty(property)) {
-        return b[property];
+        return (b as any)[property];
       }
     }
     return null;
   }
 
-  public formatMockUrl(operation: Operation, dispatchCriteria: string, queryParameters: Parameter[]): string {
+  public isMCPAvailable(): boolean {
+    return this.resolvedServiceView.service.type === ServiceType.REST
+        || this.resolvedServiceView.service.type === ServiceType.GRPC
+        || this.resolvedServiceView.service.type === ServiceType.GRAPHQL
+  }
+  public formatMCPUrl(suffix: string = ''): string {
+    let result = document.location.origin;
+
+    // Manage dev mode.
+    if (result.endsWith('localhost:4200')) {
+      result = 'http://localhost:8080';
+    }
+
+    result += '/mcp/';
+    result += this.encodeUrl(this.resolvedServiceView.service.name) + '/';
+    result += this.resolvedServiceView.service.version;
+    result += suffix;
+
+    return result;
+  }
+
+  public formatMockUrl(operation: Operation, dispatchCriteria: string | null, queryParameters: Parameter[] | null): string {
     // console.log("[ServiceDetailPageComponent.formatMockUrl()]");
     let result = document.location.origin;
 
@@ -554,7 +594,7 @@ export class ServiceDetailPageComponent implements OnInit {
         '/' +
         this.resolvedServiceView.service.version;
 
-      const parts = {};
+      const parts: Record<string, string> = {};
       const params = {};
       let operationName = operation.name;
 
@@ -569,7 +609,7 @@ export class ServiceDetailPageComponent implements OnInit {
             : dispatchCriteria.substring(dispatchCriteria.indexOf('?') + 1);
 
         partsCriteria = this.encodeUrl(partsCriteria);
-        partsCriteria.split('/').forEach((element, index, array) => {
+        partsCriteria.split('/').forEach((element) => {
           if (element) {
             parts[element.split('=')[0]] = element.split('=')[1];
           }
@@ -693,7 +733,7 @@ export class ServiceDetailPageComponent implements OnInit {
     return serviceName + '-' + versionName + '-' + operationName;
   }
 
-  private getDestinationOperationPart(
+  protected getDestinationOperationPart(
     operation: Operation,
     eventMessage: EventMessage
   ): string {
@@ -712,7 +752,7 @@ export class ServiceDetailPageComponent implements OnInit {
 
       // No replace the part placeholders with their values.
       if (eventMessage.dispatchCriteria != null) {
-        const parts = {};
+        const parts: Record<string, string> = {};
         const partsCriteria = this.encodeUrl(eventMessage.dispatchCriteria);
         partsCriteria.split('/').forEach((element) => {
           if (element) {
@@ -737,7 +777,7 @@ export class ServiceDetailPageComponent implements OnInit {
         return request.query;
       } catch (error) {
         console.log(
-          'Error while parsing GraphQL request content: ' + error.message
+          'Error while parsing GraphQL request content: ' + (error! as any)['message']
         );
         return requestContent;
       }
@@ -752,7 +792,7 @@ export class ServiceDetailPageComponent implements OnInit {
       }
     } catch (error) {
       console.log(
-        'Error while parsing GraphQL request content: ' + error.message
+        'Error while parsing GraphQL request content: ' + (error! as any)['message']
       );
     }
     return '';
@@ -839,7 +879,7 @@ export class ServiceDetailPageComponent implements OnInit {
     return cmd;
   }
 
-  public copyToClipboard(url: string): void {
+  public copyToClipboard(url: string, what: string = 'Mock URL'): void {
     const selBox = document.createElement('textarea');
     selBox.style.position = 'fixed';
     selBox.style.left = '0';
@@ -854,14 +894,12 @@ export class ServiceDetailPageComponent implements OnInit {
     this.notificationService.message(
       NotificationType.INFO,
       this.resolvedServiceView.service.name,
-      'Mock URL has been copied to clipboard',
-      false,
-      null,
-      null
+      what + ' has been copied to clipboard',
+      false
     );
   }
 
-  private removeVerbInUrl(operationName: string): string {
+  protected removeVerbInUrl(operationName: string): string {
     if (
       operationName.startsWith('GET ') ||
       operationName.startsWith('PUT ') ||
@@ -880,7 +918,7 @@ export class ServiceDetailPageComponent implements OnInit {
     }
     return operationName;
   }
-  private encodeUrl(url: string): string {
+  protected encodeUrl(url: string): string {
     return url.replace(/\s/g, '+');
   }
 

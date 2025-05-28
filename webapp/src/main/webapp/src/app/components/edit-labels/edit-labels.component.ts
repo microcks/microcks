@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, OnInit, Input, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-edit-labels',
   templateUrl: './edit-labels.component.html',
-  styleUrls: ['./edit-labels.component.css']
+  styleUrls: ['./edit-labels.component.css'],
+  imports: [
+    CommonModule,
+    FormsModule
+  ]
 })
 export class EditLabelsComponent implements OnInit {
   @Output() save = new EventEmitter<Map<string, string>>();
 
-  @Input() resourceType: string;
-  @Input() resourceName: string;
-  @Input() labels: any;
+  @Input() resourceType?: string;
+  @Input() resourceName!: string;
+  @Input() labels!: any;
 
   labelKV = '';
 
@@ -35,7 +41,7 @@ export class EditLabelsComponent implements OnInit {
     }
   }
 
-  getKeys(map) {
+  getKeys(map: any): string[] {
     return Object.keys(map);
   }
 

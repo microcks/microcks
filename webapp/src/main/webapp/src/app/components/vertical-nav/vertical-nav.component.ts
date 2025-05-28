@@ -21,24 +21,27 @@ import {
   ChangeDetectionStrategy,
   AfterViewInit,
 } from '@angular/core';
-import { Router, NavigationStart } from '@angular/router';
+import { CommonModule } from '@angular/common';
+
+import { Router, NavigationStart, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-import { BsModalService } from 'ngx-bootstrap/modal';
-import { BsModalRef } from 'ngx-bootstrap/modal/bs-modal-ref.service';
-import { AboutModalConfig } from 'patternfly-ng/modal/about-modal/about-modal-config';
-import { AboutModalEvent } from 'patternfly-ng/modal/about-modal/about-modal-event';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
+import { BsModalRef, BsModalService, ModalModule } from 'ngx-bootstrap/modal';
+
+import { AboutModalConfig, AboutModalEvent, AboutModalModule } from '../patternfly-ng/modal';
 
 import { HelpDialogComponent } from '../help-dialog/help-dialog.component';
+
 import { IAuthenticationService } from '../../services/auth.service';
 import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from '../../models/user.model';
-import { ConfigService } from 'src/app/services/config.service';
+import { ConfigService } from '../../services/config.service';
 import { KeycloakAuthenticationService } from '../../services/auth-keycloak.service';
 
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
-// import * as $ from 'jquery';
+//import * as $ from 'jquery';
 declare let $: any;
 
 @Component({
@@ -47,10 +50,17 @@ declare let $: any;
   templateUrl: './vertical-nav.component.html',
   styleUrls: ['./vertical-nav.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [
+    AboutModalModule,
+    BsDropdownModule,
+    CommonModule,
+    ModalModule,
+    RouterLink
+  ],
 })
 export class VerticalNavComponent implements OnInit, AfterViewInit {
-  aboutConfig: AboutModalConfig;
-  modalRef: BsModalRef;
+  aboutConfig: AboutModalConfig = {};
+  modalRef?: BsModalRef;
 
   constructor(
     protected authService: IAuthenticationService,
@@ -84,7 +94,7 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
       .pipe(filter((event) => event instanceof NavigationStart))
       .subscribe((event: NavigationStart) => {
         // Do something with the NavigationStart event object.
-        console.log('Navigation start event: ' + JSON.stringify(event));
+        //console.log('Navigation start event: ' + JSON.stringify(event));
         const navigationEvent = { type: 'navigationEvent', url: event.url };
         try {
           window.parent.postMessage(JSON.stringify(navigationEvent), '*');
@@ -138,7 +148,9 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
     this.modalRef = this.modalService.show(template);
   }
   public closeAboutModal($event: AboutModalEvent): void {
-    this.modalRef.hide();
+    if (this.modalRef) {
+      this.modalRef.hide();
+    }
   }
 
   public user(): Observable<User> {
@@ -156,9 +168,9 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
   public getPreferencesLink(): string {
     if (this.config.authType() === 'keycloakjs') {
       const keycloakSvc = this.authService as KeycloakAuthenticationService;
-      return keycloakSvc.getRealmUrl() + "/account/?referrer=microcks-app-js";
+      return keycloakSvc.getRealmUrl() + '/account/?referrer=microcks-app-js';
     }
-    return "";
+    return '';
   }
 
   public logout(): void {

@@ -62,7 +62,8 @@ public class GraphQLImporter implements MockRepositoryImporter {
    /** The starter marker for the comment referencing microck service and version identifiers. */
    public static final String MICROCKS_ID_STARTER = "microcksId:";
 
-   private static final List<String> VALID_OPERATION_TYPES = Arrays.asList("query", "mutation");
+   /** The list of valid operation types. */
+   public static final List<String> VALID_OPERATION_TYPES = Arrays.asList("query", "mutation");
 
    private final String specContent;
    private Document graphqlSchema;

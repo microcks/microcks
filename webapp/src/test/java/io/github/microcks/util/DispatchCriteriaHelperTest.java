@@ -21,9 +21,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.springframework.test.context.NestedTestConfiguration;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -325,6 +327,18 @@ class DispatchCriteriaHelperTest {
          final var uris = List.of("/ab/def", "/cde/def");
          final var result = DispatchCriteriaHelper.extractCommonSuffix(uris);
          assertEquals("/def", result);
+      }
+   }
+
+   @Nested
+   class ExtractFromParamsMap {
+      @Test
+      void extractFromParamsMap() {
+         Map<String, String> paramsMap = Map.of("foo", "fooValue", "bar", "barValue");
+
+         // Only 1 parameter should be taken into account according to rules.
+         String dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap("?foo", paramsMap);
+         assertEquals("?foo=fooValue", dispatchCriteria);
       }
    }
 }

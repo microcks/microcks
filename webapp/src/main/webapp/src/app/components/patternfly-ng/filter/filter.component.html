@@ -1,0 +1,11 @@
+<div class="filter-pf">
+  <pfng-filter-fields #filterFields
+                      [config]="config"
+                      (onAdd)="addFilter($event)"
+                      (onDelete)="deleteQuery($event)"
+                      (onFieldSelect)="fieldSelected($event)"
+                      (onTypeAhead)="typeAhead($event)"></pfng-filter-fields>
+  <pfng-filter-results [config]="config"
+                       (onClear)="clearFilter($event)"
+                       (onSave)="saveFilter($event)"></pfng-filter-results>
+</div>

@@ -13,10 +13,10 @@
           <h5 class="subsection-label">Message</h5>
           <dl class="dl-horizontal left">
             <dt>Content Type:</dt>
-            <dd><code><small>{{ exchange.eventMessage.mediaType }}</small></code></dd>
+            <dd><code><small>{{ getUnidirEvent(exchange).eventMessage.mediaType }}</small></code></dd>
           </dl>
-          <pre *ngIf="exchange.eventMessage.content"><code [highlight]="prettyPrintIfJSON(exchange.eventMessage.content)" [languages]="hlLang"></code></pre>
-          <table class="table table-condensed" width="100%" *ngIf="exchange.eventMessage.headers">
+          <pre *ngIf="getUnidirEvent(exchange).eventMessage.content" class="hljs"><code [highlightAuto]="prettyPrintIfJSON(getUnidirEvent(exchange).eventMessage.content)" [languages]="hlLang"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="getUnidirEvent(exchange).eventMessage.headers">
             <thead>
               <tr>
                 <th>Header name</th>
@@ -24,7 +24,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let header of exchange.eventMessage.headers">
+              <tr *ngFor="let header of getUnidirEvent(exchange).eventMessage.headers">
                 <td>{{ header.name }}</td>
                 <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
               </tr>
@@ -38,10 +38,10 @@
               <dt>Kafka topic:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'KAFKA') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'KAFKA') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                      (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'KAFKA'))"></i>
+                      (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'KAFKA'))"></i>
                   </span>
                 </div>
               </dd>
@@ -54,10 +54,10 @@
               <dt>MQTT topic:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'MQTT') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'MQTT') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                      (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'MQTT'))"></i>
+                      (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'MQTT'))"></i>
                   </span>
                 </div>
               </dd>
@@ -72,10 +72,10 @@
               <dt>NATS topic:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'NATS') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'NATS') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                      (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'NATS'))"></i>
+                      (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'NATS'))"></i>
                   </span>
                 </div>
               </dd>
@@ -86,10 +86,10 @@
               <dt>WebSocket endpoint:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'WS') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'WS') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                        (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'WS'))"></i>
+                        (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'WS'))"></i>
                   </span>
                 </div>
               </dd>
@@ -102,10 +102,10 @@
               <dt>AMQP exchange:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'AMQP') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'AMQP') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                        (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'AMQP'))"></i>
+                        (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'AMQP'))"></i>
                   </span>
                 </div>
               </dd>
@@ -118,10 +118,10 @@
               <dt>Google PubSub topic:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'GOOGLEPUBSUB') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'GOOGLEPUBSUB') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                        (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'GOOGLEPUBSUB'))"></i>
+                        (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'GOOGLEPUBSUB'))"></i>
                   </span>
                 </div>
               </dd>
@@ -132,10 +132,10 @@
               <dt>AWS SQS Queue:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'SQS') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'SQS') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                        (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'SQS'))"></i>
+                        (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'SQS'))"></i>
                   </span>
                 </div>
               </dd>
@@ -148,10 +148,10 @@
               <dt>AWS SNS Topic:</dt>
               <dd>
                 <div class="input-group">
-                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, exchange.eventMessage, 'SNS') }}" disabled/>
+                  <input type="text" class="form-control" value="{{ formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'SNS') }}" disabled/>
                   <span class="input-group-addon">
                     <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                        (click)="copyToClipboard(formatAsyncDestination(item, exchange.eventMessage, 'SNS'))"></i>
+                        (click)="copyToClipboard(formatAsyncDestination(item, getUnidirEvent(exchange).eventMessage, 'SNS'))"></i>
                   </span>
                 </div>
               </dd>
@@ -188,27 +188,27 @@
             </dt>
             <dd>
               <div class="input-group">
-                <input type="text" class="form-control" value="{{ formatMockUrl(item, exchange.response.dispatchCriteria, exchange.request.queryParameters) }}" disabled/>
+                <input type="text" class="form-control" value="{{ formatMockUrl(item, getReqRespPair(exchange).response.dispatchCriteria, getReqRespPair(exchange).request.queryParameters) }}" disabled/>
                 <span class="input-group-addon" style="border-left: 0;">
                   <i class="fa fa-paste" tooltip="Copy to Clipboard" placement="top"
-                    (click)="copyToClipboard(formatMockUrl(item, exchange.response.dispatchCriteria, exchange.request.queryParameters))"></i>
+                    (click)="copyToClipboard(formatMockUrl(item, getReqRespPair(exchange).response.dispatchCriteria, getReqRespPair(exchange).request.queryParameters))"></i>
                 </span>
                 <span class="input-group-addon">
                   <i class="fa fa-terminal" tooltip="Curl to Clipboard" placement="top"
-                    (click)="copyToClipboard(formatCurlCmd(item, exchange))"></i>
+                    (click)="copyToClipboard(formatCurlCmd(item, getReqRespPair(exchange)), 'Curl command')"></i>
                 </span>
               </div>
             </dd>
           </dl>
-          <pre *ngIf="exchange.request.content"><code [highlight]="formatRequestContent(exchange.request.content)" [languages]="hlLang"></code></pre>
+          <pre *ngIf="getReqRespPair(exchange).request.content" class="hljs"><code [highlightAuto]="formatRequestContent(getReqRespPair(exchange).request.content)" [languages]="hlLang"></code></pre>
           <dl *ngIf="view.service.type === 'GRAPHQL'">
             <dt>Variables</dt>
             <dd>
-              <pre><code [highlight]="formatGraphQLVariables(exchange.request.content)" [languages]="hlLang"></code></pre>
+              <pre class="hljs"><code [highlightAuto]="formatGraphQLVariables(getReqRespPair(exchange).request.content)" [languages]="hlLang"></code></pre>
             </dd>
           </dl>
 
-          <table class="table table-condensed" width="100%" *ngIf="exchange.request.headers">
+          <table class="table table-condensed" width="100%" *ngIf="getReqRespPair(exchange).request.headers">
             <thead>
               <tr>
                 <th>Header name</th>
@@ -216,7 +216,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let header of exchange.request.headers">
+              <tr *ngFor="let header of getReqRespPair(exchange).request.headers">
                 <td>{{ header.name }}</td>
                 <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
               </tr>
@@ -228,11 +228,11 @@
           <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST' || view.service.type === 'GRAPHQL'">
             <dt>Response Code and Type:</dt>
             <dd>
-              <code><small>{{ exchange.response.status }}: {{exchange.response.mediaType}}</small></code>
+              <code><small>{{ getReqRespPair(exchange).response.status }}: {{getReqRespPair(exchange).response.mediaType}}</small></code>
             </dd>
           </dl>
-          <pre *ngIf="exchange.response.content"><code [highlight]="prettyPrintIfJSON(exchange.response.content)" [languages]="hlLang"></code></pre>
-          <table class="table table-condensed" width="100%" *ngIf="exchange.response.headers">
+          <pre *ngIf="getReqRespPair(exchange).response.content" class="hljs"><code [highlightAuto]="prettyPrintIfJSON(getReqRespPair(exchange).response.content)" [languages]="hlLang"></code></pre>
+          <table class="table table-condensed" width="100%" *ngIf="getReqRespPair(exchange).response.headers">
             <thead>
               <tr>
                 <th>Header name</th>
@@ -240,7 +240,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let header of exchange.response.headers">
+              <tr *ngFor="let header of getReqRespPair(exchange).response.headers">
                 <td>{{ header.name }}</td>
                 <td style="max-width:200px; word-wrap:break-word"><span *ngFor="let v of header.values; let last = last">{{ v }}{{ last ? '':', '}}</span></td>
               </tr>

@@ -23,23 +23,10 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
-import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.repository.ServiceStateRepository;
-import io.github.microcks.service.ProxyService;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.ParameterConstraintUtil;
 import io.github.microcks.util.SafeLogger;
-import io.github.microcks.util.dispatcher.FallbackSpecification;
-import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
-import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
-import io.github.microcks.util.dispatcher.JsonMappingException;
-import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.graphql.GraphQLHttpRequest;
-import io.github.microcks.util.script.ScriptEngineBinder;
-import io.github.microcks.service.ServiceStateStore;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -65,8 +52,6 @@ import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
 import graphql.parser.Parser;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -80,16 +65,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import javax.script.ScriptContext;
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -108,16 +89,8 @@ public class GraphQLController {
    private static final Set<String> IGNORED_HEADERS = Set.of("transfer-encoding", "content-length");
 
    private final ServiceRepository serviceRepository;
-   private final ServiceStateRepository serviceStateRepository;
-   private final ResponseRepository responseRepository;
    private final ResourceRepository resourceRepository;
-   private final ApplicationContext applicationContext;
-   private final ProxyService proxyService;
-
-   private ScriptEngine scriptEngine;
-
-   @Value("${mocks.enable-invocation-stats}")
-   private Boolean enableInvocationStats;
+   private final GraphQLInvocationProcessor invocationProcessor;
 
    private final Parser requestParser = new Parser();
    private final SchemaParser schemaParser = new SchemaParser();
@@ -127,23 +100,15 @@ public class GraphQLController {
 
    /**
     * Build a GraphQLController with required dependencies.
-    * @param serviceRepository      The repository to access services definitions
-    * @param serviceStateRepository The repository to access service state
-    * @param responseRepository     The repository to access responses definitions
-    * @param resourceRepository     The repository to access resources artifacts
-    * @param applicationContext     The Spring application context
-    * @param proxyService           The proxy to external URLs or services
+    * @param serviceRepository   The repository to access services definitions
+    * @param resourceRepository  The repository to access resources artifacts
+    * @param invocationProcessor The invocation processor to use for processing the call
     */
-   public GraphQLController(ServiceRepository serviceRepository, ServiceStateRepository serviceStateRepository,
-         ResponseRepository responseRepository, ResourceRepository resourceRepository,
-         ApplicationContext applicationContext, ProxyService proxyService) {
+   public GraphQLController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
+         GraphQLInvocationProcessor invocationProcessor) {
       this.serviceRepository = serviceRepository;
-      this.serviceStateRepository = serviceStateRepository;
-      this.responseRepository = responseRepository;
       this.resourceRepository = resourceRepository;
-      this.applicationContext = applicationContext;
-      this.proxyService = proxyService;
-      this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
+      this.invocationProcessor = invocationProcessor;
    }
 
 
@@ -157,9 +122,6 @@ public class GraphQLController {
       log.debug("Request body: {}", body);
 
       long startTime = System.currentTimeMillis();
-
-      // Setup serviceAndVersion for proxy dispatchers
-      String serviceAndVersion = MockControllerCommons.composeServiceAndVersion(serviceName, version);
 
       // If serviceName was encoded with '+' instead of '%20', remove them.
       if (serviceName.contains("+")) {
@@ -217,20 +179,24 @@ public class GraphQLController {
 
       // Then deal with one or many regular GraphQL selection queries.
       List<GraphQLQueryResponse> graphqlResponses = new ArrayList<>();
-      final Long[] maxDelay = { (delay == null ? 0L : delay) };
+      Long specifiedDelay = MockControllerCommons.getDelay(headers, delay);
+      Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay;
 
       for (Selection<?> selection : graphqlOperation.getSelectionSet().getSelections()) {
          try {
             GraphQLQueryResponse graphqlResponse = processGraphQLQuery(service, operationType, (Field) selection,
-                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, request,
-                  serviceAndVersion);
-            if (graphqlResponse.getProxyUrl() != null) {
-               // If we've got a proxyUrl, that's the moment!
-               return proxyService.callExternal(graphqlResponse.getProxyUrl(), method, headers, body);
-            }
+                  graphqlRequest.getDefinitionsOfType(FragmentDefinition.class), body, graphqlHttpReq, headers,
+                  request);
+
+            //            if (graphqlResponse.getProxyUrl() != null) {
+            //               // If we've got a proxyUrl, that's the moment!
+            //               return proxyService.callExternal(graphqlResponse.getProxyUrl(), method, headers, body);
+            //            }
+
             graphqlResponses.add(graphqlResponse);
-            if (graphqlResponse.getOperationDelay() != null && graphqlResponse.getOperationDelay() > maxDelay[0]) {
-               maxDelay[0] = graphqlResponse.getOperationDelay();
+            if (specifiedDelay == null && graphqlResponse.getOperationDelay() != null
+                  && graphqlResponse.getOperationDelay() > maxDelay) {
+               maxDelay = graphqlResponse.getOperationDelay();
             }
          } catch (GraphQLQueryProcessingException e) {
             log.error("Caught a GraphQL processing exception", e);
@@ -265,18 +231,7 @@ public class GraphQLController {
       }
 
       // Waiting for delay if any.
-      MockControllerCommons.waitForDelay(startTime, maxDelay[0]);
-
-      // Publish an invocation event before returning if enabled.
-      if (Boolean.TRUE.equals(enableInvocationStats)) {
-         for (GraphQLQueryResponse response : graphqlResponses) {
-            // If it's not a __typename query, we might have a response, publish the invocation.
-            if (response.getResponse() != null) {
-               MockControllerCommons.publishMockInvocation(applicationContext, this, service, response.getResponse(),
-                     startTime);
-            }
-         }
-      }
+      MockControllerCommons.waitForDelay(startTime, maxDelay);
 
       String responseContent = null;
       JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
@@ -309,14 +264,14 @@ public class GraphQLController {
     * @param fragmentDefinitions A list of fragment field selection
     * @param body                The Http request body
     * @param graphqlHttpReq      The Http GraphQL request wrapper
+    * @param headers             The header of the incoming Http request
     * @param request             The bare Http Servlet request
-    * @param serviceAndVersion   The composed serviceAndVersion string for the proxy checking
     * @return A GraphQL query response wrapper with some elements from the Microcks domain matching Response
     * @throws GraphQLQueryProcessingException if incoming field selection query cannot be processed
     */
    protected GraphQLQueryResponse processGraphQLQuery(Service service, String operationType, Field graphqlField,
          List<FragmentDefinition> fragmentDefinitions, String body, GraphQLHttpRequest graphqlHttpReq,
-         HttpServletRequest request, String serviceAndVersion) throws GraphQLQueryProcessingException {
+         HttpHeaders headers, HttpServletRequest request) throws GraphQLQueryProcessingException {
 
       GraphQLQueryResponse result = new GraphQLQueryResponse();
       String operationName = graphqlField.getName();
@@ -354,103 +309,43 @@ public class GraphQLController {
                   HttpStatus.BAD_REQUEST);
          }
 
-         // We must find dispatcher and its rules. Default to operation ones but
-         // if we have a Fallback this is the one who is holding the first pass rules.
-         String dispatcher = rOperation.getDispatcher();
-         String dispatcherRules = rOperation.getDispatcherRules();
-         FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(rOperation);
-         if (fallback != null) {
-            dispatcher = fallback.getDispatcher();
-            dispatcherRules = fallback.getDispatcherRules();
-         }
-         ProxyFallbackSpecification proxyFallback = MockControllerCommons.getProxyFallbackIfAny(rOperation);
-         if (proxyFallback != null) {
-            dispatcher = proxyFallback.getDispatcher();
-            dispatcherRules = proxyFallback.getDispatcherRules();
-         }
-
-         //
-         DispatchContext dispatchContext = computeDispatchCriteria(service, dispatcher, dispatcherRules, graphqlField,
-               graphqlHttpReq.getVariables(), request, body);
-         log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
-
-         // First try: using computed dispatchCriteria on main dispatcher.
-         Response response = null;
-         List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
-               IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
-         if (!responses.isEmpty()) {
-            response = responses.getFirst();
-         }
-
-         if (response == null) {
-            // When using the SCRIPT dispatcher, return of evaluation may be the name of response.
-            log.debug("No responses with dispatch criteria, trying the name...");
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
-                  dispatchContext.dispatchCriteria());
-            if (!responses.isEmpty()) {
-               response = responses.getFirst();
+         // We must compute query parameters from the field selection.
+         Map<String, String> queryParams = new HashMap<>();
+         for (Argument arg : graphqlField.getArguments()) {
+            if (arg.getValue() instanceof StringValue stringArg) {
+               queryParams.put(arg.getName(), stringArg.getValue());
+            } else if (arg.getValue() instanceof VariableReference varRef && graphqlHttpReq.getVariables() != null) {
+               queryParams.put(arg.getName(), graphqlHttpReq.getVariables().path(varRef.getName()).asText(""));
             }
          }
 
-         if (response == null && fallback != null) {
-            // If we've found nothing and got a fallback, that's the moment!
-            log.debug("No responses till now so far, applying the fallback...");
-            responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
-                  fallback.getFallback());
-            if (!responses.isEmpty()) {
-               response = responses.getFirst();
-            }
-         }
+         // Create an invocation context for the invocation processor.
+         MockInvocationContext ic = new MockInvocationContext(service, rOperation, null);
+         ResponseResult responseResult = invocationProcessor.processInvocation(ic, System.currentTimeMillis(),
+               queryParams, body, graphqlHttpReq, headers, request);
 
-         Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
-               MockControllerCommons.extractResourcePath(request, serviceAndVersion), proxyFallback, request, response);
-         if (proxyUrl.isPresent()) {
-            // If we've got a proxyUrl, that's the moment to tell about it!
-            result.setProxyUrl(proxyUrl.get());
-            return result;
-         }
+         // Complete GraphQLQueryResponse result.
+         result.setOperationDelay(rOperation.getDefaultDelay());
 
-         if (response == null) {
-            // In case no response found (because dispatcher is null for example), just get one for the operation.
-            // This will allow also OPTIONS operations (like pre-flight requests) with no dispatch criteria to work.
-            log.debug("No responses found so far, tempting with just bare operationId...");
-            responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(service, rOperation));
-            if (!responses.isEmpty()) {
-               response = responses.get(0);
-            }
-         }
-
-         if (response != null) {
-            result.setResponse(response);
-            result.setOperationDelay(rOperation.getDefaultDelay());
-
-            // Prepare headers for evaluation.
-            Map<String, String> evaluableHeaders = new HashMap<>();
-            if (response.getHeaders() != null) {
-               for (Header header : response.getHeaders()) {
-                  evaluableHeaders.put(header.getName(), request.getHeader(header.getName()));
-               }
-            }
-
-            // Render response content before waiting and returning.
-            String responseContent = MockControllerCommons.renderResponseContent(body, null, evaluableHeaders,
-                  dispatchContext.requestContext(), response);
-
+         if (responseResult.content() != null) {
             try {
-               JsonNode responseJson = mapper.readTree(responseContent);
+               JsonNode responseJson = mapper.readTree(responseResult.content());
                filterFieldSelection(graphqlField.getSelectionSet(), fragmentDefinitions,
                      responseJson.get("data").get(operationName));
                result.setJsonResponse(responseJson);
-            } catch (JsonProcessingException pe) {
-               log.error("JsonProcessingException while filtering response according GraphQL field selection", pe);
+            } catch (Exception pe) {
+               log.error("Exception while filtering response according GraphQL field selection", pe);
                throw new GraphQLQueryProcessingException("Exception while filtering response JSON",
                      HttpStatus.INTERNAL_SERVER_ERROR);
             }
-
-            return result;
          }
-         log.debug("No response found. Throwing a BAD_REQUEST exception...");
-         throw new GraphQLQueryProcessingException("No matching response found", HttpStatus.BAD_REQUEST);
+
+         if (HttpStatus.BAD_REQUEST.equals(responseResult.status())) {
+            log.debug("No response found. Throwing a BAD_REQUEST exception...");
+            throw new GraphQLQueryProcessingException("No matching response found", HttpStatus.BAD_REQUEST);
+         }
+
+         return result;
       }
       log.debug("No valid operation found. Throwing a NOT_FOUND exception...");
       throw new GraphQLQueryProcessingException("No '" + operationName + "' operation found", HttpStatus.NOT_FOUND);
@@ -467,56 +362,6 @@ public class GraphQLController {
          }
       }
       return null;
-   }
-
-   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
-   private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
-         Selection<?> graphqlSelection, JsonNode requestVariables, HttpServletRequest request, String body) {
-
-      String dispatchCriteria = null;
-      Map<String, Object> requestContext = null;
-
-      // Depending on dispatcher, evaluate request with rules.
-      if (dispatcher != null) {
-         switch (dispatcher) {
-            case DispatchStyles.SCRIPT:
-               requestContext = new HashMap<>();
-               try {
-                  // Evaluating request with script coming from operation dispatcher rules.
-                  ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
-                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request);
-                  dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
-               } catch (Exception e) {
-                  log.error("Error during Script evaluation", e);
-               }
-               break;
-            case DispatchStyles.QUERY_ARGS:
-               Field field = (Field) graphqlSelection;
-               Map<String, String> queryParams = new HashMap<>();
-               for (Argument arg : field.getArguments()) {
-                  if (arg.getValue() instanceof StringValue stringArg) {
-                     queryParams.put(arg.getName(), stringArg.getValue());
-                  } else if (arg.getValue() instanceof VariableReference varRef && requestVariables != null) {
-                     queryParams.put(arg.getName(), requestVariables.path(varRef.getName()).asText(""));
-                  }
-               }
-               dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, queryParams);
-               break;
-            case DispatchStyles.JSON_BODY:
-               try {
-                  JsonEvaluationSpecification specification = JsonEvaluationSpecification
-                        .buildFromJsonString(dispatcherRules);
-                  dispatchCriteria = JsonExpressionEvaluator.evaluate(mapper.writeValueAsString(requestVariables),
-                        specification);
-               } catch (JsonMappingException jme) {
-                  log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
-               } catch (JsonProcessingException jpe) {
-                  log.error("Request variables cannot be serialized as Json for evaluation", jpe);
-               }
-               break;
-         }
-      }
-      return new DispatchContext(dispatchCriteria, requestContext);
    }
 
    /**

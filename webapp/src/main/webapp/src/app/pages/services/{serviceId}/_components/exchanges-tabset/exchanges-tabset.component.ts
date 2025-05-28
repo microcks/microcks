@@ -14,51 +14,69 @@
  * limitations under the License.
  */
 import { Component, ViewChild, Input } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 
+import { TabsetComponent, TabsModule } from 'ngx-bootstrap/tabs';
+import { TooltipModule } from 'ngx-bootstrap/tooltip';
+import { HighlightAuto } from 'ngx-highlightjs';
 
-import { NotificationService } from 'patternfly-ng/notification';
-import { TabsetComponent } from 'ngx-bootstrap/tabs';
-import { ServiceView, Operation } from 'src/app/models/service.model';
-import { ConfigService } from 'src/app/services/config.service';
+import { NotificationService } from '../../../../../components/patternfly-ng/notification';
 
+import { ServiceView, Operation, Exchange, EventMessage, Parameter, RequestResponsePair, UnidirectionalEvent } from '../../../../../models/service.model';
+import { ConfigService } from '../../../../../services/config.service';
 
 @Component({
   selector: 'app-exchanges-tabset',
   templateUrl: './exchanges-tabset.component.html',
   styleUrls: ['./exchanges-tabset.component.css'],
+  imports: [
+    CommonModule,
+    FormsModule,
+    HighlightAuto,
+    TabsModule,
+    TooltipModule
+  ]
 })
 export class ExchangesTabsetComponent {
 
   readonly hlLang: string[] = ['json', 'xml', 'yaml'];
 
-  @ViewChild('tabs', { static: true }) tabs?: TabsetComponent;
+  @ViewChild('tabs', { static: true }) tabs!: TabsetComponent;
 
-  @Input() public item: Operation;
-  @Input() public view: ServiceView;
-  @Input() public resolvedServiceView: ServiceView;
-  @Input() public notificationService: NotificationService;
-  @Input() public config: ConfigService;
-  @Input() public urlType: string;
+  @Input() public item!: Operation;
+  @Input() public view!: ServiceView;
+  @Input() public resolvedServiceView!: ServiceView;
+  @Input() public notificationService!: NotificationService;
+  @Input() public config!: ConfigService;
+  @Input() public urlType!: string;
 
-  @Input() public isEventTypeService: () => void;
-  @Input() public getExchangeName: () => void;
-  @Input() public getExchangeSourceArtifact: () => void;
-  @Input() public hasBinding: () => void;
-  @Input() public getBindingProperty: () => void;
-  @Input() public formatMockUrl: () => void;
-  @Input() public formatAsyncDestination: () => void;
-  @Input() public getDestinationOperationPart: () => void;
-  @Input() public formatRequestContent: () => void;
-  @Input() public formatGraphQLVariables: () => void;
-  @Input() public prettyPrintIfJSON: () => void;
-  @Input() public formatCurlCmd: () => void;
-  @Input() public copyToClipboard: () => void;
-  @Input() public encodeUrl: () => void;
-  @Input() public removeVerbInUrl: () => void;
-  @Input() public asyncAPIFeatureEndpoint: () => void;
+  @Input() public isEventTypeService!: () => boolean;
+  @Input() public getExchangeName!: (exchange: Exchange) => string;
+  @Input() public getExchangeSourceArtifact!: (exchange: Exchange) => string;
+  @Input() public hasBinding!: (operation: Operation, binding: string) => boolean;
+  @Input() public getBindingProperty!: (operation: Operation, binding: string, property: string) => string | null;
+  @Input() public formatMockUrl!: (operation: Operation, dispatchCriteria: string, queryParameters: Parameter[]) => string;
+  @Input() public formatAsyncDestination!: (operation: Operation, eventMessage: EventMessage, binding: string) => string;
+  @Input() public getDestinationOperationPart!: (peration: Operation, eventMessage: EventMessage) => string;
+  @Input() public formatRequestContent!: (requestContent: string) => string;
+  @Input() public formatGraphQLVariables!: (requestContent: string) => string;
+  @Input() public prettyPrintIfJSON!: (content: string) => string;
+  @Input() public formatCurlCmd!: (operation: Operation, exchange: RequestResponsePair) => string;
+  @Input() public copyToClipboard!: (url: string, what?: string) => void;
+  @Input() public encodeUrl!: (url: string) => string;
+  @Input() public removeVerbInUrl!: (operationName: string) => string;
+  @Input() public asyncAPIFeatureEndpoint!: (binding: string) => string;
 
   public shouldRender(index: number) {
     const activeTab = this.tabs.tabs.filter((tab) =>  tab.active )[0];
     return index == this.tabs.tabs.indexOf(activeTab);
+  }
+
+  getReqRespPair(exchange: Exchange): RequestResponsePair {
+    return exchange as RequestResponsePair;
+  }
+  getUnidirEvent(exchange: Exchange): UnidirectionalEvent {
+    return exchange as UnidirectionalEvent;
   }
 }

@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
@@ -55,6 +56,9 @@ public class MockControllerCommons {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
+
+   /** The header name used to specify a wait delay in the request. */
+   public static final String X_MICROCKS_DELAY_HEADER = "x-microcks-delay";
 
    private static final String RENDERING_MESSAGE = "Response contains dynamic EL expression, rendering it...";
 
@@ -290,13 +294,28 @@ public class MockControllerCommons {
       evaluableRequest.setParams(evaluableParams);
       // Adding headers...
       Map<String, String> evaluableHeaders = new HashMap<>();
-      List<String> headerNames = Collections.list(request.getHeaderNames());
-      for (String header : headerNames) {
-         evaluableHeaders.put(header, request.getHeader(header));
+      if (request.getHeaderNames() != null) {
+         List<String> headerNames = Collections.list(request.getHeaderNames());
+         for (String header : headerNames) {
+            evaluableHeaders.put(header, request.getHeader(header));
+         }
       }
       evaluableRequest.setHeaders(evaluableHeaders);
 
       return evaluableRequest;
+   }
+
+   /** Retrieve delay header or default to the one provided as parameter. */
+   public static Long getDelay(HttpHeaders headers, Long delayParameter) {
+      if (headers.containsKey(MockControllerCommons.X_MICROCKS_DELAY_HEADER)) {
+         String delayHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
+         try {
+            return Long.parseLong(delayHeader);
+         } catch (NumberFormatException nfe) {
+            log.debug("Invalid delay header value: {}", delayHeader);
+         }
+      }
+      return delayParameter;
    }
 
    /**

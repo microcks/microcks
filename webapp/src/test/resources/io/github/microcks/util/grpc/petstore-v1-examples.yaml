@@ -1,0 +1,65 @@
+apiVersion: mocks.microcks.io/v1alpha1
+kind: APIExamples
+metadata:
+  name: org.acme.petstore.v1.PetstoreService
+  version: v1
+operations:
+  getPets:
+    All Pets:
+      request:
+        body: ""
+      response:
+        body:
+          pets:
+            - id: 1
+              name: Zaza
+            - id: 2
+              name: Tigress
+            - id: 3
+              name: Maki
+            - id: 4
+              name: Toufik
+  searchPets:
+    k pets:
+      request:
+        body: |-
+          { "name": "k" }
+      response:
+        body: |-
+          {
+            "pets": [
+              {
+                "id": 3,
+                "name": "Maki"
+              },
+              {
+                "id": 4,
+                "name": "Toufik"
+              }
+            ]
+          }
+    'i pets':
+      request:
+        body:
+          name: i
+      response:
+        body:
+          pets:
+            - id: 2
+              name: Tigress
+            - id: 3
+              name: Maki
+            - id: 4
+              name: Toufik
+  createPet:
+    new pet:
+      request:
+        body:
+          name: Jojo
+      response:
+        body: |-
+          {
+            "id": {{ randomInt(5,10) }},
+            "name": "{{ request.body/name }}"
+          }
+

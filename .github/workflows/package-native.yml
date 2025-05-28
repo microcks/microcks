@@ -51,21 +51,22 @@ jobs:
       - name: Set builder image for amd64
         if: matrix.arch == 'amd64'
         run: |
-          echo "BUILDER_IMAGE=paketobuildpacks/builder-jammy-base:latest" >> "$GITHUB_ENV"
-          echo "RUNNER_IMAGE=paketobuildpacks/run-jammy-base:latest" >> "$GITHUB_ENV"
+          #echo "BUILDER_IMAGE=paketobuildpacks/builder-jammy-base:latest" >> "$GITHUB_ENV"
+          #echo "RUNNER_IMAGE=paketobuildpacks/run-jammy-base:latest" >> "$GITHUB_ENV"
 
       - name: Set builder image for arm64
         if: matrix.arch == 'arm64'
         run: |
-          echo "BUILDER_IMAGE=dashaun/builder@sha256:378bdc9fd7bdba105d64f294a8a7ca168dce5e496cad22307ccabb66fb571f9a" >> "$GITHUB_ENV"
-          echo "RUNNER_IMAGE=dmikusa/run-jammy-base@sha256:01d2f750569d14b0374dfa3f9f106ada23ff3dfa68f2ac33fb95d3d8e058b5e9" >> "$GITHUB_ENV"
+          #echo "BUILDER_IMAGE=dashaun/builder@sha256:378bdc9fd7bdba105d64f294a8a7ca168dce5e496cad22307ccabb66fb571f9a" >> "$GITHUB_ENV"
+          #echo "RUNNER_IMAGE=dmikusa/run-jammy-base@sha256:01d2f750569d14b0374dfa3f9f106ada23ff3dfa68f2ac33fb95d3d8e058b5e9" >> "$GITHUB_ENV"
 
       - name: Build native image for ${{ matrix.arch }}
         run: |
           cd ${{github.workspace}}/distro/uber
-          mvn -Pnative spring-boot:build-image -Dspring-boot.build-image.imageName=microcks/microcks-uber:$IMAGE_TAG-${{ matrix.arch }} \
-              -Dspring-boot.build-image.builder=$BUILDER_IMAGE \
-              -Dspring-boot.build-image.runImage=$RUNNER_IMAGE
+          #mvn -Pnative spring-boot:build-image -Dspring-boot.build-image.imageName=microcks/microcks-uber:$IMAGE_TAG-${{ matrix.arch }} \
+          #    -Dspring-boot.build-image.builder=$BUILDER_IMAGE \
+          #    -Dspring-boot.build-image.runImage=$RUNNER_IMAGE
+          mvn -Pnative spring-boot:build-image -Dspring-boot.build-image.imageName=microcks/microcks-uber:$IMAGE_TAG-${{ matrix.arch }}
 
       - name: Save native image for ${{ matrix.arch }}
         uses: ishworkh/container-image-artifact-upload@5d71a2417f0576fa11fe770fb04ece58c4587714 # v2.0.0
