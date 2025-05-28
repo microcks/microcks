@@ -27,7 +27,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:nightly
+    image: quay.io/microcks/microcks:1.12.0
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
