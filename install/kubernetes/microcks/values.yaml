@@ -47,7 +47,7 @@ microcks:
   image:
     registry: quay.io
     repository: microcks/microcks
-    tag: 1.12.0
+    tag: nightly
     digest:
   replicas: 1
 
@@ -241,7 +241,7 @@ features:
     image:
       registry: quay.io
       repository: microcks/microcks-async-minion
-      tag: 1.12.0
+      tag: nightly
       digest:
 
     env:

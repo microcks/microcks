@@ -43,7 +43,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:1.12.0
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
@@ -73,7 +73,7 @@ services:
       - app
     ports:
       - "8081:8081"
-    image: quay.io/microcks/microcks-async-minion:1.12.0
+    image: quay.io/microcks/microcks-async-minion:nightly
     container_name: microcks-async-minion
     restart: on-failure
     volumes:

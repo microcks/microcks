@@ -24,19 +24,27 @@ if [[ $# -eq 2 ]]; then
   if [ "$(uname)" == "Darwin" ]; then
     sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/docker-compose/docker-compose*.yml
     sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/docker-compose/docker-compose*.yml
+    sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/docker-compose/*-addon.yml
+    sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/docker-compose/*-addon.yml
     #sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/kubernetes/microcks/values.yaml
     #sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/kubernetes/microcks/values.yaml
     sed -i '' 's=tag: '"$1"'=tag: '"$2"'=g' install/kubernetes/microcks/values.yaml
-    sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/podman-compose/microcks-*.yml
-    sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/podman-compose/microcks-*.yml
+    sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/podman-compose/podman-compose*.yml
+    sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/podman-compose/podman-compose*.yml
+    sed -i '' 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/podman-compose/*-addon.yml
+    sed -i '' 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/podman-compose/*-addon.yml
   elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/docker-compose/docker-compose.yml
     sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/docker-compose/docker-compose*.yml
+    sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/docker-compose/*-addon.yml
+    sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/docker-compose/*-addon.yml
     #sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/kubernetes/microcks/values.yaml
     #sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/kubernetes/microcks/values.yaml
     sed -i 's=tag: '"$1"'=tag: '"$2"'=g' install/kubernetes/microcks/values.yaml
-    sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/podman-compose/microcks-*.yml
-    sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/podman-compose/microcks-*.yml
+    sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/podman-compose/podman-compose*.yml
+    sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/podman-compose/podman-compose*.yml
+    sed -i 's=quay.io/microcks/microcks:'"$1"'=quay.io/microcks/microcks:'"$2"'=g' install/podman-compose/*-addon.yml
+    sed -i 's=quay.io/microcks/microcks-async-minion:'"$1"'=quay.io/microcks/microcks-async-minion:'"$2"'=g' install/podman-compose/*-addon.yml
   fi
 else
   echo "prep-next-iteration.sh must be called with <version> <next-container-tag> as 1st argument. Example:"
