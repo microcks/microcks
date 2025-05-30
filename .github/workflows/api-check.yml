@@ -1,0 +1,215 @@
+name: API Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 4 * * *'
+
+jobs:
+  run-api-tests-uber:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        flavor: [uber-native, uber-jvm]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up dependencies for ${{ matrix.flavor }}
+        run: |
+          case "${{ matrix.flavor }}" in
+            uber-jvm)
+              IMAGE="quay.io/microcks/microcks-uber"
+              TAG="nightly"
+              ;;
+            uber-native)
+              IMAGE="quay.io/microcks/microcks-uber"
+              TAG="nightly-native"
+              ;;
+            *)
+              echo "Unsupported flavor: ${{ matrix.flavor }}"
+              exit 1
+              ;;
+          esac
+          docker run -d \
+            -p 8585:8080 \
+            -p 9090:9090 \
+            --add-host=host.docker.internal:host-gateway \
+            --name microcks \
+            "$IMAGE:$TAG"
+          sleep 30
+
+      - name: Upload API artifacts to Microcks
+        run: |
+          docker run --rm --add-host=host.docker.internal:host-gateway \
+            -v "${{ github.workspace }}/samples:/samples" \
+            -v "${{ github.workspace }}/testsuite:/scripts" \
+            -e BASE_URL="http://host.docker.internal:8585" \
+            -e MICROCKS_TOKEN="microcks" \
+            curlimages/curl:latest sh /scripts/upload-artifacts.sh
+
+      - name: Run API tests for ${{ matrix.flavor }}
+        env:
+          FLAVOR: ${{ matrix.flavor }}
+          HOST: host.docker.internal
+          PORT: 8585
+          GRPC_PORT: 9090
+        run: |
+          docker run --rm --user root \
+            --add-host=host.docker.internal:host-gateway \
+            -e FLAVOR=$FLAVOR \
+            -e HOST=$HOST \
+            -e PORT=$PORT \
+            -e GRPC_PORT=$GRPC_PORT \
+            -v "$PWD:/scripts" \
+            -w /scripts/testsuite \
+            grafana/k6:latest \
+            run --summary-export=summary.json api-tests.js
+
+          failed_checks=$(jq '.metrics.checks.fails' testsuite/summary.json)
+          rm testsuite/summary.json
+          echo "Failed checks: $failed_checks"
+          if [ "$failed_checks" -gt 0 ]; then
+            echo "There are failed checks. Failing the job."
+            exit 1
+          else
+            echo "All checks passed."
+          fi
+
+      - name: Teardown all containers after tests
+        if: always()
+        run: |
+          echo "Cleaning up all Docker containers..."
+          docker stop microcks
+
+  run-api-tests-regular:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        flavor: [regular-auth, regular-noauth]
+      fail-fast: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Install docker-compose
+        run: |
+          sudo apt-get update && sudo apt-get install -y docker-compose
+
+      - name: Set up dependencies for ${{ matrix.flavor }}
+        run: |
+          case "${{ matrix.flavor }}" in
+            regular-auth)
+              echo "[INFO] Installing via compose in default mode"
+              ./testsuite/install-compose.sh --method docker --mode default
+              ;;
+            regular-noauth)
+              echo "[INFO] Installing via compose in devmode"
+              ./testsuite/install-compose.sh --method docker --mode devmode
+              ;;
+            *)
+              echo "Unsupported flavor: ${{ matrix.flavor }}"
+              exit 1
+              ;;
+          esac
+          sleep 30
+
+      - name: Health‑check containers
+        run: |
+          case "${{ matrix.flavor }}" in
+            regular-auth)
+              ./testsuite/check-health.sh --method docker
+              ;;
+            regular-noauth)
+              ./testsuite/check-health.sh --method docker
+              ;;
+            *)
+              echo "Unsupported flavor: ${{ matrix.flavor }}"
+              exit 1
+              ;;
+          esac
+
+      - name: Get Microcks access token
+        if: ${{ matrix.flavor == 'regular-auth' }}
+        env:
+          CLIENT_AUTH: bWljcm9ja3Mtc2VydmljZWFjY291bnQ6YWI1NGQzMjktZTQzNS00MWFlLWE5MDAtZWM2YjNmZTE1YzU0Cg=
+          TOKEN_URL: http://localhost:18080/realms/microcks/protocol/openid-connect/token
+        id: get_token
+        run: |
+          echo "Fetching access token..."
+          TOKEN_RESPONSE=$(curl -s -X POST "$TOKEN_URL" \
+            -H 'Content-Type: application/x-www-form-urlencoded' \
+            -H 'Accept: application/json' \
+            -H "Authorization: Basic $CLIENT_AUTH" \
+            -d 'grant_type=client_credentials' -k)
+
+          echo "Response: $TOKEN_RESPONSE"
+
+          ACCESS_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.access_token')
+          if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
+            echo "ERROR: Failed to get access token"
+            exit 1
+          fi
+
+          # Save as step output
+          echo "token=$ACCESS_TOKEN" >> $GITHUB_OUTPUT
+          # Also export to GitHub environment for use in later steps
+          echo "MICROCKS_TOKEN=$ACCESS_TOKEN" >> $GITHUB_ENV
+
+      - name: Set default Microcks token
+        if: ${{ matrix.flavor == 'regular-noauth' }}
+        run: echo "MICROCKS_TOKEN=whatever" >> $GITHUB_ENV
+
+      - name: Upload API artifacts to Microcks
+        env:
+          BASE_URL: http://host.docker.internal:8080
+        run: |
+          docker run --rm --add-host=host.docker.internal:host-gateway \
+            -v "${{ github.workspace }}/samples:/samples" \
+            -v "${{ github.workspace }}/testsuite:/scripts" \
+            -e BASE_URL="${BASE_URL}" \
+            -e MICROCKS_TOKEN="${MICROCKS_TOKEN}" \
+            curlimages/curl:latest sh /scripts/upload-artifacts.sh
+
+      - name: Run API tests for ${{ matrix.flavor }}
+        env:
+          FLAVOR: ${{ matrix.flavor }}
+          HOST: host.docker.internal
+          PORT: 8080
+          GRPC_PORT: 9090
+          KEYCLOAK_URL: http://host.docker.internal:18080
+        run: |
+          docker run --rm --user root \
+            --add-host=host.docker.internal:host-gateway \
+            -e FLAVOR=$FLAVOR \
+            -e HOST=$HOST \
+            -e PORT=$PORT \
+            -e KEYCLOAK_URL=$KEYCLOAK_URL \
+            -e GRPC_PORT=$GRPC_PORT \
+            -v "$PWD:/scripts" \
+            -w /scripts/testsuite \
+            grafana/k6:latest \
+            run --summary-export=summary.json api-tests.js
+
+          failed_checks=$(jq '.metrics.checks.fails' testsuite/summary.json)
+          rm testsuite/summary.json
+          echo "Failed checks: $failed_checks"
+          if [ "$failed_checks" -gt 0 ]; then
+            echo "There are failed checks. Failing the job."
+            exit 1
+          else
+            echo "All checks passed."
+          fi
+
+      - name: Teardown regular install
+        if: always()
+        run: |
+          echo "[INFO] Removing Microcks containers"
+          for c in $(docker ps -aq --filter "name=microcks"); do
+            docker rm -f $c || true
+          done
