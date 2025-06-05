@@ -22,5 +22,6 @@ package io.github.microcks.domain;
 public enum ParameterLocation {
    path,
    query,
-   header
+   header,
+   cookie
 }
