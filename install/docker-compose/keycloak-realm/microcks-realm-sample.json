@@ -19,6 +19,14 @@
         "account": [ "manage-account" ],
         "microcks-app": [ "user", "manager", "admin"]
       }
+    },
+    {
+      "username": "service-account-microcks-serviceaccount",
+      "enabled": true,
+      "serviceAccountClientId": "microcks-serviceaccount",
+      "clientRoles": {
+        "microcks-app": ["manager"]
+      }
     }
   ],
   "roles": {
