@@ -12,14 +12,14 @@
 
 Microcks is a platform for turning your API and microservices assets - *OpenAPI specs*, *AsyncAPI specs*, *gRPC protobuf*, *GraphQL schema*, *Postman collections*, *SoapUI projects* - into live mocks in seconds.
 
-It also reuses these assets for running compliance and non-regression tests against your API implementation. We provide integrations with *Jenkins*, *GitHub Actions*, *Tekton* and many others through a simple CLI.
+It also reuses these assets to run compliance and non-regression tests against your API implementation. We provide integrations with *Jenkins*, *GitHub Actions*, *Tekton* and many others through a simple CLI.
 
 ## Getting Started
 
 * [Documentation](https://microcks.io/documentation/tutorials/getting-started/)
 * [Microcks Community](https://github.com/microcks/community) and community meeting
 
-To get involved with our community, please make sure you are familiar with the project's [Code of Conduct](./CODE_OF_CONDUCT.md).
+To get involved with our community, please familiarize yourself with the project's [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## Build Status
 
@@ -68,7 +68,7 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 The build instructions are available in the [building guide](BUILDING.md).
 
-## Thanks to community!
+## Thanks to the community!
 
 [![Stargazers repo roster for @microcks/microcks](http://reporoster.com/stars/microcks/microcks)](http://github.com/microcks/microcks/stargazers)
 [![Forkers repo roster for @microcks/microcks](http://reporoster.com/forks/microcks/microcks)](http://github.com/microcks/microcks/network/members)
