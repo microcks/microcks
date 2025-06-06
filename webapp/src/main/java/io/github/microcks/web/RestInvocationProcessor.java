@@ -25,11 +25,7 @@ import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
 import io.github.microcks.service.ServiceStateStore;
-import io.github.microcks.util.AbsoluteUrlMatcher;
-import io.github.microcks.util.DispatchCriteriaHelper;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.SafeLogger;
+import io.github.microcks.util.*;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
@@ -55,23 +51,20 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 /**
  * A processor for handling REST invocations. It is responsible for applying the dispatching logic and finding the most
  * appropriate response based on the request context.
+ *
  * @author laurent
  */
 @Component
 public class RestInvocationProcessor {
 
-   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   /**
+    * A safe logger for filtering user-controlled data in diagnostic messages.
+    */
    private static final SafeLogger log = SafeLogger.getLogger(RestInvocationProcessor.class);
 
    private final ServiceStateRepository serviceStateRepository;
@@ -86,6 +79,7 @@ public class RestInvocationProcessor {
 
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
+    *
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
     * @param applicationContext     The Spring application context
@@ -103,6 +97,7 @@ public class RestInvocationProcessor {
    /**
     * Process a REST invocation. This method is responsible for determining the appropriate response based on the
     * request context, applying any necessary dispatching logic, and handling proxying if required.
+    *
     * @param ic        The invocation context containing information about the service and operation being invoked
     * @param startTime The start time of the invocation
     * @param delay     The delay to apply before returning the response
@@ -175,17 +170,18 @@ public class RestInvocationProcessor {
 
          // Deal with specific headers (content-type and redirect directive).
          HttpHeaders responseHeaders = getResponseHeaders(ic, body, request, dispatchContext, response);
-         String responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
+         byte[] responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
 
          // Return response content.
-         return new ResponseResult(status, responseHeaders,
-               responseContent != null ? responseContent.getBytes(StandardCharsets.UTF_8) : null);
+         return new ResponseResult(status, responseHeaders, responseContent);
       }
 
       return new ResponseResult(HttpStatus.BAD_REQUEST, null, null);
    }
 
-   /** Get the root dispatcher for the invocation context. */
+   /**
+    * Get the root dispatcher for the invocation context.
+    */
    private String getDispatcher(MockInvocationContext ic, FallbackSpecification fallback,
          ProxyFallbackSpecification proxyFallback) {
       String dispatcher = ic.operation().getDispatcher();
@@ -198,7 +194,9 @@ public class RestInvocationProcessor {
       return dispatcher;
    }
 
-   /** Get the root dispatcher rules for the invocation context. */
+   /**
+    * Get the root dispatcher rules for the invocation context.
+    */
    private String getDispatcherRules(MockInvocationContext ic, FallbackSpecification fallback,
          ProxyFallbackSpecification proxyFallback) {
       String dispatcherRules = ic.operation().getDispatcherRules();
@@ -211,7 +209,9 @@ public class RestInvocationProcessor {
       return dispatcherRules;
    }
 
-   /** Get one random response for operation. */
+   /**
+    * Get one random response for operation.
+    */
    private Response getOneForOperation(MockInvocationContext ic, HttpServletRequest request, Response response) {
       List<Response> responses;
       // In case no response found because dispatcher is null, just get one for the operation.
@@ -224,7 +224,9 @@ public class RestInvocationProcessor {
       return response;
    }
 
-   /** Filter responses using the Accept header for content-type, default to the first. Return null if no responses. */
+   /**
+    * Filter responses using the Accept header for content-type, default to the first. Return null if no responses.
+    */
    private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {
       if (!responses.isEmpty()) {
          String accept = request.getHeader("Accept");
@@ -234,7 +236,9 @@ public class RestInvocationProcessor {
       return null;
    }
 
-   /** Retrieve URI Pattern from operation name (remove starting verb name). */
+   /**
+    * Retrieve URI Pattern from operation name (remove starting verb name).
+    */
    private String getURIPattern(String operationName) {
       if (operationName.startsWith("GET ") || operationName.startsWith("POST ") || operationName.startsWith("PUT ")
             || operationName.startsWith("DELETE ") || operationName.startsWith("PATCH ")
@@ -244,7 +248,9 @@ public class RestInvocationProcessor {
       return operationName;
    }
 
-   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
+   /**
+    * Compute a dispatch context with a dispatchCriteria string from type, rules and request elements.
+    */
    private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
          String uriPattern, String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
@@ -328,7 +334,9 @@ public class RestInvocationProcessor {
       return response;
    }
 
-   /** Extract request headers from request. */
+   /**
+    * Extract request headers from request.
+    */
    private Map<String, String> extractRequestHeaders(HttpServletRequest request) {
       Map<String, String> headers = new HashMap<>();
       Collections.list(request.getHeaderNames()).forEach(name -> headers.put(name, request.getHeader(name)));
@@ -358,7 +366,9 @@ public class RestInvocationProcessor {
       return responseHeaders;
    }
 
-   /** Recopy headers defined with parameter constraints. */
+   /**
+    * Recopy headers defined with parameter constraints.
+    */
    private void recopyHeadersFromParameterConstraints(Operation rOperation, HttpServletRequest request,
          HttpHeaders responseHeaders) {
       if (rOperation.getParameterConstraints() != null) {
@@ -395,19 +405,66 @@ public class RestInvocationProcessor {
       }
    }
 
-   private String getResponseContent(MockInvocationContext ic, long startTime, Long delay, String body,
+   /**
+    * Generates the response content to return, based on the media type (UTF-8 or Base64), applies an optional delay,
+    * and publishes an invocation event if enabled.
+    */
+   private byte[] getResponseContent(MockInvocationContext ic, long startTime, Long delay, String body,
          HttpServletRequest request, DispatchContext dispatchContext, Response response) {
-      // Render response content before waiting and returning.
-      String responseContent = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
-            dispatchContext.requestContext(), response);
 
-      // Delay response.
+      byte[] responseContent;
+
+      // If the media type is UTF-8 encodable, render the response as text
+      if (Utf8ContentTypeChecker.isUtf8Encodable(response.getMediaType())) {
+         String content = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
+               dispatchContext.requestContext(), response);
+         responseContent = content != null ? content.getBytes(StandardCharsets.UTF_8) : null;
+
+         if (responseContent != null) {
+            log.debug("Returning response content: {}", content);
+         } else {
+            log.debug("Returning empty response content");
+         }
+      } else {
+         // If not UTF-8, attempt to decode the content from Base64 (used for binary responses)
+         responseContent = tryDecodeBase64Content(response);
+      }
+
+      // Apply response delay and optionally publish the invocation event
+      handlePostProcessing(startTime, delay, ic, response);
+
+      return responseContent;
+   }
+
+   /**
+    * Attempts to decode the response content as Base64. If decoding fails, falls back to returning the raw content as
+    * UTF-8 bytes.
+    */
+   private byte[] tryDecodeBase64Content(Response response) {
+      try {
+         return Base64.getDecoder().decode(response.getContent());
+      } catch (IllegalArgumentException e) {
+         log.error("Error decoding response content as base64", e);
+         log.debug("Returning response content as is");
+
+         // Return raw content as UTF-8 if Base64 decoding fails
+         if (response.getContent() != null) {
+            return response.getContent().getBytes(StandardCharsets.UTF_8);
+         } else {
+            return null;
+         }
+      }
+   }
+
+   /**
+    * Applies an artificial delay before returning the response, and publishes a mock invocation event if statistics
+    * collection is enabled.
+    */
+   private void handlePostProcessing(long startTime, Long delay, MockInvocationContext ic, Response response) {
       MockControllerCommons.waitForDelay(startTime, delay);
 
-      // Publish an invocation event before returning if enabled.
       if (Boolean.TRUE.equals(enableInvocationStats)) {
          MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
       }
-      return responseContent;
    }
 }
