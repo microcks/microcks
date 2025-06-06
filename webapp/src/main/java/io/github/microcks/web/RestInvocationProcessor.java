@@ -548,6 +548,9 @@ public class RestInvocationProcessor {
     * UTF-8 bytes.
     */
    private byte[] tryDecodeBase64Content(Response response) {
+      if (response == null || response.getContent() == null) {
+         return null;
+      }
       try {
          return Base64.getDecoder().decode(response.getContent());
       } catch (IllegalArgumentException e) {
