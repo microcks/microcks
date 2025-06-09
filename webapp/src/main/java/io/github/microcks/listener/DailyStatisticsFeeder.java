@@ -89,9 +89,9 @@ public class DailyStatisticsFeeder implements ApplicationListener<MockInvocation
                statistic.setHourlyCount(initializeHourlyMap());
                statistic.setMinuteCount(initializeMinuteMap());
                // Now set first values before saving.
-               statistic.setDailyCount(1);
-               statistic.getHourlyCount().put(hourKey, 1);
-               statistic.getMinuteCount().put(minuteKey, 1);
+               statistic.setDailyCount(count);
+               statistic.getHourlyCount().put(hourKey, count);
+               statistic.getMinuteCount().put(minuteKey, count);
                statisticsRepository.save(statistic);
             } else {
                // Already a statistic document for this day, increment fields.
