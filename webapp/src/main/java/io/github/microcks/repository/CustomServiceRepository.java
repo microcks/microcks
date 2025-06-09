@@ -36,6 +36,8 @@ public interface CustomServiceRepository {
 
    List<LabelValues> listLabels();
 
+   Service findByNameAndVersionCached(String name, String version);
+
    class ServiceCount {
       String type;
       int number;

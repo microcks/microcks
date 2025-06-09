@@ -82,7 +82,14 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
-
+     <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-cache</artifactId>
+     </dependency>
+     <dependency>
+        <groupId>com.github.ben-manes.caffeine</groupId>
+        <artifactId>caffeine</artifactId>
+     </dependency>
     <!-- observability with Otel -->
     <dependency>
       <groupId>io.opentelemetry.javaagent</groupId>
@@ -323,6 +330,15 @@
   </pluginRepositories>
 
   <profiles>
+    <profile>
+       <id>perf</id>
+       <properties>
+          <!-- Caffeine cache configuration properties -->
+          <spring.cache.cache-names>ServiceFindByNameAndVersion</spring.cache.cache-names>
+          <spring.cache.caffeine.spec>maximumSize=500,expireAfterWrite=10s</spring.cache.caffeine.spec>
+          <mocks.enable-invocation-stats>false</mocks.enable-invocation-stats>
+       </properties>
+    </profile>
     <profile>
       <id>single</id>
       <build>
