@@ -331,15 +331,6 @@
 
   <profiles>
     <profile>
-       <id>perf</id>
-       <properties>
-          <!-- Caffeine cache configuration properties -->
-          <spring.cache.cache-names>ServiceFindByNameAndVersion</spring.cache.cache-names>
-          <spring.cache.caffeine.spec>maximumSize=500,expireAfterWrite=10s</spring.cache.caffeine.spec>
-          <mocks.enable-invocation-stats>false</mocks.enable-invocation-stats>
-       </properties>
-    </profile>
-    <profile>
       <id>single</id>
       <build>
         <plugins>
