@@ -148,7 +148,8 @@ public class DailyStatisticsFeeder implements ApplicationListener<MockInvocation
       } catch (InterruptedException e) {
          scheduler.shutdownNow();
       }
-
+      // flush remaining statistics to database
+      flushToDatabase();
       log.info("DailyStatisticsFeeder scheduler shutdown complete.");
    }
 
