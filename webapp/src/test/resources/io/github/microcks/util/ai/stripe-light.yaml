@@ -1,0 +1,105 @@
+openapi: 3.0.0
+paths:
+  /v1/products:
+    get:
+      requestBody:
+        content:
+          application/x-www-form-urlencoded:
+            encoding: { }
+            schema:
+              type: object
+        required: false
+        responses:
+          '200':
+            content:
+              application/json:
+                schema:
+                  description: ''
+                  properties:
+                    data:
+                      description: Details about each object.
+                      items:
+                        $ref: '#/components/schemas/product'
+                      type: array
+                  type: object
+          default:
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/error'
+components:
+  schemas:
+    product:
+      type: object
+      properties:
+        id:
+          type: string
+        default_price:
+          anyOf:
+            - maxLength: 5000
+              type: string
+            - $ref: '#/components/schemas/price'
+    price:
+      type: object
+      properties:
+        active:
+          type: boolean
+    error:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/api_errors'
+        otherError:
+          $ref: '#/components/schemas/api_errors'
+      required:
+        - error
+    api_errors:
+      type: object
+      properties:
+        firstFile:
+          $ref: '#/components/schemas/file'
+        secondFile:
+          $ref: '#/components/schemas/file'
+    file:
+      type: object
+      properties:
+        created:
+          type: integer
+        expires_at:
+          type: integer
+        filename:
+          type: string
+        id:
+          type: string
+        links:
+          title: FileResourceFileLinkList
+          type: object
+          properties:
+            data:
+              items:
+                $ref: '#/components/schemas/file_link'
+              type: array
+            has_more:
+              type: boolean
+            url:
+              type: string
+    file_link:
+      type: object
+      title: FileLink
+      properties:
+        id:
+          type: string
+        created:
+          type: integer
+        file:
+          anyOf:
+            - maxLength: 5000
+              type: string
+            - $ref: '#/components/schemas/file'
+          x-expansionResources:
+            oneOf:
+              - $ref: '#/components/schemas/file'
+        livemode:
+          type: boolean
+        url:
+          type: string

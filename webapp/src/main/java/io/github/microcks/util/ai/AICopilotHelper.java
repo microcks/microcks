@@ -27,9 +27,19 @@ import io.github.microcks.domain.ServiceType;
 import io.github.microcks.domain.UnidirectionalEvent;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
+import io.github.microcks.util.ObjectMapperFactory;
 
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.StreamWriteConstraints;
+import com.fasterxml.jackson.core.StreamWriteFeature;
+import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
@@ -38,7 +48,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.LoaderOptions;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * This helper class holds general utility constants and methods for:
@@ -527,92 +540,195 @@ public class AICopilotHelper {
     * specification from its examples.
     */
    protected static String removeTokensFromSpec(String specification, String operationName) throws Exception {
-      JsonNode specNode;
-      boolean isJson = specification.trim().startsWith("{");
+      // Parse and remove unrelated operations from the spec.
+      JsonNode specNode = parseAndFilterSpec(specification, operationName);
 
+      Map<String, JsonNode> resolvedReferences = new HashMap<>();
+      try {
+         // 1.5MB is a good threshold to avoid too many references resolution.
+         if (specification.length() < 1500000) {
+            resolveReferenceAndRemoveTokensInNode(specNode, specNode, new HashMap<>(), new HashSet<>(), true);
+         } else {
+            resolveReferenceAndRemoveTokensInNode(specNode, specNode, resolvedReferences, new HashSet<>(), false);
+         }
+         return filterAndSerializeSpec(specification, specNode,
+               resolvedReferences.keySet().stream().filter(ref -> ref.startsWith("#/components/schemas"))
+                     .map(ref -> ref.substring("#/components/schemas".length() + 1)).toList());
+      } catch (Throwable t) {
+         log.error(
+               "Exception while resolving references in spec. This is likely due to circular or too many references in the spec: {}",
+               t.getMessage());
+         log.error("Trying with the raw spec...");
+         specNode = parseAndFilterSpec(specification, operationName);
+         return filterAndSerializeSpec(specification, specNode, List.of());
+      }
+   }
+
+   /** */
+   protected static JsonNode parseAndFilterSpec(String specification, String operationName) throws Exception {
+      // Parse the specification to a JsonNode.
+      boolean isJson = specification.trim().startsWith("{");
+      JsonNode specNode;
       if (isJson) {
          specNode = JSON_MAPPER.readTree(specification);
       } else {
-         specNode = YAML_MAPPER.readTree(specification);
+         specNode = ObjectMapperFactory.getYamlObjectMapper().readTree(specification);
       }
 
-      // Resolve schemas and Remove examples recursively from the root.
-      resolveReferenceAndRemoveTokensInNode(specNode, specNode);
-
-      // Filter the spec
+      // Filter the operation to avoid resolving references on the whole spec.
       List<String> specTokenNames = getTokenNames(specNode);
       if (specTokenNames.contains("openapi")) {
-         filterOpenAPISpec(specNode, operationName);
+         filterOpenAPISpecOnOperation(specNode, operationName);
+      } else if (specTokenNames.contains("asyncapi")) {
+         filterAsyncAPISpecOnOperation(specNode, operationName);
       }
-      if (specTokenNames.contains("asyncapi")) {
-         filterAsyncAPISpec(specNode, operationName);
+      return specNode;
+   }
+
+   /** */
+   protected static String filterAndSerializeSpec(String originalSpec, JsonNode specNode, List<String> schemasToKeep)
+         throws IOException {
+      // Remove schemas if not in the list of components/schemas to keep.
+      if (!schemasToKeep.isEmpty() && specNode.has("components")) {
+         ObjectNode componentsNode = (ObjectNode) specNode.get("components");
+         if (componentsNode.has("schemas")) {
+            ObjectNode schemasNode = (ObjectNode) componentsNode.get("schemas");
+            removeTokensInNode(schemasNode, schemasToKeep);
+         }
+      } else {
+         ((ObjectNode) specNode).remove("components");
       }
 
+      // Filter the remaining elements in spec.
+      List<String> specTokenNames = getTokenNames(specNode);
+      if (specTokenNames.contains("openapi")) {
+         filterOpenAPISpec(specNode);
+      } else if (specTokenNames.contains("asyncapi")) {
+         filterAsyncAPISpec(specNode);
+      }
+
+      // Serialize the spec back to a string.
+      boolean isJson = originalSpec.trim().startsWith("{");
       if (isJson) {
          return JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(specNode);
       }
-
-      return YAML_MAPPER.writeValueAsString(specNode);
+      return ObjectMapperFactory.getYamlObjectMapper().writeValueAsString(specNode);
    }
 
-   protected static void resolveReferenceAndRemoveTokensInNode(JsonNode specNode, JsonNode node) {
-      JsonNode target = followRefIfAny(specNode, node);
-      if (target.getNodeType() == JsonNodeType.OBJECT) {
+   protected static void resolveReferenceAndRemoveTokensInNode(JsonNode specNode, JsonNode node,
+         Map<String, JsonNode> resolvedReferences, Set<String> resolvingReferences) {
+      resolveReferenceAndRemoveTokensInNode(specNode, node, resolvedReferences, resolvingReferences, true);
+   }
+
+   protected static void resolveReferenceAndRemoveTokensInNode(JsonNode specNode, JsonNode node,
+         Map<String, JsonNode> resolvedReferences, Set<String> resolvingReferences, boolean perBranchResolution) {
+      // Are we currently resolving a reference?
+      String resolvingRef = null;
+      boolean resolveRef = false;
+      boolean skipChildren = false;
+
+      if (node.getNodeType() == JsonNodeType.OBJECT) {
          if (node.has("$ref")) {
-            ((ObjectNode) node).setAll((ObjectNode) target);
-            ((ObjectNode) node).remove("$ref");
+            resolvingRef = node.path("$ref").asText();
+
+            // The reference may have already been resolved globally.
+            JsonNode target = resolvedReferences.get(resolvingRef);
+            if (target != null) {
+               // Dereference the $ref and merge the target into the node.
+               ((ObjectNode) node).setAll((ObjectNode) target);
+               ((ObjectNode) node).remove("$ref");
+               // Mark to skip children as we have already processed the target.
+               skipChildren = true;
+            } else {
+               // Check the reference is not currently tried to be resolved.
+               // In this case, we are in a circular reference situation, just let the $ref in place if it is not already resolved.
+               if (!resolvingReferences.contains(resolvingRef)) {
+                  target = getNodeForRef(specNode, resolvingRef);
+                  if (target != null) {
+                     // Dereference the $ref and merge the target into the node.
+                     ((ObjectNode) node).setAll((ObjectNode) target);
+                     ((ObjectNode) node).remove("$ref");
+                     // Add the resolving reference to the set of currently resolving references.
+                     resolvingReferences.add(resolvingRef);
+                     resolveRef = true;
+                  } else {
+                     log.warn("Reference '{}' could not be resolved in the spec.", resolvingRef);
+                  }
+               }
+            }
          }
-         if (target.has("examples")) {
-            ((ObjectNode) node).remove("examples");
+
+         // Remove common fields that are not needed in the context of AI copilot.
+         removeTokensInNode((ObjectNode) node);
+
+         Iterator<Map.Entry<String, JsonNode>> fields = node.fields();
+         while (fields.hasNext() && !skipChildren) {
+            Map.Entry<String, JsonNode> field = fields.next();
+            // Do not browse the root specNode components.
+            // Do not recurse on un-resolved $ref field as it has been already processed.
+            if ((specNode == node && !"components".equals(field.getKey()))
+                  || (specNode != node && !"$ref".equals(field.getKey()))) {
+               resolveReferenceAndRemoveTokensInNode(specNode, field.getValue(), resolvedReferences,
+                     resolvingReferences, perBranchResolution);
+            }
          }
-         if (target.has("example")) {
-            ((ObjectNode) node).remove("example");
-         }
-         if (target.has("x-microcks-operation")) {
-            ((ObjectNode) node).remove("x-microcks-operation");
-         }
-         Iterator<Map.Entry<String, JsonNode>> fields = target.fields();
-         while (fields.hasNext()) {
-            resolveReferenceAndRemoveTokensInNode(specNode, fields.next().getValue());
+      } else if (node.getNodeType() == JsonNodeType.ARRAY) {
+         // If node is an array, we need to iterate over its elements.
+         Iterator<JsonNode> elements = node.elements();
+         while (elements.hasNext()) {
+            resolveReferenceAndRemoveTokensInNode(specNode, elements.next(), resolvedReferences, resolvingReferences,
+                  perBranchResolution);
          }
       }
-      if (target.getNodeType() == JsonNodeType.ARRAY) {
-         Iterator<JsonNode> elements = target.elements();
-         while (elements.hasNext()) {
-            resolveReferenceAndRemoveTokensInNode(specNode, elements.next());
+
+      // Track the resolved reference if we were currently resolving one.
+      if (resolvingRef != null && resolveRef) {
+         // If we are in per-branch resolution mode, we can pop the resolving reference from the set of resolved references.
+         if (perBranchResolution) {
+            resolvingReferences.remove(resolvingRef);
          }
+         // In any case, save the resolved reference in the map of resolved references.
+         resolvedReferences.put(resolvingRef, node);
       }
    }
 
-   protected static void filterOpenAPISpec(JsonNode specNode, String operationName) {
+   protected static void removeTokensInNode(ObjectNode node) {
+      // Remove common tokens that are not needed in the context of AI copilot.
+      node.remove("examples");
+      node.remove("example");
+      node.remove("x-microcks");
+      node.remove("x-microcks-operation");
+   }
+
+   protected static void filterOpenAPISpecOnOperation(JsonNode specNode, String operationName) throws Exception {
       String[] operationPathName = operationName.split(" ");
       String verb = operationPathName[0].toLowerCase();
       String path = operationPathName[1];
 
-      JsonNode pathsSpec = ((ObjectNode) specNode).get("paths");
-      JsonNode pathSpec = ((ObjectNode) pathsSpec).get(path);
+      JsonNode pathsSpec = specNode.get("paths");
+      JsonNode pathSpec = pathsSpec.get(path);
 
-      List<String> keysToKeepInRoot = List.of("openapi", "paths", "info");
-      List<String> keysToKeepInPaths = List.of(path);
-      List<String> keysToKeepInPath = List.of(verb);
-
-      removeTokensInNode(specNode, keysToKeepInRoot);
-      removeTokensInNode(pathsSpec, keysToKeepInPaths);
-      removeTokensInNode(pathSpec, keysToKeepInPath);
+      removeTokensInNode(pathsSpec, List.of(path));
+      removeTokensInNode(pathSpec, List.of(verb));
       removeSecurityTokenInNode(pathSpec, verb);
    }
 
-   protected static void filterAsyncAPISpec(JsonNode specNode, String channelName) {
+   protected static void filterOpenAPISpec(JsonNode specNode) {
+      List<String> keysToKeepInRoot = List.of("openapi", "paths", "info", "components");
+      removeTokensInNode(specNode, keysToKeepInRoot);
+   }
+
+   protected static void filterAsyncAPISpecOnOperation(JsonNode specNode, String channelName) {
       String[] operationPathName = channelName.split(" ");
       String channel = operationPathName[1];
 
       JsonNode channelsSpec = ((ObjectNode) specNode).get("channels");
+      removeTokensInNode(channelsSpec, List.of(channel));
+   }
 
-      List<String> keysToKeepInRoot = List.of("asyncapi", "channels", "info");
-      List<String> keysToKeepInChannels = List.of(channel);
-
+   protected static void filterAsyncAPISpec(JsonNode specNode) {
+      List<String> keysToKeepInRoot = List.of("asyncapi", "channels", "info", "components");
       removeTokensInNode(specNode, keysToKeepInRoot);
-      removeTokensInNode(channelsSpec, keysToKeepInChannels);
    }
 
    protected static void removeSecurityTokenInNode(JsonNode specNode, String tokenName) {
