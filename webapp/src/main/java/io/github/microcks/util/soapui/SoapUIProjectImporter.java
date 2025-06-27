@@ -54,6 +54,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 import static io.github.microcks.util.XmlUtil.WSDL_NS;
 import static io.github.microcks.util.XmlUtil.getDirectChildren;
@@ -353,9 +354,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                results.add(xsdResource);
 
                // URL references within WSDL must be replaced by their local counterpart.
-               wsdlTextContent = wsdlTextContent.replace(xsdUrl, "./" + xsdName);
-               // TODO: have a in-depth review on how xsd are actually resolved (and should probably be fixed)
-               // wsdlTextContent = wsdlTextContent.replaceAll("schemaLocation=\"(.*)\\/(" + xsdName + ")", "schemaLocation=\"./" + xsdName + "\"");
+               wsdlTextContent = replaceXsdReferencesInWsdl(wsdlTextContent, xsdUrl, xsdName);
             }
 
             Resource wsdlResource = new Resource();
@@ -770,5 +769,134 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          }
       }
       return null;
+   }
+
+   /**
+    * Replace XSD references in WSDL content with local file references.
+    * This method handles various types of schema references:
+    * - xs:import schemaLocation
+    * - xs:include schemaLocation  
+    * - xs:redefine schemaLocation
+    * - Direct schema references
+    * 
+    * @param wsdlTextContent The WSDL content as string
+    * @param xsdUrl The original XSD URL/path
+    * @param xsdName The local XSD filename
+    * @return Updated WSDL content with local XSD references
+    */
+   private String replaceXsdReferencesInWsdl(String wsdlTextContent, String xsdUrl, String xsdName) {
+      if (wsdlTextContent == null || xsdUrl == null || xsdName == null) {
+         return wsdlTextContent;
+      }
+
+      String result = wsdlTextContent;
+      String localXsdPath = "./" + xsdName;
+
+      // Normalize the XSD URL for comparison (handle different path separators)
+      String normalizedXsdUrl = normalizePath(xsdUrl);
+      
+      // Pattern 1: Replace xs:import schemaLocation references
+      // Matches: <xs:import namespace="..." schemaLocation="http://example.com/schema.xsd"/>
+      result = result.replaceAll(
+         "(<xs:import[^>]*schemaLocation\\s*=\\s*[\"'])" + 
+         Pattern.quote(normalizedXsdUrl) + 
+         "([\"'][^>]*>)",
+         "$1" + localXsdPath + "$2"
+      );
+
+      // Pattern 2: Replace xs:include schemaLocation references  
+      // Matches: <xs:include schemaLocation="http://example.com/schema.xsd"/>
+      result = result.replaceAll(
+         "(<xs:include[^>]*schemaLocation\\s*=\\s*[\"'])" + 
+         Pattern.quote(normalizedXsdUrl) + 
+         "([\"'][^>]*>)",
+         "$1" + localXsdPath + "$2"
+      );
+
+      // Pattern 3: Replace xs:redefine schemaLocation references
+      // Matches: <xs:redefine schemaLocation="http://example.com/schema.xsd">
+      result = result.replaceAll(
+         "(<xs:redefine[^>]*schemaLocation\\s*=\\s*[\"'])" + 
+         Pattern.quote(normalizedXsdUrl) + 
+         "([\"'][^>]*>)",
+         "$1" + localXsdPath + "$2"
+      );
+
+      // Pattern 4: Replace direct schema references in WSDL types section
+      // Matches: <xs:schema ...> with external references
+      result = result.replaceAll(
+         "(<xs:schema[^>]*>\\s*<xs:import[^>]*schemaLocation\\s*=\\s*[\"'])" + 
+         Pattern.quote(normalizedXsdUrl) + 
+         "([\"'][^>]*>)",
+         "$1" + localXsdPath + "$2"
+      );
+
+      // Pattern 5: Handle relative path references that might be different from the URL
+      // Extract just the filename from the URL for additional matching
+      String xsdFileName = extractFileName(normalizedXsdUrl);
+      if (!xsdFileName.equals(xsdName)) {
+         result = result.replaceAll(
+            "(<xs:import[^>]*schemaLocation\\s*=\\s*[\"'])" + 
+            Pattern.quote(xsdFileName) + 
+            "([\"'][^>]*>)",
+            "$1" + localXsdPath + "$2"
+         );
+         
+         result = result.replaceAll(
+            "(<xs:include[^>]*schemaLocation\\s*=\\s*[\"'])" + 
+            Pattern.quote(xsdFileName) + 
+            "([\"'][^>]*>)",
+            "$1" + localXsdPath + "$2"
+         );
+      }
+
+      // Pattern 6: Handle namespace-based imports that might reference the schema
+      // This is more complex and might need additional context
+      // For now, we'll log if we find any remaining references
+      if (result.contains(normalizedXsdUrl)) {
+         log.debug("Found remaining XSD reference in WSDL: {} -> {}", normalizedXsdUrl, localXsdPath);
+         // Fallback to simple replacement for any remaining references
+         result = result.replace(normalizedXsdUrl, localXsdPath);
+      }
+
+      return result;
+   }
+
+   /**
+    * Normalize a path by converting Windows backslashes to forward slashes
+    * and handling different path formats.
+    * 
+    * @param path The path to normalize
+    * @return Normalized path
+    */
+   private String normalizePath(String path) {
+      if (path == null) {
+         return null;
+      }
+      // Convert Windows backslashes to forward slashes
+      String normalized = path.replace('\\', '/');
+      // Remove any trailing slashes
+      if (normalized.endsWith("/")) {
+         normalized = normalized.substring(0, normalized.length() - 1);
+      }
+      return normalized;
+   }
+
+   /**
+    * Extract the filename from a path or URL.
+    * 
+    * @param path The path or URL
+    * @return The filename
+    */
+   private String extractFileName(String path) {
+      if (path == null) {
+         return null;
+      }
+      String normalized = normalizePath(path);
+      int lastSlash = normalized.lastIndexOf('/');
+      if (lastSlash >= 0 && lastSlash < normalized.length() - 1) {
+         return normalized.substring(lastSlash + 1);
+      }
+      return normalized;
    }
 }
