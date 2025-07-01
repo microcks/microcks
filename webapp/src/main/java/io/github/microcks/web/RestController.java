@@ -30,6 +30,7 @@ import io.github.microcks.util.openapi.SwaggerSchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -254,7 +255,7 @@ public class RestController {
       }
 
       // Find matching service.
-      Service service = serviceRepository.findByNameAndVersion(serviceName, version);
+      Service service = serviceRepository.findByNameAndVersionCached(serviceName, version);
       if (service == null) {
          return new MockInvocationContext(null, null, resourcePath);
       }
@@ -265,7 +266,7 @@ public class RestController {
    }
 
    @CheckForNull
-   private Operation findOperation(Service service, HttpMethod method, String resourcePath) {
+   public Operation findOperation(Service service, HttpMethod method, String resourcePath) {
       // Remove trailing '/' if any.
       String trimmedResourcePath = trimResourcePath(resourcePath);
 
