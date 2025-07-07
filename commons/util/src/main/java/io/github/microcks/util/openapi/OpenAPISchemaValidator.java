@@ -23,10 +23,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.github.microcks.util.JsonSchemaValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.LoaderOptions;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -256,7 +258,14 @@ public class OpenAPISchemaValidator {
       ObjectMapper mapper = null;
       if (isYaml) {
          log.debug("Guessing OpenAPI spec format is YAML");
-         mapper = new ObjectMapper(new YAMLFactory());
+         LoaderOptions options = new LoaderOptions();
+         // If schema is too big, increase the code point limit to avoid exception.
+         // Default is 3MB hard coded in Snake Yaml, we set it to bytes length + 256.
+         if (schemaText.getBytes(StandardCharsets.UTF_8).length > 3 * 1024 * 1024) {
+            log.warn("OpenAPI schema is too big, increasing code point limit to 9MB");
+            options.setCodePointLimit(schemaText.getBytes(StandardCharsets.UTF_8).length + 256);
+         }
+         mapper = new ObjectMapper(YAMLFactory.builder().loaderOptions(options).build());
       } else {
          log.debug("Guessing OpenAPI spec format is JSON");
          mapper = new ObjectMapper();
