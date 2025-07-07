@@ -236,17 +236,19 @@ public class OpenAPISchemaValidator {
 
       // Analyse first lines of content to guess content format.
       String line = null;
+      int lineNumber = 0;
       BufferedReader reader = new BufferedReader(new StringReader(schemaText));
       while ((line = reader.readLine()) != null) {
          line = line.trim();
          // Check is we start with json object or array definition.
-         if (line.startsWith("{") || line.startsWith("[")) {
+         if (lineNumber == 0 && (line.startsWith("{") || line.startsWith("["))) {
             isYaml = false;
             break;
          }
          if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")) {
             break;
          }
+         lineNumber++;
       }
       reader.close();
 
