@@ -1,0 +1,55 @@
+{
+	"openapi": "3.1.0",
+	"info": {
+		"title": "custom-service",
+		"version": "1.0.0"
+	},
+	"servers": [
+		{
+			"url": "http://localhost:8080",
+			"description": "Generated server url"
+		}
+	],
+	"paths": {
+		"/secondary/mediatypetextplain/example02": {
+			"get": {
+				"tags": [
+					"mediatype-text-plain-resource"
+				],
+				"operationId": "example02_1",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"text/plain": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/secondary/mediatypetextplain/example01": {
+			"get": {
+				"tags": [
+					"mediatype-text-plain-resource"
+				],
+				"operationId": "example01_3",
+				"responses": {
+					"200": {
+						"description": "OK",
+						"content": {
+							"text/plain": {
+								"schema": {
+									"type": "string"
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
