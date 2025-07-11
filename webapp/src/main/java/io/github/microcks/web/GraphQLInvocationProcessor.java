@@ -32,11 +32,13 @@ import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.graphql.GraphQLHttpRequest;
+import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.roastedroot.quickjs4j.core.Engine;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -239,6 +241,9 @@ public class GraphQLInvocationProcessor {
                }
                break;
             case DispatchStyles.SCRIPT:
+               log.info("Use the \"GROOVY\" Dispatch Style instead.");
+               // fallthrough
+            case DispatchStyles.GROOVY:
                requestContext = new HashMap<>();
                try {
                   // Evaluating request with script coming from operation dispatcher rules.
@@ -247,6 +252,14 @@ public class GraphQLInvocationProcessor {
                   dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
+               }
+               break;
+            case DispatchStyles.JS:
+               Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
+                     new ServiceStateStore(serviceStateRepository, service.getId()), request);
+               String result = JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext);
+               if (result != null) {
+                  dispatchCriteria = result;
                }
                break;
          }

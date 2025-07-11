@@ -174,6 +174,11 @@ public class TestController {
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
    }
 
+   @GetMapping("/test-fetch")
+   public ResponseEntity<String> testFetch() {
+      return ResponseEntity.ok("Hello from test-fetch endpoint!");
+   }
+
    /**
     * Build OperationsHeaders domain object from basic Map. Key is operation name, Value is a header data transfer
     * object.

@@ -36,8 +36,10 @@ import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.EvaluableRequest;
+import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
+import io.roastedroot.quickjs4j.core.Engine;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -258,6 +260,9 @@ public class RestInvocationProcessor {
                      resourcePath);
                break;
             case DispatchStyles.SCRIPT:
+               log.info("Use the \"GROOVY\" Dispatch Style instead.");
+               // fallthrough
+            case DispatchStyles.GROOVY:
                requestContext = new HashMap<>();
                Map<String, String> uriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
                      resourcePath);
@@ -270,6 +275,19 @@ public class RestInvocationProcessor {
                   dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
+               }
+               break;
+            case DispatchStyles.JS:
+               requestContext = new HashMap<>();
+               Map<String, String> jsUriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
+                     resourcePath);
+               // Evaluating request with script coming from operation dispatcher rules.
+               String script = JsScriptEngineBinder.wrapIntoFunction(dispatcherRules);
+               Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
+                     new ServiceStateStore(serviceStateRepository, service.getId()), request, jsUriParameters);
+               String result = JsScriptEngineBinder.invokeProcessFn(script, scriptContext);
+               if (result != null) {
+                  dispatchCriteria = result;
                }
                break;
             case DispatchStyles.URI_PARAMS:

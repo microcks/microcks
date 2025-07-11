@@ -30,11 +30,13 @@ import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
 
+import io.roastedroot.quickjs4j.core.Engine;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -234,8 +236,10 @@ public class SoapController {
             // Depending on dispatcher, evaluate request with rules.
             if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
                dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
-            } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-               dispatchContext = getDispatchCriteriaFromScriptEval(service, dispatcherRules, body, request);
+            } else if (DispatchStyles.SCRIPT.equals(dispatcher) || DispatchStyles.GROOVY.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromGroovyEval(service, dispatcherRules, body, request);
+            } else if (DispatchStyles.JS.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromJsEval(service, dispatcherRules, body, request);
             } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
                dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
             } else if (DispatchStyles.PROXY.equals(dispatcher)) {
@@ -391,7 +395,7 @@ public class SoapController {
    }
 
    /** Build a dispatch context after a Groovy script evaluation coming from rules. */
-   private DispatchContext getDispatchCriteriaFromScriptEval(Service service, String dispatcherRules, String body,
+   private DispatchContext getDispatchCriteriaFromGroovyEval(Service service, String dispatcherRules, String body,
          HttpServletRequest request) {
       Map<String, Object> requestContext = new HashMap<>();
       try {
@@ -405,6 +409,23 @@ public class SoapController {
          log.error("Error during Script evaluation", e);
          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                "Error during Script evaluation: " + e.getMessage());
+      }
+   }
+
+   /* Build a dispatch context after a JS script evaluation coming from rules. */
+   private DispatchContext getDispatchCriteriaFromJsEval(Service service, String dispatcherRules, String body,
+         HttpServletRequest request) {
+      Map<String, Object> requestContext = new HashMap<>();
+      try {
+         Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
+               new ServiceStateStore(serviceStateRepository, service.getId()), request);
+
+         return new DispatchContext(JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext),
+               requestContext);
+      } catch (Exception e) {
+         log.error("Error during JS evaluation", e);
+         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+               "Error during JS evaluation: " + e.getMessage());
       }
    }
 

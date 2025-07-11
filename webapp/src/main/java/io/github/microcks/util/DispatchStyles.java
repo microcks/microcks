@@ -31,7 +31,14 @@ public class DispatchStyles {
    public static final String QUERY_HEADER = "QUERY_HEADER";
 
    /** Constant for SCRIPT dispatch style. */
+   @Deprecated(since = "Use \"GROOVY\" instead")
    public static final String SCRIPT = "SCRIPT";
+
+   /** Constant for GROOVY dispatch style. */
+   public static final String GROOVY = "GROOVY";
+
+   /** Constant for JS dispatch style. */
+   public static final String JS = "JS";
 
    /** Constant for SEQUENCE dispatch style. */
    public static final String SEQUENCE = "SEQUENCE";
