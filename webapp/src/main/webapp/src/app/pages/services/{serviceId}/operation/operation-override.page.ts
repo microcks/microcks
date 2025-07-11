@@ -74,6 +74,7 @@ export class OperationOverridePageComponent implements OnInit {
       { value: 'URI_ELEMENTS', label: 'URI ELEMENTS' },
       { value: 'QUERY_HEADER', label: 'QUERY HEADER' },
       { value: 'SCRIPT', label: 'SCRIPT' },
+      { value: 'JS', label: 'JS' },
       { value: 'JSON_BODY', label: 'JSON BODY' },
       { value: 'PROXY', label: 'PROXY' },
       { value: 'FALLBACK', label: 'FALLBACK' },

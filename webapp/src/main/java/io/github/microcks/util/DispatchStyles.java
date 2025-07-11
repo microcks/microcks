@@ -33,6 +33,9 @@ public class DispatchStyles {
    /** Constant for SCRIPT dispatch style. */
    public static final String SCRIPT = "SCRIPT";
 
+   /** Constant for JS dispatch style. */
+   public static final String JS = "JS";
+
    /** Constant for SEQUENCE dispatch style. */
    public static final String SEQUENCE = "SEQUENCE";
 
