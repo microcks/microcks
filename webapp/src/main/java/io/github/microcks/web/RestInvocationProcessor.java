@@ -522,7 +522,7 @@ public class RestInvocationProcessor {
       byte[] responseContent;
 
       // If the media type is UTF-8 encodable, render the response as text
-      if (Utf8ContentTypeChecker.isUtf8Encodable(response.getMediaType())) {
+      if (UTF8ContentTypeChecker.isUtf8Encodable(response.getMediaType())) {
          String content = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
                dispatchContext.requestContext(), response);
          responseContent = content != null ? content.getBytes(StandardCharsets.UTF_8) : null;

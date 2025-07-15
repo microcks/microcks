@@ -18,7 +18,7 @@ package io.github.microcks.util;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
-public class Utf8ContentTypeChecker {
+public class UTF8ContentTypeChecker {
    private static final Pattern UTF8_ENCODABLE_PATTERN = Pattern.compile(
          "^(text/[a-z0-9.+-]+|application/([a-z0-9.+-]*\\+(json|xml)|json|xml|javascript|x-www-form-urlencoded))$",
          Pattern.CASE_INSENSITIVE);
