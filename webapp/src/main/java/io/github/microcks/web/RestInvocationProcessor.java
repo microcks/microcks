@@ -68,15 +68,12 @@ import java.util.Set;
 /**
  * A processor for handling REST invocations. It is responsible for applying the dispatching logic and finding the most
  * appropriate response based on the request context.
- *
  * @author laurent
  */
 @Component
 public class RestInvocationProcessor {
 
-   /**
-    * A safe logger for filtering user-controlled data in diagnostic messages.
-    */
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
    private static final SafeLogger log = SafeLogger.getLogger(RestInvocationProcessor.class);
 
    private final ServiceStateRepository serviceStateRepository;
@@ -91,7 +88,6 @@ public class RestInvocationProcessor {
 
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
-    *
     * @param serviceStateRepository The repository to access service state
     * @param responseRepository     The repository to access responses definitions
     * @param applicationContext     The Spring application context
@@ -109,7 +105,6 @@ public class RestInvocationProcessor {
    /**
     * Process a REST invocation. This method is responsible for determining the appropriate response based on the
     * request context, applying any necessary dispatching logic, and handling proxying if required.
-    *
     * @param ic        The invocation context containing information about the service and operation being invoked
     * @param startTime The start time of the invocation
     * @param delay     The delay to apply before returning the response
@@ -191,9 +186,7 @@ public class RestInvocationProcessor {
       return new ResponseResult(HttpStatus.BAD_REQUEST, null, null);
    }
 
-   /**
-    * Get the root dispatcher for the invocation context.
-    */
+   /** Get the root dispatcher for the invocation context. */
    private String getDispatcher(MockInvocationContext ic, FallbackSpecification fallback,
          ProxyFallbackSpecification proxyFallback) {
       String dispatcher = ic.operation().getDispatcher();
@@ -206,9 +199,7 @@ public class RestInvocationProcessor {
       return dispatcher;
    }
 
-   /**
-    * Get the root dispatcher rules for the invocation context.
-    */
+   /** Get the root dispatcher rules for the invocation context. */
    private String getDispatcherRules(MockInvocationContext ic, FallbackSpecification fallback,
          ProxyFallbackSpecification proxyFallback) {
       String dispatcherRules = ic.operation().getDispatcherRules();
@@ -221,9 +212,7 @@ public class RestInvocationProcessor {
       return dispatcherRules;
    }
 
-   /**
-    * Get one random response for operation.
-    */
+   /** Get one random response for operation. */
    private Response getOneForOperation(MockInvocationContext ic, HttpServletRequest request, Response response) {
       List<Response> responses;
       // In case no response found because dispatcher is null, just get one for the operation.
@@ -236,9 +225,7 @@ public class RestInvocationProcessor {
       return response;
    }
 
-   /**
-    * Filter responses using the Accept header for content-type, default to the first. Return null if no responses.
-    */
+   /** Filter responses using the Accept header for content-type, default to the first. Return null if no responses. */
    private Response getResponseByMediaType(List<Response> responses, HttpServletRequest request) {
       if (!responses.isEmpty()) {
          String accept = request.getHeader("Accept");
@@ -248,9 +235,7 @@ public class RestInvocationProcessor {
       return null;
    }
 
-   /**
-    * Retrieve URI Pattern from operation name (remove starting verb name).
-    */
+   /** Retrieve URI Pattern from operation name (remove starting verb name). */
    private String getURIPattern(String operationName) {
       if (operationName.startsWith("GET ") || operationName.startsWith("POST ") || operationName.startsWith("PUT ")
             || operationName.startsWith("DELETE ") || operationName.startsWith("PATCH ")
@@ -260,9 +245,7 @@ public class RestInvocationProcessor {
       return operationName;
    }
 
-   /**
-    * Compute a dispatch context with a dispatchCriteria string from type, rules and request elements.
-    */
+   /** Compute a dispatch context with a dispatchCriteria string from type, rules and request elements. */
    private DispatchContext computeDispatchCriteria(Service service, String dispatcher, String dispatcherRules,
          String uriPattern, String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
@@ -346,9 +329,7 @@ public class RestInvocationProcessor {
       return response;
    }
 
-   /**
-    * Extract request headers from request.
-    */
+   /** Extract request headers from request. */
    private Map<String, String> extractRequestHeaders(HttpServletRequest request) {
       Map<String, String> headers = new HashMap<>();
       Collections.list(request.getHeaderNames()).forEach(name -> headers.put(name, request.getHeader(name)));
@@ -378,9 +359,7 @@ public class RestInvocationProcessor {
       return responseHeaders;
    }
 
-   /**
-    * Recopy headers defined with parameter constraints.
-    */
+   /** Recopy headers defined with parameter constraints. */
    private void recopyHeadersFromParameterConstraints(Operation rOperation, HttpServletRequest request,
          HttpHeaders responseHeaders) {
       if (rOperation.getParameterConstraints() != null) {
