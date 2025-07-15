@@ -49,7 +49,7 @@ public class DailyStatisticRepositoryImpl implements CustomDailyStatisticReposit
 
    @Override
    public void incrementDailyStatistic(String day, String serviceName, String serviceVersion, String hourKey,
-         String minuteKey) {
+         String minuteKey, int count) {
 
       // Build a query to select specific object within collection.
       Query query = new Query(
@@ -59,8 +59,8 @@ public class DailyStatisticRepositoryImpl implements CustomDailyStatisticReposit
       //Query queryShort = query(where("day").is(day).and("serviceName").is(serviceName).and("serviceVersion").is(serviceVersion));
 
       // Build update to increment the 3 fields.
-      Update update = new Update().inc("dailyCount", 1).inc("hourlyCount." + hourKey, 1).inc("minuteCount." + minuteKey,
-            1);
+      Update update = new Update().inc("dailyCount", count).inc("hourlyCount." + hourKey, count)
+            .inc("minuteCount." + minuteKey, count);
 
       // Do an upsert with find and modify.
       template.findAndModify(query, update, DailyStatistic.class);
