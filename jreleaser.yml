@@ -39,15 +39,14 @@ files:
 
 deploy:
   maven:
-    nexus2:
+    mavenCentral:
       sonatype:
         active: ALWAYS
         snapshotSupported: false
-        url: https://oss.sonatype.org/service/local
-        snapshotUrl: https://oss.sonatype.org/content/repositories/snapshots
-        stagingProfileId: c3fae58a8dda9
-        closeRepository: false
-        releaseRepository: false
+        url: https://central.sonatype.com/api/v1/publisher
+        username: wPlqdV4c
+        namespace: io.github.microcks
+        applyMavenCentralRules: true
         stagingRepositories:
           - target/staging-deploy
     pomchecker:
