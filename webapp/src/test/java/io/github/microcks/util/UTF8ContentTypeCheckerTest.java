@@ -8,8 +8,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Utf8ContentTypeChecker Tests")
-public class Utf8ContentTypeCheckerTest {
+@DisplayName("UTF8ContentTypeChecker Tests")
+public class UTF8ContentTypeCheckerTest {
 
    @Nested
    @DisplayName("Valid UTF-8 Encodable Content Types")
@@ -21,7 +21,7 @@ public class Utf8ContentTypeCheckerTest {
                "application/soap+xml", "application/javascript", "application/x-www-form-urlencoded");
 
          for (String type : validTypes) {
-            assertTrue(Utf8ContentTypeChecker.isUtf8Encodable(type), "Expected to match: " + type);
+            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to match: " + type);
          }
       }
    }
@@ -36,7 +36,7 @@ public class Utf8ContentTypeCheckerTest {
                "multipart/form-data");
 
          for (String type : invalidTypes) {
-            assertFalse(Utf8ContentTypeChecker.isUtf8Encodable(type), "Expected to reject: " + type);
+            assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to reject: " + type);
          }
       }
    }
@@ -47,9 +47,9 @@ public class Utf8ContentTypeCheckerTest {
       @Test
       @DisplayName("Should reject null, empty, and blank strings")
       void shouldRejectNullOrEmpty() {
-         assertAll(() -> assertFalse(Utf8ContentTypeChecker.isUtf8Encodable(null), "Null should return false"),
-               () -> assertFalse(Utf8ContentTypeChecker.isUtf8Encodable(""), "Empty string should return false"),
-               () -> assertFalse(Utf8ContentTypeChecker.isUtf8Encodable("   "), "Blank string should return false"));
+         assertAll(() -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(null), "Null should return false"),
+               () -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(""), "Empty string should return false"),
+               () -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable("   "), "Blank string should return false"));
       }
 
       @Test
@@ -59,7 +59,7 @@ public class Utf8ContentTypeCheckerTest {
                "Application/Vnd.Api+Json");
 
          for (String type : mixedCaseTypes) {
-            assertTrue(Utf8ContentTypeChecker.isUtf8Encodable(type),
+            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type),
                   "Expected to match case-insensitive type: " + type);
          }
       }
@@ -68,8 +68,8 @@ public class Utf8ContentTypeCheckerTest {
       @DisplayName("Should ignore leading/trailing whitespace")
       void shouldTrimWhitespace() {
          assertAll(
-               () -> assertTrue(Utf8ContentTypeChecker.isUtf8Encodable(" text/plain "), "Should match with whitespace"),
-               () -> assertFalse(Utf8ContentTypeChecker.isUtf8Encodable(" image/png "),
+               () -> assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(" text/plain "), "Should match with whitespace"),
+               () -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(" image/png "),
                      "Should reject even with whitespace"));
       }
    }
