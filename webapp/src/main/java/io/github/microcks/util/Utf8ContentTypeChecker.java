@@ -29,13 +29,4 @@ public class Utf8ContentTypeChecker {
       Matcher matcher = UTF8_ENCODABLE_PATTERN.matcher(contentType.trim());
       return matcher.matches();
    }
-
-   public static void main(String[] args) {
-      String[] testTypes = { "text/plain", "application/json", "application/vnd.api+json", "application/soap+xml",
-            "application/pdf", "image/png" };
-
-      for (String type : testTypes) {
-         System.out.printf("%-35s -> %s%n", type, isUtf8Encodable(type));
-      }
-   }
 }
