@@ -18,6 +18,8 @@ package io.github.microcks.web;
 import io.github.microcks.domain.DailyStatistic;
 import io.github.microcks.domain.TestConformanceMetric;
 import io.github.microcks.domain.WeightedMetricValue;
+import io.github.microcks.listener.DailyStatisticsFeeder;
+import io.github.microcks.listener.StatisticsFlusher;
 import io.github.microcks.repository.CustomDailyStatisticRepository;
 import io.github.microcks.repository.DailyStatisticRepository;
 import io.github.microcks.repository.TestConformanceMetricRepository;
@@ -51,22 +53,29 @@ public class MetricsController {
    private final DailyStatisticRepository invocationsRepository;
    private final TestConformanceMetricRepository metricRepository;
    private final TestResultRepository testResultRepository;
+   private final StatisticsFlusher statisticsFlusher;
 
    /**
     * Build a new MetricsController with its required dependencies.
     * @param invocationsRepository The repository for daily statistics.
     * @param metricRepository      The repository for test conformance metrics.
     * @param testResultRepository  The repository for test results.
+    * @param statisticsFlusher     The statistics flusher.
     */
    public MetricsController(DailyStatisticRepository invocationsRepository,
-         TestConformanceMetricRepository metricRepository, TestResultRepository testResultRepository) {
+         TestConformanceMetricRepository metricRepository, TestResultRepository testResultRepository,
+         StatisticsFlusher statisticsFlusher) {
       this.invocationsRepository = invocationsRepository;
       this.metricRepository = metricRepository;
       this.testResultRepository = testResultRepository;
+      this.statisticsFlusher = statisticsFlusher;
    }
 
    @GetMapping(value = "/metrics/invocations/global")
    public DailyStatistic getInvocationStatGlobal(@RequestParam(value = "day", required = false) String day) {
+      // Ensure we got accurate statistics by flushing the feeder to database.
+      statisticsFlusher.flushToDatabase();
+      // Now process the request.
       log.debug("Getting invocations stats for day {}", day);
       if (day == null) {
          day = getTodaysDate();
@@ -77,6 +86,9 @@ public class MetricsController {
    @GetMapping(value = "/metrics/invocations/top")
    public List<DailyStatistic> getInvocationTopStats(@RequestParam(value = "day", required = false) String day,
          @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
+      // Ensure we got accurate statistics by flushing the feeder to database.
+      statisticsFlusher.flushToDatabase();
+      // Now process the request.
       log.debug("Getting top {} invocations stats for day {}", limit, day);
       if (day == null) {
          day = getTodaysDate();
@@ -87,6 +99,9 @@ public class MetricsController {
    @GetMapping(value = "/metrics/invocations/{service}/{version}")
    public DailyStatistic getInvocationStatForService(@PathVariable("service") String serviceName,
          @PathVariable("version") String serviceVersion, @RequestParam(value = "day", required = false) String day) {
+      // Ensure we got accurate statistics by flushing the feeder to database.
+      statisticsFlusher.flushToDatabase();
+      // Now process the request.
       log.debug("Getting invocations stats for service [{}, {}] and day {}", serviceName, serviceVersion, day);
       if (day == null) {
          day = getTodaysDate();
@@ -102,6 +117,9 @@ public class MetricsController {
    @GetMapping(value = "/metrics/invocations/global/latest")
    public Map<String, Long> getLatestInvocationStatGlobal(
          @RequestParam(value = "limit", required = false, defaultValue = "20") Integer limit) {
+      // Ensure we got accurate statistics by flushing the feeder to database.
+      statisticsFlusher.flushToDatabase();
+      // Now process the request.
       log.debug("Getting invocations stats for last {} days", limit);
 
       String day = getTodaysDate();
@@ -144,10 +162,10 @@ public class MetricsController {
    private String getTodaysDate() {
       Calendar calendar = Calendar.getInstance();
       int month = calendar.get(Calendar.MONTH) + 1;
-      String monthStr = (month < 10 ? "0" : "") + String.valueOf(month);
+      String monthStr = (month < 10 ? "0" : "") + month;
       int dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH);
-      String dayOfMonthStr = (dayOfMonth < 10 ? "0" : "") + String.valueOf(dayOfMonth);
-      return String.valueOf(calendar.get(Calendar.YEAR)) + monthStr + dayOfMonthStr;
+      String dayOfMonthStr = (dayOfMonth < 10 ? "0" : "") + dayOfMonth;
+      return calendar.get(Calendar.YEAR) + monthStr + dayOfMonthStr;
    }
 
    private Date getPastDate(Integer daysBack) {
