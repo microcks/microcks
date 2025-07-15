@@ -585,6 +585,7 @@ public class RestInvocationProcessor {
    private void handlePostProcessing(long startTime, Long delay, MockInvocationContext ic, Response response) {
       MockControllerCommons.waitForDelay(startTime, delay);
 
+      // Publish an invocation event before returning if enabled.
       if (Boolean.TRUE.equals(enableInvocationStats)) {
          MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
       }
