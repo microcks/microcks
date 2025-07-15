@@ -15,7 +15,9 @@
  */
 package io.github.microcks.web;
 
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
@@ -33,7 +35,11 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
