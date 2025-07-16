@@ -296,11 +296,6 @@ public class AsyncAPITestManager {
          if (messageNode.has("contentType")) {
             contentType = messageNode.path("contentType").asText();
          }
-         if (messageNode.has("payload")) {
-            String payload = messageNode.path("payload").asText();
-            if (payload.isEmpty() || payload.equals("null"))
-               contentType = "any";
-         }
          return contentType;
       }
 
