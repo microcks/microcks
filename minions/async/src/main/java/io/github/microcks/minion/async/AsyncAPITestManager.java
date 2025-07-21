@@ -281,11 +281,17 @@ public class AsyncAPITestManager {
          // Get message real content type if defined.
          String contentType = defaultContentType;
          JsonNode messageNode = specificationNode.at(messagePathPointer);
+
+         // messageNode will be an array of messages
+         if (messageNode.isArray() && messageNode.size() > 0) {
+            messageNode = messageNode.get(0);
+         }
+
          // If it's a $ref, then navigate to it.
-         if (messageNode.has("$ref")) {
+         while (messageNode.has("$ref")) {
             // $ref: '#/components/messages/lightMeasured'
             String ref = messageNode.path("$ref").asText();
-            messageNode = messageNode.at(ref.substring(1));
+            messageNode = specificationNode.at(ref.substring(1));
          }
          if (messageNode.has("contentType")) {
             contentType = messageNode.path("contentType").asText();

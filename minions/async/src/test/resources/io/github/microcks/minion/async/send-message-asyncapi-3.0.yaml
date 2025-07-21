@@ -1,0 +1,48 @@
+asyncapi: '3.0.0'
+info:
+  title: Message Sender API
+  version: '1.0.0'
+  description: |
+    This AsyncAPI specification defines a channel `sendMessage`
+    that allows sending messages with any type of payload.
+
+servers:
+  echoServer:
+    host: echo-websocket.hoppscotch.io
+    protocol: wss
+
+channels:
+  echo:
+    description: >
+      The single channel where messages are sent to and echoed back.
+    address: /
+    messages:
+      echo:
+        $ref: '#/components/messages/echo'
+
+operations:
+  sendEchoMessage:
+    action: send
+    channel:
+      $ref: '#/channels/echo'
+    summary: Send a message to the echo server.
+    messages:
+      - $ref: '#/channels/echo/messages/echo'
+
+components:
+  messages:
+    echo:
+      summary: A message exchanged with the echo server.
+      contentType: text/plain
+      examples:
+        - name: string
+          payload: test
+        - name: boolean
+          payload: true
+        - name: number
+          payload: 123
+        - name: object
+          payload:
+            test: test text
+
+
