@@ -17,6 +17,8 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.Secret;
 import io.github.microcks.repository.SecretRepository;
+import io.github.microcks.security.AuthorizationChecker;
+import io.github.microcks.security.UserInfo;
 import io.github.microcks.util.SafeLogger;
 
 import org.springframework.data.domain.PageRequest;
@@ -49,19 +51,28 @@ public class SecretController {
    private static final SafeLogger log = SafeLogger.getLogger(SecretController.class);
 
    private final SecretRepository secretRepository;
+   private final AuthorizationChecker authorizationChecker;
 
    /**
     * Build a new SecretController with its dependencies.
-    * @param secretRepository to have access to Secrets definition
+    * @param secretRepository     to have access to Secrets definition
+    * @param authorizationChecker to check user authorization
     */
-   public SecretController(SecretRepository secretRepository) {
+   public SecretController(SecretRepository secretRepository, AuthorizationChecker authorizationChecker) {
       this.secretRepository = secretRepository;
+      this.authorizationChecker = authorizationChecker;
    }
 
    @GetMapping(value = "/secrets")
    public List<Secret> listSecrets(@RequestParam(value = "page", required = false, defaultValue = "0") int page,
-         @RequestParam(value = "size", required = false, defaultValue = "20") int size) {
+         @RequestParam(value = "size", required = false, defaultValue = "20") int size, UserInfo userInfo) {
       log.debug("Getting secrets list for page {} and size {}", page, size);
+
+      if (!authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)) {
+         return secretRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))).getContent()
+               .stream().map(this::filterSensitiveData).toList();
+      }
+      // We're admin, so we can return all secrets with sensitive data.
       return secretRepository.findAll(PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"))).getContent();
    }
 
@@ -86,8 +97,17 @@ public class SecretController {
    }
 
    @GetMapping(value = "/secrets/{id}")
-   public ResponseEntity<Secret> getSecret(@PathVariable("id") String secretId) {
+   public ResponseEntity<Secret> getSecret(@PathVariable("id") String secretId, UserInfo userInfo) {
       log.debug("Getting secret with id {}", secretId);
+
+      if (!authorizationChecker.hasRole(userInfo, AuthorizationChecker.ROLE_ADMIN)) {
+         Secret secret = secretRepository.findById(secretId).orElse(null);
+         if (secret != null) {
+            return new ResponseEntity<>(filterSensitiveData(secret), HttpStatus.OK);
+         }
+         return new ResponseEntity<>(null, HttpStatus.OK);
+      }
+      // We're admin, so we can return all secrets with sensitive data.
       return new ResponseEntity<>(secretRepository.findById(secretId).orElse(null), HttpStatus.OK);
    }
 
@@ -102,5 +122,14 @@ public class SecretController {
       log.debug("Removing secret with id {}", secretId);
       secretRepository.deleteById(secretId);
       return new ResponseEntity<>(HttpStatus.OK);
+   }
+
+   /** Filter sensitive data from a Secret before returning it to the user. */
+   private Secret filterSensitiveData(Secret secret) {
+      secret.setUsername(null);
+      secret.setPassword(null);
+      secret.setToken(null);
+      secret.setCaCertPem(null);
+      return secret;
    }
 }

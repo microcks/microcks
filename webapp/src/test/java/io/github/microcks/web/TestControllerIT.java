@@ -18,6 +18,7 @@ package io.github.microcks.web;
 
 import io.github.microcks.domain.RequestResponsePair;
 import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestStepResult;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -96,6 +97,69 @@ class TestControllerIT extends AbstractBaseIT {
       List<RequestResponsePair> pairs = testController.getMessagesForTestCase(testResult.getId(), testCaseId);
       assertEquals(1, pairs.size());
       assertEquals("pastries_json", pairs.get(0).getRequest().getName());
+   }
+
+   @Test
+   void testSoapUITesting() {
+      // Upload Hello Service SoapUI project.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/soapui/HelloService-soapui-project.xml", true);
+
+      String testEndpoint = getServerUrl() + "/soap/HelloService+Mock/0.9";
+
+      StringBuilder testRequest = new StringBuilder("{").append("\"serviceId\": \"HelloService Mock:0.9\", ")
+            .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ").append("\"runnerType\": \"SOAP_UI\", ")
+            .append("\"timeout\": 2000").append("}");
+
+      HttpHeaders headers = new HttpHeaders();
+      headers.setContentType(MediaType.APPLICATION_JSON);
+      HttpEntity<String> entity = new HttpEntity<>(testRequest.toString(), headers);
+
+      ResponseEntity<TestResult> response = restTemplate.postForEntity("/api/tests", entity, TestResult.class);
+      assertEquals(201, response.getStatusCode().value());
+
+      TestResult testResult = response.getBody();
+      assertNotNull(testResult);
+      assertNotNull(testResult.getId());
+      assertTrue(testResult.isInProgress());
+      assertEquals(testEndpoint, testResult.getTestedEndpoint());
+
+      // Wait till timeout and re-fetch the result.
+      try {
+         Thread.sleep(2000);
+      } catch (InterruptedException e) {
+         throw new RuntimeException(e);
+      }
+
+      response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      assertEquals(200, response.getStatusCode().value());
+
+      testResult = response.getBody();
+      assertNotNull(testResult);
+      assertFalse(testResult.isInProgress());
+      // 2 tests steps are ok, 1 is failing.
+      assertFalse(testResult.isSuccess());
+
+      assertEquals(1, testResult.getTestCaseResults().size());
+      List<TestStepResult> testStepResults = testResult.getTestCaseResults().getFirst().getTestStepResults();
+      for (TestStepResult testStepResult : testStepResults) {
+         if (testStepResult.getRequestName().equals("Andrew Request")) {
+            assertFalse(testStepResult.isSuccess());
+            assertEquals("Assertion 'XQuery Match' is not managed by Microcks at the moment\n",
+                  testStepResult.getMessage());
+         } else if (testStepResult.getRequestName().equals("Karla Request")) {
+            assertTrue(testStepResult.isSuccess());
+         } else if (testStepResult.getRequestName().equals("World Request")) {
+            assertTrue(testStepResult.isSuccess());
+         } else {
+            fail("Unexpected request name in test step result: " + testStepResult.getRequestName());
+         }
+      }
+
+      // Now try accessing messages for basic operation.
+      String testCaseId = testResult.getId() + "-" + testResult.getTestNumber() + "-sayHello";
+
+      List<RequestResponsePair> pairs = testController.getMessagesForTestCase(testResult.getId(), testCaseId);
+      assertEquals(3, pairs.size());
    }
 
    @Test

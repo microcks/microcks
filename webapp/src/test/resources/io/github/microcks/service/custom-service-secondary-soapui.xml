@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project soapui-version="5.8.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config">
+	<con:interface xsi:type="con:RestService" wadlVersion="http://wadl.dev.java.net/2009/02" name="API" type="rest" basePath="" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+		<con:definitionCache type="TEXT" />
+		<con:resource name="example01-Resource" path="/secondary/mediatypetextplain/example01">
+			<con:method name="example01-Method" method="GET">
+				<con:request name="/secondary/mediatypetextplain/example01" mediaType="application/json">
+				</con:request>
+			</con:method>
+		</con:resource>
+	</con:interface>
+	<con:testSuite name="TestSuite">
+		<con:runType>SEQUENTIAL</con:runType>
+		<con:testCase name="TestCase">
+			<con:testStep type="restrequest" name="OK Request">
+				<con:config service="custom-service" methodName="example01-Method" resourcePath="/secondary/mediatypetextplain/example01" xsi:type="con:RestRequestStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+					<con:restRequest name="OK Request">
+						<con:encoding>UTF-8</con:encoding>
+						<con:endpoint xsi:nil="true"/>
+						<con:jmsConfig JMSDeliveryMode="PERSISTENT"/>
+					</con:restRequest>
+				</con:config>
+			</con:testStep>
+		</con:testCase>
+	</con:testSuite>
+	<con:restMockService port="8089" path="/" host="lbroudoux-OSX.local" name="custom-service">
+		<con:properties>
+			<con:property>
+				<con:name>version</con:name>
+				<con:value>1.0.0</con:value>
+			</con:property>
+		</con:properties>
+		<con:restMockAction name="GET /secondary/mediatypetextplain/example01" method="GET" resourcePath="/secondary/mediatypetextplain/example01">
+			<con:defaultResponse>OK Response</con:defaultResponse>
+			<con:dispatchStyle>SEQUENCE</con:dispatchStyle>
+			<con:response name="OK Response" httpResponseStatus="200" mediaType="text/plain">
+				<con:responseContent>result01</con:responseContent>
+			</con:response>
+		</con:restMockAction>
+	</con:restMockService>
+</con:soapui-project>

@@ -25,8 +25,8 @@ import java.util.List;
  */
 public interface CustomDailyStatisticRepository {
 
-   void incrementDailyStatistic(String day, String serviceName, String serviceVersion, String hourKey,
-         String minuteKey);
+   void incrementDailyStatistic(String day, String serviceName, String serviceVersion, String hourKey, String minuteKey,
+         int count);
 
    DailyStatistic aggregateDailyStatistics(String day);
 

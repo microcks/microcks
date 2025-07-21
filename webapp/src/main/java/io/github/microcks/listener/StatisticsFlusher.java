@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.domain;
+
+package io.github.microcks.listener;
 
 /**
- * Enumeration of locations for operation parameters.
+ * StatisticsFlusher is an interface for components that flush statistics to a database.
  * @author laurent
  */
-public enum ParameterLocation {
-   path,
-   query,
-   header,
-   cookie
+public interface StatisticsFlusher {
+
+   /** Flush the statistics cache to the database. */
+   void flushToDatabase();
 }

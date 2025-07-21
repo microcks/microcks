@@ -58,6 +58,7 @@ class DailyStatisticsFeederTest {
 
       SimpleDateFormat formater = new SimpleDateFormat("yyyyMMdd");
       String day = formater.format(today.getTime());
+      feeder.flushToDatabase();
       DailyStatistic stat = statisticsRepository.findByDayAndServiceNameAndServiceVersion(day, "TestService1", "1.0")
             .get(0);
       assertNotNull(stat);
@@ -70,7 +71,7 @@ class DailyStatisticsFeederTest {
 
       // Fire event a second time.
       feeder.onApplicationEvent(event);
-
+      feeder.flushToDatabase();
       stat = statisticsRepository.findByDayAndServiceNameAndServiceVersion(day, "TestService1", "1.0").get(0);
       assertNotNull(stat);
       assertNotNull(stat.getId());

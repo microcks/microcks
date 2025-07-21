@@ -32,6 +32,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.junit.jupiter.Container;
@@ -46,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 
@@ -58,13 +61,16 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 class AsyncAPITestManagerIT {
 
    private static final String TOPIC_NAME = "test-topic";
-   private static final String TEXT_MESSAGE_TEMPLATE = """
-         {
-            "fullName": "Laurent Broudoux",
-            "email": "laurent@microcks.io",
-            "age": 4%s
-         }
-         """;
+
+   private static Stream<TestConfig> testConfigs() {
+      return Stream.of(new TestConfig("user-signedup-asyncapi-3.0.yaml", "SEND publishUserSignedUps", """
+            {
+               "fullName": "Laurent Broudoux",
+               "email": "laurent@microcks.io",
+               "age": 4%s
+            }
+            """), new TestConfig("send-message-asyncapi-3.0.yaml", "SEND sendEchoMessage", "test"));
+   }
 
    private static final Network NETWORK = Network.newNetwork();
 
@@ -73,11 +79,12 @@ class AsyncAPITestManagerIT {
          DockerImageName.parse("confluentinc/cp-kafka:7.5.0")).withNetwork(NETWORK).withNetworkAliases("kafka")
                .withListener(() -> "kafka:19092");
 
-   @Test
-   void testKafkaAsyncAPITestSuccess() throws Exception {
+   @ParameterizedTest
+   @MethodSource("testConfigs")
+   void testKafkaAsyncAPITestSuccess(TestConfig config) throws Exception {
       // Arrange.
-      String asyncAPIContent = Files.readString(
-            Paths.get("target/test-classes/io/github/microcks/minion/async", "user-signedup-asyncapi-3.0.yaml"));
+      String asyncAPIContent = Files
+            .readString(Paths.get("target/test-classes/io/github/microcks/minion/async", config.specificationFile));
       Map<String, TestCaseReturnDTO> reportedTestCases = new HashMap<>();
       MicrocksAPIConnector microcksAPIConnector = new MicrocksAPIConnector() {
          @Override
@@ -122,7 +129,7 @@ class AsyncAPITestManagerIT {
             "kafka://%s/%s".formatted(kafkaContainer.getBootstrapServers().replace("PLAINTEXT://", ""), TOPIC_NAME));
       testSpecification.setRunnerType(TestRunnerType.ASYNC_API_SCHEMA);
       testSpecification.setAsyncAPISpec(asyncAPIContent);
-      testSpecification.setOperationName("SEND publishUserSignedUps");
+      testSpecification.setOperationName(config.operationName);
       testSpecification.setTimeoutMS(2200L);
       testSpecification.setTestResultId("test-result-id");
 
@@ -134,7 +141,7 @@ class AsyncAPITestManagerIT {
 
       // Wait a bit so that consumption task has actually started.
       await().during(1250, TimeUnit.MILLISECONDS).until(() -> true);
-      sendTextMessagesOnTopic(5);
+      sendTextMessagesOnTopic(5, config.message);
 
       // Wait a bit so that consumption task has actually finished.
       await().during(3, TimeUnit.SECONDS).until(() -> true);
@@ -149,7 +156,7 @@ class AsyncAPITestManagerIT {
       }
    }
 
-   private static void sendTextMessagesOnTopic(int number) {
+   private static void sendTextMessagesOnTopic(int number, String message) {
       Properties props = new Properties();
       props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaContainer.getBootstrapServers());
       props.put(ProducerConfig.CLIENT_ID_CONFIG, "microcks-async-minion-str-producer");
@@ -160,10 +167,14 @@ class AsyncAPITestManagerIT {
 
       for (int i = 0; i < number; i++) {
          ProducerRecord<String, String> kafkaRecord = new ProducerRecord<>(TOPIC_NAME,
-               String.valueOf(System.currentTimeMillis()), TEXT_MESSAGE_TEMPLATE.formatted(i));
+               String.valueOf(System.currentTimeMillis()), message.formatted(i));
          producer.send(kafkaRecord);
       }
       producer.flush();
       producer.close();
+   }
+
+   // record to group the test config
+   record TestConfig(String specificationFile, String operationName, String message) {
    }
 }

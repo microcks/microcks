@@ -390,7 +390,8 @@ data:
           "enabled": true,
           "publicClient": true,
           "redirectUris": [
-            "https://{{ .Values.microcks.url }}/*"
+            "https://{{ .Values.microcks.url }}/*",
+            "http://localhost:58085/*"
           ],
           "webOrigins": [
             "+"

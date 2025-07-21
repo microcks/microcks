@@ -279,7 +279,7 @@ public class SoapController {
          HttpHeaders responseHeaders = new HttpHeaders();
 
          // Check to see if we are processing a SOAP 1.2 request
-         if (request.getContentType().startsWith("application/soap+xml")) {
+         if (request.getContentType() == null || request.getContentType().startsWith("application/soap+xml")) {
             // we are; set Content-Type to "application/soap+xml"
             responseHeaders.setContentType(MediaType.valueOf("application/soap+xml;charset=UTF-8"));
          } else {

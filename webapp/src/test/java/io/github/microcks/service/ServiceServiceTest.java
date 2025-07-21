@@ -387,6 +387,105 @@ class ServiceServiceTest {
    }
 
    @Test
+   void testImportServiceDefinitionMainAndSecondarySoapUI() {
+      List<Service> services = null;
+      try {
+         File artifactFile = new File(
+               "target/test-classes/io/github/microcks/service/custom-service-primary-openapi.json");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("custom-service-primary-openapi.json", true));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      assertNotNull(services);
+      assertEquals(1, services.size());
+
+      // Inspect Service own attributes.
+      Service importedSvc = services.get(0);
+      assertEquals("custom-service", importedSvc.getName());
+      assertEquals("1.0.0", importedSvc.getVersion());
+      assertEquals("custom-service-primary-openapi.json", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(2, importedSvc.getOperations().size());
+      assertNotNull(importedSvc.getOperations().get(0).getResourcePaths());
+
+      // Inspect and check resources.
+      List<Resource> resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(1, resources.size());
+
+      Resource resource = resources.get(0);
+      assertEquals("custom-service-1.0.0.json", resource.getName());
+      assertEquals("custom-service-primary-openapi.json", resource.getSourceArtifact());
+
+      // Inspect and check requests.
+      List<Request> requests = requestRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, requests.size());
+
+      // Inspect and check responses.
+      List<Response> responses = responseRepository
+            .findByOperationId(IdBuilder.buildOperationId(importedSvc, importedSvc.getOperations().get(0)));
+      assertEquals(0, responses.size());
+
+      try {
+         File artifactFile = new File(
+               "target/test-classes/io/github/microcks/service/custom-service-secondary-soapui.xml");
+         services = service.importServiceDefinition(artifactFile, null,
+               new ArtifactInfo("custom-service-secondary-soapui.xml", false));
+      } catch (MockRepositoryImportException mrie) {
+         fail("No MockRepositoryImportException should have be thrown");
+      }
+
+      // Inspect Service own attributes to check they didn't change.
+      importedSvc = services.get(0);
+      assertEquals("custom-service", importedSvc.getName());
+      assertEquals("1.0.0", importedSvc.getVersion());
+      assertEquals("custom-service-primary-openapi.json", importedSvc.getSourceArtifact());
+      assertNotNull(importedSvc.getMetadata());
+      assertEquals(2, importedSvc.getOperations().size());
+      assertNull(importedSvc.getOperations().get(0).getDispatcher());
+      assertEquals(1, importedSvc.getOperations().get(0).getResourcePaths().size());
+
+      // Inspect and check resources.
+      resources = resourceRepository.findByServiceId(importedSvc.getId());
+      assertEquals(2, resources.size());
+
+      for (Resource resourceItem : resources) {
+         switch (resourceItem.getType()) {
+            case OPEN_API_SPEC:
+               assertEquals("custom-service-1.0.0.json", resourceItem.getName());
+               assertEquals("custom-service-primary-openapi.json", resourceItem.getSourceArtifact());
+               break;
+            case SOAP_UI_PROJECT:
+               assertEquals("custom-service-1.0.0.xml", resourceItem.getName());
+               assertEquals("custom-service-secondary-soapui.xml", resourceItem.getSourceArtifact());
+               break;
+            default:
+               fail("Unexpected resource type: " + resourceItem.getType());
+         }
+      }
+
+      Operation operation = importedSvc.getOperations().stream()
+            .filter(op -> "GET /secondary/mediatypetextplain/example01".equals(op.getName())).findFirst().orElse(null);
+      assertNotNull(operation);
+
+      // Inspect and check requests.
+      requests = requestRepository.findByOperationId(IdBuilder.buildOperationId(importedSvc, operation));
+      assertEquals(1, requests.size());
+      for (Request request : requests) {
+         assertEquals("custom-service-secondary-soapui.xml", request.getSourceArtifact());
+      }
+
+      // Inspect and check responses.
+      responses = responseRepository.findByOperationId(IdBuilder.buildOperationId(importedSvc, operation));
+      assertEquals(1, requests.size());
+      for (Response response : responses) {
+         assertEquals("custom-service-secondary-soapui.xml", response.getSourceArtifact());
+      }
+   }
+
+   @Test
    void testImportServiceDefinitionMainGraphQLAndSecondaryPostman() {
       List<Service> services = null;
       try {
