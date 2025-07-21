@@ -107,8 +107,8 @@ class TestControllerIT extends AbstractBaseIT {
       String testEndpoint = getServerUrl() + "/soap/HelloService+Mock/0.9";
 
       StringBuilder testRequest = new StringBuilder("{").append("\"serviceId\": \"HelloService Mock:0.9\", ")
-            .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ")
-            .append("\"runnerType\": \"SOAP_UI\", ").append("\"timeout\": 2000").append("}");
+            .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ").append("\"runnerType\": \"SOAP_UI\", ")
+            .append("\"timeout\": 2000").append("}");
 
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
