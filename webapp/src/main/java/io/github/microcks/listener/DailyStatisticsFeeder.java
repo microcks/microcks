@@ -149,19 +149,11 @@ public class DailyStatisticsFeeder implements StatisticsFlusher, ApplicationList
     */
    @PreDestroy
    public void shutdown() {
-      log.info("Shutting down DailyStatisticsFeeder scheduler...");
+      log.debug("Shutting down DailyStatisticsFeeder scheduler...");
+      // Flush remaining statistics to database.
       this.flushToDatabase();
       scheduler.shutdown();
-      try {
-         if (!scheduler.awaitTermination(10, TimeUnit.SECONDS)) {
-            scheduler.shutdownNow();
-         }
-      } catch (InterruptedException e) {
-         scheduler.shutdownNow();
-      }
-      // flush remaining statistics to database
-      flushToDatabase();
-      log.info("DailyStatisticsFeeder scheduler shutdown complete.");
+      log.debug("DailyStatisticsFeeder scheduler shutdown complete.");
    }
 
 
