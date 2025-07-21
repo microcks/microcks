@@ -58,18 +58,15 @@ import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.hasConfigD
 public class SoapUIAssertionsTestRunner extends HttpTestRunner {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(SoapUIAssertionsTestRunner.class);
+   private static final Logger log = LoggerFactory.getLogger(SoapUIAssertionsTestRunner.class);
 
    /** The URL of resources used for validation. */
    private String resourceUrl = null;
 
-   private ResourceRepository resourceRepository;
-
-   private Map<ResourceType, Resource> cachedResources = new HashMap<>();
+   private final ResourceRepository resourceRepository;
+   private final Map<ResourceType, Resource> cachedResources = new HashMap<>();
 
    private Element projectElement;
-
-   private DocumentBuilder documentBuilder;
 
    private List<String> lastValidationErrors = null;
 
@@ -127,7 +124,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
          try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             factory.setNamespaceAware(true);
-            documentBuilder = factory.newDocumentBuilder();
+            DocumentBuilder documentBuilder = factory.newDocumentBuilder();
             projectElement = documentBuilder.parse(new InputSource(new StringReader(soapuiProject.getContent())))
                   .getDocumentElement();
          } catch (Exception e) {
@@ -138,7 +135,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
 
       try {
          Map<String, Element> testConfigRequests = collectTestStepsConfigRequest(operation);
-         Element testRequest = testConfigRequests.get(request.getName());
+         Element testRequest = testConfigRequests.get(getRequestShortName(request.getName()));
 
          // Now validate the embedded assertions.
          List<Element> assertions = getConfigDirectChildren(testRequest, "assertion");
@@ -197,13 +194,14 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
                   // Soap/Wsdl test request with operation reference.
                   operationName = getConfigUniqueDirectChild(config, "operation").getTextContent();
                   if (operation.getName().equals(operationName)) {
-                     results.put(testStep.getAttribute("name"), getConfigUniqueDirectChild(config, "request"));
+                     results.put(getRequestShortName(testStep.getAttribute("name")),
+                           getConfigUniqueDirectChild(config, "request"));
                   }
                } else if (config.hasAttribute("resourcePath")) {
                   // Rest test request with resourcePath as operation reference.
                   operationName = config.getAttribute("resourcePath");
                   if (operation.getName().equals(operationName)) {
-                     results.put(testStep.getAttribute("name"),
+                     results.put(getRequestShortName(testStep.getAttribute("name")),
                            SoapUIProjectParserUtils.getConfigUniqueDirectChild(config, "restRequest"));
                   }
                }
@@ -211,6 +209,14 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
          }
       }
       return results;
+   }
+
+   /** If a request name ends with " Request", we remove it to get a short name. */
+   private String getRequestShortName(String longName) {
+      if (longName.endsWith(" Request")) {
+         return longName.substring(0, longName.length() - " Request".length());
+      }
+      return longName;
    }
 
    private Map<String, String> buildParamsMapFromConfiguration(Element assertion) {
@@ -224,7 +230,7 @@ public class SoapUIAssertionsTestRunner extends HttpTestRunner {
                params.put(child.getLocalName(), child.getTextContent());
             }
          } catch (MalformedXmlException mfe) {
-            // Just ignore this has it must not happen.
+            // Just ignore this as it must not happen.
          }
       }
       return params;
