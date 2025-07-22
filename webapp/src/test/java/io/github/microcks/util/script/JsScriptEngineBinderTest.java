@@ -174,7 +174,7 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
    }
 
    @Test
-   void testFetchApiWorks() {
+   void testBasicFetchApiWorks() {
       String url = getServerUrl() + "/api/test-fetch";
       String script = JsScriptEngineBinder.wrapIntoFunction("""
             const response = fetch('""" + url + """
@@ -192,6 +192,168 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
          assertTrue(result.endsWith(":ok"));
       } catch (Exception e) {
          fail("fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testFetchApiWithPostMethod() {
+      String url = getServerUrl() + "/api/test-fetch";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const response = fetch('""" + url + """
+            ', 'POST', 'test body content');
+            log.info('POST fetch status: ' + response.status);
+            const body = response.body;
+            return response.status + ':' + (body.includes('POST received') ? 'ok' : 'fail');
+            """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("200:"));
+         assertTrue(result.endsWith(":ok"));
+      } catch (Exception e) {
+         fail("POST fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testFetchApiWithPutMethod() {
+      String url = getServerUrl() + "/api/test-fetch";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const response = fetch('""" + url + """
+            ', 'PUT', 'updated content');
+            log.info('PUT fetch status: ' + response.status);
+            const body = response.body;
+            return response.status + ':' + (body.includes('PUT received') ? 'ok' : 'fail');
+            """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("200:"));
+         assertTrue(result.endsWith(":ok"));
+      } catch (Exception e) {
+         fail("PUT fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testFetchApiWithDeleteMethod() {
+      String url = getServerUrl() + "/api/test-fetch";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const response = fetch('""" + url + """
+            ', 'DELETE', null, null);
+            log.info('DELETE fetch status: ' + response.status);
+            const body = response.body;
+            return response.status + ':' + (body.includes('DELETE received') ? 'ok' : 'fail');
+            """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("200:"));
+         assertTrue(result.endsWith(":ok"));
+      } catch (Exception e) {
+         fail("DELETE fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testFetchApiWithPatchMethod() {
+      String url = getServerUrl() + "/api/test-fetch";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const response = fetch('""" + url + """
+            ', 'PATCH', 'patch data');
+            log.info('PATCH fetch status: ' + response.status);
+            const body = response.body;
+            return response.status + ':' + (body.includes('PATCH received') ? 'ok' : 'fail');
+            """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("200:"));
+         assertTrue(result.endsWith(":ok"));
+      } catch (Exception e) {
+         fail("PATCH fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testFetchApiWithHeaders() {
+      String url = getServerUrl() + "/api/test-fetch-headers";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const headers = {
+               'X-Custom-Header': 'custom-value',
+               'Authorization': 'Bearer token123'
+            };
+            const response = fetch('""" + url
+            + """
+                  ', 'GET', null, headers);
+                  log.info('Headers fetch status: ' + response.status);
+                  const body = response.body;
+                  return response.status + ':' + (body.includes('custom-value') && body.includes('Bearer token123') ? 'ok' : 'fail');
+                  """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("200:"));
+         assertTrue(result.endsWith(":ok"));
+      } catch (Exception e) {
+         fail("Headers fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testFetchApiWithPostAndHeaders() {
+      String url = getServerUrl() + "/api/test-fetch";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const headers = {
+               'X-Example': 'my-header',
+               'X-Test-Header': 'test-value'
+            };
+            const body = '{"message": "hello world"}';
+            const response = fetch('""" + url + """
+            ', 'POST', body, headers);
+            log.info('POST with headers fetch status: ' + response.status);
+            const responseBody = response.body;
+            return response.status + ':' + (responseBody.includes('POST received') ? 'ok' : 'fail');
+            """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("200:"));
+         assertTrue(result.endsWith(":ok"));
+      } catch (Exception e) {
+         fail("POST with headers fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testFetchApiWithInvalidMethod() {
+      String url = getServerUrl() + "/api/test-fetch";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const response = fetch('""" + url + """
+            ', 'INVALID');
+            return response.status + ':' + (response.status === 0 ? 'error-handled' : 'unexpected');
+            """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("0:"));
+         assertTrue(result.endsWith(":error-handled"));
+      } catch (Exception e) {
+         fail("Invalid method fetch threw exception: " + e.getMessage());
       }
    }
 }
