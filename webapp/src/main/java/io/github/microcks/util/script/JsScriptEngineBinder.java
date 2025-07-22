@@ -34,17 +34,27 @@ import io.roastedroot.quickjs4j.core.Runner;
 import io.roastedroot.quickjs4j.core.ScriptCache;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+import org.apache.hc.client5.http.classic.methods.HttpPatch;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
- * Utility class that holds methods for creating binding environments and evaluation context for a QuickJs4J ScriptEngine.
+ * Utility class that holds methods for creating binding environments and evaluation context for a QuickJs4J
+ * ScriptEngine.
  * @author Andrea
  */
 public class JsScriptEngineBinder {
@@ -198,24 +208,70 @@ public class JsScriptEngineBinder {
       }
 
       /**
-       * Mimics the browser/node fetch API for GET requests. Is minimal at the moment, we can easily support more
-       * use-cases when needed
+       * Mimics the browser/node fetch API with full HTTP method support.
        *
-       * @param url The URL to fetch
-       * @return A JS object with status and text() method
+       * @param url        The URL to fetch
+       * @param method     The HTTP method (GET, POST, PUT, DELETE, PATCH)
+       * @param body       The request body (for POST, PUT, PATCH requests)
+       * @param rawHeaders Map of headers to include in the request
+       * @return A JS object with status and body properties
        */
       @HostFunction
-      public Object fetch(String url) {
+      public Object fetch(String url, String method, String body, JsonNode rawHeaders) {
          try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
-            HttpGet request = new HttpGet(url);
+            HttpUriRequestBase request = createHttpRequest(url, method);
+
+            // Add headers if provided
+            if (rawHeaders != null) {
+               rawHeaders.fields().forEachRemaining(entry -> {
+                  String key = entry.getKey();
+                  JsonNode valueNode = entry.getValue();
+
+                  List<String> values = new ArrayList<>();
+                  if (valueNode.isArray()) {
+                     valueNode.forEach(v -> values.add(v.asText()));
+                  } else {
+                     values.add(valueNode.asText());
+                  }
+
+                  request.addHeader(key, values);
+               });
+            }
+
+            // Add body for methods that support it
+            if (body != null
+                  && (request instanceof HttpPost || request instanceof HttpPut || request instanceof HttpPatch)) {
+               StringEntity entity = new StringEntity(body);
+               // TODO: proper handling of alternative entity types
+               request.setEntity(entity);
+            }
+
             try (CloseableHttpResponse response = httpClient.execute(request)) {
                int status = response.getCode();
-               String body = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "";
-               return new FetchResponse(status, body);
+               String responseBody = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "";
+               return new FetchResponse(status, responseBody);
             }
          } catch (Exception e) {
             return new FetchResponse(0, e.toString());
          }
+      }
+
+      /**
+       * Creates the appropriate HTTP request object based on the method.
+       */
+      private HttpUriRequestBase createHttpRequest(String url, String method) {
+         if (method == null) {
+            return new HttpGet(url);
+         }
+
+         return switch (method.toUpperCase()) {
+            case "GET" -> new HttpGet(url);
+            case "POST" -> new HttpPost(url);
+            case "PUT" -> new HttpPut(url);
+            case "DELETE" -> new HttpDelete(url);
+            case "PATCH" -> new HttpPatch(url);
+            default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
+         };
       }
    }
 
@@ -233,8 +289,6 @@ public class JsScriptEngineBinder {
       FakeScriptMockRequest mockRequest = new FakeScriptMockRequest(requestContent, headers);
       mockRequest.setRequest(request);
       mockRequest.setURIParameters(uriParameters);
-
-     LRUMap
 
       // Create bindings and put content according to SoapUI binding environment.
       Engine engine = Engine.builder().withCache(cache).addInvokables(JsApi_Invokables.toInvokables())
