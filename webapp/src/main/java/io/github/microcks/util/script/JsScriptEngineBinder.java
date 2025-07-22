@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.util.LRUMap;
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
 import io.roastedroot.quickjs4j.annotations.Builtins;
@@ -48,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -61,7 +59,7 @@ public class JsScriptEngineBinder {
 
    private static final Logger log = LoggerFactory.getLogger(JsScriptEngineBinder.class);
 
-   private static final ScriptCache cache = new ScriptCache();
+   private static final ScriptCache cache = new LRUScriptCache(100);
 
    private JsScriptEngineBinder() {
    }
