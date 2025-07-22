@@ -197,7 +197,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                   Element dispatchConfig = getConfigUniqueDirectChild(mockOperation, "dispatchConfig");
                   Element firstQuery = getConfigDirectChildren(dispatchConfig, QUERY_TAG).get(0);
                   operation.setDispatcherRules(getConfigUniqueDirectChild(firstQuery, QUERY_TAG).getTextContent());
-               } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
+               } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())
+                     || DispatchStyles.GROOVY.equals(operation.getDispatcher())
+                     || DispatchStyles.JS.equals(operation.getDispatcher())) {
                   // Groovy script is located into dispatchPath element.
                   operation
                         .setDispatcherRules(getConfigUniqueDirectChild(mockOperation, "dispatchPath").getTextContent());
@@ -292,7 +294,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                      // Extract simple dispatcher rules from operation name.
                      operation
                            .setDispatcherRules(DispatchCriteriaHelper.extractPartsFromURIPattern(operation.getName()));
-                  } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
+                  } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())
+                        || DispatchStyles.GROOVY.equals(operation.getDispatcher())
+                        || DispatchStyles.JS.equals(operation.getDispatcher())) {
                      // Groovy script is located into dispatchPath element.
                      operation.setDispatcherRules(
                            getConfigUniqueDirectChild(mockOperation, "dispatchPath").getTextContent());
@@ -446,7 +450,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                         } catch (XPathExpressionException e) {
                            throw new RuntimeException(e);
                         }
-                     } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
+                     } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())
+                           || DispatchStyles.GROOVY.equals(operation.getDispatcher())
+                           || DispatchStyles.JS.equals(operation.getDispatcher())) {
                         for (Element candidateRequest : candidateRequests) {
                            Element mockResponse = getMockResponseByName(mockOperation,
                                  candidateRequest.getAttribute(NAME_ATTRIBUTE));
@@ -553,7 +559,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                                  .getAttribute("resourcePath");
                            dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(
                                  operation.getDispatcherRules(), operation.getName(), resourcePath);
-                        } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())) {
+                        } else if (DispatchStyles.SCRIPT.equals(operation.getDispatcher())
+                              || DispatchStyles.GROOVY.equals(operation.getDispatcher())
+                              || DispatchStyles.JS.equals(operation.getDispatcher())) {
                            // Build a dispatch criteria that is equal to response name (that script evaluation should return...)
                            dispatchCriteria = entry.getValue().getAttribute(NAME_ATTRIBUTE);
                         }
