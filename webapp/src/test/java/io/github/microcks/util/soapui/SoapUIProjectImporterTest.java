@@ -550,4 +550,62 @@ class SoapUIProjectImporterTest {
       Assertions.assertEquals(ResourceType.XSD, resource.getType());
       assertEquals("Suivi_Parcours_Carte_2.0.xsd", resource.getName());
    }
+
+   @Test
+   void testXsdReferenceReplacement() {
+      SoapUIProjectImporter importer = null;
+      try {
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/HelloService-with-xsd-references-soapui-project.xml");
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      // Should have 1 project, 1 wsdl, 3 xsds
+      assertEquals(5, resources.size());
+      Resource wsdlResource = resources.stream().filter(r -> r.getType() == ResourceType.WSDL).findFirst().orElse(null);
+      assertNotNull(wsdlResource);
+      String wsdlContent = wsdlResource.getContent();
+      // Check that all schemaLocation references are replaced with local names
+      assertTrue(wsdlContent.contains("schemaLocation=\"./types1.xsd\""));
+      assertTrue(wsdlContent.contains("schemaLocation=\"./types2.xsd\""));
+      assertTrue(wsdlContent.contains("schemaLocation=\"./types3.xsd\""));
+   }
+
+   @Test
+   void testXsdReferenceReplacementWithWindowsPaths() {
+      SoapUIProjectImporter importer = null;
+      try {
+         importer = new SoapUIProjectImporter(
+               "target/test-classes/io/github/microcks/util/soapui/HelloService-with-xsd-references-windows-soapui-project.xml");
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      assertEquals(1, services.size());
+      Service service = services.get(0);
+      List<Resource> resources = importer.getResourceDefinitions(service);
+      // Should have 1 project, 1 wsdl, 3 xsds
+      assertEquals(5, resources.size());
+      Resource wsdlResource = resources.stream().filter(r -> r.getType() == ResourceType.WSDL).findFirst().orElse(null);
+      assertNotNull(wsdlResource);
+      String wsdlContent = wsdlResource.getContent();
+      // Check that all schemaLocation references are replaced with local names
+      assertTrue(wsdlContent.contains("schemaLocation=\"./types1.xsd\""));
+      assertTrue(wsdlContent.contains("schemaLocation=\"./types2.xsd\""));
+      assertTrue(wsdlContent.contains("schemaLocation=\"./types3.xsd\""));
+   }
 }
