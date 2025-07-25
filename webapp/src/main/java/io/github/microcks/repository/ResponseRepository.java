@@ -16,6 +16,7 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Response;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -23,7 +24,7 @@ import java.util.List;
 
 /**
  * Repository interface for Response domain objects.
- * 
+ *
  * @author laurent
  */
 public interface ResponseRepository extends MongoRepository<Response, String> {
@@ -34,6 +35,7 @@ public interface ResponseRepository extends MongoRepository<Response, String> {
 
    List<Response> findByOperationIdAndName(String operationId, String name);
 
+   @Cacheable(value = "responsesFindByOperationIdAndDispatchCriteria", keyGenerator = "responsesCacheKeyGenerator")
    List<Response> findByOperationIdAndDispatchCriteria(String operationId, String dispatchCriteria);
 
    List<Response> findByOperationIdAndSourceArtifact(String operationId, String sourceArtifact);

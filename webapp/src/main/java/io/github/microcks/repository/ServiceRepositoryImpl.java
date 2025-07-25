@@ -18,7 +18,10 @@ package io.github.microcks.repository;
 import io.github.microcks.domain.Service;
 
 import org.bson.types.ObjectId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
@@ -41,6 +44,8 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
 
    @Autowired
    private MongoTemplate template;
+
+   private static Logger log = LoggerFactory.getLogger(ServiceRepositoryImpl.class);
 
    @Override
    public List<Service> findByIdIn(List<String> ids) {
@@ -88,5 +93,12 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
             sort(DESC, "labels.v"), group("labels.k").addToSet("labels.v").as("values").first("labels.k").as("key"));
       AggregationResults<LabelValues> results = template.aggregate(aggregation, Service.class, LabelValues.class);
       return results.getMappedResults();
+   }
+
+   @Cacheable(value = "ServiceFindByNameAndVersion", key = "#name + '-' + #version")
+   public Service findByNameAndVersionCached(String name, String version) {
+      log.debug("ServiceFindByNameAndVersionCached called for name={} and version={}", name, version);
+      Query query = new Query(Criteria.where("name").is(name).and("version").is(version));
+      return template.findOne(query, Service.class);
    }
 }
