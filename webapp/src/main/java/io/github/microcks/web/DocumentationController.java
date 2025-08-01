@@ -20,6 +20,7 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.util.SafeLogger;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,11 +30,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import jakarta.annotation.PostConstruct;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -46,12 +49,36 @@ import java.util.stream.Stream;
 @RequestMapping("/api")
 public class DocumentationController {
 
+  public static final String DEFAULT_TEMPLATE = "redoc";
+
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
    private static final SafeLogger log = SafeLogger.getLogger(DocumentationController.class);
 
    private static final String RESOURCE_URL = "{RESOURCE_URL}";
 
    final ResourceRepository resourceRepository;
+
+  /** List of supported OpenAPI documentation templates. */
+  private static final List<String> SUPPORTED_TEMPLATES = Arrays.asList(DEFAULT_TEMPLATE, "elements");
+
+  /** Template to use for OpenAPI documentation. */
+  @Value("${features.feature.openapi.doc-template}")
+  private String openApiDocTemplate = DEFAULT_TEMPLATE;
+
+  /**
+   * Validates the configured template.
+   */
+  @PostConstruct
+  public void init() {
+    // Check if the configured template is supported.
+    if (!SUPPORTED_TEMPLATES.contains(openApiDocTemplate)) {
+      log.info("Configured OpenAPI documentation template '{}' is not supported. Using default template '{}'",
+            openApiDocTemplate, DEFAULT_TEMPLATE);
+      openApiDocTemplate = DEFAULT_TEMPLATE;
+    } else {
+      log.info("Using '{}' template for OpenAPI documentation", openApiDocTemplate);
+    }
+  }
 
    /**
     * Build a new DocumentationController with a resource repository.
@@ -111,7 +138,7 @@ public class DocumentationController {
       // Get the correct template depending on resource type.
       if (ResourceType.OPEN_API_SPEC.toString().equals(resourceType)
             || ResourceType.SWAGGER.toString().equals(resourceType)) {
-         template = new ClassPathResource("templates/redoc.html");
+        template = new ClassPathResource("templates/" + openApiDocTemplate + ".html");
          headers.setContentType(MediaType.TEXT_HTML);
       } else if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
 
