@@ -49,7 +49,7 @@ import java.util.stream.Stream;
 @RequestMapping("/api")
 public class DocumentationController {
 
-  public static final String DEFAULT_TEMPLATE = "redoc";
+   public static final String DEFAULT_TEMPLATE = "redoc";
 
    /** A safe logger for filtering user-controlled data in diagnostic messages. */
    private static final SafeLogger log = SafeLogger.getLogger(DocumentationController.class);
@@ -58,27 +58,27 @@ public class DocumentationController {
 
    final ResourceRepository resourceRepository;
 
-  /** List of supported OpenAPI documentation templates. */
-  private static final List<String> SUPPORTED_TEMPLATES = Arrays.asList(DEFAULT_TEMPLATE, "elements");
+   /** List of supported OpenAPI documentation templates. */
+   private static final List<String> SUPPORTED_TEMPLATES = Arrays.asList(DEFAULT_TEMPLATE, "elements");
 
-  /** Template to use for OpenAPI documentation. */
-  @Value("${features.feature.openapi.doc-template}")
-  private String openApiDocTemplate = DEFAULT_TEMPLATE;
+   /** Template to use for OpenAPI documentation. */
+   @Value("${features.feature.openapi.doc-template}")
+   private String openApiDocTemplate = DEFAULT_TEMPLATE;
 
-  /**
-   * Validates the configured template.
-   */
-  @PostConstruct
-  public void init() {
-    // Check if the configured template is supported.
-    if (!SUPPORTED_TEMPLATES.contains(openApiDocTemplate)) {
-      log.info("Configured OpenAPI documentation template '{}' is not supported. Using default template '{}'",
-            openApiDocTemplate, DEFAULT_TEMPLATE);
-      openApiDocTemplate = DEFAULT_TEMPLATE;
-    } else {
-      log.info("Using '{}' template for OpenAPI documentation", openApiDocTemplate);
-    }
-  }
+   /**
+    * Validates the configured template.
+    */
+   @PostConstruct
+   public void init() {
+      // Check if the configured template is supported.
+      if (!SUPPORTED_TEMPLATES.contains(openApiDocTemplate)) {
+         log.info("Configured OpenAPI documentation template '{}' is not supported. Using default template '{}'",
+               openApiDocTemplate, DEFAULT_TEMPLATE);
+         openApiDocTemplate = DEFAULT_TEMPLATE;
+      } else {
+         log.info("Using '{}' template for OpenAPI documentation", openApiDocTemplate);
+      }
+   }
 
    /**
     * Build a new DocumentationController with a resource repository.
@@ -138,7 +138,7 @@ public class DocumentationController {
       // Get the correct template depending on resource type.
       if (ResourceType.OPEN_API_SPEC.toString().equals(resourceType)
             || ResourceType.SWAGGER.toString().equals(resourceType)) {
-        template = new ClassPathResource("templates/" + openApiDocTemplate + ".html");
+         template = new ClassPathResource("templates/" + openApiDocTemplate + ".html");
          headers.setContentType(MediaType.TEXT_HTML);
       } else if (ResourceType.ASYNC_API_SPEC.toString().equals(resourceType)) {
 
