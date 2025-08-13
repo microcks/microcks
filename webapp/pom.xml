@@ -16,7 +16,7 @@
     <docker.image.prefix>microcks</docker.image.prefix>
     <docker.image.name>microcks</docker.image.name>
     <java.version>21</java.version>
-    <bouncycastle.version>1.78</bouncycastle.version>
+    <bouncycastle.version>1.78.1</bouncycastle.version>
     <snakeyaml.version>2.2</snakeyaml.version>
     <mongo-java-server.version>1.45.0</mongo-java-server.version>
     <apache-httpclient.version>5.3</apache-httpclient.version>
