@@ -255,7 +255,7 @@ public class RestController {
       }
 
       // Find matching service.
-      Service service = serviceRepository.findByNameAndVersionCached(serviceName, version);
+      Service service = serviceRepository.findByNameAndVersion(serviceName, version);
       if (service == null) {
          return new MockInvocationContext(null, null, resourcePath);
       }

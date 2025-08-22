@@ -94,11 +94,4 @@ public class ServiceRepositoryImpl implements CustomServiceRepository {
       AggregationResults<LabelValues> results = template.aggregate(aggregation, Service.class, LabelValues.class);
       return results.getMappedResults();
    }
-
-   @Cacheable(value = "ServiceFindByNameAndVersion", key = "#name + '-' + #version")
-   public Service findByNameAndVersionCached(String name, String version) {
-      log.debug("ServiceFindByNameAndVersionCached called for name={} and version={}", name, version);
-      Query query = new Query(Criteria.where("name").is(name).and("version").is(version));
-      return template.findOne(query, Service.class);
-   }
 }
