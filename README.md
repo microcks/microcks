@@ -12,18 +12,20 @@
 
 Microcks is a platform for turning your API and microservices assets - *OpenAPI specs*, *AsyncAPI specs*, *gRPC protobuf*, *GraphQL schema*, *Postman collections*, *SoapUI projects* - into live mocks in seconds.
 
-It also reuses these assets for running compliance and non-regression tests against your API implementation. We provide integrations with *Jenkins*, *GitHub Actions*, *Tekton* and many others through a simple CLI.
+It also reuses these assets to run compliance and non-regression tests against your API implementation. We provide integrations with *Jenkins*, *GitHub Actions*, *Tekton* and many others through a simple CLI.
+
+[![LFX Health Score](https://img.shields.io/static/v1?label=Health%20Score&message=Healthy&color=A7F3D0&logo=linuxfoundation&logoColor=white&style=flat)](https://insights.linuxfoundation.org/project/microcks/repository/microcks-microcks) [![LFX Contributors](https://img.shields.io/static/v1?label=Contributors&message=761&color=0094FF&logo=linuxfoundation&logoColor=white&style=flat)](https://insights.linuxfoundation.org/project/microcks/repository/microcks-microcks) [![LFX Active Contributors](https://img.shields.io/static/v1?label=Active%20contributors%20(1Y)&message=208&color=0094FF&logo=linuxfoundation&logoColor=white&style=flat)](https://insights.linuxfoundation.org/project/microcks/repository/microcks-microcks)
 
 ## Getting Started
 
 * [Documentation](https://microcks.io/documentation/tutorials/getting-started/)
 * [Microcks Community](https://github.com/microcks/community) and community meeting
 
-To get involved with our community, please make sure you are familiar with the project's [Code of Conduct](./CODE_OF_CONDUCT.md).
+To get involved with our community, please familiarize yourself with the project's [Code of Conduct](./CODE_OF_CONDUCT.md).
 
 ## Build Status
 
-The current development version is `1.12.1-SNAPSHOT` on branch `1.12.x`. 
+The current development version is `1.12.2-SNAPSHOT` on branch `1.12.x`. 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.11.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
@@ -59,8 +61,8 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch   | Container images tags |
 | ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.12.0`          | `master` | `1.12.0`, `latest`    |
-| Dev         | `1.12.1-SNAPSHOT` | `1.12.x` | `nightly`             |
+| Stable      | `1.12.1`          | `master` | `1.12.1`, `latest`    |
+| Dev         | `1.12.2-SNAPSHOT` | `1.12.x` | `nightly`             |
 | Maintenance | `1.11.3-SNAPSHOT` | `1.11.x` | `maintenance`         |
 
 
@@ -68,7 +70,7 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 The build instructions are available in the [building guide](BUILDING.md).
 
-## Thanks to community!
+## Thanks to the community!
 
 [![Stargazers repo roster for @microcks/microcks](http://reporoster.com/stars/microcks/microcks)](http://github.com/microcks/microcks/stargazers)
 [![Forkers repo roster for @microcks/microcks](http://reporoster.com/forks/microcks/microcks)](http://github.com/microcks/microcks/network/members)

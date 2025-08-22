@@ -69,7 +69,7 @@ import static io.github.microcks.util.soapui.SoapUIProjectParserUtils.hasConfigD
 public class SoapUIProjectImporter implements MockRepositoryImporter {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(SoapUIProjectImporter.class);
+   private static final Logger log = LoggerFactory.getLogger(SoapUIProjectImporter.class);
 
    /** SoapUI project property that references service version property. */
    public static final String SERVICE_VERSION_PROPERTY = "version";
@@ -86,15 +86,13 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    protected static final String CONTENT_TAG = "content";
    protected static final String VALUE_TAG = "value";
 
-   private String projectContent;
+   private final String projectContent;
+   private final DocumentBuilder documentBuilder;
+   private final Element projectElement;
 
-   private DocumentBuilder documentBuilder;
-
-   private Element projectElement;
+   private final Map<String, Element> interfaces = new HashMap<>();
 
    private Element serviceInterface;
-
-   private Map<String, Element> interfaces = new HashMap<>();
 
    /**
     * Build a new importer.
@@ -112,7 +110,7 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
          documentBuilder = factory.newDocumentBuilder();
          projectElement = documentBuilder.parse(new InputSource(new StringReader(projectContent))).getDocumentElement();
       } catch (Exception e) {
-         log.error("Exception while parsing SoapUI file " + projectFilePath, e);
+         log.error("Exception while parsing SoapUI file {}", projectFilePath, e);
          throw new IOException("SoapUI project file parsing error");
       }
    }
@@ -647,11 +645,31 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                String operationName = config.getAttribute("resourcePath");
                if (operation.getName().equals(operationName)) {
                   results.put(testStep.getAttribute(NAME_ATTRIBUTE), getConfigUniqueDirectChild(config, "restRequest"));
+               } else {
+                  // If this artifact is second one and OpenAPI was the main one, operationName may
+                  // start with the verb. We have to extract the verb from elsewhere.
+                  String methodName = config.getAttribute("methodName");
+                  Optional<Element> method = getRestInterfaceResourceMethod(operationName, methodName);
+                  if (method.isPresent()) {
+                     String methodString = method.get().getAttribute("method");
+                     if (operation.getName().equals(methodString.toUpperCase() + " " + operationName)) {
+                        results.put(testStep.getAttribute(NAME_ATTRIBUTE),
+                              getConfigUniqueDirectChild(config, "restRequest"));
+                     }
+                  }
                }
             }
          }
       }
       return results;
+   }
+
+   private Optional<Element> getRestInterfaceResourceMethod(String resourcePath, String methodName)
+         throws MalformedXmlException {
+      return getConfigDirectChildren(serviceInterface, "resource").stream()
+            .filter(resource -> resourcePath.equals(resource.getAttribute("path")))
+            .flatMap(resource -> getConfigDirectChildren(resource, "method").stream())
+            .filter(method -> methodName.equals(method.getAttribute("name"))).findFirst();
    }
 
    private List<Element> getMockRestResponses(Element restMockService, Operation operation) {
@@ -716,7 +734,9 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    private Request buildRequest(Element testRequest) throws MockRepositoryImportException, Exception {
       Request request = new Request();
       request.setName(testRequest.getAttribute(NAME_ATTRIBUTE));
-      request.setContent(getConfigUniqueDirectChild(testRequest, REQUEST_TAG).getTextContent());
+      if (hasConfigDirectChild(testRequest, REQUEST_TAG)) {
+         request.setContent(getConfigUniqueDirectChild(testRequest, REQUEST_TAG).getTextContent());
+      }
       request.setHeaders(buildHeaders(testRequest));
 
       // Add query parameters only if presents.
@@ -734,39 +754,40 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
    }
 
    private Set<Header> buildHeaders(Element requestOrResponse) throws Exception {
+      if (hasConfigDirectChild(requestOrResponse, "settings")) {
+         Element settingsElt = getConfigUniqueDirectChild(requestOrResponse, "settings");
+         List<Element> settings = getConfigDirectChildren(settingsElt, "setting");
+         for (Element setting : settings) {
+            if (setting.getAttribute("id").contains("@request-headers")) {
 
-      Element settingsElt = getConfigUniqueDirectChild(requestOrResponse, "settings");
-      List<Element> settings = getConfigDirectChildren(settingsElt, "setting");
-      for (Element setting : settings) {
-         if (setting.getAttribute("id").contains("@request-headers")) {
+               // 2 possibilities here:
+               // 1) &lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
+               //      &lt;con:entry key="Authorization" value="Basic YWRtaW46YWRtaW4="/>
+               //      &lt;con:entry key="x-userid" value="s026210"/>
+               //    &lt;/xml-fragment>
+               // 2) &lt;entry key="toto"
+               //                value="tata" xmlns="http://eviware.com/soapui/config"/>
+               String headersContent = setting.getTextContent();
+               Element fragment = documentBuilder.parse(new InputSource(new StringReader(headersContent)))
+                     .getDocumentElement();
 
-            // 2 possibilities here:
-            // 1) &lt;xml-fragment xmlns:con="http://eviware.com/soapui/config">
-            //      &lt;con:entry key="Authorization" value="Basic YWRtaW46YWRtaW4="/>
-            //      &lt;con:entry key="x-userid" value="s026210"/>
-            //    &lt;/xml-fragment>
-            // 2) &lt;entry key="toto"
-            //                value="tata" xmlns="http://eviware.com/soapui/config"/>
-            String headersContent = setting.getTextContent();
-            Element fragment = documentBuilder.parse(new InputSource(new StringReader(headersContent)))
-                  .getDocumentElement();
-
-            Set<Header> headers = new HashSet<>();
-            if (headersContent.contains("xml-fragment")) {
-               List<Element> entries = getConfigDirectChildren(fragment, "entry");
-               for (Element entry : entries) {
+               Set<Header> headers = new HashSet<>();
+               if (headersContent.contains("xml-fragment")) {
+                  List<Element> entries = getConfigDirectChildren(fragment, "entry");
+                  for (Element entry : entries) {
+                     Header header = new Header();
+                     header.setName(entry.getAttribute("key"));
+                     header.setValues(Set.of(entry.getAttribute(VALUE_TAG)));
+                     headers.add(header);
+                  }
+               } else {
                   Header header = new Header();
-                  header.setName(entry.getAttribute("key"));
-                  header.setValues(Set.of(entry.getAttribute(VALUE_TAG)));
+                  header.setName(fragment.getAttribute("key"));
+                  header.setValues(Set.of(fragment.getAttribute(VALUE_TAG)));
                   headers.add(header);
                }
-            } else {
-               Header header = new Header();
-               header.setName(fragment.getAttribute("key"));
-               header.setValues(Set.of(fragment.getAttribute(VALUE_TAG)));
-               headers.add(header);
+               return headers;
             }
-            return headers;
          }
       }
       return null;

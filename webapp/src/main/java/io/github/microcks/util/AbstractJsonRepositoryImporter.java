@@ -72,16 +72,18 @@ public abstract class AbstractJsonRepositoryImporter {
       try {
          // Analyse first lines of file content to guess repository type.
          String line = null;
+         int lineNumber = 0;
          reader = Files.newBufferedReader(new File(specificationFilePath).toPath(), StandardCharsets.UTF_8);
          while ((line = reader.readLine()) != null && isYaml == null) {
             line = line.trim();
-            // Check is we start with json object or array definition.
-            if (line.startsWith("{") || line.startsWith("[")) {
+            // Only treat as JSON if the very first line starts with { or [
+            if (lineNumber == 0 && (line.startsWith("{") || line.startsWith("["))) {
                isYaml = false;
             } else if (line.startsWith("---") || line.startsWith("-") || line.startsWith("openapi: ")
                   || line.startsWith("asyncapi: ")) {
                isYaml = true;
             }
+            lineNumber++;
          }
 
          // Read spec bytes.

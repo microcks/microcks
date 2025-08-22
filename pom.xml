@@ -5,7 +5,7 @@
   <groupId>io.github.microcks</groupId>
   <artifactId>microcks</artifactId>
   <packaging>pom</packaging>
-  <version>1.12.1-SNAPSHOT</version>
+  <version>1.12.2-SNAPSHOT</version>
   <modules>
     <module>commons/util</module>
     <module>commons/model</module>
@@ -249,7 +249,7 @@
           <plugin>
             <groupId>org.jreleaser</groupId>
             <artifactId>jreleaser-maven-plugin</artifactId>
-            <version>1.15.0</version>
+            <version>1.19.0</version>
             <inherited>false</inherited>
             <configuration>
               <configFile>jreleaser.yml</configFile>

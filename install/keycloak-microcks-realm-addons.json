@@ -77,7 +77,8 @@
         "+"
       ],
       "redirectUris": [
-        "https://localhost:8080/*"
+        "https://localhost:8080/*",
+        "http://localhost:58085/*"
       ],
       "fullScopeAllowed": false,
       "protocolMappers": [

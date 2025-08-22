@@ -19,6 +19,7 @@ import io.github.microcks.domain.Operation;
 import io.github.microcks.domain.Resource;
 import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
+import io.github.microcks.listener.ListenerTestsConfiguration;
 import io.github.microcks.repository.RepositoryTestsConfiguration;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.service.ArtifactInfo;
@@ -47,7 +48,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * @author laurent
  */
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ControllerTestsConfiguration.class })
+@SpringJUnitConfig(classes = { RepositoryTestsConfiguration.class, ControllerTestsConfiguration.class,
+      ListenerTestsConfiguration.class })
 @TestPropertySource(locations = { "classpath:/config/test.properties" })
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class OpenAPIMcpToolConverterTest {
