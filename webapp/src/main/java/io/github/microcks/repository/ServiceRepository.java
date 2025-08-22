@@ -27,7 +27,7 @@ import java.util.List;
 
 /**
  * Repository interface for Service domain objects.
- *
+ * 
  * @author laurent
  */
 public interface ServiceRepository extends MongoRepository<Service, String>, CustomServiceRepository {
