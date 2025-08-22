@@ -25,7 +25,7 @@ import java.util.List;
 
 /**
  * Repository interface for Response domain objects.
- *
+ * 
  * @author laurent
  */
 public interface ResponseRepository extends MongoRepository<Response, String> {
