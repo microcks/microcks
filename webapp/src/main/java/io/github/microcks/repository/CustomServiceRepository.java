@@ -36,7 +36,6 @@ public interface CustomServiceRepository {
 
    List<LabelValues> listLabels();
 
-
    class ServiceCount {
       String type;
       int number;
