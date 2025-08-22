@@ -266,7 +266,7 @@ public class RestController {
    }
 
    @CheckForNull
-   public Operation findOperation(Service service, HttpMethod method, String resourcePath) {
+   private Operation findOperation(Service service, HttpMethod method, String resourcePath) {
       // Remove trailing '/' if any.
       String trimmedResourcePath = trimResourcePath(resourcePath);
 
