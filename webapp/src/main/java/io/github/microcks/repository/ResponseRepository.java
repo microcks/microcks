@@ -16,6 +16,7 @@
 package io.github.microcks.repository;
 
 import io.github.microcks.domain.Response;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -35,11 +36,23 @@ public interface ResponseRepository extends MongoRepository<Response, String> {
 
    List<Response> findByOperationIdAndName(String operationId, String name);
 
-   @Cacheable(value = "responsesFindByOperationIdAndDispatchCriteria", keyGenerator = "responsesCacheKeyGenerator")
+   @Cacheable(value = "responsesFindByOperationIdAndDispatchCriteria", keyGenerator = "nullCacheKeyGenerator")
    List<Response> findByOperationIdAndDispatchCriteria(String operationId, String dispatchCriteria);
 
    List<Response> findByOperationIdAndSourceArtifact(String operationId, String sourceArtifact);
 
    @Query("{ 'operationId' : {'$in' : ?0}}")
    List<Response> findByOperationIdIn(List<String> operationIds);
+
+   @Override
+   @CacheEvict(value = "responsesFindByOperationIdAndDispatchCriteria", allEntries = true)
+   <S extends Response> S save(S entity);
+
+   @Override
+   @CacheEvict(value = "responsesFindByOperationIdAndDispatchCriteria", allEntries = true)
+   <S extends Response> List<S> saveAll(Iterable<S> entities);
+
+   @Override
+   @CacheEvict(value = "responsesFindByOperationIdAndDispatchCriteria", allEntries = true)
+   void delete(Response entity);
 }

@@ -18,6 +18,8 @@ package io.github.microcks.repository;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
@@ -25,15 +27,29 @@ import java.util.List;
 
 /**
  * Repository interface for Service domain objects.
- * 
+ *
  * @author laurent
  */
 public interface ServiceRepository extends MongoRepository<Service, String>, CustomServiceRepository {
 
+   @Cacheable(value = "ServiceFindByNameAndVersion", keyGenerator = "nullCacheKeyGenerator")
    Service findByNameAndVersion(String name, String version);
 
    List<Service> findByType(ServiceType type);
 
    @Query("{'name' : {'$regex':?0, '$options':'i'}}")
    List<Service> findByNameLike(String name);
+
+
+   @Override
+   @CacheEvict(value = "ServiceFindByNameAndVersion", allEntries = true)
+   <S extends Service> S save(S entity);
+
+   @Override
+   @CacheEvict(value = "ServiceFindByNameAndVersion", allEntries = true)
+   <S extends Service> List<S> saveAll(Iterable<S> entities);
+
+   @Override
+   @CacheEvict(value = "ServiceFindByNameAndVersion", allEntries = true)
+   void delete(Service entity);
 }
