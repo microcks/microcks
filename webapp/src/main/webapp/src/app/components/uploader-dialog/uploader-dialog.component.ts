@@ -103,12 +103,11 @@ export class UploaderDialogComponent implements OnInit {
     this.uploader.onCompleteAll = () => {
         // close dialog and redirect to services
         this.bsModalRef.hide();
-        this.router.navigate(['/services']);
     };
 
     // Add pre-selected files if any
     if (this.preSelectedFiles && this.preSelectedFiles.length > 0) {
-      this.uploader.addToQueue(this.preSelectedFiles);
+      this.addFiles(this.preSelectedFiles);
     }
   }
 
@@ -118,6 +117,12 @@ export class UploaderDialogComponent implements OnInit {
       const isSecondaryArtifact = this.fileSecondaryStatus.get(item) || false;
       form.append('mainArtifact', !isSecondaryArtifact);
     };
+    // reorder the queue by putting the main artifact first
+    this.uploader.queue.sort((a, b) => {
+      const aIsMain = this.fileSecondaryStatus.get(a) === false;
+      const bIsMain = this.fileSecondaryStatus.get(b) === false;
+      return aIsMain === bIsMain ? 0 : aIsMain ? -1 : 1;
+    });
     this.uploader.uploadAll();
   }
 
@@ -146,6 +151,11 @@ export class UploaderDialogComponent implements OnInit {
   addFiles(files: File[]): void {
     if (files && files.length > 0) {
       this.uploader.addToQueue(files);
+      for (const item of this.uploader.queue) {
+        if (!this.fileSecondaryStatus.has(item)) {
+          this.fileSecondaryStatus.set(item, false);
+        }
+      }
     }
   }
 
