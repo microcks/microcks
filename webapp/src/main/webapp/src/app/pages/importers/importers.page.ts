@@ -61,7 +61,7 @@ import { IAuthenticationService } from '../../services/auth.service';
 import { ConfigService } from '../../services/config.service';
 import { ImportersService } from '../../services/importers.service';
 import { ServicesService } from '../../services/services.service';
-import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
+import { UploaderDialogComponent } from '../../components/uploader-dialog/uploader-dialog.component';
 import { ImporterWizardComponent} from './_components/importer.wizard';
 import { ServiceRefsDialogComponent } from './service-refs.dialog';
 
@@ -249,7 +249,7 @@ export class ImportersPageComponent implements OnInit {
   openArtifactUploader(): void {
     const initialState = {
     };
-    this.modalRef = this.modalService.show(ArtifactUploaderDialogComponent, {initialState});
+    this.modalRef = this.modalService.show(UploaderDialogComponent, {initialState});
     this.modalRef.content.closeBtnName = 'Close';
   }
 
