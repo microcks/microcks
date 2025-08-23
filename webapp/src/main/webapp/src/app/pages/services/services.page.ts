@@ -48,12 +48,11 @@ import {
 
 import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete/confirm-delete.component';
 import { LabelListComponent } from '../../components/label-list/label-list.component';
-import { UploaderDialogComponent } from '../../components/uploader-dialog/uploader-dialog.component';
-
 import { Api, Service, ServiceType } from '../../models/service.model';
 import { IAuthenticationService } from '../../services/auth.service';
 import { ConfigService } from '../../services/config.service';
 import { ServicesService } from '../../services/services.service';
+import { UploaderDialogService } from '../../services/uploader-dialog.service';
 import { DirectAPIWizardComponent } from './_components/direct-api.wizard';
 
 @Component({
@@ -96,7 +95,8 @@ export class ServicesPageComponent implements OnInit {
     protected authService: IAuthenticationService,
     private config: ConfigService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private uploaderDialogService: UploaderDialogService
   ) {}
 
   ngOnInit() {
@@ -300,15 +300,11 @@ export class ServicesPageComponent implements OnInit {
   }
 
   openArtifactUploader(): void {
-    const initialState = {
-    };
-    this.modalRef = this.modalService.show(UploaderDialogComponent, {initialState});
-    this.modalRef.content.closeBtnName = 'Close';
-    
-    // Refresh data when the modal is closed
-    this.modalRef.onHidden?.subscribe(() => {
-      this.getServices();
-      this.countServices();
+    this.uploaderDialogService.openArtifactUploader({
+      onClose: () => {
+        this.getServices();
+        this.countServices();
+      }
     });
   }
 
