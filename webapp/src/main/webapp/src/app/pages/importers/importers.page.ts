@@ -61,7 +61,7 @@ import { IAuthenticationService } from '../../services/auth.service';
 import { ConfigService } from '../../services/config.service';
 import { ImportersService } from '../../services/importers.service';
 import { ServicesService } from '../../services/services.service';
-import { UploaderDialogComponent } from '../../components/uploader-dialog/uploader-dialog.component';
+import { UploaderDialogService } from '../../services/uploader-dialog.service';
 import { ImporterWizardComponent} from './_components/importer.wizard';
 import { ServiceRefsDialogComponent } from './service-refs.dialog';
 
@@ -105,7 +105,8 @@ export class ImportersPageComponent implements OnInit {
   constructor(private importersSvc: ImportersService, private servicesSvc: ServicesService,
               private modalService: BsModalService, private notificationService: NotificationService,
               protected authService: IAuthenticationService, private config: ConfigService,
-              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) { }
+              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef,
+              private uploaderDialogService: UploaderDialogService) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
@@ -247,10 +248,12 @@ export class ImportersPageComponent implements OnInit {
   }
 
   openArtifactUploader(): void {
-    const initialState = {
-    };
-    this.modalRef = this.modalService.show(UploaderDialogComponent, {initialState});
-    this.modalRef.content.closeBtnName = 'Close';
+    this.uploaderDialogService.openArtifactUploader({
+      onClose: () => {
+        this.getImportJobs();
+        this.countImportJobs();
+      }
+    });
   }
 
   openServiceRefs(serviceRefs: ServiceRef[]): void {
