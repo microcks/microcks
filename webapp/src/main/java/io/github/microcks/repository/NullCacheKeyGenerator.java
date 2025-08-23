@@ -11,13 +11,8 @@ public class NullCacheKeyGenerator implements KeyGenerator {
 
    @Override
    public Object generate(Object target, Method method, Object... params) {
-      return Arrays.stream(params).map(
-            param -> param != null ? param.toString() : "null"
-         )
-         .reduce((a, b) -> a + "::??::" + b)
-         .orElseThrow(
-            () -> new IllegalArgumentException("At least one parameter is required for key generation")
-         )
-         ;
+      return Arrays.stream(params).map(param -> param != null ? param.toString() : "null")
+            .reduce((a, b) -> a + "::??::" + b)
+            .orElseThrow(() -> new IllegalArgumentException("At least one parameter is required for key generation"));
    }
 }
