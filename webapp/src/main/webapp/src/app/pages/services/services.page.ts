@@ -48,6 +48,7 @@ import {
 
 import { ConfirmDeleteDialogComponent } from '../../components/confirm-delete/confirm-delete.component';
 import { LabelListComponent } from '../../components/label-list/label-list.component';
+import { UploaderDialogComponent } from '../../components/uploader-dialog/uploader-dialog.component';
 
 import { Api, Service, ServiceType } from '../../models/service.model';
 import { IAuthenticationService } from '../../services/auth.service';
@@ -296,6 +297,19 @@ export class ServicesPageComponent implements OnInit {
       });
       this.filterServices(this.repositoryFilter!, this.nameFilterTerm!);
     }
+  }
+
+  openArtifactUploader(): void {
+    const initialState = {
+    };
+    this.modalRef = this.modalService.show(UploaderDialogComponent, {initialState});
+    this.modalRef.content.closeBtnName = 'Close';
+    
+    // Refresh data when the modal is closed
+    this.modalRef.onHidden?.subscribe(() => {
+      this.getServices();
+      this.countServices();
+    });
   }
 
   openCreateDirectAPI(): void {
