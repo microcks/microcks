@@ -23,21 +23,21 @@ import { BsModalRef } from 'ngx-bootstrap/modal';
 import {
   NotificationService,
   NotificationType,
-} from '../../../components/patternfly-ng/notification';
+} from '../patternfly-ng/notification';
 import { FileUploader, FileItem, ParsedResponseHeaders, FileUploadModule } from 'ng2-file-upload';
-import { IAuthenticationService } from '../../../services/auth.service';
+import { IAuthenticationService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-uploader-dialog',
-  templateUrl: './uploader.dialog.html',
-  styleUrls: ['./uploader.dialog.css'],
+  templateUrl: './uploader-dialog.component.html',
+  styleUrls: ['./uploader-dialog.component.css'],
   imports: [
     FileUploadModule,
     FormsModule,
     ReactiveFormsModule
   ],
 })
-export class ArtifactUploaderDialogComponent implements OnInit {
+export class UploaderDialogComponent implements OnInit {
   title?: string;
   closeBtnName?: string;
 
