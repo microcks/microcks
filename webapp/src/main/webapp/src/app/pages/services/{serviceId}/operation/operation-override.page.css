@@ -1,7 +1,7 @@
 .help-bar {
-  background-color: #f1f1f1;
-  border-left: 1px solid #ccc;
-  border-bottom: 1px solid #ccc; 
+  background-color: var(--surface-muted);
+  border-left: 1px solid var(--border-muted);
+  border-bottom: 1px solid var(--border-muted); 
 }
 .code-block {
   display: inline-block;
@@ -54,5 +54,5 @@
   vertical-align: middle;
   padding-top: 5px;
   padding-bottom: 5px;
-  color: #333;
+  color: var(--text-dark);
 }

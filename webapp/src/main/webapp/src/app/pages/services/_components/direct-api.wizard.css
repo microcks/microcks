@@ -3,10 +3,10 @@
 }
 
 .api-card:hover {
-  background-color: #ededed;
+  background-color: var(--surface-border);
 }
 .api-card-selected {
-  background-color: #ededed;
+  background-color: var(--surface-border);
 }
 
 .card-pf-header {

@@ -1,6 +1,6 @@
 .metadata-label {
-  background-color: #f5f5f5;
-  border: 1px solid #ededed;
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--surface-border);
   border-radius: 12px;
   display: inline-flex;
   line-height: 20px;

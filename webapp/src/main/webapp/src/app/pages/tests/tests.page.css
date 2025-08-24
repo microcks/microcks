@@ -25,22 +25,22 @@ span.label {
 
 .fa-times-circle {
   content: "\f057";
-  color: #c00;
+  color: var(--danger);
 }
 .fa-check-circle {
   content: "\f058";
-  color: #3f9c35;
+  color: var(--status-success);
 }
 .fa-refresh {
   content: "\f021";
-  color: #0088ce;
+  color: var(--primary-500);
 }
 .fa-clock-o {
-  color: #ec7a08;
+  color: var(--warning-500);
 }
 .test-timestamp {
   padding-top: 2px;
   font-size: 91%;
   font-weight: 400;
-  color: #757575;
+  color: var(--text-muted-2);
 }
