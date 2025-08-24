@@ -9,7 +9,7 @@
 .mh-package-header_description {
   font-weight: 400;
   font-size: 0.9em;
-  color: #9c9c9c !important;
+  color: var(--text-muted) !important;
 }
 
 /* Global styles coming from styles.css */
@@ -51,9 +51,9 @@
   overflow: hidden;
 }
 .mh-package-header_image-container {
-  background: #fff;
+  background: var(--white);
   /*border-radius: 50px;*/
-  /*box-shadow: 0 2px 4px rgba(0,0,0,.2);*/
+  /*box-shadow: 0 2px 4px var(--shadow-strong);*/
   /*height: 100px;*/
   /*width: 100px;*/
   display: flex;
@@ -71,7 +71,7 @@
   overflow: hidden;
 }
 .mh-package-header_description {
-  color: #fff;
+  color: var(--white);
 }
 
 @media (min-width: 768px) {
@@ -89,10 +89,10 @@
   width: 100%;
 }
 .mh-package-api-list-view_item {
-  background: #fff;
+  background: var(--white);
   border: none;
   border-radius: 5px;
-  box-shadow: 0 3px 6px rgba(0,0,0,.1);
+  box-shadow: 0 3px 6px var(--shadow-subtle);
   color: inherit;
   display: flex;
   flex: 1;
@@ -135,7 +135,7 @@
 }
 
 .mh-package-api-list-view_item .catalog-tile-pf-subtitle {
-  color: #bbb;
+  color: var(--border-accent);
   font-size: 12px;
 }
 .mh-package-api-list-view_item .catalog-tile-pf-description {
