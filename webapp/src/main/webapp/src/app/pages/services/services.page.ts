@@ -16,10 +16,8 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import {
   Component,
-  inject,
-  model,
   OnInit,
-  signal
+  OnDestroy,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Params, Router, RouterLink } from '@angular/router';
@@ -73,7 +71,7 @@ import { DirectAPIWizardComponent } from './_components/direct-api.wizard';
     ToastNotificationListComponent,
   ],
 })
-export class ServicesPageComponent implements OnInit {
+export class ServicesPageComponent implements OnInit, OnDestroy {
   
   modalRef?: BsModalRef;
   services?: Service[];
@@ -101,6 +99,12 @@ export class ServicesPageComponent implements OnInit {
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
+
+    // Register refresh callback for this page
+    this.uploaderDialogService.registerPageRefreshCallback('/services', () => {
+      this.getServices();
+      this.countServices();
+    });
 
     const filterFieldsConfig = [];
     if (this.hasRepositoryFilterFeatureEnabled()) {
@@ -300,12 +304,7 @@ export class ServicesPageComponent implements OnInit {
   }
 
   openArtifactUploader(): void {
-    this.uploaderDialogService.openArtifactUploader({
-      onClose: () => {
-        this.getServices();
-        this.countServices();
-      }
-    });
+    this.uploaderDialogService.openArtifactUploader();
   }
 
   openCreateDirectAPI(): void {
@@ -414,5 +413,10 @@ export class ServicesPageComponent implements OnInit {
   }
   public repositoryFilterFeatureLabelList(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-list');
+  }
+
+  ngOnDestroy(): void {
+    // Unregister refresh callback to prevent memory leaks
+    this.uploaderDialogService.unregisterPageRefreshCallback('/services');
   }
 }

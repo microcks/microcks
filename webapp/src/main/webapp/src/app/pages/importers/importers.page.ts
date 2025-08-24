@@ -17,10 +17,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { 
   ChangeDetectorRef, 
   Component, 
-  Injectable,
-  OnInit, 
-  TemplateRef, 
-  ViewChild, 
+  OnInit,
+  OnDestroy, 
   ViewEncapsulation
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -87,7 +85,7 @@ import { ServiceRefsDialogComponent } from './service-refs.dialog';
   ],
   providers: [ImportersPageComponent]
 })
-export class ImportersPageComponent implements OnInit {
+export class ImportersPageComponent implements OnInit, OnDestroy {
 
   modalRef?: BsModalRef;
   importJobs?: ImportJob[];
@@ -112,6 +110,12 @@ export class ImportersPageComponent implements OnInit {
     this.notifications = this.notificationService.getNotifications();
     this.getImportJobs();
     this.countImportJobs();
+
+    // Register refresh callback for this page
+    this.uploaderDialogService.registerPageRefreshCallback('/importers', () => {
+      this.getImportJobs();
+      this.countImportJobs();
+    });
 
     const filterFieldsConfig = [];
     if (this.hasRepositoryFilterFeatureEnabled()) {
@@ -458,5 +462,10 @@ export class ImportersPageComponent implements OnInit {
   }
   public repositoryFilterFeatureLabelList(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-list');
+  }
+
+  ngOnDestroy(): void {
+    // Unregister refresh callback to prevent memory leaks
+    this.uploaderDialogService.unregisterPageRefreshCallback('/importers');
   }
 }

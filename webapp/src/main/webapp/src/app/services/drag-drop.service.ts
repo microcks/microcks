@@ -104,15 +104,12 @@ export class DragDropService {
     }
 
     this.ngZone.run(() => {
-      // Navigate to services page and open uploader with files
-      this.router.navigate(['/services']).then(() => {
-        // Small delay to ensure the page has loaded
-        setTimeout(() => {
-          this.uploaderDialogService.openArtifactUploader({
-            preSelectedFiles: files
-          });
-        }, 100);
-      });
+        this.uploaderDialogService.openArtifactUploader({
+            preSelectedFiles: files,
+            onClose: () => {
+                this.router.navigate(['/services']);
+            }
+        });
     });
   }
 
@@ -121,5 +118,7 @@ export class DragDropService {
     document.removeEventListener('dragover', this.handleDragOver.bind(this));
     document.removeEventListener('dragleave', this.handleDragLeave.bind(this));
     document.removeEventListener('drop', this.handleDrop.bind(this));
+    
+    this.dragOverSubject.complete();
   }
 }
