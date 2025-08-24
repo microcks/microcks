@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import { Injectable } from '@angular/core';
+import { Router } from '@angular/router';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { UploaderDialogComponent } from '../components/uploader-dialog/uploader-dialog.component';
 
@@ -34,8 +35,14 @@ export interface UploaderDialogOptions {
 export class UploaderDialogService {
   
   private currentModalRef: BsModalRef | null = null;
+  
+  // Registry of page refresh callbacks by route
+  private refreshCallbacks = new Map<string, () => void>();
 
-  constructor(private modalService: BsModalService) {}
+  constructor(
+    private modalService: BsModalService,
+    private router: Router
+  ) {}
 
   /**
    * Opens the artifact uploader dialog
@@ -47,7 +54,6 @@ export class UploaderDialogService {
       preSelectedFiles: options.preSelectedFiles,
       ...options.initialState
     };
-    console.log('Initial state for uploader dialog:', initialState);
     
     const modalRef = this.modalService.show(UploaderDialogComponent, { initialState });
     this.currentModalRef = modalRef;
@@ -59,12 +65,20 @@ export class UploaderDialogService {
       }
     }
     
-    // Subscribe to modal close event if callback provided
-    if (options.onClose) {
-      modalRef.onHidden?.subscribe(() => {
-        options.onClose!();
-      });
-    }
+    // Subscribe to modal close event
+    modalRef.onHidden?.subscribe(() => {
+      // Call the provided callback
+      if (options.onClose) {
+        options.onClose();
+      }
+      
+      // Also call the registered page refresh callback if available
+      const currentRoute = this.getCurrentRouteKey();
+      const refreshCallback = this.refreshCallbacks.get(currentRoute);
+      if (refreshCallback) {
+        refreshCallback();
+      }
+    });
 
     // Clear the reference when modal is closed
     modalRef.onHidden?.subscribe(() => {
@@ -101,5 +115,32 @@ export class UploaderDialogService {
 
     console.warn('Component does not have addFiles method');
     return false;
+  }
+
+  /**
+   * Registers a refresh callback for a specific route
+   * @param route The route path (e.g., '/services')
+   * @param callback The function to call when uploader closes on this route
+   */
+  registerPageRefreshCallback(route: string, callback: () => void): void {
+    this.refreshCallbacks.set(route, callback);
+  }
+
+  /**
+   * Unregisters a refresh callback for a specific route
+   * @param route The route path to unregister
+   */
+  unregisterPageRefreshCallback(route: string): void {
+    this.refreshCallbacks.delete(route);
+  }
+
+  /**
+   * Gets the current route key for callback lookup
+   * @returns The current route path
+   */
+  private getCurrentRouteKey(): string {
+    const url = this.router.url;
+    // Extract base route without query parameters
+    return url.split('?')[0];
   }
 }
