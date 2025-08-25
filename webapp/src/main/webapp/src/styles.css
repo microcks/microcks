@@ -1,55 +1,57 @@
-:root { --border-muted: #ccc; /* border-muted: breadcrumbs, subtle dividers */ }
-:root { --text-muted: #9c9c9c; /* text-muted: small, de-emphasized text */ }
-:root { --rest-accent: #89bf04; /* rest-accent: REST icon ring (green) */ }
-:root { --brand-blue: #39a5dc; /* brand-blue: soap icon, stepper selected bg */ }
-:root { --warning-500: #ec7a08; /* warning-500: event icon ring (orange) */ }
-:root { --grpc-accent: #379c9c; /* grpc-accent: gRPC icon/label (teal) */ }
-:root { --graphql-accent: #e10098; /* graphql-accent: GraphQL icon/label (magenta) */ }
-:root { --generic-accent: #9c27b0; /* generic-accent: generic icon/label (purple) */ }
-:root { --text-subtle: rgb(117, 117, 117); /* text-subtle: section/subsection labels */ }
-:root { --divider-light: rgb(220, 220, 220); /* divider-light: subsection underline */ }
-:root { --divider-muted: #CCC; /* divider-muted: bar borders */ }
-:root { --success-500: #7BB33D; /* success-500: test bars (pass) */ }
-:root { --success-600: #73A839; /* success-600: hover/darker pass */ }
-:root { --danger-500: #dd1f26; /* danger-500: test bars (fail) */ }
-:root { --danger-600: #d41e24; /* danger-600: hover/darker fail */ }
-:root { --axis-line: #eee; /* axis-line: chart axis strokes */ }
-:root { --axis-text: #888; /* axis-text: chart axis text */ }
-:root { --primary-500: #0088ce; /* primary-500: active tabs, bars, highlights */ }
-:root { --border-accent: #bbb; /* border-accent: active/hover underlines */ }
-:root { --white: #fff; /* white: surfaces and controls */ }
-:root { --placeholder-text: #8b8d8f; /* placeholder-text: inputs and hints */ }
-:root { --info-400: #339cff; /* info-400: chart accent blue */ }
-:root { --surface-subtle: #f5f5f5; /* surface-subtle: cards, list backgrounds */ }
-:root { --surface-border: #ededed; /* surface-border: card/list borders */ }
-:root { --text-secondary: #6a6e73; /* text-secondary: secondary labels */ }
-:root { --status-success: #3f9c35; /* status-success: good health/grade */ }
-:root { --status-success-bright: #92d400; /* status-success-bright: positive accent */ }
-:root { --status-warning: #efaa00; /* status-warning: caution/amber */ }
-:root { --status-danger: #cc0000; /* status-danger: critical/severe */ }
-:root { --primary-tint: #def3ff; /* primary-tint: info/brand background */ }
-:root { --primary-deep: #004368; /* primary-deep: brand gradient end */ }
-:root { --white-alias: #ffffff; /* white-alias: duplicate white token */ }
-:root { --primary-border-light: #bee1f4; /* primary-border-light: top/bottom accents */ }
-:root { --danger-accent: #ff1745; /* danger-accent: dashboard highlights */ }
-:root { --surface-muted: #f1f1f1; /* surface-muted: page backgrounds */ }
-:root { --hero-bg: #4E5D6C; /* hero-bg: hub hero background */ }
-:root { --shadow-strong: rgba(0,0,0,.2); /* shadow-strong: text shadows */ }
-:root { --text-tertiary: #b6b6b6; /* text-tertiary: subdued text */ }
-:root { --divider: #eaeaea; /* divider: section/card separators */ }
-:root { --brand-orange: #df691a; /* brand-orange: hub accent */ }
-:root { --shadow-subtle: rgba(0,0,0,.1); /* shadow-subtle: card shadows */ }
-:root { --divider-translucent: rgba(0,0,0,0.2); /* divider-translucent: subtle borders */ }
-:root { --link-blue: #1991eb; /* link-blue: prominent CTAs/badges */ }
-:root { --text-strong: #363636; /* text-strong: titles/labels */ }
-:root { --surface-offwhite: #fafbfd; /* surface-offwhite: popovers/menus */ }
-:root { --shadow-medium: rgba(0,0,0,.175); /* shadow-medium: dropdowns/menus */ }
-:root { --text-default: #4d5258; /* text-default: general body text */ }
-:root { --black: #000; /* black */ }
-:root { --text-dark: #333; /* text-dark: headings */ }
-:root { --primary-border: #7dc3e8; /* primary-border: focus/active borders */ }
-:root { --danger: #c00; /* danger: warnings/errors in lists */ }
-:root { --text-muted-2: #757575; /* text-muted-2: tertiary labels */ }
+:root { 
+    --border-muted: #ccc; /* border-muted: breadcrumbs, subtle dividers */ 
+    --text-muted: #9c9c9c; /* text-muted: small, de-emphasized text */ 
+    --rest-accent: #89bf04; /* rest-accent: REST icon ring (green) */ 
+    --brand-blue: #39a5dc; /* brand-blue: soap icon, stepper selected bg */ 
+    --warning-500: #ec7a08; /* warning-500: event icon ring (orange) */ 
+    --grpc-accent: #379c9c; /* grpc-accent: gRPC icon/label (teal) */ 
+    --graphql-accent: #e10098; /* graphql-accent: GraphQL icon/label (magenta) */ 
+    --generic-accent: #9c27b0; /* generic-accent: generic icon/label (purple) */ 
+    --text-subtle: rgb(117, 117, 117); /* text-subtle: section/subsection labels */ 
+    --divider-light: rgb(220, 220, 220); /* divider-light: subsection underline */ 
+    --divider-muted: #CCC; /* divider-muted: bar borders */ 
+    --success-500: #7BB33D; /* success-500: test bars (pass) */ 
+    --success-600: #73A839; /* success-600: hover/darker pass */ 
+    --danger-500: #dd1f26; /* danger-500: test bars (fail) */ 
+    --danger-600: #d41e24; /* danger-600: hover/darker fail */ 
+    --axis-line: #eee; /* axis-line: chart axis strokes */ 
+    --axis-text: #888; /* axis-text: chart axis text */ 
+    --primary-500: #0088ce; /* primary-500: active tabs, bars, highlights */ 
+    --border-accent: #bbb; /* border-accent: active/hover underlines */ 
+    --white: #fff; /* white: surfaces and controls */ 
+    --placeholder-text: #8b8d8f; /* placeholder-text: inputs and hints */ 
+    --info-400: #339cff; /* info-400: chart accent blue */ 
+    --surface-subtle: #f5f5f5; /* surface-subtle: cards, list backgrounds */ 
+    --surface-border: #ededed; /* surface-border: card/list borders */ 
+    --text-secondary: #6a6e73; /* text-secondary: secondary labels */ 
+    --status-success: #3f9c35; /* status-success: good health/grade */ 
+    --status-success-bright: #92d400; /* status-success-bright: positive accent */ 
+    --status-warning: #efaa00; /* status-warning: caution/amber */ 
+    --status-danger: #cc0000; /* status-danger: critical/severe */ 
+    --primary-tint: #def3ff; /* primary-tint: info/brand background */ 
+    --primary-deep: #004368; /* primary-deep: brand gradient end */ 
+    --white-alias: #ffffff; /* white-alias: duplicate white token */ 
+    --primary-border-light: #bee1f4; /* primary-border-light: top/bottom accents */ 
+    --danger-accent: #ff1745; /* danger-accent: dashboard highlights */ 
+    --surface-muted: #f1f1f1; /* surface-muted: page backgrounds */ 
+    --hero-bg: #4E5D6C; /* hero-bg: hub hero background */ 
+    --shadow-strong: rgba(0,0,0,.2); /* shadow-strong: text shadows */ 
+    --text-tertiary: #b6b6b6; /* text-tertiary: subdued text */ 
+    --divider: #eaeaea; /* divider: section/card separators */ 
+    --brand-orange: #df691a; /* brand-orange: hub accent */ 
+    --shadow-subtle: rgba(0,0,0,.1); /* shadow-subtle: card shadows */ 
+    --divider-translucent: rgba(0,0,0,0.2); /* divider-translucent: subtle borders */ 
+    --link-blue: #1991eb; /* link-blue: prominent CTAs/badges */ 
+    --text-strong: #363636; /* text-strong: titles/labels */ 
+    --surface-offwhite: #fafbfd; /* surface-offwhite: popovers/menus */ 
+    --shadow-medium: rgba(0,0,0,.175); /* shadow-medium: dropdowns/menus */ 
+    --text-default: #4d5258; /* text-default: general body text */ 
+    --black: #000; /* black */ 
+    --text-dark: #333; /* text-dark: headings */ 
+    --primary-border: #7dc3e8; /* primary-border: focus/active borders */ 
+    --danger: #c00; /* danger: warnings/errors in lists */ 
+    --text-muted-2: #757575; /* text-muted-2: tertiary labels */ 
+}
 
 .breadcrumb-bar {
   height: 37px;
