@@ -17,10 +17,8 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { 
   ChangeDetectorRef, 
   Component, 
-  Injectable,
-  OnInit, 
-  TemplateRef, 
-  ViewChild, 
+  OnInit,
+  OnDestroy, 
   ViewEncapsulation
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -61,7 +59,7 @@ import { IAuthenticationService } from '../../services/auth.service';
 import { ConfigService } from '../../services/config.service';
 import { ImportersService } from '../../services/importers.service';
 import { ServicesService } from '../../services/services.service';
-import { ArtifactUploaderDialogComponent } from './_components/uploader.dialog';
+import { UploaderDialogService } from '../../services/uploader-dialog.service';
 import { ImporterWizardComponent} from './_components/importer.wizard';
 import { ServiceRefsDialogComponent } from './service-refs.dialog';
 
@@ -87,7 +85,7 @@ import { ServiceRefsDialogComponent } from './service-refs.dialog';
   ],
   providers: [ImportersPageComponent]
 })
-export class ImportersPageComponent implements OnInit {
+export class ImportersPageComponent implements OnInit, OnDestroy {
 
   modalRef?: BsModalRef;
   importJobs?: ImportJob[];
@@ -105,12 +103,19 @@ export class ImportersPageComponent implements OnInit {
   constructor(private importersSvc: ImportersService, private servicesSvc: ServicesService,
               private modalService: BsModalService, private notificationService: NotificationService,
               protected authService: IAuthenticationService, private config: ConfigService,
-              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef) { }
+              private route: ActivatedRoute, private router: Router, private ref: ChangeDetectorRef,
+              private uploaderDialogService: UploaderDialogService) { }
 
   ngOnInit() {
     this.notifications = this.notificationService.getNotifications();
     this.getImportJobs();
     this.countImportJobs();
+
+    // Register refresh callback for this page
+    this.uploaderDialogService.registerPageRefreshCallback('/importers', () => {
+      this.getImportJobs();
+      this.countImportJobs();
+    });
 
     const filterFieldsConfig = [];
     if (this.hasRepositoryFilterFeatureEnabled()) {
@@ -247,10 +252,12 @@ export class ImportersPageComponent implements OnInit {
   }
 
   openArtifactUploader(): void {
-    const initialState = {
-    };
-    this.modalRef = this.modalService.show(ArtifactUploaderDialogComponent, {initialState});
-    this.modalRef.content.closeBtnName = 'Close';
+    this.uploaderDialogService.openArtifactUploader({
+      onClose: () => {
+        this.getImportJobs();
+        this.countImportJobs();
+      }
+    });
   }
 
   openServiceRefs(serviceRefs: ServiceRef[]): void {
@@ -455,5 +462,10 @@ export class ImportersPageComponent implements OnInit {
   }
   public repositoryFilterFeatureLabelList(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-list');
+  }
+
+  ngOnDestroy(): void {
+    // Unregister refresh callback to prevent memory leaks
+    this.uploaderDialogService.unregisterPageRefreshCallback('/importers');
   }
 }

@@ -1,0 +1,43 @@
+.drag-drop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.drag-drop-overlay.active {
+  display: flex;
+}
+
+.drag-drop-content {
+  text-align: center;
+  color: white;
+  padding: 40px;
+  border: 3px dashed #007cbb;
+  border-radius: 10px;
+  background-color: rgba(0, 124, 187, 0.1);
+  max-width: 400px;
+}
+
+.drag-drop-icon {
+  margin-bottom: 20px;
+}
+
+.drag-drop-content h2 {
+  margin-bottom: 10px;
+  font-size: 24px;
+  color: #007cbb;
+}
+
+.drag-drop-content p {
+  margin: 0;
+  color: #ccc;
+  font-size: 14px;
+}
