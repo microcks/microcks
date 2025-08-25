@@ -3,15 +3,15 @@
 }
 .axis line {
   stroke-width: 1px;
-  stroke: #eee;
+  stroke: var(--axis-line);
   shape-rendering: crispedges;
 }
 .axis text {
-  fill: #888;
+  fill: var(--axis-text);
 }
 rect {
-  color: #339cff;
-  fill: #339cff;
+  color: var(--info-400);
+  fill: var(--info-400);
   fill-opacity: 0.7;
 }
 rect:hover {

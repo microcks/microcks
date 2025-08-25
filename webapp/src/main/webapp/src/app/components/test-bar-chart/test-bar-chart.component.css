@@ -1,18 +1,18 @@
 .bar {
   display: inline-block;
   border: 1px;
-  border-bottom: 1px solid #CCC;
+  border-bottom: 1px solid var(--divider-muted);
   margin: 5px;
 }
 .bar-success {
-  background: #7BB33D;
+  background: var(--success-500);
 }
 .bar-success:hover {
-  background: #73A839;
+  background: var(--success-600);
 }
 .bar-failure {
-  background: #dd1f26;
+  background: var(--danger-500);
 }
 .bar-failure:hover {
-  background: #d41e24;
+  background: var(--danger-600);
 }
