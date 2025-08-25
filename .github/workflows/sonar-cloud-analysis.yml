@@ -3,8 +3,8 @@ on:
   push:
     branches:
       - master
-      - 1.11.x
       - 1.12.x
+      - 1.13.x
   schedule:
     - cron: '0 4 * * *'  # Everyday at 4am UTC
   pull_request:

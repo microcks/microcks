@@ -82,12 +82,12 @@ jobs:
             echo "IMAGE_TAG=latest" >> "$GITHUB_OUTPUT"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF == 'refs/heads/1.11.x' ]]; then
+          elif [[ $GITHUB_REF == 'refs/heads/1.12.x' ]]; then
             echo "IMAGE_TAG=maintenance" >> "$GITHUB_ENV"
             echo "IMAGE_TAG=maintenance" >> "$GITHUB_OUTPUT"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_OUTPUT"
-          elif [[ $GITHUB_REF == 'refs/heads/1.12.x' ]]; then
+          elif [[ $GITHUB_REF == 'refs/heads/1.13.x' ]]; then
             echo "IMAGE_TAG=nightly" >> "$GITHUB_ENV"
             echo "IMAGE_TAG=nightly" >> "$GITHUB_OUTPUT"
             echo "PACKAGE_IMAGE=true" >> "$GITHUB_ENV"
