@@ -29,8 +29,7 @@
     --status-warning: #efaa00; /* status-warning: caution/amber */ 
     --status-danger: #cc0000; /* status-danger: critical/severe */ 
     --primary-tint: #def3ff; /* primary-tint: info/brand background */ 
-    --primary-deep: #004368; /* primary-deep: brand gradient end */ 
-    --white-alias: #ffffff; /* white-alias: duplicate white token */ 
+    --primary-deep: #004368; /* primary-deep: brand gradient end */
     --primary-border-light: #bee1f4; /* primary-border-light: top/bottom accents */ 
     --danger-accent: #ff1745; /* danger-accent: dashboard highlights */ 
     --surface-muted: #f1f1f1; /* surface-muted: page backgrounds */ 
