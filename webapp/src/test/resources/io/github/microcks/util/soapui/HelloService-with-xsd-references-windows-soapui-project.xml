@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project xmlns:con="http://eviware.com/soapui/config">
+  <con:interface name="HelloService" bindingName="{http://example.com/hello}HelloServiceSoapBinding">
+    <con:definitionCache>
+      <con:part>
+        <con:content><![CDATA[
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <wsdl:types>
+    <xs:schema>
+      <xs:import namespace="http://example.com/types1" schemaLocation="C:\\wsdl\\types1.xsd"/>
+      <xs:include schemaLocation="C:\\wsdl\\types2.xsd"/>
+      <xs:redefine schemaLocation="C:\\wsdl\\types3.xsd"/>
+    </xs:schema>
+  </wsdl:types>
+  <wsdl:message name="sayHello">
+    <wsdl:part name="parameters" element="xs:sayHello"/>
+  </wsdl:message>
+</wsdl:definitions>
+        ]]></con:content>
+      </con:part>
+      <con:part>
+        <con:url>C:\wsdl\types1.xsd</con:url>
+        <con:content><![CDATA[
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://example.com/types1"/>
+        ]]></con:content>
+      </con:part>
+      <con:part>
+        <con:url>C:\wsdl\types2.xsd</con:url>
+        <con:content><![CDATA[
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://example.com/types2"/>
+        ]]></con:content>
+      </con:part>
+      <con:part>
+        <con:url>C:\wsdl\types3.xsd</con:url>
+        <con:content><![CDATA[
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://example.com/types3"/>
+        ]]></con:content>
+      </con:part>
+    </con:definitionCache>
+  </con:interface>
+  <con:mockService name="HelloServiceSoapBinding">
+    <con:properties>
+      <con:property>
+        <con:name>version</con:name>
+        <con:value>1.0</con:value>
+      </con:property>
+    </con:properties>
+    <con:mockOperation name="sayHello" interface="HelloService">
+      <con:dispatchStyle>QUERY_MATCH</con:dispatchStyle>
+      <con:dispatchConfig>
+        <con:query>
+          <con:query>declare namespace ser='http://example.com/hello';
+//ser:sayHello/name</con:query>
+        </con:query>
+      </con:dispatchConfig>
+    </con:mockOperation>
+  </con:mockService>
+</con:soapui-project> 

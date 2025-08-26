@@ -333,15 +333,13 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
             Element wsdlContent = getConfigUniqueDirectChild(wsdlPart, CONTENT_TAG);
             String wsdlTextContent = wsdlContent.getTextContent();
 
+            // Collect XSD URLs and their local names/contents.
+            Map<String, String> xsdUrlToLocalName = new HashMap<>();
+            Map<String, String> xsdUrlToContent = new HashMap<>();
             for (int i = 1; i < parts.size(); i++) {
                Element xsdPart = parts.get(i);
                String xsdUrl = getConfigUniqueDirectChild(xsdPart, "url").getTextContent().trim();
-               String xsdName = xsdUrl.substring(xsdUrl.lastIndexOf('/') + 1);
-               // Try also Windows style path separators.
-               if (xsdUrl.contains("\\")) {
-                  xsdName = xsdUrl.substring(xsdUrl.lastIndexOf("\\") + 1);
-               }
-
+               String xsdName = extractFileName(xsdUrl);
                String xsdContent = getConfigUniqueDirectChild(xsdPart, CONTENT_TAG).getTextContent();
 
                Resource xsdResource = new Resource();
@@ -350,11 +348,12 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
                xsdResource.setContent(xsdContent);
                results.add(xsdResource);
 
-               // URL references within WSDL must be replaced by their local counterpart.
-               wsdlTextContent = wsdlTextContent.replace(xsdUrl, "./" + xsdName);
-               // TODO: have a in-depth review on how xsd are actually resolved (and should probably be fixed)
-               // wsdlTextContent = wsdlTextContent.replaceAll("schemaLocation=\"(.*)\\/(" + xsdName + ")", "schemaLocation=\"./" + xsdName + "\"");
+               xsdUrlToLocalName.put(normalizePath(xsdUrl), "./" + xsdName);
+               xsdUrlToContent.put(normalizePath(xsdUrl), xsdContent);
             }
+
+            // Replace all XSD references in the WSDL content.
+            wsdlTextContent = replaceXsdReferencesInWsdl(wsdlTextContent, xsdUrlToLocalName);
 
             Resource wsdlResource = new Resource();
             wsdlResource.setName(service.getName() + "-" + service.getVersion() + ".wsdl");
@@ -368,6 +367,52 @@ public class SoapUIProjectImporter implements MockRepositoryImporter {
       }
 
       return results;
+   }
+
+   /**
+    * Replace all XSD references in WSDL content with their local file names.
+    * Handles xs:import, xs:include, xs:redefine, and direct xs:schema references.
+    * Supports both HTTP URLs and file system paths, normalizes paths for cross-platform compatibility.
+    */
+   private String replaceXsdReferencesInWsdl(String wsdlContent, Map<String, String> xsdUrlToLocalName) {
+      // Regex for schemaLocation in xs:import, xs:include, xs:redefine
+      String[] patterns = new String[] {
+         // Handles schemaLocation in import/include/redefine
+         "(<xs:(import|include|redefine)[^>]*schemaLocation=\")([^"]+)(\")",
+         // Handles schemaLocation in direct xs:schema
+         "(<xs:schema[^>]*schemaLocation=\")([^"]+)(\")"
+      };
+      for (String pattern : patterns) {
+         wsdlContent = wsdlContent.replaceAll(pattern, match -> {
+            String before = match.group(1);
+            String url = match.group(3);
+            String after = match.group(4);
+            String normalizedUrl = normalizePath(url);
+            String local = xsdUrlToLocalName.getOrDefault(normalizedUrl, url);
+            return before + local + after;
+         });
+      }
+      return wsdlContent;
+   }
+
+   // Normalize a path for cross-platform compatibility (converts backslashes to slashes, removes redundant parts).
+   private String normalizePath(String path) {
+      if (path == null) return null;
+      // Convert backslashes to slashes, remove redundant slashes
+      String norm = path.replace('\\', '/');
+      // Remove ./ and ../ for matching
+      while (norm.contains("/./")) norm = norm.replace("/./", "/");
+      while (norm.contains("../")) norm = norm.replaceAll("[^/]+/\.\./", "");
+      return norm;
+   }
+
+   
+   // Extract the file name from a path or URL.
+   private String extractFileName(String path) {
+      if (path == null) return null;
+      String norm = path.replace('\\', '/');
+      int idx = norm.lastIndexOf('/');
+      return idx >= 0 ? norm.substring(idx + 1) : norm;
    }
 
    @Override
