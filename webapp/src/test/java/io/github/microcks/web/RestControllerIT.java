@@ -24,14 +24,13 @@ import io.github.microcks.domain.Service;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings.Redirects;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMapAdapter;
 
 import java.util.List;
 import java.util.UUID;
@@ -184,9 +183,10 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload simple-oidc-redirect-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
-            + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
-            String.class);
+      ResponseEntity<String> response = restTemplate.withRedirects(Redirects.DONT_FOLLOW)
+            .getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
+                  + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
+                  String.class);
       assertEquals(302, response.getStatusCode().value());
 
       String content = response.getBody();

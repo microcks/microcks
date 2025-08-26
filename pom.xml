@@ -61,7 +61,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>${project.basedir}</multi-project.rootdir>
     <docker.image.prefix>microcks</docker.image.prefix>
-    <spring-boot.version>3.3.10</spring-boot.version>
+    <spring-boot.version>3.5.5</spring-boot.version>
     <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
     <sonar.organization>microcks</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
