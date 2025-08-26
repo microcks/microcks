@@ -18,7 +18,7 @@
     <java.version>21</java.version>
     <bouncycastle.version>1.78</bouncycastle.version>
     <snakeyaml.version>2.2</snakeyaml.version>
-    <mongo-java-server.version>1.45.0</mongo-java-server.version>
+    <mongo-java-server.version>1.47.0</mongo-java-server.version>
     <apache-httpclient.version>5.3</apache-httpclient.version>
     <commons-lang3.version>3.18.0</commons-lang3.version>
     <commons-io.version>2.16.1</commons-io.version>
