@@ -93,7 +93,7 @@ jobs:
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
       - name: Get saved image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
+        uses: ishworkh/container-image-artifact-download@d5e9b6d62ef3f9762f6553c8178c2d925acc0409 # v2.1.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -180,7 +180,7 @@ jobs:
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
       - name: Get saved image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
+        uses: ishworkh/container-image-artifact-download@d5e9b6d62ef3f9762f6553c8178c2d925acc0409 # v2.1.0
         with:
           image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
