@@ -23,7 +23,7 @@
     <commons-lang3.version>3.18.0</commons-lang3.version>
     <commons-io.version>2.16.1</commons-io.version>
     <commons-codec.version>1.17.1</commons-codec.version>
-    <groovy.version>4.0.26</groovy.version>
+    <groovy.version>5.0.0</groovy.version>
     <protobuf.version>3.25.5</protobuf.version>
     <grpc.version>1.70.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
