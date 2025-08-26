@@ -165,7 +165,6 @@ export function invokeSOAPMocks() {
         if (!ok) {
           console.error(`Unexpected status ${andrewCall.status} from andrewCall:\n${andrewCall.body}`);
         }
-        sleep(1);
 
         // Define a SOAP envelope for "Karla" with SOAP 1.2 headers
         const karlaBody = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:hel="http://www.example.com/hello">
@@ -187,7 +186,6 @@ export function invokeSOAPMocks() {
         if (!ok) {
           console.error(`Unexpected status ${karlaCall.status} from karlaCall:\n${karlaCall.body}`);
         }
-        sleep(1);
 
         // Define a SOAP envelope for "Laurent" expecting a fault (500)
         const laurentHeaders = {
@@ -209,7 +207,6 @@ export function invokeSOAPMocks() {
         if (!ok) {
           console.error(`Unexpected status ${laurentCall.status} from laurentCall:\n${laurentCall.body}`);
         }
-        sleep(1);
     });
 }
 
