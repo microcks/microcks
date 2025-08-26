@@ -3,8 +3,8 @@ on:
   push:
     branches:
       - master
-      - 1.11.x
       - 1.12.x
+      - 1.13.x
   schedule:
     - cron: '0 4 * * *'  # Everyday at 4am UTC
   pull_request:
@@ -17,12 +17,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
       - name: Set up JDK 21 for x64
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -30,7 +30,7 @@ jobs:
           cache: maven
 
       - name: Cache SonarCloud packages
-        uses: actions/cache@v3
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
