@@ -90,7 +90,7 @@ jobs:
           ref: ${{ github.event.inputs.branch || '1.12.x' }}
 
       - name: Set up Minikube
-        uses: medyagh/setup-minikube@v0.0.14
+        uses: medyagh/setup-minikube@v0.0.20
 
       - name: Start Minikube
         run: |
