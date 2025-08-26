@@ -199,6 +199,15 @@ public class ExpressionParser {
          return buildFunctionExpression(expressionString, argsStart, argsEnd, context);
       }
 
+      // Check for simple literal marker.
+      int quoteStart = expressionString.indexOf('\'');
+      int quoteEnd = expressionString.lastIndexOf('\'');
+      boolean hasLiteral = (quoteStart == 0 && quoteEnd > quoteStart);
+      if (hasLiteral) {
+         log.debug("Found a literal expression {}", expressionString);
+         return new LiteralExpression(expressionString.substring(1, expressionString.length() - 1));
+      }
+
       log.info("No ELFunction or complex VariableReference expressions found... Returning simple VariableReference");
       return new VariableReferenceExpression(expressionString);
    }
@@ -226,7 +235,7 @@ public class ExpressionParser {
             function = functionClazz.getDeclaredConstructor().newInstance();
             return new FunctionExpression(function, args);
          } catch (Exception e) {
-            log.error("Exception while instantiating the functionClazz " + functionClazz, e);
+            log.error("Exception while instantiating the functionClazz {}", functionClazz, e);
          }
       }
       // Fallback on empty literal expression.
