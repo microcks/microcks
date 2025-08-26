@@ -47,8 +47,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
@@ -176,38 +174,6 @@ public class TestController {
          return new ResponseEntity<>(testCaseResult, HttpStatus.OK);
       }
       return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-   }
-
-   @GetMapping("/test-fetch")
-   public ResponseEntity<String> testFetch() {
-      return ResponseEntity.ok("Hello from test-fetch endpoint!");
-   }
-
-   @PostMapping("/test-fetch")
-   public ResponseEntity<String> testFetchPost(@RequestBody(required = false) String body) {
-      return ResponseEntity.ok("POST received with body: " + (body != null ? body : "empty"));
-   }
-
-   @PutMapping("/test-fetch")
-   public ResponseEntity<String> testFetchPut(@RequestBody(required = false) String body) {
-      return ResponseEntity.ok("PUT received with body: " + (body != null ? body : "empty"));
-   }
-
-   @DeleteMapping("/test-fetch")
-   public ResponseEntity<String> testFetchDelete() {
-      return ResponseEntity.ok("DELETE received");
-   }
-
-   @PatchMapping("/test-fetch")
-   public ResponseEntity<String> testFetchPatch(@RequestBody(required = false) String body) {
-      return ResponseEntity.ok("PATCH received with body: " + (body != null ? body : "empty"));
-   }
-
-   @GetMapping("/test-fetch-headers")
-   public ResponseEntity<String> testFetchHeaders(HttpServletRequest request) {
-      String customHeader = request.getHeader("X-Custom-Header");
-      String authHeader = request.getHeader("Authorization");
-      return ResponseEntity.ok("Headers received - Custom: " + customHeader + ", Auth: " + authHeader);
    }
 
    /**
