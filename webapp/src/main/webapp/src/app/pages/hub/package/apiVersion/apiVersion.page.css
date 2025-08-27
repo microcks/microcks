@@ -1,18 +1,18 @@
 /* Specific styles */
 
 .modal-header {
-  background-color: var(--white) !important;
+  background-color: var(--background) !important;
   border-bottom: 1px solid var(--divider-translucent);
 }
 
 .mh-api-install-modal_row {
-  padding-top: 20px; 
+  padding-top: 20px;
   padding-bottom: 15px;
 }
 
 .mh-button.mh-button-navig {
   background-color: var(--status-success-bright);
-  color: var(--white);
+  color: var(--accent-text);
 }
 
 /* Overriden styles */
@@ -87,7 +87,7 @@
   overflow: hidden;
 }
 .mh-api-header_image-container {
-  background: var(--white);
+  background: var(--background);
   /*border-radius: 50px;*/
   /*box-shadow: 0 2px 4px var(--shadow-strong);*/
   /*height: 100px;*/
@@ -107,7 +107,7 @@
   overflow: hidden;
 }
 .mh-api-header_version {
-  color: var(--white);
+  color: var(--accent-text);
 }
 
 
@@ -118,7 +118,7 @@
 }
 @media (min-width: 768px) {
   .col-md-pull-3 {
-    right: 25%; 
+    right: 25%;
   }
 }
 
@@ -132,7 +132,7 @@
 }
 .mh-button.mh-button-primary {
   background-color: var(--link-blue);
-  color: var(--white);
+  color: var(--accent-text);
 }
 .mh-button {
   border: none;
@@ -146,7 +146,7 @@
 }
 
 .mh-api-page_side-panel .properties-side-panel-pf {
-  background-color: var(--white);
+  background-color: var(--background);
   display: block;
   padding: 30px 30px 30px 10px;
   width: 100%;
@@ -196,7 +196,7 @@
 .mh-api-page_side-panel .dropdown-menu, .mh-api-page_side-panel_version-dropdown {
   font-size: inherit;
   font-weight: inherit;
-  
+
 }
 .mh-api-page_side-panel .dropdown-menu {
   background-color: var(--surface-offwhite);
@@ -255,7 +255,7 @@
 }
 
 .modal-content {
-  background-color: var(--white);
+  background-color: var(--background);
 }
 .modal-header .close {
   color: var(--black);

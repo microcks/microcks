@@ -9,7 +9,7 @@
   margin-left: 0;
 }
 .grade-box {
-  background-color: var(--white);
+  background-color: var(--background);
   color: var(--text-secondary);
   border-top: calc(1px * 2) solid var(--surface-subtle);
 }
@@ -19,23 +19,23 @@
 
 .grade-box.a {
   --pfe-health-index--accent: var(--status-success);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--white));
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
 }
 .grade-box.b {
   --pfe-health-index--accent: var(--status-success-bright);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--white));
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
 }
 .grade-box.c {
   --pfe-health-index--accent: var(--status-warning);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--white));
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
 }
 .grade-box.d {
   --pfe-health-index--accent: var(--warning-500);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--white));
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
 }
 .grade-box.e {
   --pfe-health-index--accent: var(--status-danger);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--white));
+  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
 }
 
 .grade-box .grade {

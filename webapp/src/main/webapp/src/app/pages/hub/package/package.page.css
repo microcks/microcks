@@ -51,7 +51,7 @@
   overflow: hidden;
 }
 .mh-package-header_image-container {
-  background: var(--white);
+  background: var(--background);
   /*border-radius: 50px;*/
   /*box-shadow: 0 2px 4px var(--shadow-strong);*/
   /*height: 100px;*/
@@ -71,7 +71,7 @@
   overflow: hidden;
 }
 .mh-package-header_description {
-  color: var(--white);
+  color: var(--accent-text);
 }
 
 @media (min-width: 768px) {
@@ -81,7 +81,7 @@
 }
 @media (min-width: 768px) {
   .col-md-pull-5 {
-    right: 41.68%; 
+    right: 41.68%;
   }
 }
 
@@ -89,7 +89,7 @@
   width: 100%;
 }
 .mh-package-api-list-view_item {
-  background: var(--white);
+  background: var(--background);
   border: none;
   border-radius: 5px;
   box-shadow: 0 3px 6px var(--shadow-subtle);

@@ -1,7 +1,7 @@
 
 .tiny-form-control {
   color: var(--text-strong);
-  background-color: var(--white);
+  background-color: var(--background);
   border: 1px solid var(--border-accent);
   border-radius: 1px;
   padding: 0px 1px;

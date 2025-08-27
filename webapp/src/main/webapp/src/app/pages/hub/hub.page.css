@@ -126,7 +126,7 @@
   text-decoration: underline;
 }
 .mh-category-item_select {
-  flex: 1;  
+  flex: 1;
 }
 .mh-category-item.selected .mh-category-item_select,  .mh-category-item:hover .mh-category-item_select {
   color: var(--brand-orange);
@@ -225,7 +225,7 @@ input[type=checkbox], input[type=radio] {
   box-shadow: 0 3px 6px var(--shadow-subtle);
 }
 .catalog-tile-pf {
-  background: var(--white);
+  background: var(--background);
   border: 1px solid hsla(0,0%,82%,.75);
   color: inherit;
   display: flex;

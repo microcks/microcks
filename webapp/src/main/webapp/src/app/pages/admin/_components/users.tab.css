@@ -6,7 +6,7 @@ span.label {
   border-radius: .25rem;
 }
 span.label a {
-  color: var(--white);
+  color: var(--accent-text);
 }
 
 .userName {
