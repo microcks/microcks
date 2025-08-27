@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 import { CommonModule, DatePipe } from '@angular/common';
-import { 
-  ChangeDetectorRef, 
-  Component, 
+import {
+  ChangeDetectorRef,
+  Component,
   OnInit,
-  OnDestroy, 
+  OnDestroy,
   ViewEncapsulation
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -110,12 +110,6 @@ export class ImportersPageComponent implements OnInit, OnDestroy {
     this.notifications = this.notificationService.getNotifications();
     this.getImportJobs();
     this.countImportJobs();
-
-    // Register refresh callback for this page
-    this.uploaderDialogService.registerPageRefreshCallback('/importers', () => {
-      this.getImportJobs();
-      this.countImportJobs();
-    });
 
     const filterFieldsConfig = [];
     if (this.hasRepositoryFilterFeatureEnabled()) {
@@ -277,8 +271,8 @@ export class ImportersPageComponent implements OnInit, OnDestroy {
   }
   editImportJob(job: ImportJob): void {
     this.selectedJob = job;
-    this.modalRef = this.modalService.show(ImporterWizardComponent, { 
-      class: 'modal-lg', 
+    this.modalRef = this.modalService.show(ImporterWizardComponent, {
+      class: 'modal-lg',
       initialState: {
         job: this.selectedJob
       }
@@ -462,10 +456,5 @@ export class ImportersPageComponent implements OnInit, OnDestroy {
   }
   public repositoryFilterFeatureLabelList(): string {
     return this.config.getFeatureProperty('repository-filter', 'label-list');
-  }
-
-  ngOnDestroy(): void {
-    // Unregister refresh callback to prevent memory leaks
-    this.uploaderDialogService.unregisterPageRefreshCallback('/importers');
   }
 }
