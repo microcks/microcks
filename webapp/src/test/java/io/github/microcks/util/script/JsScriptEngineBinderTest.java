@@ -17,6 +17,7 @@ package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
 import io.roastedroot.quickjs4j.core.Engine;
+import jakarta.servlet.http.Cookie;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -73,6 +74,52 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
          String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
          assertEquals("bar", result);
+      } catch (Exception e) {
+         fail("Exception should no be thrown");
+      }
+   }
+
+   @Test
+   void testRequestQueryString() {
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const request = mockRequest.getRequest();
+            log.info("queryString: " + request.queryString);
+            return request.queryString;
+            """);
+
+      String body = "content";
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.setQueryString("foobar");
+
+      try {
+         // Evaluating request with script coming from operation dispatcher rules.
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, null, null, request);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertEquals("foobar", result);
+      } catch (Exception e) {
+         fail("Exception should no be thrown");
+      }
+   }
+
+   @Test
+   void testRequestCookie() {
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const request = mockRequest.getRequest();
+            log.info("cookies: " + JSON.stringify(request.cookies));
+            return request.cookies[0].name + request.cookies[0].value;
+            """);
+
+      String body = "content";
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.setCookies(new Cookie("bar", "baz"));
+
+      try {
+         // Evaluating request with script coming from operation dispatcher rules.
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, null, null, request);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertEquals("barbaz", result);
       } catch (Exception e) {
          fail("Exception should no be thrown");
       }
