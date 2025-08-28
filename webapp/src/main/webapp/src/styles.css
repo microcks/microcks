@@ -1,6 +1,61 @@
+:root {
+    --border-muted: #ccc; /* border-muted: breadcrumbs, subtle dividers */
+    --text-muted: #9c9c9c; /* text-muted: small, de-emphasized text */
+    --rest-accent: #89bf04; /* rest-accent: REST icon ring (green) */
+    --brand-blue: #39a5dc; /* brand-blue: soap icon, stepper selected bg */
+    --warning-500: #ec7a08; /* warning-500: event icon ring (orange) */
+    --grpc-accent: #379c9c; /* grpc-accent: gRPC icon/label (teal) */
+    --graphql-accent: #e10098; /* graphql-accent: GraphQL icon/label (magenta) */
+    --generic-accent: #9c27b0; /* generic-accent: generic icon/label (purple) */
+    --text-subtle: rgb(117, 117, 117); /* text-subtle: section/subsection labels */
+    --divider-light: rgb(220, 220, 220); /* divider-light: subsection underline */
+    --divider-muted: #CCC; /* divider-muted: bar borders */
+    --success-500: #7BB33D; /* success-500: test bars (pass) */
+    --success-600: #73A839; /* success-600: hover/darker pass */
+    --danger-500: #dd1f26; /* danger-500: test bars (fail) */
+    --danger-600: #d41e24; /* danger-600: hover/darker fail */
+    --axis-line: #eee; /* axis-line: chart axis strokes */
+    --axis-text: #888; /* axis-text: chart axis text */
+    --primary-500: #0088ce; /* primary-500: active tabs, bars, highlights */
+    --border-accent: #bbb; /* border-accent: active/hover underlines */
+    --placeholder-text: #8b8d8f; /* placeholder-text: inputs and hints */
+    --info-400: #339cff; /* info-400: chart accent blue */
+    --surface-subtle: #f5f5f5; /* surface-subtle: cards, list backgrounds */
+    --surface-border: #ededed; /* surface-border: card/list borders */
+    --text-secondary: #6a6e73; /* text-secondary: secondary labels */
+    --status-success: #3f9c35; /* status-success: good health/grade */
+    --status-success-bright: #92d400; /* status-success-bright: positive accent */
+    --status-warning: #efaa00; /* status-warning: caution/amber */
+    --status-danger: #cc0000; /* status-danger: critical/severe */
+    --primary-tint: #def3ff; /* primary-tint: info/brand background */
+    --primary-deep: #004368; /* primary-deep: brand gradient end */
+    --primary-border-light: #bee1f4; /* primary-border-light: top/bottom accents */
+    --danger-accent: #ff1745; /* danger-accent: dashboard highlights */
+    --surface-muted: #f1f1f1; /* surface-muted: page backgrounds */
+    --hero-bg: #4E5D6C; /* hero-bg: hub hero background */
+    --shadow-strong: rgba(0,0,0,.2); /* shadow-strong: text shadows */
+    --text-tertiary: #b6b6b6; /* text-tertiary: subdued text */
+    --divider: #eaeaea; /* divider: section/card separators */
+    --brand-orange: #df691a; /* brand-orange: hub accent */
+    --shadow-subtle: rgba(0,0,0,.1); /* shadow-subtle: card shadows */
+    --divider-translucent: rgba(0,0,0,0.2); /* divider-translucent: subtle borders */
+    --link-blue: #1991eb; /* link-blue: prominent CTAs/badges */
+    --text-strong: #363636; /* text-strong: titles/labels */
+    --surface-offwhite: #fafbfd; /* surface-offwhite: popovers/menus */
+    --shadow-medium: rgba(0,0,0,.175); /* shadow-medium: dropdowns/menus */
+    --text-default: #4d5258; /* text-default: general body text */
+    --black: #000; /* black */
+    --text-dark: #333; /* text-dark: headings */
+    --primary-border: #7dc3e8; /* primary-border: focus/active borders */
+    --danger: #c00; /* danger: warnings/errors in lists */
+    --text-muted-2: #757575; /* text-muted-2: tertiary labels */
+    --background: #fff; /* background: main background */
+    --accent-text: #fff; /* accent-text: links, highlights and button text color */
+}
+
 .breadcrumb-bar {
   height: 37px;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--border-muted);
   margin-left: -20px;
   margin-right: -20px;
   margin-top: -20px;
@@ -17,7 +72,7 @@ small {
   font-weight: 400;
   font-size: 0.9em;
   line-height: 1;
-  color: #9c9c9c;
+  color: var(--text-muted);
 }
 dl {
   margin-bottom: 2em;
@@ -58,37 +113,37 @@ span.card-pf-footer-text {
   width: 30px;
 }
 .rest-icon-sm {
-  border: 3px solid #89bf04 !important;
+  border: 3px solid var(--rest-accent) !important;
 }
 .soap-icon-sm {
-  border: 3px solid #39a5dc !important;
+  border: 3px solid var(--brand-blue) !important;
 }
 .event-icon-sm {
-  border: 3px solid #ec7a08 !important;
+  border: 3px solid var(--warning-500) !important;
 }
 .grpc-icon-sm {
-  border: 3px solid #379c9c !important;
+  border: 3px solid var(--grpc-accent) !important;
 }
 .graph-icon-sm {
-  border: 3px solid #e10098 !important;
+  border: 3px solid var(--graphql-accent) !important;
 }
 .generic-icon-sm {
-  border: 3px solid #9c27b0 !important;
+  border: 3px solid var(--generic-accent) !important;
 }
 
 .label-grpc {
-  background-color: #379c9c;
+  background-color: var(--grpc-accent);
 }
 .label-graph {
-  background-color: #e10098;
+  background-color: var(--graphql-accent);
 }
 .label-gene {
-  background-color: #9c27b0;
+  background-color: var(--generic-accent);
 }
 
 .section-label {
   text-transform: uppercase;
-  color: rgb(117, 117, 117);
+  color: var(--text-subtle);
   margin-top: 2em;
   margin-bottom: 1em;
 }
@@ -98,8 +153,8 @@ span.card-pf-footer-text {
 }
 
 .subsection-label {
-  color: rgb(117, 117, 117);
-  border-bottom: 1px solid rgb(220, 220, 220);
+  color: var(--text-subtle);
+  border-bottom: 1px solid var(--divider-light);
   padding-bottom: 10px;
   margin-top: 1em;
 }
@@ -116,20 +171,20 @@ span.card-pf-footer-text {
 }
 .bar {
   border: 1px;
-  border-bottom: 1px solid #CCC;
+  border-bottom: 1px solid var(--divider-muted);
   margin: 5px;
 }
 .bar-success {
-  background: #7BB33D;
+  background: var(--success-500);
 }
 .bar-success:hover {
-  background: #73A839;
+  background: var(--success-600);
 }
 .bar-failure {
-  background: #dd1f26;
+  background: var(--danger-500);
 }
 .bar-failure:hover {
-  background: #d41e24;
+  background: var(--danger-600);
 }
 
 #dayInvocationsBarChart {
@@ -140,11 +195,11 @@ span.card-pf-footer-text {
 }
 #dayInvocationsBarChart >* .axis line {
   stroke-width: 1px;
-  stroke: #eee;
+  stroke: var(--axis-line);
   shape-rendering: crispedges;
 }
 #dayInvocationsBarChart >* .axis text {
-  fill: #888;
+  fill: var(--axis-text);
 }
 #hourInvocationsBarChart {
   padding-right: 20px;
@@ -154,14 +209,14 @@ span.card-pf-footer-text {
 }
 #hourInvocationsBarChart >* .axis line {
   stroke-width: 1px;
-  stroke: #eee;
+  stroke: var(--axis-line);
   shape-rendering: crispedges;
 }
 #hourInvocationsBarChart >* .axis text {
-  fill: #888;
+  fill: var(--axis-text);
 }
 .invocations-bar > rect {
-  fill: #0088ce;
+  fill: var(--primary-500);
   fill-opacity: 0.7;
 }
 .invocations-bar > rect:hover {
@@ -182,11 +237,11 @@ span.card-pf-footer-text {
 .nav-tabs>li.second-tab.active>a, .nav-tabs>li.second-tab.active>a:active, .nav-tabs>li.second-tab.active>a:focus, .nav-tabs>li.second-tab.active>a:hover {
   background-color: transparent;
   border: 0!important;
-  color: #0088ce;
+  color: var(--primary-500);
 }
 
 .nav-tabs>li.second-tab.active>a:before, .nav-tabs>li.second-tab.active>a:focus:before, .nav-tabs>li.second-tab.active>a:hover:before {
-  background: #0088ce;
+  background: var(--primary-500);
   bottom: -1px;
   content: "";
   display: block;
@@ -196,7 +251,7 @@ span.card-pf-footer-text {
   right: 15px;
 }
 .nav-tabs>li.second-tab>a:active:before, .nav-tabs>li.second-tab>a:focus:before, .nav-tabs>li.second-tab>a:hover:before {
-  background: #bbb;
+  background: var(--border-accent);
   bottom: -1px;
   content: "";
   display: block;
@@ -271,7 +326,7 @@ pre.hljs {
 }
 
 .filter-select .btn-default {
-  background-color: #fff;
+  background-color: var(--background);
   background-image: none;
 }
 .filter-select .btn {
@@ -290,7 +345,7 @@ pre.hljs {
   text-align: left;
 }
 .filter-select .btn-default .placeholder {
-  color: #8b8d8f;
+  color: var(--placeholder-text);
   font-style: italic;
   font-weight: 400;
 }
@@ -332,7 +387,7 @@ pre.hljs {
 
 /** Reajust the Material elements style on Patternly */
 .mat-stepper-horizontal {
-  background-color: #fff !important;
+  background-color: var(--background) !important;
   font-family: "Open Sans", Helvetica, Arial, sans-serif !important;
 }
 .mat-stepper-horizontal-line {
@@ -342,24 +397,23 @@ pre.hljs {
   height: 0;
   margin: 0 -16px;
   min-width: 32px;
-  border-top-color: #bbb;
+  border-top-color: var(--border-accent);
 }
 .mat-horizontal-content-container {
   padding-top: 3em !important;
 }
 .mat-step-icon {
-  background-color: #fff !important;
-  border-color: #bbb !important;
+  background-color: var(--background) !important;
+  border-color: var(--border-accent) !important;
   border-style: solid !important;
   border-width: 1px;
-  color: #bbb !important;
+  color: var(--border-accent) !important;
 }
 .mat-step-icon-selected {
-  background-color: #39a5dc !important;
-  color: #fff !important;
+  background-color: var(--brand-blue) !important;
+  color: var(--accent-text) !important;
 }
 .mat-step-text-label {
   font-family: "Open Sans", Helvetica, Arial, sans-serif;
   font-size: 16px;
 }
-

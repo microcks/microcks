@@ -3,7 +3,7 @@ h1.arvo {
   line-height: 1.2em;
 }
 .hl {
-  color: #ff1745;
+  color: var(--danger-accent);
   font-weight: 600;
 }
 
@@ -12,7 +12,7 @@ h1.arvo {
   padding-bottom: 20px;
   margin-bottom: 20px;
   color: inherit;
-  background-color: #f1f1f1;
+  background-color: var(--surface-muted);
 }
 .megatron p {
   font-weight: 200;

@@ -20,7 +20,7 @@ span.label {
   padding-bottom: 0.6em;
 }
 span.label a {
-  color: #ffffff;
+  color: var(--accent-text);
 }
 
 .list-view-pf-description {

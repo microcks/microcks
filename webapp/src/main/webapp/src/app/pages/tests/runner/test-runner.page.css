@@ -7,13 +7,13 @@ span.label {
 
 .fa-times-circle {
   content: "\f057";
-  color: #c00;
+  color: var(--danger);
 }
 .fa-check-circle {
   content: "\f058";
-  color: #3f9c35;
+  color: var(--status-success);
 }
 .fa-refresh {
   content: "\f021";
-  color: #0088ce;
+  color: var(--primary-500);
 }
