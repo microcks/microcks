@@ -36,15 +36,18 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * An implementation of MockRepositoryImporter that deals with Protobuf v3 specification documents.
@@ -58,6 +61,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
    private static final String BINARY_DESCRIPTOR_EXT = ".pbb";
    private static final String BUILTIN_LIBRARY_PREFIX = "google/protobuf";
 
+   private final PackageServices packageServices;
    private final String protoDirectory;
    private final String protoFileName;
    private final ReferenceResolver referenceResolver;
@@ -73,10 +77,39 @@ public class ProtobufImporter implements MockRepositoryImporter {
     */
    public ProtobufImporter(String protoFilePath, ReferenceResolver referenceResolver) throws IOException {
       this.referenceResolver = referenceResolver;
-      // Prepare file, path and name for easier process.
-      File protoFile = new File(protoFilePath);
-      protoDirectory = protoFile.getParentFile().getAbsolutePath();
-      protoFileName = protoFile.getName();
+
+      // Move proto file to a unique subdir that matches its package name (to avoid conflicts)
+      // This will allow protoc to find the relative imports we will download later on.
+      Path protoPath = Paths.get(protoFilePath);
+      packageServices = getPackage(protoPath);
+      if (packageServices.packageName != null) {
+         String packagePath = packageServices.packageName.replace(".", "/");
+
+         String uuid = UUID.randomUUID().toString();
+         Path newProtoPath = protoPath.getParent().resolve(uuid + "/" + packagePath + "/" + protoPath.getFileName());
+
+         try {
+            Files.createDirectories(newProtoPath.getParent());
+            Files.createFile(newProtoPath);
+         } catch (FileAlreadyExistsException faee) {
+            // Ignore if the file already exists, it means we have already downloaded it.
+         }
+         Files.copy(protoPath, newProtoPath, StandardCopyOption.REPLACE_EXISTING);
+
+         // Prepare file, path and name for easier process.
+         File protoFile = new File(protoFilePath);
+         protoDirectory = protoPath.getParent().resolve(uuid + "/").toFile().getAbsolutePath();
+         protoFileName = packagePath + "/" + protoFile.getName();
+
+         // Now switch the proto and file paths.
+         protoFilePath = newProtoPath.toString();
+         protoPath = newProtoPath;
+      } else {
+         // Prepare file, path and name for easier process.
+         File protoFile = new File(protoFilePath);
+         protoDirectory = protoFile.getParentFile().getAbsolutePath();
+         protoFileName = protoFile.getName();
+      }
 
       // Prepare protoc arguments.
       String[] args = { "-v3.21.8", "--include_std_types", "--include_imports", "--proto_path=" + protoDirectory,
@@ -91,8 +124,9 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
          // Resolve and retrieve imports if any.
          if (referenceResolver != null) {
+            String rootBaseUrl = referenceResolver.getBaseRepositoryUrl();
             resolvedImportsLocalFiles = new ArrayList<>();
-            resolveAndPrepareRemoteImports(Paths.get(protoFilePath), resolvedImportsLocalFiles);
+            resolveAndPrepareRemoteImports(protoPath, resolvedImportsLocalFiles, rootBaseUrl);
          }
 
          // Run Protoc.
@@ -139,6 +173,11 @@ public class ProtobufImporter implements MockRepositoryImporter {
          }
 
          for (Descriptors.ServiceDescriptor sd : fd.getServices()) {
+            if (packageServices.packageName != null && (!packageServices.packageName.equals(fd.getPackage()))
+                  || !packageServices.services.contains(sd.getName())) {
+               // If the service is not in the package and list of services, skip it.
+               continue;
+            }
             // Build a new service.
             Service service = new Service();
             service.setName(sd.getFullName());
@@ -206,15 +245,60 @@ public class ProtobufImporter implements MockRepositoryImporter {
       return new ArrayList<>();
    }
 
-   /**
-    * Analyse a protofile imports, resolve and retrieve them from remote to allow protoc to run later.
-    */
-   private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles) {
+   /** Initial proto file package and embedded services. */
+   private record PackageServices(String packageName, List<String> services) {
+   }
+
+   /** Extract the package name from a proto file. */
+   private PackageServices getPackage(Path protoFilePath) {
+      String packageName = null;
+      List<String> servicesNames = new ArrayList<>();
+
       String line = null;
       try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
          while ((line = reader.readLine()) != null) {
             line = line.trim();
-            if (line.startsWith("import ")) {
+            if (line.startsWith("package ")) {
+               // Extract package name.
+               String protoPackage = line.substring("package ".length()).trim();
+               if (protoPackage.endsWith(";")) {
+                  protoPackage = protoPackage.substring(0, protoPackage.length() - 1);
+               }
+               packageName = protoPackage;
+            } else if (line.startsWith("service ")) {
+               // Extract service name.
+               String serviceName = line.substring("service ".length()).trim();
+               if (serviceName.endsWith("{")) {
+                  serviceName = serviceName.substring(0, serviceName.length() - 1).trim();
+               }
+               servicesNames.add(serviceName);
+            }
+         }
+      } catch (Exception e) {
+         log.error("Exception while retrieving protobuf package", e);
+      }
+      return new PackageServices(packageName, servicesNames);
+   }
+
+   /**
+    * Analyse a protofile imports, resolve and retrieve them from remote to allow protoc to run later.
+    */
+   private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles,
+         String rootBaseUrl) {
+      String line = null;
+      String protoPackage = null;
+      try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
+         while ((line = reader.readLine()) != null) {
+            line = line.trim();
+            if (line.startsWith("package ")) {
+               // Extract package name.
+               protoPackage = line.substring("package ".length()).trim();
+               if (protoPackage.endsWith(";")) {
+                  protoPackage = protoPackage.substring(0, protoPackage.length() - 1);
+               }
+               log.debug("Found a package in protobuf: {}", protoPackage);
+
+            } else if (line.startsWith("import ")) {
                String importStr = line.substring("import ".length() + 1);
                // Remove semicolon and quotes/double-quotes.
                if (importStr.endsWith(";")) {
@@ -230,22 +314,17 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
                // Check that this lib is not in built-in ones.
                if (!importStr.startsWith(BUILTIN_LIBRARY_PREFIX)) {
-                  // Check if import path is locally there.
-                  Path importPath = protoFilePath.getParent().resolve(importStr);
-                  if (!Files.exists(importPath)) {
-                     // Not there, so resolve it remotely and write to local file for protoc.
-                     String importContent = referenceResolver.getReferenceContent(importStr, StandardCharsets.UTF_8);
-                     try {
-                        Files.createDirectories(importPath.getParent());
-                        Files.createFile(importPath);
-                     } catch (FileAlreadyExistsException faee) {
-                        log.warn("Exception while writing protobuf dependency", faee);
-                     }
-                     Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
-                     resolvedImportsLocalFiles.add(importPath.toFile());
-
-                     // Now go down the resource content and resolve its own imports.
-                     resolveAndPrepareRemoteImports(importPath, resolvedImportsLocalFiles);
+                  Path importPath = null;
+                  if (protoPackage != null) {
+                     int levelsToRoot = protoPackage.split("\\.").length;
+                     String relativeImportStr = "../".repeat(levelsToRoot) + importStr;
+                     importPath = protoFilePath.getParent().resolve(relativeImportStr);
+                     downloadImportReferenceAndProgress(importPath, relativeImportStr, resolvedImportsLocalFiles,
+                           rootBaseUrl);
+                  } else {
+                     // No package, so just use the import string as is.
+                     importPath = protoFilePath.getParent().resolve(importStr);
+                     downloadImportReferenceAndProgress(importPath, importStr, resolvedImportsLocalFiles, rootBaseUrl);
                   }
                }
             }
@@ -253,6 +332,33 @@ public class ProtobufImporter implements MockRepositoryImporter {
       } catch (Exception e) {
          log.error("Exception while retrieving protobuf dependency", e);
       }
+   }
+
+
+   /**
+    * Download a remote import reference and write it to local file system. Progressively resolve its own imports.
+    */
+   private void downloadImportReferenceAndProgress(Path importPath, String importStr,
+         List<File> resolvedImportsLocalFiles, String rootBaseUrl) throws FileNotFoundException, IOException {
+      referenceResolver.setBaseRepositoryUrl(rootBaseUrl);
+      String importContent = referenceResolver.getReferenceContent(importStr, StandardCharsets.UTF_8);
+      if (!Files.exists(importPath)) {
+         try {
+            Files.createDirectories(importPath.getParent());
+            Files.createFile(importPath);
+         } catch (FileAlreadyExistsException faee) {
+            log.warn("Exception while writing protobuf dependency: {}", importPath.toFile().getAbsolutePath());
+         }
+      }
+      log.debug("Writing protobuf import {} to {}", importStr, importPath);
+      Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
+      resolvedImportsLocalFiles.add(importPath.toFile());
+
+      // Now go down the resource content and resolve its own imports.
+      if (importStr.startsWith("../")) {
+         rootBaseUrl = referenceResolver.getReferenceURL(importStr);
+      }
+      resolveAndPrepareRemoteImports(importPath, resolvedImportsLocalFiles, rootBaseUrl);
    }
 
    /**
