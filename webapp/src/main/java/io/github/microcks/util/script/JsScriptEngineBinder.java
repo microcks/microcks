@@ -180,6 +180,11 @@ public class JsScriptEngineBinder {
       }
 
       @HostFunction
+      public MockRequest getRequest() {
+         return new MockRequest(this.delegate.getRequest());
+      }
+
+      @HostFunction
       public String getURIParameter(String key) {
          if (this.delegate.getURIParameters() == null) {
             return null;
