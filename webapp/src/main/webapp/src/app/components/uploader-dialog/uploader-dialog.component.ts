@@ -28,6 +28,7 @@ import { FileUploader, FileItem, ParsedResponseHeaders, FileUploadModule } from 
 import { IAuthenticationService } from '../../services/auth.service';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TabsModule } from 'ngx-bootstrap/tabs';
 
 @Component({
   selector: 'app-uploader-dialog',
@@ -37,7 +38,8 @@ import { Router } from '@angular/router';
     FileUploadModule,
     FormsModule,
     ReactiveFormsModule,
-    CommonModule
+  CommonModule,
+  TabsModule
   ],
 })
 export class UploaderDialogComponent implements OnInit {
