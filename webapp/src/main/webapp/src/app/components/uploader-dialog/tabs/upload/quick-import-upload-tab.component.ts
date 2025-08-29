@@ -13,51 +13,48 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import {
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
-
-import { BsModalRef } from 'ngx-bootstrap/modal';
-import {
-  NotificationService,
-  NotificationType,
-} from '../patternfly-ng/notification';
-import { FileUploader, FileItem, ParsedResponseHeaders, FileUploadModule } from 'ng2-file-upload';
-import { IAuthenticationService } from '../../services/auth.service';
+import { Component, ElementRef, Input, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
-import { TabsModule } from 'ngx-bootstrap/tabs';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FileItem, FileUploadModule, FileUploader, ParsedResponseHeaders } from 'ng2-file-upload';
+import { BsModalRef } from 'ngx-bootstrap/modal';
+import { NotificationService, NotificationType } from '../../../patternfly-ng/notification';
+import { IAuthenticationService } from '../../../../services/auth.service';
 
 @Component({
-  selector: 'app-uploader-dialog',
-  templateUrl: './uploader-dialog.component.html',
-  styleUrls: ['./uploader-dialog.component.css'],
-  imports: [
-    FileUploadModule,
-    FormsModule,
-    ReactiveFormsModule,
-    CommonModule,
-    TabsModule
-  ],
+  selector: 'app-quick-import-upload-tab',
+  standalone: true,
+  templateUrl: './quick-import-upload-tab.component.html',
+  styleUrls: ['./quick-import-upload-tab.component.css'],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, FileUploadModule]
 })
-export class UploaderDialogComponent implements OnInit {
+/**
+ * Upload File tab for the Quick Import dialog.
+ *
+ * Responsibilities:
+ * - Manage file selection (manual and drag-and-drop via ng2-file-upload)
+ * - Maintain a queue with per-file "secondary artifact" flags
+ * - Post files to /api/artifact/upload with form data for main/secondary
+ * - Close the dialog when uploads complete
+ *
+ * Inputs:
+ * - preSelectedFiles?: File[]  Optional files to pre-populate the queue
+ */
+export class QuickImportUploadTabComponent implements OnInit {
+  /** Optional files provided by the opener to pre-fill the queue */
+  @Input() preSelectedFiles?: File[];
+  /** Hidden file input used to open the native file chooser */
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  
-  title?: string;
-  closeBtnName?: string;
-  preSelectedFiles?: File[];
 
+  /** Uploader instance configured for the backend endpoint */
   uploader: FileUploader;
-  // Map to track secondary artifact status for each file
+  /** Tracks whether a queued file is a secondary artifact (true) or main (false) */
   fileSecondaryStatus = new Map<FileItem, boolean>();
 
   constructor(
     public bsModalRef: BsModalRef,
     private notificationService: NotificationService,
-    protected authService: IAuthenticationService,
-    private router: Router
+    protected authService: IAuthenticationService
   ) {
     if (this.authService.isAuthenticated()) {
       this.uploader = new FileUploader({
@@ -75,7 +72,10 @@ export class UploaderDialogComponent implements OnInit {
     }
   }
 
-  ngOnInit() {
+  /**
+   * Wire up uploader callbacks for success/error/completion and enqueue any pre-selected files.
+   */
+  ngOnInit(): void {
     this.uploader.onErrorItem = (
       item: FileItem,
       response: string,
@@ -103,23 +103,24 @@ export class UploaderDialogComponent implements OnInit {
       );
     };
     this.uploader.onCompleteAll = () => {
-        // close dialog and redirect to services
-        this.bsModalRef.hide();
+      this.bsModalRef.hide();
     };
 
-    // Add pre-selected files if any
     if (this.preSelectedFiles && this.preSelectedFiles.length > 0) {
       this.addFiles(this.preSelectedFiles);
     }
   }
 
-  protected upload(): void {
+  /**
+   * Start upload of all queued files.
+   * - Adds 'mainArtifact' flag per file based on its secondary status.
+   * - Reorders queue to send the (single) main artifact first.
+   */
+  upload(): void {
     this.uploader.onBuildItemForm = (item: FileItem, form: any) => {
-      // Use individual file's secondary status, defaulting to false (main artifact)
       const isSecondaryArtifact = this.fileSecondaryStatus.get(item) || false;
       form.append('mainArtifact', !isSecondaryArtifact);
     };
-    // reorder the queue by putting the main artifact first
     this.uploader.queue.sort((a, b) => {
       const aIsMain = this.fileSecondaryStatus.get(a) === false;
       const bIsMain = this.fileSecondaryStatus.get(b) === false;
@@ -128,27 +129,18 @@ export class UploaderDialogComponent implements OnInit {
     this.uploader.uploadAll();
   }
 
-  /**
-   * Gets the secondary artifact status for a file
-   * @param item FileItem to check
-   * @returns true if file is marked as secondary artifact
-   */
+  /** Get the secondary status for a given queued file item. */
   getFileSecondaryStatus(item: FileItem): boolean {
     return this.fileSecondaryStatus.get(item) || false;
   }
 
-  /**
-   * Updates the secondary artifact status for a file
-   * @param item FileItem to update
-   * @param isSecondary true if file should be marked as secondary artifact
-   */
+  /** Update the secondary status for a given queued file item. */
   updateFileSecondaryStatus(item: FileItem, isSecondary: boolean): void {
     this.fileSecondaryStatus.set(item, isSecondary);
   }
 
   /**
-   * Adds new files to the uploader queue
-   * @param files Files to add to the queue
+   * Add new files to the upload queue; initialize per-file status to main (false) when absent.
    */
   addFiles(files: File[]): void {
     if (files && files.length > 0) {
@@ -161,19 +153,13 @@ export class UploaderDialogComponent implements OnInit {
     }
   }
 
-  /**
-   * Removes a file from the uploader queue
-   * @param item FileItem to remove
-   */
+  /** Remove a file from the queue and clear its tracked secondary status. */
   removeFile(item: FileItem): void {
-    // Clean up the secondary status tracking
     this.fileSecondaryStatus.delete(item);
     item.remove();
   }
 
-  /**
-   * Triggers the hidden file input when placeholder is clicked
-   */
+  /** Programmatically open the hidden native file chooser. */
   triggerFileInput(): void {
     this.fileInput.nativeElement.click();
   }

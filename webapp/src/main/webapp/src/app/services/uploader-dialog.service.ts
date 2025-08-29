@@ -16,7 +16,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
-import { UploaderDialogComponent } from '../components/uploader-dialog/uploader-dialog.component';
+import { QuickImportDialogComponent } from '../components/uploader-dialog/quick-import-dialog.component';
 
 export interface UploaderDialogOptions {
   /** Callback to execute when the dialog is closed */
@@ -55,7 +55,7 @@ export class UploaderDialogService {
       ...options.initialState
     };
     
-    const modalRef = this.modalService.show(UploaderDialogComponent, { initialState });
+  const modalRef = this.modalService.show(QuickImportDialogComponent, { initialState });
     this.currentModalRef = modalRef;
     
     if (modalRef.content) {
@@ -107,7 +107,7 @@ export class UploaderDialogService {
       return false;
     }
 
-    const component = this.currentModalRef.content as UploaderDialogComponent;
+  const component = this.currentModalRef.content as QuickImportDialogComponent;
     if (component.addFiles) {
       component.addFiles(files);
       return true;

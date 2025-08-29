@@ -1,0 +1,21 @@
+<div class="modal-header">
+  <h4 class="modal-title pull-left">
+    Quick Import
+  </h4>
+  <button type="button" class="close pull-right" aria-label="Close" (click)="bsModalRef.hide()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<div class="modal-body">
+  <tabset>
+    <tab>
+      <ng-template tabHeading>
+        <span class="fa fa-upload"></span> Upload File
+      </ng-template>
+  <app-quick-import-upload-tab [preSelectedFiles]="preSelectedFiles"></app-quick-import-upload-tab>
+    </tab>
+  </tabset>
+</div>
+<div class="modal-footer">
+  <button type="button" class="btn btn-default" (click)="bsModalRef.hide()">{{closeBtnName}}</button>
+</div>
