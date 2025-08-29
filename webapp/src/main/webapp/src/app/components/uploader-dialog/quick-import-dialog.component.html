@@ -10,9 +10,15 @@
   <tabset>
     <tab>
       <ng-template tabHeading>
-        <span class="fa fa-upload"></span> Upload File
+        <span class="fa fa-upload"></span> Upload Artifact
       </ng-template>
-  <app-quick-import-upload-tab [preSelectedFiles]="preSelectedFiles"></app-quick-import-upload-tab>
+      <app-quick-import-upload-tab [preSelectedFiles]="preSelectedFiles"></app-quick-import-upload-tab>
+    </tab>
+    <tab>
+      <ng-template tabHeading>
+        <span class="fa fa-download"></span> Download Artifact
+      </ng-template>
+      <app-quick-import-download-tab></app-quick-import-download-tab>
     </tab>
   </tabset>
 </div>
