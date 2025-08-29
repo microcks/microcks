@@ -25,6 +25,16 @@ import { UploaderDialogService } from '../../services/uploader-dialog.service';
   styleUrls: ['./drag-drop-overlay.component.css'],
   imports: [CommonModule]
 })
+/**
+ * Component that displays a drag-and-drop overlay when files are dragged over the application.
+ * 
+ * Listens to drag events via `DragDropService` and shows the overlay only if the uploader dialog is not open.
+ * 
+ * @remarks
+ * - Subscribes to drag-over events on initialization and unsubscribes on destruction to prevent memory leaks.
+ * - The overlay visibility is controlled by the `isDragOver` property.
+ * 
+ */
 export class DragDropOverlayComponent implements OnInit, OnDestroy {
   isDragOver = false;
   private subscription?: Subscription;

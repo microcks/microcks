@@ -32,6 +32,16 @@ export interface UploaderDialogOptions {
 @Injectable({
   providedIn: 'root'
 })
+/**
+ * Service for managing the artifact uploader dialog within the application.
+ * 
+ * Provides methods to open the uploader dialog, add files to an open dialog,
+ * check dialog state, and register/unregister page refresh callbacks for specific routes.
+ * 
+ * Handles dialog lifecycle, including invoking custom close callbacks and
+ * route-specific refresh logic when the dialog is closed.
+ *
+ */
 export class UploaderDialogService {
   
   private currentModalRef: BsModalRef | null = null;

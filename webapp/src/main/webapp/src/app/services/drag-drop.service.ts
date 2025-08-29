@@ -21,6 +21,26 @@ import { UploaderDialogService } from './uploader-dialog.service';
 @Injectable({
   providedIn: 'root'
 })
+/**
+ * Service to handle global drag-and-drop file operations in the application.
+ *
+ * Registers global event listeners for drag-and-drop events on the document,
+ * manages drag-over state via an observable, and coordinates file uploads
+ * through the `UploaderDialogService`.
+ *
+ * - Emits `true` on `dragOver$` when files are dragged over the document.
+ * - Emits `false` when drag leaves the document or after a drop.
+ * - Handles dropped files by opening or updating the uploader dialog.
+ * - Ensures dialog operations run inside Angular's zone for proper change detection.
+ * - Provides a `destroy()` method to clean up event listeners and complete the observable.
+ *
+ * @example
+ * // Subscribe to drag-over state
+ * dragDropService.dragOver$.subscribe(isOver => { ... });
+ *
+ * @remarks
+ * Call `destroy()` when the service is no longer needed to avoid memory leaks.
+ */
 export class DragDropService {
   private dragOverSubject = new Subject<boolean>();
   public dragOver$ = this.dragOverSubject.asObservable();
