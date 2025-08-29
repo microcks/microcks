@@ -85,7 +85,7 @@ import { ServiceRefsDialogComponent } from './service-refs.dialog';
   ],
   providers: [ImportersPageComponent]
 })
-export class ImportersPageComponent implements OnInit, OnDestroy {
+export class ImportersPageComponent implements OnInit {
 
   modalRef?: BsModalRef;
   importJobs?: ImportJob[];
