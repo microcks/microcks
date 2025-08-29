@@ -54,4 +54,36 @@ public class TestFetchController {
       String authHeader = request.getHeader("Authorization");
       return ResponseEntity.ok("Headers received - Custom: " + customHeader + ", Auth: " + authHeader);
    }
+
+   public static class TestFetchResponse {
+      private String message;
+      private int status;
+
+      public TestFetchResponse(String message, int status) {
+         this.message = message;
+         this.status = status;
+      }
+
+      public String getMessage() {
+         return message;
+      }
+
+      public void setMessage(String message) {
+         this.message = message;
+      }
+
+      public int getStatus() {
+         return status;
+      }
+
+      public void setStatus(int status) {
+         this.status = status;
+      }
+   }
+
+   @GetMapping("/test-fetch-json")
+   public ResponseEntity<TestFetchResponse> testFetchJson() {
+      TestFetchResponse response = new TestFetchResponse("Hello from test-fetch-json endpoint!", 200);
+      return ResponseEntity.ok(response);
+   }
 }

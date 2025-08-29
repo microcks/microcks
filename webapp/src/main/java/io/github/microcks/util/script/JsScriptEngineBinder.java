@@ -40,12 +40,15 @@ import org.apache.hc.client5.http.classic.methods.HttpPatch;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ParseException;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -242,10 +245,9 @@ public class JsScriptEngineBinder {
             }
 
             // Add body for methods that support it
-            if (body != null
-                  && (request instanceof HttpPost || request instanceof HttpPut || request instanceof HttpPatch)) {
+            if ((request instanceof HttpPost || request instanceof HttpPut || request instanceof HttpPatch)
+                  && body != null) {
                StringEntity entity = new StringEntity(body);
-               // TODO: proper handling of alternative entity types
                request.setEntity(entity);
             }
 
@@ -254,8 +256,10 @@ public class JsScriptEngineBinder {
                String responseBody = response.getEntity() != null ? EntityUtils.toString(response.getEntity()) : "";
                return new FetchResponse(status, responseBody);
             }
-         } catch (Exception e) {
-            return new FetchResponse(0, e.toString());
+         } catch (IOException e) {
+            throw new UncheckedIOException("Failed to read response from server", e);
+         } catch (ParseException e) {
+            throw new RuntimeException("Failed to parse response from server", e);
          }
       }
 
