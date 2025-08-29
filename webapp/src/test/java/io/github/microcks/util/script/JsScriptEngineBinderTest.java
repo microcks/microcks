@@ -27,7 +27,6 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import io.github.microcks.web.AbstractBaseIT;
 
@@ -43,16 +42,10 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             """);
 
       String body = "content";
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-      try {
-         // Evaluating request with script coming from operation dispatcher rules.
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
-
-         assertEquals(body, result);
-      } catch (Exception e) {
-         fail("Exception should no be thrown");
-      }
+      assertEquals(body, result);
    }
 
    @Test
@@ -63,19 +56,13 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return fooHeader[0];
             """);
 
-      String body = "content";
       MockHttpServletRequest request = new MockHttpServletRequest();
       request.addHeader("foo", "bar");
 
-      try {
-         // Evaluating request with script coming from operation dispatcher rules.
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, null, null, request);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertEquals("bar", result);
-      } catch (Exception e) {
-         fail("Exception should no be thrown");
-      }
+      assertEquals("bar", result);
    }
 
    @Test
@@ -86,19 +73,14 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return fooParam ?? "null";
             """);
 
-      String body = "content";
       MockHttpServletRequest request = new MockHttpServletRequest();
       Map<String, String> uriParameters = new HashMap<>();
       uriParameters.put("foo", "bar");
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, null, null, request, uriParameters);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request, uriParameters);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertEquals("bar", result);
-      } catch (Exception e) {
-         fail("Exception should no be thrown");
-      }
+      assertEquals("bar", result);
    }
 
    @Test
@@ -111,16 +93,12 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
       Map<String, Object> context = new HashMap<>();
       String body = "content";
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, context, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(body, context, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertEquals(body, result);
-         assertTrue(context.containsKey("foo"));
-         assertEquals("bar", context.get("foo"));
-      } catch (Exception e) {
-         fail("Exception should no be thrown");
-      }
+      assertEquals(body, result);
+      assertTrue(context.containsKey("foo"));
+      assertEquals("bar", context.get("foo"));
    }
 
    @Test
@@ -161,16 +139,12 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
       store.put("foo", "fooValue");
       store.put("baz", "bazValue");
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext("body", context, store, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext("body", context, store, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertEquals("fooValue", result);
-         assertEquals("barValue", store.get("bar"));
-         assertNull(store.get("baz"));
-      } catch (Exception e) {
-         fail("Exception should no be thrown");
-      }
+      assertEquals("fooValue", result);
+      assertEquals("barValue", store.get("bar"));
+      assertNull(store.get("baz"));
    }
 
    @Test
@@ -184,15 +158,11 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return response.status + ':' + (body.includes('test-fetch') ? 'ok' : 'fail');
             """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("200:"));
-         assertTrue(result.endsWith(":ok"));
-      } catch (Exception e) {
-         fail("fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("200:"));
+      assertTrue(result.endsWith(":ok"));
    }
 
    @Test
@@ -206,15 +176,11 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return response.status + ':' + (body.includes('POST received') ? 'ok' : 'fail');
             """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("200:"));
-         assertTrue(result.endsWith(":ok"));
-      } catch (Exception e) {
-         fail("POST fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("200:"));
+      assertTrue(result.endsWith(":ok"));
    }
 
    @Test
@@ -228,15 +194,11 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return response.status + ':' + (body.includes('PUT received') ? 'ok' : 'fail');
             """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("200:"));
-         assertTrue(result.endsWith(":ok"));
-      } catch (Exception e) {
-         fail("PUT fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("200:"));
+      assertTrue(result.endsWith(":ok"));
    }
 
    @Test
@@ -250,15 +212,11 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return response.status + ':' + (body.includes('DELETE received') ? 'ok' : 'fail');
             """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("200:"));
-         assertTrue(result.endsWith(":ok"));
-      } catch (Exception e) {
-         fail("DELETE fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("200:"));
+      assertTrue(result.endsWith(":ok"));
    }
 
    @Test
@@ -272,15 +230,11 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return response.status + ':' + (body.includes('PATCH received') ? 'ok' : 'fail');
             """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("200:"));
-         assertTrue(result.endsWith(":ok"));
-      } catch (Exception e) {
-         fail("PATCH fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("200:"));
+      assertTrue(result.endsWith(":ok"));
    }
 
    @Test
@@ -299,15 +253,11 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
                   return response.status + ':' + (body.includes('custom-value') && body.includes('Bearer token123') ? 'ok' : 'fail');
                   """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("200:"));
-         assertTrue(result.endsWith(":ok"));
-      } catch (Exception e) {
-         fail("Headers fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("200:"));
+      assertTrue(result.endsWith(":ok"));
    }
 
    @Test
@@ -326,15 +276,11 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return response.status + ':' + (responseBody.includes('POST received') ? 'ok' : 'fail');
             """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("200:"));
-         assertTrue(result.endsWith(":ok"));
-      } catch (Exception e) {
-         fail("POST with headers fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("200:"));
+      assertTrue(result.endsWith(":ok"));
    }
 
    @Test
@@ -346,14 +292,10 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
             return response.status + ':' + (response.status === 0 ? 'error-handled' : 'unexpected');
             """);
 
-      try {
-         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
-         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("0:"));
-         assertTrue(result.endsWith(":error-handled"));
-      } catch (Exception e) {
-         fail("Invalid method fetch threw exception: " + e.getMessage());
-      }
+      assertTrue(result.startsWith("0:"));
+      assertTrue(result.endsWith(":error-handled"));
    }
 }
