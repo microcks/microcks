@@ -147,6 +147,16 @@ class DispatchCriteriaHelperTest {
          // Dispatch string parts are sorted.
          String dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(paramRule, operationName, requestPath);
          assertEquals("/component=myComp/version=1.2", dispatchCriteria);
+
+
+         // Add more tests with different keys that will be not naturally ordered in default Map impl.
+         requestPath = "/deployment/byComponent/1.2/myComp";
+         operationName = "/deployment/byComponent/{seconda}/{first}";
+         paramRule = "first && seconda";
+
+         // Dispatch string parts are sorted.
+         dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(paramRule, operationName, requestPath);
+         assertEquals("/first=myComp/seconda=1.2", dispatchCriteria);
       }
 
       @Test
