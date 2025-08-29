@@ -246,12 +246,7 @@ export class ImportersPageComponent implements OnInit {
   }
 
   openArtifactUploader(): void {
-    this.uploaderDialogService.openArtifactUploader({
-      onClose: () => {
-        this.getImportJobs();
-        this.countImportJobs();
-      }
-    });
+    this.uploaderDialogService.openArtifactUploader();
   }
 
   openServiceRefs(serviceRefs: ServiceRef[]): void {
