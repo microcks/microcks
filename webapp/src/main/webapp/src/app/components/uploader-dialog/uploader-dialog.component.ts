@@ -38,8 +38,8 @@ import { TabsModule } from 'ngx-bootstrap/tabs';
     FileUploadModule,
     FormsModule,
     ReactiveFormsModule,
-  CommonModule,
-  TabsModule
+    CommonModule,
+    TabsModule
   ],
 })
 export class UploaderDialogComponent implements OnInit {
