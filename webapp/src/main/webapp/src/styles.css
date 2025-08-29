@@ -51,6 +51,7 @@
     --text-muted-2: #757575; /* text-muted-2: tertiary labels */
     --background: #fff; /* background: main background */
     --accent-text: #fff; /* accent-text: links, highlights and button text color */
+  --overlay-scrim: rgba(0, 0, 0, 0.8); /* overlay-scrim: drag/drop backdrop */
 }
 
 .breadcrumb-bar {
@@ -381,6 +382,7 @@ pre.hljs {
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
+  font-feature-settings: 'liga';
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }

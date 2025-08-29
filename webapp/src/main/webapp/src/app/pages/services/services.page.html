@@ -6,14 +6,17 @@
 
 <h1>
   APIs &amp; Services
-  <div class="pull-right">
+  <div class="pull-right" >
+    <button class="btn btn-default" (click)="openArtifactUploader()">
+      <span class="fa fa-upload"></span> Upload
+    </button>&nbsp;
     <button class="btn btn-primary" (click)="openCreateDirectAPI()">
       <span class="fa fa-plus"></span> Add Direct API
     </button>
   </div>
 </h1>
-<small> These are the APIs | Services managed by Microcks. You can discover new ones adding Import Job or creating a new
-  Direct API...</small>
+<small> These are the APIs | Services managed by Microcks. You can discover new ones adding Import Job, creating a new
+  Direct API or uploading a specification...</small>
 
 <div class="container-fluid">
   <div id="pf-list-standard" class="list-group list-view-pf list-view-pf-view">

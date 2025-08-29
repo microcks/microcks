@@ -39,6 +39,7 @@ import { VersionInfoService } from '../../services/versioninfo.service';
 import { User } from '../../models/user.model';
 import { ConfigService } from '../../services/config.service';
 import { KeycloakAuthenticationService } from '../../services/auth-keycloak.service';
+import { UploaderDialogService } from '../../services/uploader-dialog.service';
 
 // Thanks to https://github.com/onokumus/metismenu/issues/110#issuecomment-317254128
 //import * as $ from 'jquery';
@@ -67,7 +68,8 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
     private modalService: BsModalService,
     private versionInfoSvc: VersionInfoService,
     private config: ConfigService,
-    private router: Router
+    private router: Router,
+    private uploaderDialogService: UploaderDialogService
   ) {}
 
   ngOnInit() {
@@ -205,5 +207,9 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
 
   public hasFeatureEnabled(feature: string): boolean {
     return this.config.hasFeatureEnabled(feature);
+  }
+
+  public openQuickImportDialog(): void {
+    this.uploaderDialogService.openArtifactUploader();
   }
 }

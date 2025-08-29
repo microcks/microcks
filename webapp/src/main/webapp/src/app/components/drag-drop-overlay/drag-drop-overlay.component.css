@@ -1,0 +1,44 @@
+.drag-drop-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--overlay-scrim);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.drag-drop-overlay.active {
+  display: flex;
+}
+
+.drag-drop-content {
+  text-align: center;
+  color: var(--accent-text);
+  padding: 40px;
+  border: 3px dashed var(--primary-500);
+  border-radius: 10px;
+  /* Use a subtle tint of primary with transparency, reuse existing token */
+  background-color: color-mix(in srgb, var(--primary-500) 10%, transparent);
+  max-width: 400px;
+}
+
+.drag-drop-icon {
+  margin-bottom: 20px;
+}
+
+.drag-drop-content h2 {
+  margin-bottom: 10px;
+  font-size: 24px;
+  color: var(--primary-500);
+}
+
+.drag-drop-content p {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
