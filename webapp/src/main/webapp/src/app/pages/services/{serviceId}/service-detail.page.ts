@@ -100,6 +100,9 @@ export class ServiceDetailPageComponent implements OnInit {
   operationsListConfig!: ListConfig;
   notifications: Notification[] = [];
   urlType: string = 'raw';
+  // Deep-linking state from URL
+  private qpOperationName: string | null = null;
+  activeExchangeName: string | null = null;
 
   aiCopilotSamples: boolean = false;
   aiCopilotTaskId: string | null = null;
@@ -144,6 +147,10 @@ export class ServiceDetailPageComponent implements OnInit {
         return this.sortOperations(o1, o2);
       });
       this.updateAICopilotSamplesFlag(view);
+      // If deep-link operation present, expand it now that operations are loaded
+      if (this.qpOperationName) {
+        this.expandOperation(this.qpOperationName);
+      }
     });
 
     // Fallback
@@ -172,6 +179,18 @@ export class ServiceDetailPageComponent implements OnInit {
       showRadioButton: false,
       useExpandItems: true,
     } as ListConfig;
+
+    // Listen to query params for deep-link selection
+    this.route.queryParamMap.subscribe((qp) => {
+      const op = qp.get('operation');
+      const ex = qp.get('exchange');
+      this.qpOperationName = op;
+      this.activeExchangeName = ex;
+      // Try to expand the matching operation if view already loaded
+      if (op && this.operations) {
+        this.expandOperation(op);
+      }
+    });
   }
 
   private refreshServiceView(): void {
@@ -188,6 +207,18 @@ export class ServiceDetailPageComponent implements OnInit {
     });
     // Then trigger view reevaluation to update the samples list and the notifications toaster.
     this.ref.detectChanges();
+  }
+
+  // Expand operation row in the list if names match
+  private expandOperation(operationName: string): void {
+    if (!this.operations) return;
+    const item = this.operations.find((o) => o.name === operationName);
+    if (item) {
+      // Mark as expanded; ListComponent uses this flag
+      (item as any).expanded = true;
+      // Trigger change detection so child gets rendered
+      this.ref.detectChanges();
+    }
   }
 
   private updateAICopilotSamplesFlag(view: ServiceView): void {

@@ -20,6 +20,7 @@ import { FormsModule } from '@angular/forms';
 import { TabsetComponent, TabsModule } from 'ngx-bootstrap/tabs';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
 import { HighlightAuto } from 'ngx-highlightjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { NotificationService } from '../../../../../components/patternfly-ng/notification';
 
@@ -35,7 +36,8 @@ import { ConfigService } from '../../../../../services/config.service';
     FormsModule,
     HighlightAuto,
     TabsModule,
-    TooltipModule
+    TooltipModule,
+    RouterLink
   ]
 })
 export class ExchangesTabsetComponent {
@@ -68,9 +70,18 @@ export class ExchangesTabsetComponent {
   @Input() public removeVerbInUrl!: (operationName: string) => string;
   @Input() public asyncAPIFeatureEndpoint!: (binding: string) => string;
 
+  // Name of the exchange tab to activate on init (deep-linking)
+  @Input() public activeExchangeName: string | null | undefined;
+
+  constructor(private router: Router, private route: ActivatedRoute) {}
+
   public shouldRender(index: number) {
-    const activeTab = this.tabs.tabs.filter((tab) =>  tab.active )[0];
-    return index == this.tabs.tabs.indexOf(activeTab);
+    const activeTab = this.tabs.tabs.find((tab) => tab.active);
+    if (!activeTab) {
+      // Fallback: show the first tab content if none is marked active
+      return index === 0;
+    }
+    return index === this.tabs.tabs.indexOf(activeTab);
   }
 
   getReqRespPair(exchange: Exchange): RequestResponsePair {
@@ -78,5 +89,51 @@ export class ExchangesTabsetComponent {
   }
   getUnidirEvent(exchange: Exchange): UnidirectionalEvent {
     return exchange as UnidirectionalEvent;
+  }
+
+  private normalizeName(val: string | null | undefined): string | null {
+    if (val == null) return null;
+    try {
+      return val
+        .toString()
+        .trim()
+        .toLowerCase();
+    } catch {
+      return val as any;
+    }
+  }
+
+  // Declarative active check for template binding
+  public isActive(exchange: Exchange): boolean {
+    const target = this.normalizeName(this.activeExchangeName);
+    if (target == null) return false;
+    return this.normalizeName(this.getExchangeName(exchange)) === target;
+  }
+
+  public hasAnyMatch(): boolean {
+    const target = this.normalizeName(this.activeExchangeName);
+    if (target == null) return false;
+    try {
+      const exchanges = this.view.messagesMap[this.item.name] as Exchange[];
+      return exchanges?.some((ex) => this.normalizeName(this.getExchangeName(ex)) === target) || false;
+    } catch {
+      return false;
+    }
+  }
+
+  // Update URL when a tab becomes active
+  public onTabSelected(exchange: Exchange): void {
+    const exchangeName = this.getExchangeName(exchange);
+    const operationName = this.item.name;
+    const qp = this.route.snapshot.queryParamMap;
+    const curOp = qp.get('operation');
+    const curEx = qp.get('exchange');
+    if (curOp === operationName && curEx === exchangeName) return;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { operation: operationName, exchange: exchangeName },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 }
