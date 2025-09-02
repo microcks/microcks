@@ -355,6 +355,12 @@ Here are below the configuration properties of the Amazon SNS support feature:
 > same environment variables. So you have to specify `credentialsSecretRef` on only one of those two services and be sure that the access key and secret
 > access key mounted refers to a IAM account having write access to both services.
 
+### OpenAPI documentation
+
+| Section            | Property      | Description                                                                                                                                                                                                                                                           |
+|--------------------|---------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `features.openapi` | `docTemplate` | **Optional**. The template used for OpenApi documentation. Default is value is `redoc` for [Redocly](https://redocly.com/redoc) template. Using the `elements` value renders the documentation using [Stoplight Elements](https://stoplight.io/open-source/elements). |
+
 ### Examples
 
 You may want to launch custom installation with such a command:
