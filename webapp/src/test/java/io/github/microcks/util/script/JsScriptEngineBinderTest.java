@@ -243,6 +243,43 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
    }
 
    @Test
+   void testBasicFetchApiWorksWithJsonPayloads() {
+      String url = getServerUrl() + "/api/test-fetch-json";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const response = fetch('""" + url + """
+            ');
+            log.info('fetch status: ' + response.status);
+            const body = JSON.parse(response.body);
+            return body.status + ':' + (body.message.includes('test-fetch-json') ? 'ok' : 'fail');
+            """);
+
+      try {
+         Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+         String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+         assertTrue(result.startsWith("200:"));
+         assertTrue(result.endsWith(":ok"));
+      } catch (Exception e) {
+         fail("fetch threw exception: " + e.getMessage());
+      }
+   }
+
+   @Test
+   void testBasicFetchApiWithErrors() {
+      String url = "http://inexistent:6543/api/test-fetch-inexistent";
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            log.info("the following fetch will fail");
+            const response = fetch('""" + url + """
+            ');
+            """);
+
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+      assertNull(result);
+   }
+
+   @Test
    void testFetchApiWithPostMethod() {
       String url = getServerUrl() + "/api/test-fetch";
       String script = JsScriptEngineBinder.wrapIntoFunction("""
@@ -388,17 +425,17 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
    void testFetchApiWithInvalidMethod() {
       String url = getServerUrl() + "/api/test-fetch";
       String script = JsScriptEngineBinder.wrapIntoFunction("""
+            log.info("going to fail");
             const response = fetch('""" + url + """
             ', 'INVALID');
-            return response.status + ':' + (response.status === 0 ? 'error-handled' : 'unexpected');
+            return "unreachable";
             """);
 
       try {
          Engine engine = JsScriptEngineBinder.buildEvaluationContext(null, null, null, null);
          String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
-         assertTrue(result.startsWith("0:"));
-         assertTrue(result.endsWith(":error-handled"));
+         assertNull(result);
       } catch (Exception e) {
          fail("Invalid method fetch threw exception: " + e.getMessage());
       }
