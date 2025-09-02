@@ -1,0 +1,104 @@
+/* Override modal width for uploader dialog */
+@media (min-width: 768px) {
+    ::ng-deep .modal-dialog {
+        width: 800px;
+        margin: 30px auto;
+    }
+}
+
+/* Scrollable file list */
+.file-list-container {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid var(--surface-border);
+    border-radius: 4px;
+}
+
+.file-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-bottom: 1px solid var(--axis-line);
+    background-color: var(--surface-offwhite);
+}
+
+.file-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.file-item .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+.file-item [class*="col-"] {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+.file-name {
+    word-break: break-word;
+    overflow-wrap: break-word;
+}
+
+.checkbox label {
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+    line-height: 1.2;
+}
+
+.file-item .btn {
+    white-space: nowrap;
+}
+
+/* Upload placeholder */
+.upload-placeholder {
+    border: 2px dashed var(--surface-border);
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: var(--surface-offwhite);
+    margin: 20px 0;
+    transition: all 0.3s ease;
+}
+
+.upload-placeholder.clickable {
+    cursor: pointer;
+}
+
+.upload-placeholder.clickable:hover {
+    border-color: var(--primary-500);
+    background-color: var(--primary-tint);
+}
+
+.upload-placeholder.clickable:hover .fa {
+    color: var(--primary-500) !important;
+}
+
+.upload-placeholder.clickable:hover h4,
+.upload-placeholder.clickable:hover p {
+    color: var(--primary-500) !important;
+}
+
+.placeholder-content {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.placeholder-icon {
+    margin-bottom: 15px;
+}
+
+.upload-placeholder h4 {
+    margin-bottom: 10px;
+    font-weight: 500;
+}
+
+.upload-placeholder p {
+    margin-bottom: 0;
+    font-size: 14px;
+}
