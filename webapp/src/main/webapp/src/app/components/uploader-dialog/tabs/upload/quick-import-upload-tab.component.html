@@ -10,7 +10,7 @@
       <div class="file-list-container">
         <div *ngFor="let item of uploader.queue; let i = index" class="file-item">
           <div class="row">
-            <div class="col-sm-5 col-md-5">
+            <div class="col-sm-5 col-md-5 file-name-col">
               <span class="fa fa-file-o" style="margin-right: 8px;"></span> 
               <strong class="file-name">{{ item.file.name }}</strong>
               <br>
@@ -31,7 +31,7 @@
             </div>
             <div class="col-sm-2 col-md-2 text-right remove-button-col">
               <button type="button" class="btn btn-xs btn-danger" (click)="removeFile(item)" title="Remove file">
-                <span class="fa fa-times"></span> Remove
+                <span class="pficon pficon-close"></span> Remove
               </button>
             </div>
           </div>
@@ -62,7 +62,7 @@
 
   <!-- Alternative file input when files are already present -->
   <div *ngIf="uploader.queue.length > 0" style="margin-bottom: 10px;">
-    <button type="button" class="btn btn-default btn-sm" (click)="triggerFileInput()">
+    <button type="button" class="btn btn-default" (click)="triggerFileInput()">
       <span class="fa fa-plus"></span> Add More Files
     </button>
   </div>
