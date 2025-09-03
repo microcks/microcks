@@ -19,8 +19,8 @@
 
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>3.15.4</quarkus.platform.version>
-    <quarkus-plugin.version>3.15.4</quarkus-plugin.version>
+    <quarkus.platform.version>3.20.2.2</quarkus.platform.version>
+    <quarkus-plugin.version>3.20.2.2</quarkus-plugin.version>
 
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
   </properties>
@@ -46,7 +46,7 @@
     <dependency>
       <groupId>io.quarkiverse.reactivemessaging.http</groupId>
       <artifactId>quarkus-reactive-messaging-http</artifactId>
-      <version>2.0.2</version>
+      <version>2.6.0</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
