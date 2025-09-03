@@ -31,6 +31,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -49,6 +50,8 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
 @Testcontainers
 class TestControllerIT extends AbstractBaseIT {
 
+   private static Network network = Network.newNetwork();
+
    @Container
    public static GenericContainer<?> pastryImpl = new GenericContainer("quay.io/microcks/quarkus-api-pastry:latest")
          .withExposedPorts(8282);
@@ -60,12 +63,18 @@ class TestControllerIT extends AbstractBaseIT {
    @Container
    public static GenericContainer<?> postmanRunner = new GenericContainer(
          "quay.io/microcks/microcks-postman-runtime:nightly")
-               .waitingFor(Wait.forLogMessage(".*postman-runtime wrapper listening on port.*", 1))
-               .withExposedPorts(3000);
+               .waitingFor(Wait.forLogMessage(".*postman-runtime wrapper listening on port.*", 1)).withNetwork(network)
+               .withNetworkAliases("postman").withExposedPorts(3000).withAccessToHost(true);
 
    @Container
    public static GenericContainer<?> goodPastryImpl = new GenericContainer("quay.io/microcks/contract-testing-demo:03")
-         .withExposedPorts(3003);
+         .withNetwork(network).withNetworkAliases("good-pastry-impl").withExposedPorts(3003);
+
+   @DynamicPropertySource
+   static void postmanRunnerEndpoint(DynamicPropertyRegistry registry) {
+      registry.add("postman-runner.url", () -> String.format("http://localhost:%d", postmanRunner.getMappedPort(3000)));
+   }
+
 
    @Autowired
    private TestRunnerService testRunnerService;
@@ -116,12 +125,6 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals("pastries_json", pairs.get(0).getRequest().getName());
    }
 
-
-   @DynamicPropertySource
-   static void postmanRunnerEndpoint(DynamicPropertyRegistry registry) {
-      registry.add("postman-runner.url", () -> String.format("http://localhost:%d", postmanRunner.getMappedPort(3000)));
-   }
-
    @Test
    void testPostmanTesting() {
       // Upload API Pastry Contract Testing demo reference artifacts.
@@ -129,8 +132,9 @@ class TestControllerIT extends AbstractBaseIT {
       uploadArtifactFile("target/test-classes/io/github/microcks/util/postman/apipastries-postman-collection.json",
             false);
 
-      String testEndpoint = String.format("http://host.docker.internal:%d", goodPastryImpl.getMappedPort(3003));
-      testRunnerService.setTestsCallbackUrl(getServerUrl().replace("localhost", "host.docker.internal"));
+      org.testcontainers.Testcontainers.exposeHostPorts(getServerPort());
+      String testEndpoint = "http://good-pastry-impl:3003";
+      testRunnerService.setTestsCallbackUrl("http://host.testcontainers.internal:" + getServerPort());
 
       StringBuilder testRequest = new StringBuilder("{").append("\"serviceId\": \"API Pastries:0.0.1\", ")
             .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ").append("\"runnerType\": \"POSTMAN\", ")
