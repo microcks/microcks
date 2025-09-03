@@ -57,9 +57,10 @@ class TestControllerIT extends AbstractBaseIT {
          .withExposedPorts(9000);
 
    @Container
-   public static GenericContainer<?> postmanRunner = new GenericContainer("quay.io/microcks/microcks-postman-runtime:nightly")
-         .waitingFor(Wait.forLogMessage(".*postman-runtime wrapper listening on port.*", 1))
-         .withExposedPorts(3000);
+   public static GenericContainer<?> postmanRunner = new GenericContainer(
+         "quay.io/microcks/microcks-postman-runtime:nightly")
+               .waitingFor(Wait.forLogMessage(".*postman-runtime wrapper listening on port.*", 1))
+               .withExposedPorts(3000);
 
    @Container
    public static GenericContainer<?> goodPastryImpl = new GenericContainer("quay.io/microcks/contract-testing-demo:03")
@@ -124,7 +125,8 @@ class TestControllerIT extends AbstractBaseIT {
    void testPostmanTesting() {
       // Upload API Pastry Contract Testing demo reference artifacts.
       uploadArtifactFile("target/test-classes/io/github/microcks/util/postman/apipastries-openapi.yaml", true);
-      uploadArtifactFile("target/test-classes/io/github/microcks/util/postman/apipastries-postman-collection.json", false);
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/postman/apipastries-postman-collection.json",
+            false);
 
       String testEndpoint = String.format("http://host.docker.internal:%d", goodPastryImpl.getMappedPort(3003));
       testRunnerService.setTestsCallbackUrl(getServerUrl().replace("localhost", "host.docker.internal"));
@@ -306,11 +308,10 @@ class TestControllerIT extends AbstractBaseIT {
    }
 
    private void waitForTestCompletion(TestResult testResult, int seconds) {
-      await().atMost(seconds, TimeUnit.SECONDS)
-            .pollDelay(500, TimeUnit.MILLISECONDS)
-            .pollInterval(250, TimeUnit.MILLISECONDS)
-            .until(() -> {
-               ResponseEntity<TestResult> resp = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
+      await().atMost(seconds, TimeUnit.SECONDS).pollDelay(500, TimeUnit.MILLISECONDS)
+            .pollInterval(250, TimeUnit.MILLISECONDS).until(() -> {
+               ResponseEntity<TestResult> resp = restTemplate.getForEntity("/api/tests/" + testResult.getId(),
+                     TestResult.class);
                if (resp.getStatusCode().value() == 200) {
                   TestResult tr = resp.getBody();
                   return tr != null && !tr.isInProgress();
