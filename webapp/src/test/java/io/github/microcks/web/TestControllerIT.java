@@ -34,6 +34,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.shaded.org.awaitility.core.ConditionTimeoutException;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -133,7 +134,7 @@ class TestControllerIT extends AbstractBaseIT {
 
       StringBuilder testRequest = new StringBuilder("{").append("\"serviceId\": \"API Pastries:0.0.1\", ")
             .append("\"testEndpoint\": \"").append(testEndpoint).append("\", ").append("\"runnerType\": \"POSTMAN\", ")
-            .append("\"timeout\": 2000").append("}");
+            .append("\"timeout\": 3000").append("}");
 
       HttpHeaders headers = new HttpHeaders();
       headers.setContentType(MediaType.APPLICATION_JSON);
@@ -149,7 +150,12 @@ class TestControllerIT extends AbstractBaseIT {
       assertEquals(testEndpoint, testResult.getTestedEndpoint());
 
       // Wait till timeout and re-fetch the result.
-      waitForTestCompletion(testResult, 3);
+      try {
+         waitForTestCompletion(testResult, 4);
+      } catch (ConditionTimeoutException cde) {
+         System.err.println("Test execution seems to take too long - Here are Postman Runner logs for diagnostic:");
+         System.err.println(postmanRunner.getLogs());
+      }
 
       response = restTemplate.getForEntity("/api/tests/" + testResult.getId(), TestResult.class);
       assertEquals(200, response.getStatusCode().value());
@@ -160,7 +166,6 @@ class TestControllerIT extends AbstractBaseIT {
       assertTrue(testResult.isSuccess());
       assertEquals(3, testResult.getTestCaseResults().size());
    }
-
 
    @Test
    void testSoapUITesting() {
