@@ -29,7 +29,7 @@ services:
       retries: 3
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:0.6.0
+    image: quay.io/microcks/microcks-postman-runtime:0.7.0
     container_name: microcks-postman-runtime
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]

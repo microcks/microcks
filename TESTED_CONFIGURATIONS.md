@@ -16,6 +16,7 @@ a pull request against the community file 🙏
 
 ### Dependencies
 
+* **Microcks Postman Runtime**: 0.7.0
 * **MongoDB**: 4.4.29 - wire protocol version 8 as the minimum
 * **Keycloak**: 26.0.0
 
@@ -35,6 +36,7 @@ a pull request against the community file 🙏
 
 ### Dependencies
 
+* **Microcks Postman Runtime**: 0.6.0
 * **MongoDB**: 4.4.29 - wire protocol version 6 as the minimum
 * **Keycloak**: 26.0.0
 
