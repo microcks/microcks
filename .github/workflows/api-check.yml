@@ -1,9 +1,13 @@
 name: API Tests
-
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to check'
+        required: true
   schedule:
-    - cron: '0 4 * * *'
+    - cron: '0 5 * * *'  # Everyday at 5am UTC
+permissions: read-all
 
 jobs:
   run-api-tests-uber:
@@ -17,6 +21,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch || '1.13.x' }}
 
       - name: Set up dependencies for ${{ matrix.flavor }}
         run: |
