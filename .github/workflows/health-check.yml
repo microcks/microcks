@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.branch || '1.12.x' }}
+          ref: ${{ github.event.inputs.branch || '1.13.x' }}
 
       - name: Install docker-compose
         if: matrix.method == 'docker'
@@ -65,6 +65,8 @@ jobs:
 
       - name: Health-check containers
         run: |
+          # Wait a bit for everything to be really up
+          sleep 20
           # We're already cd'ed into install/<method>-compose by the installer
           ./testsuite/check-health.sh --method "${{ matrix.method }}"
 
@@ -87,17 +89,17 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
-          ref: ${{ github.event.inputs.branch || '1.12.x' }}
+          ref: ${{ github.event.inputs.branch || '1.13.x' }}
 
       - name: Set up Minikube
-        uses: medyagh/setup-minikube@v0.0.14
+        uses: medyagh/setup-minikube@e3c7f79eb1e997eabccc536a6cf318a2b0fe19d9 # v0.0.14
 
       - name: Start Minikube
         run: |
           minikube start --driver=docker
 
       - name: Install Helm
-        uses: azure/setup-helm@v3
+        uses: azure/setup-helm@5119fcb9089d432beecbf79bb2c7915207344b78 # v3.5
         with:
           version: v3.13.1
 
@@ -111,6 +113,8 @@ jobs:
 
       - name: Health-check containers
         run: |
+          # Wait a bit for everything to be really up
+          sleep 20
           # We're already cd'ed into install/<method>-compose by the installer
           ./testsuite/check-health.sh --method helm
 
