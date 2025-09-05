@@ -103,6 +103,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.branch || '1.13.x' }}
 
       - name: Install docker-compose
         run: |
@@ -144,11 +147,11 @@ jobs:
       - name: Get Microcks access token
         if: ${{ matrix.flavor == 'regular-auth' }}
         env:
-          CLIENT_AUTH: bWljcm9ja3Mtc2VydmljZWFjY291bnQ6YWI1NGQzMjktZTQzNS00MWFlLWE5MDAtZWM2YjNmZTE1YzU0Cg=
+          CLIENT_AUTH: bWljcm9ja3Mtc2VydmljZWFjY291bnQtdGVzdDoxYjRkYjdlYi00MDU3LTVkZGYtOTFlMC0zNmRlYzcyMDcxZjU=
           TOKEN_URL: http://localhost:18080/realms/microcks/protocol/openid-connect/token
         id: get_token
         run: |
-          echo "Fetching access token..."
+          echo "Fetching access token for microcks-serviceaccount-test..."
           TOKEN_RESPONSE=$(curl -s -X POST "$TOKEN_URL" \
             -H 'Content-Type: application/x-www-form-urlencoded' \
             -H 'Accept: application/json' \
