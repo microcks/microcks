@@ -1869,4 +1869,93 @@ class OpenAPIImporterTest {
          }
       }
    }
+
+   @Test
+   void testOpenAPIWithFormDataParameters() {
+      // Create a temporary test YAML content
+      String yamlContent = """
+            swagger: "2.0"
+            info:
+              title: FormData Test API
+              version: "1.0.0"
+            host: example.com
+            basePath: /api/v1
+            consumes:
+              - application/x-www-form-urlencoded
+            produces:
+              - application/json
+            paths:
+              /upload:
+                post:
+                  summary: Upload file with form data
+                  parameters:
+                    - name: file
+                      in: formData
+                      description: File to upload
+                      required: true
+                      type: file
+                    - name: description
+                      in: formData
+                      description: File description
+                      required: false
+                      type: string
+                    - name: category
+                      in: formData
+                      description: File category
+                      required: true
+                      type: string
+                      enum: ["image", "document", "video"]
+                  responses:
+                    200:
+                      description: File uploaded successfully
+            """;
+
+      try {
+         // Write temporary test file
+         java.nio.file.Path tempFile = Files.createTempFile("test-formdata-api", ".yaml");
+         Files.write(tempFile, yamlContent.getBytes());
+
+         OpenAPIImporter importer = new OpenAPIImporter(tempFile.toString(), null);
+
+         // Check that basic service properties are there.
+         List<Service> services = importer.getServiceDefinitions();
+         assertEquals(1, services.size());
+         Service service = services.get(0);
+         assertEquals("FormData Test API", service.getName());
+         assertEquals("1.0.0", service.getVersion());
+
+         // Check that operations have been found.
+         assertEquals(1, service.getOperations().size());
+         Operation operation = service.getOperations().iterator().next();
+         assertEquals("POST /upload", operation.getName());
+         assertEquals("POST", operation.getMethod());
+
+         // Check that parameter constraints have been correctly processed
+         // (formData parameters should not cause IllegalArgumentException)
+         assertEquals(2, operation.getParameterConstraints().size()); // Only required parameters
+
+         // Verify required parameters are correctly identified
+         boolean foundFileParam = false;
+         boolean foundCategoryParam = false;
+         for (ParameterConstraint constraint : operation.getParameterConstraints()) {
+            if ("file".equals(constraint.getName())) {
+               assertEquals(ParameterLocation.formData, constraint.getIn());
+               assertTrue(constraint.isRequired());
+               foundFileParam = true;
+            } else if ("category".equals(constraint.getName())) {
+               assertEquals(ParameterLocation.formData, constraint.getIn());
+               assertTrue(constraint.isRequired());
+               foundCategoryParam = true;
+            }
+         }
+         assertTrue(foundFileParam, "Required 'file' parameter constraint should be found");
+         assertTrue(foundCategoryParam, "Required 'category' parameter constraint should be found");
+
+         // Clean up temporary file
+         Files.delete(tempFile);
+
+      } catch (IOException | MockRepositoryImportException e) {
+         fail("Exception should not be thrown when processing formData parameters: " + e.getMessage());
+      }
+   }
 }
