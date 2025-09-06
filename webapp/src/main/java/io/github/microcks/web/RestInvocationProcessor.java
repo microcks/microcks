@@ -102,6 +102,9 @@ public class RestInvocationProcessor {
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
 
+   @Value("${mocks.enable-binary-response-decode:false}")
+   private boolean enableBinaryResponseDecode;
+
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
     * @param serviceStateRepository The repository to access service state
@@ -533,19 +536,16 @@ public class RestInvocationProcessor {
 
       byte[] responseContent;
 
-      // If the media type is UTF-8 encodable, render the response as text
-      if (UTF8ContentTypeChecker.isUtf8Encodable(response.getMediaType())) {
+      // Decide if we should treat content as UTF-8 (text) either because feature is disabled or media type is utf-8 encodable.
+      boolean treatAsUtf8 = !enableBinaryResponseDecode
+            || UTF8ContentTypeChecker.isUtf8Encodable(response.getMediaType());
+
+      if (treatAsUtf8) {
          String content = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
                dispatchContext.requestContext(), response);
          responseContent = content != null ? content.getBytes(StandardCharsets.UTF_8) : null;
 
-         if (responseContent != null) {
-            log.debug("Returning response content: {}", content);
-         } else {
-            log.debug("Returning empty response content");
-         }
       } else {
-         // If not UTF-8, attempt to decode the content from Base64 (used for binary responses)
          responseContent = tryDecodeBase64Content(response);
       }
 

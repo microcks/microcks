@@ -18,7 +18,8 @@ public class UTF8ContentTypeCheckerTest {
       @DisplayName("Should match all known valid content types")
       void shouldMatchValidContentTypes() {
          List<String> validTypes = List.of("text/plain", "text/html", "application/json", "application/vnd.api+json",
-               "application/soap+xml", "application/javascript", "application/x-www-form-urlencoded");
+               "application/soap+xml", "application/javascript", "application/x-www-form-urlencoded", "application/xml",
+               "text/xml", "application/json; charset=utf-8");
 
          for (String type : validTypes) {
             assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to match: " + type);
@@ -71,6 +72,70 @@ public class UTF8ContentTypeCheckerTest {
                () -> assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(" text/plain "), "Should match with whitespace"),
                () -> assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(" image/png "),
                      "Should reject even with whitespace"));
+      }
+   }
+
+   @Nested
+   @DisplayName("Structured Syntax & Parameters")
+   class StructuredSyntaxAndParameters {
+      @Test
+      @DisplayName("Should match +json and +xml structured syntax types")
+      void shouldMatchStructuredSyntaxTypes() {
+         List<String> structured = List.of(
+               "application/hal+json",
+               "application/soap+xml",
+               "application/vnd.custom.resource+json",
+               "application/vnd.custom.resource+xml",
+               "Application/Vnd.Custom.Resource+Json", // case-insensitive
+               "application/problem+json" // RFC 7807 problem details
+         );
+         for (String type : structured) {
+            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected structured suffix to match: " + type);
+         }
+      }
+
+      @Test
+      @DisplayName("Should match when parameters are present in various forms")
+      void shouldMatchWithParameters() {
+         List<String> withParams = List.of(
+               "application/json;charset=utf-8",
+               "application/json; charset=UTF-8",
+               "application/json;version=1; charset=utf-8",
+               "application/hal+json; profile=some; charset=utf-8",
+               "application/soap+xml;action=urn:foo;Charset=Utf-8",
+               "text/plain; format=flowed; charset=iso-8859-1" // text/* always accepted even if non-utf charset declared
+         );
+         for (String type : withParams) {
+            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to match with parameters: " + type);
+         }
+      }
+
+      @Test
+      @DisplayName("Should reject media types that do not have +json/+xml even if they look similar")
+      void shouldRejectInvalidStructuredSyntax() {
+         List<String> invalid = List.of(
+               "application/hal+jsn",     // typo suffix
+               "application/soap+xmll",   // typo suffix
+               "application/vnd.foo+bin", // unsupported +bin suffix
+               "application/pdf; charset=utf-8",
+               "image/png; name=image.png"
+         );
+         for (String type : invalid) {
+            assertFalse(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to reject invalid: " + type);
+         }
+      }
+
+      @Test
+      @DisplayName("Should handle excess internal whitespace around separators")
+      void shouldHandleInternalWhitespace() {
+         List<String> types = List.of(
+               "  application/json  ;  charset=utf-8  ",
+               "text/plain   ;   format=flowed",
+               "application/soap+xml   ;action=urn:foo" // no space before semicolon is fine
+         );
+         for (String type : types) {
+            assertTrue(UTF8ContentTypeChecker.isUtf8Encodable(type), "Expected to match despite whitespace: " + type);
+         }
       }
    }
 }
