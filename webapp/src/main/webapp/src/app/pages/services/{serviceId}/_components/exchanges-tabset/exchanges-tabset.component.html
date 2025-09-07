@@ -3,8 +3,11 @@
     <ng-template tabHeading (click)="onTabSelected(exchange)">
       <a [routerLink]="[]" [queryParams]="{ operation: item.name, exchange: getExchangeName(exchange) }" queryParamsHandling="merge" class="tab-heading-link" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
         <span>{{ getExchangeName(exchange) }}</span>
-        <span class="learn-more-inline">
+        <span class="learn-more-inline" id="source-artifact-icon">
           <i tooltip="Source artifact: {{ getExchangeSourceArtifact(exchange) }}" containerClass="tooltip-break" class="pficon pficon-resources-almost-empty" aria-hidden="true"></i>
+        </span>
+        <span class="" id="copy-exchange-link-icon">
+          <i class="fa fa-link" style="cursor:pointer" (click)="copyExchangeLink(exchange)"></i>
         </span>
       </a>
     </ng-template>

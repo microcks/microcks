@@ -136,4 +136,28 @@ export class ExchangesTabsetComponent {
       replaceUrl: true
     });
   }
+
+  /** Build an absolute URL pointing to the provided exchange (deep link). */
+  public buildExchangeLink(exchange: Exchange): string {
+    try {
+      const tree = this.router.createUrlTree([], {
+        relativeTo: this.route,
+        queryParams: { operation: this.item.name, exchange: this.getExchangeName(exchange) },
+        queryParamsHandling: 'merge'
+      });
+      const relative = this.router.serializeUrl(tree);
+      const base = window.location.origin;
+      return base + '/#' + relative;
+    } catch {
+      return '';
+    }
+  }
+
+  /** Copy the deep link to clipboard */
+  public copyExchangeLink(exchange: Exchange): void {
+    const link = this.buildExchangeLink(exchange);
+    if (link) {
+      this.copyToClipboard(link, 'Mock link');
+    }
+  }
 }
