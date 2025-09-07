@@ -32,6 +32,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 
@@ -65,6 +66,7 @@ class RestInvocationProcessorTest {
       request = mock(HttpServletRequest.class);
 
       processor = new RestInvocationProcessor(stateRepo, responseRepo, appContext, proxyService);
+      ReflectionTestUtils.setField(processor, "enableBinaryResponseDecode", true);
    }
 
    /** Helper method to build a mock response object. */
