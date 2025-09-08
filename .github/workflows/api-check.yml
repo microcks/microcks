@@ -1,4 +1,5 @@
-name: API Testson:
+name: API Tests
+on:
   workflow_dispatch:
     inputs:
       branch:
