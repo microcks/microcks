@@ -15,11 +15,11 @@
  */
 package io.github.microcks.util.el;
 
-import io.github.microcks.util.el.function.NowELFunction;
-import io.github.microcks.util.el.function.PutInContextELFunction;
-import io.github.microcks.util.el.function.RandomBooleanELFunction;
-import io.github.microcks.util.el.function.UUIDELFunction;
+import io.github.microcks.util.el.function.*;
 import org.junit.jupiter.api.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -50,6 +50,47 @@ class ExpressionParserTest {
 
       assertEquals("Hello ", ((LiteralExpression) expressions[0]).getValue(context));
       assertEquals(" it's ", ((LiteralExpression) expressions[2]).getValue(context));
+   }
+
+   @Test
+   void testParseExpressionsDynamicFaker() {
+      String template = "Hello {{ faker(name.firstName) }} {{ faker(name.lastName) }}, it's {{ now() }} today, year is {{ faker(number.numberBetween, 10, 20) }}";
+
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.registerFunction("now", NowELFunction.class);
+      context.registerFunction("faker", io.github.microcks.util.el.function.DynamicFakerELFunction.class);
+      context.setVariable("request", new EvaluableRequest("{'name': 'Laurent'}", null));
+
+      var expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
+      assertEquals(8, expressions.length);
+      assertInstanceOf(LiteralExpression.class, expressions[0]);
+      assertInstanceOf(FunctionExpression.class, expressions[1]);
+      assertInstanceOf(LiteralExpression.class, expressions[2]);
+      assertInstanceOf(FunctionExpression.class, expressions[3]);
+      assertInstanceOf(LiteralExpression.class, expressions[4]);
+      assertInstanceOf(FunctionExpression.class, expressions[5]);
+      assertInstanceOf(LiteralExpression.class, expressions[6]);
+      assertEquals("Hello ", expressions[0].getValue(context));
+      assertEquals(" ", expressions[2].getValue(context));
+      assertEquals(", it's ", expressions[4].getValue(context));
+      assertEquals(" today, year is ", expressions[6].getValue(context));
+      assertInstanceOf(DynamicFakerELFunction.class, ((FunctionExpression) expressions[1]).getFunction());
+      assertInstanceOf(DynamicFakerELFunction.class, ((FunctionExpression) expressions[3]).getFunction());
+      assertInstanceOf(NowELFunction.class, ((FunctionExpression) expressions[5]).getFunction());
+      assertInstanceOf(DynamicFakerELFunction.class, ((FunctionExpression) expressions[7]).getFunction());
+      assertEquals(Arrays.asList("name.firstName"),
+            Arrays.asList(((FunctionExpression) expressions[1]).getFunctionArgs()));
+      assertEquals(Arrays.asList("name.lastName"),
+            Arrays.asList(((FunctionExpression) expressions[3]).getFunctionArgs()));
+      assertEquals(List.of(), Arrays.asList(((FunctionExpression) expressions[5]).getFunctionArgs()));
+      assertEquals(Arrays.asList("number.numberBetween", "10", "20"),
+            Arrays.asList(((FunctionExpression) expressions[7]).getFunctionArgs()));
+
+      for (Expression expression : expressions) {
+         System.out.println("Expression: " + expression + " -> " + expression.getValue(context));
+      }
+
    }
 
    @Test
