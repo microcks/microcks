@@ -206,56 +206,67 @@ public class ProtobufImporter implements MockRepositoryImporter {
       return new ArrayList<>();
    }
 
-   /**
-    * Analyse a protofile imports, resolve and retrieve them from remote to allow protoc to run later.
-    */
-   private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles) {
-      String line = null;
-      try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
-         while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            if (line.startsWith("import ")) {
-               String importStr = line.substring("import ".length() + 1);
-               // Remove semicolon and quotes/double-quotes.
-               if (importStr.endsWith(";")) {
-                  importStr = importStr.substring(0, importStr.length() - 1);
-               }
-               if (importStr.endsWith("\"") || importStr.endsWith("'")) {
-                  importStr = importStr.substring(0, importStr.length() - 1);
-               }
-               if (importStr.startsWith("\"") || importStr.startsWith("'")) {
-                  importStr = importStr.substring(1);
-               }
-               log.debug("Found an import to resolve in protobuf: {}", importStr);
-
-               // Check that this lib is not in built-in ones.
-               if (!importStr.startsWith(BUILTIN_LIBRARY_PREFIX)) {
-                  // Check if import path is locally there.
-                  Path importPath = protoFilePath.getParent().resolve(importStr);
-                  if (!Files.exists(importPath)) {
-                     // Not there, so resolve it remotely and write to local file for protoc.
-                     String importContent = referenceResolver.getReferenceContent(importStr, StandardCharsets.UTF_8);
-                     try {
-                        Files.createDirectories(importPath.getParent());
-                        Files.createFile(importPath);
-                     } catch (FileAlreadyExistsException faee) {
-                        log.warn("Exception while writing protobuf dependency", faee);
-                     }
-                     Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
-                     resolvedImportsLocalFiles.add(importPath.toFile());
-
-                     // Now go down the resource content and resolve its own imports.
-                     resolveAndPrepareRemoteImports(importPath, resolvedImportsLocalFiles);
-                  }
-               }
-            }
-         }
-      } catch (Exception e) {
-         log.error("Exception while retrieving protobuf dependency", e);
+  /**
+   * Analyse a protofile imports, resolve and retrieve them from remote to allow protoc to run later.
+   */
+  private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles) {
+    try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+        if (line.startsWith("import ")) {
+          processImportLine(line, protoFilePath, resolvedImportsLocalFiles);
+        }
       }
-   }
+    } catch (Exception e) {
+      log.error("Exception while retrieving protobuf dependency", e);
+    }
+  }
 
-   /**
+  /**
+   * Process a single import line, resolve and retrieve it if necessary.
+   */
+  private void processImportLine(String line, Path protoFilePath, List<File> resolvedImportsLocalFiles) {
+    String importStr = line.substring("import ".length() + 1).trim();
+
+    // Remove semicolon and quotes/double-quotes.
+    if (importStr.endsWith(";")) {
+      importStr = importStr.substring(0, importStr.length() - 1);
+    }
+    if (importStr.endsWith("\"") || importStr.endsWith("'")) {
+      importStr = importStr.substring(0, importStr.length() - 1);
+    }
+    if (importStr.startsWith("\"") || importStr.startsWith("'")) {
+      importStr = importStr.substring(1);
+    }
+    log.debug("Found an import to resolve in protobuf: {}", importStr);
+
+    // Check that this lib is not in built-in ones.
+    if (!importStr.startsWith(BUILTIN_LIBRARY_PREFIX)) {
+      // Check if import path is locally there.
+      Path importPath = protoFilePath.getParent().resolve(importStr);
+      if (!Files.exists(importPath)) {
+        try {
+          // Not there, so resolve it remotely and write to local file for protoc.
+          String importContent = referenceResolver.getReferenceContent(importStr, StandardCharsets.UTF_8);
+          Files.createDirectories(importPath.getParent());
+          Files.createFile(importPath);
+          Files.write(importPath, importContent.getBytes(StandardCharsets.UTF_8));
+          resolvedImportsLocalFiles.add(importPath.toFile());
+
+          // Now go down the resource content and resolve its own imports.
+          resolveAndPrepareRemoteImports(importPath, resolvedImportsLocalFiles);
+        } catch (FileAlreadyExistsException faee) {
+          log.warn("Exception while writing protobuf dependency", faee);
+        } catch (Exception e) {
+          log.error("Exception while resolving remote import", e);
+        }
+      }
+    }
+  }
+
+
+  /**
     * Extract the operations from GRPC service methods.
     */
    private List<Operation> extractOperations(Descriptors.ServiceDescriptor service) {
