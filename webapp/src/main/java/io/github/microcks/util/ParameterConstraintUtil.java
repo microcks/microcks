@@ -18,6 +18,7 @@ package io.github.microcks.util;
 import io.github.microcks.domain.ParameterConstraint;
 import io.github.microcks.domain.ParameterLocation;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.regex.Pattern;
 
@@ -44,6 +45,8 @@ public class ParameterConstraintUtil {
          value = request.getHeader(constraint.getName());
       } else if (ParameterLocation.query == constraint.getIn()) {
          value = request.getParameter(constraint.getName());
+      } else if (ParameterLocation.cookie == constraint.getIn()) {
+         value = getCookieValue(request, constraint.getName());
       }
 
       if (value != null) {
@@ -53,6 +56,24 @@ public class ParameterConstraintUtil {
       } else {
          if (constraint.isRequired()) {
             return "Parameter " + constraint.getName() + " is required";
+         }
+      }
+      return null;
+   }
+
+   /**
+    * Extract cookie value from HttpServletRequest by name.
+    * @param request    HttpServletRequest to extract cookie from
+    * @param cookieName Name of the cookie to retrieve
+    * @return Cookie value if found, null otherwise
+    */
+   private static String getCookieValue(HttpServletRequest request, String cookieName) {
+      Cookie[] cookies = request.getCookies();
+      if (cookies != null) {
+         for (Cookie cookie : cookies) {
+            if (cookieName.equals(cookie.getName())) {
+               return cookie.getValue();
+            }
          }
       }
       return null;
