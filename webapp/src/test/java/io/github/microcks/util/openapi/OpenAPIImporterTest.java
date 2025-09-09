@@ -1869,4 +1869,105 @@ class OpenAPIImporterTest {
          }
       }
    }
+
+   @Test
+   void testOpenAPIWithFormDataParameters() {
+      String openAPISpec = """
+            openapi: 3.0.0
+            info:
+              title: FormData Parameters Test API
+              description: API to test formData parameter handling in Microcks
+              version: 1.0.0
+            servers:
+              - url: http://localhost:8080/api
+                description: Test server
+            paths:
+              /upload:
+                post:
+                  summary: Upload file with formData parameters
+                  parameters:
+                    - name: userId
+                      in: formData
+                      required: true
+                      schema:
+                        type: string
+                      description: User ID submitting the form
+                      example: user123
+                    - name: category
+                      in: formData
+                      required: false
+                      schema:
+                        type: string
+                        enum: [document, image, video]
+                      description: Category of the upload
+                      example: document
+                  requestBody:
+                    content:
+                      multipart/form-data:
+                        schema:
+                          type: object
+                          properties:
+                            file:
+                              type: string
+                              format: binary
+                        examples:
+                          sample-upload:
+                            summary: Sample file upload
+                            value:
+                              file: sample-document.pdf
+                  responses:
+                    '200':
+                      description: Upload successful
+                      content:
+                        application/json:
+                          schema:
+                            type: object
+                            properties:
+                              message:
+                                type: string
+                              uploadId:
+                                type: string
+                          examples:
+                            success:
+                              summary: Successful upload
+                              value:
+                                message: Upload completed successfully
+                                uploadId: upload_12345
+            """;
+
+      // Create a temporary file with the OpenAPI spec
+      try {
+         java.io.File tempFile = java.io.File.createTempFile("formdata-test-openapi", ".yaml");
+         tempFile.deleteOnExit();
+         java.nio.file.Files.write(tempFile.toPath(), openAPISpec.getBytes());
+
+         OpenAPIImporter importer = new OpenAPIImporter(tempFile.getAbsolutePath(), null);
+
+         // Check that basic service properties are there.
+         List<Service> services = importer.getServiceDefinitions();
+         assertEquals(1, services.size());
+         Service service = services.get(0);
+         assertEquals("FormData Parameters Test API", service.getName());
+         assertEquals(ServiceType.REST, service.getType());
+         assertEquals("1.0.0", service.getVersion());
+
+         // Check that operations have been found.
+         assertEquals(1, service.getOperations().size());
+         Operation operation = service.getOperations().get(0);
+         assertEquals("POST /upload", operation.getName());
+         assertEquals("POST", operation.getMethod());
+
+         // Check that parameter constraints have been correctly parsed including formData
+         // The fix should now allow formData parameters to be parsed without throwing IllegalArgumentException
+         assertEquals(1, operation.getParameterConstraints().size());
+
+         ParameterConstraint constraint = operation.getParameterConstraints().iterator().next();
+         assertEquals("userId", constraint.getName());
+         assertTrue(constraint.isRequired());
+         assertEquals(ParameterLocation.formData, constraint.getIn());
+
+      } catch (Exception e) {
+         fail("Exception should not be thrown when parsing formData parameters: " + e.getMessage());
+      }
+   }
 }
