@@ -19,18 +19,6 @@ RUN microdnf install java-21-openjdk-headless openssl curl-minimal ca-certificat
 ENV JAVA_APP_DIR=/deployments \
     JAVA_MAJOR_VERSION=11
 
-# Opentelemetry Agent Instrumentation
-# By default we deactivate the agent with OTEL_JAVAAGENT_ENABLED=false
-RUN curl https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.33.6/opentelemetry-javaagent.jar -Lo /opt/opentelemetry-javaagent.jar
-ENV JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar \
-    OTEL_JAVAAGENT_ENABLED=false \
-    OTEL_EXPORTER_OTLP_ENDPOINT=http://o11y_otel:4317 \
-    OTEL_METRICS_EXPORTER=otlp \
-    OTEL_LOGS_EXPORTER=otlp \
-    OTEL_TRACES_EXPORTER=otlp \
-    OTEL_RESOURCE_ATTRIBUTES=service.name=microcks,service.namespace=microcks-ns,service.instance.id=microcks-cnt,service.version=1.11.0
-
-
 # Set working directory at /deployments
 WORKDIR /deployments
 VOLUME /deployments/config
