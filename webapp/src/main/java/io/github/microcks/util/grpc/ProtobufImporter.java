@@ -60,6 +60,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
    private static final String BINARY_DESCRIPTOR_EXT = ".pbb";
    private static final String BUILTIN_LIBRARY_PREFIX = "google/protobuf";
+   private static final String PACKAGE = "package ";
 
    private final PackageServices packageServices;
    private final String protoDirectory;
@@ -258,9 +259,9 @@ public class ProtobufImporter implements MockRepositoryImporter {
       try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
          while ((line = reader.readLine()) != null) {
             line = line.trim();
-            if (line.startsWith("package ")) {
+            if (line.startsWith(PACKAGE)) {
                // Extract package name.
-               String protoPackage = line.substring("package ".length()).trim();
+               String protoPackage = line.substring(PACKAGE.length()).trim();
                if (protoPackage.endsWith(";")) {
                   protoPackage = protoPackage.substring(0, protoPackage.length() - 1);
                }
@@ -280,62 +281,86 @@ public class ProtobufImporter implements MockRepositoryImporter {
       return new PackageServices(packageName, servicesNames);
    }
 
-   /**
-    * Analyse a protofile imports, resolve and retrieve them from remote to allow protoc to run later.
-    */
-   private void resolveAndPrepareRemoteImports(Path protoFilePath, List<File> resolvedImportsLocalFiles,
-         String rootBaseUrl) {
-      String line = null;
-      String protoPackage = null;
-      try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
-         while ((line = reader.readLine()) != null) {
-            line = line.trim();
-            if (line.startsWith("package ")) {
-               // Extract package name.
-               protoPackage = line.substring("package ".length()).trim();
-               if (protoPackage.endsWith(";")) {
-                  protoPackage = protoPackage.substring(0, protoPackage.length() - 1);
-               }
-               log.debug("Found a package in protobuf: {}", protoPackage);
+  /**
+   * Analyse a protofile imports, resolve and retrieve them from remote to allow protoc to run later.
+   */
+  private void resolveAndPrepareRemoteImports(
+    Path protoFilePath,
+    List<File> resolvedImportsLocalFiles,
+    String rootBaseUrl) {
 
-            } else if (line.startsWith("import ")) {
-               String importStr = line.substring("import ".length() + 1);
-               // Remove semicolon and quotes/double-quotes.
-               if (importStr.endsWith(";")) {
-                  importStr = importStr.substring(0, importStr.length() - 1);
-               }
-               if (importStr.endsWith("\"") || importStr.endsWith("'")) {
-                  importStr = importStr.substring(0, importStr.length() - 1);
-               }
-               if (importStr.startsWith("\"") || importStr.startsWith("'")) {
-                  importStr = importStr.substring(1);
-               }
-               log.debug("Found an import to resolve in protobuf: {}", importStr);
+    String protoPackage = null;
 
-               // Check that this lib is not in built-in ones.
-               if (!importStr.startsWith(BUILTIN_LIBRARY_PREFIX)) {
-                  Path importPath = null;
-                  if (protoPackage != null) {
-                     int levelsToRoot = protoPackage.split("\\.").length;
-                     String relativeImportStr = "../".repeat(levelsToRoot) + importStr;
-                     importPath = protoFilePath.getParent().resolve(relativeImportStr);
-                     downloadImportReferenceAndProgress(importPath, relativeImportStr, resolvedImportsLocalFiles,
-                           rootBaseUrl);
-                  } else {
-                     // No package, so just use the import string as is.
-                     importPath = protoFilePath.getParent().resolve(importStr);
-                     downloadImportReferenceAndProgress(importPath, importStr, resolvedImportsLocalFiles, rootBaseUrl);
-                  }
-               }
-            }
-         }
-      } catch (Exception e) {
-         log.error("Exception while retrieving protobuf dependency", e);
+    try (BufferedReader reader = Files.newBufferedReader(protoFilePath, StandardCharsets.UTF_8)) {
+      String line;
+      while ((line = reader.readLine()) != null) {
+        line = line.trim();
+
+        if (line.startsWith(PACKAGE)) {
+          // Extract package name
+          protoPackage = line.substring(PACKAGE.length()).trim();
+          if (protoPackage.endsWith(";")) {
+            protoPackage = protoPackage.substring(0, protoPackage.length() - 1);
+          }
+          log.debug("Found a package in protobuf: {}", protoPackage);
+
+        } else if (line.startsWith("import ")) {
+          processImportLine(line, protoFilePath, protoPackage, resolvedImportsLocalFiles, rootBaseUrl);
+        }
       }
-   }
+    } catch (Exception e) {
+      log.error("Exception while retrieving protobuf dependency", e);
+    }
+  }
 
+  /**
+   * Process a single import line, resolve and retrieve it if necessary.
+   */
+  private void processImportLine(
+    String line,
+    Path protoFilePath,
+    String protoPackage,
+    List<File> resolvedImportsLocalFiles,
+    String rootBaseUrl) {
 
-   /**
+    String importStr = line.substring("import ".length() + 1).trim();
+
+    // Remove semicolon and quotes/double-quotes
+    if (importStr.endsWith(";")) {
+      importStr = importStr.substring(0, importStr.length() - 1);
+    }
+    if (importStr.endsWith("\"") || importStr.endsWith("'")) {
+      importStr = importStr.substring(0, importStr.length() - 1);
+    }
+    if (importStr.startsWith("\"") || importStr.startsWith("'")) {
+      importStr = importStr.substring(1);
+    }
+
+    log.debug("Found an import to resolve in protobuf: {}", importStr);
+
+    // Skip built-in imports
+    if (importStr.startsWith(BUILTIN_LIBRARY_PREFIX)) {
+      return;
+    }
+
+    Path importPath;
+    try {
+      if (protoPackage != null) {
+        int levelsToRoot = protoPackage.split("\\.").length;
+        String relativeImportStr = "../".repeat(levelsToRoot) + importStr;
+        importPath = protoFilePath.getParent().resolve(relativeImportStr);
+        downloadImportReferenceAndProgress(importPath, relativeImportStr, resolvedImportsLocalFiles, rootBaseUrl);
+      } else {
+        // No package, so just use the import string as is
+        importPath = protoFilePath.getParent().resolve(importStr);
+        downloadImportReferenceAndProgress(importPath, importStr, resolvedImportsLocalFiles, rootBaseUrl);
+      }
+    } catch (IOException e) {
+      log.error("Error while processing import line for {}", importStr, e);
+    }
+  }
+
+  /**
     * Download a remote import reference and write it to local file system. Progressively resolve its own imports.
     */
    private void downloadImportReferenceAndProgress(Path importPath, String importStr,
