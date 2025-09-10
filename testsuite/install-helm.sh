@@ -41,13 +41,11 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/../install/kubernetes" || { echo "Failed to change directory to ${SCRIPT_DIR}"; exit 1; }
 
-#  Add the Microcks Helm repository and update it.
-echo "[INFO] Adding Microcks Helm repository..."
-helm repo add microcks https://microcks.io/helm
+#  Use Microcks Helm directly from the sources (not the repo as we have not yet publish changes).
 if $ASYNC; then
+  echo "[INFO] Adding Microcks Helm repository..."
   helm repo add strimzi https://strimzi.io/charts/
 fi
-helm repo update
 
 # Install Microcks using Helm with dynamic nip.io URLs based on the minikube IP.
 echo "[INFO] Installing Microcks..."
@@ -58,7 +56,7 @@ if $ASYNC; then
       --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \
       --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
       --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
-      --set features.async.kafka.url=${MINIKUBE_IP}.nip.io
+      --set features.async.kafka.url=kafka.${MINIKUBE_IP}.nip.io
 else
   helm install microcks ./microcks --namespace microcks \
      --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \

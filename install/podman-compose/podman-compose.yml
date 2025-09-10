@@ -14,7 +14,7 @@ services:
       retries: 3
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:0.6.0
+    image: quay.io/microcks/microcks-postman-runtime:0.7.0
     container_name: microcks-postman-runtime
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -46,7 +46,7 @@ services:
       - mongo
       - postman
       - keycloak
-    image: quay.io/microcks/microcks:1.12.1
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     ports:
       - "8080:8080"

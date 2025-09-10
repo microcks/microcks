@@ -14,7 +14,7 @@
 # docker run -i --rm -p 8080:8080 microcks/microcks-async-minion-legacy-jar
 #
 ###
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1742914212
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.6-1755695350
 
 ARG JAVA_PACKAGE=java-21-openjdk-headless
 ARG RUN_JAVA_VERSION=1.3.8

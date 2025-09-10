@@ -151,7 +151,7 @@ jobs:
           TOKEN_URL: http://localhost:18080/realms/microcks/protocol/openid-connect/token
         id: get_token
         run: |
-          echo "Fetching access token..."
+          echo "Fetching access token for microcks-serviceaccount-test..."
           TOKEN_RESPONSE=$(curl -s -X POST "$TOKEN_URL" \
             -H 'Content-Type: application/x-www-form-urlencoded' \
             -H 'Accept: application/json' \

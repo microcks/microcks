@@ -27,7 +27,7 @@ import java.util.regex.PatternSyntaxException;
 public class PostmanUtil {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(PostmanUtil.class);
+   private static final Logger log = LoggerFactory.getLogger(PostmanUtil.class);
 
    /** Regular expression used to evaluate operation name matching. */
    private static final String OPERATION_NAME_EXPRESSION_PREFIX = "(GET|POST|PUT|PATCH|DELETE|OPTION)?( *)(/)?";
@@ -60,7 +60,7 @@ public class PostmanUtil {
          // Finally check again adding a verb as prefix.
          return operationNameCandidate.matches(OPERATION_NAME_EXPRESSION_PREFIX + operationNameRef);
       } catch (PatternSyntaxException pse) {
-         log.warn("{}{} throws a PatternSyntaxException", OPERATION_NAME_EXPRESSION_PREFIX, operationNameRef);
+         log.debug("{}{} throws a PatternSyntaxException", OPERATION_NAME_EXPRESSION_PREFIX, operationNameRef);
       }
       return false;
    }

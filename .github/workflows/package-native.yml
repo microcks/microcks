@@ -44,7 +44,7 @@ jobs:
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
         with:
           install: true
 
@@ -93,7 +93,7 @@ jobs:
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
       - name: Get saved image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
+        uses: ishworkh/container-image-artifact-download@d5e9b6d62ef3f9762f6553c8178c2d925acc0409 # v2.1.0
         with:
           image: "microcks/microcks-uber:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -140,7 +140,7 @@ jobs:
           echo "IMAGE_TAG=${{ inputs.image-tag }}-native" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
         with:
           install: true
           
@@ -180,7 +180,7 @@ jobs:
           echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin docker.io
 
       - name: Get saved image for ${{ matrix.arch }}
-        uses: ishworkh/container-image-artifact-download@ccb3671db007622e886a2d7037eb62b119d5ffaf # v2.0.0
+        uses: ishworkh/container-image-artifact-download@d5e9b6d62ef3f9762f6553c8178c2d925acc0409 # v2.1.0
         with:
           image: "microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}-${{ matrix.arch }}"
 
@@ -247,7 +247,7 @@ jobs:
           echo "microcks-uber-async-minion=$(crane digest quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }})" >> $GITHUB_OUTPUT
           
       - name: Install Cosign
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c50bcb52f4837da5e9b6a # v3.8.1
+        uses: sigstore/cosign-installer@d58896d6a1865668819e1d91763c7751a165e159 # v3.9.2
 
       - name: Sign images with with GitHub OIDC Token
         env:

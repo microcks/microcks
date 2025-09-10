@@ -29,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -330,7 +329,7 @@ public class DispatchCriteriaHelper {
       // Filter the extracted parameter map by the referenced parameters in paramsRule
       return extractMapFromURIPattern(pattern, realURI).entrySet().stream()
             .filter(entry -> paramsRule.contains(entry.getKey()))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (v1, v2) -> v1, TreeMap::new));
    }
 
    /**

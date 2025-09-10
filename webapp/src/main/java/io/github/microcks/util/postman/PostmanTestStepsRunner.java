@@ -59,13 +59,13 @@ import java.util.Set;
 public class PostmanTestStepsRunner extends AbstractTestRunner<HttpMethod> {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(PostmanTestStepsRunner.class);
+   private static final Logger log = LoggerFactory.getLogger(PostmanTestStepsRunner.class);
 
    private ObjectMapper mapper = new ObjectMapper();
 
    private JsonNode collection;
 
-   private ResourceRepository resourceRepository;
+   private final ResourceRepository resourceRepository;
    private ClientHttpRequestFactory clientHttpRequestFactory;
 
    private String testsCallbackUrl = null;

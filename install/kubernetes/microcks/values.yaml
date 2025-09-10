@@ -47,7 +47,7 @@ microcks:
   image:
     registry: quay.io
     repository: microcks/microcks
-    tag: 1.12.1
+    tag: nightly
     digest:
   replicas: 1
 
@@ -98,7 +98,7 @@ postman:
   image:
     registry: quay.io
     repository: microcks/microcks-postman-runtime
-    tag: 0.6.0
+    tag: 0.7.0
     digest:
   replicas: 1
   resources:
@@ -241,7 +241,7 @@ features:
     image:
       registry: quay.io
       repository: microcks/microcks-async-minion
-      tag: 1.12.1
+      tag: nightly
       digest:
 
     env:
