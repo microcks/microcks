@@ -36,8 +36,8 @@ import { ConfigService } from '../../../../../services/config.service';
     FormsModule,
     HighlightAuto,
     TabsModule,
-    RouterLink,
     TooltipModule,
+    RouterLink
   ]
 })
 export class ExchangesTabsetComponent {
