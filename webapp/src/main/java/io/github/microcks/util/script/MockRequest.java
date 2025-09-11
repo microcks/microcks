@@ -142,123 +142,177 @@ public class MockRequest {
    public MockRequest() {
    }
 
-   /**
-    * Create a MockRequest from an HttpServletRequest, capturing all its final values.
-    *
-    * @param request The HttpServletRequest to capture
-    */
-   public MockRequest(HttpServletRequest request) {
-      if (request != null) {
-         this.method = request.getMethod();
-         this.requestURI = request.getRequestURI();
-         this.requestURL = request.getRequestURL() != null ? request.getRequestURL().toString() : null;
-         this.contextPath = request.getContextPath();
-         this.servletPath = request.getServletPath();
-         this.pathInfo = request.getPathInfo();
-         this.queryString = request.getQueryString();
-         this.scheme = request.getScheme();
-         this.serverName = request.getServerName();
-         this.serverPort = request.getServerPort();
-         this.remoteAddr = request.getRemoteAddr();
-         this.remoteHost = request.getRemoteHost();
-         this.remotePort = request.getRemotePort();
-         this.localAddr = request.getLocalAddr();
-         this.localName = request.getLocalName();
-         this.localPort = request.getLocalPort();
-         this.protocol = request.getProtocol();
-         this.characterEncoding = request.getCharacterEncoding();
-         this.contentType = request.getContentType();
-         this.contentLength = request.getContentLengthLong();
+  /**
+   * Create a MockRequest from an HttpServletRequest, capturing all its final values.
+   *
+   * @param request The HttpServletRequest to capture
+   */
+  public MockRequest(HttpServletRequest request) {
+    // Return early if request is null to avoid NullPointerException
+    if (request == null) {
+      return;
+    }
 
-         // Handle locale information
-         Locale requestLocale = request.getLocale();
-         this.locale = requestLocale != null ? requestLocale.toString() : null;
+    // Capture basic request information that should always be available
+    this.method = request.getMethod();
+    this.requestURI = request.getRequestURI();
+    // RequestURL might be null in some servlet containers
+    this.requestURL = request.getRequestURL() != null ? request.getRequestURL().toString() : null;
+    this.contextPath = request.getContextPath();
+    this.servletPath = request.getServletPath();
+    this.pathInfo = request.getPathInfo();
+    this.queryString = request.getQueryString();
+    this.scheme = request.getScheme();
+    this.serverName = request.getServerName();
+    this.serverPort = request.getServerPort();
 
-         Enumeration<Locale> requestLocales = request.getLocales();
-         if (requestLocales != null && requestLocales.hasMoreElements()) {
-            java.util.List<String> localeList = new java.util.ArrayList<>();
-            while (requestLocales.hasMoreElements()) {
-               Locale loc = requestLocales.nextElement();
-               if (loc != null) {
-                  localeList.add(loc.toString());
-               }
-            }
-            this.locales = localeList.toArray(new String[0]);
-         }
+    // Capture remote client information
+    this.remoteAddr = request.getRemoteAddr();
+    this.remoteHost = request.getRemoteHost();
+    this.remotePort = request.getRemotePort();
 
-         // Capture headers
-         this.headers = new HashMap<>();
-         Enumeration<String> headerNames = request.getHeaderNames();
-         if (headerNames != null) {
-            while (headerNames.hasMoreElements()) {
-               String headerName = headerNames.nextElement();
-               if (headerName != null) {
-                  Enumeration<String> headerValues = request.getHeaders(headerName);
-                  if (headerValues != null) {
-                     java.util.List<String> values = new java.util.ArrayList<>();
-                     while (headerValues.hasMoreElements()) {
-                        String value = headerValues.nextElement();
-                        if (value != null) {
-                           values.add(value);
-                        }
-                     }
-                     this.headers.put(headerName, values.toArray(new String[0]));
-                  }
-               }
-            }
-         }
+    // Capture local server information
+    this.localAddr = request.getLocalAddr();
+    this.localName = request.getLocalName();
+    this.localPort = request.getLocalPort();
 
-         // Capture parameters
-         this.parameters = new HashMap<>();
-         Map<String, String[]> paramMap = request.getParameterMap();
-         if (paramMap != null) {
-            this.parameters.putAll(paramMap);
-         }
+    // Capture request metadata
+    this.protocol = request.getProtocol();
+    this.characterEncoding = request.getCharacterEncoding();
+    this.contentType = request.getContentType();
+    this.contentLength = request.getContentLengthLong();
 
-         // Capture cookies
-         this.cookies = request.getCookies();
+    // Extract complex properties using helper methods
+    this.locale = extractLocale(request);          // Locale might not be available
+    this.locales = extractLocales(request);        // Multiple locales might not be available
+    this.headers = extractHeaders(request);         // Headers might be empty or null
+    this.parameters = extractParameters(request);   // Parameters might be empty or null
+    this.cookies = request.getCookies();           // Cookies might be null if none present
+    this.attributes = extractAttributes(request);   // Attributes might be empty or null
 
-         // Capture attributes
-         this.attributes = new HashMap<>();
-         Enumeration<String> attributeNames = request.getAttributeNames();
-         if (attributeNames != null) {
-            while (attributeNames.hasMoreElements()) {
-               String attrName = attributeNames.nextElement();
-               if (attrName != null) {
-                  Object attrValue = request.getAttribute(attrName);
-                  // Only include serializable attributes
-                  if (isSerializable(attrValue)) {
-                     this.attributes.put(attrName, attrValue);
-                  }
-               }
-            }
-         }
+    // Extract session and security information
+    this.sessionId = extractSessionId(request);    // Session might not exist
+    this.isSecure = request.isSecure();
+    this.isRequestedSessionIdValid = request.isRequestedSessionIdValid();
+    this.isRequestedSessionIdFromCookie = request.isRequestedSessionIdFromCookie();
+    this.isRequestedSessionIdFromURL = request.isRequestedSessionIdFromURL();
+    this.userPrincipal = extractUserPrincipal(request);  // Principal might not be available
+    this.authType = request.getAuthType();         // Auth type might be null if not authenticated
+  }
 
-         // Session information
-         try {
-            if (request.getSession(false) != null) {
-               this.sessionId = request.getSession(false).getId();
-            }
-         } catch (Exception e) {
-            // Session might not be available, ignore
-         }
+  /**
+   * Extracts the primary locale from the request, handling null case.
+   */
+  private String extractLocale(HttpServletRequest request) {
+    Locale requestLocale = request.getLocale();
+    return requestLocale != null ? requestLocale.toString() : null;
+  }
 
-         this.isSecure = request.isSecure();
-         this.isRequestedSessionIdValid = request.isRequestedSessionIdValid();
-         this.isRequestedSessionIdFromCookie = request.isRequestedSessionIdFromCookie();
-         this.isRequestedSessionIdFromURL = request.isRequestedSessionIdFromURL();
-
-         // User principal and auth type
-         try {
-            if (request.getUserPrincipal() != null) {
-               this.userPrincipal = request.getUserPrincipal().getName();
-            }
-         } catch (Exception e) {
-            // User principal might not be available, ignore
-         }
-         this.authType = request.getAuthType();
+  /**
+   * Extracts all locales from the request, filtering null values.
+   */
+  private String[] extractLocales(HttpServletRequest request) {
+    Enumeration<Locale> requestLocales = request.getLocales();
+    if (requestLocales == null || !requestLocales.hasMoreElements()) {
+      return new String[0];
+    }
+    java.util.List<String> localeList = new java.util.ArrayList<>();
+    while (requestLocales.hasMoreElements()) {
+      Locale loc = requestLocales.nextElement();
+      if (loc != null) {
+        localeList.add(loc.toString());
       }
-   }
+    }
+    return localeList.toArray(new String[0]);
+  }
+
+  /**
+   * Extracts all headers from the request, handling null cases and empty values.
+   */
+  private Map<String, String[]> extractHeaders(HttpServletRequest request) {
+    Map<String, String[]> headersMap = new HashMap<>();
+    Enumeration<String> headerNames = request.getHeaderNames();
+    if (headerNames == null) {
+      return headersMap;
+    }
+    while (headerNames.hasMoreElements()) {
+      String headerName = headerNames.nextElement();
+      if (headerName == null) {
+        continue;  // Skip null header names
+      }
+      Enumeration<String> headerValues = request.getHeaders(headerName);
+      if (headerValues == null) {
+        continue;  // Skip null header values
+      }
+      java.util.List<String> values = new java.util.ArrayList<>();
+      while (headerValues.hasMoreElements()) {
+        String value = headerValues.nextElement();
+        if (value != null) {
+          values.add(value);
+        }
+      }
+      headersMap.put(headerName, values.toArray(new String[0]));
+    }
+    return headersMap;
+  }
+
+  /**
+   * Extracts parameters from the request, ensuring a non-null return value.
+   */
+  private Map<String, String[]> extractParameters(HttpServletRequest request) {
+    Map<String, String[]> paramMap = request.getParameterMap();
+    return paramMap != null ? new HashMap<>(paramMap) : new HashMap<>();
+  }
+
+  /**
+   * Extracts serializable attributes from the request, filtering non-serializable values.
+   */
+  private Map<String, Object> extractAttributes(HttpServletRequest request) {
+    Map<String, Object> attributesMap = new HashMap<>();
+    Enumeration<String> attributeNames = request.getAttributeNames();
+    if (attributeNames == null) {
+      return attributesMap;
+    }
+    while (attributeNames.hasMoreElements()) {
+      String attrName = attributeNames.nextElement();
+      if (attrName == null) {
+        continue;  // Skip null attribute names
+      }
+      Object attrValue = request.getAttribute(attrName);
+      if (isSerializable(attrValue)) {
+        attributesMap.put(attrName, attrValue);
+      }
+    }
+    return attributesMap;
+  }
+
+  /**
+   * Extracts session ID safely, handling the case where session doesn't exist.
+   */
+  private String extractSessionId(HttpServletRequest request) {
+    try {
+      if (request.getSession(false) != null) {
+        return request.getSession(false).getId();
+      }
+    } catch (Exception ignored) {
+      // Session might not be available, ignore
+    }
+    return null;
+  }
+
+  /**
+   * Extracts user principal safely, handling the case where security context is not available.
+   */
+  private String extractUserPrincipal(HttpServletRequest request) {
+    try {
+      if (request.getUserPrincipal() != null) {
+        return request.getUserPrincipal().getName();
+      }
+    } catch (Exception ignored) {
+      // User principal might not be available, ignore
+    }
+    return null;
+  }
 
    /**
     * Check if an object is serializable by Jackson.
