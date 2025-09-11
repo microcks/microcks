@@ -50,6 +50,8 @@ fi
 # Install Microcks using Helm with dynamic nip.io URLs based on the minikube IP.
 echo "[INFO] Installing Microcks..."
 if $ASYNC; then
+  kubectl patch -n ingress-nginx deployment/ingress-nginx-controller --type='json' \
+    -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
   helm install strimzi strimzi/strimzi-kafka-operator --namespace microcks
   helm install microcks ./microcks --namespace=microcks \
       --set appName=microcks --set features.async.enabled=true \
