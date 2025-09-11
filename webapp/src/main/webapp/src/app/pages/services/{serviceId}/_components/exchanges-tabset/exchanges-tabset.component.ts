@@ -18,7 +18,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 import { TabsetComponent, TabsModule } from 'ngx-bootstrap/tabs';
-import { TooltipModule } from 'ngx-bootstrap/tooltip';
+import { TooltipConfig, TooltipModule } from 'ngx-bootstrap/tooltip';
 import { HighlightAuto } from 'ngx-highlightjs';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
@@ -73,7 +73,12 @@ export class ExchangesTabsetComponent {
   // Name of the exchange tab to activate on init (deep-linking)
   @Input() public activeExchangeName: string | null | undefined;
 
-  constructor(private router: Router, private route: ActivatedRoute) {}
+  constructor(private router: Router, private route: ActivatedRoute, tooltipConfig: TooltipConfig) {
+    // Bind tooltip to body container to have it properly positioned
+    tooltipConfig.adaptivePosition = true;
+    tooltipConfig.container = 'body';
+    tooltipConfig.placement = 'top';
+  }
 
   public shouldRender(index: number) {
     const activeTab = this.tabs.tabs.find((tab) => tab.active);
