@@ -73,6 +73,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.github.microcks.util.delay.Delay;
+
 /**
  * A controller for mocking GraphQL responses.
  * @author laurent
@@ -114,7 +116,8 @@ public class GraphQLController {
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.GET, RequestMethod.POST })
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
+         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
          @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
          HttpMethod method) {
 
@@ -179,8 +182,9 @@ public class GraphQLController {
 
       // Then deal with one or many regular GraphQL selection queries.
       List<GraphQLQueryResponse> graphqlResponses = new ArrayList<>();
-      Long specifiedDelay = MockControllerCommons.getDelay(headers, delay);
-      Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay;
+      Delay specifiedDelay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+
+      Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay.getBaseValue();
 
       for (Selection<?> selection : graphqlOperation.getSelectionSet().getSelections()) {
          try {
@@ -231,7 +235,8 @@ public class GraphQLController {
       }
 
       // Waiting for delay if any.
-      MockControllerCommons.waitForDelay(startTime, maxDelay);
+      Delay waitMaxDelay = new Delay(maxDelay, null);
+      MockControllerCommons.waitForDelay(startTime, waitMaxDelay);
 
       String responseContent = null;
       JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
