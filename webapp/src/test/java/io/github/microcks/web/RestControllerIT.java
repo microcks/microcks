@@ -325,7 +325,7 @@ class RestControllerIT extends AbstractBaseIT {
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
       assertEquals(400, response.getStatusCode().value());
-      verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any());
+      verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any(), any());
    }
 
    @Test
