@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * This class holds commons, utility handlers for different mock controller implements (whether it be Soap, Rest, Async
@@ -54,11 +56,16 @@ import java.util.Optional;
  */
 public class MockControllerCommons {
 
+   private static final Pattern RANDOM_RANGE_PATTERN = Pattern.compile("random-(\\d+)");
+
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(MockControllerCommons.class);
 
    /** The header name used to specify a wait delay in the request. */
    public static final String X_MICROCKS_DELAY_HEADER = "x-microcks-delay";
+
+   /** The header name used to specify a delay strategy in the request. */
+   public static final String X_MICROCKS_DELAY_STRATEGY_HEADER = "x-microcks-delay-strategy";
 
    private static final String RENDERING_MESSAGE = "Response contains dynamic EL expression, rendering it...";
 
@@ -305,12 +312,60 @@ public class MockControllerCommons {
       return evaluableRequest;
    }
 
+   /** Compute a random delay. */
+   private static Long computeRandomDelay(Long baseDelay) {
+      if (baseDelay != null && baseDelay > 0) {
+         double factor = Math.random();
+         return Math.round(baseDelay * factor);
+      }
+      return 0L;
+   }
+
+   /** Compute a ranged random delay. */
+   private static Long computeRangedRandomDelay(Long baseDelay, String delayStrategy) {
+      if (baseDelay != null && baseDelay > 0 && delayStrategy != null) {
+         Matcher matcher = RANDOM_RANGE_PATTERN.matcher(delayStrategy.toLowerCase());
+         if (matcher.matches()) {
+            int percent = Integer.parseInt(matcher.group(1));
+            if (percent < 0 || percent > 100) {
+               log.debug("Invalid percent value for ranged random delay strategy {}, using 20% as default",
+                     delayStrategy);
+               percent = 20;
+            }
+            double factor = (Math.random() * (2 * percent) + (100 - percent)) / 100;
+            return Math.round(baseDelay * factor);
+         }
+      }
+      return baseDelay;
+   }
+
+   /** Compute the delay with the provided strategy. */
+   public static Long computeDelayWithStrategy(Long baseDelay, String delayStrategy) {
+      if (delayStrategy == null || "fixed".equalsIgnoreCase(delayStrategy)) {
+         return baseDelay;
+      }
+      // Compute random delay
+      if ("random".equalsIgnoreCase(delayStrategy)) {
+         return computeRandomDelay(baseDelay);
+      }
+      // Compute ranged random delay
+      if (RANDOM_RANGE_PATTERN.matcher(delayStrategy.toLowerCase()).matches()) {
+         return computeRangedRandomDelay(baseDelay, delayStrategy);
+      } else {
+         log.debug("Unknown delay strategy {}, using fixed as default", delayStrategy);
+         return baseDelay;
+      }
+   }
+
    /** Retrieve delay header or default to the one provided as parameter. */
    public static Long getDelay(HttpHeaders headers, Long delayParameter) {
+
       if (headers.containsKey(MockControllerCommons.X_MICROCKS_DELAY_HEADER)) {
          String delayHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
          try {
-            return Long.parseLong(delayHeader);
+            String delayStrategyHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
+
+            return computeDelayWithStrategy(Long.parseLong(delayHeader), delayStrategyHeader);
          } catch (NumberFormatException nfe) {
             log.debug("Invalid delay header value: {}", delayHeader);
          }
