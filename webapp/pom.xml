@@ -29,7 +29,7 @@
     <grpc.version>1.70.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
-    <opentelemetry.version>1.33.6</opentelemetry.version>
+    <opentelemetry.version>2.19.0</opentelemetry.version>
   </properties>
 
   <dependencyManagement>
