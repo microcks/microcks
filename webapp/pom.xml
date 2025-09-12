@@ -47,6 +47,13 @@
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
       </dependency>
+      <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-instrumentation-bom</artifactId>
+        <version>2.19.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -84,17 +91,18 @@
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
 
-    <!-- observability with Otel -->
-    <dependency>
-      <groupId>io.opentelemetry.javaagent</groupId>
-      <artifactId>opentelemetry-javaagent</artifactId>
-      <version>${opentelemetry.version}</version>
-      <scope>provided</scope>
-    </dependency>
+    <!-- Core OpenTelemetry dependencies -->
     <dependency>
       <groupId>io.opentelemetry.instrumentation</groupId>
-      <artifactId>opentelemetry-instrumentation-annotations</artifactId>
-      <version>${opentelemetry.version}</version>
+      <artifactId>opentelemetry-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
     </dependency>
 
     <dependency>
@@ -160,7 +168,7 @@
       <version>${groovy.version}</version>
     </dependency>
     <dependency>
-    <groupId>org.apache.groovy</groupId>
+      <groupId>org.apache.groovy</groupId>
       <artifactId>groovy-dateutil</artifactId>
       <version>${groovy.version}</version>
     </dependency>
