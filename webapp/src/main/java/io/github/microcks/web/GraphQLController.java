@@ -73,7 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import io.github.microcks.util.delay.Delay;
+import io.github.microcks.util.delay.DelaySpec;
 
 /**
  * A controller for mocking GraphQL responses.
@@ -182,7 +182,7 @@ public class GraphQLController {
 
       // Then deal with one or many regular GraphQL selection queries.
       List<GraphQLQueryResponse> graphqlResponses = new ArrayList<>();
-      Delay specifiedDelay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+      DelaySpec specifiedDelay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
 
       Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay.getBaseValue();
 
@@ -235,7 +235,7 @@ public class GraphQLController {
       }
 
       // Waiting for delay if any.
-      Delay waitMaxDelay = new Delay(maxDelay, null);
+      DelaySpec waitMaxDelay = new DelaySpec(maxDelay, null);
       MockControllerCommons.waitForDelay(startTime, waitMaxDelay);
 
       String responseContent = null;

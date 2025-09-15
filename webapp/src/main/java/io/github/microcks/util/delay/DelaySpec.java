@@ -19,40 +19,12 @@ package io.github.microcks.util.delay;
  * 
  * @author SebastienDegodez
  */
-public class Delay {
-   private final Long baseValue;
-   private final String strategyName;
-
-   public Delay(Long baseValue, String strategyName) {
-      this.baseValue = baseValue;
-      this.strategyName = strategyName;
-   }
-
+public record DelaySpec(Long baseValue, String strategyName) {
    public Long getBaseValue() {
       return baseValue;
    }
 
    public String getStrategyName() {
       return strategyName;
-   }
-
-   @Override
-   public String toString() {
-      return "Delay{baseValue=" + baseValue + ", strategyName=" + strategyName + '}';
-   }
-
-   @Override
-   public boolean equals(Object o) {
-      if (this == o)
-         return true;
-      if (!(o instanceof Delay))
-         return false;
-      Delay delay = (Delay) o;
-      return baseValue == delay.baseValue && strategyName.equals(delay.strategyName);
-   }
-
-   @Override
-   public int hashCode() {
-      return Long.hashCode(baseValue) * 31 + strategyName.hashCode();
    }
 }

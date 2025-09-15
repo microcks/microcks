@@ -53,7 +53,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import io.github.microcks.util.delay.Delay;
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplierOptions;
 
 /**
  * A processor for handling gRPC invocations. It is responsible for applying the dispatching logic and finding the most
@@ -130,7 +131,7 @@ public class GrpcInvocationProcessor {
          if (ic.operation().getDefaultDelay() != null) {
             Long defaultDelay = ic.operation().getDefaultDelay();
             // TODO: Get DefaultStrategy
-            Delay delay = new Delay(defaultDelay, "fixed");
+            DelaySpec delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
             MockControllerCommons.waitForDelay(startTime, delay);
          }
 

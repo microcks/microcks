@@ -16,24 +16,11 @@
 package io.github.microcks.util.delay;
 
 /**
- * A {@link DelayStrategy} that returns fixed value.
- * <p>
- * Instances should be obtained via the factory method in {@link DelayStrategyFactory} to ensure proper usage and
- * encapsulation.
- * </p>
+ * This interface defines a strategy for computing delays based on a base value.
  * @author SebastienDegodez
  */
-public class FixedDelayStrategy implements DelayStrategy {
-   FixedDelayStrategy() {
-   } // package-private
+public interface DelayApplier {
+   long compute(long baseValue);
 
-   @Override
-   public long compute(long baseValue) {
-      return baseValue;
-   }
-
-   @Override
-   public String getName() {
-      return "fixed";
-   }
+   String getName();
 }

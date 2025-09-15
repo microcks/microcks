@@ -54,7 +54,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import io.github.microcks.util.delay.Delay;
+import io.github.microcks.util.delay.DelaySpec;
 
 /**
  * A controller for mocking Rest responses.
@@ -129,7 +129,7 @@ public class RestController {
       }
       log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
             ic.operation().getDispatcherRules());
-      Delay delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
       return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
    }
 
@@ -193,7 +193,7 @@ public class RestController {
          }
       }
 
-      Delay delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
       return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
    }
 
@@ -234,8 +234,8 @@ public class RestController {
    }
 
    /** Process REST mock invocation. */
-   private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime, Delay delay,
-         String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+   private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime,
+         DelaySpec delay, String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
       Span span = Span.current();
       span.setAttribute("explain-trace", true);
       span.setAttribute("service.name", ic.service().getName());

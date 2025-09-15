@@ -15,22 +15,20 @@
  */
 package io.github.microcks.util.delay;
 
-/**
- * 
- * @author SebastienDegodez
- */
-public class DelayStrategyFactory {
-   public static DelayStrategy fromString(String strategyName) {
-      if (strategyName == null || strategyName.equalsIgnoreCase("fixed")) {
-         return new FixedDelayStrategy();
-      }
-      if (strategyName.equalsIgnoreCase("random")) {
-         return new RandomDelayStrategy();
-      }
-      if (RandomRangedDelayStrategy.isRandomRangedStrategy(strategyName)) {
-         return new RandomRangedDelayStrategy(strategyName);
-      }
-      // fallback
-      return new FixedDelayStrategy();
+import java.util.regex.Pattern;
+
+public final class DelayApplierOptions {
+
+   public static final String FIXED = "fixed";
+   public static final String RANDOM = "random";
+
+   private static final String RANDOM_RANGED_PREFIX = "random-";
+   public static final Pattern RANDOM_RANGED_PATTERN = Pattern.compile(RANDOM_RANGED_PREFIX + "(\\d+)",
+         Pattern.CASE_INSENSITIVE);
+   public static final String RANDOM_RANGED_FORMAT = RANDOM_RANGED_PREFIX + "%d";
+
+   private DelayApplierOptions() {
+      // utility class
    }
+
 }

@@ -47,9 +47,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Optional;
 
-import io.github.microcks.util.delay.Delay;
-import io.github.microcks.util.delay.DelayStrategy;
-import io.github.microcks.util.delay.DelayStrategyFactory;
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplier;
+import io.github.microcks.util.delay.DelayApplierFactory;
 
 /**
  * This class holds commons, utility handlers for different mock controller implements (whether it be Soap, Rest, Async
@@ -313,13 +313,13 @@ public class MockControllerCommons {
    }
 
    /** Retrieve delay header or default to the one provided as parameter. */
-   public static Delay getDelay(HttpHeaders headers, Long delayParameter, String strategyName) {
+   public static DelaySpec getDelay(HttpHeaders headers, Long delayParameter, String strategyName) {
       if (headers.containsKey(MockControllerCommons.X_MICROCKS_DELAY_HEADER)) {
          String delayHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
          try {
             String delayStrategyHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
 
-            return new Delay(Long.parseLong(delayHeader), delayStrategyHeader);
+            return new DelaySpec(Long.parseLong(delayHeader), delayStrategyHeader);
          } catch (NumberFormatException nfe) {
             log.debug("Invalid delay header value: {}", delayHeader);
          }
@@ -328,7 +328,7 @@ public class MockControllerCommons {
          return null;
       }
 
-      return new Delay(delayParameter, strategyName);
+      return new DelaySpec(delayParameter, strategyName);
    }
 
    /**
@@ -336,9 +336,9 @@ public class MockControllerCommons {
     * @param startTime The starting time of mock request invocation
     * @param delay     The delay to wait for
     */
-   public static void waitForDelay(Long startTime, Delay delay) {
+   public static void waitForDelay(Long startTime, DelaySpec delay) {
       if (delay != null && delay.getBaseValue() > -1) {
-         DelayStrategy delayStrategy = DelayStrategyFactory.fromString(delay.getStrategyName());
+         DelayApplier delayStrategy = DelayApplierFactory.fromString(delay.getStrategyName());
          Long waitDelay = delayStrategy.compute(delay.getBaseValue());
          log.debug("Mock delay is turned on, waiting if necessary...");
          long duration = System.currentTimeMillis() - startTime;

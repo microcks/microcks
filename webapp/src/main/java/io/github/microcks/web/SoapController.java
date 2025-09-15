@@ -71,7 +71,8 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.github.microcks.util.delay.Delay;
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplierOptions;
 
 /**
  * A controller for mocking Soap responses.
@@ -301,11 +302,11 @@ public class SoapController {
                dispatchContext.requestContext(), response);
 
          // Setting delay to default one if not set.
-         Delay delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+         DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
          if (delay == null && rOperation.getDefaultDelay() != null) {
             Long operationDelay = rOperation.getDefaultDelay();
             // TODO: Get delayStrategy
-            delay = new Delay(operationDelay, "fixed");
+            delay = new DelaySpec(operationDelay, DelayApplierOptions.FIXED);
          }
          MockControllerCommons.waitForDelay(startTime, delay);
 

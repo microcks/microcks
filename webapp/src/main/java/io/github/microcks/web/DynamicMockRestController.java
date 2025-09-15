@@ -49,7 +49,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.github.microcks.util.delay.Delay;
+import io.github.microcks.util.delay.DelayApplierOptions;
+import io.github.microcks.util.delay.DelaySpec;
 
 /**
  * This is the controller for Dynamic mocks in Microcks.
@@ -116,9 +117,9 @@ public class DynamicMockRestController {
 
          // Append id and wait if specified before returning.
          document.append(ID_FIELD, genericResource.getId());
-         Delay delay = null;
+         DelaySpec delay = null;
          if (requestedDelay != null) {
-            delay = new Delay(requestedDelay, requestedDelayStrategy);
+            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
          }
          waitForDelay(startTime, delay, mockContext);
          return new ResponseEntity<>(document.toJson(), HttpStatus.CREATED);
@@ -165,9 +166,9 @@ public class DynamicMockRestController {
                .renderResponseContent(evaluableRequest, engine, transformToResourceJSON(genericResource)))
                .collect(Collectors.toList());
 
-         Delay delay = null;
+         DelaySpec delay = null;
          if (requestedDelay != null) {
-            delay = new Delay(requestedDelay, requestedDelayStrategy);
+            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
          }
 
          // Wait if specified before returning.
@@ -202,9 +203,9 @@ public class DynamicMockRestController {
          // Get the requested generic resource.
          GenericResource genericResource = genericResourceRepository.findById(resourceId).orElse(null);
 
-         Delay delay = null;
+         DelaySpec delay = null;
          if (requestedDelay != null) {
-            delay = new Delay(requestedDelay, requestedDelayStrategy);
+            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
          }
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
@@ -239,9 +240,9 @@ public class DynamicMockRestController {
       long startTime = System.currentTimeMillis();
 
       serviceName = sanitizeServiceName(serviceName);
-      Delay delay = null;
+      DelaySpec delay = null;
       if (requestedDelay != null) {
-         delay = new Delay(requestedDelay, requestedDelayStrategy);
+         delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
       }
 
       MockContext mockContext = getMockContext(serviceName, version, "PUT /" + resource + "/:id");
@@ -293,9 +294,9 @@ public class DynamicMockRestController {
       long startTime = System.currentTimeMillis();
 
       serviceName = sanitizeServiceName(serviceName);
-      Delay delay = null;
+      DelaySpec delay = null;
       if (requestedDelay != null) {
-         delay = new Delay(requestedDelay, requestedDelayStrategy);
+         delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
       }
 
       MockContext mockContext = getMockContext(serviceName, version, "DELETE /" + resource + "/:id");
@@ -352,12 +353,12 @@ public class DynamicMockRestController {
       return builder.append("]").toString();
    }
 
-   private void waitForDelay(Long since, Delay delay, MockContext mockContext) {
+   private void waitForDelay(Long since, DelaySpec delay, MockContext mockContext) {
       // Setting delay to default one if not set.
       if (delay == null && mockContext.operation.getDefaultDelay() != null) {
          Long operationDelay = mockContext.operation.getDefaultDelay();
          // TODO: Get DelayStrategy
-         delay = new Delay(operationDelay, "fixed");
+         delay = new DelaySpec(operationDelay, DelayApplierOptions.FIXED);
       }
 
       MockControllerCommons.waitForDelay(since, delay);

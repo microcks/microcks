@@ -16,16 +16,16 @@
 package io.github.microcks.util.delay;
 
 /**
- * A {@link DelayStrategy} that computes a random delay between 0 and the base value.
+ * A {@link DelayApplier} that computes a random delay between 0 and the base value.
  * <p>
- * Instances should be obtained via the factory method in {@link DelayStrategyFactory} to ensure proper usage and
+ * Instances should be obtained via the factory method in {@link DelayApplierFactory} to ensure proper usage and
  * encapsulation.
  * </p>
  * @author SebastienDegodez
  */
-public class RandomDelayStrategy implements DelayStrategy {
+public class RandomDelayApplier implements DelayApplier {
 
-   RandomDelayStrategy() {
+   RandomDelayApplier() {
    }
 
    @Override
@@ -39,6 +39,6 @@ public class RandomDelayStrategy implements DelayStrategy {
 
    @Override
    public String getName() {
-      return "random";
+      return DelayApplierOptions.RANDOM;
    }
 }
