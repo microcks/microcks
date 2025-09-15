@@ -19,30 +19,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A {@link DelayStrategy} implementation that computes a random delay within a range defined by a percentage. The
+ * A {@link DelayApplier} implementation that computes a random delay within a range defined by a percentage. The
  * resulting delay will be randomly distributed between (100 - percent)% and (100 + percent)% of the base value. For
  * example, with percent=20 and baseValue=100, the delay will be between 80 and 120.
  * <p>
- * Instances should be obtained via the factory method in {@link DelayStrategyFactory} to ensure proper usage and
+ * Instances should be obtained via the factory method in {@link DelayApplierFactory} to ensure proper usage and
  * encapsulation. Direct instantiation is discouraged.
  * </p>
  * @author SebastienDegodez
  */
-public class RandomRangedDelayStrategy implements DelayStrategy {
-   private static final Pattern RANDOM_RANGED_PATTERN = Pattern.compile("random-(\\d+)", Pattern.CASE_INSENSITIVE);
+public class RandomRangedDelayApplier implements DelayApplier {
 
    public static boolean isRandomRangedStrategy(String strategyName) {
-      return RANDOM_RANGED_PATTERN.matcher(strategyName).matches();
+      return DelayApplierOptions.RANDOM_RANGED_PATTERN.matcher(strategyName).matches();
    }
 
    private final int percent;
 
-   RandomRangedDelayStrategy(String strategyName) {
+   RandomRangedDelayApplier(String strategyName) {
       this.percent = extractPercent(strategyName);
    }
 
    private int extractPercent(String strategyName) {
-      Matcher matcher = RANDOM_RANGED_PATTERN.matcher(strategyName.toLowerCase());
+      Matcher matcher = DelayApplierOptions.RANDOM_RANGED_PATTERN.matcher(strategyName.toLowerCase());
       if (matcher.matches()) {
          int percent = Integer.parseInt(matcher.group(1));
          return percent;
@@ -63,6 +62,7 @@ public class RandomRangedDelayStrategy implements DelayStrategy {
 
    @Override
    public String getName() {
-      return "random-" + this.percent;
+      return String.format(DelayApplierOptions.RANDOM_RANGED_FORMAT, this.percent);
+
    }
 }

@@ -16,11 +16,24 @@
 package io.github.microcks.util.delay;
 
 /**
- * 
+ * A {@link DelayApplier} that returns fixed value.
+ * <p>
+ * Instances should be obtained via the factory method in {@link DelayApplierFactory} to ensure proper usage and
+ * encapsulation.
+ * </p>
  * @author SebastienDegodez
  */
-public interface DelayStrategy {
-   long compute(long baseValue);
+public class FixedDelayApplier implements DelayApplier {
+   FixedDelayApplier() {
+   } // package-private
 
-   String getName();
+   @Override
+   public long compute(long baseValue) {
+      return baseValue;
+   }
+
+   @Override
+   public String getName() {
+      return DelayApplierOptions.FIXED;
+   }
 }
