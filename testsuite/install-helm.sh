@@ -42,17 +42,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR/../install/kubernetes" || { echo "Failed to change directory to ${SCRIPT_DIR}"; exit 1; }
 
 #  Use Microcks Helm directly from the sources (not the repo as we have not yet publish changes).
-if $ASYNC; then
-  echo "[INFO] Adding Microcks Helm repository..."
-  helm repo add strimzi https://strimzi.io/charts/
-fi
-
 # Install Microcks using Helm with dynamic nip.io URLs based on the minikube IP.
-echo "[INFO] Installing Microcks..."
 if $ASYNC; then
-  kubectl patch -n ingress-nginx deployment/ingress-nginx-controller --type='json' \
-    -p '[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--enable-ssl-passthrough"}]'
+  echo "[INFO] Adding Strimzi Helm repository..."
+  helm repo add strimzi https://strimzi.io/charts/
+  echo "[INFO] Installing Strimzi Kafka Operator for async support..."
   helm install strimzi strimzi/strimzi-kafka-operator --namespace microcks
+  echo "[INFO] Installing Microcks..."
   helm install microcks ./microcks --namespace=microcks \
       --set appName=microcks --set features.async.enabled=true \
       --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \
@@ -60,6 +56,7 @@ if $ASYNC; then
       --set keycloak.privateUrl=http://microcks-keycloak.microcks.svc.cluster.local:8080 \
       --set features.async.kafka.url=kafka.${MINIKUBE_IP}.nip.io
 else
+  echo "[INFO] Installing Microcks..."
   helm install microcks ./microcks --namespace microcks \
      --set microcks.url=microcks.${MINIKUBE_IP}.nip.io \
      --set keycloak.url=keycloak.${MINIKUBE_IP}.nip.io \
@@ -73,13 +70,15 @@ echo "[INFO] Waiting for Microcks pods to be ready..."
 # Wait for all microcks pods except async-minion
 pods=$(kubectl get pods -n "$NAMESPACE" -l app=microcks -o jsonpath='{.items[?(@.metadata.name!="microcks-async-minion")].metadata.name}')
 
-if ! kubectl wait --for=condition=Ready pod -n "$NAMESPACE" $pods --timeout=120s; then
-  echo "[WARN] Some Microcks pods (except async-minion) did not become ready within 300s. Continuing anyway."
+if ! kubectl wait --for=condition=Ready pod -n "$NAMESPACE" $pods --timeout=180s; then
+  echo "[WARN] Some Microcks pods (except async-minion) did not become ready within 180s. Continuing anyway."
 fi
 
-# Wait for async-minion pod last
-if ! kubectl wait --for=condition=Ready pod microcks-async-minion -n "$NAMESPACE" --timeout=120s; then
-  echo "[WARN] Async-minion pod did not become ready within timeout. Continuing anyway."
+if $ASYNC; then
+  # Wait for async-minion pod last
+  if ! kubectl wait --for=condition=Ready pod microcks-async-minion -n "$NAMESPACE" --timeout=120s; then
+    echo "[WARN] Async-minion pod did not become ready within timeout. Continuing anyway."
+  fi
 fi
 
 echo "------------------------------------------------------"
