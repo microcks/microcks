@@ -41,7 +41,7 @@ spec:
 apiVersion: kafka.strimzi.io/v1beta2
 kind: KafkaNodePool
 metadata:
-  name: dual-role
+  name: "{{ .Values.appName }}-kafka-nodes"
   labels:
     strimzi.io/cluster: "{{ .Values.appName }}-kafka"
 spec:
@@ -91,8 +91,8 @@ spec:
           brokers:
           - broker: 0
             host: "{{ .Values.appName }}-kafka-0.{{ .Values.features.async.kafka.url }}"
-    replicas: 1
     {{- if not .Values.features.async.kafka.enableKraft }}
+    replicas: 1
     storage:
       type: ephemeral
     {{- end }}

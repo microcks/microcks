@@ -22,7 +22,7 @@ a pull request against the community file 🙏
 
 ### Runtime Environments
 
-* **Minikube**: v1.32.0 with Kubernetes v1.28.3
+* **Minikube**: v1.32.0 with Kubernetes v1.28.3, v1.36.0 with Kubernetes v1.32.1, v1.37.0 with Kubernetes v1.34.0
 * **Kind**: v0.25.0 with Kubernetes v1.28.3
 
 ### Integrations
