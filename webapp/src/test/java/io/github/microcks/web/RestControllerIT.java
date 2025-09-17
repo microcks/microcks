@@ -272,6 +272,7 @@ class RestControllerIT extends AbstractBaseIT {
       // Introduce request delay.
       long delay = 150l;
       op.setDefaultDelay(delay);
+      op.setDefaultDelayStrategy("fixed");
       serviceRepository.save(service);
 
       // If we have the mock, we should get the response from the mock.

@@ -223,7 +223,7 @@ public class ServiceController {
       log.debug("ParameterConstraints?: {}", operationOverride.getParameterConstraints());
       boolean result = serviceService.updateOperation(serviceId, operationName, operationOverride.getDispatcher(),
             operationOverride.getDispatcherRules(), operationOverride.getDefaultDelay(),
-            operationOverride.getParameterConstraints(), userInfo);
+            operationOverride.getDefaultDelayStrategy(), operationOverride.getParameterConstraints(), userInfo);
       if (result) {
          return new ResponseEntity<>(HttpStatus.OK);
       }

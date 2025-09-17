@@ -38,6 +38,7 @@ public class Operation {
    private String dispatcher;
    private String dispatcherRules;
    private Long defaultDelay;
+   private String defaultDelayStrategy;
 
    private Set<String> resourcePaths;
    private Set<ParameterConstraint> parameterConstraints;
@@ -127,6 +128,14 @@ public class Operation {
 
    public void setDefaultDelay(Long defaultDelay) {
       this.defaultDelay = defaultDelay;
+   }
+
+   public String getDefaultDelayStrategy() {
+      return defaultDelayStrategy;
+   }
+
+   public void setDefaultDelayStrategy(String defaultDelayStrategy) {
+      this.defaultDelayStrategy = defaultDelayStrategy;
    }
 
    public Set<String> getResourcePaths() {
