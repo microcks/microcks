@@ -28,6 +28,7 @@ public class OperationOverrideDTO {
    private String dispatcher;
    private String dispatcherRules;
    private Long defaultDelay;
+   private String defaultDelayStrategy;
    private Set<ParameterConstraint> parameterConstraints;
 
    public String getDispatcher() {
@@ -52,6 +53,14 @@ public class OperationOverrideDTO {
 
    public void setDefaultDelay(Long defaultDelay) {
       this.defaultDelay = defaultDelay;
+   }
+
+   public String getDefaultDelayStrategy() {
+      return this.defaultDelayStrategy;
+   }
+
+   public void setDefaultDelayStrategy(String defaultDelayStrategy) {
+      this.defaultDelayStrategy = defaultDelayStrategy;
    }
 
    public Set<ParameterConstraint> getParameterConstraints() {

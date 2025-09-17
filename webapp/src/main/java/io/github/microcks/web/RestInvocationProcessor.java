@@ -63,6 +63,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplierOptions;
+
 /**
  * A processor for handling REST invocations. It is responsible for applying the dispatching logic and finding the most
  * appropriate response based on the request context.
@@ -111,7 +114,7 @@ public class RestInvocationProcessor {
     * @param request   The HTTP servlet request
     * @return A ResponseResult containing the status, headers, and body of the response
     */
-   public ResponseResult processInvocation(MockInvocationContext ic, long startTime, Long delay, String body,
+   public ResponseResult processInvocation(MockInvocationContext ic, long startTime, DelaySpec delay, String body,
          Map<String, List<String>> headers, HttpServletRequest request) {
 
       // We must find dispatcher and its rules. Default to operation ones but
@@ -139,7 +142,9 @@ public class RestInvocationProcessor {
 
       // Setting delay to default one if not set.
       if (delay == null && ic.operation().getDefaultDelay() != null) {
-         delay = ic.operation().getDefaultDelay();
+         Long defaultDelay = ic.operation().getDefaultDelay();
+         // TODO: Get DelayStrategy 
+         delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
       }
 
       // Check if we need to proxy the request.
@@ -395,7 +400,7 @@ public class RestInvocationProcessor {
       }
    }
 
-   private String getResponseContent(MockInvocationContext ic, long startTime, Long delay, String body,
+   private String getResponseContent(MockInvocationContext ic, long startTime, DelaySpec delay, String body,
          HttpServletRequest request, DispatchContext dispatchContext, Response response) {
       // Render response content before waiting and returning.
       String responseContent = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
