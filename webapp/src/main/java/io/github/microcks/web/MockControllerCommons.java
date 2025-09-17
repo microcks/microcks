@@ -317,7 +317,7 @@ public class MockControllerCommons {
       if (headers.containsKey(MockControllerCommons.X_MICROCKS_DELAY_HEADER)) {
          String delayHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
          try {
-            String delayStrategyHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
+            String delayStrategyHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_STRATEGY_HEADER);
 
             return new DelaySpec(Long.parseLong(delayHeader), delayStrategyHeader);
          } catch (NumberFormatException nfe) {
