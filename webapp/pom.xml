@@ -29,7 +29,7 @@
     <grpc.version>1.70.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
-    <opentelemetry.version>1.33.6</opentelemetry.version>
+    <opentelemetry.version>2.19.0</opentelemetry.version>
   </properties>
 
   <dependencyManagement>
@@ -46,6 +46,13 @@
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
         <version>${snakeyaml.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-instrumentation-bom</artifactId>
+        <version>${opentelemetry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -84,17 +91,18 @@
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
 
-    <!-- observability with Otel -->
-    <dependency>
-      <groupId>io.opentelemetry.javaagent</groupId>
-      <artifactId>opentelemetry-javaagent</artifactId>
-      <version>${opentelemetry.version}</version>
-      <scope>provided</scope>
-    </dependency>
+    <!-- Core OpenTelemetry dependencies -->
     <dependency>
       <groupId>io.opentelemetry.instrumentation</groupId>
-      <artifactId>opentelemetry-instrumentation-annotations</artifactId>
-      <version>${opentelemetry.version}</version>
+      <artifactId>opentelemetry-spring-boot-starter</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-exporter-otlp</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aop</artifactId>
     </dependency>
 
     <dependency>
@@ -160,7 +168,7 @@
       <version>${groovy.version}</version>
     </dependency>
     <dependency>
-    <groupId>org.apache.groovy</groupId>
+      <groupId>org.apache.groovy</groupId>
       <artifactId>groovy-dateutil</artifactId>
       <version>${groovy.version}</version>
     </dependency>
@@ -580,15 +588,11 @@
             <version>${spring-boot.version}</version>
             <configuration>
               <environmentVariables>
-                <!-- <JAVA_TOOL_OPTIONS>-javaagent:${user.home}/.m2/repository/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar</JAVA_TOOL_OPTIONS> -->
-                <JAVA_TOOL_OPTIONS>-javaagent:${user.home}/Development/repository/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar</JAVA_TOOL_OPTIONS>
-                <OTEL_JAVAAGENT_ENABLED>true</OTEL_JAVAAGENT_ENABLED>
                 <OTEL_METRICS_EXPORTER>otlp</OTEL_METRICS_EXPORTER>
                 <OTEL_LOGS_EXPORTER>otlp</OTEL_LOGS_EXPORTER>
                 <OTEL_TRACES_EXPORTER>otlp</OTEL_TRACES_EXPORTER>
                 <OTEL_METRIC_EXPORT_INTERVAL>10000</OTEL_METRIC_EXPORT_INTERVAL>
                 <OTEL_EXPORTER_OTLP_TIMEOUT>7000</OTEL_EXPORTER_OTLP_TIMEOUT>
-                <OTEL_RESOURCE_ATTRIBUTES>service.name=${project.artifactId},service.namespace=${project.artifactId}-ns,service.instance.id=${project.artifactId}-dev,service.version=${project.version}</OTEL_RESOURCE_ATTRIBUTES>
               </environmentVariables>
             </configuration>
           </plugin>
