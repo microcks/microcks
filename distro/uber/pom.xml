@@ -15,6 +15,7 @@
     <multi-project.rootdir>../..</multi-project.rootdir>
     <java.version>21</java.version>
     <mongo-java-server.version>1.47.0</mongo-java-server.version>
+    <opentelemetry.version>2.19.0</opentelemetry.version>
   </properties>
 
   <dependencies>
@@ -71,6 +72,23 @@
   <profiles>
     <profile>
       <id>prod</id>
+      <dependencyManagement>
+        <dependencies>
+          <dependency>
+            <groupId>io.opentelemetry.instrumentation</groupId>
+            <artifactId>opentelemetry-instrumentation-bom</artifactId>
+            <version>${opentelemetry.version}</version>
+            <type>pom</type>
+            <scope>import</scope>
+          </dependency>
+        </dependencies>
+      </dependencyManagement>
+      <dependencies>
+        <dependency>
+          <groupId>io.opentelemetry</groupId>
+          <artifactId>opentelemetry-common</artifactId>
+        </dependency>
+      </dependencies>
       <build>
         <plugins>
           <plugin>
