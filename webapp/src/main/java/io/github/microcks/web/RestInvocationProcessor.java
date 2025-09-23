@@ -39,6 +39,10 @@ import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.roastedroot.quickjs4j.core.Engine;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
@@ -113,9 +117,12 @@ public class RestInvocationProcessor {
     * @param request   The HTTP servlet request
     * @return A ResponseResult containing the status, headers, and body of the response
     */
+   @WithSpan(kind = SpanKind.INTERNAL, value = "processInvocation")
    public ResponseResult processInvocation(MockInvocationContext ic, long startTime, Long delay, String body,
          Map<String, List<String>> headers, HttpServletRequest request) {
-
+      // Mark current span as an explain Span
+      Span span = Span.current();
+      span.setAttribute("explain-trace", true);
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation());
@@ -123,7 +130,12 @@ public class RestInvocationProcessor {
       String dispatcher = getDispatcher(ic, fallback, proxyFallback);
       String dispatcherRules = getDispatcherRules(ic, fallback, proxyFallback);
 
-      //
+      span.addEvent("dispatcher_selected",
+            Attributes.builder().put("message", "Selected dispatcher and rules for this invocation")
+                  .put("dispatcher", dispatcher != null ? dispatcher : "none")
+                  .put("dispatcher.rules", dispatcherRules != null ? dispatcherRules : "none").build());
+
+
       DispatchContext dispatchContext = computeDispatchCriteria(ic.service(), dispatcher, dispatcherRules,
             getURIPattern(ic.operation().getName()), UriUtils.decode(ic.resourcePath(), StandardCharsets.UTF_8),
             request, body);
