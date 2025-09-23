@@ -18,6 +18,18 @@
     <opentelemetry.version>2.19.0</opentelemetry.version>
   </properties>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>io.opentelemetry.instrumentation</groupId>
+        <artifactId>opentelemetry-instrumentation-bom</artifactId>
+        <version>${opentelemetry.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>io.github.microcks</groupId>
@@ -37,6 +49,10 @@
       <groupId>de.bwaldvogel</groupId>
       <artifactId>mongo-java-server-h2-backend</artifactId>
       <version>${mongo-java-server.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-common</artifactId>
     </dependency>
   </dependencies>
 
@@ -72,23 +88,6 @@
   <profiles>
     <profile>
       <id>prod</id>
-      <dependencyManagement>
-        <dependencies>
-          <dependency>
-            <groupId>io.opentelemetry.instrumentation</groupId>
-            <artifactId>opentelemetry-instrumentation-bom</artifactId>
-            <version>${opentelemetry.version}</version>
-            <type>pom</type>
-            <scope>import</scope>
-          </dependency>
-        </dependencies>
-      </dependencyManagement>
-      <dependencies>
-        <dependency>
-          <groupId>io.opentelemetry</groupId>
-          <artifactId>opentelemetry-common</artifactId>
-        </dependency>
-      </dependencies>
       <build>
         <plugins>
           <plugin>
