@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
+import io.opentelemetry.api.trace.StatusCode;
 import io.roastedroot.quickjs4j.annotations.Builtins;
 import io.roastedroot.quickjs4j.annotations.GuestFunction;
 import io.roastedroot.quickjs4j.annotations.HostFunction;
@@ -336,9 +337,21 @@ public class JsScriptEngineBinder {
          return jsApi.process();
       } catch (Exception e) {
          log.error("Error during JS evaluation", e);
+         Span.current().recordException(e);
+         Span.current().addEvent("dispatch_criteria_result",
+               Attributes.builder().put("message", "Failed to compute dispatch criteria using JS dispatcher")
+                     .put("dispatch.type", "JS").put("dispatch.result", "null")
+                     .put("dispatch.script", script == null ? "" : script).build());
+         Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
          if (runner != null) {
             log.error("script stdout: " + runner.stdout());
             log.error("script stderr: " + runner.stderr());
+            Span.current().addEvent("script_output",
+                  Attributes.builder().put("message", "Script stdout and stderr")
+                        .put("script.stdout", runner.stdout() == null ? "" : runner.stdout())
+                        .put("script.stderr", runner.stderr() == null ? "" : runner.stderr()).build());
+
+
          }
       } finally {
          if (runner != null) {
