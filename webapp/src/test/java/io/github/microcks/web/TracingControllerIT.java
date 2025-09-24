@@ -130,7 +130,6 @@ class TracingControllerIT extends AbstractBaseIT {
       // Check if traces exist (but don't fail if they don't)
       restTemplate.exchange("/api/traces", HttpMethod.GET, null, new ParameterizedTypeReference<Set<String>>() {
       });
-      // We may or may not have traces at this point, but that's ok for this test
 
       // When - Clear all traces
       ResponseEntity<String> clearResponse = restTemplate.exchange("/api/traces", HttpMethod.DELETE, null,
