@@ -324,9 +324,6 @@ public class RestInvocationProcessor {
                   String result = JsScriptEngineBinder.invokeProcessFn(script, scriptContext);
                   if (result != null) {
                      dispatchCriteria = result;
-                     Span.current().addEvent("dispatch_criteria_result",
-                           Attributes.builder().put("message", "Computed dispatch criteria using JS dispatcher")
-                                 .put("dispatch.type", "SCRIPT").put("dispatch.result", dispatchCriteria).build());
                   }
                   break;
                case DispatchStyles.URI_PARAMS:

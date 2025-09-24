@@ -334,7 +334,12 @@ public class JsScriptEngineBinder {
       try {
          runner = Runner.builder().withEngine(scriptContext).build();
          JsScriptEngineBinder.JsApi jsApi = JsApi_Invokables.create(script, runner);
-         return jsApi.process();
+         String res = jsApi.process();
+         Span.current().addEvent("dispatch_criteria_result",
+               Attributes.builder().put("message", "Computed dispatch criteria using JS dispatcher")
+                     .put("dispatch.type", "SCRIPT").put("dispatch.result", res).build());
+         return res;
+
       } catch (Exception e) {
          log.error("Error during JS evaluation", e);
          Span.current().recordException(e);
