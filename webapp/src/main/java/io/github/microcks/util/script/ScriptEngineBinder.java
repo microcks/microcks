@@ -18,6 +18,10 @@ package io.github.microcks.util.script;
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +43,57 @@ public class ScriptEngineBinder {
 
    /** Private constructor to hide the implicit public one. */
    private ScriptEngineBinder() {
+   }
+
+   /**
+    * Lightweight wrapper exposing common Logger methods while also exporting messages as span events. Keeps the same
+    * method names used by scripts (info/debug/warn/error) for drop-in compatibility.
+    */
+   public static final class LogWrapper {
+      private final Logger delegate;
+
+      LogWrapper(Logger delegate) {
+         this.delegate = delegate;
+      }
+
+      public void info(String msg) {
+         delegate.info(msg);
+         addSpanLogEvent("INFO", msg, null);
+      }
+
+      public void debug(String msg) {
+         delegate.debug(msg);
+         addSpanLogEvent("DEBUG", msg, null);
+      }
+
+      public void warn(String msg) {
+         delegate.warn(msg);
+         addSpanLogEvent("WARN", msg, null);
+      }
+
+      public void error(String msg) {
+         delegate.error(msg);
+         addSpanLogEvent("ERROR", msg, null);
+      }
+
+      public void error(String msg, Throwable t) {
+         delegate.error(msg, t);
+         addSpanLogEvent("ERROR", msg, t);
+      }
+
+      private void addSpanLogEvent(String level, String message, Throwable t) {
+         AttributesBuilder b = Attributes.builder().put(AttributeKey.stringKey("level"), level)
+               .put(AttributeKey.stringKey("script.log"), message == null ? "" : message)
+               .put(AttributeKey.stringKey("script.engine"), "groovy")
+               .put(AttributeKey.stringKey("message"), "Script log message");
+         if (t != null) {
+            b.put(AttributeKey.stringKey("exception.type"), t.getClass().getName());
+            if (t.getMessage() != null) {
+               b.put(AttributeKey.stringKey("exception.message"), t.getMessage());
+            }
+         }
+         Span.current().addEvent("script.log", b.build());
+      }
    }
 
    /**
@@ -113,7 +168,8 @@ public class ScriptEngineBinder {
       // Create bindings and put content according to SoapUI binding environment.
       Bindings bindings = engine.createBindings();
       bindings.put("mockRequest", mockRequest);
-      bindings.put("log", log);
+      // Wrap the logger so that script log calls are also exported as span events.
+      bindings.put("log", new LogWrapper(log));
       bindings.put("requestContext", requestContext);
       bindings.put("store", stateStore);
 
