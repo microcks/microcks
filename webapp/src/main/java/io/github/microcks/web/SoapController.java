@@ -71,6 +71,9 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplierOptions;
+
 /**
  * A controller for mocking Soap responses.
  * @author laurent
@@ -130,8 +133,9 @@ public class SoapController {
    @PostMapping(value = "/{service}/{version}/**")
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "validate", required = false) Boolean validate,
-         @RequestParam(value = "delay", required = false) Long delay, @RequestBody String body,
-         @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
+         @RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
 
@@ -298,9 +302,11 @@ public class SoapController {
                dispatchContext.requestContext(), response);
 
          // Setting delay to default one if not set.
-         delay = MockControllerCommons.getDelay(headers, delay);
+         DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
          if (delay == null && rOperation.getDefaultDelay() != null) {
-            delay = rOperation.getDefaultDelay();
+            Long operationDelay = rOperation.getDefaultDelay();
+            // TODO: Get delayStrategy
+            delay = new DelaySpec(operationDelay, DelayApplierOptions.FIXED);
          }
          MockControllerCommons.waitForDelay(startTime, delay);
 
