@@ -24,6 +24,52 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * OpenTelemetry auto-configuration customizer that adds a custom span processor for local trace storage.
+ * This processor runs alongside the default OpenTelemetry export flow to external systems.
+ *
+ * <pre>
+ * Trace Flow:
+ * ===========
+ *
+ *  ┌─────────────────┐            ┌──────────────────────┐
+ *  │   Application   │───────────▶│   OpenTelemetry      │
+ *  │     traces      │            │   SDK                │
+ *  └─────────────────┘            └──────────────────────┘
+ *                                           │
+ *                                           ▼
+ *                                 ┌─────────────────────┐
+ *                                 │    Span Created     │
+ *                                 └─────────────────────┘
+ *                                           │
+ *                                           ▼
+ *                                  ┌────────┴────────┐
+ *                                  │                 │
+ *                                  ▼                 ▼
+ *           ┌─────────────────────────────┐   ┌─────────────────────────────┐
+ *           │ CustomExplainTraceProcessor │   │  Default Batch Processor    │
+ *           │     (stores locally)        │   │ (exports to external sys.)  │
+ *           └─────────────────────────────┘   └─────────────────────────────┘
+ *                          │                                 │
+ *                          ▼                                 ▼
+ *           ┌─────────────────────────────┐   ┌─────────────────────────────┐
+ *           │     SpanStorageService      │   │         Exporters           │
+ *           │      (In-Memory)            │   │  (Jaeger, Tempo, OTLP)      │
+ *           └─────────────────────────────┘   └─────────────────────────────┘
+ *                                                            │
+ *                                                            ▼
+ *                                           ┌─────────────────────────────────┐
+ *                                           │         External Systems        │
+ *                                           │  (Jaeger, Tempo, OTLP, etc.)    │
+ *                                           └─────────────────────────────────┘
+ *
+ * The CustomExplainTraceProcessor adds local storage capability without interfering
+ * with the standard OpenTelemetry export pipeline to external tracing systems.
+ * </pre>
+ *
+ * @see CustomExplainTraceProcessor
+ * @see SpanStorageService
+ */
 @Configuration
 public class OtelAutoConfigurationCustomizerProvider {
 
