@@ -25,8 +25,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * OpenTelemetry auto-configuration customizer that adds a custom span processor for local trace storage.
- * This processor runs alongside the default OpenTelemetry export flow to external systems.
+ * OpenTelemetry auto-configuration customizer that adds a custom span processor for local trace storage. This processor
+ * runs alongside the default OpenTelemetry export flow to external systems.
  *
  * <pre>
  * Trace Flow:
