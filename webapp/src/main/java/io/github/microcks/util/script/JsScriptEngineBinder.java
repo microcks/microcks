@@ -32,6 +32,10 @@ import io.roastedroot.quickjs4j.core.Engine;
 import io.roastedroot.quickjs4j.core.Runner;
 import io.roastedroot.quickjs4j.core.ScriptCache;
 import jakarta.servlet.http.HttpServletRequest;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
@@ -89,21 +93,33 @@ public class JsScriptEngineBinder {
       @HostFunction
       public void info(String str) {
          log.info(str);
+         addSpanLogEvent("INFO", str);
       }
 
       @HostFunction
       public void debug(String str) {
          log.debug(str);
+         addSpanLogEvent("DEBUG", str);
       }
 
       @HostFunction
       public void warn(String str) {
          log.warn(str);
+         addSpanLogEvent("WARN", str);
       }
 
       @HostFunction
       public void error(String str) {
          log.error(str);
+         addSpanLogEvent("ERROR", str);
+      }
+
+      private void addSpanLogEvent(String level, String message) {
+         AttributesBuilder b = Attributes.builder().put(AttributeKey.stringKey("level"), level)
+               .put(AttributeKey.stringKey("script.log"), message == null ? "" : message)
+               .put(AttributeKey.stringKey("message"), "Script log message")
+               .put(AttributeKey.stringKey("script.engine"), "js").put(AttributeKey.stringKey("logger"), log.getName());
+         Span.current().addEvent("script.log", b.build());
       }
    }
 
