@@ -74,7 +74,7 @@ public class SpanStorageService {
 
       // Limit total number of traces to prevent memory leaks
       if (spansByTraceId.size() > MAX_TRACES) {
-         // Remove oldest trace (this is a simple approach - you might want to use LRU)
+         // Remove oldest trace this works because LinkedHashMap maintains insertion order
          String oldestTraceId = spansByTraceId.keySet().iterator().next();
          spansByTraceId.remove(oldestTraceId);
       }
