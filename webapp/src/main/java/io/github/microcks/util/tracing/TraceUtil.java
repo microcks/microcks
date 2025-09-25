@@ -53,12 +53,6 @@ public final class TraceUtil {
    public static boolean enableExplainTracing() {
       Span currentSpan = Span.current();
 
-      // Check if there's an active span
-      SpanContext spanContext = currentSpan.getSpanContext();
-      if (!spanContext.isValid()) {
-         return false;
-      }
-
       try {
          // Add the explain-trace attribute to the current span
          currentSpan.setAttribute(EXPLAIN_TRACE_ATTRIBUTE, true);
