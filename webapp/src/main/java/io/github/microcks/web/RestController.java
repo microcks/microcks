@@ -27,11 +27,11 @@ import io.github.microcks.util.ParameterConstraintUtil;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.openapi.OpenAPISchemaValidator;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
+import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.util.tracing.TraceUtil;
 import io.github.microcks.util.openapi.SwaggerSchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -234,16 +234,16 @@ public class RestController {
    private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime, Long delay,
          String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
       Span span = Span.current();
-      span.setAttribute("explain-trace", true);
+      TraceUtil.enableExplainTracing();
       span.setAttribute("service.name", ic.service().getName());
       span.setAttribute("service.version", ic.service().getVersion());
       span.setAttribute("operation.name", ic.operation().getName());
       span.setAttribute("operation.method", ic.operation().getMethod());
       span.setAttribute("operation.id", IdBuilder.buildOperationId(ic.service(), ic.operation()));
       // Add an event for the invocation reception with a human-friendly message.
-      span.addEvent("invocation_received",
-            Attributes.builder()
-                  .put("message",
+      span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
+            TraceUtil
+                  .explainSpanEventBuilder(
                         String.format("Received REST invocation %s %s", ic.operation().getMethod(), ic.resourcePath()))
                   .put("http.method", request.getMethod())
                   .put("query.string", request.getQueryString() != null ? request.getQueryString() : "empty")
@@ -256,8 +256,9 @@ public class RestController {
                   .put("client.address", request.getRemoteAddr()).build());
       String violationMsg = validateParameterConstraintsIfAny(ic.operation(), request);
       if (violationMsg != null) {
-         span.addEvent("parameter.constraint.violation",
-               Attributes.of(AttributeKey.stringKey("message"), violationMsg));
+         // if a constraint is violated, add an event and return a 400 error.
+         span.addEvent(CommonEvents.PARAMETER_CONSTRAINT_VIOLATED.getEventName(),
+               TraceUtil.explainSpanEventBuilder(violationMsg).build());
          span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, "Parameter constraint violation");
          span.setAttribute("http.status_code", 400);
          return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(),
