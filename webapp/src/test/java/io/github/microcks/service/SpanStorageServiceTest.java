@@ -44,7 +44,6 @@ import static org.mockito.Mockito.*;
 
 /**
  * Test case for SpanStorageService class.
- * @author microcks-team
  */
 class SpanStorageServiceTest {
 
