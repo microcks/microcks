@@ -7,8 +7,7 @@ import { ModalModule } from 'ngx-bootstrap/modal';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AppComponent } from './app.component';
 import { AuthenticationServiceProvider } from './services/auth.service.provider';
-import { ConfigService } from './services/config.service';
-import { VersionInfoService } from './services/versioninfo.service';
+
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -23,8 +22,6 @@ describe('AppComponent', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         AuthenticationServiceProvider,
-        ConfigService,
-        VersionInfoService
       ]
     }).compileComponents();
   });
