@@ -43,8 +43,9 @@ class TraceUtilTest {
    @DisplayName("Should return true when enabling explain tracing with a current span")
    void testEnableExplainTracingWithCurrentSpan() throws Exception {
       var span = mock(io.opentelemetry.api.trace.Span.class);
+      when(span.getSpanContext()).thenReturn(mock(io.opentelemetry.api.trace.SpanContext.class));
+      when(span.getSpanContext().isValid()).thenReturn(true);
       try (var currentSpan = mockStatic(io.opentelemetry.api.trace.Span.class)) {
-         ;
          currentSpan.when(io.opentelemetry.api.trace.Span::current).thenReturn(span);
          boolean result = TraceUtil.enableExplainTracing();
          assertThat(result).isTrue();
