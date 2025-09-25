@@ -16,6 +16,7 @@
 package io.github.microcks.util.otel;
 
 import io.github.microcks.service.SpanStorageService;
+import io.github.microcks.util.tracing.TraceUtil;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
@@ -59,7 +60,7 @@ public class CustomExplainTraceProcessor implements SpanProcessor {
       // if span has attribute explain-trace save it
       Map<AttributeKey<?>, Object> attributes = span.toSpanData().getAttributes().asMap();
       if (attributes.keySet().stream()
-            .anyMatch(key -> SpanStorageService.valuesEqualAttr(key, AttributeKey.booleanKey("explain-trace")))) {
+            .anyMatch(key -> SpanStorageService.valuesEqualAttr(key, TraceUtil.EXPLAIN_TRACE_ATTRIBUTE))) {
          spanStorageService.storeSpan(span);
       }
    }
