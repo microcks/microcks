@@ -1,10 +1,31 @@
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { ModalModule } from 'ngx-bootstrap/modal';
+import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { AppComponent } from './app.component';
-
+import { AuthenticationServiceProvider } from './services/auth.service.provider';
+import { ConfigService } from './services/config.service';
+import { VersionInfoService } from './services/versioninfo.service';
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppComponent],
+      imports: [
+        AppComponent,
+        BrowserAnimationsModule,
+        ModalModule.forRoot(),
+        BsDropdownModule.forRoot()
+      ],
+      providers: [
+        provideRouter([]), // Empty routes for testing
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        AuthenticationServiceProvider,
+        ConfigService,
+        VersionInfoService
+      ]
     }).compileComponents();
   });
 
@@ -12,18 +33,5 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
     expect(app).toBeTruthy();
-  });
-
-  it(`should have the 'webapp-new' title`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('webapp-new');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, webapp-new');
   });
 });
