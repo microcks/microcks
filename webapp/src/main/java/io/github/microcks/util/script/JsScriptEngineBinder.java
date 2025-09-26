@@ -15,6 +15,9 @@
  */
 package io.github.microcks.util.script;
 
+import io.github.microcks.service.StateStore;
+import io.github.microcks.util.http.HttpHeadersUtil;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -22,8 +25,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.github.microcks.service.StateStore;
-import io.github.microcks.util.http.HttpHeadersUtil;
 import io.opentelemetry.api.trace.StatusCode;
 import io.roastedroot.quickjs4j.annotations.Builtins;
 import io.roastedroot.quickjs4j.annotations.GuestFunction;
