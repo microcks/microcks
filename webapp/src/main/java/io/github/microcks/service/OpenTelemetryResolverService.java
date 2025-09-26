@@ -1,19 +1,20 @@
-package io.github.microcks.util.tracing;
+package io.github.microcks.service;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import org.springframework.stereotype.Component;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Service;
 
 /**
  * A resolver class to obtain an OpenTelemetry instance from the Spring application context. If no OpenTelemetry bean is
  * found, it falls back to the global OpenTelemetry instance.
  *
  */
-@Component
-public class OpenTelemetryResolver {
-   private final org.springframework.context.ApplicationContext applicationContext;
+@Service
+public class OpenTelemetryResolverService {
+   private final ApplicationContext applicationContext;
 
-   public OpenTelemetryResolver(org.springframework.context.ApplicationContext applicationContext) {
+   public OpenTelemetryResolverService(ApplicationContext applicationContext) {
       this.applicationContext = applicationContext;
    }
 
