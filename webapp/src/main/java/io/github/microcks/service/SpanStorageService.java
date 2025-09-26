@@ -99,8 +99,12 @@ public class SpanStorageService {
          String operation = null;
          for (ReadableSpan s : spans) {
             Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
-            service = (String) attributes.get(AttributeKey.stringKey("service.name"));
-            operation = (String) attributes.get(AttributeKey.stringKey("operation.name"));
+            String serviceAttribute = (String) attributes.get(AttributeKey.stringKey("service.name"));
+            String operationAttribute = (String) attributes.get(AttributeKey.stringKey("operation.name"));
+            if (serviceAttribute != null)
+               service = serviceAttribute;
+            if (operationAttribute != null)
+               operation = operationAttribute;
             if (service != null && operation != null) {
                break;
             }
