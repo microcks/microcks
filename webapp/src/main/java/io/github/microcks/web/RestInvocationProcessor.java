@@ -39,7 +39,8 @@ import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
-import io.opentelemetry.api.common.Attributes;
+import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.util.tracing.TraceUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
@@ -133,8 +134,8 @@ public class RestInvocationProcessor {
       String dispatcher = getDispatcher(ic, fallback, proxyFallback);
       String dispatcherRules = getDispatcherRules(ic, fallback, proxyFallback);
 
-      span.addEvent("dispatcher_selected",
-            Attributes.builder().put("message", "Selected dispatcher and rules for this invocation")
+      span.addEvent(CommonEvents.DISPATCHER_SELECTED.getEventName(),
+            TraceUtil.explainSpanEventBuilder("Selected dispatcher and rules for this invocation")
                   .put("dispatcher", dispatcher != null ? dispatcher : "none")
                   .put("dispatcher.rules", dispatcherRules != null ? dispatcherRules : "none").build());
 
