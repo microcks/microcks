@@ -15,10 +15,13 @@
  */
 package io.github.microcks.service;
 
+import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -53,6 +56,15 @@ public class SpanStorageService {
     */
    private static final int MAX_SPANS_PER_TRACE = 100;
 
+   /**
+    * Publisher for notifying listeners about new root spans (new traces).
+    */
+   private final ApplicationEventPublisher publisher;
+
+   public SpanStorageService(ApplicationEventPublisher publisher) {
+      this.publisher = publisher;
+   }
+
 
    /**
     * Stores a span in the service, grouped by trace ID.
@@ -77,6 +89,23 @@ public class SpanStorageService {
          // Remove oldest trace this works because LinkedHashMap maintains insertion order
          String oldestTraceId = spansByTraceId.keySet().iterator().next();
          spansByTraceId.remove(oldestTraceId);
+      }
+
+      // Publish a notification if this is a root span (no parent)
+      if (!span.getParentSpanContext().isValid()) {
+         List<ReadableSpan> current = spansByTraceId.getOrDefault(traceId, List.of());
+         List<SpanData> snapshot = current.stream().map(ReadableSpan::toSpanData).toList();
+         String service = null;
+         String operation = null;
+         for (ReadableSpan s : spans) {
+            Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
+            service = (String) attributes.get(AttributeKey.stringKey("service.name"));
+            operation = (String) attributes.get(AttributeKey.stringKey("operation.name"));
+            if (service != null && operation != null) {
+               break;
+            }
+         }
+         publisher.publishEvent(new TraceEvent(traceId, service, operation));
       }
    }
 

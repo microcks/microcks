@@ -15,6 +15,7 @@
  */
 package io.github.microcks.service;
 
+import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanContext;
@@ -28,7 +29,11 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.HashMap;
 import java.util.List;
@@ -48,10 +53,13 @@ import static org.mockito.Mockito.*;
 class SpanStorageServiceTest {
 
    private SpanStorageService spanStorageService;
+   @Mock
+   private ApplicationEventPublisher mockEventPublisher;
 
    @BeforeEach
    void setUp() {
-      spanStorageService = new SpanStorageService();
+      mockEventPublisher = mock(ApplicationEventPublisher.class);
+      spanStorageService = new SpanStorageService(mockEventPublisher);
    }
 
    @Test
@@ -274,6 +282,118 @@ class SpanStorageServiceTest {
       assertEquals(2, trace1Spans.size());
    }
 
+   @Nested
+   @DisplayName("Event Publishing Tests")
+   class EventPublishingTests {
+
+      @Test
+      @DisplayName("Should publish TraceEvent when root span is stored")
+      void shouldPublishTraceEventWhenRootSpanIsStored() {
+         // Given
+         String traceId = "trace-123";
+         String serviceName = "user-service";
+         String operationName = "login";
+
+         ReadableSpan rootSpan = createMockRootSpanWithServiceInfo(traceId, "span-1", serviceName, operationName);
+
+         // When
+         spanStorageService.storeSpan(rootSpan);
+
+         // Then
+         ArgumentCaptor<TraceEvent> eventCaptor = ArgumentCaptor.forClass(TraceEvent.class);
+         verify(mockEventPublisher).publishEvent(eventCaptor.capture());
+
+         TraceEvent publishedEvent = eventCaptor.getValue();
+         assertEquals(traceId, publishedEvent.traceId());
+         assertEquals(serviceName, publishedEvent.service());
+         assertEquals(operationName, publishedEvent.operation());
+      }
+
+      @Test
+      @DisplayName("Should not publish event when non-root span is stored")
+      void shouldNotPublishEventWhenNonRootSpanIsStored() {
+         // Given
+         String traceId = "trace-456";
+         ReadableSpan childSpan = createMockChildSpan(traceId, "span-1", "parent-span-id");
+
+         // When
+         spanStorageService.storeSpan(childSpan);
+
+         // Then
+         verify(mockEventPublisher, never()).publishEvent(any());
+      }
+
+      @Test
+      @DisplayName("Should publish event with null service and operation when attributes are missing")
+      void shouldPublishEventWithNullWhenAttributesMissing() {
+         // Given
+         String traceId = "trace-789";
+         ReadableSpan rootSpan = createMockRootSpanWithoutServiceInfo(traceId, "span-1");
+
+         // When
+         spanStorageService.storeSpan(rootSpan);
+
+         // Then
+         ArgumentCaptor<TraceEvent> eventCaptor = ArgumentCaptor.forClass(TraceEvent.class);
+         verify(mockEventPublisher).publishEvent(eventCaptor.capture());
+
+         TraceEvent publishedEvent = eventCaptor.getValue();
+         assertEquals(traceId, publishedEvent.traceId());
+         assertNull(publishedEvent.service());
+         assertNull(publishedEvent.operation());
+      }
+
+      @Test
+      @DisplayName("Should extract service and operation from any span in the trace")
+      void shouldExtractServiceAndOperationFromAnySpanInTrace() {
+         // Given
+         String traceId = "trace-multispan";
+         String serviceName = "order-service";
+         String operationName = "create-order";
+
+         // First store a span without service info (root span)
+         ReadableSpan rootSpan = createMockRootSpanWithoutServiceInfo(traceId, "root-span");
+         spanStorageService.storeSpan(rootSpan);
+
+         // Clear the previous invocation
+         reset(mockEventPublisher);
+
+         // Now store another root span with service info
+         ReadableSpan rootSpanWithInfo = createMockRootSpanWithServiceInfo(traceId, "root-span-2", serviceName,
+               operationName);
+
+         // When
+         spanStorageService.storeSpan(rootSpanWithInfo);
+
+         // Then
+         ArgumentCaptor<TraceEvent> eventCaptor = ArgumentCaptor.forClass(TraceEvent.class);
+         verify(mockEventPublisher).publishEvent(eventCaptor.capture());
+
+         TraceEvent publishedEvent = eventCaptor.getValue();
+         assertEquals(traceId, publishedEvent.traceId());
+         assertEquals(serviceName, publishedEvent.service());
+         assertEquals(operationName, publishedEvent.operation());
+      }
+
+      @Test
+      @DisplayName("Should publish event only once per root span")
+      void shouldPublishEventOnlyOncePerRootSpan() {
+         // Given
+         String traceId = "trace-single-event";
+         ReadableSpan rootSpan1 = createMockRootSpanWithServiceInfo(traceId, "root-1", "service-1", "op-1");
+         ReadableSpan rootSpan2 = createMockRootSpanWithServiceInfo(traceId, "root-2", "service-2", "op-2");
+         ReadableSpan childSpan = createMockChildSpan(traceId, "child-1", "root-1");
+
+         // When
+         spanStorageService.storeSpan(rootSpan1);
+         spanStorageService.storeSpan(childSpan);
+         spanStorageService.storeSpan(rootSpan2);
+
+         // Then - Should have published exactly 2 events (one for each root span)
+         verify(mockEventPublisher, times(2)).publishEvent(any(TraceEvent.class));
+      }
+   }
+
    // Helper methods for creating mock spans
 
    private ReadableSpan createMockSpan(String traceId, String spanId) {
@@ -283,6 +403,7 @@ class SpanStorageServiceTest {
    private ReadableSpan createMockSpanWithAttributes(String traceId, String spanId, Attributes attributes) {
       ReadableSpan span = Mockito.mock(ReadableSpan.class);
       SpanContext spanContext = Mockito.mock(SpanContext.class);
+      SpanContext invalidParentContext = Mockito.mock(SpanContext.class);
       SpanData spanData = createMockSpanData(attributes);
 
       // Mock the SpanContext to return the correct trace ID
@@ -291,7 +412,46 @@ class SpanStorageServiceTest {
       when(spanContext.getTraceFlags()).thenReturn(TraceFlags.getDefault());
       when(spanContext.getTraceState()).thenReturn(TraceState.getDefault());
 
+      // Mock invalid parent context (makes this a root span)
+      when(invalidParentContext.isValid()).thenReturn(false);
+
       when(span.getSpanContext()).thenReturn(spanContext);
+      when(span.getParentSpanContext()).thenReturn(invalidParentContext);
+      when(span.toSpanData()).thenReturn(spanData);
+
+      return span;
+   }
+
+   private ReadableSpan createMockRootSpanWithServiceInfo(String traceId, String spanId, String serviceName,
+         String operationName) {
+      Attributes attributes = Attributes.builder().put(AttributeKey.stringKey("service.name"), serviceName)
+            .put(AttributeKey.stringKey("operation.name"), operationName).build();
+
+      return createMockSpanWithAttributes(traceId, spanId, attributes);
+   }
+
+   private ReadableSpan createMockRootSpanWithoutServiceInfo(String traceId, String spanId) {
+      return createMockSpanWithAttributes(traceId, spanId, Attributes.empty());
+   }
+
+   private ReadableSpan createMockChildSpan(String traceId, String spanId, String parentSpanId) {
+      ReadableSpan span = Mockito.mock(ReadableSpan.class);
+      SpanContext spanContext = Mockito.mock(SpanContext.class);
+      SpanContext parentSpanContext = Mockito.mock(SpanContext.class);
+      SpanData spanData = createMockSpanData(Attributes.empty());
+
+      // Mock the SpanContext to return the correct trace and span IDs
+      when(spanContext.getTraceId()).thenReturn(traceId);
+      when(spanContext.getSpanId()).thenReturn(spanId);
+      when(spanContext.getTraceFlags()).thenReturn(TraceFlags.getDefault());
+      when(spanContext.getTraceState()).thenReturn(TraceState.getDefault());
+
+      // Mock valid parent context (makes this a child span)
+      when(parentSpanContext.isValid()).thenReturn(true);
+      when(parentSpanContext.getSpanId()).thenReturn(parentSpanId);
+
+      when(span.getSpanContext()).thenReturn(spanContext);
+      when(span.getParentSpanContext()).thenReturn(parentSpanContext);
       when(span.toSpanData()).thenReturn(spanData);
 
       return span;
