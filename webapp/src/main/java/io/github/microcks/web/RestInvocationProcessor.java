@@ -40,8 +40,8 @@ import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 
 import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.util.tracing.OpenTelemetryResolver;
 import io.github.microcks.util.tracing.TraceUtil;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
@@ -95,7 +95,7 @@ public class RestInvocationProcessor {
    private final ProxyService proxyService;
 
    private ScriptEngine scriptEngine;
-   private final OpenTelemetry openTelemetry;
+   private final OpenTelemetryResolver opentelemetryResolver;
 
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
@@ -108,13 +108,14 @@ public class RestInvocationProcessor {
     * @param proxyService           The proxy to external URLs or services
     */
    public RestInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
-         ApplicationContext applicationContext, ProxyService proxyService, OpenTelemetry openTelemetry) {
+         ApplicationContext applicationContext, ProxyService proxyService,
+         OpenTelemetryResolver opentelemetryResolver) {
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
-      this.openTelemetry = openTelemetry;
+      this.opentelemetryResolver = opentelemetryResolver;
    }
 
    /**
@@ -277,7 +278,7 @@ public class RestInvocationProcessor {
       String dispatchCriteria = null;
       Map<String, Object> requestContext = null;
       // Create an INTERNAL child span explicitly because Spring AOP does not apply to private/self-invoked methods.
-      Tracer tracer = openTelemetry.getTracer(RestInvocationProcessor.class.getName());
+      Tracer tracer = opentelemetryResolver.getOpenTelemetry().getTracer(RestInvocationProcessor.class.getName());
       Span childSpan = tracer.spanBuilder("computeDispatchCriteria").setSpanKind(SpanKind.INTERNAL).startSpan();
       try (Scope ignored = childSpan.makeCurrent()) {
          TraceUtil.enableExplainTracing();

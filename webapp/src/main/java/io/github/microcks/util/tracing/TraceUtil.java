@@ -19,7 +19,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 
 /**
  * Utility class for managing tracing functionality. This class provides constants and methods to enable explain tracing
