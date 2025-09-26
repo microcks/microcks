@@ -78,4 +78,27 @@ public final class TraceUtil {
       return Attributes.builder().put("message", message);
    }
 
+   /**
+    * Adds a Script log event to the current span with custom attributes.
+    *
+    * @param level        Log level (e\.g\. INFO, ERROR)
+    * @param message      Log message to record
+    * @param scriptEngine The script engine used (e.g., "groovy", "javascript")
+    * @param t            Associated exception, can be null
+    *
+    */
+   public static void addSpanLogEvent(String level, String message, String scriptEngine, Throwable t) {
+      AttributesBuilder b = Attributes.builder().put(AttributeKey.stringKey("level"), level)
+            .put(AttributeKey.stringKey("script.log"), message == null ? "" : message)
+            .put(AttributeKey.stringKey("script.engine"), scriptEngine)
+            .put(AttributeKey.stringKey("message"), "Script log message");
+      if (t != null) {
+         b.put(AttributeKey.stringKey("exception.type"), t.getClass().getName());
+         if (t.getMessage() != null) {
+            b.put(AttributeKey.stringKey("exception.message"), t.getMessage());
+         }
+      }
+      Span.current().addEvent("script.log", b.build());
+   }
+
 }

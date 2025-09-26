@@ -41,8 +41,12 @@ import io.github.microcks.util.script.ScriptEngineBinder;
 
 import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.util.tracing.TraceUtil;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.roastedroot.quickjs4j.core.Engine;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,6 +76,7 @@ import java.util.Set;
 
 import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.delay.DelayApplierOptions;
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A processor for handling REST invocations. It is responsible for applying the dispatching logic and finding the most
@@ -128,7 +133,7 @@ public class RestInvocationProcessor {
          Map<String, List<String>> headers, HttpServletRequest request) {
       // Mark current span as an explain Span
       Span span = Span.current();
-      span.setAttribute("explain-trace", true);
+      TraceUtil.enableExplainTracing();
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation());
@@ -274,8 +279,8 @@ public class RestInvocationProcessor {
       // Create an INTERNAL child span explicitly because Spring AOP does not apply to private/self-invoked methods.
       Tracer tracer = openTelemetry.getTracer(RestInvocationProcessor.class.getName());
       Span childSpan = tracer.spanBuilder("computeDispatchCriteria").setSpanKind(SpanKind.INTERNAL).startSpan();
-      childSpan.setAttribute("explain-trace", true);
       try (Scope ignored = childSpan.makeCurrent()) {
+         TraceUtil.enableExplainTracing();
          // Depending on dispatcher, evaluate request with rules.
          if (dispatcher != null) {
             switch (dispatcher) {
@@ -297,16 +302,15 @@ public class RestInvocationProcessor {
                            requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request,
                            uriParameters);
                      dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
-                     Span.current()
-                           .addEvent("dispatch_criteria_result", Attributes.builder()
-                                 .put("message", "Computed dispatch criteria using GROOVY dispatcher")
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                           TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using GROOVY dispatcher")
                                  .put("dispatch.type", "GROOVY").put("dispatch.result", dispatchCriteria).build());
                   } catch (Exception e) {
                      // Get current span and record failure
                      Span.current().recordException(e);
-                     Span.current().addEvent("dispatch_criteria_result",
-                           Attributes.builder()
-                                 .put("message", "Failed to compute dispatch criteria using GROOVY dispatcher")
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                           TraceUtil
+                                 .explainSpanEventBuilder("Failed to compute dispatch criteria using GROOVY dispatcher")
                                  .put("dispatch.type", "GROOVY").put("dispatch.result", "null")
                                  .put("dispatch.script", dispatcherRules).build());
                      Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");

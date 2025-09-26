@@ -18,7 +18,8 @@ package io.github.microcks.util.tracing;
 public enum CommonEvents {
    INVOCATION_RECEIVED("invocation_received"),
    DISPATCHER_SELECTED("dispatcher_selected"),
-   PARAMETER_CONSTRAINT_VIOLATED("parameter_constraint_violated");
+   PARAMETER_CONSTRAINT_VIOLATED("parameter_constraint_violated"),
+   DISPATCH_CRITERIA_COMPUTED("dispatch_criteria_computed");
 
    private final String eventName;
 

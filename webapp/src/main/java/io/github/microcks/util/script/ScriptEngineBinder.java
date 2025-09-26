@@ -17,20 +17,17 @@ package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
+import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
 
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.trace.Span;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import jakarta.servlet.http.HttpServletRequest;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.SimpleScriptContext;
 import java.util.Map;
+
 
 /**
  * Utility class that holds methods for creating binding environments and evaluation context for a JSR 233 ScriptEngine.
@@ -58,42 +55,29 @@ public class ScriptEngineBinder {
 
       public void info(String msg) {
          delegate.info(msg);
-         addSpanLogEvent("INFO", msg, null);
+         addSpanLogEvent("INFO", msg, "groovy", null);
       }
 
       public void debug(String msg) {
          delegate.debug(msg);
-         addSpanLogEvent("DEBUG", msg, null);
+         addSpanLogEvent("DEBUG", msg, "groovy", null);
       }
 
       public void warn(String msg) {
          delegate.warn(msg);
-         addSpanLogEvent("WARN", msg, null);
+         addSpanLogEvent("WARN", msg, "groovy", null);
       }
 
       public void error(String msg) {
          delegate.error(msg);
-         addSpanLogEvent("ERROR", msg, null);
+         addSpanLogEvent("ERROR", msg, "groovy", null);
       }
 
       public void error(String msg, Throwable t) {
          delegate.error(msg, t);
-         addSpanLogEvent("ERROR", msg, t);
+         addSpanLogEvent("ERROR", msg, "groovy", t);
       }
 
-      private void addSpanLogEvent(String level, String message, Throwable t) {
-         AttributesBuilder b = Attributes.builder().put(AttributeKey.stringKey("level"), level)
-               .put(AttributeKey.stringKey("script.log"), message == null ? "" : message)
-               .put(AttributeKey.stringKey("script.engine"), "groovy")
-               .put(AttributeKey.stringKey("message"), "Script log message");
-         if (t != null) {
-            b.put(AttributeKey.stringKey("exception.type"), t.getClass().getName());
-            if (t.getMessage() != null) {
-               b.put(AttributeKey.stringKey("exception.message"), t.getMessage());
-            }
-         }
-         Span.current().addEvent("script.log", b.build());
-      }
    }
 
    /**

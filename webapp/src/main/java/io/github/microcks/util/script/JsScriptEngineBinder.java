@@ -17,6 +17,8 @@ package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
+import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import io.github.microcks.util.tracing.TraceUtil;
 import io.opentelemetry.api.trace.StatusCode;
 import io.roastedroot.quickjs4j.annotations.Builtins;
 import io.roastedroot.quickjs4j.annotations.GuestFunction;
@@ -34,9 +37,6 @@ import io.roastedroot.quickjs4j.core.Engine;
 import io.roastedroot.quickjs4j.core.Runner;
 import io.roastedroot.quickjs4j.core.ScriptCache;
 import jakarta.servlet.http.HttpServletRequest;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
@@ -95,33 +95,25 @@ public class JsScriptEngineBinder {
       @HostFunction
       public void info(String str) {
          log.info(str);
-         addSpanLogEvent("INFO", str);
+         addSpanLogEvent("INFO", str, "javascript", null);
       }
 
       @HostFunction
       public void debug(String str) {
          log.debug(str);
-         addSpanLogEvent("DEBUG", str);
+         addSpanLogEvent("DEBUG", str, "javascript", null);
       }
 
       @HostFunction
       public void warn(String str) {
          log.warn(str);
-         addSpanLogEvent("WARN", str);
+         addSpanLogEvent("WARN", str, "javascript", null);
       }
 
       @HostFunction
       public void error(String str) {
          log.error(str);
-         addSpanLogEvent("ERROR", str);
-      }
-
-      private void addSpanLogEvent(String level, String message) {
-         AttributesBuilder b = Attributes.builder().put(AttributeKey.stringKey("level"), level)
-               .put(AttributeKey.stringKey("script.log"), message == null ? "" : message)
-               .put(AttributeKey.stringKey("message"), "Script log message")
-               .put(AttributeKey.stringKey("script.engine"), "js").put(AttributeKey.stringKey("logger"), log.getName());
-         Span.current().addEvent("script.log", b.build());
+         addSpanLogEvent("ERROR", str, "javascript", null);
       }
    }
 
@@ -336,24 +328,24 @@ public class JsScriptEngineBinder {
          runner = Runner.builder().withEngine(scriptContext).build();
          JsScriptEngineBinder.JsApi jsApi = JsApi_Invokables.create(script, runner);
          String res = jsApi.process();
-         Span.current().addEvent("dispatch_criteria_result",
-               Attributes.builder().put("message", "Computed dispatch criteria using JS dispatcher")
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using JS dispatcher")
                      .put("dispatch.type", "SCRIPT").put("dispatch.result", res).build());
          return res;
 
       } catch (Exception e) {
          log.error("Error during JS evaluation", e);
          Span.current().recordException(e);
-         Span.current().addEvent("dispatch_criteria_result",
-               Attributes.builder().put("message", "Failed to compute dispatch criteria using JS dispatcher")
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using JS dispatcher")
                      .put("dispatch.type", "JS").put("dispatch.result", "null")
                      .put("dispatch.script", script == null ? "" : script).build());
          Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
          if (runner != null) {
             log.error("script stdout: " + runner.stdout());
             log.error("script stderr: " + runner.stderr());
-            Span.current().addEvent("script_output",
-                  Attributes.builder().put("message", "Script stdout and stderr")
+            Span.current().addEvent("script_error_output",
+                  TraceUtil.explainSpanEventBuilder("Script error output")
                         .put("script.stdout", runner.stdout() == null ? "" : runner.stdout())
                         .put("script.stderr", runner.stderr() == null ? "" : runner.stderr()).build());
 
