@@ -272,7 +272,7 @@ public class RestInvocationProcessor {
       String dispatchCriteria = null;
       Map<String, Object> requestContext = null;
       // Create an INTERNAL child span explicitly because Spring AOP does not apply to private/self-invoked methods.
-      Tracer tracer = openTelemetry.getTracer("io.github.microcks.web.RestInvocationProcessor");
+      Tracer tracer = openTelemetry.getTracer(RestInvocationProcessor.class.getName());
       Span childSpan = tracer.spanBuilder("computeDispatchCriteria").setSpanKind(SpanKind.INTERNAL).startSpan();
       childSpan.setAttribute("explain-trace", true);
       try (Scope ignored = childSpan.makeCurrent()) {
