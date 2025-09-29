@@ -93,23 +93,25 @@ public class SpanStorageService {
 
       // Publish a notification if this is a root span (no parent)
       if (!span.getParentSpanContext().isValid()) {
-         List<ReadableSpan> current = spansByTraceId.getOrDefault(traceId, List.of());
-         List<SpanData> snapshot = current.stream().map(ReadableSpan::toSpanData).toList();
          String service = null;
          String operation = null;
+         String clientAddress = null;
          for (ReadableSpan s : spans) {
             Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
             String serviceAttribute = (String) attributes.get(AttributeKey.stringKey("service.name"));
             String operationAttribute = (String) attributes.get(AttributeKey.stringKey("operation.name"));
+            String clientAddressAttribute = (String) attributes.get(AttributeKey.stringKey("client.address"));
             if (serviceAttribute != null)
                service = serviceAttribute;
             if (operationAttribute != null)
                operation = operationAttribute;
-            if (service != null && operation != null) {
+            if (clientAddressAttribute != null)
+               clientAddress = clientAddressAttribute;
+            if (service != null && operation != null && clientAddress != null) {
                break;
             }
          }
-         publisher.publishEvent(new TraceEvent(traceId, service, operation));
+         publisher.publishEvent(new TraceEvent(traceId, service, operation, clientAddress));
       }
    }
 

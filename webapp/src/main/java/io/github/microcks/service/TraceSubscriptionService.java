@@ -31,9 +31,17 @@ public class TraceSubscriptionService {
    /**
     * Register a new subscription with filters.
     */
-   public SseEmitter subscribe(String serviceName, String operationName) {
-      SseEmitter emitter = new SseEmitter(0L); // no timeout
-      Subscription sub = new Subscription(emitter, serviceName, operationName);
+   public SseEmitter subscribe(String serviceName, String operationName, String clientAddress) {
+      SseEmitter emitter = new SseEmitter(0L); // No timeout
+      subscribe(emitter, serviceName, operationName, clientAddress);
+      return emitter;
+   }
+
+   /**
+    * Subscribe to Custom Emitter
+    */
+   public void subscribe(SseEmitter emitter, String serviceName, String operationName, String clientAddress) {
+      Subscription sub = new Subscription(emitter, serviceName, operationName, clientAddress);
 
       subscriptions.add(sub);
 
@@ -46,8 +54,6 @@ public class TraceSubscriptionService {
          emitter.send(SseEmitter.event().name("heartbeat").data(Collections.emptyList()));
       } catch (IOException ignored) {
       }
-
-      return emitter;
    }
 
    /**
@@ -60,8 +66,10 @@ public class TraceSubscriptionService {
          return;
 
       for (Subscription sub : subscriptions) {
-         boolean matches = spans.stream().anyMatch(
-               span -> sub.serviceName().equals(event.service()) && sub.operationName().equals(event.operation()));
+         boolean matches = spans.stream()
+               .anyMatch(span -> matchesWildcard(sub.serviceName(), event.service())
+                     && matchesWildcard(sub.operationName(), event.operation())
+                     && matchesWildcard(sub.clientAddress(), event.clientAddress()));
 
          if (matches) {
             List<SpanData> spanDataList = spans.stream().map(ReadableSpan::toSpanData).toList();
@@ -92,6 +100,32 @@ public class TraceSubscriptionService {
       }
    }
 
-   private record Subscription(SseEmitter emitter, String serviceName, String operationName) {
+   /**
+    * Check if a value matches a pattern with optional regex support.
+    *
+    * @param pattern The pattern to match against (can be null, "*", or regex pattern).
+    * @param value   The value to check (can be null).
+    * @return True if the value matches the pattern, false otherwise.
+    */
+   private boolean matchesWildcard(String pattern, String value) {
+      if (pattern == null || value == null) {
+         return pattern == null && value == null;
+      }
+
+      // If pattern is "*", match everything
+      if ("*".equals(pattern)) {
+         return true;
+      }
+
+      // Try regex matching first
+      try {
+         return value.matches(pattern);
+      } catch (Exception e) {
+         // If regex fails, fall back to exact match
+         return pattern.equals(value);
+      }
+   }
+
+   private record Subscription(SseEmitter emitter, String serviceName, String operationName, String clientAddress) {
    }
 }

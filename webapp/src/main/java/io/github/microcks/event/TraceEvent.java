@@ -1,4 +1,4 @@
 package io.github.microcks.event;
 
-public record TraceEvent(String traceId, String service, String operation) {
+public record TraceEvent(String traceId, String service, String operation, String clientAddress) {
 }
