@@ -35,7 +35,10 @@ import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
+import io.github.microcks.util.tracing.TraceUtil;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
 import io.roastedroot.quickjs4j.core.Engine;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,6 +76,7 @@ import java.util.regex.Pattern;
 
 import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.delay.DelayApplierOptions;
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A controller for mocking Soap responses.
@@ -410,8 +414,19 @@ public class SoapController {
          ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body, requestContext,
                new ServiceStateStore(serviceStateRepository, service.getId()), request);
 
-         return new DispatchContext((String) scriptEngine.eval(script, scriptContext), requestContext);
+         DispatchContext res = new DispatchContext((String) scriptEngine.eval(script, scriptContext), requestContext);
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using GROOVY dispatcher")
+                     .put("dispatch.type", "GROOVY").put("dispatch.result", res.dispatchCriteria()).build());
+         return res;
       } catch (Exception e) {
+         // Get current span and record failure
+         Span.current().recordException(e);
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using GROOVY dispatcher")
+                     .put("dispatch.type", "GROOVY").put("dispatch.result", "null")
+                     .put("dispatch.script", dispatcherRules).build());
+         Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
          log.error("Error during Script evaluation", e);
          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                "Error during Script evaluation: " + e.getMessage());

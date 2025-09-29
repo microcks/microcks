@@ -38,11 +38,15 @@ import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
-
 import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.service.OpenTelemetryResolverService;
 import io.github.microcks.util.tracing.TraceUtil;
+
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.roastedroot.quickjs4j.core.Engine;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,6 +76,7 @@ import java.util.Set;
 
 import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.delay.DelayApplierOptions;
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A processor for handling REST invocations. It is responsible for applying the dispatching logic and finding the most
@@ -90,6 +95,7 @@ public class RestInvocationProcessor {
    private final ProxyService proxyService;
 
    private ScriptEngine scriptEngine;
+   private final OpenTelemetryResolverService opentelemetryResolverService;
 
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
@@ -102,12 +108,14 @@ public class RestInvocationProcessor {
     * @param proxyService           The proxy to external URLs or services
     */
    public RestInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
-         ApplicationContext applicationContext, ProxyService proxyService) {
+         ApplicationContext applicationContext, ProxyService proxyService,
+         OpenTelemetryResolverService opentelemetryResolverService) {
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
       this.applicationContext = applicationContext;
       this.proxyService = proxyService;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
+      this.opentelemetryResolverService = opentelemetryResolverService;
    }
 
    /**
@@ -126,7 +134,7 @@ public class RestInvocationProcessor {
          Map<String, List<String>> headers, HttpServletRequest request) {
       // Mark current span as an explain Span
       Span span = Span.current();
-      span.setAttribute("explain-trace", true);
+      TraceUtil.enableExplainTracing();
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation());
@@ -158,7 +166,7 @@ public class RestInvocationProcessor {
       // Setting delay to default one if not set.
       if (delay == null && ic.operation().getDefaultDelay() != null) {
          Long defaultDelay = ic.operation().getDefaultDelay();
-         // TODO: Get DelayStrategy 
+         // TODO: Get DelayStrategy
          delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
       }
 
@@ -269,78 +277,98 @@ public class RestInvocationProcessor {
          String uriPattern, String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
       Map<String, Object> requestContext = null;
-
-      // Depending on dispatcher, evaluate request with rules.
-      if (dispatcher != null) {
-         switch (dispatcher) {
-            case DispatchStyles.SEQUENCE:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
-                     resourcePath);
-               break;
-            case DispatchStyles.SCRIPT:
-               log.info("Use the \"GROOVY\" Dispatch Style instead.");
-               // fallthrough
-            case DispatchStyles.GROOVY:
-               requestContext = new HashMap<>();
-               Map<String, String> uriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
-                     resourcePath);
-               try {
+      // Create an INTERNAL child span explicitly because Spring AOP does not apply to private/self-invoked methods.
+      Tracer tracer = opentelemetryResolverService.getOpenTelemetry()
+            .getTracer(RestInvocationProcessor.class.getName());
+      Span childSpan = tracer.spanBuilder("computeDispatchCriteria").setSpanKind(SpanKind.INTERNAL).startSpan();
+      try (Scope ignored = childSpan.makeCurrent()) {
+         TraceUtil.enableExplainTracing();
+         // Depending on dispatcher, evaluate request with rules.
+         if (dispatcher != null) {
+            switch (dispatcher) {
+               case DispatchStyles.SEQUENCE:
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
+                        resourcePath);
+                  break;
+               case DispatchStyles.SCRIPT:
+                  log.info("Use the \"GROOVY\" Dispatch Style instead.");
+                  // fallthrough
+               case DispatchStyles.GROOVY:
+                  requestContext = new HashMap<>();
+                  Map<String, String> uriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
+                        resourcePath);
+                  try {
+                     // Evaluating request with script coming from operation dispatcher rules.
+                     String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
+                     ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
+                           requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request,
+                           uriParameters);
+                     dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                           TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using GROOVY dispatcher")
+                                 .put("dispatch.type", "GROOVY").put("dispatch.result", dispatchCriteria).build());
+                  } catch (Exception e) {
+                     // Get current span and record failure
+                     Span.current().recordException(e);
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                           TraceUtil
+                                 .explainSpanEventBuilder("Failed to compute dispatch criteria using GROOVY dispatcher")
+                                 .put("dispatch.type", "GROOVY").put("dispatch.result", "null")
+                                 .put("dispatch.script", dispatcherRules).build());
+                     Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
+                     log.error("Error during Script evaluation", e);
+                  }
+                  break;
+               case DispatchStyles.JS:
+                  requestContext = new HashMap<>();
+                  Map<String, String> jsUriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
+                        resourcePath);
                   // Evaluating request with script coming from operation dispatcher rules.
-                  String script = ScriptEngineBinder.ensureSoapUICompatibility(dispatcherRules);
-                  ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body,
-                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request,
-                        uriParameters);
-                  dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
-               } catch (Exception e) {
-                  log.error("Error during Script evaluation", e);
-               }
-               break;
-            case DispatchStyles.JS:
-               requestContext = new HashMap<>();
-               Map<String, String> jsUriParameters = DispatchCriteriaHelper.extractMapFromURIPattern(uriPattern,
-                     resourcePath);
-               // Evaluating request with script coming from operation dispatcher rules.
-               String script = JsScriptEngineBinder.wrapIntoFunction(dispatcherRules);
-               Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
-                     new ServiceStateStore(serviceStateRepository, service.getId()), request, jsUriParameters);
-               String result = JsScriptEngineBinder.invokeProcessFn(script, scriptContext);
-               if (result != null) {
-                  dispatchCriteria = result;
-               }
-               break;
-            case DispatchStyles.URI_PARAMS:
-               String fullURI = request.getRequestURL() + "?" + request.getQueryString();
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-               break;
-            case DispatchStyles.URI_PARTS:
-               // /tenantId?t1/userId=x
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
-                     resourcePath);
-               break;
-            case DispatchStyles.URI_ELEMENTS:
-               dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
-                     resourcePath);
-               fullURI = request.getRequestURL() + "?" + request.getQueryString();
-               dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-               break;
-            case DispatchStyles.JSON_BODY:
-               try {
-                  JsonEvaluationSpecification specification = JsonEvaluationSpecification
-                        .buildFromJsonString(dispatcherRules);
-                  dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
-               } catch (JsonMappingException jme) {
-                  log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
-               }
-               break;
-            case DispatchStyles.QUERY_HEADER:
-               // Extract headers from request and put them into a simple map to reuse extractFromParamMap().
-               dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules,
-                     extractRequestHeaders(request));
-               break;
-            default:
-               log.error("Unknown dispatcher type: {}", dispatcher);
-               break;
+                  String script = JsScriptEngineBinder.wrapIntoFunction(dispatcherRules);
+                  Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
+                        new ServiceStateStore(serviceStateRepository, service.getId()), request, jsUriParameters);
+                  String result = JsScriptEngineBinder.invokeProcessFn(script, scriptContext);
+                  if (result != null) {
+                     dispatchCriteria = result;
+                  }
+                  break;
+               case DispatchStyles.URI_PARAMS:
+                  String fullURI = request.getRequestURL() + "?" + request.getQueryString();
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
+                  break;
+               case DispatchStyles.URI_PARTS:
+                  // /tenantId?t1/userId=x
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
+                        resourcePath);
+                  break;
+               case DispatchStyles.URI_ELEMENTS:
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
+                        resourcePath);
+                  fullURI = request.getRequestURL() + "?" + request.getQueryString();
+                  dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
+                  break;
+               case DispatchStyles.JSON_BODY:
+                  try {
+                     JsonEvaluationSpecification specification = JsonEvaluationSpecification
+                           .buildFromJsonString(dispatcherRules);
+                     dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
+                  } catch (JsonMappingException jme) {
+                     log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification",
+                           jme);
+                  }
+                  break;
+               case DispatchStyles.QUERY_HEADER:
+                  // Extract headers from request and put them into a simple map to reuse extractFromParamMap().
+                  dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules,
+                        extractRequestHeaders(request));
+                  break;
+               default:
+                  log.error("Unknown dispatcher type: {}", dispatcher);
+                  break;
+            }
          }
+      } finally {
+         childSpan.end();
       }
 
       return new DispatchContext(dispatchCriteria, requestContext);

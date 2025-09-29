@@ -15,6 +15,11 @@
  */
 package io.github.microcks.util.script;
 
+import io.github.microcks.service.StateStore;
+import io.github.microcks.util.http.HttpHeadersUtil;
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
+import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonDeserializer;
@@ -22,8 +27,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.github.microcks.service.StateStore;
-import io.github.microcks.util.http.HttpHeadersUtil;
+import io.github.microcks.util.tracing.TraceUtil;
+import io.opentelemetry.api.trace.StatusCode;
 import io.roastedroot.quickjs4j.annotations.Builtins;
 import io.roastedroot.quickjs4j.annotations.GuestFunction;
 import io.roastedroot.quickjs4j.annotations.HostFunction;
@@ -32,6 +37,7 @@ import io.roastedroot.quickjs4j.core.Engine;
 import io.roastedroot.quickjs4j.core.Runner;
 import io.roastedroot.quickjs4j.core.ScriptCache;
 import jakarta.servlet.http.HttpServletRequest;
+import io.opentelemetry.api.trace.Span;
 import org.apache.hc.client5.http.classic.methods.HttpGet;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.classic.methods.HttpPut;
@@ -89,21 +95,25 @@ public class JsScriptEngineBinder {
       @HostFunction
       public void info(String str) {
          log.info(str);
+         addSpanLogEvent("INFO", str, "javascript", null);
       }
 
       @HostFunction
       public void debug(String str) {
          log.debug(str);
+         addSpanLogEvent("DEBUG", str, "javascript", null);
       }
 
       @HostFunction
       public void warn(String str) {
          log.warn(str);
+         addSpanLogEvent("WARN", str, "javascript", null);
       }
 
       @HostFunction
       public void error(String str) {
          log.error(str);
+         addSpanLogEvent("ERROR", str, "javascript", null);
       }
    }
 
@@ -317,12 +327,29 @@ public class JsScriptEngineBinder {
       try {
          runner = Runner.builder().withEngine(scriptContext).build();
          JsScriptEngineBinder.JsApi jsApi = JsApi_Invokables.create(script, runner);
-         return jsApi.process();
+         String res = jsApi.process();
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using JS dispatcher")
+                     .put("dispatch.type", "SCRIPT").put("dispatch.result", res).build());
+         return res;
+
       } catch (Exception e) {
          log.error("Error during JS evaluation", e);
+         Span.current().recordException(e);
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using JS dispatcher")
+                     .put("dispatch.type", "JS").put("dispatch.result", "null")
+                     .put("dispatch.script", script == null ? "" : script).build());
+         Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
          if (runner != null) {
             log.error("script stdout: " + runner.stdout());
             log.error("script stderr: " + runner.stderr());
+            Span.current().addEvent("script_error_output",
+                  TraceUtil.explainSpanEventBuilder("Script error output")
+                        .put("script.stdout", runner.stdout() == null ? "" : runner.stdout())
+                        .put("script.stderr", runner.stderr() == null ? "" : runner.stderr()).build());
+
+
          }
       } finally {
          if (runner != null) {
