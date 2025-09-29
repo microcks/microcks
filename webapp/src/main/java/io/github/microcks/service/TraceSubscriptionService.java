@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.regex.PatternSyntaxException;
 
 /**
  * Service for managing subscriptions to trace updates via Server-Sent Events (SSE). Clients can subscribe with filters
@@ -120,7 +121,7 @@ public class TraceSubscriptionService {
       // Try regex matching first
       try {
          return value.matches(pattern);
-      } catch (Exception e) {
+      } catch (PatternSyntaxException e) {
          // If regex fails, fall back to exact match
          return pattern.equals(value);
       }
