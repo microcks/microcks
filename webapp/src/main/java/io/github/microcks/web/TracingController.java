@@ -100,7 +100,7 @@ public class TracingController {
    }
 
 
-   @GetMapping(value = "/operations/spans/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+   @GetMapping(value = "/operations/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
    public SseEmitter streamTraces(@RequestParam("serviceName") String serviceName,
          @RequestParam("operationName") String operationName, @RequestParam("clientAddress") String clientAddress) {
       return traceSubscriptionService.subscribe(serviceName, operationName, clientAddress);
