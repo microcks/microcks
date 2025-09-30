@@ -217,9 +217,7 @@ class TracingControllerIT extends AbstractBaseIT {
       // Check that we have at least one trace event
       assertThat(sseFrames).anyMatch(frame -> "event".equals(frame.key) && "trace".equals(frame.value));
       // Check that at least one trace event contains expected span info
-     assertThat(sseFrames).anyMatch(
-            frame -> "data".equals(frame.key) && frame.value.contains("processInvocation")
-     );
+      assertThat(sseFrames).anyMatch(frame -> "data".equals(frame.key) && frame.value.contains("processInvocation"));
    }
 
    private void parseAndStoreSseFrame(String line, List<SseFrame> sseFrames) {
