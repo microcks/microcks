@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -75,18 +74,16 @@ public class TracingController {
       return ResponseEntity.ok(spans.stream().map(ReadableSpan::toSpanData).toList());
    }
 
-   @GetMapping("/operations/spans")
-   public ResponseEntity<List<List<ReadableSpan>>> getSpansForOperation(@RequestParam("serviceName") String serviceName,
-         @RequestParam("operationName") String operationName) {
-      List<String> traceIds = spanStorageService
-            .queryTraceIdsBySpanAttributes(Map.of(io.opentelemetry.api.common.AttributeKey.stringKey("service.name"),
-                  serviceName, io.opentelemetry.api.common.AttributeKey.stringKey("operation.name"), operationName));
+   @GetMapping("/operations")
+   public ResponseEntity<List<List<ReadableSpan>>> getTracesForOperation(
+         @RequestParam("serviceName") String serviceName, @RequestParam("operationName") String operationName,
+         @RequestParam(value = "clientAddress", defaultValue = ".*") String clientAddress) {
+      List<String> traceIds = spanStorageService.queryTraceIdsByPatterns(serviceName, operationName, clientAddress);
       if (traceIds.isEmpty()) {
          return ResponseEntity.notFound().build();
       }
 
       List<List<ReadableSpan>> spansByTraceId = traceIds.stream().map(spanStorageService::getSpansForTrace).toList();
-
 
       return ResponseEntity.ok(spansByTraceId);
    }

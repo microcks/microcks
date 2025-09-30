@@ -41,7 +41,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author microcks-team
  */
 @TestPropertySource(properties = { "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none",
-      "otel.instrumentation.annotations.enabled=true" })
+      "otel.instrumentation.annotations.enabled=true", "otel.sdk.disabled=false" })
 class TracingControllerIT extends AbstractBaseIT {
 
    @Autowired
@@ -112,7 +112,7 @@ class TracingControllerIT extends AbstractBaseIT {
 
       // Try to query spans by operation (this may return empty if no specific operation traces exist)
       ResponseEntity<List<List<Object>>> operationSpansResponse = restTemplate.exchange(
-            "/api/traces/operations/spans?serviceName=pastry-details&operationName=GET /pastry", HttpMethod.GET, null,
+            "/api/traces/operations?serviceName=pastry-details&operationName=GET /pastry", HttpMethod.GET, null,
             new ParameterizedTypeReference<>() {
             });
 
