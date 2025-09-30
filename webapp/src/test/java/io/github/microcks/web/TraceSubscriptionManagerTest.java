@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.microcks.service;
+package io.github.microcks.web;
 
 import io.github.microcks.event.TraceEvent;
+import io.github.microcks.service.SpanStorageService;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
@@ -40,16 +41,16 @@ import static org.mockito.ArgumentMatchers.any;
  * Test case for TraceSubscriptionService class.
  */
 @ExtendWith(MockitoExtension.class)
-class TraceSubscriptionServiceTest {
+class TraceSubscriptionManagerTest {
 
-   private TraceSubscriptionService traceSubscriptionService;
+   private TraceSubscriptionManager traceSubscriptionManager;
 
    @Mock
    private SpanStorageService mockSpanStorageService;
 
    @BeforeEach
    void setUp() {
-      traceSubscriptionService = new TraceSubscriptionService(mockSpanStorageService);
+      traceSubscriptionManager = new TraceSubscriptionManager(mockSpanStorageService);
    }
 
    @Test
@@ -61,7 +62,7 @@ class TraceSubscriptionServiceTest {
       String clientAddress = "127.0.0.1";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceName, operationName, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceName, operationName, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -70,7 +71,7 @@ class TraceSubscriptionServiceTest {
       when(mockSpanStorageService.getSpansForTrace("trace-empty")).thenReturn(Collections.emptyList());
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace("trace-empty");
@@ -88,7 +89,7 @@ class TraceSubscriptionServiceTest {
       String traceId = "trace-123";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceName, operationName, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceName, operationName, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -99,7 +100,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, serviceName, operationName, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -119,7 +120,7 @@ class TraceSubscriptionServiceTest {
       String traceId = "trace-456";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceName, operationName, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceName, operationName, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -131,7 +132,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, differentService, differentOperation, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -144,13 +145,13 @@ class TraceSubscriptionServiceTest {
    void shouldSendHeartbeatWithoutErrors() throws IOException {
       // Given
       SseEmitter mockEmitter = mock(SseEmitter.class);
-      traceSubscriptionService.subscribe(mockEmitter, "user-service", "login", "127.0.0.1");
+      traceSubscriptionManager.subscribe(mockEmitter, "user-service", "login", "127.0.0.1");
 
       // Reset mock to clear the initial heartbeat call and focus on periodic heartbeats
       reset(mockEmitter);
 
       // When & Then
-      assertDoesNotThrow(() -> traceSubscriptionService.sendHeartbeats());
+      assertDoesNotThrow(() -> traceSubscriptionManager.sendHeartbeats());
 
       // Verify heartbeat was sent
       verify(mockEmitter, atLeastOnce()).send(any(SseEmitter.SseEventBuilder.class));
@@ -167,7 +168,7 @@ class TraceSubscriptionServiceTest {
       String actualServiceName = "user-service";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceNamePattern, operationName, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceNamePattern, operationName, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -179,7 +180,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, actualServiceName, operationName, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -198,7 +199,7 @@ class TraceSubscriptionServiceTest {
       String actualOperation = "login";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceName, operationPattern, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceName, operationPattern, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -210,7 +211,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, serviceName, actualOperation, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -230,7 +231,7 @@ class TraceSubscriptionServiceTest {
       String actualOperation = "any-operation";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, servicePattern, operationPattern, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, servicePattern, operationPattern, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -242,7 +243,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, actualServiceName, actualOperation, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -262,7 +263,7 @@ class TraceSubscriptionServiceTest {
       String actualOperation = "login"; // matches log.*
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, servicePattern, operationPattern, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, servicePattern, operationPattern, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -274,7 +275,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, actualServiceName, actualOperation, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -289,7 +290,7 @@ class TraceSubscriptionServiceTest {
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
       // When
-      traceSubscriptionService.subscribe(mockEmitter, "service", "operation", "127.0.0.1");
+      traceSubscriptionManager.subscribe(mockEmitter, "service", "operation", "127.0.0.1");
 
       // Then
       verify(mockEmitter).send(any(SseEmitter.SseEventBuilder.class));
@@ -305,7 +306,7 @@ class TraceSubscriptionServiceTest {
       String traceId = "trace-123";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceName, operationName, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceName, operationName, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -319,7 +320,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, serviceName, operationName, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -338,7 +339,7 @@ class TraceSubscriptionServiceTest {
       String traceId = "trace-123";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceName, operationName, clientAddressPattern);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceName, operationName, clientAddressPattern);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -349,7 +350,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, serviceName, operationName, actualClientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -367,7 +368,7 @@ class TraceSubscriptionServiceTest {
       String traceId = "trace-123";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, serviceName, operationName, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, serviceName, operationName, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -378,7 +379,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, serviceName, operationName, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);
@@ -398,7 +399,7 @@ class TraceSubscriptionServiceTest {
       String actualOperation = "logout";
       SseEmitter mockEmitter = mock(SseEmitter.class);
 
-      traceSubscriptionService.subscribe(mockEmitter, servicePattern, operationPattern, clientAddress);
+      traceSubscriptionManager.subscribe(mockEmitter, servicePattern, operationPattern, clientAddress);
 
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
@@ -410,7 +411,7 @@ class TraceSubscriptionServiceTest {
       TraceEvent event = new TraceEvent(traceId, actualServiceName, actualOperation, clientAddress);
 
       // When
-      traceSubscriptionService.onTraceUpdated(event);
+      traceSubscriptionManager.onTraceUpdated(event);
 
       // Then
       verify(mockSpanStorageService).getSpansForTrace(traceId);

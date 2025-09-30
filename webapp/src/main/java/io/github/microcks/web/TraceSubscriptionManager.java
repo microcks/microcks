@@ -1,13 +1,14 @@
-package io.github.microcks.service;
+package io.github.microcks.web;
 
 import io.github.microcks.event.TraceEvent;
+import io.github.microcks.service.SpanStorageService;
 import io.github.microcks.util.tracing.SpanFilterUtil;
 
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -20,13 +21,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Service for managing subscriptions to trace updates via Server-Sent Events (SSE). Clients can subscribe with filters
  * on service name and operation name, and will receive updates when matching traces are updated.
  */
-@Service
-public class TraceSubscriptionService {
+@Component
+public class TraceSubscriptionManager {
 
    private final SpanStorageService spanStorageService;
    private final List<Subscription> subscriptions = new CopyOnWriteArrayList<>();
 
-   public TraceSubscriptionService(SpanStorageService spanStorageService) {
+   public TraceSubscriptionManager(SpanStorageService spanStorageService) {
       this.spanStorageService = spanStorageService;
    }
 

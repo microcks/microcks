@@ -16,7 +16,6 @@
 package io.github.microcks.web;
 
 import io.github.microcks.service.SpanStorageService;
-import io.github.microcks.service.TraceSubscriptionService;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.springframework.http.MediaType;
@@ -41,12 +40,12 @@ import java.util.Set;
 public class TracingController {
 
    private final SpanStorageService spanStorageService;
-   private final TraceSubscriptionService traceSubscriptionService;
+   private final TraceSubscriptionManager traceSubscriptionManager;
 
 
-   public TracingController(SpanStorageService spanStorageService, TraceSubscriptionService traceSubscriptionService) {
+   public TracingController(SpanStorageService spanStorageService, TraceSubscriptionManager traceSubscriptionManager) {
       this.spanStorageService = spanStorageService;
-      this.traceSubscriptionService = traceSubscriptionService;
+      this.traceSubscriptionManager = traceSubscriptionManager;
    }
 
    /**
@@ -103,6 +102,6 @@ public class TracingController {
    @GetMapping(value = "/operations/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
    public SseEmitter streamTraces(@RequestParam("serviceName") String serviceName,
          @RequestParam("operationName") String operationName, @RequestParam("clientAddress") String clientAddress) {
-      return traceSubscriptionService.subscribe(serviceName, operationName, clientAddress);
+      return traceSubscriptionManager.subscribe(serviceName, operationName, clientAddress);
    }
 }
