@@ -16,9 +16,9 @@
 package io.github.microcks.service;
 
 import io.github.microcks.event.TraceEvent;
+import io.github.microcks.util.tracing.SpanFilterUtil;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.ReadableSpan;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -93,25 +93,7 @@ public class SpanStorageService {
 
       // Publish a notification if this is a root span (no parent)
       if (!span.getParentSpanContext().isValid()) {
-         String service = null;
-         String operation = null;
-         String clientAddress = null;
-         for (ReadableSpan s : spans) {
-            Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
-            String serviceAttribute = (String) attributes.get(AttributeKey.stringKey("service.name"));
-            String operationAttribute = (String) attributes.get(AttributeKey.stringKey("operation.name"));
-            String clientAddressAttribute = (String) attributes.get(AttributeKey.stringKey("client.address"));
-            if (serviceAttribute != null)
-               service = serviceAttribute;
-            if (operationAttribute != null)
-               operation = operationAttribute;
-            if (clientAddressAttribute != null)
-               clientAddress = clientAddressAttribute;
-            if (service != null && operation != null && clientAddress != null) {
-               break;
-            }
-         }
-         publisher.publishEvent(new TraceEvent(traceId, service, operation, clientAddress));
+         publisher.publishEvent(SpanFilterUtil.extractTraceEvent(traceId, spans));
       }
    }
 
@@ -151,17 +133,26 @@ public class SpanStorageService {
                               reqAttr.getValue()))))
             .map(Map.Entry::getKey)
             // Sort by recency - most recent first
-            .sorted((id1, id2) -> {
-               List<ReadableSpan> spans1 = spansByTraceId.get(id1);
-               List<ReadableSpan> spans2 = spansByTraceId.get(id2);
-               if (spans1.isEmpty() || spans2.isEmpty())
-                  return 0;
-               long endTime1 = spans1.stream().mapToLong(s -> s.toSpanData().getEndEpochNanos()).max().orElse(0);
-               long endTime2 = spans2.stream().mapToLong(s -> s.toSpanData().getEndEpochNanos()).max().orElse(0);
-               return Long.compare(endTime2, endTime1); // Descending order
-            }).toList();
+            .sorted(this::compareSpansByEndTime).toList();
    }
 
+   /**
+    * Query trace IDs by span attributes with support for regex patterns.
+    *
+    * @param serviceName   Service name pattern (can be null, "*", or regex)
+    * @param operationName Operation name pattern (can be null, "*", or regex)
+    * @param clientAddress Client address pattern (can be null, "*", or regex)
+    * @return A List of trace IDs that have spans matching all the provided patterns sorted by recency (most recent
+    *         first)
+    */
+   public List<String> queryTraceIdsByPatterns(String serviceName, String operationName, String clientAddress) {
+      return spansByTraceId.entrySet().stream()
+            .map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
+            .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
+            .map(TraceEvent::traceId)
+            // Sort by recency - most recent first
+            .sorted(this::compareSpansByEndTime).toList();
+   }
 
    public static boolean valuesEqualAttr(Object actual, Object expected) {
       if (actual == null && expected == null)
@@ -183,5 +174,15 @@ public class SpanStorageService {
     */
    public Set<String> getAllTraceIds() {
       return spansByTraceId.keySet();
+   }
+
+   private int compareSpansByEndTime(String id1, String id2) {
+      List<ReadableSpan> spans1 = spansByTraceId.get(id1);
+      List<ReadableSpan> spans2 = spansByTraceId.get(id2);
+      if (spans1.isEmpty() || spans2.isEmpty())
+         return 0;
+      long endTime1 = spans1.stream().mapToLong(s -> s.toSpanData().getEndEpochNanos()).max().orElse(0);
+      long endTime2 = spans2.stream().mapToLong(s -> s.toSpanData().getEndEpochNanos()).max().orElse(0);
+      return Long.compare(endTime2, endTime1); // Descending order
    }
 }
