@@ -18,6 +18,7 @@ package io.github.microcks.web;
 import io.github.microcks.service.SpanStorageService;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
@@ -28,8 +29,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,8 +55,14 @@ import static org.assertj.core.api.Assertions.assertThat;
       "otel.instrumentation.annotations.enabled=true", "otel.sdk.disabled=false" })
 class TracingControllerIT extends AbstractBaseIT {
 
+   record SseFrame(String key, String value) {
+   }
+
    @Autowired
    private SpanStorageService spanStorageService;
+
+   private List<SseFrame> sseFrames;
+   private ExecutorService sseClientExecutor;
 
    @BeforeEach
    void setUp() {
@@ -54,6 +71,16 @@ class TracingControllerIT extends AbstractBaseIT {
 
       // Upload a test artifact that will generate traces when invoked
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/pastry-with-details-openapi.yaml", true);
+
+      sseFrames = new ArrayList<>();
+      sseClientExecutor = Executors.newSingleThreadExecutor();
+   }
+
+   @AfterEach
+   void tearDown() {
+      if (sseClientExecutor != null) {
+         sseClientExecutor.shutdown();
+      }
    }
 
    @Test
@@ -146,5 +173,67 @@ class TracingControllerIT extends AbstractBaseIT {
 
       assertThat(tracesAfterClear.getStatusCode()).isEqualTo(HttpStatus.OK);
       assertThat(tracesAfterClear.getBody()).isEmpty();
+   }
+
+   @Test
+   @DisplayName("Should stream traces via SSE endpoint")
+   void shouldStreamTracesViaSseEndpoint() throws Exception {
+      // Define the runnable for the SSE client to listen to the stream
+      Runnable sseClientRunnable = () -> {
+         // Add "explain-trace" attribute to the current span to get root span which is created by the REST call
+         Span currentSpan = Span.current();
+         currentSpan.setAttribute("explain-trace", true);
+         restTemplate.execute(
+               "/api/traces/operations/stream?serviceName=pastry-details&operationName=GET /pastry&clientAddress=.*",
+               HttpMethod.GET, request -> {}, response -> {
+                  String line;
+                  try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()));) {
+                     while ((line = bufferedReader.readLine()) != null) {
+                        System.out.println("SSE Line: " + line);
+                        parseAndStoreSseFrame(line, sseFrames);
+                     }
+                  } catch (IOException e) {
+                     System.err.println("Caught exception while reading SSE response: " + e.getMessage());
+                  }
+                  return response;
+               });
+      };
+
+      // Start the SSE client in background
+      sseClientExecutor.execute(sseClientRunnable);
+
+      // Wait a bit for the SSE connection to be established
+      Thread.sleep(100);
+
+      // Generate traces by calling the REST endpoint
+      ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-details/1.0.0/pastry", String.class);
+      assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+      // Wait for SSE events to be received
+      Thread.sleep(500);
+
+      // Verify that we received SSE events
+      assertThat(sseFrames).isNotEmpty();
+
+      // Check that we received data events containing span information
+      boolean foundDataEvent = false;
+      for (SseFrame frame : sseFrames) {
+         System.out.println(frame.key() + ": " + frame.value());
+         if ("trace".equals(frame.key())) {
+            foundDataEvent = true;
+            // The data should contain span information
+            assertThat(frame.value()).isNotBlank();
+            break;
+         }
+      }
+      assertThat(foundDataEvent).isTrue();
+   }
+
+   private void parseAndStoreSseFrame(String line, List<SseFrame> sseFrames) {
+      if (line.contains(":")) {
+         String key = line.substring(0, line.indexOf(':'));
+         String value = line.substring(line.indexOf(':') + 1).trim();
+         sseFrames.add(new SseFrame(key, value));
+      }
    }
 }
