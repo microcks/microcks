@@ -1,6 +1,8 @@
 package io.github.microcks.service;
 
 import io.github.microcks.event.TraceEvent;
+import io.github.microcks.util.tracing.SpanFilterUtil;
+
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.springframework.context.event.EventListener;
@@ -13,7 +15,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * Service for managing subscriptions to trace updates via Server-Sent Events (SSE). Clients can subscribe with filters
@@ -67,12 +68,7 @@ public class TraceSubscriptionService {
          return;
 
       for (Subscription sub : subscriptions) {
-         boolean matches = spans.stream()
-               .anyMatch(span -> matchesWildcard(sub.serviceName(), event.service())
-                     && matchesWildcard(sub.operationName(), event.operation())
-                     && matchesWildcard(sub.clientAddress(), event.clientAddress()));
-
-         if (matches) {
+         if (SpanFilterUtil.matchesTraceEvent(event, sub.serviceName(), sub.operationName(), sub.clientAddress())) {
             List<SpanData> spanDataList = spans.stream().map(ReadableSpan::toSpanData).toList();
 
             try {
@@ -101,31 +97,6 @@ public class TraceSubscriptionService {
       }
    }
 
-   /**
-    * Check if a value matches a pattern with optional regex support.
-    *
-    * @param pattern The pattern to match against (can be null, "*", or regex pattern).
-    * @param value   The value to check (can be null).
-    * @return True if the value matches the pattern, false otherwise.
-    */
-   private boolean matchesWildcard(String pattern, String value) {
-      if (pattern == null || value == null) {
-         return pattern == null && value == null;
-      }
-
-      // If pattern is "*", match everything
-      if ("*".equals(pattern)) {
-         return true;
-      }
-
-      // Try regex matching first
-      try {
-         return value.matches(pattern);
-      } catch (PatternSyntaxException e) {
-         // If regex fails, fall back to exact match
-         return pattern.equals(value);
-      }
-   }
 
    private record Subscription(SseEmitter emitter, String serviceName, String operationName, String clientAddress) {
    }
