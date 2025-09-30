@@ -29,10 +29,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -52,7 +48,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * @author microcks-team
  */
 @TestPropertySource(properties = { "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none",
-      "otel.instrumentation.annotations.enabled=true", "otel.sdk.disabled=false" })
+      "otel.instrumentation.annotations.enabled=true", "otel.sdk.disabled=false",
+      "otel.instrumentation.spring-web.enabled=false" })
 class TracingControllerIT extends AbstractBaseIT {
 
    record SseFrame(String key, String value) {
@@ -180,12 +177,10 @@ class TracingControllerIT extends AbstractBaseIT {
    void shouldStreamTracesViaSseEndpoint() throws Exception {
       // Define the runnable for the SSE client to listen to the stream
       Runnable sseClientRunnable = () -> {
-         // Add "explain-trace" attribute to the current span to get root span which is created by the REST call
-         Span currentSpan = Span.current();
-         currentSpan.setAttribute("explain-trace", true);
          restTemplate.execute(
                "/api/traces/operations/stream?serviceName=pastry-details&operationName=GET /pastry&clientAddress=.*",
                HttpMethod.GET, request -> {}, response -> {
+
                   String line;
                   try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()));) {
                      while ((line = bufferedReader.readLine()) != null) {
@@ -215,18 +210,18 @@ class TracingControllerIT extends AbstractBaseIT {
       // Verify that we received SSE events
       assertThat(sseFrames).isNotEmpty();
 
-      // Check that we received data events containing span information
-      boolean foundDataEvent = false;
-      for (SseFrame frame : sseFrames) {
-         System.out.println(frame.key() + ": " + frame.value());
-         if ("trace".equals(frame.key())) {
-            foundDataEvent = true;
-            // The data should contain span information
-            assertThat(frame.value()).isNotBlank();
-            break;
-         }
-      }
-      assertThat(foundDataEvent).isTrue();
+      // Check that the first event is a heartbeat
+      SseFrame firstFrame = sseFrames.get(0);
+      assertThat(firstFrame.key).isEqualTo("event");
+      assertThat(firstFrame.value).isEqualTo("heartbeat");
+      // Check that we have at least one trace event
+      boolean hasTraceEvent = sseFrames.stream()
+            .anyMatch(frame -> "event".equals(frame.key) && "trace".equals(frame.value));
+      assertThat(hasTraceEvent).isTrue();
+      // Check that we have at least one data frame with span details
+      boolean hasDataFrame = sseFrames.stream().anyMatch(
+            frame -> "data".equals(frame.key) && frame.value.contains("GET /rest/pastry-details/1.0.0/pastry"));
+
    }
 
    private void parseAndStoreSseFrame(String line, List<SseFrame> sseFrames) {
