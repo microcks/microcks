@@ -60,6 +60,7 @@ class TracingControllerIT extends AbstractBaseIT {
 
    private List<SseFrame> sseFrames;
    private ExecutorService sseClientExecutor;
+   private Thread sseClientThread;
 
    @BeforeEach
    void setUp() {
@@ -76,7 +77,7 @@ class TracingControllerIT extends AbstractBaseIT {
    @AfterEach
    void tearDown() {
       if (sseClientExecutor != null) {
-         sseClientExecutor.shutdown();
+         sseClientExecutor.shutdownNow();
       }
    }
 
@@ -184,7 +185,6 @@ class TracingControllerIT extends AbstractBaseIT {
                   String line;
                   try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(response.getBody()));) {
                      while ((line = bufferedReader.readLine()) != null) {
-                        System.out.println("SSE Line: " + line);
                         parseAndStoreSseFrame(line, sseFrames);
                      }
                   } catch (IOException e) {
@@ -211,17 +211,15 @@ class TracingControllerIT extends AbstractBaseIT {
       assertThat(sseFrames).isNotEmpty();
 
       // Check that the first event is a heartbeat
-      SseFrame firstFrame = sseFrames.get(0);
+      SseFrame firstFrame = sseFrames.getFirst();
       assertThat(firstFrame.key).isEqualTo("event");
       assertThat(firstFrame.value).isEqualTo("heartbeat");
       // Check that we have at least one trace event
-      boolean hasTraceEvent = sseFrames.stream()
-            .anyMatch(frame -> "event".equals(frame.key) && "trace".equals(frame.value));
-      assertThat(hasTraceEvent).isTrue();
-      // Check that we have at least one data frame with span details
-      boolean hasDataFrame = sseFrames.stream().anyMatch(
-            frame -> "data".equals(frame.key) && frame.value.contains("GET /rest/pastry-details/1.0.0/pastry"));
-
+      assertThat(sseFrames).anyMatch(frame -> "event".equals(frame.key) && "trace".equals(frame.value));
+      // Check that at least one trace event contains expected span info
+     assertThat(sseFrames).anyMatch(
+            frame -> "data".equals(frame.key) && frame.value.contains("processInvocation")
+     );
    }
 
    private void parseAndStoreSseFrame(String line, List<SseFrame> sseFrames) {
