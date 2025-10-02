@@ -56,7 +56,6 @@ export class TraceGroupListComponent {
       spanName: string;
       traceId: string;
     }[] = [];
-    console.log("Extracting events from trace:", trace);
     for (const span of trace) {
       for (const event of span.events || []) {
         events.push({
@@ -67,7 +66,6 @@ export class TraceGroupListComponent {
         });
       }
     }
-    console.log("Unsorted events:", events);
     // Sort events by time
     events.sort((a, b) => {
       if (!a.event.time && !b.event.time) return 0;
@@ -77,7 +75,6 @@ export class TraceGroupListComponent {
         return a.event.time[0] - b.event.time[0];
       return a.event.time[1] - b.event.time[1];
     });
-    console.log("Extracted events:", events);
     return events;
   }
 
@@ -109,7 +106,6 @@ export class TraceGroupListComponent {
   }
 
   getEventSpanId(trace: ReadableSpan[], e: TimedEvent): string {
-    console.log("Finding span ID for event:", e, trace);
     for (const span of trace) {
       if (span.events?.includes(e)) {
         return span.spanContext().spanId;

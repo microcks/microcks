@@ -85,7 +85,6 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (spans) => {
           if (spans && spans.length > 0) {
-            console.log("Received spans", spans);
             // Get trace ID from first span
             const traceId = spans[0]?.spanContext()?.traceId;
             if (traceId && !this.seenTraceIds.has(traceId)) {
@@ -102,9 +101,6 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
                   }
                 }
               }
-              console.log("Trace groups now", this.traceGroups.length);
-            } else {
-              console.log("Duplicate trace ignored", traceId);
             }
           }
         },
@@ -115,7 +111,6 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
         },
         complete: () => {
           this.connected = false;
-          console.log("Stream completed");
         },
       });
   }
@@ -137,7 +132,6 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (traces) => {
-          console.log("Prefilled traces", traces);
           if (traces && traces.length > 0) {
             // Filter out traces we've already seen
             const newTraces = traces.filter((traceGroup) => {
@@ -171,11 +165,6 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
                   }
                 });
               }
-              console.log(
-                `Added ${newTraces.length} new traces, ${traces.length - newTraces.length} duplicates ignored`,
-              );
-            } else {
-              console.log("No new traces, all were duplicates");
             }
           }
           this.isLoading = false;
