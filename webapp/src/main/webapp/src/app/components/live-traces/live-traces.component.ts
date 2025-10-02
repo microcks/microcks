@@ -234,24 +234,6 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  formatHrTime(t?: HrTime): string {
-    if (!t) return "";
-    const [sec, nsec] = t;
-    if (
-      !Number.isFinite(sec) ||
-      !Number.isFinite(nsec) ||
-      (sec === 0 && nsec === 0)
-    )
-      return "";
-    const msEpoch = sec * 1000 + Math.floor(nsec / 1_000_000);
-    const d = new Date(msEpoch);
-    const hh = String(d.getHours()).padStart(2, "0");
-    const mm = String(d.getMinutes()).padStart(2, "0");
-    const ss = String(d.getSeconds()).padStart(2, "0");
-    const ms = String(d.getMilliseconds()).padStart(3, "0");
-    return `${hh}:${mm}:${ss}.${ms}`;
-  }
-
   get totalEvents(): number {
     return this.traceGroups.reduce(
       (acc, g) =>
@@ -269,25 +251,5 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
     if (!Number.isFinite(s) || !Number.isFinite(ns) || (s === 0 && ns === 0))
       return -1n;
     return BigInt(Math.trunc(s)) * 1_000_000_000n + BigInt(Math.trunc(ns));
-  }
-  private minHrTime(
-    a: HrTime | undefined,
-    b: HrTime | undefined,
-  ): HrTime | undefined {
-    const an = this.toNanos(a);
-    const bn = this.toNanos(b);
-    if (an < 0n) return b;
-    if (bn < 0n) return a;
-    return an <= bn ? a : b;
-  }
-  private maxHrTime(
-    a: HrTime | undefined,
-    b: HrTime | undefined,
-  ): HrTime | undefined {
-    const an = this.toNanos(a);
-    const bn = this.toNanos(b);
-    if (an < 0n) return b;
-    if (bn < 0n) return a;
-    return an >= bn ? a : b;
   }
 }
