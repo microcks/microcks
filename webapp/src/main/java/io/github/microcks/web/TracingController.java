@@ -74,8 +74,8 @@ public class TracingController {
    }
 
    @GetMapping("/operations")
-   public ResponseEntity<List<List<SpanData>>> getTracesForOperation(
-         @RequestParam("serviceName") String serviceName, @RequestParam("operationName") String operationName,
+   public ResponseEntity<List<List<SpanData>>> getTracesForOperation(@RequestParam("serviceName") String serviceName,
+         @RequestParam("operationName") String operationName,
          @RequestParam(value = "clientAddress", defaultValue = ".*") String clientAddress) {
       List<String> traceIds = spanStorageService.queryTraceIdsByPatterns(serviceName, operationName, clientAddress);
       if (traceIds.isEmpty()) {
