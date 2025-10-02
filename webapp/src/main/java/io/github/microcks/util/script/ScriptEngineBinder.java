@@ -17,16 +17,17 @@ package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
+import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import jakarta.servlet.http.HttpServletRequest;
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
 import javax.script.SimpleScriptContext;
 import java.util.Map;
+
 
 /**
  * Utility class that holds methods for creating binding environments and evaluation context for a JSR 233 ScriptEngine.
@@ -39,6 +40,44 @@ public class ScriptEngineBinder {
 
    /** Private constructor to hide the implicit public one. */
    private ScriptEngineBinder() {
+   }
+
+   /**
+    * Lightweight wrapper exposing common Logger methods while also exporting messages as span events. Keeps the same
+    * method names used by scripts (info/debug/warn/error) for drop-in compatibility.
+    */
+   public static final class LogWrapper {
+      private final Logger delegate;
+
+      LogWrapper(Logger delegate) {
+         this.delegate = delegate;
+      }
+
+      public void info(String msg) {
+         delegate.info(msg);
+         addSpanLogEvent("INFO", msg, "groovy", null);
+      }
+
+      public void debug(String msg) {
+         delegate.debug(msg);
+         addSpanLogEvent("DEBUG", msg, "groovy", null);
+      }
+
+      public void warn(String msg) {
+         delegate.warn(msg);
+         addSpanLogEvent("WARN", msg, "groovy", null);
+      }
+
+      public void error(String msg) {
+         delegate.error(msg);
+         addSpanLogEvent("ERROR", msg, "groovy", null);
+      }
+
+      public void error(String msg, Throwable t) {
+         delegate.error(msg, t);
+         addSpanLogEvent("ERROR", msg, "groovy", t);
+      }
+
    }
 
    /**
@@ -113,7 +152,8 @@ public class ScriptEngineBinder {
       // Create bindings and put content according to SoapUI binding environment.
       Bindings bindings = engine.createBindings();
       bindings.put("mockRequest", mockRequest);
-      bindings.put("log", log);
+      // Wrap the logger so that script log calls are also exported as span events.
+      bindings.put("log", new LogWrapper(log));
       bindings.put("requestContext", requestContext);
       bindings.put("store", stateStore);
 

@@ -95,6 +95,30 @@ class ExpressionParserTest {
    }
 
    @Test
+   void testFallbackWithLiteralParseExpression() {
+      String template = "result: {{ request.body/key || '[]'}}";
+
+      // Build a suitable context.
+      EvaluationContext context = new EvaluationContext();
+      context.setVariable("request", new EvaluableRequest("{\"key\": \"value\"}", null));
+
+      Expression[] expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
+      assertEquals(2, expressions.length);
+      assertInstanceOf(LiteralExpression.class, expressions[0]);
+      assertInstanceOf(FallbackExpression.class, expressions[1]);
+
+      // Check value of fallback expression.
+      FallbackExpression fbe = (FallbackExpression) expressions[1];
+      assertEquals("value", fbe.getValue(context));
+
+      // Now change request to not have 'key' and check fallback to literal.
+      context.setVariable("request", new EvaluableRequest("{\"otherKey\": \"value\"}", null));
+      expressions = ExpressionParser.parseExpressions(template, context, "{{", "}}");
+      fbe = (FallbackExpression) expressions[1];
+      assertEquals("[]", fbe.getValue(context));
+   }
+
+   @Test
    void testXpathExpressionWithNestedFunction() {
       String template = "Hello {{ request.body//*[local-name() = 'name'] }} it's {{ now() }}";
 

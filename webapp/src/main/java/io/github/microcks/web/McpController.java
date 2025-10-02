@@ -80,7 +80,7 @@ public class McpController {
     * @param resourceRepository         The repository to access resources definitions
     * @param restInvocationProcessor    The invocation processor to apply REST mocks dispatching logic
     * @param grpcInvocationProcessor    The invocation processor to apply GRPC mocks dispatching logic
-    * @param graphQLInvocationProcessor The incocation processor to apply GraphQL mocks dispatching logic
+    * @param graphQLInvocationProcessor The invocation processor to apply GraphQL mocks dispatching logic
     */
    public McpController(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
          RestInvocationProcessor restInvocationProcessor, GrpcInvocationProcessor grpcInvocationProcessor,
@@ -239,8 +239,7 @@ public class McpController {
             new TypeReference<McpSchema.InitializeRequest>() {
             });
 
-      if (initializeRequest.protocolVersion().equals(McpSchema.LATEST_PROTOCOL_VERSION)
-            || initializeRequest.protocolVersion().equals(McpSchema.FIRST_PROTOCOL_VERSION)) {
+      if (McpSchema.SUPPORTED_PROTOCOL_VERSIONS.contains(initializeRequest.protocolVersion())) {
          McpSchema.ClientCapabilities clientCapabilities = initializeRequest.capabilities();
          McpSchema.Implementation clientInfo = initializeRequest.clientInfo();
 

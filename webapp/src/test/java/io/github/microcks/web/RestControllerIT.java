@@ -24,14 +24,13 @@ import io.github.microcks.domain.Service;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.skyscreamer.jsonassert.comparator.ArraySizeComparator;
+import org.springframework.boot.http.client.ClientHttpRequestFactorySettings.Redirects;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMapAdapter;
 
 import java.util.List;
 import java.util.UUID;
@@ -184,9 +183,10 @@ class RestControllerIT extends AbstractBaseIT {
       // Upload simple-oidc-redirect-openapi spec
       uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/simple-oidc-redirect-openapi.yaml", true);
 
-      ResponseEntity<String> response = restTemplate.getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
-            + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
-            String.class);
+      ResponseEntity<String> response = restTemplate.withRedirects(Redirects.DONT_FOLLOW)
+            .getForEntity("/rest/Simple+OIDC/1.0/login/oauth/authorize?"
+                  + "response_type=code&client_id=GHCLIENT&scope=openid+user:email&redirect_uri=http://localhost:8080/Login/githubLoginSuccess&state=e956e017-5e13-4c9d-b83b-6dd6337a6a86",
+                  String.class);
       assertEquals(302, response.getStatusCode().value());
 
       String content = response.getBody();
@@ -272,6 +272,7 @@ class RestControllerIT extends AbstractBaseIT {
       // Introduce request delay.
       long delay = 150l;
       op.setDefaultDelay(delay);
+      op.setDefaultDelayStrategy("fixed");
       serviceRepository.save(service);
 
       // If we have the mock, we should get the response from the mock.
@@ -325,7 +326,7 @@ class RestControllerIT extends AbstractBaseIT {
       ResponseEntity<String> response = restTemplate.getForEntity("/rest/pastry-proxy/1.0.0/pastry?name=realDonut",
             String.class);
       assertEquals(400, response.getStatusCode().value());
-      verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any());
+      verify(restController, times(1)).execute(any(), any(), any(), any(), any(), any(), any(), any());
    }
 
    @Test
@@ -423,4 +424,104 @@ class RestControllerIT extends AbstractBaseIT {
       assertTrue(mockedResponseTime >= 400, "mocked response time delayed: " + mockedResponseTime + "ms");
       assertEquals(200, response.getStatusCode().value());
    }
+
+
+   @Test
+   void testDelayWithStrategyFixed() {
+      // Upload PetStore reference artifact.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+
+      // Check a delayed mocked operations with fixed strategy.
+      long startTime = System.currentTimeMillis();
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", String.class);
+      long mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is greater than the delay and greater that .
+      assertTrue(mockedResponseTime >= 200, "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+
+      // Now use a header to specify mock response time with random strategy.
+      HttpHeaders headers = new HttpHeaders();
+      headers.set("x-microcks-delay", "400");
+      headers.set("x-microcks-delay-strategy", "fixed");
+      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+      startTime = System.currentTimeMillis();
+      // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set random here).
+      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", HttpMethod.GET,
+            requestEntity, String.class);
+      mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is greater than the delay and greater that .
+      assertTrue(mockedResponseTime >= 400, "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+   }
+
+   @Test
+   void testDelayStrategyRandom() {
+      Long schedulingDelay = 50l;
+      // Upload PetStore reference artifact.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+
+      // Check a delayed mocked operations with random strategy.
+      long startTime = System.currentTimeMillis();
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=random", String.class);
+      long mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is between 0 and 200ms (random strategy)
+      // Note: we can't be sure that the delay is <= 200 because of JVM scheduling but it's very likely.
+      assertTrue(mockedResponseTime >= 0 && mockedResponseTime <= (200 + schedulingDelay),
+            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+
+      // Now use a header to specify mock response time with random strategy.
+      HttpHeaders headers = new HttpHeaders();
+      headers.set("x-microcks-delay", "400");
+      headers.set("x-microcks-delay-strategy", "random");
+      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+      startTime = System.currentTimeMillis();
+      // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
+      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
+            requestEntity, String.class);
+      mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is between 0 and the delay.
+      // Note: we can't be sure that the delay is <= 400 because of JVM scheduling but it's very likely.
+      assertTrue(mockedResponseTime >= 0 && mockedResponseTime <= (400 + schedulingDelay),
+            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+   }
+
+   @Test
+   void testDelayStrategyRangedRandom() {
+      Long schedulingDelay = 50l;
+      // Upload PetStore reference artifact.
+      uploadArtifactFile("target/test-classes/io/github/microcks/util/openapi/petstore-openapi.json", true);
+
+      // Check a delayed mocked operations with random strategy.
+      long startTime = System.currentTimeMillis();
+      ResponseEntity<String> response = restTemplate
+            .getForEntity("/rest/PetStore+API/1.0.0/pets?delay=100&delayStrategy=random-20", String.class);
+      long mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is between 80 and 120 (100 + or - 20%).
+      assertTrue(mockedResponseTime >= 80 && mockedResponseTime <= (120 + schedulingDelay),
+            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+
+      // Now use a header to specify mock response time with random strategy.
+      HttpHeaders headers = new HttpHeaders();
+      headers.set("x-microcks-delay", "400");
+      headers.set("x-microcks-delay-strategy", "random-20");
+      HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+      startTime = System.currentTimeMillis();
+      // delay and delayStrategy query params should be ignored in favour of headers. (It's a reason why we set fixed here).
+      response = restTemplate.exchange("/rest/PetStore+API/1.0.0/pets?delay=200&delayStrategy=fixed", HttpMethod.GET,
+            requestEntity, String.class);
+      mockedResponseTime = System.currentTimeMillis() - startTime;
+      // Assert that the response time is between 320 and 480 (400 + or - 20%).
+      // Note: we can't be sure that the delay is <= 480 because of JVM scheduling but it's very likely.
+      assertTrue(mockedResponseTime >= 320 && mockedResponseTime <= (480 + schedulingDelay),
+            "mocked response time delayed: " + mockedResponseTime + "ms");
+      assertEquals(200, response.getStatusCode().value());
+   }
+
 }

@@ -30,7 +30,7 @@ fi
 
 if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
   INSPECT_CMD="$METHOD"
-
+  global_elapsed=0
   unhealthy=()
 
   to_seconds() {
@@ -47,22 +47,31 @@ if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
 
   for cname in "${containers[@]}"; do
     echo "Inspecting container: $cname"
+    echo "  Global elapsed time: ${global_elapsed}s"
 
     interval=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Interval}}' "$cname")
     timeout=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Timeout}}' "$cname")
     start_period=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.StartPeriod}}' "$cname")
     retries=$($INSPECT_CMD inspect -f '{{.Config.Healthcheck.Retries}}' "$cname")
 
-    echo "Interval=${interval}, timeout=${timeout}, start-period=${start_period}, retries=${retries}"
+    echo "  Interval=${interval}, timeout=${timeout}, start-period=${start_period}, retries=${retries}"
 
     try=0
     elapsed=0
-    sleep $start_period
+    # If global elapsed is less than start_period, wait the remaining time
+    if [[ $global_elapsed -lt $(to_seconds "$start_period") ]]; then
+      start_period_val=$(to_seconds "$start_period")
+      wait_time=$((start_period_val - global_elapsed))
+      echo "  Waiting $wait_time seconds for start period..."
+      sleep $wait_time
+      global_elapsed=$((global_elapsed + wait_time))
+    fi
+
     timeout_val=$(to_seconds "$timeout")
     interval_val=$(to_seconds "$interval")
     while [[ $elapsed -lt $timeout_val ]] || [[ $try -lt $retries ]]; do
       status=$($INSPECT_CMD inspect -f '{{.State.Health.Status}}' "$cname")
-      echo "Status after ${elapsed}s: $status"
+      echo "  Status after ${elapsed}s: $status"
 
       if [[ "$status" == "healthy" ]]; then
         echo "$cname is healthy!"
@@ -72,6 +81,7 @@ if [[ "$METHOD" == "docker" || "$METHOD" == "podman" ]]; then
       sleep "$interval"
       try=$((try + 1))
       elapsed=$((elapsed + interval_val))
+      global_elapsed=$((global_elapsed + interval_val))
     done
 
     if [[ "$status" != "healthy" ]]; then

@@ -271,6 +271,9 @@ public class ServiceService {
                   if (operation.getDefaultDelay() != null) {
                      existingOp.setDefaultDelay(operation.getDefaultDelay());
                   }
+                  if (operation.getDefaultDelayStrategy() != null) {
+                     existingOp.setDefaultDelayStrategy(operation.getDefaultDelayStrategy());
+                  }
                   if (operation.getDispatcher() != null) {
                      existingOp.setDispatcher(operation.getDispatcher());
                   }
@@ -536,12 +539,13 @@ public class ServiceService {
     * @param dispatcher      The dispatcher to use for this operation
     * @param dispatcherRules The dispatcher rules to use for this operation
     * @param delay           The new delay value for operation
+    * @param delayStrategy   The new delay strategy value for operation
     * @param constraints     Constraints for this operation parameters
     * @param userInfo        The current user information to check if authorized to do the update
     * @return True if operation has been found and updated, false otherwise.
     */
    public Boolean updateOperation(String id, String operationName, String dispatcher, String dispatcherRules,
-         Long delay, Set<ParameterConstraint> constraints, UserInfo userInfo) {
+         Long delay, String delayStrategy, Set<ParameterConstraint> constraints, UserInfo userInfo) {
       // Get service to update.
       Service service = getServiceById(id);
       if (service != null
@@ -552,6 +556,7 @@ public class ServiceService {
                operation.setDispatcherRules(dispatcherRules);
                operation.setParameterConstraints(constraints);
                operation.setDefaultDelay(delay);
+               operation.setDefaultDelayStrategy(delayStrategy);
                operation.setOverride(true);
                serviceRepository.save(service);
 
@@ -661,6 +666,7 @@ public class ServiceService {
             for (Operation op : newService.getOperations()) {
                if (existingOperation.getName().equals(op.getName())) {
                   op.setDefaultDelay(existingOperation.getDefaultDelay());
+                  op.setDefaultDelayStrategy(existingOperation.getDefaultDelayStrategy());
                   op.setDispatcher(existingOperation.getDispatcher());
                   op.setDispatcherRules(existingOperation.getDispatcherRules());
                   op.setParameterConstraints(existingOperation.getParameterConstraints());

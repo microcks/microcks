@@ -239,6 +239,13 @@ public class TestRunnerService {
       return CompletableFuture.completedFuture(testResult);
    }
 
+   /**
+    * Update the testsCallbackUrl property. This is just here for testing purposes.
+    * @param testsCallbackUrl The URL to set
+    */
+   public void setTestsCallbackUrl(String testsCallbackUrl) {
+      this.testsCallbackUrl = testsCallbackUrl;
+   }
 
    /**
     *

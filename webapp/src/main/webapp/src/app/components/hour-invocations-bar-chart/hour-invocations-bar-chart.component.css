@@ -3,14 +3,14 @@
   }
   #hourInvocationsBarChart >* .axis line {
     stroke-width: 1px;
-    stroke: #eee;
+    stroke: var(--axis-line);
     shape-rendering: crispedges;
   }
   #hourInvocationsBarChart >* .axis text {
-    fill: #888;
+    fill: var(--axis-text);
   }
   .invocations-bar > rect {
-    fill: #0088ce;
+    fill: var(--primary-500);
     fill-opacity: 0.7;
   }
   .invocations-bar > rect:hover {

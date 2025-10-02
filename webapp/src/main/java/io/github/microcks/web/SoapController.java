@@ -30,11 +30,16 @@ import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
+import io.github.microcks.util.tracing.TraceUtil;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.roastedroot.quickjs4j.core.Engine;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -68,6 +73,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplierOptions;
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A controller for mocking Soap responses.
@@ -128,8 +137,9 @@ public class SoapController {
    @PostMapping(value = "/{service}/{version}/**")
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "validate", required = false) Boolean validate,
-         @RequestParam(value = "delay", required = false) Long delay, @RequestBody String body,
-         @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
+         @RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
 
@@ -234,8 +244,10 @@ public class SoapController {
             // Depending on dispatcher, evaluate request with rules.
             if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
                dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
-            } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-               dispatchContext = getDispatchCriteriaFromScriptEval(service, dispatcherRules, body, request);
+            } else if (DispatchStyles.SCRIPT.equals(dispatcher) || DispatchStyles.GROOVY.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromGroovyEval(service, dispatcherRules, body, request);
+            } else if (DispatchStyles.JS.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromJsEval(service, dispatcherRules, body, request);
             } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
                dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
             } else if (DispatchStyles.PROXY.equals(dispatcher)) {
@@ -294,9 +306,11 @@ public class SoapController {
                dispatchContext.requestContext(), response);
 
          // Setting delay to default one if not set.
-         delay = MockControllerCommons.getDelay(headers, delay);
+         DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
          if (delay == null && rOperation.getDefaultDelay() != null) {
-            delay = rOperation.getDefaultDelay();
+            Long operationDelay = rOperation.getDefaultDelay();
+            // TODO: Get delayStrategy
+            delay = new DelaySpec(operationDelay, DelayApplierOptions.FIXED);
          }
          MockControllerCommons.waitForDelay(startTime, delay);
 
@@ -391,7 +405,7 @@ public class SoapController {
    }
 
    /** Build a dispatch context after a Groovy script evaluation coming from rules. */
-   private DispatchContext getDispatchCriteriaFromScriptEval(Service service, String dispatcherRules, String body,
+   private DispatchContext getDispatchCriteriaFromGroovyEval(Service service, String dispatcherRules, String body,
          HttpServletRequest request) {
       Map<String, Object> requestContext = new HashMap<>();
       try {
@@ -400,11 +414,39 @@ public class SoapController {
          ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, body, requestContext,
                new ServiceStateStore(serviceStateRepository, service.getId()), request);
 
-         return new DispatchContext((String) scriptEngine.eval(script, scriptContext), requestContext);
+         DispatchContext res = new DispatchContext((String) scriptEngine.eval(script, scriptContext), requestContext);
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using GROOVY dispatcher")
+                     .put("dispatch.type", "GROOVY").put("dispatch.result", res.dispatchCriteria()).build());
+         return res;
       } catch (Exception e) {
+         // Get current span and record failure
+         Span.current().recordException(e);
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using GROOVY dispatcher")
+                     .put("dispatch.type", "GROOVY").put("dispatch.result", "null")
+                     .put("dispatch.script", dispatcherRules).build());
+         Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
          log.error("Error during Script evaluation", e);
          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                "Error during Script evaluation: " + e.getMessage());
+      }
+   }
+
+   /* Build a dispatch context after a JS script evaluation coming from rules. */
+   private DispatchContext getDispatchCriteriaFromJsEval(Service service, String dispatcherRules, String body,
+         HttpServletRequest request) {
+      Map<String, Object> requestContext = new HashMap<>();
+      try {
+         Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
+               new ServiceStateStore(serviceStateRepository, service.getId()), request);
+
+         return new DispatchContext(JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext),
+               requestContext);
+      } catch (Exception e) {
+         log.error("Error during JS evaluation", e);
+         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+               "Error during JS evaluation: " + e.getMessage());
       }
    }
 

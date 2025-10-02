@@ -1,7 +1,7 @@
 /* New specific styles */
 
 .mh-header-bar {
-  background-color: #4E5D6C !important;
+  background-color: var(--hero-bg) !important;
   margin-left: -20px;
   margin-right: -20px;
   margin-top: -20px;
@@ -61,7 +61,7 @@
 
 .mh-header-bar-inner_logo {
   height: 20px;
-  text-shadow: 0 1px 1px rgba(0,0,0,.2);
+  text-shadow: 0 1px 1px var(--shadow-strong);
   margin-bottom: 30px;
 }
 
@@ -90,14 +90,14 @@
 }
 .filter-panel-pf-category-title {
   border: 0;
-  color: #8b8d8f;
+  color: var(--placeholder-text);
   font-size: inherit;
   margin: 0;
   text-transform: uppercase;
 }
 .mh-page_filters .filter-panel-pf-category-title {
   margin-bottom: 10px;
-  color: #b6b6b6;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -112,7 +112,7 @@
   width: 100%;
 }
 .mh-category-item.selected, .mh-category-item:hover {
-  background-color: #eaeaea;
+  background-color: var(--divider);
 
 }
 .mh-category-item>button {
@@ -126,10 +126,10 @@
   text-decoration: underline;
 }
 .mh-category-item_select {
-  flex: 1;  
+  flex: 1;
 }
 .mh-category-item.selected .mh-category-item_select,  .mh-category-item:hover .mh-category-item_select {
-  color: #df691a;
+  color: var(--brand-orange);
 }
 
 .sr-only {
@@ -185,7 +185,7 @@ input[type=checkbox], input[type=radio] {
 }
 
 .mh-page_toolbar {
-  border-bottom: 1px solid #eaeaea;
+  border-bottom: 1px solid var(--divider);
   display: flex;
   flex-direction: row;
   margin-bottom: 20px;
@@ -197,7 +197,7 @@ input[type=checkbox], input[type=radio] {
   margin: 0;
   text-transform: uppercase;
   margin-bottom: 10px;
-  color: #b6b6b6;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -222,10 +222,10 @@ input[type=checkbox], input[type=radio] {
 .catalog-tile-pf {
   border: none;
   border-radius: 5px;
-  box-shadow: 0 3px 6px rgba(0,0,0,.1);
+  box-shadow: 0 3px 6px var(--shadow-subtle);
 }
 .catalog-tile-pf {
-  background: #fff;
+  background: var(--background);
   border: 1px solid hsla(0,0%,82%,.75);
   color: inherit;
   display: flex;
@@ -261,7 +261,7 @@ input[type=checkbox], input[type=radio] {
   font-weight: 400;
 }
 .catalog-tile-pf-body .catalog-tile-pf-subtitle {
-  color: #8b8d8f;
+  color: var(--placeholder-text);
   font-size: 14px;
 }
 .catalog-tile-pf-body .catalog-tile-pf-description {

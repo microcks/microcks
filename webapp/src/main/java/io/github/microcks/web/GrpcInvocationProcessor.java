@@ -29,6 +29,7 @@ import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
 import io.github.microcks.util.dispatcher.JsonMappingException;
 import io.github.microcks.util.grpc.GrpcMetadataUtil;
+import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.util.script.StringToStringsMap;
 
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.grpc.Metadata;
 import io.grpc.Status;
+import io.roastedroot.quickjs4j.core.Engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,6 +52,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplierOptions;
 
 /**
  * A processor for handling gRPC invocations. It is responsible for applying the dispatching logic and finding the most
@@ -124,7 +129,10 @@ public class GrpcInvocationProcessor {
 
          // Setting delay to default one if not set.
          if (ic.operation().getDefaultDelay() != null) {
-            MockControllerCommons.waitForDelay(startTime, ic.operation().getDefaultDelay());
+            Long defaultDelay = ic.operation().getDefaultDelay();
+            // TODO: Get DefaultStrategy
+            DelaySpec delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
+            MockControllerCommons.waitForDelay(startTime, delay);
          }
 
          // Publish an invocation event before returning if enabled.
@@ -175,6 +183,9 @@ public class GrpcInvocationProcessor {
                }
                break;
             case DispatchStyles.SCRIPT:
+               log.info("Use the \"GROOVY\" Dispatch Style instead.");
+               // fallthrough
+            case DispatchStyles.GROOVY:
                requestContext = new HashMap<>();
                try {
                   StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
@@ -182,6 +193,18 @@ public class GrpcInvocationProcessor {
                   ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, jsonBody,
                         requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
                   dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
+               } catch (Exception e) {
+                  log.error("Error during Script evaluation", e);
+               }
+               break;
+            case DispatchStyles.JS:
+               requestContext = new HashMap<>();
+               try {
+                  StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
+                  // Evaluating request with script coming from operation dispatcher rules.
+                  Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(jsonBody, requestContext,
+                        new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
+                  dispatchCriteria = JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext);
                } catch (Exception e) {
                   log.error("Error during Script evaluation", e);
                }

@@ -39,6 +39,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -1867,6 +1868,222 @@ class OpenAPIImporterTest {
             assertEquals(DispatchStyles.URI_PARAMS, operation.getDispatcher());
             assertEquals("lastName && firstName", operation.getDispatcherRules());
          }
+      }
+   }
+
+   @Test
+   void testOpenAPIWithFormDataParameters() {
+      String openAPISpec = """
+            openapi: 3.0.0
+            info:
+              title: FormData Parameters Test API
+              description: API to test formData parameter handling in Microcks
+              version: 1.0.0
+            servers:
+              - url: http://localhost:8080/api
+                description: Test server
+            paths:
+              /upload:
+                post:
+                  summary: Upload file with formData parameters
+                  parameters:
+                    - name: userId
+                      in: formData
+                      required: true
+                      schema:
+                        type: string
+                      description: User ID submitting the form
+                      example: user123
+                    - name: category
+                      in: formData
+                      required: false
+                      schema:
+                        type: string
+                        enum: [document, image, video]
+                      description: Category of the upload
+                      example: document
+                  requestBody:
+                    content:
+                      multipart/form-data:
+                        schema:
+                          type: object
+                          properties:
+                            file:
+                              type: string
+                              format: binary
+                        examples:
+                          sample-upload:
+                            summary: Sample file upload
+                            value:
+                              file: sample-document.pdf
+                  responses:
+                    '200':
+                      description: Upload successful
+                      content:
+                        application/json:
+                          schema:
+                            type: object
+                            properties:
+                              message:
+                                type: string
+                              uploadId:
+                                type: string
+                          examples:
+                            success:
+                              summary: Successful upload
+                              value:
+                                message: Upload completed successfully
+                                uploadId: upload_12345
+            """;
+
+      // Create a temporary file with the OpenAPI spec
+      try {
+         java.io.File tempFile = java.io.File.createTempFile("formdata-test-openapi", ".yaml");
+         tempFile.deleteOnExit();
+         java.nio.file.Files.write(tempFile.toPath(), openAPISpec.getBytes());
+
+         OpenAPIImporter importer = new OpenAPIImporter(tempFile.getAbsolutePath(), null);
+
+         // Check that basic service properties are there.
+         List<Service> services = importer.getServiceDefinitions();
+         assertEquals(1, services.size());
+         Service service = services.get(0);
+         assertEquals("FormData Parameters Test API", service.getName());
+         assertEquals(ServiceType.REST, service.getType());
+         assertEquals("1.0.0", service.getVersion());
+
+         // Check that operations have been found.
+         assertEquals(1, service.getOperations().size());
+         Operation operation = service.getOperations().get(0);
+         assertEquals("POST /upload", operation.getName());
+         assertEquals("POST", operation.getMethod());
+
+         // Check that parameter constraints have been correctly parsed including formData
+         // The fix should now allow formData parameters to be parsed without throwing IllegalArgumentException
+         assertEquals(1, operation.getParameterConstraints().size());
+
+         ParameterConstraint constraint = operation.getParameterConstraints().iterator().next();
+         assertEquals("userId", constraint.getName());
+         assertTrue(constraint.isRequired());
+         assertEquals(ParameterLocation.formData, constraint.getIn());
+
+      } catch (Exception e) {
+         fail("Exception should not be thrown when parsing formData parameters: " + e.getMessage());
+      }
+   }
+
+
+   @Test
+   void testSimpleOpenAPIImportCookieParameters() {
+      // Test cookie parameter parsing which was failing with IllegalArgumentException before the fix
+      String openAPISpec = """
+            openapi: 3.0.0
+            info:
+              title: Cookie Parameters Test API
+              description: API to test cookie parameter handling in Microcks
+              version: 1.0.0
+            servers:
+              - url: http://localhost:8080/rest/Cookie Parameters Test API/1.0.0
+                description: Microcks mock server
+            paths:
+              /secure:
+                get:
+                  summary: Get secure data with cookie authentication
+                  parameters:
+                    - name: sessionId
+                      in: cookie
+                      required: true
+                      schema:
+                        type: string
+                      description: Session ID for authentication
+                      example: session_abc123
+                    - name: preferences
+                      in: cookie
+                      required: false
+                      schema:
+                        type: string
+                        pattern: "theme_(light|dark)"
+                      description: User preferences cookie
+                      example: theme_dark
+                  responses:
+                    '200':
+                      description: Secure data retrieved successfully
+                      content:
+                        application/json:
+                          schema:
+                            type: object
+                            properties:
+                              data:
+                                type: string
+                              userId:
+                                type: string
+                          examples:
+                            success:
+                              summary: Successful secure data retrieval
+                              value:
+                                data: "Secret information"
+                                userId: "user123"
+                    '401':
+                      description: Unauthorized - missing or invalid session
+                      content:
+                        application/json:
+                          schema:
+                            type: object
+                            properties:
+                              error:
+                                type: string
+                          examples:
+                            unauthorized:
+                              summary: Missing session cookie
+                              value:
+                                error: "Session ID required"
+            """;
+
+      try {
+         File tempFile = File.createTempFile("openapi-cookie-test", ".yaml");
+         java.nio.file.Files.write(tempFile.toPath(), openAPISpec.getBytes());
+
+         OpenAPIImporter importer = new OpenAPIImporter(tempFile.getAbsolutePath(), null);
+
+         // Check that basic service properties are there.
+         List<Service> services = importer.getServiceDefinitions();
+         assertEquals(1, services.size());
+         Service service = services.get(0);
+         assertEquals("Cookie Parameters Test API", service.getName());
+         assertEquals(ServiceType.REST, service.getType());
+         assertEquals("1.0.0", service.getVersion());
+
+         // Check that operations have been found.
+         assertEquals(1, service.getOperations().size());
+         Operation operation = service.getOperations().get(0);
+         assertEquals("GET /secure", operation.getName());
+         assertEquals("GET", operation.getMethod());
+
+         // Check that parameter constraints have been correctly parsed including cookie
+         // The fix should now allow cookie parameters to be parsed without throwing IllegalArgumentException
+         // Only required parameters may be parsed, so expect 1 (sessionId)
+         assertEquals(1, operation.getParameterConstraints().size());
+
+         boolean foundSessionIdCookie = false;
+         boolean foundPreferencesCookie = false;
+
+         for (ParameterConstraint constraint : operation.getParameterConstraints()) {
+            if ("sessionId".equals(constraint.getName())) {
+               assertTrue(constraint.isRequired());
+               assertEquals(ParameterLocation.cookie, constraint.getIn());
+               foundSessionIdCookie = true;
+            } else if ("preferences".equals(constraint.getName())) {
+               assertFalse(constraint.isRequired());
+               assertEquals(ParameterLocation.cookie, constraint.getIn());
+               foundPreferencesCookie = true;
+            }
+         }
+
+         assertTrue(foundSessionIdCookie, "Should find sessionId cookie parameter");
+         assertFalse(foundPreferencesCookie, "Should not find preferences cookie parameter (not required)");
+
+      } catch (Exception e) {
+         fail("Exception should not be thrown when parsing cookie parameters: " + e.getMessage());
       }
    }
 }

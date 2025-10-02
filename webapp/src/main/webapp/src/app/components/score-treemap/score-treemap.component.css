@@ -8,5 +8,5 @@
   margin: 5px; 
   width: 100px; 
   height: 10px; 
-  background-image: linear-gradient(to left, #def3ff, #39a5dc, #004368);
+  background-image: linear-gradient(to left, var(--primary-tint), var(--brand-blue), var(--primary-deep));
 }

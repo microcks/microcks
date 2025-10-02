@@ -15,17 +15,15 @@
  */
 package io.github.microcks.minion.async;
 
-
-import com.fasterxml.jackson.databind.JsonNode;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaUtil;
 import io.github.microcks.util.asyncapi.AsyncAPISchemaValidator;
-import lombok.extern.slf4j.Slf4j;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-@Slf4j
 public class AsyncAPITestManagerTest {
 
    private static final String ASYNC_API_2_SCHEMA_TEXT1 = """

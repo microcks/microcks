@@ -59,8 +59,16 @@ public class MetadataExtractor {
       if (node.has("delay")) {
          operation.setDefaultDelay(node.path("delay").asLong(0));
       }
+      if (node.has("delayStrategy")) {
+         String strategy = node.path("delayStrategy").asText();
+         operation.setDefaultDelayStrategy(strategy);
+      }
       if (node.has("frequency")) {
          operation.setDefaultDelay(node.path("frequency").asLong());
+      }
+      if (node.has("frequenceStrategy")) {
+         String strategy = node.path("frequenceStrategy").asText();
+         operation.setDefaultDelayStrategy(strategy);
       }
       if (node.has("dispatcher")) {
          operation.setDispatcher(node.path("dispatcher").asText());

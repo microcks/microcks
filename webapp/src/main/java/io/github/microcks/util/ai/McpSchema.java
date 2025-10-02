@@ -34,8 +34,7 @@ import java.util.Map;
  */
 public class McpSchema {
 
-   public static final String LATEST_PROTOCOL_VERSION = "2025-03-26";
-   public static final String FIRST_PROTOCOL_VERSION = "2024-11-05";
+   public static final List<String> SUPPORTED_PROTOCOL_VERSIONS = List.of("2024-11-05", "2025-03-26", "2025-06-18");
 
    public static final String JSONRPC_VERSION = "2.0";
 

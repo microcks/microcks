@@ -49,6 +49,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.github.microcks.util.delay.DelayApplierOptions;
+import io.github.microcks.util.delay.DelaySpec;
+
 /**
  * This is the controller for Dynamic mocks in Microcks.
  * @author laurent
@@ -85,8 +88,9 @@ public class DynamicMockRestController {
    @PostMapping(value = "/{service}/{version}/{resource}", produces = "application/json")
    public ResponseEntity<String> createResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
-         @RequestParam(value = "delay", required = false) Long delay, @RequestBody(required = true) String body,
-         HttpServletRequest request) {
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
+         @RequestBody(required = true) String body, HttpServletRequest request) {
       log.debug("Creating a new resource '{}' for service '{}-{}'", resource, serviceName, version);
       long startTime = System.currentTimeMillis();
 
@@ -113,6 +117,10 @@ public class DynamicMockRestController {
 
          // Append id and wait if specified before returning.
          document.append(ID_FIELD, genericResource.getId());
+         DelaySpec delay = null;
+         if (requestedDelay != null) {
+            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
+         }
          waitForDelay(startTime, delay, mockContext);
          return new ResponseEntity<>(document.toJson(), HttpStatus.CREATED);
       }
@@ -125,8 +133,9 @@ public class DynamicMockRestController {
          @PathVariable("version") String version, @PathVariable("resource") String resource,
          @RequestParam(value = "page", required = false, defaultValue = "0") int page,
          @RequestParam(value = "size", required = false, defaultValue = "20") int size,
-         @RequestParam(value = "delay", required = false) Long delay, @RequestBody(required = false) String body,
-         HttpServletRequest request) {
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
+         @RequestBody(required = false) String body, HttpServletRequest request) {
       log.debug("Find resources '{}' for service '{}-{}'", resource, serviceName, version);
       long startTime = System.currentTimeMillis();
 
@@ -157,6 +166,11 @@ public class DynamicMockRestController {
                .renderResponseContent(evaluableRequest, engine, transformToResourceJSON(genericResource)))
                .collect(Collectors.toList());
 
+         DelaySpec delay = null;
+         if (requestedDelay != null) {
+            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
+         }
+
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
          MockControllerCommons.waitForDelay(startTime, delay);
@@ -170,7 +184,9 @@ public class DynamicMockRestController {
    @GetMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
    public ResponseEntity<String> getResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
-         @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay,
+         @PathVariable("resourceId") String resourceId,
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
          HttpServletRequest request) {
       log.debug("Get resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
@@ -187,6 +203,10 @@ public class DynamicMockRestController {
          // Get the requested generic resource.
          GenericResource genericResource = genericResourceRepository.findById(resourceId).orElse(null);
 
+         DelaySpec delay = null;
+         if (requestedDelay != null) {
+            delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
+         }
          // Wait if specified before returning.
          waitForDelay(startTime, delay, mockContext);
 
@@ -212,12 +232,18 @@ public class DynamicMockRestController {
    @PutMapping(value = "/{service}/{version}/{resource}/{resourceId}", produces = "application/json")
    public ResponseEntity<String> updateResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
-         @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay,
+         @PathVariable("resourceId") String resourceId,
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
          @RequestBody(required = true) String body, HttpServletRequest request) {
       log.debug("Update resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
 
       serviceName = sanitizeServiceName(serviceName);
+      DelaySpec delay = null;
+      if (requestedDelay != null) {
+         delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
+      }
 
       MockContext mockContext = getMockContext(serviceName, version, "PUT /" + resource + "/:id");
       if (mockContext != null) {
@@ -261,11 +287,17 @@ public class DynamicMockRestController {
    @DeleteMapping(value = "/{service}/{version}/{resource}/{resourceId}")
    public ResponseEntity<String> deleteResource(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @PathVariable("resource") String resource,
-         @PathVariable("resourceId") String resourceId, @RequestParam(value = "delay", required = false) Long delay) {
+         @PathVariable("resourceId") String resourceId,
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy) {
       log.debug("Update resource '{}:{}' for service '{}-{}'", resource, resourceId, serviceName, version);
       long startTime = System.currentTimeMillis();
 
       serviceName = sanitizeServiceName(serviceName);
+      DelaySpec delay = null;
+      if (requestedDelay != null) {
+         delay = new DelaySpec(requestedDelay, requestedDelayStrategy);
+      }
 
       MockContext mockContext = getMockContext(serviceName, version, "DELETE /" + resource + "/:id");
       if (mockContext != null) {
@@ -321,10 +353,12 @@ public class DynamicMockRestController {
       return builder.append("]").toString();
    }
 
-   private void waitForDelay(Long since, Long delay, MockContext mockContext) {
+   private void waitForDelay(Long since, DelaySpec delay, MockContext mockContext) {
       // Setting delay to default one if not set.
       if (delay == null && mockContext.operation.getDefaultDelay() != null) {
-         delay = mockContext.operation.getDefaultDelay();
+         Long operationDelay = mockContext.operation.getDefaultDelay();
+         // TODO: Get DelayStrategy
+         delay = new DelaySpec(operationDelay, DelayApplierOptions.FIXED);
       }
 
       MockControllerCommons.waitForDelay(since, delay);
