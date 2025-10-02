@@ -119,4 +119,89 @@ class SwaggerImporterTest {
          assertEquals(0, exchanges.size());
       }
    }
+
+   @Test
+   void testSwaggerWithBodyParameters() {
+      String swaggerJson = """
+            {
+               "swagger": "2.0",
+               "info": {
+                  "title": "Ping API",
+                  "version": "1.0.0"
+               },
+               "consumes": ["application/json"],
+               "produces": ["application/json"],
+               "paths": {
+                  "/ping": {
+                     "post": {
+                        "summary": "Ping endpoint",
+                        "description": "Returns pong",
+                        "parameters": [
+                           {
+                              "in": "body",
+                              "name": "body",
+                              "description": "Ping request body",
+                              "required": true,
+                              "schema": {
+                                 "type": "object",
+                                 "properties": {
+                                    "message": {
+                                       "type": "string"
+                                    }
+                                 }
+                              }
+                           }
+                        ],
+                        "responses": {
+                           "200": {
+                              "description": "pong response",
+                              "schema": {
+                                 "type": "object",
+                                 "properties": {
+                                    "message": { "type": "string", "example": "pong" }
+                                 },
+                                 "example": { "message": "pong" }
+                              }
+                           }
+                        }
+                     }
+                  }
+               }
+            }
+            """;
+
+      try {
+         java.io.File tempFile = java.io.File.createTempFile("ping-api-swagger", ".json");
+         tempFile.deleteOnExit();
+         java.nio.file.Files.write(tempFile.toPath(), swaggerJson.getBytes());
+
+         SwaggerImporter importer = new SwaggerImporter(tempFile.getAbsolutePath(), null);
+
+         // Check that basic service properties are there.
+         List<Service> services = importer.getServiceDefinitions();
+         assertEquals(1, services.size());
+         Service service = services.get(0);
+         assertEquals("Ping API", service.getName());
+         assertEquals(ServiceType.REST, service.getType());
+         assertEquals("1.0.0", service.getVersion());
+
+         // Check that /ping POST operation exists
+         assertEquals(1, service.getOperations().size());
+         Operation operation = service.getOperations().get(0);
+         assertEquals("POST /ping", operation.getName());
+         assertEquals("POST", operation.getMethod());
+
+         // Check that parameter constraints have been correctly parsed including body
+         // The fix should now allow body parameters to be parsed without throwing IllegalArgumentException
+         assertEquals(1, operation.getParameterConstraints().size());
+
+         ParameterConstraint constraint = operation.getParameterConstraints().iterator().next();
+         assertEquals("body", constraint.getName());
+         assertTrue(constraint.isRequired());
+         assertEquals(ParameterLocation.body, constraint.getIn());
+
+      } catch (Exception e) {
+         fail("Exception should not be thrown when parsing Ping API Swagger: " + e.getMessage());
+      }
+   }
 }

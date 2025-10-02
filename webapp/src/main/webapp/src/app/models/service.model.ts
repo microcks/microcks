@@ -97,6 +97,7 @@ export enum ParameterLocation {
   header,
   cookie,
   formData,
+  body,
 }
 
 export type Contract = {

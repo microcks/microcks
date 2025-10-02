@@ -24,5 +24,6 @@ public enum ParameterLocation {
    query,
    header,
    cookie,
-   formData
+   formData,
+   body
 }
