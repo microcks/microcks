@@ -40,6 +40,7 @@ import {
 } from '../../../../models/service.model';
 import { ServicesService } from '../../../../services/services.service';
 import { ConfigService } from '../../../../services/config.service';
+import { LiveTracesComponent } from '../../../../components/live-traces/live-traces.component';
 
 @Component({
   selector: 'app-operation-override-page',
@@ -49,7 +50,8 @@ import { ConfigService } from '../../../../services/config.service';
     CommonModule,
     FormsModule,
     RouterLink,
-    ToastNotificationListComponent
+    ToastNotificationListComponent,
+    LiveTracesComponent
   ],
 })
 export class OperationOverridePageComponent implements OnInit {

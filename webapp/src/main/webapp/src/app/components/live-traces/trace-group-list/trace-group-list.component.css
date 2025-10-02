@@ -1,0 +1,102 @@
+.traces .trace {
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.traces .trace-header {
+  cursor: pointer;
+  padding: 6px 8px;
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.traces .trace.error .trace-header {
+  background: #fff5f5;
+  border-color: #f5c2c7;
+}
+
+.traces .trace.error .trace-header strong {
+  color: #b02a37;
+}
+
+.traces .trace-header .muted {
+  color: #777;
+  margin-left: 6px;
+}
+
+.traces .trace-header .caret {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 6px;
+  vertical-align: middle;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 6px solid #444;
+}
+
+.traces .trace-header .caret.open {
+  transform: rotate(90deg);
+}
+
+.traces .trace-body {
+  padding: 6px 8px;
+}
+
+.traces .section-title {
+  font-weight: 600;
+  margin: 6px 0 4px;
+}
+
+.traces ul.kv {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.traces ul.kv li {
+  font-family: monospace;
+  font-size: 12px;
+  padding: 1px 0;
+}
+
+.traces ul.kv .k {
+  color: #333;
+  margin-right: 4px;
+}
+
+.traces ul.kv .v {
+  color: #0a5;
+}
+
+.traces ul.events {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+.traces ul.events li {
+  margin: 6px 0;
+  padding: 6px 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.traces ul.events li:last-child {
+  border-bottom: 0;
+}
+
+.traces .evt-time {
+  margin-right: 6px;
+  color: #888;
+}
+
+.traces .evt-name {
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.traces .evt-span {
+  color: #555;
+  margin-left: 6px;
+}

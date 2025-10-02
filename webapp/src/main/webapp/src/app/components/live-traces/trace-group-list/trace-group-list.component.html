@@ -1,0 +1,45 @@
+<div class="traces" *ngIf="traces.length">
+  <div
+    class="trace"
+    *ngFor="let trace of traces; trackBy: trackByTrace"
+    [class.error]="getTraceError(trace)"
+  >
+    <div class="trace-header" (click)="toggleTrace(trace)">
+      <span class="caret" [class.open]="isTraceOpen(trace)"></span>
+      <strong>Trace {{ getTraceId(trace) }}</strong>
+      <small *ngIf="getStartTime(trace) || getEndTime(trace)">
+        ({{ formatHrTime(getStartTime(trace)) }} →
+        {{ formatHrTime(getEndTime(trace)) }})</small
+      >
+      <span class="muted"> — {{ getEvents(trace).length }} event(s)</span>
+      <span *ngIf="getTraceError(trace)" class="text-danger">
+        — {{ getTraceError(trace) }}</span
+      >
+    </div>
+    <div class="trace-body" *ngIf="isTraceOpen(trace)">
+      <ul class="events">
+        <li
+          class="event"
+          *ngFor="let e of getEvents(trace); trackBy: trackByEvent"
+        >
+          <div class="event-line">
+            <code class="evt-time">{{ formatHrTime(e.event.time) }}</code>
+            <span class="evt-name">{{ getEventTitle(e.event) }}</span>
+            <span class="evt-span"
+              >in <code>{{ e.spanId }}</code> • {{ e.spanName }}</span
+            >
+          </div>
+          <ul class="kv" *ngIf="hasNonMessageAttributes(e.event.attributes)">
+            <li
+              *ngFor="let kv of e.event.attributes | keyvalue"
+              [hidden]="kv.key === 'message'"
+            >
+              <span class="k">{{ kv.key }}</span>
+              <span class="v">{{ kv.value | json }}</span>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
