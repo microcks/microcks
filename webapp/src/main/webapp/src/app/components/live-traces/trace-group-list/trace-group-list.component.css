@@ -1,5 +1,5 @@
 .traces .trace {
-  border: 1px solid #e5e5e5;
+  border: 1px solid var(--surface-border);
   border-radius: 4px;
   margin-bottom: 8px;
 }
@@ -7,21 +7,21 @@
 .traces .trace-header {
   cursor: pointer;
   padding: 6px 8px;
-  background: #fafafa;
-  border-bottom: 1px solid #eee;
+  background: var(--surface-offwhite);
+  border-bottom: 1px solid var(--divider);
 }
 
 .traces .trace.error .trace-header {
-  background: #fff5f5;
-  border-color: #f5c2c7;
+  background: var(--danger-tint);
+  border-color: var(--status-danger);
 }
 
 .traces .trace.error .trace-header strong {
-  color: #b02a37;
+  color: var(--status-danger);
 }
 
 .traces .trace-header .muted {
-  color: #777;
+  color: var(--text-muted-2);
   margin-left: 6px;
 }
 
@@ -33,7 +33,7 @@
   vertical-align: middle;
   border-top: 6px solid transparent;
   border-bottom: 6px solid transparent;
-  border-left: 6px solid #444;
+  border-left: 6px solid var(--text-default);
 }
 
 .traces .trace-header .caret.open {
@@ -62,12 +62,12 @@
 }
 
 .traces ul.kv .k {
-  color: #333;
+  color: var(--text-dark);
   margin-right: 4px;
 }
 
 .traces ul.kv .v {
-  color: #0a5;
+  color: var(--status-success);
 }
 
 .traces ul.events {
@@ -79,7 +79,7 @@
 .traces ul.events li {
   margin: 6px 0;
   padding: 6px 0;
-  border-bottom: 1px dashed #eee;
+  border-bottom: 1px dashed var(--divider);
 }
 
 .traces ul.events li:last-child {
@@ -88,7 +88,7 @@
 
 .traces .evt-time {
   margin-right: 6px;
-  color: #888;
+  color: var(--axis-text);
 }
 
 .traces .evt-name {
@@ -97,6 +97,6 @@
 }
 
 .traces .evt-span {
-  color: #555;
+  color: var(--text-default);
   margin-left: 6px;
 }

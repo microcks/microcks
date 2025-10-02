@@ -8,7 +8,7 @@
 
 .live-traces .count {
   margin-left: 6px;
-  color: #666;
+  color: var(--text-secondary);
 }
 
 .live-traces .form-inline {

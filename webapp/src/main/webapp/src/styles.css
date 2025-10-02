@@ -51,6 +51,7 @@
     --text-muted-2: #757575; /* text-muted-2: tertiary labels */
     --background: #fff; /* background: main background */
     --accent-text: #fff; /* accent-text: links, highlights and button text color */
+    --danger-tint: #fff5f5; /* danger-tint: subtle error background */
   --overlay-scrim: rgba(0, 0, 0, 0.8); /* overlay-scrim: drag/drop backdrop */
 }
 
