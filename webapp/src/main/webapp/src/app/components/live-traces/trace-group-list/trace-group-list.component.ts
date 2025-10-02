@@ -42,9 +42,7 @@ export class TraceGroupListComponent {
     }
   }
 
-  getEvents(
-    trace: ReadableSpan[],
-  ): {
+  getEvents(trace: ReadableSpan[]): {
     event: TimedEvent;
     spanId: string;
     spanName: string;

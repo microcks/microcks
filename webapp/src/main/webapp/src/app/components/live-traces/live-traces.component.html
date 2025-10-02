@@ -62,7 +62,7 @@
       <button
         class="btn btn-default btn-sm"
         (click)="clear()"
-        [disabled]="traceGroups.length === 0"
+        [disabled]="traces.length === 0"
       >
         <span class="fa fa-trash"></span> Clear
       </button>
@@ -80,5 +80,5 @@
     <div *ngIf="error" class="text-danger">{{ error }}</div>
   </div>
 
-  <app-trace-group-list [traces]="traceGroups"></app-trace-group-list>
+  <app-trace-group-list [traces]="traces"></app-trace-group-list>
 </div>

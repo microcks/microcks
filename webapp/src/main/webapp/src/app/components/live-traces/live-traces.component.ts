@@ -30,14 +30,11 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
   operationName = "";
   connected = false;
   error = "";
-  spans: ReadableSpan[] = [];
-  // View of groups comes from service
-  traceGroups: ReadableSpan[][] = [];
+  traces: ReadableSpan[][] = [];
   clientIpFilter = ".*";
   isLoading = false;
 
   private sub?: Subscription;
-  private groupsSub?: Subscription;
   private seenKeys = new Set<string>();
   private seenTraceIds = new Set<string>();
 
@@ -69,14 +66,17 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
       this.error = "Service name and operation name are required";
       return;
     }
+    // Ensure any previous subscription is cleaned up
+    if (this.sub) {
+      this.sub.unsubscribe();
+      this.sub = undefined;
+    }
     this.connected = true;
     this.error = "";
-    this.spans = [];
     this.seenKeys.clear();
-    this.traceGroups = [];
+    this.traces = [];
     this.seenTraceIds.clear();
-    // Subscribe to groups store for this service/op with client IP filter
-    const subscription = this.tracing
+    this.sub = this.tracing
       .streamSpans(
         this.serviceName,
         this.operationName,
@@ -89,11 +89,11 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
             const traceId = spans[0]?.spanContext()?.traceId;
             if (traceId && !this.seenTraceIds.has(traceId)) {
               this.seenTraceIds.add(traceId);
-              this.traceGroups.unshift(spans);
+              this.traces.unshift(spans);
               // Trim to max items
-              if (this.traceGroups.length > this.maxItems) {
-                const removed = this.traceGroups.pop();
-                // Remove the trace ID of the removed group
+              if (this.traces.length > this.maxItems) {
+                const removed = this.traces.pop();
+                // Remove the trace ID of the removed trace
                 if (removed && removed[0]) {
                   const removedTraceId = removed[0].spanContext()?.traceId;
                   if (removedTraceId) {
@@ -108,9 +108,18 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
           this.error = `Stream error: ${err.message || err}`;
           console.error("Stream error", err);
           this.connected = false;
+          // Ensure subscription reference is cleared on error
+          if (this.sub) {
+            this.sub.unsubscribe();
+            this.sub = undefined;
+          }
         },
         complete: () => {
           this.connected = false;
+          if (this.sub) {
+            this.sub.unsubscribe();
+            this.sub = undefined;
+          }
         },
       });
   }
@@ -134,9 +143,9 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
         next: (traces) => {
           if (traces && traces.length > 0) {
             // Filter out traces we've already seen
-            const newTraces = traces.filter((traceGroup) => {
-              if (traceGroup && traceGroup.length > 0) {
-                const traceId = traceGroup[0]?.spanContext()?.traceId;
+            const newTraces = traces.filter((trace) => {
+              if (trace && trace.length > 0) {
+                const traceId = trace[0]?.spanContext()?.traceId;
                 if (traceId && !this.seenTraceIds.has(traceId)) {
                   this.seenTraceIds.add(traceId);
                   return true;
@@ -147,18 +156,15 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
 
             if (newTraces.length > 0) {
               // Add new prefilled traces to the beginning
-              this.traceGroups = [...newTraces, ...this.traceGroups];
+              this.traces = [...newTraces, ...this.traces];
               // Trim to max items
-              if (this.traceGroups.length > this.maxItems) {
-                const toRemove = this.traceGroups.length - this.maxItems;
-                const removed = this.traceGroups.splice(
-                  this.maxItems,
-                  toRemove,
-                );
-                // Remove trace IDs of removed groups
-                removed.forEach((group) => {
-                  if (group && group[0]) {
-                    const removedTraceId = group[0].spanContext()?.traceId;
+              if (this.traces.length > this.maxItems) {
+                const toRemove = this.traces.length - this.maxItems;
+                const removed = this.traces.splice(this.maxItems, toRemove);
+                // Remove trace IDs of removed traces
+                removed.forEach((trace) => {
+                  if (trace && trace[0]) {
+                    const removedTraceId = trace[0].spanContext()?.traceId;
                     if (removedTraceId) {
                       this.seenTraceIds.delete(removedTraceId);
                     }
@@ -182,17 +188,12 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
       this.sub.unsubscribe();
       this.sub = undefined;
     }
-    if (this.groupsSub) {
-      this.groupsSub.unsubscribe();
-      this.groupsSub = undefined;
-    }
     this.connected = false;
   }
 
   clear(): void {
-    this.spans = [];
     this.seenKeys.clear();
-    this.traceGroups = [];
+    this.traces = [];
     this.seenTraceIds.clear();
     this.error = "";
   }
@@ -235,7 +236,7 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
   }
 
   get totalEvents(): number {
-    return this.traceGroups.reduce(
+    return this.traces.reduce(
       (acc, g) =>
         acc +
         (g.reduce((count, span) => count + (span.events?.length || 0), 0) || 0),
