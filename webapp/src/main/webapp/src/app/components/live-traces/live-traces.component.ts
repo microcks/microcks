@@ -198,43 +198,6 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
     this.error = "";
   }
 
-  trackBySpan(index: number, s: ReadableSpan): string {
-    const ctx = s.spanContext();
-    return `${ctx.traceId}/${ctx.spanId}`;
-  }
-
-  trackByTrace(index: number, g: { traceId: string }): string {
-    return g.traceId;
-  }
-
-  trackByEvent(
-    index: number,
-    e: { traceId: string; spanId: string; name: string; time?: HrTime },
-  ): string {
-    const t = e.time ? `${e.time[0]}-${e.time[1]}` : "no-time";
-    return `${e.traceId}/${e.spanId}/${e.name}/${t}`;
-  }
-
-  getEventTitle(e: { name: string; attributes?: Attributes }): string {
-    const raw = (e.attributes as any)?.["message"];
-    if (raw === undefined || raw === null) return e.name;
-    if (typeof raw === "string") return raw;
-    try {
-      return JSON.stringify(raw);
-    } catch {
-      return String(raw);
-    }
-  }
-
-  hasNonMessageAttributes(attrs?: Attributes): boolean {
-    if (!attrs) return false;
-    for (const k in attrs) {
-      if (Object.prototype.hasOwnProperty.call(attrs, k) && k !== "message")
-        return true;
-    }
-    return false;
-  }
-
   get totalEvents(): number {
     return this.traces.reduce(
       (acc, g) =>
