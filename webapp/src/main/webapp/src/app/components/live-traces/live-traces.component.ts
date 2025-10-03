@@ -243,14 +243,4 @@ export class LiveTracesComponent implements OnInit, OnDestroy {
       0,
     );
   }
-
-  // Helpers to compare HrTime
-  // Kept for the component's own time formatting etc; store has its own copies as well.
-  private toNanos(t?: HrTime): bigint {
-    if (!t) return -1n;
-    const [s, ns] = t;
-    if (!Number.isFinite(s) || !Number.isFinite(ns) || (s === 0 && ns === 0))
-      return -1n;
-    return BigInt(Math.trunc(s)) * 1_000_000_000n + BigInt(Math.trunc(ns));
-  }
 }
