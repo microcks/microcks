@@ -204,6 +204,13 @@
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
         <button type="submit" class="btn btn-primary" (click)="saveOperationProperties()" ng-disabled="form.$invalid">Save</button>
       </div>
+
+      <br/><br/><br/>
+      <h3 class="section-label">Live Traces</h3>
+      <app-live-traces 
+        [initialServiceName]="view.service.name" 
+        [initialOperationName]="operationName">
+      </app-live-traces>
     </div>
     <div class="col-md-4 help-bar">
       <h3 class="section-label">Help needed?</h3>

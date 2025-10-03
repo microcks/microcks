@@ -1,0 +1,39 @@
+.live-traces .controls {
+  margin-bottom: 10px;
+}
+
+.live-traces .status {
+  margin-left: 10px;
+}
+
+.live-traces .count {
+  margin-left: 6px;
+  color: var(--text-secondary);
+}
+
+.live-traces .form-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.live-traces .form-inline label {
+  margin: 0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.live-traces .form-inline .form-control-sm {
+  display: inline-block;
+  width: auto;
+  min-width: 150px;
+}
+
+.live-traces .button-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}

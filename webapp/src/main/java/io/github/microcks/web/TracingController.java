@@ -74,15 +74,16 @@ public class TracingController {
    }
 
    @GetMapping("/operations")
-   public ResponseEntity<List<List<ReadableSpan>>> getTracesForOperation(
-         @RequestParam("serviceName") String serviceName, @RequestParam("operationName") String operationName,
+   public ResponseEntity<List<List<SpanData>>> getTracesForOperation(@RequestParam("serviceName") String serviceName,
+         @RequestParam("operationName") String operationName,
          @RequestParam(value = "clientAddress", defaultValue = ".*") String clientAddress) {
       List<String> traceIds = spanStorageService.queryTraceIdsByPatterns(serviceName, operationName, clientAddress);
       if (traceIds.isEmpty()) {
          return ResponseEntity.notFound().build();
       }
 
-      List<List<ReadableSpan>> spansByTraceId = traceIds.stream().map(spanStorageService::getSpansForTrace).toList();
+      List<List<SpanData>> spansByTraceId = traceIds.stream().map(spanStorageService::getSpansForTrace)
+            .map(spans -> spans.stream().map(ReadableSpan::toSpanData).toList()).toList();
 
       return ResponseEntity.ok(spansByTraceId);
    }
