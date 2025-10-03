@@ -3,8 +3,7 @@ import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
 import { ActivatedRoute } from "@angular/router";
 import { TraceGroupListComponent } from "./trace-group-list/trace-group-list.component";
-import { ReadableSpan, TimedEvent } from "@opentelemetry/sdk-trace-base";
-import { Attributes, HrTime, SpanStatusCode } from "@opentelemetry/api";
+import { ReadableSpan } from "@opentelemetry/sdk-trace-base";
 import { Subscription } from "rxjs";
 import { TracingService } from "../../services/tracing.service";
 

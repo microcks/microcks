@@ -1,7 +1,6 @@
 import { Component, Input } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { Attributes, HrTime } from "@opentelemetry/api";
-import { OnInit } from "@angular/core";
 import { ReadableSpan, TimedEvent } from "@opentelemetry/sdk-trace-base";
 
 @Component({
