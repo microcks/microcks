@@ -25,6 +25,7 @@ import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 import { Observable, Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
+import { CollapseModule } from 'ngx-bootstrap/collapse';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
@@ -41,6 +42,7 @@ import { ListConfig, ListModule } from '../../../components/patternfly-ng/list';
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
 import { GradeIndexComponent } from '../../../components/grade-index/grade-index.component';
 import { LabelListComponent } from '../../../components/label-list/label-list.component';
+import { LiveTracesComponent } from '../../../components/live-traces/live-traces.component';
 import { TimeAgoPipe } from '../../../components/time-ago.pipe';
 
 import { ExchangesTabsetComponent } from './_components/exchanges-tabset/exchanges-tabset.component';
@@ -75,11 +77,13 @@ import { ServicesService } from '../../../services/services.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    CollapseModule,
     BsDropdownModule,
     ExchangesTabsetComponent,
     GradeIndexComponent,
     LabelListComponent,
     ListModule,
+    LiveTracesComponent,
     RouterLink,
     TimeAgoPipe,
     ToastNotificationListComponent,

@@ -337,6 +337,26 @@
           </div>
         </div>
 
+        <h4 class="section-label">
+          <a (click)="item.isLiveTracesCollapsed = !item.isLiveTracesCollapsed" 
+             [attr.aria-expanded]="!item.isLiveTracesCollapsed" 
+             style="text-decoration: none; color: inherit; cursor: pointer;">
+            <i class="fa" 
+               [class.fa-chevron-right]="item.isLiveTracesCollapsed" 
+               [class.fa-chevron-down]="!item.isLiveTracesCollapsed" 
+               aria-hidden="true"></i>
+            Live Traces
+          </a>
+        </h4>
+
+        <div [collapse]="item.isLiveTracesCollapsed" [isAnimated]="false">
+          <app-live-traces 
+            [initialServiceName]="view.service.name" 
+            [initialOperationName]="item.name" 
+            [autoConnect]="true"
+            [allowCustomization]="false">
+          </app-live-traces>
+        </div>
         <h4 class="section-label" *ngIf="view.service.type != 'GENERIC_REST'">Mocks</h4>
         <app-exchanges-tabset [item]="item" [view]="view" [resolvedServiceView]="resolvedServiceView"
           [notificationService]="notificationService" [isEventTypeService]="isEventTypeService"
@@ -348,6 +368,7 @@
           [removeVerbInUrl]="removeVerbInUrl" [encodeUrl]="encodeUrl" [urlType]="urlType"
           [activeExchangeName]="activeExchangeName"
           [asyncAPIFeatureEndpoint]="asyncAPIFeatureEndpoint" [config]="config"></app-exchanges-tabset>
+
       </ng-template>
 
     </pfng-list>
