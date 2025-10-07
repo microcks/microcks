@@ -289,6 +289,10 @@ public class RestInvocationProcessor {
                case DispatchStyles.SEQUENCE:
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
                         resourcePath);
+                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using SEQUENCE dispatcher")
+                              .put("dispatch.type", "SEQUENCE").put("dispatch.result", dispatchCriteria)
+                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.SCRIPT:
                   log.info("Use the \"GROOVY\" Dispatch Style instead.");
@@ -335,35 +339,64 @@ public class RestInvocationProcessor {
                case DispatchStyles.URI_PARAMS:
                   String fullURI = request.getRequestURL() + "?" + request.getQueryString();
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
+                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using URI_PARAMS dispatcher")
+                              .put("dispatch.type", "URI_PARAMS").put("dispatch.result", dispatchCriteria)
+                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.URI_PARTS:
                   // /tenantId?t1/userId=x
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
                         resourcePath);
+                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using URI_PARTS dispatcher")
+                              .put("dispatch.type", "URI_PARTS").put("dispatch.result", dispatchCriteria)
+                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.URI_ELEMENTS:
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
                         resourcePath);
                   fullURI = request.getRequestURL() + "?" + request.getQueryString();
                   dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
+                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using URI_ELEMENTS dispatcher")
+                              .put("dispatch.type", "URI_ELEMENTS").put("dispatch.result", dispatchCriteria)
+                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.JSON_BODY:
                   try {
                      JsonEvaluationSpecification specification = JsonEvaluationSpecification
                            .buildFromJsonString(dispatcherRules);
                      dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                           TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using JSON_BODY dispatcher")
+                                 .put("dispatch.type", "JSON_BODY").put("dispatch.result", dispatchCriteria)
+                                 .put("dispatch.rules", dispatcherRules).build());
                   } catch (JsonMappingException jme) {
                      log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification",
                            jme);
+                     Span.current().recordException(jme);
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(), TraceUtil
+                           .explainSpanEventBuilder("Failed to compute dispatch criteria using JSON_BODY dispatcher")
+                           .put("dispatch.type", "JSON_BODY").put("dispatch.result", "null")
+                           .put("dispatch.rules", dispatcherRules).build());
+                     Span.current().setStatus(StatusCode.ERROR, "Error during JSON_BODY evaluation");
                   }
                   break;
                case DispatchStyles.QUERY_HEADER:
                   // Extract headers from request and put them into a simple map to reuse extractFromParamMap().
                   dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules,
                         extractRequestHeaders(request));
+                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using QUERY_HEADER dispatcher")
+                              .put("dispatch.type", "QUERY_HEADER").put("dispatch.result", dispatchCriteria)
+                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                default:
                   log.error("Unknown dispatcher type: {}", dispatcher);
+                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                        TraceUtil.explainSpanEventBuilder("Unknown dispatcher type encountered")
+                              .put("dispatch.type", dispatcher).put("dispatch.result", "null").build());
                   break;
             }
          }
