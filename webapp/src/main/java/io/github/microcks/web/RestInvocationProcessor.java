@@ -213,6 +213,7 @@ public class RestInvocationProcessor {
             span.addEvent(CommonEvents.NO_RESPONSE_FOUND.getEventName(),
                   TraceUtil.explainSpanEventBuilder("No matching response found for dispatch criteria")
                         .put("dispatch.criteria", dispatchContext.dispatchCriteria()).put("error.status", 400).build());
+            span.setStatus(StatusCode.ERROR, "No matching response found for dispatch criteria");
             return new ResponseResult(HttpStatus.BAD_REQUEST, null,
                   String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()).getBytes());
          }
@@ -239,6 +240,7 @@ public class RestInvocationProcessor {
 
       span.addEvent(CommonEvents.NO_RESPONSE_AVAILABLE.getEventName(), TraceUtil
             .explainSpanEventBuilder("No response could be found or generated").put("error.status", 400).build());
+      span.setStatus(StatusCode.ERROR, "No response could be found or generated");
       return new ResponseResult(HttpStatus.BAD_REQUEST, null, null);
    }
 
