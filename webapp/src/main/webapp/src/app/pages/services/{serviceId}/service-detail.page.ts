@@ -150,6 +150,10 @@ export class ServiceDetailPageComponent implements OnInit {
       this.operations.sort((o1, o2) => {
         return this.sortOperations(o1, o2);
       });
+      // Initialize live traces as collapsed by default
+      this.operations.forEach((op: any) => {
+        op.isLiveTracesCollapsed = true;
+      });
       this.updateAICopilotSamplesFlag(view);
       // If deep-link operation present, expand it now that operations are loaded
       if (this.qpOperationName) {
