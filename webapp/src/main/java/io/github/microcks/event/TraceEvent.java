@@ -17,9 +17,9 @@ package io.github.microcks.event;
 
 /**
  * A trace event that can be sent to subscribers.
- * @param traceId the trace identifier
- * @param service the service name
- * @param operation the operation name
+ * @param traceId       the trace identifier
+ * @param service       the service name
+ * @param operation     the operation name
  * @param clientAddress the client address
  */
 public record TraceEvent(String traceId, String service, String operation, String clientAddress) {
