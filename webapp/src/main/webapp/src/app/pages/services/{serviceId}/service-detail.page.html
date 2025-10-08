@@ -208,8 +208,8 @@
           <!-- Main Content Column -->
           <div [style.flex]="'1 1 auto'" style="padding-right: 40px;">
             <h4 class="section-label no-margin-top">Dispatching Properties</h4>
-            <div class="row">
-              <div class="col-md-6">
+            <div class="dispatching-container">
+              <div class="dispatching-column">
                 <dl class="dl-horizontal left">
                   <span *ngIf="view.service.type === 'SOAP_HTTP'">
                     <dt>SOAP Action:</dt>
@@ -246,7 +246,7 @@
                   </span>
                 </dl>
               </div>
-              <div class="col-md-6">
+              <div class="dispatching-column">
                 <dl class="dl-horizontal left" *ngIf="isEventTypeService()">
                   <span *ngIf="hasBinding(item, 'KAFKA')">
                     <dt>Kafka endpoint:</dt>

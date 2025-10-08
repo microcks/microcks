@@ -36,3 +36,14 @@
 .tooltip-break {
   word-break: break-word;
 }
+
+.dispatching-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.dispatching-column {
+  flex: 1 1 250px;
+  min-width: 0;
+}
