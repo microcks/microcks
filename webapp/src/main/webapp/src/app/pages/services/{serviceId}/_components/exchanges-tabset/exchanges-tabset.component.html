@@ -230,9 +230,9 @@
         </div>
         <div class="exchange-column">
           <h5 class="subsection-label">Response</h5>
-          <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST' || view.service.type === 'GRAPHQL'">
+          <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST' || view.service.type === 'GRAPHQL'" >
             <dt>Response Code and Type:</dt>
-            <dd>
+            <dd style="margin-left: 0;">
               <code><small>{{ getReqRespPair(exchange).response.status }}: {{getReqRespPair(exchange).response.mediaType}}</small></code>
             </dd>
           </dl>
