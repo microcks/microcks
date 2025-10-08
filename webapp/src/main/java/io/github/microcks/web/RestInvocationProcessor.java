@@ -582,7 +582,7 @@ public class RestInvocationProcessor {
     * Applies an artificial delay before returning the response, and publishes a mock invocation event if statistics
     * collection is enabled.
     */
-   private void handlePostProcessing(long startTime, Long delay, MockInvocationContext ic, Response response) {
+   private void handlePostProcessing(long startTime, DelaySpec delay, MockInvocationContext ic, Response response) {
       MockControllerCommons.waitForDelay(startTime, delay);
 
       // Publish an invocation event before returning if enabled.
