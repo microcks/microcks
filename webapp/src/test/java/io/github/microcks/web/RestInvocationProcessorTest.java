@@ -20,9 +20,11 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceStateRepository;
+import io.github.microcks.service.OpenTelemetryResolverService;
 import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.DispatchStyles;
 
+import io.opentelemetry.api.OpenTelemetry;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -64,8 +66,10 @@ class RestInvocationProcessorTest {
       ApplicationContext appContext = mock(ApplicationContext.class);
       proxyService = mock(ProxyService.class);
       request = mock(HttpServletRequest.class);
-
-      processor = new RestInvocationProcessor(stateRepo, responseRepo, appContext, proxyService);
+      OpenTelemetryResolverService otelResolver = mock(OpenTelemetryResolverService.class);
+      OpenTelemetry openTelemetry = OpenTelemetry.noop();
+      when(otelResolver.getOpenTelemetry()).thenReturn(openTelemetry);
+      processor = new RestInvocationProcessor(stateRepo, responseRepo, appContext, proxyService, otelResolver);
       ReflectionTestUtils.setField(processor, "enableBinaryResponseDecode", true);
    }
 
