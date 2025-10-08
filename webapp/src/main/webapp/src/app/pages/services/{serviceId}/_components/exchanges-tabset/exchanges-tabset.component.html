@@ -13,8 +13,8 @@
     </ng-template>
 
     <div *ngIf="shouldRender(i)">
-      <div class="row" *ngIf="isEventTypeService()">
-        <div class="col-md-6">
+      <div class="exchange-container" *ngIf="isEventTypeService()">
+        <div class="exchange-column">
           <h5 class="subsection-label">Message</h5>
           <dl class="dl-horizontal left">
             <dt>Content Type:</dt>
@@ -36,7 +36,7 @@
             </tbody>
           </table>
         </div>
-        <div class="col-md-6">
+        <div class="exchange-column">
           <h5 class="subsection-label">Bindings details</h5>
           <span *ngIf="hasBinding(item, 'KAFKA')">
             <dl class="dl-horizontal left">
@@ -178,8 +178,8 @@
           </span>
         </div>
       </div>
-      <div class="row" *ngIf="!isEventTypeService()">
-        <div class="col-md-6">
+      <div class="exchange-container" *ngIf="!isEventTypeService()">
+        <div class="exchange-column">
           <h5 class="subsection-label">Request</h5>
           <dl>
             <dt style="width: 100%; display: flex; justify-content: space-between">
@@ -228,11 +228,11 @@
             </tbody>
           </table>
         </div>
-        <div class="col-md-6">
+        <div class="exchange-column">
           <h5 class="subsection-label">Response</h5>
-          <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST' || view.service.type === 'GRAPHQL'">
+          <dl class="dl-horizontal left" *ngIf="view.service.type === 'REST' || view.service.type === 'GRAPHQL'" >
             <dt>Response Code and Type:</dt>
-            <dd>
+            <dd style="margin-left: 0;">
               <code><small>{{ getReqRespPair(exchange).response.status }}: {{getReqRespPair(exchange).response.mediaType}}</small></code>
             </dd>
           </dl>
