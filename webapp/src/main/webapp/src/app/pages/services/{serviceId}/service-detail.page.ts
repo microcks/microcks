@@ -40,9 +40,9 @@ import {
 import { ListConfig, ListModule } from '../../../components/patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
+import { CollapsibleLiveTracesComponent } from '../../../components/collapsible-live-traces/collapsible-live-traces.component';
 import { GradeIndexComponent } from '../../../components/grade-index/grade-index.component';
 import { LabelListComponent } from '../../../components/label-list/label-list.component';
-import { LiveTracesComponent } from '../../../components/live-traces/live-traces.component';
 import { TimeAgoPipe } from '../../../components/time-ago.pipe';
 
 import { ExchangesTabsetComponent } from './_components/exchanges-tabset/exchanges-tabset.component';
@@ -78,12 +78,12 @@ import { ServicesService } from '../../../services/services.service';
   imports: [
     CommonModule,
     CollapseModule,
+    CollapsibleLiveTracesComponent,
     BsDropdownModule,
     ExchangesTabsetComponent,
     GradeIndexComponent,
     LabelListComponent,
     ListModule,
-    LiveTracesComponent,
     RouterLink,
     TimeAgoPipe,
     ToastNotificationListComponent,
@@ -149,10 +149,6 @@ export class ServiceDetailPageComponent implements OnInit {
       this.operations = view.service.operations;
       this.operations.sort((o1, o2) => {
         return this.sortOperations(o1, o2);
-      });
-      // Initialize live traces as collapsed by default
-      this.operations.forEach((op: any) => {
-        op.isLiveTracesCollapsed = true;
       });
       this.updateAICopilotSamplesFlag(view);
       // If deep-link operation present, expand it now that operations are loaded
