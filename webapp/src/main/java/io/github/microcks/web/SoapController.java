@@ -509,13 +509,6 @@ public class SoapController {
          return new DispatchContext(JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext),
                requestContext);
       } catch (Exception e) {
-         // Get current span and record failure
-         Span.current().recordException(e);
-         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-               TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using JS dispatcher")
-                     .put("dispatch.type", "JS").put("dispatch.result", "null").put("dispatch.script", dispatcherRules)
-                     .build());
-         Span.current().setStatus(StatusCode.ERROR, "Error during JS evaluation");
          log.error("Error during JS evaluation", e);
          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                "Error during JS evaluation: " + e.getMessage());
