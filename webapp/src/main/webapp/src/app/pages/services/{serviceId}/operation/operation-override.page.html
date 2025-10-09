@@ -89,10 +89,9 @@
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
         <button type="submit" class="btn btn-primary" (click)="saveOperationProperties()" ng-disabled="form.$invalid">Save</button>
       </div>
-      <br/><br/><br/>
+      <br/><br/>
 
       <h3 class="section-label">Current dispatching properties</h3>
-
       <div class="row">
         <div class="col-md-6">
           <dl class="dl-horizontal left">
@@ -142,7 +141,6 @@
       </div>
 
       <h3 class="section-label">New dispatching properties</h3>
-
       <div class="row">
         <div class="col-md-7">
           <div class="control-group form-inline">
@@ -170,7 +168,7 @@
           <div class="control-group">
             <label class="control-label" for="dispatcher">Dispatcher</label>
             <div class="controls">
-              <select class="form-control" name="dispatcher" [(ngModel)]="newOperation!.dispatcher">
+              <select class="form-control" id="dispatcher" name="dispatcher" [(ngModel)]="newOperation!.dispatcher">
                 <option *ngFor="let dispatcher of dispatchersByServiceType[view.service.type]" [value]="dispatcher.value">{{ dispatcher.value }} </option>
               </select>
               <p class="help-block">The dispatcher used by Operation.</p>
@@ -191,7 +189,12 @@
 
           <div class="text-right" *ngFor="let exchange of view.messagesMap[operationName]">
             <span *ngIf="!isEventTypeService()">
-              <h2><span class="label label-primary">{{ getReqRespPair(exchange).response.name }} - {{ getReqRespPair(exchange).response.dispatchCriteria }}</span></h2>
+              <h2>
+                <span class="label label-primary">
+                  <span class="fa fa-play" *ngIf="isRequestTriable()" (click)="tryRequest(getReqRespPair(exchange))">&nbsp;</span>
+                  {{ getReqRespPair(exchange).response.name }} - {{ getReqRespPair(exchange).response.dispatchCriteria }}
+                </span>
+              </h2>
             </span>
             <span *ngIf="isEventTypeService()">
               <h2><span class="label label-primary">{{ getUnidirEvent(exchange).eventMessage.name }} </span></h2>
@@ -199,19 +202,23 @@
           </div>
         </div>
       </div>
-      <br/><br/>
+
       <div class="pull-right">
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
         <button type="submit" class="btn btn-primary" (click)="saveOperationProperties()" ng-disabled="form.$invalid">Save</button>
       </div>
 
-      <br/><br/><br/>
-      <h3 class="section-label">Live Traces</h3>
-      <app-live-traces 
-        [initialServiceName]="view.service.name" 
-        [initialOperationName]="operationName">
-      </app-live-traces>
+      <br/><br/>
+      <div *ngIf="!isEventTypeService()">
+        <h3 class="section-label"><i class="fa fa-bug toggle-button-icon"></i> Live Traces</h3>
+        <app-live-traces
+          [initialServiceName]="view.service.name"
+          [initialOperationName]="operationName">
+        </app-live-traces>
+      </div>
+      <br/><br/>
     </div>
+
     <div class="col-md-4 help-bar">
       <h3 class="section-label">Help needed?</h3>
       <small>This sidebar provides some explanations and examples on how to setup parameter constraints and use the evolved dispatchers.</small>
