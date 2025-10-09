@@ -49,6 +49,11 @@
 }
 
 .toggle-button-icon {
+  margin-top: 10px;
+  padding-left: 2px;
+  transform: rotate(180deg);
+}
+.toggle-button-caret {
   margin-bottom: 5px;
 }
 
