@@ -32,6 +32,102 @@
     "allPermittedSubclasses": true
   },
   {
+    "name": "io.opentelemetry.sdk.trace.data.SpanData",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllPublicMethods": true
+  },
+  {
+    "name": "io.opentelemetry.sdk.trace.data.EventData",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllPublicMethods": true
+  },
+  {
+    "name": "io.opentelemetry.api.common.Attributes",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllPublicMethods": true
+  },
+  {
+    "name": "io.opentelemetry.api.common.ArrayBackedAttributes",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "unsafeAllocated": true,
+    "methods": [
+      {
+        "name": "asMap",
+        "parameterTypes": []
+      },
+      {
+        "name": "isEmpty",
+        "parameterTypes": []
+      },
+      {
+        "name": "size",
+        "parameterTypes": []
+      },
+      {
+        "name": "forEach",
+        "parameterTypes": ["java.util.function.BiConsumer"]
+      }
+    ]
+  },
+  {
+    "name": "io.opentelemetry.api.internal.ImmutableKeyValuePairs",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllDeclaredConstructors": true,
+    "queryAllDeclaredFields": true,
+    "queryAllPublicMethods": true,
+    "unsafeAllocated": true,
+    "methods": [
+      {
+        "name": "data",
+        "parameterTypes": []
+      },
+      {
+        "name": "size",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "io.opentelemetry.api.common.AttributeKey",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllPublicMethods": true,
+    "methods": [
+      {
+        "name": "getKey",
+        "parameterTypes": []
+      },
+      {
+        "name": "getType",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "java.util.AbstractMap$SimpleImmutableEntry",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "queryAllDeclaredMethods": true,
+    "queryAllPublicMethods": true
+  },
+  {
     "condition": {
       "typeReachable": "io.grpc.netty.shaded.io.netty.util.internal.shaded.org.jctools.queues.BaseMpscLinkedArrayQueueProducerFields"
     },
