@@ -72,6 +72,7 @@
         [class.text-muted]="!connected"
       >
         {{ connected ? "Connected" : "Disconnected" }}
+        <span class="recording-indicator" [class.recording]="connected" [class.not-recording]="!connected"></span>
       </span>
       <span class="count" *ngIf="totalEvents">
         | {{ totalEvents }} event(s)</span
