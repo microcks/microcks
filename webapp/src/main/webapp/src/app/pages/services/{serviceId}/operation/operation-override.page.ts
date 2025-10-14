@@ -21,6 +21,9 @@ import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
+import { TooltipConfig, TooltipModule } from 'ngx-bootstrap/tooltip';
+import { HighlightAuto } from 'ngx-highlightjs';
+
 import {
   Notification,
   NotificationEvent,
@@ -50,8 +53,10 @@ import { formatMockUrl } from '../../../../utils/format-utils';
   imports: [
     CommonModule,
     FormsModule,
+    HighlightAuto,
     RouterLink,
     ToastNotificationListComponent,
+    TooltipModule,
     LiveTracesComponent
   ],
 })

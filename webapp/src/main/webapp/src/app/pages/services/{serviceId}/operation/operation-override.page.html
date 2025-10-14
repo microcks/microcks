@@ -191,7 +191,8 @@
             <span *ngIf="!isEventTypeService()">
               <h2>
                 <span class="label label-primary">
-                  <span class="fa fa-play" *ngIf="isRequestTriable()" (click)="tryRequest(getReqRespPair(exchange))">&nbsp;</span>
+                  <span class="fa fa-play" *ngIf="isRequestTriable()" (click)="tryRequest(getReqRespPair(exchange))"
+                        tooltip="Try it now!" placement="top">&nbsp;</span>
                   {{ getReqRespPair(exchange).response.name }} - {{ getReqRespPair(exchange).response.dispatchCriteria }}
                 </span>
               </h2>
@@ -255,7 +256,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ fallback }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="fallback"></code></pre>
       </div>
 
       <div id="proxy-fallback-help" *ngIf="newOperation?.dispatcher === 'PROXY_FALLBACK'">
@@ -279,7 +280,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ proxyFallback }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="proxyFallback"></code></pre>
       </div>
 
       <div id="json-body-help" *ngIf="newOperation?.dispatcher === 'JSON_BODY'">
@@ -292,7 +293,7 @@
         <p>
           Consider the following JSON payload representing a request body for creating new Beer entity:
         </p>
-        <pre><code highlight>{{ examplePayload }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="examplePayload"></code></pre>
 
         <p>
           Using the <code>JSON_BODY</code> dispatcher, you can select target response depending of the value of a payload element.
@@ -303,7 +304,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ equalsOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="equalsOperator"></code></pre>
 
         <p>
           You can also dispatch depending on a payload number value using the <code>range</code> operator. Note the orientation
@@ -314,7 +315,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ rangeOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="rangeOperator"></code></pre>
 
         <p>
           The <code>size</code> operator allows you to define dispatching rules depending on the size of an array. Here we only accept
@@ -325,7 +326,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ sizeOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="sizeOperator"></code></pre>
 
         <p>
           For much more complex rules, you may use the <code>regexp</code> operator. There's no guarantee that cases will in the given
@@ -336,7 +337,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ regexpOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="regexpOperator"></code></pre>
 
         <p>
           Finally, you may want to dispatch according the presence of an element within JSON payload. For that, you'll use the <code>presence</code>
@@ -347,7 +348,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ presenceOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="presenceOperator"></code></pre>
       </div>
     </div>
   </div>
