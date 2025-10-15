@@ -1611,8 +1611,8 @@ components:
           type: array
           items:
             type: string
-        parameterContraints:
-          description: Contraints that may apply to mock invocatino on this operation
+        parameterConstraints:
+          description: Constraints that may apply to mock invocation on this operation
           type: array
           items:
             $ref: '#/components/schemas/ParameterConstraint'
@@ -1621,6 +1621,11 @@ components:
           type: object
           additionalProperties:
             $ref: '#/components/schemas/Binding'
+        defaultDelayStrategy:
+          description: "The delay strategy to apply to default delay. Can be 'fixed',\
+            \ 'random' or 'random-(\\d)' to specify a range around the default delay\
+            \ value."
+          type: string
     ArtifactUpload:
       description: |-
         Artifact to be imported by Microcks.
