@@ -30,6 +30,7 @@ import java.util.regex.Pattern;
  */
 public class RandomRangedDelayApplier implements DelayApplier {
 
+   /** Check if the strategy name matches the random ranged pattern. */
    public static boolean isRandomRangedStrategy(String strategyName) {
       return DelayApplierOptions.RANDOM_RANGED_PATTERN.matcher(strategyName).matches();
    }

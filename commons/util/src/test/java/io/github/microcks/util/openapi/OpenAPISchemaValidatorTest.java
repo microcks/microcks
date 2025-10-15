@@ -659,4 +659,140 @@ class OpenAPISchemaValidatorTest {
             "/paths/~1queen~1members/get/responses/200", "application/json");
       assertTrue(errors.isEmpty());
    }
+
+   @Test
+   void testOneOf() {
+      String openAPIText = null;
+      String jsonText = """
+             {
+               "data": [
+                 {
+                   "commonProp1": "Value1A",
+                   "typeIdentifierProp": "TypeA",
+                   "commonProp3": false,
+                   "additionalFieldA": "Specific data for TypeA",
+                   "nestedCommon": { "label": "Category Alpha", "description": null }
+                 },
+                 {
+                   "commonProp1": "Value1B",
+                   "typeIdentifierProp": "TypeB",
+                   "commonProp3": true,
+                   "additionalFieldB": 123,
+                   "additionalFieldC": "Another B field",
+                   "nestedCommon": { "label": "Category Beta", "description": "Details for Beta" }
+                 }
+               ]
+             }
+            """;
+
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/oneof-failure-openapi.json"),
+               StandardCharsets.UTF_8);
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1test-endpoint/get/responses/200", "application/json");
+      errors.forEach(e -> System.out.println("Error: " + e));
+
+      assertTrue(errors.isEmpty());
+   }
+
+   @Test
+   void testAnyOf() {
+      String openAPIText = null;
+      String jsonText = """
+             {
+                  "customers": [
+                      {
+                          "id": "695d0700-dec8-4384-a97a-d07a5db27f3a",
+                          "status": "ACTIVE",
+                          "type": "INDIVIDUAL",
+                          "email": "felipe.rodriguez@email.com",
+                          "phone": "+34699887766",
+                          "firstName": "Felipe",
+                          "lastName": "Rodriguez",
+                          "dateOfBirth": "1985-03-15",
+                          "address": {
+                              "id": "52e02327-f94f-4f52-b7f0-298d434bbc94",
+                              "type": "MAIN",
+                              "line1": "Calle Mayor 123",
+                              "city": "Madrid",
+                              "postalCode": "28013",
+                              "country": "ES",
+                              "validFrom": "2025-09-30",
+                              "createdAt": "2025-09-30T14:16:24.372887Z",
+                              "updatedAt": "2025-09-30T14:16:24.372895Z"
+                          },
+                          "preferences": {
+                              "timezone": "UTC"
+                          },
+                          "createdAt": "2025-09-30T14:16:24.359Z",
+                          "updatedAt": "2025-09-30T14:16:24.359Z"
+                      },
+                      {
+                          "id": "2a4daf06-8284-4069-a502-5adea0bc9146",
+                          "status": "ACTIVE",
+                          "type": "ORGANIZATION",
+                          "email": "contact@newcorp.com",
+                          "phone": "+49123456789",
+                          "organizationCode": "DE987654321",
+                          "organizationName": "BMW",
+                          "administrator": {},
+                          "vat": "DE987654321",
+                          "address": {
+                              "id": "3b3d97b4-fc81-4fb6-9bba-3c920461dc3e",
+                              "type": "MAIN",
+                              "line1": "Business Center 1",
+                              "line2": "Suite 1234",
+                              "city": "Frankfurt",
+                              "region": "Hesse",
+                              "postalCode": "60313",
+                              "country": "DE",
+                              "validFrom": "2025-10-01",
+                              "createdAt": "2025-10-01T15:03:56.197314Z",
+                              "updatedAt": "2025-10-01T15:03:56.197319Z"
+                          },
+                          "preferences": {
+                              "timezone": "UTC"
+                          },
+                          "createdAt": "2025-10-01T15:03:56.193Z",
+                          "updatedAt": "2025-10-01T15:03:56.193Z"
+                      }
+                  ]
+              }
+            """;
+
+      JsonNode openAPISpec = null;
+      JsonNode contentNode = null;
+
+      try {
+         // Load full specification from file.
+         openAPIText = FileUtils.readFileToString(
+               new File("target/test-classes/io/github/microcks/util/openapi/test-api.yml"),
+               StandardCharsets.UTF_8);
+         // Extract JSON nodes using OpenAPISchemaValidator methods.
+         openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
+         contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);
+      } catch (Exception e) {
+         fail("Exception should not be thrown");
+      }
+
+      // Validate the content for Get /accounts response message.
+      List<String> errors = OpenAPISchemaValidator.validateJsonMessage(openAPISpec, contentNode,
+            "/paths/~1customers/get/responses/200", "application/json");
+      errors.forEach(e -> System.out.println("Error: " + e));
+
+      assertTrue(errors.isEmpty());
+   }
 }

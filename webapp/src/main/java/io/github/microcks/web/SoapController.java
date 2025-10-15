@@ -357,14 +357,13 @@ public class SoapController {
          // Setting delay to default one if not set.
          DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
          if (delay == null && rOperation.getDefaultDelay() != null) {
-            Long operationDelay = rOperation.getDefaultDelay();
-            // TODO: Get delayStrategy
-            delay = new DelaySpec(operationDelay, DelayApplierOptions.FIXED);
+            delay = new DelaySpec(rOperation.getDefaultDelay(), rOperation.getDefaultDelayStrategy());
          }
+
          span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
                TraceUtil.explainSpanEventBuilder("Configured response delay")
-                     .put("delay.value", delay != null ? delay.getBaseValue() : 0)
-                     .put("delay.strategy", delay != null ? delay.getStrategyName() : "N/A").build());
+                     .put("delay.value", delay != null ? delay.baseValue() : 0)
+                     .put("delay.strategy", delay != null ? delay.strategyName() : "N/A").build());
 
          MockControllerCommons.waitForDelay(startTime, delay);
 

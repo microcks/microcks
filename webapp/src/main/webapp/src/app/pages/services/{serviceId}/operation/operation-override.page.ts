@@ -210,10 +210,10 @@ export class OperationOverridePageComponent implements OnInit {
           this.newOperation = {} as Operation;
           this.newOperation.name = this.operation.name;
           this.newOperation.defaultDelay = this.operation.defaultDelay || 0;
+          this.newOperation.defaultDelayStrategy = this.operation.defaultDelayStrategy || 'fixed';
           this.newOperation.dispatcher = this.operation?.dispatcher ?? '';
           this.newOperation.dispatcherRules = this.operation.dispatcherRules;
-          this.newOperation.parameterConstraints =
-            this.operation.parameterConstraints;
+          this.newOperation.parameterConstraints = this.operation.parameterConstraints;
           if (this.newOperation.parameterConstraints) {
             for (const constraint of this.newOperation.parameterConstraints) {
               this.paramConstraints[constraint.in].push(constraint);
@@ -302,6 +302,7 @@ export class OperationOverridePageComponent implements OnInit {
     if (this.operation) {
       this.newOperation.name = this.operation.name;
       this.newOperation.defaultDelay = this.operation?.defaultDelay ?? 0;
+      this.newOperation.defaultDelayStrategy = this.operation?.defaultDelayStrategy ?? 'fixed';
       this.newOperation.dispatcher = this.operation?.dispatcher ?? '';
       this.newOperation.dispatcherRules = this.operation.dispatcherRules;
     }
@@ -310,6 +311,7 @@ export class OperationOverridePageComponent implements OnInit {
     const operationProperties = {} as OperationMutableProperties;
     if (this.newOperation) {
       operationProperties.defaultDelay = this.newOperation.defaultDelay;
+      operationProperties.defaultDelayStrategy = this.newOperation.defaultDelayStrategy;
       operationProperties.dispatcher = this.newOperation.dispatcher;
       operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
     }

@@ -143,15 +143,24 @@
       <h3 class="section-label">New dispatching properties</h3>
       <div class="row">
         <div class="col-md-7">
-          <div class="control-group form-inline">
-            <span *ngIf="!isEventTypeService()">
+          <span *ngIf="!isEventTypeService()">
+            <div class="control-group form-inline">
               <label class="control-label" for="defaultDelay">Default delay</label>
               <div class="controls">
                 <input class="form-control" id="defaultDelay" name="defaultDelay" [(ngModel)]="newOperation!.defaultDelay"/> ms
                 <p class="help-block">The delay to wait before returning response.</p>
               </div>
-            </span>
-            <span *ngIf="isEventTypeService()">
+            </div>
+            <div class="control-group form-inline">
+              <label class="control-label" for="defaultDelay">Default delay strategy</label>
+              <div class="controls">
+                <input class="form-control" id="defaultDelayStrategy" name="defaultDelayStrategy" [(ngModel)]="newOperation!.defaultDelayStrategy"/>
+                <p class="help-block">The strategy to apply to default delay (can be <code>fixed</code>, <code>random</code> or <code>randome-(\d)</code> to specify a range).</p>
+              </div>
+            </div>
+          </span>
+          <span *ngIf="isEventTypeService()">
+            <div class="control-group form-inline">
               <label class="control-label" for="defaultDelay">Frequency</label>
               <div class="controls">
                 <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation!.defaultDelay" [disabled]="!isAsyncMockEnabled()">
@@ -163,8 +172,8 @@
                 </div>
                 <p class="help-block">The frequency of messages publication.</p>
               </div>
-            </span>
-          </div>
+            </div>
+          </span>
           <div class="control-group">
             <label class="control-label" for="dispatcher">Dispatcher</label>
             <div class="controls">

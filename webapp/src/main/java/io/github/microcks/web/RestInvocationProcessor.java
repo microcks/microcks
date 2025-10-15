@@ -135,6 +135,7 @@ public class RestInvocationProcessor {
       // Mark current span as an explain Span
       Span span = Span.current();
       TraceUtil.enableExplainTracing();
+
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation());
@@ -172,14 +173,13 @@ public class RestInvocationProcessor {
 
       // Setting delay to default one if not set.
       if (delay == null && ic.operation().getDefaultDelay() != null) {
-         Long defaultDelay = ic.operation().getDefaultDelay();
-         // TODO: Get DelayStrategy
-         delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
+         delay = new DelaySpec(ic.operation().getDefaultDelay(), ic.operation().getDefaultDelayStrategy());
       }
+
       span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
             TraceUtil.explainSpanEventBuilder("Configured response delay")
-                  .put("delay.value", delay != null ? delay.getBaseValue() : 0)
-                  .put("delay.strategy", delay != null ? delay.getStrategyName() : "N/A").build());
+                  .put("delay.value", delay != null ? delay.baseValue() : 0)
+                  .put("delay.strategy", delay != null ? delay.strategyName() : "N/A").build());
 
       // Check if we need to proxy the request.
       Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
@@ -189,6 +189,7 @@ public class RestInvocationProcessor {
                TraceUtil.explainSpanEventBuilder("Proxying request to external service")
                      .put("proxy.url", proxyUrl.get().toString()).put("proxy.method", ic.operation().getMethod())
                      .build());
+
          // Delay response here as the returning content will be returned directly.
          MockControllerCommons.waitForDelay(startTime, delay);
 

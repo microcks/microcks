@@ -16,15 +16,8 @@
 package io.github.microcks.util.delay;
 
 /**
- * 
+ * A simple record to represent a delay specification made of a base value and a strategy name.
  * @author SebastienDegodez
  */
 public record DelaySpec(Long baseValue, String strategyName) {
-   public Long getBaseValue() {
-      return baseValue;
-   }
-
-   public String getStrategyName() {
-      return strategyName;
-   }
 }
