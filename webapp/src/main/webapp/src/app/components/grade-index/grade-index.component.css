@@ -19,23 +19,23 @@
 
 .grade-box.a {
   --pfe-health-index--accent: var(--status-success);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
+  --pfe-health-index--accent--text: var(--accent-text);
 }
 .grade-box.b {
   --pfe-health-index--accent: var(--status-success-bright);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
+  --pfe-health-index--accent--text: var(--accent-text);
 }
 .grade-box.c {
   --pfe-health-index--accent: var(--status-warning);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
+  --pfe-health-index--accent--text: var(--accent-text);
 }
 .grade-box.d {
   --pfe-health-index--accent: var(--warning-500);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
+  --pfe-health-index--accent--text: var(--accent-text);
 }
 .grade-box.e {
   --pfe-health-index--accent: var(--status-danger);
-  --pfe-health-index--accent--text: var(--pfe-theme--color--text--on-dark, var(--accent-text));
+  --pfe-health-index--accent--text: var(--accent-text);
 }
 
 .grade-box .grade {

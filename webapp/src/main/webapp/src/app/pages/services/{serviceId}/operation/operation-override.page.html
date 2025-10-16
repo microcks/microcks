@@ -130,7 +130,7 @@
             </dd>
             <span *ngIf="!isEventTypeService()">
               <dt>Default delay:</dt>
-              <dd>{{ operation?.defaultDelay || 0 }} ms</dd>
+              <dd>{{ operation?.defaultDelay || 0 }} ms with <code>{{ operation?.defaultDelayStrategy || 'fixed' }}</code> strategy</dd>
             </span>
             <span *ngIf="isEventTypeService()">
               <dt>Frequency:</dt>

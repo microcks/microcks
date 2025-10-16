@@ -1,58 +1,112 @@
 :root {
-    --border-muted: #ccc; /* border-muted: breadcrumbs, subtle dividers */
-    --text-muted: #9c9c9c; /* text-muted: small, de-emphasized text */
-    --rest-accent: #89bf04; /* rest-accent: REST icon ring (green) */
-    --brand-blue: #39a5dc; /* brand-blue: soap icon, stepper selected bg */
-    --warning-500: #ec7a08; /* warning-500: event icon ring (orange) */
-    --grpc-accent: #379c9c; /* grpc-accent: gRPC icon/label (teal) */
-    --graphql-accent: #e10098; /* graphql-accent: GraphQL icon/label (magenta) */
-    --generic-accent: #9c27b0; /* generic-accent: generic icon/label (purple) */
-    --text-subtle: rgb(117, 117, 117); /* text-subtle: section/subsection labels */
-    --divider-light: rgb(220, 220, 220); /* divider-light: subsection underline */
-    --divider-muted: #CCC; /* divider-muted: bar borders */
-    --success-500: #7BB33D; /* success-500: test bars (pass) */
-    --success-600: #73A839; /* success-600: hover/darker pass */
-    --danger-500: #dd1f26; /* danger-500: test bars (fail) */
-    --danger-600: #d41e24; /* danger-600: hover/darker fail */
-    --axis-line: #eee; /* axis-line: chart axis strokes */
-    --axis-text: #888; /* axis-text: chart axis text */
-    --primary-500: #0088ce; /* primary-500: active tabs, bars, highlights */
-    --border-accent: #bbb; /* border-accent: active/hover underlines */
-    --placeholder-text: #8b8d8f; /* placeholder-text: inputs and hints */
-    --info-400: #339cff; /* info-400: chart accent blue */
-    --surface-subtle: #f5f5f5; /* surface-subtle: cards, list backgrounds */
-    --surface-border: #ededed; /* surface-border: card/list borders */
-    --text-secondary: #6a6e73; /* text-secondary: secondary labels */
-    --status-success: #3f9c35; /* status-success: good health/grade */
-    --status-success-bright: #92d400; /* status-success-bright: positive accent */
-    --status-warning: #efaa00; /* status-warning: caution/amber */
-    --status-danger: #cc0000; /* status-danger: critical/severe */
-    --primary-tint: #def3ff; /* primary-tint: info/brand background */
-    --primary-deep: #004368; /* primary-deep: brand gradient end */
-    --primary-border-light: #bee1f4; /* primary-border-light: top/bottom accents */
-    --danger-accent: #ff1745; /* danger-accent: dashboard highlights */
-    --surface-muted: #f1f1f1; /* surface-muted: page backgrounds */
-    --hero-bg: #4E5D6C; /* hero-bg: hub hero background */
-    --shadow-strong: rgba(0,0,0,.2); /* shadow-strong: text shadows */
-    --text-tertiary: #b6b6b6; /* text-tertiary: subdued text */
-    --divider: #eaeaea; /* divider: section/card separators */
-    --brand-orange: #df691a; /* brand-orange: hub accent */
-    --shadow-subtle: rgba(0,0,0,.1); /* shadow-subtle: card shadows */
-    --divider-translucent: rgba(0,0,0,0.2); /* divider-translucent: subtle borders */
-    --link-blue: #1991eb; /* link-blue: prominent CTAs/badges */
-    --text-strong: #363636; /* text-strong: titles/labels */
-    --surface-offwhite: #fafbfd; /* surface-offwhite: popovers/menus */
-    --shadow-medium: rgba(0,0,0,.175); /* shadow-medium: dropdowns/menus */
-    --text-default: #4d5258; /* text-default: general body text */
-    --black: #000; /* black */
-    --text-dark: #333; /* text-dark: headings */
-    --primary-border: #7dc3e8; /* primary-border: focus/active borders */
-    --danger: #c00; /* danger: warnings/errors in lists */
-    --text-muted-2: #757575; /* text-muted-2: tertiary labels */
-    --background: #fff; /* background: main background */
-    --accent-text: #fff; /* accent-text: links, highlights and button text color */
-    --danger-tint: #fff5f5; /* danger-tint: subtle error background */
+  --border-muted: #ccc; /* border-muted: breadcrumbs, subtle dividers */
+  --rest-accent: #89bf04; /* rest-accent: REST icon ring (green) */
+  --brand-blue: #39a5dc; /* brand-blue: soap icon, stepper selected bg */
+  --warning-500: #ec7a08; /* warning-500: event icon ring (orange) */
+  --grpc-accent: #379c9c; /* grpc-accent: gRPC icon/label (teal) */
+  --graphql-accent: #e10098; /* graphql-accent: GraphQL icon/label (magenta) */
+  --generic-accent: #9c27b0; /* generic-accent: generic icon/label (purple) */
+  --success-500: #7BB33D; /* success-500: test bars (pass) */
+  --success-600: #73A839; /* success-600: hover/darker pass */
+  --danger-500: #dd1f26; /* danger-500: test bars (fail) */
+  --danger-600: #d41e24; /* danger-600: hover/darker fail */
+  --axis-line: #eee; /* axis-line: chart axis strokes */
+  --axis-text: #888; /* axis-text: chart axis text */
+  --primary-400: #00659c; /* primary-400: active tabs, bars, highlights */
+  --primary-500: #0088ce; /* primary-500: tabs, links */
+  --border-accent: #bbb; /* border-accent: active/hover underlines */
+  --placeholder-text: #8b8d8f; /* placeholder-text: inputs and hints */
+  --info-400: #339cff; /* info-400: chart accent blue */
+  --surface-subtle: #f5f5f5; /* surface-subtle: cards, list backgrounds */
+  --surface-border: #ededed; /* surface-border: card/list borders */
+  --surface-muted: #f1f1f1; /* surface-muted: block backgrounds */
+  --surface-hover: #edf8ff; /* surface-hover: highlighted block */
+  --surface-offwhite: #fafbfd; /* surface-offwhite: popovers/menus */
+  --status-success: #3f9c35; /* status-success: good health/grade */
+  --status-success-bright: #92d400; /* status-success-bright: positive accent */
+  --status-warning: #efaa00; /* status-warning: caution/amber */
+  --status-danger: #cc0000; /* status-danger: critical/severe */
+  --primary-tint: #def3ff; /* primary-tint: info/brand background */
+  --primary-deep: #004368; /* primary-deep: brand gradient end */
+  --primary-border-light: #bee1f4; /* primary-border-light: top/bottom accents */
+  --danger-accent: #ff1745; /* danger-accent: dashboard highlights */
+  --hero-bg: #4e5d6c; /* hero-bg: hub hero background */
+  --shadow-strong: rgba(0,0,0,.2); /* shadow-strong: text shadows */
+  --brand-orange: #df691a; /* brand-orange: hub accent */
+  --shadow-subtle: rgba(0,0,0,.1); /* shadow-subtle: card shadows */
+  --divider: #eaeaea; /* divider: section/card separators */
+  --divider-translucent: rgba(0,0,0,0.2); /* divider-translucent: subtle borders */
+  --divider-light: rgb(220, 220, 220); /* divider-light: subsection underline */
+  --divider-muted: #ccc; /* divider-muted: bar borders */
+  --link-blue: #1991eb; /* link-blue: prominent CTAs/badges */
+  --shadow-medium: rgba(0,0,0,.175); /* shadow-medium: dropdowns/menus */
+  --text-default: #4d5258; /* text-default: general body text */
+  --text-strong: #363636; /* text-strong: titles/labels */
+  --text-subtle: rgb(117, 117, 117); /* text-subtle: section/subsection labels */
+  --text-secondary: #6a6e73; /* text-secondary: secondary labels */
+  --text-tertiary: #b6b6b6; /* text-tertiary: subdued text */
+  --text-dark: #333; /* text-dark: headings */
+  --text-muted: #9c9c9c; /* text-muted: small, de-emphasized text */
+  --text-muted-2: #757575; /* text-muted-2: tertiary labels */
+  --accent-text: #fff; /* accent-text: links, highlights and button text color */
+  --black: #000; /* black */
+  --primary-border: #7dc3e8; /* primary-border: focus/active borders */
+  --danger: #c00; /* danger: warnings/errors in lists */
+  --background: #fff; /* background: main background */
+  --danger-tint: #fff5f5; /* danger-tint: subtle error background */
   --overlay-scrim: rgba(0, 0, 0, 0.8); /* overlay-scrim: drag/drop backdrop */
+  --light-gradient-start: #fafafa; /* light-gradient-start: light gradient start */
+  --light-gradient-stop: #ededed; /* light-gradient-stop: light gradient stop */
+  --tooltip-background: #393f44;
+  --tooltip-text: #fff;
+  --card-box-shadow: 0 1px 1px rgba(3, 3, 3, .175);
+}
+
+.dark {
+  /* --primary-500: #0088ce; /* primary-500: tabs, links */
+  --primary-400: #32baff; /* primary-400: active tabs, bars, highlights */
+  --primary-500: #21a9ef; /* primary-500: tabs, links */
+  /* --background: #202020; /* main background */
+  /* --background: #0f172a; */
+  /* --background: #1e293b; */
+  --background: #334155; /* main background */
+  --text-default: #fff; /* text-default: general body text */
+  --text-strong: #fff; /* text-strong: titles/labels */
+  --text-secondary: rgb(220, 220, 220); /* text-secondary: secondary labels */
+  --text-subtle: rgb(200, 200, 200); /* text-subtle: section/subsection labels */
+  --text-muted: #c9c9c9; /* text-muted: small, de-emphasized text */
+  --text-muted-2: #c9c9c9; /* text-muted-2: tertiary labels */
+  --divider-light: rgb(117, 117, 117); /* divider-light: subsection underline */
+  --divider-muted: #292e34; /* divider-muted: bar borders */
+  --surface-muted: #292e34; /* surface-muted: block backgrounds */
+  --surface-hover: #393f44; /* surface-hover: highlighted block */
+  --surface-subtle: #292e34; /* surface-subtle: cards, list backgrounds */
+  --border-muted: #292e34; /* border-muted: breadcrumbs, subtle dividers */
+  --border-accent: #292e34; /* border-accent: active/hover underlines */
+  --light-gradient-start: #1e293b; /* light-gradient-start: light gradient start */
+  --light-gradient-stop: #393f44; /* light-gradient-stop: light gradient stop */
+  --tooltip-background: #292e34;
+  --tooltip-text: rgb(200, 200, 200);
+  --card-box-shadow: 0 1px 1px rgba(3, 3, 3, .825);
+}
+
+/* Classes to toggle visibility based on light/dark logos */
+.light .dark\:hidden {
+  display: block;
+}
+.dark .dark\:hidden {
+  display: none;
+}
+.dark .light\:hidden {
+  display: block;
+}
+.light .light\:hidden {
+  display: none;
+}
+
+body {
+  color: var(--text-default);
+  background-color: var(--background);
 }
 
 .breadcrumb-bar {
@@ -410,13 +464,14 @@ pre.hljs {
   border-color: var(--border-accent) !important;
   border-style: solid !important;
   border-width: 1px;
-  color: var(--border-accent) !important;
+  color: var(--text-muted) !important;
 }
 .mat-step-icon-selected {
   background-color: var(--brand-blue) !important;
   color: var(--accent-text) !important;
 }
 .mat-step-text-label {
+  color: var(--text-default);
   font-family: "Open Sans", Helvetica, Arial, sans-serif;
   font-size: 16px;
 }
