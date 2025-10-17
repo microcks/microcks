@@ -8,10 +8,13 @@
       <span class="trace-caret" [class.open]="isTraceOpen(trace)"></span>
       <strong>Trace {{ getTraceId(trace) }}</strong>
       <small *ngIf="getStartTime(trace) || getEndTime(trace)">
-        ({{ formatHrTime(getStartTime(trace)) }} → {{ formatHrTime(getEndTime(trace)) }})
+        ({{ formatHrTime(getStartTime(trace)) }} →
+        {{ formatHrTime(getEndTime(trace)) }})
       </small>
       <span class="muted"> — {{ getEvents(trace).length }} event(s)</span>
-      <span *ngIf="getTraceError(trace)" class="text-danger"> — {{ getTraceError(trace) }}</span>
+      <span *ngIf="getTraceError(trace)" class="text-danger">
+        — {{ getTraceError(trace) }}</span
+      >
     </div>
     <div class="trace-body" *ngIf="isTraceOpen(trace)">
       <ul class="events">
