@@ -76,6 +76,7 @@
   --text-subtle: rgb(200, 200, 200); /* text-subtle: section/subsection labels */
   --text-muted: #c9c9c9; /* text-muted: small, de-emphasized text */
   --text-muted-2: #c9c9c9; /* text-muted-2: tertiary labels */
+  --divider: #121212; /* divider: section/card separators */
   --divider-light: rgb(117, 117, 117); /* divider-light: subsection underline */
   --divider-muted: #292e34; /* divider-muted: bar borders */
   --surface-muted: #292e34; /* surface-muted: block backgrounds */

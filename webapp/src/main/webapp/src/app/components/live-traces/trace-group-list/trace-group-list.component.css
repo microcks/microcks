@@ -1,14 +1,14 @@
 .traces .trace {
-  border: 1px solid var(--surface-border);
-  border-radius: 4px;
+  border: 1px solid var(--border-accent);
+  border-radius: 1px;
   margin-bottom: 8px;
 }
 
 .traces .trace-header {
   cursor: pointer;
   padding: 6px 8px;
-  background: var(--surface-offwhite);
-  border-bottom: 1px solid var(--divider);
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border-accent);
 }
 
 .traces .trace.error .trace-header {
@@ -62,12 +62,13 @@
 }
 
 .traces ul.kv .k {
-  color: var(--text-dark);
+  color: var(--text-default);
   margin-right: 4px;
 }
 
 .traces ul.kv .v {
   color: var(--status-success);
+  word-wrap: break-word;
 }
 
 .traces ul.events {

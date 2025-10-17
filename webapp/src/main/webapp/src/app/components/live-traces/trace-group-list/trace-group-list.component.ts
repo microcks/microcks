@@ -99,6 +99,17 @@ export class TraceGroupListComponent {
     return false;
   }
 
+  getNonMessageAttributes(attrs?: Attributes): { key: string; value: any }[] {
+    const result: { key: string; value: any }[] = [];
+    if (!attrs) return result;
+    for (const k in attrs) {
+      if (Object.prototype.hasOwnProperty.call(attrs, k) && k !== "message") {
+        result.push({ key: k, value: attrs[k] });
+      }
+    }
+    return result;
+  }
+
   formatHrTime(t?: HrTime): string {
     if (!t) return "";
     const [sec, nsec] = t;
