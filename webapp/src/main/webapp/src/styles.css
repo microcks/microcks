@@ -63,8 +63,8 @@
 }
 
 .dark {
-  --primary-400: #47c2ff; /* primary-400: active tabs, bars, highlights (current) */
-  --primary-500: #40b7f2; /* primary-500: tabs, links (current )*/
+  --primary-400: #47c2ff; /* primary-400: active tabs, bars, highlights */
+  --primary-500: #40b7f2; /* primary-500: tabs, links */
   --background: #263140; /* main background */
   --text-default: #fff; /* text-default: general body text */
   --text-strong: #fff; /* text-strong: titles/labels */
@@ -76,7 +76,7 @@
   --divider-light: rgb(117, 117, 117); /* divider-light: subsection underline */
   --divider-muted: #292e34; /* divider-muted: bar borders */
   --surface-muted: #292e34; /* surface-muted: block backgrounds */
-  --surface-hover: #364459; /* surface-hover: highlighted block (current) */
+  --surface-hover: #364459; /* surface-hover: highlighted block */
   --surface-subtle: #292e34; /* surface-subtle: cards, list backgrounds */
   --border-muted: #292e34; /* border-muted: breadcrumbs, subtle dividers */
   --border-accent: #292e34; /* border-accent: active/hover underlines */
