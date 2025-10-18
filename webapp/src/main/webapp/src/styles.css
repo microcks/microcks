@@ -63,13 +63,9 @@
 }
 
 .dark {
-  /* --primary-500: #0088ce; /* primary-500: tabs, links */
-  --primary-400: #32baff; /* primary-400: active tabs, bars, highlights */
-  --primary-500: #21a9ef; /* primary-500: tabs, links */
-  /* --background: #202020; /* main background */
-  /* --background: #0f172a; */
-  /* --background: #1e293b; */
-  --background: #334155; /* main background */
+  --primary-400: #47c2ff; /* primary-400: active tabs, bars, highlights (current) */
+  --primary-500: #40b7f2; /* primary-500: tabs, links (current )*/
+  --background: #263140; /* main background */
   --text-default: #fff; /* text-default: general body text */
   --text-strong: #fff; /* text-strong: titles/labels */
   --text-secondary: rgb(220, 220, 220); /* text-secondary: secondary labels */
@@ -80,12 +76,12 @@
   --divider-light: rgb(117, 117, 117); /* divider-light: subsection underline */
   --divider-muted: #292e34; /* divider-muted: bar borders */
   --surface-muted: #292e34; /* surface-muted: block backgrounds */
-  --surface-hover: #393f44; /* surface-hover: highlighted block */
+  --surface-hover: #364459; /* surface-hover: highlighted block (current) */
   --surface-subtle: #292e34; /* surface-subtle: cards, list backgrounds */
   --border-muted: #292e34; /* border-muted: breadcrumbs, subtle dividers */
   --border-accent: #292e34; /* border-accent: active/hover underlines */
-  --light-gradient-start: #1e293b; /* light-gradient-start: light gradient start */
-  --light-gradient-stop: #393f44; /* light-gradient-stop: light gradient stop */
+  --light-gradient-start:  #393f44; /* light-gradient-start: light gradient start */
+  --light-gradient-stop: #1e293b; /* light-gradient-stop: light gradient stop */
   --tooltip-background: #292e34;
   --tooltip-text: rgb(200, 200, 200);
   --card-box-shadow: 0 1px 1px rgba(3, 3, 3, .825);
