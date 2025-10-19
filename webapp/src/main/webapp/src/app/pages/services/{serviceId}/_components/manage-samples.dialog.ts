@@ -37,12 +37,13 @@ import { IAuthenticationService } from '../../../../services/auth.service';
   ]
 })
 export class ManageSamplesDialogComponent implements OnInit {
-  //@Output() cleanupSelectionAction = new EventEmitter<any>();
+
   @Output() cleanupSelectionAction = new EventEmitter<Record<string, Record<string, boolean>>>();
 
   closeBtnName!: string;
   serviceView!: ServiceView;
-  operationsWithAISamples: any[] = [];
+  samplesMode: string = 'AI';
+  operationsWithSamples: any[] = [];
   operationsListConfig!: ListConfig;
 
   //selectedExchanges: any = {};
@@ -68,9 +69,10 @@ export class ManageSamplesDialogComponent implements OnInit {
     } as ListConfig;
 
     this.serviceView.service.operations.forEach(operation => {
-      let exchanges = this.getOperationAICopilotExchanges(operation.name);
+      let exchanges = (this.samplesMode === 'AI') ? this.getOperationAICopilotExchanges(operation.name) 
+        : this.getOperationAllExchanges(operation.name);
       if (exchanges.length > 0) {
-        this.operationsWithAISamples.push(operation);
+        this.operationsWithSamples.push(operation);
         if (this.selectedExchanges[operation.name] == undefined) {
           this.selectedExchanges[operation.name] = {};
         }
@@ -80,13 +82,13 @@ export class ManageSamplesDialogComponent implements OnInit {
       }
     });
 
-    this.operationsWithAISamples.forEach(operation => {
+    this.operationsWithSamples.forEach(operation => {
       operation.expanded = true;
     });
   }
 
   public selectAllExchanges(): void {
-    this.operationsWithAISamples.forEach(operation => {
+    this.operationsWithSamples.forEach(operation => {
       if (this.selectedExchanges[operation.name] == undefined) {
         this.selectedExchanges[operation.name] = {};
       }
@@ -96,26 +98,28 @@ export class ManageSamplesDialogComponent implements OnInit {
     });
   }
   public unselectAllExchanges(): void {
-    this.operationsWithAISamples.forEach(operation => {
+    this.operationsWithSamples.forEach(operation => {
       this.selectedExchanges[operation.name] = {};
     });
   }
   public cleanupEnabled(): boolean {
     let enabled = false;
-    this.operationsWithAISamples.forEach(operation => {
-      // Have a quick look at defintiion and keys.
-      if (this.selectedExchanges[operation.name] != undefined
-        && Object.keys(this.selectedExchanges[operation.name]).length > 0
-      ) {
-        // Now inspect the values.
-        Object.values(this.selectedExchanges[operation.name]).forEach(value => {
-          if (value === true) {
-            enabled = true;
-            return;
-          }
-        });
-      }
-    });
+    if (this.samplesMode === 'AI') {
+      this.operationsWithSamples.forEach(operation => {
+        // Have a quick look at defintiion and keys.
+        if (this.selectedExchanges[operation.name] != undefined
+          && Object.keys(this.selectedExchanges[operation.name]).length > 0
+        ) {
+          // Now inspect the values.
+          Object.values(this.selectedExchanges[operation.name]).forEach(value => {
+            if (value === true) {
+              enabled = true;
+              return;
+            }
+          });
+        }
+      });
+    }
     return enabled;
   }
   
@@ -134,31 +138,35 @@ export class ManageSamplesDialogComponent implements OnInit {
   }
 
   public halfOperationExchanges(operationName: string): Exchange[] {
-    let exchanges = this.getOperationAICopilotExchanges(operationName);
+    let exchanges = (this.samplesMode === 'AI') ? this.getOperationAICopilotExchanges(operationName) 
+        : this.getOperationAllExchanges(operationName);
     return exchanges.slice(0, (exchanges.length / 2) + 1);
   }
 
   public secondHalfOperationExchanges(operationName: string): Exchange[] {
-    let exchanges = this.getOperationAICopilotExchanges(operationName);
+    let exchanges = (this.samplesMode === 'AI') ? this.getOperationAICopilotExchanges(operationName) 
+        : this.getOperationAllExchanges(operationName);
     return exchanges.slice((exchanges.length / 2) + 1, exchanges.length);
   }
 
   public cleanupSelection(): void {
-    // Remove exchanges that are not selected.
-    this.operationsWithAISamples.forEach(operation => {
-      Object.keys(this.selectedExchanges[operation.name]).forEach(exchangeName => {
-        if (this.selectedExchanges[operation.name][exchangeName] === false) {
-          delete this.selectedExchanges[operation.name][exchangeName];
-        }
+    if (this.samplesMode === 'AI') {
+      // Remove exchanges that are not selected.
+      this.operationsWithSamples.forEach(operation => {
+        Object.keys(this.selectedExchanges[operation.name]).forEach(exchangeName => {
+          if (this.selectedExchanges[operation.name][exchangeName] === false) {
+            delete this.selectedExchanges[operation.name][exchangeName];
+          }
+        });
       });
-    });
-    this.cleanupSelectionAction.emit(this.selectedExchanges);
-    this.bsModalRef.hide();
+      this.cleanupSelectionAction.emit(this.selectedExchanges);
+      this.bsModalRef.hide();
+    }
   }
 
   public exportSelection(): void {
     // Remove exchanges that are not selected.
-    this.operationsWithAISamples.forEach(operation => {
+    this.operationsWithSamples.forEach(operation => {
       Object.keys(this.selectedExchanges[operation.name]).forEach(exchangeName => {
         if (this.selectedExchanges[operation.name][exchangeName] === false) {
           delete this.selectedExchanges[operation.name][exchangeName];
@@ -208,6 +216,10 @@ export class ManageSamplesDialogComponent implements OnInit {
       }
     };
     xhr.send(JSON.stringify(exchangeSelection));
+  }
+
+  getOperationAllExchanges(operationName: string): Exchange[] {
+    return this.serviceView.messagesMap[operationName];
   }
 
   getOperationAICopilotExchanges(operationName: string): Exchange[] {

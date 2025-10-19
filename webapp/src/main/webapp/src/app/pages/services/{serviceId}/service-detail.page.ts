@@ -437,6 +437,19 @@ export class ServiceDetailPageComponent implements OnInit {
     });
   }
 
+  public openManageSamples(): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      serviceView: this.resolvedServiceView,
+      samplesMode: 'ALL',
+    };
+    console.log(`Opening ManageSamplesDialog in ${initialState.samplesMode} mode`);
+    this.modalRef = this.modalService.show(ManageSamplesDialogComponent, {
+      initialState,
+    });
+    this.modalRef.setClass('modal-lg');
+  }
+
   public openManageAISamples(): void {
     const initialState = {
       closeBtnName: 'Cancel',

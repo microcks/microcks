@@ -151,9 +151,22 @@
         <button class="btn btn-warning" (click)="enrichWithAICopilot()" *ngIf="allowAICopilotOnSamples()" [disabled]="isAIEnrichInProgress()">
           <span class="pficon pficon-optimize"></span> AI Copilot
         </button>&nbsp;
-        <button class="btn btn-default" (click)="openManageAISamples()" *ngIf="hasAICopilotSamples()">
-          <span class="fa fa-filter"></span> AI Copilot Samples
+        <button class="btn btn-default" (click)="openManageSamples()" *ngIf="!hasAICopilotSamples()">
+          <span class="fa fa-filter"></span> Manage Samples
         </button>
+
+        <div class="btn-group" *ngIf="hasAICopilotSamples()">
+          <span class="dropdown" dropdown>
+            <button class="btn btn-default dropdown-toggle" dropdownToggle aria-controls="dropdown-actions">
+              <span class="fa fa-filter"></span> Manage Samples
+              <span class="caret"></span>
+            </button>
+            <ul id="dropdown-actions" *dropdownMenu class="dropdown-menu dropdown-menu-right" aria-labelledby="exportOptions">
+              <li role="presentation" (click)="openManageSamples()"><a class="filter-field dropdown-item">All Samples</a></li>
+              <li role="presentation" (click)="openManageAISamples()"><a class="filter-field dropdown-item">AI Copilot only</a></li>
+            </ul>
+          </span>
+        </div>
       </div>
     </h3>
   </div>
