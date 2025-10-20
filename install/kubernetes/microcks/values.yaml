@@ -353,8 +353,9 @@ features:
     # Uncomment the sqs.region and put a valid region below to enable Amazon SQS support.
     sqs:
       #region: eu-west-3
-      # For authentication, we rely on either Environment Variables or an AWS Profile of type credentials (see https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html).
-      # You can choose between 'env-variable' and 'profile'
+      # For authentication, we rely on either Environment Variables or an AWS Profile of type credentials (see https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html)
+      # or IRSA (https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) for in-EKS-cluster deployments.
+      # You can choose between 'env-variable', 'profile' and 'web-identity'
       credentialsType: env-variable
       #credentialsType: profile
       # For 'env-variable', you may want to specify a Secret to get environment variables from.

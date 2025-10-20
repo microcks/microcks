@@ -21,7 +21,8 @@ package io.github.microcks.minion.async.producer;
  */
 public enum AmazonCredentialsProviderType {
    PROFILE("profile"),
-   ENV_VARIABLE("env-variable");
+   ENV_VARIABLE("env-variable"),
+   WEB_IDENTITY("web-identity");
 
 
    private String value;

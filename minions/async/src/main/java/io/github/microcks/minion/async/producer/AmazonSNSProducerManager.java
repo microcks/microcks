@@ -23,9 +23,12 @@ import io.github.microcks.util.el.TemplateEngine;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.SystemPropertyCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.WebIdentityTokenFileCredentialsProvider;
 import software.amazon.awssdk.profiles.ProfileFile;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sns.SnsClient;
@@ -86,16 +89,23 @@ public class AmazonSNSProducerManager {
       try {
          switch (credentialsType) {
             case ENV_VARIABLE:
-               credentialsProvider = EnvironmentVariableCredentialsProvider.create();
+               AwsCredentialsProvider[] credentialsProviders = new AwsCredentialsProvider[] {
+                     SystemPropertyCredentialsProvider.create(), EnvironmentVariableCredentialsProvider.create() };
+               credentialsProvider = AwsCredentialsProviderChain.builder().reuseLastProviderEnabled(true)
+                     .credentialsProviders(credentialsProviders).build();
                break;
             case PROFILE:
-               if (credentialsProfileLocation != null && credentialsProfileLocation.length() > 0) {
+               if (credentialsProfileLocation != null && !credentialsProfileLocation.isEmpty()) {
                   ProfileFile profileFile = ProfileFile.builder().type(ProfileFile.Type.CREDENTIALS)
                         .content(Paths.get(credentialsProfileLocation)).build();
 
                   credentialsProvider = ProfileCredentialsProvider.builder().profileFile(profileFile)
                         .profileName(credentialsProfileName).build();
                }
+               break;
+            case WEB_IDENTITY:
+               credentialsProvider = WebIdentityTokenFileCredentialsProvider.builder()
+                     .asyncCredentialUpdateEnabled(true).build();
                break;
          }
 
