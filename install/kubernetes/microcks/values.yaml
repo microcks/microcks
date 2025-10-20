@@ -354,8 +354,9 @@ features:
     sqs:
       #region: eu-west-3
       # For authentication, we rely on either Environment Variables or an AWS Profile of type credentials (see https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials_profiles.html)
-      # or IRSA (https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) for in-EKS-cluster deployments.
-      # You can choose between 'env-variable', 'profile' and 'web-identity'
+      # , IRSA (https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) or Pod Identity (https://docs.aws.amazon.com/eks/latest/userguide/pod-identities.html)
+      # for in-EKS-cluster deployments.
+      # You can choose between 'env-variable', 'profile', 'web-identity' and 'pod-identity'
       credentialsType: env-variable
       #credentialsType: profile
       # For 'env-variable', you may want to specify a Secret to get environment variables from.
@@ -364,7 +365,7 @@ features:
         #accessKeyIdKey: access_key_id
         #secretAccessKeyKey: secret_access_key
         #sessionTokenKey: session_token
-      # For 'profile', you have to provide the profile name and setup a secret reference for retrieving this file from secret.
+      # For 'profile', you have to provide the profile name and set up a secret reference for retrieving this file from secret.
       credentialsProfile: microcks-sqs-admin
       #credentialsSecretRef:
         #secret: aws-credentials

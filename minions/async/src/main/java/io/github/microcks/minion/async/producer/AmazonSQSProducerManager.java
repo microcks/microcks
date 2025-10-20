@@ -24,6 +24,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProviderChain;
+import software.amazon.awssdk.auth.credentials.ContainerCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider;
@@ -105,6 +106,9 @@ public class AmazonSQSProducerManager {
             case WEB_IDENTITY:
                credentialsProvider = WebIdentityTokenFileCredentialsProvider.builder()
                      .asyncCredentialUpdateEnabled(true).build();
+               break;
+            case POD_IDENTITY:
+               credentialsProvider = ContainerCredentialsProvider.builder().asyncCredentialUpdateEnabled(true).build();
                break;
          }
 

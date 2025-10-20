@@ -71,7 +71,6 @@ public class AmazonSQSProducerManagerIT {
    private static final Network NETWORK = Network.newNetwork();
 
    private SqsClient sqsClient = null;
-   private AtomicReference<String> queueUrl = new AtomicReference<>(null);
 
    @Container
    private static final LocalStackContainer localStackContainer = new LocalStackContainer(
