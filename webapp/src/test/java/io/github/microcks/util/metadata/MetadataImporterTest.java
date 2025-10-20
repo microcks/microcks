@@ -71,7 +71,7 @@ class MetadataImporterTest {
    }
 
    @Test
-   void testAPIMetadataWithParmaeterConstraintsImport() {
+   void testAPIMetadataWithParameterConstraintsImport() {
       MetadataImporter importer = null;
       try {
          importer = new MetadataImporter(

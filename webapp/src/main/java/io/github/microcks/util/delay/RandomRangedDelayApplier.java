@@ -16,7 +16,6 @@
 package io.github.microcks.util.delay;
 
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * A {@link DelayApplier} implementation that computes a random delay within a range defined by a percentage. The
@@ -44,8 +43,7 @@ public class RandomRangedDelayApplier implements DelayApplier {
    private int extractPercent(String strategyName) {
       Matcher matcher = DelayApplierOptions.RANDOM_RANGED_PATTERN.matcher(strategyName.toLowerCase());
       if (matcher.matches()) {
-         int percent = Integer.parseInt(matcher.group(1));
-         return percent;
+         return Integer.parseInt(matcher.group(1));
       }
       // exception 
       throw new IllegalArgumentException("Invalid random range strategy format: " + strategyName
