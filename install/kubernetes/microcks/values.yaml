@@ -194,10 +194,21 @@ keycloak:
   serviceAccountCredentials: ab54d329-e435-41ae-a900-ec6b3fe15c54
 
 mongodb:
+  # You can turn off mongodb installation if you use an external one
   install: true
-  #uri: mongodb:27017
-  #uriParameters: "?ssl=true"
+
+  # MongoDB connection URI must include the protocol prefix
+  #uri: mongodb://mongodb:27017
+  #uri: mongodb+srv://mongodb:27017
+  # Your can use references to user and password to access value mounted from secret
+  #uri: mongodb+srv://${SPRING_DATA_MONGODB_USER}:${SPRING_DATA_MONGODB_PASSWORD}@cluster0.myalias.mongodb.net
+
+  # MongoDB database name (default to appName if not set)
   #database: sampledb
+
+  # MongoDB uri parameters are appended after the database name
+  #uriParameters: "?ssl=true"
+
   image:
     registry:
     repository: library/mongo
@@ -217,8 +228,8 @@ mongodb:
   # Or you can uncomment secretRef block if username and password are provided through a Secret.
   #secretRef:
     #secret: mongodb
-    #usernameKey: database-user
-    #passwordKey: database-password
+    #usernameKey: username
+    #passwordKey: password
 
   #pvcAnnotations:
     #helm.sh/resource-policy: keep
