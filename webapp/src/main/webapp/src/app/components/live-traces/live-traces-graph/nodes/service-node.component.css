@@ -1,0 +1,34 @@
+.service-node {
+  width: 140px;
+  height: 80px;
+  border: 2px solid #1565c0;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.service-node:hover {
+  box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
+}
+
+.node-icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.node-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0d47a1;
+  text-align: center;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

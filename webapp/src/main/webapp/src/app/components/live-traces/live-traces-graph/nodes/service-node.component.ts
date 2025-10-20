@@ -19,7 +19,6 @@ import { Vflow, CustomDynamicNodeComponent } from "ngx-vflow";
 export interface ServiceNode {
   label: string;
   kind: string;
-  isLeftSide?: boolean;
 }
 
 /**
@@ -27,52 +26,8 @@ export interface ServiceNode {
  */
 @Component({
   selector: "app-service-node",
-  template: `
-    <div class="service-node">
-      <div class="node-icon">⚙️</div>
-      <div class="node-label">{{ data()?.label }}</div>
-      <handle type="source" [position]="data()?.isLeftSide ? 'left' : 'right'" />
-      <handle type="target" [position]="data()?.isLeftSide ? 'right' : 'left'" />
-    </div>
-  `,
-  styles: [
-    `
-      .service-node {
-        width: 140px;
-        height: 80px;
-        border: 2px solid #1565c0;
-        border-radius: 8px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-        box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
-        transition: all 0.2s ease;
-        cursor: pointer;
-      }
-
-      .service-node:hover {
-        box-shadow: 0 4px 12px rgba(21, 101, 192, 0.3);
-      }
-
-      .node-icon {
-        font-size: 28px;
-        margin-bottom: 4px;
-      }
-
-      .node-label {
-        font-size: 11px;
-        font-weight: 600;
-        color: #0d47a1;
-        text-align: center;
-        max-width: 120px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-    `,
-  ],
+  templateUrl: "./service-node.component.html",
+  styleUrl: "./service-node.component.css",
   imports: [Vflow],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,

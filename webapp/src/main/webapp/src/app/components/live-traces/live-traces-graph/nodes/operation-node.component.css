@@ -1,0 +1,115 @@
+.operation-node {
+  width: 320px;
+  max-height: 380px;
+  border: 2px solid #ef6c00;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  overflow: hidden;
+  padding: 0;
+  transition: width 120ms ease-in-out;
+  box-shadow: 0 2px 8px rgba(239, 108, 0, 0.2);
+}
+
+.operation-node.expanded {
+  width: 800px;
+}
+
+.operation-node:hover {
+  box-shadow: 0 4px 12px rgba(239, 108, 0, 0.3);
+}
+
+.node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px;
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-radius: 6px 6px 0 0;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.node-header:hover {
+  background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%);
+}
+
+.node-header:focus {
+  outline: 2px solid #ef6c00;
+  outline-offset: 2px;
+}
+
+.expand-icon {
+  font-size: 12px;
+  color: #ef6c00;
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.node-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e65100;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-service {
+  font-size: 10px;
+  color: #f57c00;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.trace-count {
+  font-size: 9px;
+  color: #ef6c00;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.traces-container {
+  padding: 8px;
+  background: #ffffff;
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 0 0 6px 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.traces-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.traces-container::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 3px;
+}
+
+.traces-container::-webkit-scrollbar-thumb {
+  background: #ef6c00;
+  border-radius: 3px;
+}
+
+.traces-container::-webkit-scrollbar-thumb:hover {
+  background: #e65100;
+}

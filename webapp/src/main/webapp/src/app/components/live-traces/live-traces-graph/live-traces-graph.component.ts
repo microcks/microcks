@@ -21,6 +21,7 @@ import {
   Input,
   OnInit,
   OnDestroy,
+  inject,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { ActivatedRoute } from "@angular/router";
@@ -39,6 +40,18 @@ import { ReadableSpan } from "@opentelemetry/sdk-trace-base";
 import { ExternalUserNodeComponent } from "./nodes/external-user-node.component";
 import { ServiceNodeComponent } from "./nodes/service-node.component";
 import { OperationNodeComponent } from "./nodes/operation-node.component";
+
+/**
+ * Hierarchy node data structure for d3-hierarchy.
+ */
+interface HierarchyNodeData {
+  id: string;
+  kind: "app" | "service" | "operation";
+  label: string;
+  type?: typeof ExternalUserNodeComponent;
+  serviceName?: string;
+  children?: HierarchyNodeData[];
+}
 
 /**
  * Component for displaying live traces in a hierarchical graph visualization.
@@ -97,10 +110,9 @@ export class LiveTracesGraphComponent
 
   private subscription?: Subscription;
 
-  constructor(
-    public manager: LiveTracesManagerService,
-    private route: ActivatedRoute,
-  ) {}
+  // Injected services
+  public manager = inject(LiveTracesManagerService);
+  private route = inject(ActivatedRoute);
 
   ngOnInit(): void {
     // Check if allowCustomization is set in route data
@@ -164,7 +176,7 @@ export class LiveTracesGraphComponent
     this.edges = [];
     this.hasInitiallyFitView = false;
     this.knownServiceOperations.clear();
-    
+
     // Connect to trace stream
     this.manager.connect();
   }
@@ -233,11 +245,11 @@ export class LiveTracesGraphComponent
     edges: Edge[];
   } {
     // Build hierarchical data structure from tracesMap
-    const children: any[] = [];
-    
+    const children: HierarchyNodeData[] = [];
+
     tracesMap.forEach((_, key) => {
       const [serviceName, operationName] = key.split("::");
-      
+
       let serviceNode = children.find((c) => c.id === `svc:${serviceName}`);
       if (!serviceNode) {
         serviceNode = {
@@ -248,7 +260,10 @@ export class LiveTracesGraphComponent
         };
         children.push(serviceNode);
       }
-      
+
+      if (!serviceNode.children) {
+        serviceNode.children = [];
+      }
       serviceNode.children.push({
         id: `op:${serviceName}:${operationName}`,
         kind: "operation",
@@ -257,7 +272,7 @@ export class LiveTracesGraphComponent
       });
     });
 
-    const data: any = {
+    const data: HierarchyNodeData = {
       id: "external-user",
       kind: "app",
       label: "External User",
@@ -281,7 +296,7 @@ export class LiveTracesGraphComponent
 
     tree(root);
 
-    const nodes: ComponentDynamicNode<any>[] = [];
+    const nodes: ComponentDynamicNode[] = [];
     const edges: Edge[] = [];
 
     // Use Cartesian coordinates directly (horizontal tree to the right)
@@ -294,17 +309,17 @@ export class LiveTracesGraphComponent
       const kind: "app" | "service" | "operation" = nd.data.kind;
       const label: string = nd.data.label;
 
-      const payload: any = { label, kind };
-      if (kind === "operation") {
-        payload.serviceName = nd.data.serviceName;
-        payload.operationName = nd.data.label;
+      const payload: Record<string, unknown> = { label, kind };
+      if (kind === "operation" && nd.data.serviceName) {
+        payload["serviceName"] = nd.data.serviceName;
+        payload["operationName"] = nd.data.label;
         // Get the filtered observable for this service-operation
         const traces$ = this.getTracesForServiceOperation(
           nd.data.serviceName,
           nd.data.label,
         );
         if (traces$) {
-          payload.traces$ = traces$;
+          payload["traces$"] = traces$;
         }
       }
 
@@ -319,8 +334,8 @@ export class LiveTracesGraphComponent
 
     // Build edges from hierarchy links
     root.links().forEach((lnk) => {
-      const sid = (lnk.source.data as any).id as string;
-      const tid = (lnk.target.data as any).id as string;
+      const sid = (lnk.source.data as HierarchyNodeData).id;
+      const tid = (lnk.target.data as HierarchyNodeData).id;
       edges.push({
         id: `${sid}->${tid}`,
         source: sid,
