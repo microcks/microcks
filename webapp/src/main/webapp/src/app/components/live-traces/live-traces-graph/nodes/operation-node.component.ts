@@ -64,9 +64,10 @@ export interface OperationNode {
         max-height: 380px;
         border: 2px solid #ef6c00;
         border-radius: 8px;
-        display: block;
+        display: flex;
+        flex-direction: column;
         background: #ffffff;
-        overflow: auto;
+        overflow: hidden;
         padding: 0;
         transition: width 120ms ease-in-out;
         box-shadow: 0 2px 8px rgba(239, 108, 0, 0.2);
@@ -74,7 +75,6 @@ export interface OperationNode {
 
       .operation-node.expanded {
         width: 800px;
-        overflow: visible;
       }
 
       .operation-node:hover {
@@ -90,6 +90,7 @@ export interface OperationNode {
         padding: 8px;
         background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
         border-radius: 6px 6px 0 0;
+        flex-shrink: 0;
       }
 
       .expand-icon {
@@ -138,9 +139,12 @@ export interface OperationNode {
       .traces-container {
         padding: 8px;
         background: #ffffff;
-        max-height: 350px;
+        max-height: 320px;
         overflow-y: auto;
+        overflow-x: hidden;
         border-radius: 0 0 6px 6px;
+        flex: 1;
+        min-height: 0;
       }
 
       .traces-container::-webkit-scrollbar {

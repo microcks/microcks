@@ -42,8 +42,8 @@ import { OperationNodeComponent } from "./nodes/operation-node.component";
 
 /**
  * Component for displaying live traces in a hierarchical graph visualization.
- * Uses ngx-vflow and d3-hierarchy to create a radial cluster layout showing:
- * - External User (root) → Services → Operations
+ * Uses ngx-vflow and d3-hierarchy to create a horizontal tree layout showing:
+ * - External User (root) → Services → Operations (left to right)
  * - Live traces grouped by service and operation
  * - Animated edges showing data flow
  *
@@ -78,9 +78,9 @@ export class LiveTracesGraphComponent
   protected nodes: DynamicNode[] = [];
   protected edges: Edge[] = [];
 
-  // Layout parameters
-  private baseRadius = 300; // distance of services from external user
-  private opRingRadius = 150; // additional radius for operations around service
+  // Layout parameters for horizontal tree
+  private baseRadius = 300; // horizontal distance between levels
+  private opRingRadius = 150; // additional horizontal spacing for operations
 
   // Track if initial fitView has been done
   private hasInitiallyFitView = false;
@@ -90,6 +90,10 @@ export class LiveTracesGraphComponent
 
   // Track known service-operation combinations to detect new ones
   private knownServiceOperations = new Set<string>();
+
+  // Observable properties for template bindings
+  protected totalServices$!: Observable<number>;
+  protected totalOperations$!: Observable<number>;
 
   private subscription?: Subscription;
 
@@ -114,10 +118,27 @@ export class LiveTracesGraphComponent
   ngAfterViewInit(): void {
     this.traceMap$ = this.manager.traces$.pipe(
       map((traces) => {
-        // Update service-operation mapping and observables
-        return this.updateServiceOperationObservables(traces);
+        // Build service-operation mapping from traces
+        return this.buildServiceOperationTraceMap(traces);
       }),
     );
+
+    // Initialize observable properties for template
+    this.totalServices$ = this.traceMap$.pipe(
+      map((tracesMap) => {
+        const services = new Set<string>();
+        tracesMap.forEach((__, key) => {
+          const [service] = key.split("::");
+          services.add(service);
+        });
+        return services.size;
+      }),
+    );
+
+    this.totalOperations$ = this.traceMap$.pipe(
+      map((tracesMap) => tracesMap.size),
+    );
+
     // Subscribe to trace map updates to rebuild graph only when new operations appear
     this.subscription = this.traceMap$.subscribe((tracesMap) => {
       const hasNewOperations = this.checkForNewOperations(tracesMap);
@@ -132,6 +153,20 @@ export class LiveTracesGraphComponent
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
+  }
+
+  /**
+   * Connect to live traces and clear graph state.
+   */
+  connect(): void {
+    // Clear graph-specific state before connecting
+    this.nodes = [];
+    this.edges = [];
+    this.hasInitiallyFitView = false;
+    this.knownServiceOperations.clear();
+    
+    // Connect to trace stream
+    this.manager.connect();
   }
 
   /**
@@ -184,38 +219,41 @@ export class LiveTracesGraphComponent
           vf.fitView({ duration: 300 });
           this.hasInitiallyFitView = true;
         }
-      }, 1000);
+      }, 200);
     }
   }
 
   /**
-   * Build a hierarchical radial cluster layout using d3-hierarchy.
-   * Structure: External User → Services → Operations
+   * Build a hierarchical horizontal tree layout using d3-hierarchy.
+   * Structure: External User → Services → Operations (left to right)
+   * @param tracesMap Map of service-operation keys to trace arrays
    */
   private buildClusterGraph(tracesMap: Map<string, ReadableSpan[][]>): {
     nodes: DynamicNode[];
     edges: Edge[];
   } {
-    // Build hierarchical data structure
+    // Build hierarchical data structure from tracesMap
     const children: any[] = [];
-    this.getServiceOperationKeys().forEach((d) => {
-      d.forEach(([serviceName, operationName]) => {
-        let serviceNode = children.find((c) => c.id === `svc:${serviceName}`);
-        if (!serviceNode) {
-          serviceNode = {
-            id: `svc:${serviceName}`,
-            kind: "service",
-            label: serviceName,
-            children: [],
-          };
-          children.push(serviceNode);
-        }
-        serviceNode.children.push({
-          id: `op:${serviceName}:${operationName}`,
-          kind: "operation",
-          label: operationName,
-          serviceName: serviceName,
-        });
+    
+    tracesMap.forEach((_, key) => {
+      const [serviceName, operationName] = key.split("::");
+      
+      let serviceNode = children.find((c) => c.id === `svc:${serviceName}`);
+      if (!serviceNode) {
+        serviceNode = {
+          id: `svc:${serviceName}`,
+          kind: "service",
+          label: serviceName,
+          children: [],
+        };
+        children.push(serviceNode);
+      }
+      
+      serviceNode.children.push({
+        id: `op:${serviceName}:${operationName}`,
+        kind: "operation",
+        label: operationName,
+        serviceName: serviceName,
       });
     });
 
@@ -230,28 +268,27 @@ export class LiveTracesGraphComponent
     // Create d3 hierarchy
     const root = d3h.hierarchy(data);
 
-    // Calculate max radius for layout
-    const maxRadius = this.baseRadius + this.opRingRadius;
-    const cluster = d3h
-      .cluster<any>()
-      .size([0.5 * Math.PI, maxRadius])
-      .separation((a, b) => (a.parent == b.parent ? 1 : 2) / a.depth);
+    // Calculate tree dimensions (horizontal layout)
+    const treeWidth = this.baseRadius + this.opRingRadius;
+    const treeHeight = 800; // Vertical spread
+    const tree = d3h
+      .tree<any>()
+      .size([treeHeight, treeWidth])
+      .separation((a, b) => {
+        // More space between operations of different services
+        return a.parent == b.parent ? 1 : 2;
+      });
 
-    cluster(root);
+    tree(root);
 
     const nodes: ComponentDynamicNode<any>[] = [];
     const edges: Edge[] = [];
 
-    // Convert polar coordinates to Cartesian
+    // Use Cartesian coordinates directly (horizontal tree to the right)
     root.descendants().forEach((nd) => {
-      let angle = (nd.x as number) || 0;
-      let r = (nd.y as number) || 0;
-
-      if (!Number.isFinite(angle)) angle = 0;
-      if (!Number.isFinite(r)) r = 0;
-
-      const x = Math.cos(angle - Math.PI / 4) * r;
-      const y = Math.sin(angle - Math.PI / 4) * r;
+      // d3.tree sets x (vertical position) and y (horizontal position from root)
+      const x = (nd.y as number) || 0; // Horizontal: left to right
+      const y = (nd.x as number) || 0; // Vertical: top to bottom
 
       const id: string = nd.data.id;
       const kind: "app" | "service" | "operation" = nd.data.kind;
@@ -312,23 +349,12 @@ export class LiveTracesGraphComponent
   }
 
   /**
-   * Get total count of operations across all services.
+   * Build a map of service-operation combinations to their corresponding traces.
+   * Groups traces by extracting service and operation names from span attributes.
+   * @param traces Array of trace spans to group
+   * @returns Map with keys in format "service::operation" pointing to arrays of traces
    */
-  getTotalOperations(): Observable<number> {
-    return this.traceMap$.pipe(
-      map((tracesMap) => {
-        let count = 0;
-        tracesMap.forEach((_, __) => count++);
-        return count;
-      }),
-    );
-  }
-
-  /**
-   * Update the service-operation filtered observables when new traces arrive.
-   * Creates or updates observables for each service-operation combination found in the trace.
-   */
-  private updateServiceOperationObservables(
+  private buildServiceOperationTraceMap(
     traces: ReadableSpan[][],
   ): Map<string, ReadableSpan[][]> {
     if (!traces || traces.length === 0) return new Map();
@@ -369,33 +395,5 @@ export class LiveTracesGraphComponent
   ): Observable<ReadableSpan[][]> | null {
     const key = `${service}::${operation}`;
     return this.traceMap$.pipe(map((tracesMap) => tracesMap.get(key) || []));
-  }
-
-  /**
-   * Get all available service-operation combinations currently being tracked.
-   * @returns Array of [service, operation] tuples
-   */
-  getServiceOperationKeys(): Observable<[string, string][]> {
-    return this.traceMap$.pipe(
-      map((tracesMap) => {
-        const keys: [string, string][] = [];
-        tracesMap.forEach((_, key) => {
-          const [service, operation] = key.split("::");
-          keys.push([service, operation]);
-        });
-        return keys;
-      }),
-    );
-  }
-
-  /**  * Get total count of Services being tracked. */
-  getTotalServices(): Observable<number> {
-    return this.getServiceOperationKeys().pipe(
-      map((keys) => {
-        const services = new Set<string>();
-        keys.forEach(([service, _]) => services.add(service));
-        return services.size;
-      }),
-    );
   }
 }

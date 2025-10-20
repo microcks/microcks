@@ -19,6 +19,7 @@ import { Vflow, CustomDynamicNodeComponent } from "ngx-vflow";
 export interface ServiceNode {
   label: string;
   kind: string;
+  isLeftSide?: boolean;
 }
 
 /**
@@ -30,8 +31,8 @@ export interface ServiceNode {
     <div class="service-node">
       <div class="node-icon">⚙️</div>
       <div class="node-label">{{ data()?.label }}</div>
-      <handle type="source" position="right" />
-      <handle type="target" position="left" />
+      <handle type="source" [position]="data()?.isLeftSide ? 'left' : 'right'" />
+      <handle type="target" [position]="data()?.isLeftSide ? 'right' : 'left'" />
     </div>
   `,
   styles: [

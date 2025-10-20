@@ -9,7 +9,7 @@
     [allowCustomization]="allowCustomization"
     [traceCount]="(manager.traces$ | async)?.length || 0"
     [totalEvents]="manager.totalEvents"
-    (connectClick)="manager.connect()"
+    (connectClick)="connect()"
     (disconnectClick)="manager.disconnect()"
     (prefillClick)="manager.prefill()"
     (clearClick)="clear()"
@@ -24,10 +24,10 @@
           >{{ (manager.traces$ | async)?.length || 0 }} trace(s)</span
         >
         <span class="separator">•</span>
-        <span class="badge">{{ getTotalServices() | async }} service(s)</span>
+        <span class="badge">{{ (totalServices$ | async) || 0 }} service(s)</span>
         <span class="separator">•</span>
         <span class="badge"
-          >{{ getTotalOperations() | async }} operation(s)</span
+          >{{ (totalOperations$ | async) || 0 }} operation(s)</span
         >
       </p>
     </div>
