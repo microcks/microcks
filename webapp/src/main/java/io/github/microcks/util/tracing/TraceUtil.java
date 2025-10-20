@@ -23,8 +23,7 @@ import io.opentelemetry.api.trace.Span;
 /**
  * Utility class for managing tracing functionality. This class provides constants and methods to enable explain tracing
  * in the current context.
- *
- * @author microcks-team
+ * @author Apoorva Srinivas Appadoo
  */
 public final class TraceUtil {
 
@@ -45,7 +44,6 @@ public final class TraceUtil {
     * Enables explain tracing for the current span context. This method adds the explain-trace attribute to the current
     * active span, marking it for capture and storage by the tracing infrastructure. If there is no active span in the
     * current context, this method will have no effect
-    *
     * @return true if explain tracing was successfully enabled on the current span, false if there was no active span or
     *         if the operation failed
     */
@@ -74,30 +72,34 @@ public final class TraceUtil {
     * event name in tracing UIs.
     */
    public static AttributesBuilder explainSpanEventBuilder(String message) {
-      return Attributes.builder().put("message", message);
+      return Attributes.builder().put(CommonAttributes.MESSAGE, message);
    }
 
    /**
     * Adds a Script log event to the current span with custom attributes.
-    *
     * @param level        Log level (e\.g\. INFO, ERROR)
     * @param message      Log message to record
     * @param scriptEngine The script engine used (e.g., "groovy", "javascript")
     * @param t            Associated exception, can be null
-    *
     */
-   public static void addSpanLogEvent(String level, String message, String scriptEngine, Throwable t) {
-      AttributesBuilder b = Attributes.builder().put(AttributeKey.stringKey("level"), level)
-            .put(AttributeKey.stringKey("script.log"), message == null ? "" : message)
-            .put(AttributeKey.stringKey("script.engine"), scriptEngine)
-            .put(AttributeKey.stringKey("message"), "Script log message");
+   public static void addSpanLogEvent(LogLevel level, String message, String scriptEngine, Throwable t) {
+      AttributesBuilder b = Attributes.builder().put(AttributeKey.stringKey("level"), level.name())
+            .put(CommonAttributes.SCRIPT_LOG, message == null ? "" : message)
+            .put(CommonAttributes.SCRIPT_ENGINE, scriptEngine).put(CommonAttributes.MESSAGE, "Script log message");
       if (t != null) {
          b.put(AttributeKey.stringKey("exception.type"), t.getClass().getName());
          if (t.getMessage() != null) {
             b.put(AttributeKey.stringKey("exception.message"), t.getMessage());
          }
       }
-      Span.current().addEvent("script.log", b.build());
+      Span.current().addEvent("script_log", b.build());
    }
 
+   /** Enumeration of log levels for tracing events. */
+   public enum LogLevel {
+      INFO,
+      WARN,
+      ERROR,
+      DEBUG
+   }
 }

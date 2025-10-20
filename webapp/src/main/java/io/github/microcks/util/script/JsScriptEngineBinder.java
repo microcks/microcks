@@ -17,8 +17,6 @@ package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
-import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
-import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -59,6 +57,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
+import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
+import static io.github.microcks.util.tracing.TraceUtil.LogLevel;
+
 /**
  * Utility class that holds methods for creating binding environments and evaluation context for a QuickJs4J
  * ScriptEngine.
@@ -67,6 +69,8 @@ import java.util.Map;
 public class JsScriptEngineBinder {
 
    private static final Logger log = LoggerFactory.getLogger(JsScriptEngineBinder.class);
+
+   private static final String ENGINE_NAME = "javascript";
 
    private static final ScriptCache cache = new LRUScriptCache(100);
 
@@ -95,30 +99,30 @@ public class JsScriptEngineBinder {
       @HostFunction
       public void info(String str) {
          log.info(str);
-         addSpanLogEvent("INFO", str, "javascript", null);
+         addSpanLogEvent(LogLevel.INFO, str, ENGINE_NAME, null);
       }
 
       @HostFunction
       public void debug(String str) {
          log.debug(str);
-         addSpanLogEvent("DEBUG", str, "javascript", null);
+         addSpanLogEvent(LogLevel.DEBUG, str, ENGINE_NAME, null);
       }
 
       @HostFunction
       public void warn(String str) {
          log.warn(str);
-         addSpanLogEvent("WARN", str, "javascript", null);
+         addSpanLogEvent(LogLevel.WARN, str, ENGINE_NAME, null);
       }
 
       @HostFunction
       public void error(String str) {
          log.error(str);
-         addSpanLogEvent("ERROR", str, "javascript", null);
+         addSpanLogEvent(LogLevel.ERROR, str, ENGINE_NAME, null);
       }
    }
 
    @Builtins("store")
-   public final static class StoreApi {
+   public static final class StoreApi {
       private final StateStore delegate;
 
       public StoreApi(StateStore store) {
@@ -149,9 +153,8 @@ public class JsScriptEngineBinder {
    private static final ObjectMapper mapper = new ObjectMapper();
 
    @Builtins("requestContext")
-   public final static class RequestContextApi {
+   public static final class RequestContextApi {
       private final Map<String, Object> delegate;
-
 
       public RequestContextApi(Map<String, Object> requestContext) {
          this.delegate = requestContext;
@@ -169,7 +172,7 @@ public class JsScriptEngineBinder {
    }
 
    @Builtins("mockRequest")
-   public final static class MockRequestApi {
+   public static final class MockRequestApi {
       private final FakeScriptMockRequest delegate;
       private final ObjectMapper mapper = new ObjectMapper();
 
@@ -239,7 +242,7 @@ public class JsScriptEngineBinder {
 
             // Add headers if provided
             if (rawHeaders != null) {
-               rawHeaders.fields().forEachRemaining(entry -> {
+               rawHeaders.properties().forEach(entry -> {
                   String key = entry.getKey();
                   JsonNode valueNode = entry.getValue();
 
@@ -308,14 +311,12 @@ public class JsScriptEngineBinder {
       mockRequest.setURIParameters(uriParameters);
 
       // Create bindings and put content according to SoapUI binding environment.
-      Engine engine = Engine.builder().withCache(cache).addInvokables(JsApi_Invokables.toInvokables())
+      return Engine.builder().withCache(cache).addInvokables(JsApi_Invokables.toInvokables())
             .addBuiltins(LogContext_Builtins.toBuiltins(new LogContext()))
             .addBuiltins(StoreApi_Builtins.toBuiltins(new StoreApi(stateStore)))
             .addBuiltins(RequestContextApi_Builtins.toBuiltins(new RequestContextApi(requestContext)))
             .addBuiltins(MockRequestApi_Builtins.toBuiltins(new MockRequestApi(mockRequest)))
             .addBuiltins(CustomBuiltins_Builtins.toBuiltins(new CustomBuiltins())).build();
-
-      return engine;
    }
 
    public static String wrapIntoFunction(String script) {
@@ -342,8 +343,8 @@ public class JsScriptEngineBinder {
                      .put("dispatch.script", script == null ? "" : script).build());
          Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
          if (runner != null) {
-            log.error("script stdout: " + runner.stdout());
-            log.error("script stderr: " + runner.stderr());
+            log.error("script stdout: {}", runner.stdout());
+            log.error("script stderr: {}", runner.stderr());
             Span.current().addEvent("script_error_output",
                   TraceUtil.explainSpanEventBuilder("Script error output")
                         .put("script.stdout", runner.stdout() == null ? "" : runner.stdout())
