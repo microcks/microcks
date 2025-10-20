@@ -220,11 +220,11 @@ export class LiveTracesGraphComponent
     this.nodes = nodes;
     this.edges = edges;
 
-    // Only fit view on initial load (when graph goes from empty to having nodes)
+    // Fit view whenever graph is rebuilt (initial load or new operations)
     const hasFinite = this.nodes.every(
       (n) => Number.isFinite(n.point().x) && Number.isFinite(n.point().y),
     );
-    if (this.nodes.length > 1 && hasFinite && !this.hasInitiallyFitView) {
+    if (this.nodes.length > 1 && hasFinite) {
       setTimeout(() => {
         const vf = this.vflow();
         if (vf) {
