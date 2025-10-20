@@ -443,7 +443,6 @@ export class ServiceDetailPageComponent implements OnInit {
       serviceView: this.resolvedServiceView,
       samplesMode: 'ALL',
     };
-    console.log(`Opening ManageSamplesDialog in ${initialState.samplesMode} mode`);
     this.modalRef = this.modalService.show(ManageSamplesDialogComponent, {
       initialState,
     });
@@ -685,7 +684,7 @@ export class ServiceDetailPageComponent implements OnInit {
 
       // Result may still contain {} if no dispatchCriteria (because of SCRIPT)
       if (result.indexOf('{') != -1 && queryParameters != null) {
-        console.log('queryParameters: ' + queryParameters);
+        //console.log('queryParameters: ' + queryParameters);
         queryParameters.forEach((param) => {
           result = result.replace('{' + param.name + '}', param.value);
         });
@@ -983,7 +982,7 @@ export class ServiceDetailPageComponent implements OnInit {
       this.hasRepositoryTenancyFeatureEnabled() &&
       this.resolvedServiceView.service.metadata.labels
     ) {
-      console.log('hasRepositoryTenancyFeatureEnabled');
+      //console.log('hasRepositoryTenancyFeatureEnabled');
       const tenant =
         this.resolvedServiceView.service.metadata.labels[
           this.repositoryTenantLabel()
