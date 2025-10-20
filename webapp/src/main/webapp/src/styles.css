@@ -108,6 +108,30 @@
   --tooltip-background: #292e34;
   --tooltip-text: rgb(200, 200, 200);
   --card-box-shadow: 0 1px 1px rgba(3, 3, 3, .825);
+
+  /* Dark mode: Live traces graph colors */
+  --operation-accent: #ff9800; /* operation-accent: brighter orange for dark mode */
+  --operation-accent-dark: #fb8c00; /* operation-accent-dark: vibrant orange */
+  --operation-accent-light: #ffa726; /* operation-accent-light: lighter orange */
+  --operation-bg-start: #3d2817; /* operation-bg-start: dark brown-orange */
+  --operation-bg-end: #4d3219; /* operation-bg-end: slightly lighter brown-orange */
+  --operation-bg-hover-start: #4d3219; /* operation-bg-hover-start: hover gradient */
+  --operation-bg-hover-end: #5d3c1b; /* operation-bg-hover-end: hover gradient end */
+  --service-accent: #64b5f6; /* service-accent: bright blue for visibility */
+  --service-accent-dark: #42a5f5; /* service-accent-dark: vibrant blue */
+  --service-bg-start: #1a2f3d; /* service-bg-start: dark blue-gray */
+  --service-bg-end: #1e3847; /* service-bg-end: slightly lighter blue-gray */
+  --user-accent: #81c784; /* user-accent: bright green for visibility */
+  --user-accent-dark: #66bb6a; /* user-accent-dark: vibrant green */
+  --user-bg-start: #1f2e22; /* user-bg-start: dark green-gray */
+  --user-bg-end: #253629; /* user-bg-end: slightly lighter green-gray */
+  --graph-border: #3d4752; /* graph-border: lighter border for contrast */
+  --graph-divider: #364459; /* graph-divider: visible divider */
+  --graph-bg-subtle: #1a2332; /* graph-bg-subtle: dark canvas background with slight blue tint */
+  --graph-border-light: #2d3642; /* graph-border-light: light border */
+  --text-medium: #b0b0b0; /* text-medium: readable gray text */
+  --text-light: #888; /* text-light: lighter gray text */
+  --text-dark: #e0e0e0; /* text-dark: light text for dark mode */
 }
 
 /* Classes to toggle visibility based on light/dark logos */
