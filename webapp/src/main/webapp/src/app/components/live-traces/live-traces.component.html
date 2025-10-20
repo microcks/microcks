@@ -1,89 +1,21 @@
 <div class="live-traces">
-  <div class="controls">
-    <div class="form-inline">
-      <label for="serviceName" *ngIf="allowCustomization">Service:</label>
-      <input
-        *ngIf="allowCustomization"
-        id="serviceName"
-        type="text"
-        class="form-control form-control-sm"
-        [(ngModel)]="serviceName"
-        placeholder="Service name"
-        [disabled]="connected"
-      />
-      <label for="operationName" *ngIf="allowCustomization">Operation:</label>
-      <input
-        *ngIf="allowCustomization"
-        id="operationName"
-        type="text"
-        class="form-control form-control-sm"
-        [(ngModel)]="operationName"
-        placeholder="Operation name"
-        [disabled]="connected"
-      />
-      <label for="clientIpFilter">Client IP:</label>
-      <input
-        id="clientIpFilter"
-        type="text"
-        class="form-control form-control-sm"
-        [(ngModel)]="clientIpFilter"
-        placeholder="IP filter (regex)"
-        [disabled]="connected"
-      />
-    </div>
-    <div class="button-group">
-      <button
-        class="btn btn-default btn-sm"
-        (click)="connect()"
-        [disabled]="connected || !serviceName || !operationName"
-      >
-        <span class="fa fa-play"></span> Connect
-      </button>
-      <button
-        class="btn btn-default btn-sm"
-        (click)="disconnect()"
-        [disabled]="!connected"
-      >
-        <span class="fa fa-stop"></span> Disconnect
-      </button>
-      <button
-        class="btn btn-default btn-sm"
-        (click)="prefill()"
-        [disabled]="isLoading || !serviceName || !operationName"
-      >
-        <span
-          class="fa"
-          [class.fa-download]="!isLoading"
-          [class.fa-spinner]="isLoading"
-          [class.fa-spin]="isLoading"
-        ></span>
-        {{ isLoading ? "Loading..." : "Prefill" }}
-      </button>
-      <button
-        class="btn btn-default btn-sm"
-        (click)="clear()"
-        [disabled]="traces.length === 0"
-      >
-        <span class="fa fa-trash"></span> Clear
-      </button>
-      <span
-        class="status"
-        [class.text-success]="connected"
-        [class.text-muted]="!connected"
-      >
-        {{ connected ? "Connected" : "Disconnected" }}
-        <span
-          class="recording-indicator"
-          [class.recording]="connected"
-          [class.not-recording]="!connected"
-        ></span>
-      </span>
-      <span class="count" *ngIf="totalEvents">
-        | {{ totalEvents }} event(s)</span
-      >
-    </div>
-    <div *ngIf="error" class="text-danger">{{ error }}</div>
-  </div>
+  <app-live-traces-controls
+    [(serviceName)]="manager.serviceName"
+    [(operationName)]="manager.operationName"
+    [(clientIpFilter)]="manager.clientIpFilter"
+    [connected]="manager.connected"
+    [isLoading]="manager.isLoading"
+    [error]="manager.error"
+    [allowCustomization]="allowCustomization"
+    [traceCount]="(manager.traces$ | async)?.length || 0"
+    [totalEvents]="manager.totalEvents"
+    (connectClick)="manager.connect()"
+    (disconnectClick)="manager.disconnect()"
+    (prefillClick)="manager.prefill()"
+    (clearClick)="manager.clear()"
+  ></app-live-traces-controls>
 
-  <app-trace-group-list [traces]="traces"></app-trace-group-list>
+  <app-trace-group-list
+    [traces]="(manager.traces$ | async) || []"
+  ></app-trace-group-list>
 </div>

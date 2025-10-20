@@ -1,0 +1,69 @@
+<div class="live-traces-graph">
+  <app-live-traces-controls
+    [(serviceName)]="manager.serviceName"
+    [(operationName)]="manager.operationName"
+    [(clientIpFilter)]="manager.clientIpFilter"
+    [connected]="manager.connected"
+    [isLoading]="manager.isLoading"
+    [error]="manager.error"
+    [allowCustomization]="allowCustomization"
+    [traceCount]="(manager.traces$ | async)?.length || 0"
+    [totalEvents]="manager.totalEvents"
+    (connectClick)="connect()"
+    (disconnectClick)="manager.disconnect()"
+    (prefillClick)="manager.prefill()"
+    (clearClick)="clear()"
+  ></app-live-traces-controls>
+
+  <!-- Graph visualization area -->
+  <div class="graph-container">
+    <div class="graph-info">
+      <h4>Trace Flow Visualization</h4>
+      <p class="info-text">
+        <span class="badge"
+          >{{ (manager.traces$ | async)?.length || 0 }} trace(s)</span
+        >
+        <span class="separator">•</span>
+        <span class="badge">{{ (totalServices$ | async) || 0 }} service(s)</span>
+        <span class="separator">•</span>
+        <span class="badge"
+          >{{ (totalOperations$ | async) || 0 }} operation(s)</span
+        >
+      </p>
+    </div>
+
+    <!-- ngx-vflow canvas -->
+    <div class="canvas-wrapper">
+      <vflow
+        *ngIf="nodes.length > 0"
+        [nodes]="nodes"
+        [edges]="edges"
+        view="auto"
+        [background]="{ type: 'dots', backgroundColor: 'var(--bs-light)' }"
+      >
+        <!-- Custom edge template with animation -->
+        <ng-template let-ctx edge>
+          <svg:path
+            class="animated-edge"
+            fill="none"
+            [attr.d]="ctx.path()"
+            [attr.stroke-width]="2"
+            [attr.stroke]="'#666'"
+            [attr.marker-end]="ctx.markerEnd()"
+          />
+        </ng-template>
+
+        <mini-map [scaleOnHover]="false" />
+      </vflow>
+
+      <!-- Empty state -->
+      <div *ngIf="nodes.length === 0" class="empty-state">
+        <div class="empty-icon">📊</div>
+        <p>No traces to visualize</p>
+        <p class="text-muted">
+          Connect or prefill to start visualizing trace flows
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

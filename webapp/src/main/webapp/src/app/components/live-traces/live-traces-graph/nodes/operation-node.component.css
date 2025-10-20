@@ -1,0 +1,115 @@
+.operation-node {
+  width: 320px;
+  max-height: 380px;
+  border: 2px solid var(--operation-accent);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  overflow: hidden;
+  padding: 0;
+  transition: width 120ms ease-in-out;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--operation-accent) 20%, transparent);
+}
+
+.operation-node.expanded {
+  width: 800px;
+}
+
+.operation-node:hover {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--operation-accent) 30%, transparent);
+}
+
+.node-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  padding: 8px;
+  background: linear-gradient(135deg, var(--operation-bg-start) 0%, var(--operation-bg-end) 100%);
+  border-radius: 6px 6px 0 0;
+  flex-shrink: 0;
+  outline: none;
+}
+
+.node-header:hover {
+  background: linear-gradient(135deg, var(--operation-bg-hover-start) 0%, var(--operation-bg-hover-end) 100%);
+}
+
+.node-header:focus {
+  outline: 2px solid var(--operation-accent);
+  outline-offset: 2px;
+}
+
+.expand-icon {
+  font-size: 12px;
+  color: var(--operation-accent);
+  flex-shrink: 0;
+  width: 16px;
+  text-align: center;
+}
+
+.node-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.node-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.node-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--operation-accent-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-service {
+  font-size: 10px;
+  color: var(--operation-accent-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+.trace-count {
+  font-size: 9px;
+  color: var(--operation-accent);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.traces-container {
+  padding: 8px;
+  background: var(--background);
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  border-radius: 0 0 6px 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.traces-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.traces-container::-webkit-scrollbar-track {
+  background: var(--surface-subtle);
+  border-radius: 3px;
+}
+
+.traces-container::-webkit-scrollbar-thumb {
+  background: var(--operation-accent);
+  border-radius: 3px;
+}
+
+.traces-container::-webkit-scrollbar-thumb:hover {
+  background: var(--operation-accent-dark);
+}

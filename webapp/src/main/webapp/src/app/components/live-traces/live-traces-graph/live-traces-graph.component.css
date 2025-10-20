@@ -1,0 +1,125 @@
+.live-traces-graph {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.graph-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background);
+  border: 1px solid var(--graph-border);
+  border-radius: 6px;
+  padding: 16px;
+  margin-top: 12px;
+  min-height: 600px;
+}
+
+.graph-info {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--graph-divider);
+}
+
+.graph-info h4 {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-default);
+}
+
+.info-text {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background-color: var(--service-bg-start);
+  color: var(--service-accent);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.separator {
+  color: var(--graph-divider);
+  font-weight: 300;
+}
+
+.canvas-wrapper {
+  position: relative;
+  flex: 1;
+  border: 1px solid var(--graph-border-light);
+  border-radius: 6px;
+  overflow: hidden;
+  min-height: 500px;
+  background-color: var(--graph-bg-subtle);
+}
+
+/* Make sure vflow fills the wrapper */
+.canvas-wrapper vflow {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.empty-state {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--text-medium);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  margin: 8px 0;
+  font-size: 16px;
+}
+
+.empty-state .text-muted {
+  color: var(--text-light);
+  font-size: 14px;
+}
+
+/* Animated edges */
+.animated-edge {
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 8 6;
+  stroke-dashoffset: 200;
+  animation: move-edge-stroke 2.5s linear infinite;
+}
+
+@keyframes move-edge-stroke {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .graph-container {
+    min-height: 400px;
+  }
+
+  .canvas-wrapper {
+    min-height: 350px;
+  }
+
+  .info-text {
+    flex-wrap: wrap;
+  }
+}
