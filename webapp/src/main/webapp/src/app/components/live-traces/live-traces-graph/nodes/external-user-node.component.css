@@ -1,20 +1,20 @@
 .external-user-node {
   width: 140px;
   height: 80px;
-  border: 2px solid #2e7d32;
+  border: 2px solid var(--user-accent);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+  background: linear-gradient(135deg, var(--user-bg-start) 0%, var(--user-bg-end) 100%);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--user-accent) 20%, transparent);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .external-user-node:hover {
-  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--user-accent) 30%, transparent);
 }
 
 .node-icon {
@@ -25,6 +25,6 @@
 .node-label {
   font-size: 12px;
   font-weight: 600;
-  color: #1b5e20;
+  color: var(--user-accent-dark);
   text-align: center;
 }

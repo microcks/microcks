@@ -60,6 +60,29 @@
   --tooltip-background: #393f44;
   --tooltip-text: #fff;
   --card-box-shadow: 0 1px 1px rgba(3, 3, 3, .175);
+
+  /* Live traces graph colors */
+  --operation-accent: #ef6c00; /* operation-accent: operation nodes (orange) */
+  --operation-accent-dark: #e65100; /* operation-accent-dark: operation hover/focus (dark orange) */
+  --operation-accent-light: #f57c00; /* operation-accent-light: operation secondary (light orange) */
+  --operation-bg-start: #fff3e0; /* operation-bg-start: operation gradient start */
+  --operation-bg-end: #ffe0b2; /* operation-bg-end: operation gradient end */
+  --operation-bg-hover-start: #ffe0b2; /* operation-bg-hover-start: operation hover gradient start */
+  --operation-bg-hover-end: #ffcc80; /* operation-bg-hover-end: operation hover gradient end */
+  --service-accent: #1565c0; /* service-accent: service nodes (blue) */
+  --service-accent-dark: #0d47a1; /* service-accent-dark: service text (dark blue) */
+  --service-bg-start: #e3f2fd; /* service-bg-start: service gradient start (light blue) */
+  --service-bg-end: #bbdefb; /* service-bg-end: service gradient end (blue) */
+  --user-accent: #2e7d32; /* user-accent: external user nodes (green) */
+  --user-accent-dark: #1b5e20; /* user-accent-dark: user text (dark green) */
+  --user-bg-start: #e8f5e9; /* user-bg-start: user gradient start (light green) */
+  --user-bg-end: #c8e6c9; /* user-bg-end: user gradient end (green) */
+  --graph-border: #ddd; /* graph-border: graph container borders */
+  --graph-divider: #eee; /* graph-divider: section dividers */
+  --graph-bg-subtle: #fafafa; /* graph-bg-subtle: subtle backgrounds */
+  --graph-border-light: #e0e0e0; /* graph-border-light: light borders */
+  --text-medium: #666; /* text-medium: medium emphasis text */
+  --text-light: #999; /* text-light: light emphasis text */
 }
 
 .dark {

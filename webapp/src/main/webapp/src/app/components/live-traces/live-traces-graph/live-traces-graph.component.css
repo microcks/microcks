@@ -8,8 +8,8 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background-color: #fff;
-  border: 1px solid #ddd;
+  background-color: var(--background);
+  border: 1px solid var(--graph-border);
   border-radius: 6px;
   padding: 16px;
   margin-top: 12px;
@@ -19,14 +19,14 @@
 .graph-info {
   margin-bottom: 12px;
   padding-bottom: 12px;
-  border-bottom: 2px solid #eee;
+  border-bottom: 2px solid var(--graph-divider);
 }
 
 .graph-info h4 {
   margin: 0 0 8px 0;
   font-size: 16px;
   font-weight: 600;
-  color: #333;
+  color: var(--text-dark);
 }
 
 .info-text {
@@ -40,26 +40,26 @@
 .badge {
   display: inline-block;
   padding: 4px 10px;
-  background-color: #e3f2fd;
-  color: #1565c0;
+  background-color: var(--service-bg-start);
+  color: var(--service-accent);
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
 }
 
 .separator {
-  color: #ccc;
+  color: var(--graph-divider);
   font-weight: 300;
 }
 
 .canvas-wrapper {
   position: relative;
   flex: 1;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--graph-border-light);
   border-radius: 6px;
   overflow: hidden;
   min-height: 500px;
-  background-color: #fafafa;
+  background-color: var(--graph-bg-subtle);
 }
 
 /* Make sure vflow fills the wrapper */
@@ -75,7 +75,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: #666;
+  color: var(--text-medium);
 }
 
 .empty-icon {
@@ -90,7 +90,7 @@
 }
 
 .empty-state .text-muted {
-  color: #999;
+  color: var(--text-light);
   font-size: 14px;
 }
 
