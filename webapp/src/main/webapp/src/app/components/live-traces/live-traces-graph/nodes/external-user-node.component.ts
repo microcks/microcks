@@ -19,6 +19,7 @@ import { Vflow, CustomDynamicNodeComponent } from "ngx-vflow";
 export interface ExternalUserNode {
   label: string;
   kind: string;
+  clientIpFilter?: string;
 }
 
 /**
@@ -32,4 +33,9 @@ export interface ExternalUserNode {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ExternalUserNodeComponent extends CustomDynamicNodeComponent<ExternalUserNode> {}
+export class ExternalUserNodeComponent extends CustomDynamicNodeComponent<ExternalUserNode> {
+
+  clientIpFilter(): string | undefined {
+    return this.data()?.clientIpFilter !== ".*" ? this.data()?.clientIpFilter : undefined;
+  }
+}
