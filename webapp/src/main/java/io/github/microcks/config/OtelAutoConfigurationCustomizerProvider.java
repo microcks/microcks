@@ -70,6 +70,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @see CustomExplainTraceProcessor
  * @see SpanStorageService
+ * @author Apoorva Srinivas Appadoo
  */
 @Configuration
 public class OtelAutoConfigurationCustomizerProvider {

@@ -18,13 +18,16 @@ package io.github.microcks.util.tracing;
 import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.trace.data.EventData;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.PatternSyntaxException;
 
 /**
  * Utility class for filtering spans based on service attributes.
+ * @author Apoorva Srinivas Appadoo
  */
 public class SpanFilterUtil {
 
@@ -34,7 +37,6 @@ public class SpanFilterUtil {
 
    /**
     * Check if a value matches a pattern with optional regex support.
-    *
     * @param pattern The pattern to match against (can be null, "*", or regex pattern).
     * @param value   The value to check (can be null).
     * @return True if the value matches the pattern, false otherwise.
@@ -65,7 +67,6 @@ public class SpanFilterUtil {
 
    /**
     * Check if a TraceEvent matches the provided filters.
-    *
     * @param traceEvent    TraceEvent to check
     * @param serviceName   Service name pattern (can be null, "*", or regex)
     * @param operationName Operation name pattern (can be null, "*", or regex)
@@ -84,7 +85,6 @@ public class SpanFilterUtil {
 
    /**
     * Extract TraceEvent from spans
-    *
     * @param traceId the trace ID
     * @param spans   the list of spans
     * @return the TraceEvent
@@ -101,15 +101,24 @@ public class SpanFilterUtil {
             continue;
          }
          Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
-         String serviceAttribute = (String) attributes.get(AttributeKey.stringKey("service.name"));
-         String operationAttribute = (String) attributes.get(AttributeKey.stringKey("operation.name"));
-         String clientAddressAttribute = (String) attributes.get(AttributeKey.stringKey("client.address"));
+
+         String serviceAttribute = (String) attributes.get(CommonAttributes.SERVICE_NAME);
+         String operationAttribute = (String) attributes.get(CommonAttributes.OPERATION_NAME);
          if (serviceAttribute != null)
             service = serviceAttribute;
          if (operationAttribute != null)
             operation = operationAttribute;
-         if (clientAddressAttribute != null)
-            clientAddress = clientAddressAttribute;
+
+         Optional<EventData> invocationReceivedEvent = s.toSpanData().getEvents().stream()
+               .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
+         if (invocationReceivedEvent.isPresent()) {
+            String clientAddressAttribute = invocationReceivedEvent.get().getAttributes()
+                  .get(CommonAttributes.CLIENT_ADDRESS);
+            if (clientAddressAttribute != null) {
+               clientAddress = clientAddressAttribute;
+            }
+         }
+
          if (service != null && operation != null && clientAddress != null) {
             break;
          }

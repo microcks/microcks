@@ -32,14 +32,20 @@ import java.util.Map;
 /**
  * A custom SpanProcessor that delegates span storage to SpanStorageService. This processor filters and forwards
  * relevant spans to the storage service for collection and retrieval.
- *
+ * @author Apoorva Srinivas Appadoo
  */
 @Component
 public class CustomExplainTraceProcessor implements SpanProcessor {
+
+   /** A commons logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(CustomExplainTraceProcessor.class);
 
    private final SpanStorageService spanStorageService;
 
+   /**
+    * Construct a CustomExplainTraceProcessor with the given SpanStorageService.
+    * @param spanStorageService the span storage service
+    */
    public CustomExplainTraceProcessor(SpanStorageService spanStorageService) {
       this.spanStorageService = spanStorageService;
    }
@@ -59,6 +65,7 @@ public class CustomExplainTraceProcessor implements SpanProcessor {
       // Called when a span ends - delegate to storage service if span matches filter criteria
       // if span has attribute explain-trace save it
       Map<AttributeKey<?>, Object> attributes = span.toSpanData().getAttributes().asMap();
+
       if (attributes.keySet().stream()
             .anyMatch(key -> SpanStorageService.valuesEqualAttr(key, TraceUtil.EXPLAIN_TRACE_ATTRIBUTE))) {
          spanStorageService.storeSpan(span);

@@ -19,6 +19,7 @@ import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.junit.jupiter.api.Test;
 
@@ -75,28 +76,37 @@ class SpanFilterUtilTest {
       // Mock a ReadableSpan with specific attributes
       ReadableSpan mockSpan = mock(ReadableSpan.class);
       SpanData mockSpanData = mock(SpanData.class);
+      EventData mockEventData = mock(EventData.class);
+
       when(mockSpan.toSpanData()).thenReturn(mockSpanData);
 
       when(mockSpanData.getAttributes())
             .thenReturn(Attributes.builder().put(AttributeKey.stringKey("service.name"), "order-service")
-                  .put(AttributeKey.stringKey("operation.name"), "createOrder")
-                  .put(AttributeKey.stringKey("client.address"), "127.0.0.1").build());
+                  .put(AttributeKey.stringKey("operation.name"), "createOrder").build());
       when(mockSpan.getName()).thenReturn("createOrderSpan");
       when(mockSpan.getSpanContext()).thenReturn(null); // Simplified for this test
+
+      when(mockEventData.getName()).thenReturn("invocation_received");
+      when(mockEventData.getAttributes())
+            .thenReturn(Attributes.builder().put(AttributeKey.stringKey("client.address"), "128.0.0.1").build());
+      when(mockSpanData.getEvents()).thenReturn(List.of(mockEventData));
+
       List<ReadableSpan> spans = List.of(mockSpan);
       TraceEvent event = SpanFilterUtil.extractTraceEvent("trace-123", spans);
+
       assertNotNull(event);
       assertEquals("trace-123", event.traceId());
       assertEquals("order-service", event.service());
       assertEquals("createOrder", event.operation());
-      assertEquals("127.0.0.1", event.clientAddress());
+      assertEquals("128.0.0.1", event.clientAddress());
+
       // Test matching with exact values
-      assertTrue(SpanFilterUtil.matchesTraceEvent(event, "order-service", "createOrder", "127.0.0.1"));
+      assertTrue(SpanFilterUtil.matchesTraceEvent(event, "order-service", "createOrder", "128.0.0.1"));
       // Test matching with wildcards
       assertTrue(SpanFilterUtil.matchesTraceEvent(event, "*", "createOrder", "*"));
       assertFalse(SpanFilterUtil.matchesTraceEvent(event, "other-service", "createOrder", "*"));
       // Test matching with regex
-      assertTrue(SpanFilterUtil.matchesTraceEvent(event, ".*-service", "create.*", "127\\.0\\.0\\.1"));
-      assertFalse(SpanFilterUtil.matchesTraceEvent(event, ".*-service", "update.*", "127\\.0\\.0\\.1"));
+      assertTrue(SpanFilterUtil.matchesTraceEvent(event, ".*-service", "create.*", "128\\.0\\.0\\.1"));
+      assertFalse(SpanFilterUtil.matchesTraceEvent(event, ".*-service", "update.*", "128\\.0\\.0\\.1"));
    }
 }

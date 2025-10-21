@@ -16,6 +16,8 @@
 package io.github.microcks.service;
 
 import io.github.microcks.event.TraceEvent;
+import io.github.microcks.util.tracing.CommonAttributes;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanContext;
@@ -24,6 +26,7 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -113,7 +116,7 @@ class SpanStorageServiceTest {
    @DisplayName("Should remove oldest traces when memory limit exceeded")
    void shouldRemoveOldestTracesWhenMemoryLimitExceeded() {
       // Given
-      int maxTraces = 1000; // From SpanStorageService.MAX_TRACES
+      int maxTraces = 500; // From SpanStorageService.MAX_TRACES
 
       // When - Add more traces than the limit
       for (int i = 0; i < maxTraces + 5; i++) {
@@ -405,6 +408,7 @@ class SpanStorageServiceTest {
       SpanContext spanContext = Mockito.mock(SpanContext.class);
       SpanContext invalidParentContext = Mockito.mock(SpanContext.class);
       SpanData spanData = createMockSpanData(attributes);
+      EventData eventData = Mockito.mock(EventData.class);
 
       // Mock the SpanContext to return the correct trace ID
       when(spanContext.getTraceId()).thenReturn(traceId);
@@ -418,6 +422,11 @@ class SpanStorageServiceTest {
       when(span.getSpanContext()).thenReturn(spanContext);
       when(span.getParentSpanContext()).thenReturn(invalidParentContext);
       when(span.toSpanData()).thenReturn(spanData);
+
+      // Mock span data events to access a termination span.
+      when(eventData.getName()).thenReturn("invocation_received");
+      when(eventData.getAttributes()).thenReturn(attributes);
+      when(spanData.getEvents()).thenReturn(List.of(eventData));
 
       return span;
    }
