@@ -50,6 +50,7 @@ interface HierarchyNodeData {
   label: string;
   type?: typeof ExternalUserNodeComponent;
   serviceName?: string;
+  clientIpFilter?: string;
   children?: HierarchyNodeData[];
 }
 
@@ -278,6 +279,7 @@ export class LiveTracesGraphComponent
       label: "External User",
       type: ExternalUserNodeComponent,
       children: children,
+      clientIpFilter: this.manager.clientIpFilter,
     };
 
     // Create d3 hierarchy
@@ -310,6 +312,12 @@ export class LiveTracesGraphComponent
       const label: string = nd.data.label;
 
       const payload: Record<string, unknown> = { label, kind };
+
+      // Add client IP filter for external user node
+      if (kind === "app" && nd.data.clientIpFilter) {
+        payload["clientIpFilter"] = nd.data.clientIpFilter;
+      }
+
       if (kind === "operation" && nd.data.serviceName) {
         payload["serviceName"] = nd.data.serviceName;
         payload["operationName"] = nd.data.label;
