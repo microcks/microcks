@@ -9,7 +9,7 @@
     [attr.aria-expanded]="isExpanded()"
     aria-label="Toggle operation details">
     <div class="expand-icon">{{ isExpanded() ? "▼" : "▶" }}</div>
-    <div class="node-icon">⚡</div>
+    <div class="node-icon"><span class="fa fa-cog"></span></div>
     <div class="node-info">
       <div class="node-label">{{ data()?.label }}</div>
       <div class="trace-count">
