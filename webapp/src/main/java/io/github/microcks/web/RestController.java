@@ -22,7 +22,6 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.ParameterConstraintUtil;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.delay.DelaySpec;

@@ -29,7 +29,7 @@
     <grpc.version>1.70.0</grpc.version>
     <protoc-jar.version>3.21.8</protoc-jar.version>
     <openai-gpt3-java.version>0.18.2</openai-gpt3-java.version>
-    <opentelemetry.version>2.19.0</opentelemetry.version>
+    <opentelemetry.version>2.21.0</opentelemetry.version>
   </properties>
 
   <dependencyManagement>
@@ -85,21 +85,49 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+
     <!-- Micrometer Prometheus registry  -->
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-tracing-bridge-otel</artifactId>
     </dependency>
 
     <!-- Core OpenTelemetry dependencies -->
     <dependency>
       <groupId>io.opentelemetry.instrumentation</groupId>
       <artifactId>opentelemetry-spring-boot-starter</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>io.opentelemetry.instrumentation</groupId>
+          <artifactId>opentelemetry-jdbc</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.opentelemetry.instrumentation</groupId>
+          <artifactId>opentelemetry-spring-webflux-5.3</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.opentelemetry.instrumentation</groupId>
+          <artifactId>opentelemetry-reactor-3.1</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.opentelemetry.instrumentation</groupId>
+          <artifactId>opentelemetry-log4j-appender-2.17</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>io.opentelemetry.instrumentation</groupId>
+          <artifactId>opentelemetry-log4j-context-data-2.17-autoconfigure</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>io.opentelemetry</groupId>
       <artifactId>opentelemetry-exporter-otlp</artifactId>
     </dependency>
+
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-aop</artifactId>
@@ -537,13 +565,6 @@
                 <argument>--spring.profiles.active=prod</argument>
               </arguments>
               <classifier>exec</classifier>
-              <excludes>
-                <!-- Otel agent should be provided at the bootstrap level within the container image -->
-                <exclude>
-                  <groupId>io.opentelemetry.javaagent</groupId>
-                  <artifactId>opentelemetry-javaagent</artifactId>
-                </exclude>
-              </excludes>
             </configuration>
             <executions>
               <execution>
@@ -591,8 +612,9 @@
                 <OTEL_METRICS_EXPORTER>otlp</OTEL_METRICS_EXPORTER>
                 <OTEL_LOGS_EXPORTER>otlp</OTEL_LOGS_EXPORTER>
                 <OTEL_TRACES_EXPORTER>otlp</OTEL_TRACES_EXPORTER>
-                <OTEL_METRIC_EXPORT_INTERVAL>10000</OTEL_METRIC_EXPORT_INTERVAL>
-                <OTEL_EXPORTER_OTLP_TIMEOUT>7000</OTEL_EXPORTER_OTLP_TIMEOUT>
+                <OTEL_METRIC_EXPORT_INTERVAL>5000</OTEL_METRIC_EXPORT_INTERVAL>
+                <OTEL_EXPORTER_OTLP_ENDPOINT>http://localhost:4317</OTEL_EXPORTER_OTLP_ENDPOINT>
+                <OTEL_EXPORTER_OTLP_TIMEOUT>10000</OTEL_EXPORTER_OTLP_TIMEOUT>
               </environmentVariables>
             </configuration>
           </plugin>

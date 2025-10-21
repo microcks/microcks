@@ -42,7 +42,7 @@ import java.util.EnumSet;
 public class WebConfiguration implements ServletContextInitializer {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(WebConfiguration.class);
+   private static final Logger log = LoggerFactory.getLogger(WebConfiguration.class);
 
    @Autowired
    private Environment env;
@@ -74,6 +74,8 @@ public class WebConfiguration implements ServletContextInitializer {
          FilterRegistration.Dynamic dynamicCorsFilter = servletContext.addFilter("dynamicCorsFilter",
                new DynamicCorsFilter(corsAllowedOrigins, corsAllowCredentials));
          dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/rest/*");
+         dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/soap/*");
+         dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/graphql/*");
       }
    }
 }
