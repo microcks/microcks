@@ -103,10 +103,11 @@ public class RestInvocationProcessor {
 
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
-    * @param serviceStateRepository The repository to access service state
-    * @param responseRepository     The repository to access responses definitions
-    * @param applicationContext     The Spring application context
-    * @param proxyService           The proxy to external URLs or services
+    * @param serviceStateRepository       The repository to access service state
+    * @param responseRepository           The repository to access responses definitions
+    * @param applicationContext           The Spring application context
+    * @param proxyService                 The proxy to external URLs or services
+    * @param opentelemetryResolverService The opentelemetry resolver
     */
    public RestInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
          ApplicationContext applicationContext, ProxyService proxyService,

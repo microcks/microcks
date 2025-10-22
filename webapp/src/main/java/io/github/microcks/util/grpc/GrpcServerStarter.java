@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,7 +65,23 @@ public class GrpcServerStarter {
       @Override
       public <ReqT, RespT> Listener<ReqT> interceptCall(ServerCall<ReqT, RespT> call, Metadata headers,
             ServerCallHandler<ReqT, RespT> next) {
-         log.info("Found headers for operation {}: {}", call.getMethodDescriptor().getFullMethodName(), headers.keys());
+         log.debug("Found headers for operation {}: {}", call.getMethodDescriptor().getFullMethodName(),
+               headers.keys());
+         log.debug("Found remote address from call: {}", call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+
+         // Extract remote client address top make it available as metadata for observability purposes.
+         SocketAddress socketAddress = call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR);
+         if (socketAddress != null) {
+            String remoteAddressWithPort = socketAddress.toString();
+
+            // remoteAddressWithPort should be in form of "/[address]:port"
+            if (remoteAddressWithPort != null && remoteAddressWithPort.startsWith("/[")) {
+               remoteAddressWithPort = remoteAddressWithPort.substring(2); // Remove leading "/["
+               remoteAddressWithPort = remoteAddressWithPort.substring(0, remoteAddressWithPort.indexOf("]"));
+               headers.put(GrpcMetadataUtil.REMOTE_ADDR_METADATA_KEY, remoteAddressWithPort);
+            }
+         }
+
          Context context = Context.current().withValue(GrpcMetadataUtil.METADATA_CTX_KEY, headers);
          return Contexts.interceptCall(context, call, headers, next);
       }

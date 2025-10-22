@@ -27,15 +27,27 @@ import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.TypeRegistry;
 import com.google.protobuf.util.JsonFormat;
 
+import io.github.microcks.service.OpenTelemetryResolverService;
+import io.github.microcks.util.grpc.GrpcMetadataUtil;
 import io.github.microcks.util.grpc.GrpcUtil;
+import io.github.microcks.util.tracing.CommonAttributes;
+import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.util.tracing.TraceUtil;
+
+import io.grpc.Metadata;
 import io.grpc.ServerCallHandler;
 import io.grpc.Status;
 import io.grpc.stub.ServerCalls;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -52,18 +64,21 @@ public class GrpcServerCallHandler {
    private final ResourceRepository resourceRepository;
 
    private final GrpcInvocationProcessor invocationProcessor;
+   private final OpenTelemetryResolverService opentelemetryResolverService;
 
    /**
     * Build a new GrpcServerCallHandler with all the repositories it needs and application context.
-    * @param serviceRepository   Repository for getting service definitions
-    * @param resourceRepository  Repository for getting service resources definitions
-    * @param invocationProcessor The invocation processor to apply gRPC mocks dispatching logic
+    * @param serviceRepository            Repository for getting service definitions
+    * @param resourceRepository           Repository for getting service resources definitions
+    * @param invocationProcessor          The invocation processor to apply gRPC mocks dispatching logic
+    * @param opentelemetryResolverService The opentelemetry resolver
     */
    public GrpcServerCallHandler(ServiceRepository serviceRepository, ResourceRepository resourceRepository,
-         GrpcInvocationProcessor invocationProcessor) {
+         GrpcInvocationProcessor invocationProcessor, OpenTelemetryResolverService opentelemetryResolverService) {
       this.serviceRepository = serviceRepository;
       this.resourceRepository = resourceRepository;
       this.invocationProcessor = invocationProcessor;
+      this.opentelemetryResolverService = opentelemetryResolverService;
    }
 
    /**
@@ -81,10 +96,10 @@ public class GrpcServerCallHandler {
     */
    protected class MockedUnaryMethod implements ServerCalls.UnaryMethod<byte[], byte[]> {
 
-      private String fullMethodName;
-      private String serviceName;
-      private String serviceVersion;
-      private String operationName;
+      private final String fullMethodName;
+      private final String serviceName;
+      private final String serviceVersion;
+      private final String operationName;
 
       /**
        * Build a UnaryMethod for handling GRPC call.
@@ -105,7 +120,41 @@ public class GrpcServerCallHandler {
          log.info("Servicing mock response for service [{}, {}] and method {}", serviceName, serviceVersion,
                operationName);
 
+         // Create an SERVER child span explicitly because Spring AOP does not apply to current method.
+         Tracer tracer = opentelemetryResolverService.getOpenTelemetry()
+               .getTracer(GrpcServerCallHandler.class.getName());
+         Span span = tracer.spanBuilder("invokeMockedUnaryMethod").setSpanKind(SpanKind.SERVER).startSpan();
+
+         try (Scope ignored = span.makeCurrent()) {
+            // Delegate processing to doInvoke().
+            doInvoke(bytes, streamObserver);
+         } finally {
+            span.end();
+         }
+      }
+
+      private void doInvoke(byte[] bytes, StreamObserver<byte[]> streamObserver) {
          long startTime = System.currentTimeMillis();
+
+         // Mark current span as explain-trace and set attributes.
+         TraceUtil.enableExplainTracing();
+         Span.current().setAttribute(CommonAttributes.SERVICE_NAME, serviceName);
+         Span.current().setAttribute(CommonAttributes.SERVICE_VERSION, serviceVersion);
+         Span.current().setAttribute(CommonAttributes.OPERATION_NAME, operationName);
+
+         // Get metadata for current context to find remote client address put there by HeaderInterceptor.
+         Metadata metadata = GrpcMetadataUtil.METADATA_CTX_KEY.get();
+         String remoteAddr = metadata.get(GrpcMetadataUtil.REMOTE_ADDR_METADATA_KEY);
+
+         // Add an event for the invocation reception with a human-friendly message.
+         Span.current().addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
+               .explainSpanEventBuilder(
+                     String.format("Received gRPC invocation %s-%s on %s", serviceName, serviceVersion, operationName))
+               .put(CommonAttributes.BODY_SIZE, bytes.length)
+               .put(CommonAttributes.BODY_CONTENT,
+                     (bytes.length > 1000 ? new String(bytes, StandardCharsets.UTF_8).substring(0, 1000) + "..."
+                           : new String(bytes, StandardCharsets.UTF_8)))
+               .put(CommonAttributes.CLIENT_ADDRESS, remoteAddr).build());
 
          try {
             // Get service and spotted operation.
@@ -150,6 +199,14 @@ public class GrpcServerCallHandler {
                DynamicMessage inMsg = DynamicMessage.parseFrom(md.getInputType(), bytes);
                String jsonBody = JsonFormat.printer().usingTypeRegistry(registry).print(inMsg);
                log.debug("Request body: {}", jsonBody);
+
+               Span.current()
+                     .addEvent(CommonEvents.BODY_PARSED.getEventName(),
+                           TraceUtil.explainSpanEventBuilder("GRPC input bytes have been converted in JSON string")
+                                 .put(CommonAttributes.BODY_SIZE, jsonBody.length())
+                                 .put(CommonAttributes.BODY_CONTENT,
+                                       (jsonBody.length() > 1000 ? jsonBody.substring(0, 1000) + "..." : jsonBody))
+                                 .build());
 
                MockInvocationContext ic = new MockInvocationContext(service, grpcOperation, null);
                GrpcResponseResult response = invocationProcessor.processInvocation(ic, startTime, jsonBody);

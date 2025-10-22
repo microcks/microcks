@@ -24,14 +24,20 @@ import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 import com.nimbusds.jose.util.StandardCharset;
+import org.springframework.data.mongodb.core.query.Meta;
 
 /**
  * Helper class containing utility to deal with GrpcMetadata.
  */
 public class GrpcMetadataUtil {
 
-   /* Key used to pass gRPC metadata from interceptor to server via context */
+   /** Key used to pass gRPC metadata from interceptor to server via context */
    public static final Context.Key<Metadata> METADATA_CTX_KEY = Context.key("grpc-metadata");
+
+   /** Key for remote address metadata entry in metadata. */
+   public static final Metadata.Key<String> REMOTE_ADDR_METADATA_KEY = Metadata.Key.of("remote-addr",
+         Metadata.ASCII_STRING_MARSHALLER);
+
 
    private GrpcMetadataUtil() {
       // Private constructor to hide the implicit public one.
