@@ -155,14 +155,11 @@ public class GrpcInvocationProcessor {
 
          // Setting delay to default one if not set.
          if (ic.operation().getDefaultDelay() != null) {
-            Long defaultDelay = ic.operation().getDefaultDelay();
-            // TODO: Get DefaultStrategy
-            DelaySpec delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
-
+            DelaySpec delay = new DelaySpec(ic.operation().getDefaultDelay(), ic.operation().getDefaultDelayStrategy());
             span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
                   TraceUtil.explainSpanEventBuilder("Configured response delay")
-                        .put(CommonAttributes.DELAY_VALUE, delay != null ? delay.baseValue() : 0)
-                        .put(CommonAttributes.DELAY_STRATEGY, delay != null ? delay.strategyName() : "N/A").build());
+                        .put(CommonAttributes.DELAY_VALUE, delay.baseValue())
+                        .put(CommonAttributes.DELAY_STRATEGY, delay.strategyName()).build());
 
             MockControllerCommons.waitForDelay(startTime, delay);
          }
