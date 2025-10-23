@@ -74,6 +74,7 @@ public class WebConfiguration implements ServletContextInitializer {
          FilterRegistration.Dynamic dynamicCorsFilter = servletContext.addFilter("dynamicCorsFilter",
                new DynamicCorsFilter(corsAllowedOrigins, corsAllowCredentials));
          dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/rest/*");
+         dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/rest-valid/*");
          dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/soap/*");
          dynamicCorsFilter.addMappingForUrlPatterns(disps, true, "/graphql/*");
       }
