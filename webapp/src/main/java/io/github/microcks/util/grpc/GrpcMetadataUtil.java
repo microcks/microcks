@@ -24,7 +24,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 import com.nimbusds.jose.util.StandardCharset;
-import org.springframework.data.mongodb.core.query.Meta;
 
 /**
  * Helper class containing utility to deal with GrpcMetadata.

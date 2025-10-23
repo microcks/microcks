@@ -16,7 +16,6 @@
 package io.github.microcks.service;
 
 import io.github.microcks.event.TraceEvent;
-import io.github.microcks.util.tracing.CommonAttributes;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;

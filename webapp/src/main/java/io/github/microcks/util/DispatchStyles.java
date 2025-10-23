@@ -30,7 +30,10 @@ public class DispatchStyles {
    /** Constant for QUERY_HEADER dispatch style. */
    public static final String QUERY_HEADER = "QUERY_HEADER";
 
-   /** Constant for SCRIPT dispatch style. */
+   /**
+    * Constant for SCRIPT dispatch style.
+    * @deprecated Use {@link #GROOVY} instead. Since 1.13.0.
+    */
    @Deprecated(since = "Use \"GROOVY\" instead")
    public static final String SCRIPT = "SCRIPT";
 

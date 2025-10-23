@@ -24,6 +24,10 @@ import io.opentelemetry.api.common.AttributeKey;
  */
 public class CommonAttributes {
 
+   private CommonAttributes() {
+      // Private constructor to hide the implicit public one.
+   }
+
    /** A 'service.name' span attribute. */
    public static final AttributeKey<String> SERVICE_NAME = AttributeKey.stringKey("service.name");
    /** A 'service.version' span attribute. */
