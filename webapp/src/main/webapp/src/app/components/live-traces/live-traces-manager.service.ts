@@ -28,7 +28,7 @@ export class LiveTracesManagerService implements OnDestroy {
   serviceName = ".*";
   operationName = ".*";
   clientIpFilter = ".*";
-  maxItems = 200;
+  maxItems = 2000;
 
   // State
   connected = false;
