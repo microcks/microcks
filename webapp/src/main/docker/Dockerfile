@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1742914212
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.6-1755695350
 
 # Some version information
 LABEL maintainer="Laurent Broudoux <laurent@microcks.io>" \
@@ -18,18 +18,6 @@ RUN microdnf install java-21-openjdk-headless openssl curl-minimal ca-certificat
 # JAVA_APP_DIR is used by run-java.sh for finding the binaries
 ENV JAVA_APP_DIR=/deployments \
     JAVA_MAJOR_VERSION=11
-
-# Opentelemetry Agent Instrumentation
-# By default we deactivate the agent with OTEL_JAVAAGENT_ENABLED=false
-RUN curl https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v1.33.6/opentelemetry-javaagent.jar -Lo /opt/opentelemetry-javaagent.jar
-ENV JAVA_TOOL_OPTIONS=-javaagent:/opt/opentelemetry-javaagent.jar \
-    OTEL_JAVAAGENT_ENABLED=false \
-    OTEL_EXPORTER_OTLP_ENDPOINT=http://o11y_otel:4317 \
-    OTEL_METRICS_EXPORTER=otlp \
-    OTEL_LOGS_EXPORTER=otlp \
-    OTEL_TRACES_EXPORTER=otlp \
-    OTEL_RESOURCE_ATTRIBUTES=service.name=microcks,service.namespace=microcks-ns,service.instance.id=microcks-cnt,service.version=1.11.0
-
 
 # Set working directory at /deployments
 WORKDIR /deployments

@@ -38,12 +38,18 @@ public class MicrometerConfiguration extends DefaultServerRequestObservationConv
       return super.getLowCardinalityKeyValues(context).and(additionalTags(context));
    }
 
+   /**
+    * Extract the service and version request attributes to add them as tags.
+    * @param context the server request observation context
+    * @return a KeyValues instance with additional tags
+    */
    protected KeyValues additionalTags(ServerRequestObservationContext context) {
       KeyValues keyValues = KeyValues.empty();
 
       Map<String, String> pathVariables = (Map<String, String>) context.getCarrier()
             .getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
       if (pathVariables != null) {
+         // It's a call to a mock controller.
          String service = pathVariables.get("service");
          String version = pathVariables.get("version");
          if (service != null) {
@@ -51,6 +57,15 @@ public class MicrometerConfiguration extends DefaultServerRequestObservationConv
          }
          if (version != null) {
             keyValues = keyValues.and(KeyValue.of("version", version));
+         }
+      } else {
+         String requestPath = context.getCarrier().getRequestURI();
+         if (requestPath.startsWith("/api/")) {
+            // It's a call to an API controller.
+            String[] segments = requestPath.split("/");
+            if (segments.length >= 3) {
+               keyValues = keyValues.and(KeyValue.of("service", "/api/" + segments[2]));
+            }
          }
       }
       return keyValues;

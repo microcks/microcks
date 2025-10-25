@@ -5,7 +5,7 @@ const baseMocks = [
   'invokeGRPCMocks',
   'invokeREST_HelloAPIMocks',
   'invokeREST_PetStoreAPI',
-  'asyncAPI_websocketMocks',
+  //'asyncAPI_websocketMocks',
 ]
 var flavorConfig = {
   'regular-auth': ['ownAPIsAuth'].concat(baseMocks),

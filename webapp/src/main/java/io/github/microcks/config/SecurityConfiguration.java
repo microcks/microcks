@@ -43,7 +43,7 @@ import static io.github.microcks.security.AuthorizationChecker.*;
 public class SecurityConfiguration {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(SecurityConfiguration.class);
+   private static final Logger log = LoggerFactory.getLogger(SecurityConfiguration.class);
 
    @Value("${keycloak.enabled}")
    private final Boolean keycloakEnabled = true;
@@ -61,7 +61,7 @@ public class SecurityConfiguration {
       // Disable CORS as we already have a filter in WebConfiguration that does the job
       http.cors(cors -> cors.disable());
 
-      http.securityMatcher("/rest/**", "/graphql/**", "/soap/**")
+      http.securityMatcher("/rest/**", "/rest-valid/**", "/graphql/**", "/soap/**")
             .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
 
       // Disable the publication of X-Frame-Options to allow embedding the UI.

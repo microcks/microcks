@@ -1,18 +1,18 @@
 /* Specific styles */
 
 .modal-header {
-  background-color: #ffffff !important;
-  border-bottom: 1px solid rgba(0,0,0,0.2);
+  background-color: var(--background) !important;
+  border-bottom: 1px solid var(--divider-translucent);
 }
 
 .mh-api-install-modal_row {
-  padding-top: 20px; 
+  padding-top: 20px;
   padding-bottom: 15px;
 }
 
 .mh-button.mh-button-navig {
-  background-color: #92d400;
-  color: #fff;
+  background-color: var(--status-success-bright);
+  color: var(--accent-text);
 }
 
 /* Overriden styles */
@@ -27,11 +27,11 @@
   font-weight: 400;
   font-size: 0.9em;
   line-height: 1;
-  color: #9c9c9c !important;
+  color: var(--text-muted) !important;
 }
 
 .mh-api-page_side-panel .properties-side-panel-pf {
-  background-color: #f1f1f1 !important;
+  background-color: var(--surface-muted) !important;
 }
 
 .mh-api-install-modal_list {
@@ -87,9 +87,9 @@
   overflow: hidden;
 }
 .mh-api-header_image-container {
-  background: #fff;
+  background: var(--background);
   /*border-radius: 50px;*/
-  /*box-shadow: 0 2px 4px rgba(0,0,0,.2);*/
+  /*box-shadow: 0 2px 4px var(--shadow-strong);*/
   /*height: 100px;*/
   /*width: 100px;*/
   display: flex;
@@ -107,7 +107,7 @@
   overflow: hidden;
 }
 .mh-api-header_version {
-  color: #fff;
+  color: var(--accent-text);
 }
 
 
@@ -118,7 +118,7 @@
 }
 @media (min-width: 768px) {
   .col-md-pull-3 {
-    right: 25%; 
+    right: 25%;
   }
 }
 
@@ -131,8 +131,8 @@
   width: 100%;
 }
 .mh-button.mh-button-primary {
-  background-color: #1991eb;
-  color: #fff;
+  background-color: var(--link-blue);
+  color: var(--accent-text);
 }
 .mh-button {
   border: none;
@@ -142,11 +142,11 @@
 
 .mh-api-page_side-panel_separator {
   margin: 30px 0;
-  border-top: 1px solid #eaeaea;
+  border-top: 1px solid var(--divider);
 }
 
 .mh-api-page_side-panel .properties-side-panel-pf {
-  background-color: #ffffff;
+  background-color: var(--background);
   display: block;
   padding: 30px 30px 30px 10px;
   width: 100%;
@@ -158,7 +158,7 @@
   margin-top: 20px;
 }
 .mh-api-page_side-panel .properties-side-panel-pf .properties-side-panel-pf-property-label {
-  color: #b6b6b6;
+  color: var(--text-tertiary);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -182,28 +182,28 @@
   padding: 2px 6px;
 }
 .btn-default.active, .btn-default .open .dropdown-toggle.btn-default, .btn-default:active, .btn-default:focus, .btn-default:hover {
-  background-color: #f1f1f1;
+  background-color: var(--surface-muted);
 }
 
 .mh-api-page_side-panel_version-dropdown {
   background: transparent;
   border: none;
   box-shadow: none;
-  color: #363636;
+  color: var(--text-strong);
   font-size: inherit;
   font-weight: inherit;
 }
 .mh-api-page_side-panel .dropdown-menu, .mh-api-page_side-panel_version-dropdown {
   font-size: inherit;
   font-weight: inherit;
-  
+
 }
 .mh-api-page_side-panel .dropdown-menu {
-  background-color: #fafbfd;
+  background-color: var(--surface-offwhite);
   border-radius: 4px;
-  border: 1px solid #eaeaea;
-  -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.175);
-  box-shadow: 0 6px 12px rgba(0,0,0,.175);
+  border: 1px solid var(--divider);
+  -webkit-box-shadow: 0 6px 12px var(--shadow-medium);
+  box-shadow: 0 6px 12px var(--shadow-medium);
 }
 .mh-api-page_side-panel .dropdown-menu>li>a {
   border-color: transparent;
@@ -214,13 +214,13 @@
   clear: both;
   font-weight: 400;
   line-height: 1.66667;
-  color: #363636;
+  color: var(--text-strong);
   white-space: nowrap;
 }
 .dropdown-menu>li>a:focus, .dropdown-menu>li>a:hover {
-  color: #4d5258;
+  color: var(--text-default);
   text-decoration: none;
-  background-color: #f5f5f5;
+  background-color: var(--surface-subtle);
 }
 
 .properties-side-panel-pf-property-value {
@@ -255,10 +255,10 @@
 }
 
 .modal-content {
-  background-color: #fff;
+  background-color: var(--background);
 }
 .modal-header .close {
-  color: #000;
+  color: var(--black);
 }
 .modal-body {
   padding: 20px;
@@ -289,7 +289,7 @@
   margin-top: 0;
 }
 .catalog-item-header-pf-subtitle {
-  color: #8b8d8f;
+  color: var(--placeholder-text);
   margin-top: 10px;
   margin-bottom: 0;
   font-size: 15px;
@@ -319,7 +319,7 @@
 .mh-api-install-modal .mh-code {
   margin: 10px 20px 15px 0;
   padding: 10px;
-  background-color: #fafbfd;
+  background-color: var(--surface-offwhite);
   border-radius: 3px;
   flex: 1;
   word-break: break-all;

@@ -23,5 +23,7 @@ public enum ParameterLocation {
    path,
    query,
    header,
-   cookie
+   cookie,
+   formData,
+   body
 }

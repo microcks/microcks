@@ -1,0 +1,171 @@
+/** Adjust 3rd party libraries CSS rules with theme switching capabilities */
+
+/* global */
+a {
+  color: var(--primary-500);
+}
+a:focus, a:hover {
+  color: var(--primary-400);
+}
+
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:focus, .nav-tabs > li.active > a:hover {
+  color: var(--primary-500);
+  background-color: var(--background);
+}
+.nav-tabs > li > a:active, .nav-tabs > li > a:focus, .nav-tabs > li > a:hover {
+  color: var(--text-strong);
+}
+.nav-tabs > li > a {
+  color: var(--text-default);
+}
+
+.btn-link {
+  color: var(--primary-500);
+}
+.form-control[disabled], .form-control[readonly], fieldset[disabled] .form-control {
+  background-color: var(--surface-subtle);
+}
+.table > thead {
+  background-color: var(--surface-subtle);
+  background-image: linear-gradient(to bottom, var(--light-gradient-start) 0, var(--light-gradient-stop) 100%);
+}
+.close {
+  color: var(--text-strong);
+}
+.close:focus, .close:hover {
+  color: var(--text-strong);
+}
+.help-block {
+  color: var(--text-muted-2);
+}
+pre {
+  border: 1px solid var(--divider-muted);
+}
+
+/* ngx-bootstrap tooltip */
+.tooltip.bottom .tooltip-arrow {
+  border-bottom-color: var(--tooltip-background);
+}
+.tooltip.top .tooltip-arrow {
+  border-top-color: var(--tooltip-background);
+}
+.tooltip-inner {
+  background-color: var(--tooltip-background);
+  color: var(--tooltip-text);
+  max-width: max-content;
+}
+
+/* ngx-bootstrap modals */
+.modal-content {
+  background: var(--background);
+}
+.modal-header {
+  background: var(--surface-muted);
+}
+
+/* bootstrap 3 panels */
+.panel-default > .panel-heading {
+  background: var(--surface-muted);
+  color: var(--text-default);
+}
+.panel-default > .panel-body {
+  background: var(--background);
+}
+
+/* dashboard page */
+.card-pf {
+  background: var(--background);
+  box-shadow: var(--card-box-shadow);
+}
+.card-pf-heading {
+  border-bottom-color: var(--surface-muted);
+}
+.card-pf-footer {
+  background: var(--background);
+  border-top-color: var(--surface-muted);
+}
+.donut-title-big-pf {
+  fill: var(--text-default);
+}
+.donut-title-small-pf {
+  fill: var(--text-default);
+}
+.c3-legend-item {
+  fill: var(--text-default);
+}
+
+/* services page */
+.toolbar-pf {
+  background: var(--background);
+}
+.list-view-pf-view {
+  background: var(--surface-muted);
+}
+.list-view-pf .list-group-item {
+  border-color: transparent var(--background);
+}
+.list-group-item {
+  background: var(--background);
+}
+.list-view-pf .list-group-item:hover {
+  background-color: var(--surface-hover);
+  border-left-color: transparent;
+  border-right-color: transparent;
+
+}
+.dropdown-kebab-pf .btn-link, .dropdown-kebab-pf.btn-group > .btn:first-child {
+  color: var(--text-strong);
+}
+.content-view-pf-pagination {
+  background: var(--background);
+}
+form.content-view-pf-pagination > * > input.pagination-pf-page {
+  color: #363636;
+}
+
+/* service page */
+.list-pf {
+  border-bottom: 1px solid var(--surface-muted);
+}
+.list-pf-item {
+  /*border-color: #ededed;*/
+  border-top-color: var(--surface-muted);
+  border-left-color: var(--background);
+  border-right-color: var(--background);
+}
+.list-pf-item:hover {
+  background-color: var(--surface-hover);
+}
+.list-pf-item.active {
+  background-color: var(--surface-hover);
+  /*border-color: #bbb; */
+  border-color: var(--border-accent);
+}
+.list-pf-expansion {
+  background-color: var(--background);
+}
+.list-pf-expansion .list-pf-container {
+  border-top: 1px solid var(--border-accent);
+}
+
+/** importer wizard **/
+legend {
+  color: var(--text-default);
+}
+.wizard-pf-footer {
+  background: var(--background);
+}
+
+/** dark theme specific overrides **/
+.dark .btn-default {
+  background-color: var(--surface-muted);
+  background-image: linear-gradient(to bottom, var(--light-gradient-start) 0, var(--light-gradient-stop) 100%);
+  border-color: var(--border-accent);
+  color: var(--text-default);
+}
+.dark .hljs {
+  background: var(--background);
+}
+.dark pre.hljs {
+   border: 2px solid var(--border-accent);
+}

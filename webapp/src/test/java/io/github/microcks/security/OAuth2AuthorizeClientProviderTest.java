@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class OAuth2AuthorizeClientProviderTest {
 
    @Container
-   public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:24.0.4")
+   public static KeycloakContainer keycloak = new KeycloakContainer("quay.io/keycloak/keycloak:26.0.0")
          .withRealmImportFile("io/github/microcks/security/myrealm-realm.json");
 
    @Test

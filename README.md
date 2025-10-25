@@ -65,6 +65,8 @@ Here are the naming conventions we're using for current releases, ongoing develo
 | Dev         | `1.13.0-SNAPSHOT` | `1.13.x` | `nightly`             |
 | Maintenance | `1.12.2-SNAPSHOT` | `1.12.x` | `maintenance`         |
 
+Have a look at our [tested configurations](TESTED_CONFIGURATIONS.md) to know more about the versions of dependencies 
+and integrations that we are using for development and testing.
 
 ## How to build Microcks
 

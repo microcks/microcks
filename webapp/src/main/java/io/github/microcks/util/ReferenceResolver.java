@@ -44,10 +44,10 @@ public class ReferenceResolver {
    private final boolean disableSSLValidation;
    private boolean cleanResolvedFiles = true;
 
-   private RelativeReferenceURLBuilder urlBuilder;
+   private final RelativeReferenceURLBuilder urlBuilder;
 
-   private Map<String, File> resolvedReferences = new HashMap<>();
-   private Map<String, File> relativeResolvedReferences = new HashMap<>();
+   private final Map<String, File> resolvedReferences = new HashMap<>();
+   private final Map<String, File> relativeResolvedReferences = new HashMap<>();
 
    /**
     * Build a new reference resolver.
@@ -136,7 +136,7 @@ public class ReferenceResolver {
       String remoteUrl = getReferenceURL(relativePath);
       File referenceFile = resolvedReferences.get(remoteUrl);
       if (referenceFile == null) {
-         log.info("Downloading a reference file at {}", remoteUrl);
+         log.debug("Downloading a reference file at {}", remoteUrl);
 
          if (remoteUrl.startsWith("http")) {
             // We have a remote URL, let's download it.

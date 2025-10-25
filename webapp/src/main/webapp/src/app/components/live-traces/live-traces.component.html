@@ -1,0 +1,21 @@
+<div class="live-traces">
+  <app-live-traces-controls
+    [(serviceName)]="manager.serviceName"
+    [(operationName)]="manager.operationName"
+    [(clientIpFilter)]="manager.clientIpFilter"
+    [connected]="manager.connected"
+    [isLoading]="manager.isLoading"
+    [error]="manager.error"
+    [allowCustomization]="allowCustomization"
+    [traceCount]="(manager.traces$ | async)?.length || 0"
+    [totalEvents]="manager.totalEvents"
+    (connectClick)="manager.connect()"
+    (disconnectClick)="manager.disconnect()"
+    (prefillClick)="manager.prefill()"
+    (clearClick)="manager.clear()"
+  ></app-live-traces-controls>
+
+  <app-trace-group-list
+    [traces]="(manager.traces$ | async) || []"
+  ></app-trace-group-list>
+</div>

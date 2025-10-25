@@ -89,10 +89,9 @@
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
         <button type="submit" class="btn btn-primary" (click)="saveOperationProperties()" ng-disabled="form.$invalid">Save</button>
       </div>
-      <br/><br/><br/>
+      <br/><br/>
 
       <h3 class="section-label">Current dispatching properties</h3>
-
       <div class="row">
         <div class="col-md-6">
           <dl class="dl-horizontal left">
@@ -131,7 +130,7 @@
             </dd>
             <span *ngIf="!isEventTypeService()">
               <dt>Default delay:</dt>
-              <dd>{{ operation?.defaultDelay || 0 }} ms</dd>
+              <dd>{{ operation?.defaultDelay || 0 }} ms with <code>{{ operation?.defaultDelayStrategy || 'fixed' }}</code> strategy</dd>
             </span>
             <span *ngIf="isEventTypeService()">
               <dt>Frequency:</dt>
@@ -142,18 +141,26 @@
       </div>
 
       <h3 class="section-label">New dispatching properties</h3>
-
       <div class="row">
         <div class="col-md-7">
-          <div class="control-group form-inline">
-            <span *ngIf="!isEventTypeService()">
+          <span *ngIf="!isEventTypeService()">
+            <div class="control-group form-inline">
               <label class="control-label" for="defaultDelay">Default delay</label>
               <div class="controls">
                 <input class="form-control" id="defaultDelay" name="defaultDelay" [(ngModel)]="newOperation!.defaultDelay"/> ms
                 <p class="help-block">The delay to wait before returning response.</p>
               </div>
-            </span>
-            <span *ngIf="isEventTypeService()">
+            </div>
+            <div class="control-group form-inline">
+              <label class="control-label" for="defaultDelay">Default delay strategy</label>
+              <div class="controls">
+                <input class="form-control" id="defaultDelayStrategy" name="defaultDelayStrategy" [(ngModel)]="newOperation!.defaultDelayStrategy"/>
+                <p class="help-block">The strategy to apply to default delay (can be <code>fixed</code>, <code>random</code> or <code>random-(\d)</code> to specify a range).</p>
+              </div>
+            </div>
+          </span>
+          <span *ngIf="isEventTypeService()">
+            <div class="control-group form-inline">
               <label class="control-label" for="defaultDelay">Frequency</label>
               <div class="controls">
                 <select class="form-control" name="defaultDelay" [(ngModel)]="newOperation!.defaultDelay" [disabled]="!isAsyncMockEnabled()">
@@ -165,12 +172,12 @@
                 </div>
                 <p class="help-block">The frequency of messages publication.</p>
               </div>
-            </span>
-          </div>
+            </div>
+          </span>
           <div class="control-group">
             <label class="control-label" for="dispatcher">Dispatcher</label>
             <div class="controls">
-              <select class="form-control" name="dispatcher" [(ngModel)]="newOperation!.dispatcher">
+              <select class="form-control" id="dispatcher" name="dispatcher" [(ngModel)]="newOperation!.dispatcher">
                 <option *ngFor="let dispatcher of dispatchersByServiceType[view.service.type]" [value]="dispatcher.value">{{ dispatcher.value }} </option>
               </select>
               <p class="help-block">The dispatcher used by Operation.</p>
@@ -191,7 +198,13 @@
 
           <div class="text-right" *ngFor="let exchange of view.messagesMap[operationName]">
             <span *ngIf="!isEventTypeService()">
-              <h2><span class="label label-primary">{{ getReqRespPair(exchange).response.name }} - {{ getReqRespPair(exchange).response.dispatchCriteria }}</span></h2>
+              <h2>
+                <span class="label label-primary">
+                  <span class="fa fa-play" *ngIf="isRequestTriable()" (click)="tryRequest(getReqRespPair(exchange))"
+                        tooltip="Try it now!" placement="top">&nbsp;</span>
+                  {{ getReqRespPair(exchange).response.name }} - {{ getReqRespPair(exchange).response.dispatchCriteria }}
+                </span>
+              </h2>
             </span>
             <span *ngIf="isEventTypeService()">
               <h2><span class="label label-primary">{{ getUnidirEvent(exchange).eventMessage.name }} </span></h2>
@@ -199,12 +212,23 @@
           </div>
         </div>
       </div>
-      <br/><br/>
+
       <div class="pull-right">
         <button type="button" class="btn btn-default" (click)="resetOperationProperties()">Reset</button>&nbsp;
         <button type="submit" class="btn btn-primary" (click)="saveOperationProperties()" ng-disabled="form.$invalid">Save</button>
       </div>
+
+      <br/><br/>
+      <div *ngIf="!isEventTypeService()">
+        <h3 class="section-label"><i class="fa fa-bug toggle-button-icon"></i> Live Traces</h3>
+        <app-live-traces
+          [initialServiceName]="view.service.name"
+          [initialOperationName]="operationName">
+        </app-live-traces>
+      </div>
+      <br/><br/>
     </div>
+
     <div class="col-md-4 help-bar">
       <h3 class="section-label">Help needed?</h3>
       <small>This sidebar provides some explanations and examples on how to setup parameter constraints and use the evolved dispatchers.</small>
@@ -241,7 +265,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ fallback }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="fallback"></code></pre>
       </div>
 
       <div id="proxy-fallback-help" *ngIf="newOperation?.dispatcher === 'PROXY_FALLBACK'">
@@ -265,7 +289,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ proxyFallback }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="proxyFallback"></code></pre>
       </div>
 
       <div id="json-body-help" *ngIf="newOperation?.dispatcher === 'JSON_BODY'">
@@ -278,7 +302,7 @@
         <p>
           Consider the following JSON payload representing a request body for creating new Beer entity:
         </p>
-        <pre><code highlight>{{ examplePayload }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="examplePayload"></code></pre>
 
         <p>
           Using the <code>JSON_BODY</code> dispatcher, you can select target response depending of the value of a payload element.
@@ -289,7 +313,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ equalsOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="equalsOperator"></code></pre>
 
         <p>
           You can also dispatch depending on a payload number value using the <code>range</code> operator. Note the orientation
@@ -300,7 +324,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ rangeOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="rangeOperator"></code></pre>
 
         <p>
           The <code>size</code> operator allows you to define dispatching rules depending on the size of an array. Here we only accept
@@ -311,7 +335,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ sizeOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="sizeOperator"></code></pre>
 
         <p>
           For much more complex rules, you may use the <code>regexp</code> operator. There's no guarantee that cases will in the given
@@ -322,7 +346,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ regexpOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="regexpOperator"></code></pre>
 
         <p>
           Finally, you may want to dispatch according the presence of an element within JSON payload. For that, you'll use the <code>presence</code>
@@ -333,7 +357,7 @@
             <span class="fa fa-paste"></span> Copy
           </button>
         </div>
-        <pre><code highlight>{{ presenceOperator }}</code></pre>
+        <pre class="hljs"><code [highlightAuto]="presenceOperator"></code></pre>
       </div>
     </div>
   </div>

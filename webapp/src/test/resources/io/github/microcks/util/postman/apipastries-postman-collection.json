@@ -1,0 +1,182 @@
+{
+	"info": {
+		"_postman_id": "3cb5af80-dc32-4b6b-87d5-f81307bc71b6",
+		"name": "API Pastries",
+		"description": "version=0.0.1 - API Pastries collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "1278651",
+		"_collection_link": "https://www.postman.com/lbroudoux/workspace/public-workspace/collection/1278651-3cb5af80-dc32-4b6b-87d5-f81307bc71b6?action=share&creator=1278651&source=collection_link"
+	},
+	"item": [
+		{
+			"name": "pastries",
+			"item": [
+				{
+					"name": "List pastries by size",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var expectedSize = pm.globals.get(\"size\");",
+									"",
+									"pm.test(\"Valid size in response pastries\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an(\"array\");",
+									"    jsonData.forEach(pastry => pm.expect(pastry.size).to.eql(expectedSize));",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://${pastries.base}/pastries?size=M",
+							"protocol": "http",
+							"host": [
+								"${pastries",
+								"base}"
+							],
+							"path": [
+								"pastries"
+							],
+							"query": [
+								{
+									"key": "size",
+									"value": "M",
+									"description": "Size of selected pastries"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get pastry by name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var expectedName = pm.globals.get(\"name\");",
+									"",
+									"pm.test(\"Valid name in response pastry\", function () {",
+									"    var pastry = pm.response.json();",
+									"    pm.expect(pastry).to.be.an(\"object\");",
+									"    pm.expect(pastry.name).to.eql(expectedName);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http:///pastries/:name",
+							"protocol": "http",
+							"path": [
+								"pastries",
+								":name"
+							],
+							"variable": [
+								{
+									"key": "name",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Eclair Chocolat",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http:///pastry/:name",
+									"protocol": "http",
+									"path": [
+										"pastry",
+										":name"
+									],
+									"variable": [
+										{
+											"key": "name",
+											"value": "Eclair Chocolat"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": "",
+									"type": "text"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"name\": \"Eclair Chocolat\",\n    \"description\": \"Delicieux Eclair au Chocolat pas calorique du tout\",\n    \"size\": \"M\",\n    \"price\": 2.4,\n    \"status\": \"unknown\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update pastry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var expectedPrice = JSON.parse(pm.request.body.raw).price;",
+									"",
+									"pm.test(\"Valid price in response pastry\", function () {",
+									"    var pastry = pm.response.json();",
+									"    pm.expect(pastry).to.be.an(\"object\");",
+									"    pm.expect(pastry.price).to.eql(expectedPrice);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http:///pastries/:name",
+							"protocol": "http",
+							"path": [
+								"pastries",
+								":name"
+							],
+							"variable": [
+								{
+									"key": "name",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

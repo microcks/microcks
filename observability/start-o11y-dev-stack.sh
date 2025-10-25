@@ -38,7 +38,7 @@ if [ -z $(docker network ls --filter name=^${NETWORK_NAME}$ --format="{{ .Name }
      docker network create --driver=bridge --subnet=172.19.0.0/16 --gateway=172.19.0.1 ${NETWORK_NAME} ; 
      echo "✅ $NETWORK_NAME docker network created !"
 else
-     echo "✅ $NETWORK_NAME already exisits ! "
+     echo "✅ $NETWORK_NAME already exists ! "
 fi
 
 ##############################

@@ -41,12 +41,12 @@ public class MetadataExtractor {
    public static void completeMetadata(Metadata metadata, JsonNode node) {
       JsonNode annotationsNode = node.get("annotations");
       if (annotationsNode != null) {
-         annotationsNode.fields()
-               .forEachRemaining(entry -> metadata.setAnnotation(entry.getKey(), entry.getValue().asText()));
+         annotationsNode.properties()
+               .forEach(entry -> metadata.setAnnotation(entry.getKey(), entry.getValue().asText()));
       }
       JsonNode labelsNode = node.get("labels");
       if (labelsNode != null) {
-         labelsNode.fields().forEachRemaining(entry -> metadata.setLabel(entry.getKey(), entry.getValue().asText()));
+         labelsNode.properties().forEach(entry -> metadata.setLabel(entry.getKey(), entry.getValue().asText()));
       }
    }
 
@@ -59,8 +59,16 @@ public class MetadataExtractor {
       if (node.has("delay")) {
          operation.setDefaultDelay(node.path("delay").asLong(0));
       }
+      if (node.has("delayStrategy")) {
+         String strategy = node.path("delayStrategy").asText();
+         operation.setDefaultDelayStrategy(strategy);
+      }
       if (node.has("frequency")) {
          operation.setDefaultDelay(node.path("frequency").asLong());
+      }
+      if (node.has("frequenceStrategy")) {
+         String strategy = node.path("frequenceStrategy").asText();
+         operation.setDefaultDelayStrategy(strategy);
       }
       if (node.has("dispatcher")) {
          operation.setDispatcher(node.path("dispatcher").asText());

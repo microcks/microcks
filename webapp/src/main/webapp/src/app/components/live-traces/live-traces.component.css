@@ -1,0 +1,74 @@
+.live-traces .controls {
+  margin-bottom: 10px;
+}
+
+.live-traces .status {
+  margin-left: 10px;
+}
+
+.live-traces .count {
+  margin-left: 6px;
+  color: var(--text-secondary);
+}
+
+.live-traces .form-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.live-traces .form-inline label {
+  margin: 0;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.live-traces .form-inline .form-control-sm {
+  display: inline-block;
+  width: auto;
+  min-width: 150px;
+}
+
+.live-traces .button-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.live-traces .recording-indicator {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: baseline;
+  position: relative;
+  top: 1px;
+}
+
+.live-traces .recording-indicator.recording {
+  background-color: var(--danger-500);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger-500) 70%, transparent);
+  animation: pulse-recording 1.5s infinite;
+}
+
+.live-traces .recording-indicator.not-recording {
+  background-color: var(--text-muted);
+  border: 2px solid var(--text-muted-2);
+  box-sizing: border-box;
+}
+
+@keyframes pulse-recording {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger-500) 70%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 8px color-mix(in srgb, var(--danger-500) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger-500) 0%, transparent);
+  }
+}

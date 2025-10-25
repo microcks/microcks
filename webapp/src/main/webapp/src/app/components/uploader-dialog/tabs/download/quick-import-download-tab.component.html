@@ -1,0 +1,46 @@
+<br />
+<small>Provide a URL to an artifact Microcks can download and import. Optionally select an Authentication Secret for authorization.</small>
+
+<form [formGroup]="form" class="container-fluid" style="padding-top: 1rem;" (ngSubmit)="submit()">
+  <div class="form-group">
+    <label for="downloadUrl">Artifact URL</label>
+    <input
+      id="downloadUrl"
+      type="url"
+      class="form-control"
+      placeholder="https://..."
+      formControlName="url" />
+    <div *ngIf="url?.touched && url?.invalid" class="text-danger small" style="margin-top:4px">URL is required</div>
+  </div>
+
+  <div class="row">
+    <div class="col-sm-6">
+      <div class="control-group">
+        <label class="control-label" for="secret">Authentication Secret</label>
+        <div class="controls">
+          <select class="form-control" id="secret" name="secret" formControlName="secretId">
+            <option value="none">None</option>
+            <option *ngFor="let secret of secrets" [value]="secret.id">{{ secret.name }}</option>
+          </select>
+          <p class="help-block">Pick the authentication secret to use for this download.</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6">
+      <div class="checkbox" style="margin-top: 26px;">
+        <label class="control-label">
+          <input type="checkbox" formControlName="isSecondary" />
+          Secondary Artifact
+          <br />
+          <p class="help-block">Merge examples only</p>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="pull-right">
+    <button type="submit" class="btn btn-success" [disabled]="form.invalid">
+      <span class="fa fa-download"></span> Download & Import
+    </button>
+  </div>
+</form>

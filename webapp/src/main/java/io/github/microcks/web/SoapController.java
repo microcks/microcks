@@ -28,13 +28,21 @@ import io.github.microcks.service.ProxyService;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.SafeLogger;
+import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
+import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.soap.SoapMessageValidator;
 import io.github.microcks.util.soapui.SoapUIXPathBuilder;
+import io.github.microcks.util.tracing.CommonAttributes;
+import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.util.tracing.TraceUtil;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.StatusCode;
+import io.roastedroot.quickjs4j.core.Engine;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -68,6 +76,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A controller for mocking Soap responses.
@@ -128,8 +138,9 @@ public class SoapController {
    @PostMapping(value = "/{service}/{version}/**")
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
          @PathVariable("version") String version, @RequestParam(value = "validate", required = false) Boolean validate,
-         @RequestParam(value = "delay", required = false) Long delay, @RequestBody String body,
-         @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+         @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
+         @RequestBody String body, @RequestHeader HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
       log.info("Servicing mock response for service [{}, {}]", serviceName, version);
       log.debug("Request body: {}", body);
 
@@ -190,6 +201,25 @@ public class SoapController {
       if (rOperation != null) {
          log.debug("Found a valid operation with rules: {}", rOperation.getDispatcherRules());
 
+         // Setup span attributes and event for invocation
+         Span span = Span.current();
+         TraceUtil.enableExplainTracing();
+         span.setAttribute(CommonAttributes.SERVICE_NAME, service.getName());
+         span.setAttribute(CommonAttributes.SERVICE_VERSION, service.getVersion());
+         span.setAttribute(CommonAttributes.OPERATION_NAME, rOperation.getName());
+         span.setAttribute(CommonAttributes.OPERATION_ACTION, action != null ? action : "none");
+
+         // Add an event for the invocation reception with a human-friendly message.
+         span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
+               TraceUtil
+                     .explainSpanEventBuilder(
+                           String.format("Received SOAP invocation for operation %s", rOperation.getName()))
+                     .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
+                     .put(CommonAttributes.BODY_CONTENT,
+                           body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
+                     .put(CommonAttributes.URI_FULL, request.getRequestURL().toString())
+                     .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
+
          if (validate != null && validate) {
             log.debug("Soap message validation is turned on, validating...");
 
@@ -227,6 +257,12 @@ public class SoapController {
             dispatcherRules = proxyFallback.getDispatcherRules();
          }
 
+         span.addEvent(CommonEvents.DISPATCHER_SELECTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Selected dispatcher and rules for this invocation")
+                     .put(CommonAttributes.DISPATCHER, dispatcher != null ? dispatcher : "none")
+                     .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules != null ? dispatcherRules : "none")
+                     .build());
+
          Response response = null;
          DispatchContext dispatchContext = null;
 
@@ -234,8 +270,10 @@ public class SoapController {
             // Depending on dispatcher, evaluate request with rules.
             if (DispatchStyles.QUERY_MATCH.equals(dispatcher)) {
                dispatchContext = getDispatchCriteriaFromXPathEval(dispatcherRules, body);
-            } else if (DispatchStyles.SCRIPT.equals(dispatcher)) {
-               dispatchContext = getDispatchCriteriaFromScriptEval(service, dispatcherRules, body, request);
+            } else if (DispatchStyles.SCRIPT.equals(dispatcher) || DispatchStyles.GROOVY.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromGroovyEval(service, dispatcherRules, body, request);
+            } else if (DispatchStyles.JS.equals(dispatcher)) {
+               dispatchContext = getDispatchCriteriaFromJsEval(service, dispatcherRules, body, request);
             } else if (DispatchStyles.RANDOM.equals(dispatcher)) {
                dispatchContext = new DispatchContext(DispatchStyles.RANDOM, null);
             } else if (DispatchStyles.PROXY.equals(dispatcher)) {
@@ -248,12 +286,30 @@ public class SoapController {
             return new ResponseEntity<>(e.getMessage(), e.getStatusCode());
          }
 
+         if (dispatchContext.dispatchCriteria() != null) {
+            // Add an event about computed dispatch criteria.
+            Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                  TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using " + dispatcher + " dispatcher")
+                        .put(CommonAttributes.DISPATCHER, dispatcher)
+                        .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                        .put(CommonAttributes.DISPATCH_CRITERIA, dispatchContext.dispatchCriteria()).build());
+         }
+
          log.debug("Dispatch criteria for finding response is {}", dispatchContext.dispatchCriteria());
          List<Response> responses = responseRepository.findByOperationIdAndDispatchCriteria(
                IdBuilder.buildOperationId(service, rOperation), dispatchContext.dispatchCriteria());
 
+         span.addEvent(CommonEvents.RESPONSE_LOOKUP_COMPLETED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Response lookup completed")
+                     .put(CommonAttributes.RESPONSE_FOUND, !responses.isEmpty())
+                     .put(CommonAttributes.RESPONSE_NAME, !responses.isEmpty() ? responses.get(0).getName() : "null")
+                     .build());
+
          if (responses.isEmpty() && fallback != null) {
             // If we've found nothing and got a fallback, that's the moment!
+            span.addEvent(CommonEvents.FALLBACK_RESPONSE_USED.getEventName(),
+                  TraceUtil.explainSpanEventBuilder("Using fallback response as no matching response was found")
+                        .put("fallback.name", fallback.getFallback()).build());
             responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, rOperation),
                   fallback.getFallback());
          }
@@ -263,6 +319,10 @@ public class SoapController {
                responses.isEmpty() ? null : responses.get(0));
          if (proxyUrl.isPresent()) {
             // If we've got a proxyUrl, that's the moment!
+            span.addEvent(CommonEvents.PROXY_REQUEST_INITIATED.getEventName(),
+                  TraceUtil.explainSpanEventBuilder("Proxying request to external service")
+                        .put("proxy.url", proxyUrl.get().toString())
+                        .put("proxy.method", method != null ? method.toString() : "POST").build());
             return proxyService.callExternal(proxyUrl.get(), method, headers, body);
          }
 
@@ -270,10 +330,21 @@ public class SoapController {
             int idx = DispatchStyles.RANDOM.equals(dispatcher) ? RandomUtils.nextInt(0, responses.size()) : 0;
             response = responses.get(idx);
          } else {
+            span.addEvent(CommonEvents.NO_RESPONSE_FOUND.getEventName(),
+                  TraceUtil.explainSpanEventBuilder("No matching response found for dispatch criteria")
+                        .put(CommonAttributes.DISPATCH_CRITERIA, dispatchContext.dispatchCriteria())
+                        .put(CommonAttributes.ERROR_STATUS, 400).build());
+            span.setStatus(StatusCode.ERROR, "No matching response found for dispatch criteria");
             return new ResponseEntity<>(
                   String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()),
                   HttpStatus.BAD_REQUEST);
          }
+
+         span.addEvent(CommonEvents.RESPONSE_SELECTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Selected response to return")
+                     .put(CommonAttributes.RESPONSE_NAME, response.getName())
+                     .put("response.mediaType", response.getMediaType() != null ? response.getMediaType() : "none")
+                     .build());
 
          // Set Content-Type to "text/xml".
          HttpHeaders responseHeaders = new HttpHeaders();
@@ -294,10 +365,16 @@ public class SoapController {
                dispatchContext.requestContext(), response);
 
          // Setting delay to default one if not set.
-         delay = MockControllerCommons.getDelay(headers, delay);
+         DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
          if (delay == null && rOperation.getDefaultDelay() != null) {
-            delay = rOperation.getDefaultDelay();
+            delay = new DelaySpec(rOperation.getDefaultDelay(), rOperation.getDefaultDelayStrategy());
          }
+
+         span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Configured response delay")
+                     .put(CommonAttributes.DELAY_VALUE, delay != null ? delay.baseValue() : 0)
+                     .put(CommonAttributes.DELAY_STRATEGY, delay != null ? delay.strategyName() : "N/A").build());
+
          MockControllerCommons.waitForDelay(startTime, delay);
 
          // Publish an invocation event before returning if enabled.
@@ -384,6 +461,14 @@ public class SoapController {
          XPathExpression xpath = SoapUIXPathBuilder.buildXPathMatcherFromRules(dispatcherRules);
          return new DispatchContext(xpath.evaluate(new InputSource(new StringReader(body))), null);
       } catch (Exception e) {
+         // Get current span and record failure
+         Span.current().recordException(e);
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using XPATH dispatcher")
+                     .put(CommonAttributes.DISPATCHER, "XPATH").put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                     .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
+         Span.current().setStatus(StatusCode.ERROR, "Error during Xpath evaluation");
+
          log.error("Error during Xpath evaluation", e);
          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                "Error during Xpath evaluation: " + e.getMessage());
@@ -391,7 +476,7 @@ public class SoapController {
    }
 
    /** Build a dispatch context after a Groovy script evaluation coming from rules. */
-   private DispatchContext getDispatchCriteriaFromScriptEval(Service service, String dispatcherRules, String body,
+   private DispatchContext getDispatchCriteriaFromGroovyEval(Service service, String dispatcherRules, String body,
          HttpServletRequest request) {
       Map<String, Object> requestContext = new HashMap<>();
       try {
@@ -402,9 +487,34 @@ public class SoapController {
 
          return new DispatchContext((String) scriptEngine.eval(script, scriptContext), requestContext);
       } catch (Exception e) {
+         // Get current span and record failure
+         Span.current().recordException(e);
+         Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Failed to compute dispatch criteria using GROOVY dispatcher")
+                     .put(CommonAttributes.DISPATCHER, "GROOVY").put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                     .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
+         Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
+
          log.error("Error during Script evaluation", e);
          throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
                "Error during Script evaluation: " + e.getMessage());
+      }
+   }
+
+   /* Build a dispatch context after a JS script evaluation coming from rules. */
+   private DispatchContext getDispatchCriteriaFromJsEval(Service service, String dispatcherRules, String body,
+         HttpServletRequest request) {
+      Map<String, Object> requestContext = new HashMap<>();
+      try {
+         Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(body, requestContext,
+               new ServiceStateStore(serviceStateRepository, service.getId()), request);
+
+         return new DispatchContext(JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext),
+               requestContext);
+      } catch (Exception e) {
+         log.error("Error during JS evaluation", e);
+         throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+               "Error during JS evaluation: " + e.getMessage());
       }
    }
 

@@ -1,0 +1,78 @@
+<br/>
+<small>Directly upload your Service and API mock artifact for one-time import of definitions.</small>
+<div class="container-fluid" style="padding-top: 1rem;">
+  <!-- Show files in uploader queue -->
+  <div *ngIf="uploader.queue.length > 0" class="panel panel-default">
+    <div class="panel-heading">
+      <strong>Files ready for upload ({{ uploader.queue.length }})</strong>
+    </div>
+    <div class="panel-body" style="padding: 0;">
+      <div class="file-list-container">
+        <div *ngFor="let item of uploader.queue; let i = index" class="file-item">
+          <div class="row">
+            <div class="col-sm-5 col-md-5 file-name-col">
+              <span class="fa fa-file-o" style="margin-right: 8px;"></span> 
+              <strong class="file-name">{{ item.file.name }}</strong>
+              <br>
+              <small class="text-muted">({{ (item.file.size / 1024).toFixed(2) }} KB)</small>
+            </div>
+            <div class="col-sm-5 col-md-5">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" 
+                         [id]="'secondaryArtifact_' + i"
+                         [checked]="getFileSecondaryStatus(item)" 
+                         (change)="updateFileSecondaryStatus(item, $any($event.target).checked)"/>
+                  Secondary Artifact
+                  <br>
+                  <p class="help-block">Merge examples only</p>
+                </label>
+              </div>
+            </div>
+            <div class="col-sm-2 col-md-2 text-right remove-button-col">
+              <button type="button" class="btn btn-xs btn-danger" (click)="removeFile(item)" title="Remove file">
+                <span class="pficon pficon-close"></span> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Placeholder when no files are uploaded -->
+  <div *ngIf="uploader.queue.length === 0" class="upload-placeholder clickable" (click)="triggerFileInput()">
+    <div class="placeholder-content">
+      <div class="placeholder-icon">
+        <span class="fa fa-cloud-upload fa-3x text-muted"></span>
+      </div>
+      <h4 class="text-muted">No files selected</h4>
+      <p class="text-muted">Click here to choose files or drag and drop files to add them to the upload queue</p>
+    </div>
+  </div>
+
+  <!-- Hidden file input -->
+  <input type="file" 
+         #fileInput
+         multiple
+         accept=".json,.yaml,.yml,.xml,.wsdl,.proto,.graphql"
+         ng2FileSelect 
+         [uploader]="uploader" 
+         style="display: none;" />
+
+  <!-- Alternative file input when files are already present -->
+  <div *ngIf="uploader.queue.length > 0" style="margin-bottom: 10px;">
+    <button type="button" class="btn btn-default" (click)="triggerFileInput()">
+      <span class="fa fa-plus"></span> Add More Files
+    </button>
+  </div>
+
+  <br/>
+  <div class="pull-right">
+    <button type="button" class="btn btn-success" 
+        (click)="upload()" 
+        [disabled]="!uploader.getNotUploadedItems().length" >
+      <span class="fa fa-upload"></span> Upload
+    </button>
+  </div>
+</div>

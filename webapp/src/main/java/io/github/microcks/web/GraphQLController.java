@@ -73,6 +73,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.github.microcks.util.delay.DelaySpec;
+
 /**
  * A controller for mocking GraphQL responses.
  * @author laurent
@@ -114,7 +116,8 @@ public class GraphQLController {
 
    @RequestMapping(value = "/{service}/{version}/**", method = { RequestMethod.GET, RequestMethod.POST })
    public ResponseEntity<?> execute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
+         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
          @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
          HttpMethod method) {
 
@@ -179,8 +182,10 @@ public class GraphQLController {
 
       // Then deal with one or many regular GraphQL selection queries.
       List<GraphQLQueryResponse> graphqlResponses = new ArrayList<>();
-      Long specifiedDelay = MockControllerCommons.getDelay(headers, delay);
-      Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay;
+      DelaySpec specifiedDelay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+
+      Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay.baseValue();
+      String maxDelayStrategy = specifiedDelay == null ? null : specifiedDelay.strategyName();
 
       for (Selection<?> selection : graphqlOperation.getSelectionSet().getSelections()) {
          try {
@@ -197,6 +202,7 @@ public class GraphQLController {
             if (specifiedDelay == null && graphqlResponse.getOperationDelay() != null
                   && graphqlResponse.getOperationDelay() > maxDelay) {
                maxDelay = graphqlResponse.getOperationDelay();
+               maxDelayStrategy = graphqlResponse.getOperationDelayStrategy();
             }
          } catch (GraphQLQueryProcessingException e) {
             log.error("Caught a GraphQL processing exception", e);
@@ -231,7 +237,8 @@ public class GraphQLController {
       }
 
       // Waiting for delay if any.
-      MockControllerCommons.waitForDelay(startTime, maxDelay);
+      DelaySpec waitMaxDelay = new DelaySpec(maxDelay, maxDelayStrategy);
+      MockControllerCommons.waitForDelay(startTime, waitMaxDelay);
 
       String responseContent = null;
       JsonNode responseNode = graphqlResponses.get(0).getJsonResponse();
@@ -326,6 +333,7 @@ public class GraphQLController {
 
          // Complete GraphQLQueryResponse result.
          result.setOperationDelay(rOperation.getDefaultDelay());
+         result.setOperationDelayStrategy(rOperation.getDefaultDelayStrategy());
 
          if (responseResult.content() != null) {
             try {
@@ -417,6 +425,7 @@ public class GraphQLController {
       String operationName;
       String alias;
       Long operationDelay;
+      String operationDelayStrategy;
       Response response;
       JsonNode jsonResponse;
       URI proxyUrl;
@@ -443,6 +452,14 @@ public class GraphQLController {
 
       public void setOperationDelay(Long operationDelay) {
          this.operationDelay = operationDelay;
+      }
+
+      public String getOperationDelayStrategy() {
+         return operationDelayStrategy;
+      }
+
+      public void setOperationDelayStrategy(String operationDelayStrategy) {
+         this.operationDelayStrategy = operationDelayStrategy;
       }
 
       public JsonNode getJsonResponse() {

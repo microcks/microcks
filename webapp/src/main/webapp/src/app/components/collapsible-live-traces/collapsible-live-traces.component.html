@@ -1,0 +1,56 @@
+<!-- Live Traces Sidebar Column -->
+<div
+  *ngIf="!isCollapsed"
+  class="panel-container"
+  [style.width]="panelWidth + 'px'"
+>
+  <!-- Resize Handle with Close Button -->
+  <div
+    class="resize-handle"
+    (mousedown)="startResize($event)"
+    title="Drag to resize"
+  >
+    <div class="resize-indicator"></div>
+
+    <!-- Close Button on Separator -->
+    <button
+      type="button"
+      class="btn btn-default btn-xs toggle-button"
+      (click)="closePanel(); $event.stopPropagation()"
+      (mousedown)="$event.stopPropagation()"
+      title="Live Traces"
+    >
+      <span class="toggle-button-text h4">
+        <i class="fa fa-chevron-left toggle-button-caret" aria-hidden="true"></i>
+        Live Traces <i class="fa fa-bug toggle-button-icon" aria-hidden="true"></i>
+      </span>
+    </button>
+  </div>
+
+  <div class="content-container">
+    <h4 class="section-label no-margin-top">Live Traces</h4>
+    <app-live-traces
+      [initialServiceName]="serviceName"
+      [initialOperationName]="operationName"
+      [autoConnect]="false"
+      [allowCustomization]="false"
+    >
+    </app-live-traces>
+  </div>
+</div>
+
+<!-- Separator line when collapsed -->
+<div *ngIf="isCollapsed" class="separator-collapsed">
+  <!-- Open Button on Separator -->
+  <button
+    type="button"
+    class="btn btn-default btn-xs toggle-button"
+    (click)="openPanel()"
+    title="Live Traces"
+  >
+    <span class="toggle-button-text h4">
+      <i class="fa fa-chevron-right toggle-button-caret" aria-hidden="true"></i>
+      Live Traces <i class="fa fa-bug toggle-button-icon" aria-hidden="true"></i>
+    </span>
+  </button>
+</div>

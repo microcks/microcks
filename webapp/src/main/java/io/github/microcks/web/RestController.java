@@ -24,11 +24,16 @@ import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.util.ParameterConstraintUtil;
 import io.github.microcks.util.SafeLogger;
+import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.openapi.OpenAPISchemaValidator;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
+import io.github.microcks.util.tracing.CommonAttributes;
+import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.util.tracing.TraceUtil;
 import io.github.microcks.util.openapi.SwaggerSchemaValidator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.opentelemetry.api.trace.Span;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -91,7 +96,8 @@ public class RestController {
    @RequestMapping(value = "/rest/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
    public ResponseEntity<byte[]> execute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
+         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
          @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
          HttpMethod method) {
 
@@ -122,16 +128,16 @@ public class RestController {
       }
       log.debug("Found a valid operation {} with rules: {}", ic.operation().getName(),
             ic.operation().getDispatcherRules());
-
-      return processMockInvocationRequest(ic, startTime, MockControllerCommons.getDelay(headers, delay), body, headers,
-            request, method);
+      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+      return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
    }
 
    @SuppressWarnings("java:S3752")
    @RequestMapping(value = "/rest-valid/{service}/{version}/**", method = { RequestMethod.HEAD, RequestMethod.OPTIONS,
          RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE })
    public ResponseEntity<byte[]> validateAndExecute(@PathVariable("service") String serviceName,
-         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long delay,
+         @PathVariable("version") String version, @RequestParam(value = "delay", required = false) Long requestedDelay,
+         @RequestParam(value = "delayStrategy", required = false) String requestedDelayStrategy,
          @RequestBody(required = false) String body, @RequestHeader HttpHeaders headers, HttpServletRequest request,
          HttpMethod method) {
 
@@ -186,8 +192,8 @@ public class RestController {
          }
       }
 
-      return processMockInvocationRequest(ic, startTime, MockControllerCommons.getDelay(headers, delay), body, headers,
-            request, method);
+      DelaySpec delay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
+      return processMockInvocationRequest(ic, startTime, delay, body, headers, request, method);
    }
 
    /** Get the errors from OpenAPI/Swagger schema validation. */
@@ -227,11 +233,38 @@ public class RestController {
    }
 
    /** Process REST mock invocation. */
-   private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime, Long delay,
-         String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+   private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime,
+         DelaySpec delay, String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+
+      Span span = Span.current();
+      TraceUtil.enableExplainTracing();
+      span.setAttribute(CommonAttributes.SERVICE_NAME, ic.service().getName());
+      span.setAttribute(CommonAttributes.SERVICE_VERSION, ic.service().getVersion());
+      span.setAttribute(CommonAttributes.OPERATION_NAME, ic.operation().getName());
+      span.setAttribute(CommonAttributes.OPERATION_METHOD, ic.operation().getMethod());
+
+      // Add an event for the invocation reception with a human-friendly message.
+      span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
+            .explainSpanEventBuilder(
+                  String.format("Received REST invocation %s %s", ic.operation().getMethod(), ic.resourcePath()))
+            .put(CommonAttributes.HTTP_METHOD, request.getMethod())
+            .put(CommonAttributes.QUERY_STRING, request.getQueryString() != null ? request.getQueryString() : "empty")
+            .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
+            .put(CommonAttributes.BODY_CONTENT,
+                  body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
+            .put(CommonAttributes.URI_FULL,
+                  request.getRequestURL().toString()
+                        + (request.getQueryString() != null ? "?" + request.getQueryString() : ""))
+            .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
 
       String violationMsg = validateParameterConstraintsIfAny(ic.operation(), request);
       if (violationMsg != null) {
+         // if a constraint is violated, add an event and return a 400 error.
+         span.addEvent(CommonEvents.PARAMETER_CONSTRAINT_VIOLATED.getEventName(),
+               TraceUtil.explainSpanEventBuilder(violationMsg).build());
+         span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, "Parameter constraint violation");
+         span.setAttribute(CommonAttributes.ERROR_STATUS, 400);
+
          return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(),
                HttpStatus.BAD_REQUEST);
       }

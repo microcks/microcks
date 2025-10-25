@@ -37,10 +37,31 @@ spec:
     resources:
       {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
 {{- else if .Capabilities.APIVersions.Has "kafka.strimzi.io/v1beta2/Kafka" }}
+{{- if .Values.features.async.kafka.enableKraft }}
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaNodePool
+metadata:
+  name: "{{ .Values.appName }}-kafka-nodes"
+  labels:
+    strimzi.io/cluster: "{{ .Values.appName }}-kafka"
+spec:
+  replicas: 1
+  roles:
+    - controller
+    - broker
+  storage:
+    type: ephemeral
+---
+{{- end }}
 kind: Kafka
 apiVersion: kafka.strimzi.io/v1beta2
 metadata:
   name: "{{ .Values.appName }}-kafka"
+  {{- if .Values.features.async.kafka.enableKraft }}
+  annotations:
+    strimzi.io/node-pools: enabled
+    strimzi.io/kraft: enabled
+  {{- end }}
 spec:
   entityOperator:
     topicOperator: {}
@@ -70,16 +91,20 @@ spec:
           brokers:
           - broker: 0
             host: "{{ .Values.appName }}-kafka-0.{{ .Values.features.async.kafka.url }}"
+    {{- if not .Values.features.async.kafka.enableKraft }}
     replicas: 1
     storage:
       type: ephemeral
+    {{- end }}
     resources:
       {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
+  {{- if not .Values.features.async.kafka.enableKraft }}
   zookeeper:
     replicas: 1
     storage:
       type: ephemeral
     resources:
       {{- toYaml .Values.features.async.kafka.resources | nindent 6 }}
+  {{- end }}
 {{- end }}
 {{- end }}

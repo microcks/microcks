@@ -77,6 +77,10 @@ public abstract class AbstractBaseIT {
       registry.add("spring.data.mongodb.uri", () -> url);
    }
 
+   public int getServerPort() {
+      return port;
+   }
+
    public String getServerUrl() {
       return "http://localhost:" + port;
    }

@@ -3,7 +3,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.12.2-SNAPSHOT</version>
+    <version>1.13.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -22,14 +22,14 @@
 
     <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
-    <quarkus.platform.version>3.15.4</quarkus.platform.version>
-    <quarkus-plugin.version>3.15.4</quarkus-plugin.version>
+    <quarkus.platform.version>3.20.2.2</quarkus.platform.version>
+    <quarkus-plugin.version>3.20.2.2</quarkus-plugin.version>
 
     <apache-httpclient.version>5.3</apache-httpclient.version>
     <eclipse-paho.version>1.2.5</eclipse-paho.version>
     <nats.version>2.21.0</nats.version>
     <rabbitmq.version>5.19.0</rabbitmq.version>
-    <apicurio-registry.version>2.6.8.Final</apicurio-registry.version>
+    <apicurio-registry.version>2.6.13.Final</apicurio-registry.version>
     <confluent-registry.version>6.2.10</confluent-registry.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
   </properties>
@@ -69,10 +69,10 @@
       <exclusions>
         <!-- quarkus-resteasy-jackson pulls the 1.6 version of jackson-coreutils that make
         validation of required fields fail in JSON validation. See microcks/microcks#346. -->
-        <exclusion>
-          <groupId>com.github.fge</groupId>
-          <artifactId>jackson-coreutils</artifactId>
-        </exclusion>
+<!--        <exclusion>-->
+<!--          <groupId>com.github.fge</groupId>-->
+<!--          <artifactId>jackson-coreutils</artifactId>-->
+<!--        </exclusion>-->
       </exclusions>
     </dependency>
     <dependency>
@@ -95,11 +95,7 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
     </dependency>
-    <!-- Force Micrometer versions otherwise we'll get issues:
-       - https://github.com/vert-x3/vertx-micrometer-metrics/issues/109
-       - https://github.com/prometheus/client_java/issues/623
-       - https://github.com/micrometer-metrics/micrometer/issues/2765
-     -->
+
     <dependency>
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-core</artifactId>
@@ -148,6 +144,10 @@
     <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>url-connection-client</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>software.amazon.awssdk</groupId>
+      <artifactId>sts</artifactId>
     </dependency>
 
     <dependency>
@@ -204,6 +204,16 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.vintage</groupId>
+      <artifactId>junit-vintage-engine</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>junit-jupiter</artifactId>
       <scope>test</scope>
@@ -216,6 +226,11 @@
     <dependency>
       <groupId>org.testcontainers</groupId>
       <artifactId>kafka</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>localstack</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -1,18 +1,26 @@
+.panel-heading {
+  background: var(--surface-muted);
+}
+
 h1.arvo {
   font-size: 2.4em;
   line-height: 1.2em;
+  color: var(--text-default);
 }
 .hl {
-  color: #ff1745;
+  color: var(--danger-accent);
   font-weight: 600;
 }
 
+.jumbotron {
+  background: var(--surface-muted);
+}
 .megatron {
   padding: 40px;
   padding-bottom: 20px;
   margin-bottom: 20px;
   color: inherit;
-  background-color: #f1f1f1;
+  background-color: var(--surface-muted);
 }
 .megatron p {
   font-weight: 200;

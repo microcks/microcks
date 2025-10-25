@@ -38,6 +38,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -46,6 +47,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Optional;
+
+import io.github.microcks.util.delay.DelaySpec;
+import io.github.microcks.util.delay.DelayApplier;
+import io.github.microcks.util.delay.DelayApplierFactory;
 
 /**
  * This class holds commons, utility handlers for different mock controller implements (whether it be Soap, Rest, Async
@@ -59,6 +64,9 @@ public class MockControllerCommons {
 
    /** The header name used to specify a wait delay in the request. */
    public static final String X_MICROCKS_DELAY_HEADER = "x-microcks-delay";
+
+   /** The header name used to specify a delay strategy in the request. */
+   public static final String X_MICROCKS_DELAY_STRATEGY_HEADER = "x-microcks-delay-strategy";
 
    private static final String RENDERING_MESSAGE = "Response contains dynamic EL expression, rendering it...";
 
@@ -306,16 +314,22 @@ public class MockControllerCommons {
    }
 
    /** Retrieve delay header or default to the one provided as parameter. */
-   public static Long getDelay(HttpHeaders headers, Long delayParameter) {
+   public static DelaySpec getDelay(HttpHeaders headers, Long delayParameter, String strategyName) {
       if (headers.containsKey(MockControllerCommons.X_MICROCKS_DELAY_HEADER)) {
          String delayHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_HEADER);
          try {
-            return Long.parseLong(delayHeader);
+            String delayStrategyHeader = headers.getFirst(MockControllerCommons.X_MICROCKS_DELAY_STRATEGY_HEADER);
+
+            return new DelaySpec(Long.parseLong(delayHeader), delayStrategyHeader);
          } catch (NumberFormatException nfe) {
             log.debug("Invalid delay header value: {}", delayHeader);
          }
       }
-      return delayParameter;
+      if (delayParameter == null) {
+         return null;
+      }
+
+      return new DelaySpec(delayParameter, strategyName);
    }
 
    /**
@@ -323,15 +337,17 @@ public class MockControllerCommons {
     * @param startTime The starting time of mock request invocation
     * @param delay     The delay to wait for
     */
-   public static void waitForDelay(Long startTime, Long delay) {
-      if (delay != null && delay > -1) {
+   public static void waitForDelay(Long startTime, DelaySpec delay) {
+      if (delay != null && delay.baseValue() > -1) {
+         DelayApplier delayStrategy = DelayApplierFactory.fromString(delay.strategyName());
+         Long waitDelay = delayStrategy.compute(delay.baseValue());
          log.debug("Mock delay is turned on, waiting if necessary...");
          long duration = System.currentTimeMillis() - startTime;
-         if (duration < delay) {
+         if (duration < waitDelay) {
             Object semaphore = new Object();
             synchronized (semaphore) {
                try {
-                  semaphore.wait(delay - duration);
+                  semaphore.wait(waitDelay - duration);
                } catch (Exception e) {
                   log.debug("Delay semaphore was interrupted");
                }
@@ -359,7 +375,7 @@ public class MockControllerCommons {
    }
 
    public static String composeServiceAndVersion(String serviceName, String version) {
-      return "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
+      return "/" + UriUtils.encodeFragment(serviceName, StandardCharsets.UTF_8) + "/" + version;
    }
 
    public static String extractResourcePath(HttpServletRequest request, String serviceAndVersion) {

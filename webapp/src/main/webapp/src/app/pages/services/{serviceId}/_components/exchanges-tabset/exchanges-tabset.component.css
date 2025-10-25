@@ -1,11 +1,42 @@
 
 .tiny-form-control {
-  color: #363636;
-  background-color: #fff;
-  border: 1px solid #bbb;
+  color: var(--text-strong);
+  background-color: var(--background);
+  border: 1px solid var(--border-accent);
   border-radius: 1px;
   padding: 0px 1px;
 }
 .tiny-form-control:hover {
-  border-color: #7dc3e8;
+  border-color: var(--primary-border);
+}
+
+.exchange-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.exchange-column {
+  flex: 1 1 250px;
+  min-width: 0;
+}
+
+
+/* On larger screens, make definition lists horizontal */
+@media (min-width: 768px) {
+  dl.dl-horizontal {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px 16px;
+    align-items: start;
+  }
+
+  dl.dl-horizontal dt {
+    margin-bottom: 0;
+    text-align: right;
+  }
+
+  dl.dl-horizontal dd {
+    grid-column: 2;
+  }
 }

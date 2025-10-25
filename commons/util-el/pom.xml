@@ -19,7 +19,7 @@
   <parent>
     <artifactId>microcks</artifactId>
     <groupId>io.github.microcks</groupId>
-    <version>1.12.2-SNAPSHOT</version>
+    <version>1.13.0-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
@@ -31,7 +31,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <multi-project.rootdir>../..</multi-project.rootdir>
     <java.version>21</java.version>
-    <datafaker.version>2.0.2</datafaker.version>
+    <datafaker.version>2.4.4</datafaker.version>
     <junit.version>5.10.2</junit.version>
   </properties>
 
@@ -61,6 +61,12 @@
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter</artifactId>
       <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-launcher</artifactId>
+      <version>1.12.2</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

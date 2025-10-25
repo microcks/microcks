@@ -1,6 +1,161 @@
+:root {
+  --border-muted: #ccc; /* border-muted: breadcrumbs, subtle dividers */
+  --rest-accent: #89bf04; /* rest-accent: REST icon ring (green) */
+  --brand-blue: #39a5dc; /* brand-blue: soap icon, stepper selected bg */
+  --warning-500: #ec7a08; /* warning-500: event icon ring (orange) */
+  --grpc-accent: #379c9c; /* grpc-accent: gRPC icon/label (teal) */
+  --graphql-accent: #e10098; /* graphql-accent: GraphQL icon/label (magenta) */
+  --generic-accent: #9c27b0; /* generic-accent: generic icon/label (purple) */
+  --success-500: #7BB33D; /* success-500: test bars (pass) */
+  --success-600: #73A839; /* success-600: hover/darker pass */
+  --danger-500: #dd1f26; /* danger-500: test bars (fail) */
+  --danger-600: #d41e24; /* danger-600: hover/darker fail */
+  --axis-line: #eee; /* axis-line: chart axis strokes */
+  --axis-text: #888; /* axis-text: chart axis text */
+  --primary-400: #00659c; /* primary-400: active tabs, bars, highlights */
+  --primary-500: #0088ce; /* primary-500: tabs, links */
+  --border-accent: #bbb; /* border-accent: active/hover underlines */
+  --placeholder-text: #8b8d8f; /* placeholder-text: inputs and hints */
+  --info-400: #339cff; /* info-400: chart accent blue */
+  --surface-subtle: #f5f5f5; /* surface-subtle: cards, list backgrounds */
+  --surface-border: #ededed; /* surface-border: card/list borders */
+  --surface-muted: #f1f1f1; /* surface-muted: block backgrounds */
+  --surface-hover: #edf8ff; /* surface-hover: highlighted block */
+  --surface-offwhite: #fafbfd; /* surface-offwhite: popovers/menus */
+  --status-success: #3f9c35; /* status-success: good health/grade */
+  --status-success-bright: #92d400; /* status-success-bright: positive accent */
+  --status-warning: #efaa00; /* status-warning: caution/amber */
+  --status-danger: #cc0000; /* status-danger: critical/severe */
+  --primary-tint: #def3ff; /* primary-tint: info/brand background */
+  --primary-deep: #004368; /* primary-deep: brand gradient end */
+  --primary-border-light: #bee1f4; /* primary-border-light: top/bottom accents */
+  --danger-accent: #ff1745; /* danger-accent: dashboard highlights */
+  --hero-bg: #4e5d6c; /* hero-bg: hub hero background */
+  --shadow-strong: rgba(0,0,0,.2); /* shadow-strong: text shadows */
+  --brand-orange: #df691a; /* brand-orange: hub accent */
+  --shadow-subtle: rgba(0,0,0,.1); /* shadow-subtle: card shadows */
+  --divider: #eaeaea; /* divider: section/card separators */
+  --divider-translucent: rgba(0,0,0,0.2); /* divider-translucent: subtle borders */
+  --divider-light: rgb(220, 220, 220); /* divider-light: subsection underline */
+  --divider-muted: #ccc; /* divider-muted: bar borders */
+  --link-blue: #1991eb; /* link-blue: prominent CTAs/badges */
+  --shadow-medium: rgba(0,0,0,.175); /* shadow-medium: dropdowns/menus */
+  --text-default: #4d5258; /* text-default: general body text */
+  --text-strong: #363636; /* text-strong: titles/labels */
+  --text-subtle: rgb(117, 117, 117); /* text-subtle: section/subsection labels */
+  --text-secondary: #6a6e73; /* text-secondary: secondary labels */
+  --text-tertiary: #b6b6b6; /* text-tertiary: subdued text */
+  --text-dark: #333; /* text-dark: headings */
+  --text-muted: #9c9c9c; /* text-muted: small, de-emphasized text */
+  --text-muted-2: #757575; /* text-muted-2: tertiary labels */
+  --accent-text: #fff; /* accent-text: links, highlights and button text color */
+  --black: #000; /* black */
+  --primary-border: #7dc3e8; /* primary-border: focus/active borders */
+  --danger: #c00; /* danger: warnings/errors in lists */
+  --background: #fff; /* background: main background */
+  --danger-tint: #fff5f5; /* danger-tint: subtle error background */
+  --overlay-scrim: rgba(0, 0, 0, 0.8); /* overlay-scrim: drag/drop backdrop */
+  --light-gradient-start: #fafafa; /* light-gradient-start: light gradient start */
+  --light-gradient-stop: #ededed; /* light-gradient-stop: light gradient stop */
+  --tooltip-background: #393f44;
+  --tooltip-text: #fff;
+  --card-box-shadow: 0 1px 1px rgba(3, 3, 3, .175);
+
+  /* Live traces graph colors */
+  --operation-accent: #ef6c00; /* operation-accent: operation nodes (orange) */
+  --operation-accent-dark: #e65100; /* operation-accent-dark: operation hover/focus (dark orange) */
+  --operation-accent-light: #f57c00; /* operation-accent-light: operation secondary (light orange) */
+  --operation-bg-start: #fff3e0; /* operation-bg-start: operation gradient start */
+  --operation-bg-end: #ffe0b2; /* operation-bg-end: operation gradient end */
+  --operation-bg-hover-start: #ffe0b2; /* operation-bg-hover-start: operation hover gradient start */
+  --operation-bg-hover-end: #ffcc80; /* operation-bg-hover-end: operation hover gradient end */
+  --service-accent: #1565c0; /* service-accent: service nodes (blue) */
+  --service-accent-dark: #0d47a1; /* service-accent-dark: service text (dark blue) */
+  --service-bg-start: #e3f2fd; /* service-bg-start: service gradient start (light blue) */
+  --service-bg-end: #bbdefb; /* service-bg-end: service gradient end (blue) */
+  --user-accent: #2e7d32; /* user-accent: external user nodes (green) */
+  --user-accent-dark: #1b5e20; /* user-accent-dark: user text (dark green) */
+  --user-bg-start: #e8f5e9; /* user-bg-start: user gradient start (light green) */
+  --user-bg-end: #c8e6c9; /* user-bg-end: user gradient end (green) */
+  --graph-border: #ddd; /* graph-border: graph container borders */
+  --graph-divider: #eee; /* graph-divider: section dividers */
+  --graph-bg-subtle: #fafafa; /* graph-bg-subtle: subtle backgrounds */
+  --graph-border-light: #e0e0e0; /* graph-border-light: light borders */
+  --text-medium: #666; /* text-medium: medium emphasis text */
+  --text-light: #999; /* text-light: light emphasis text */
+}
+
+.dark {
+  --primary-400: #47c2ff; /* primary-400: active tabs, bars, highlights */
+  --primary-500: #40b7f2; /* primary-500: tabs, links */
+  --background: #263140; /* main background */
+  --text-default: #fff; /* text-default: general body text */
+  --text-strong: #fff; /* text-strong: titles/labels */
+  --text-secondary: rgb(220, 220, 220); /* text-secondary: secondary labels */
+  --text-subtle: rgb(200, 200, 200); /* text-subtle: section/subsection labels */
+  --text-muted: #c9c9c9; /* text-muted: small, de-emphasized text */
+  --text-muted-2: #c9c9c9; /* text-muted-2: tertiary labels */
+  --divider: #121212; /* divider: section/card separators */
+  --divider-light: rgb(117, 117, 117); /* divider-light: subsection underline */
+  --divider-muted: #292e34; /* divider-muted: bar borders */
+  --surface-muted: #292e34; /* surface-muted: block backgrounds */
+  --surface-hover: #364459; /* surface-hover: highlighted block */
+  --surface-subtle: #292e34; /* surface-subtle: cards, list backgrounds */
+  --border-muted: #292e34; /* border-muted: breadcrumbs, subtle dividers */
+  --border-accent: #292e34; /* border-accent: active/hover underlines */
+  --light-gradient-start:  #393f44; /* light-gradient-start: light gradient start */
+  --light-gradient-stop: #1e293b; /* light-gradient-stop: light gradient stop */
+  --tooltip-background: #292e34;
+  --tooltip-text: rgb(200, 200, 200);
+  --card-box-shadow: 0 1px 1px rgba(3, 3, 3, .825);
+
+  /* Dark mode: Live traces graph colors */
+  --operation-accent: #ff9800; /* operation-accent: brighter orange for dark mode */
+  --operation-accent-dark: #fb8c00; /* operation-accent-dark: vibrant orange */
+  --operation-accent-light: #ffa726; /* operation-accent-light: lighter orange */
+  --operation-bg-start: #3d2817; /* operation-bg-start: dark brown-orange */
+  --operation-bg-end: #4d3219; /* operation-bg-end: slightly lighter brown-orange */
+  --operation-bg-hover-start: #4d3219; /* operation-bg-hover-start: hover gradient */
+  --operation-bg-hover-end: #5d3c1b; /* operation-bg-hover-end: hover gradient end */
+  --service-accent: #64b5f6; /* service-accent: bright blue for visibility */
+  --service-accent-dark: #42a5f5; /* service-accent-dark: vibrant blue */
+  --service-bg-start: #1a2f3d; /* service-bg-start: dark blue-gray */
+  --service-bg-end: #1e3847; /* service-bg-end: slightly lighter blue-gray */
+  --user-accent: #81c784; /* user-accent: bright green for visibility */
+  --user-accent-dark: #66bb6a; /* user-accent-dark: vibrant green */
+  --user-bg-start: #1f2e22; /* user-bg-start: dark green-gray */
+  --user-bg-end: #253629; /* user-bg-end: slightly lighter green-gray */
+  --graph-border: #3d4752; /* graph-border: lighter border for contrast */
+  --graph-divider: #364459; /* graph-divider: visible divider */
+  --graph-bg-subtle: #1a2332; /* graph-bg-subtle: dark canvas background with slight blue tint */
+  --graph-border-light: #2d3642; /* graph-border-light: light border */
+  --text-medium: #b0b0b0; /* text-medium: readable gray text */
+  --text-light: #888; /* text-light: lighter gray text */
+  --text-dark: #e0e0e0; /* text-dark: light text for dark mode */
+}
+
+/* Classes to toggle visibility based on light/dark logos */
+.light .dark\:hidden {
+  display: block;
+}
+.dark .dark\:hidden {
+  display: none;
+}
+.dark .light\:hidden {
+  display: block;
+}
+.light .light\:hidden {
+  display: none;
+}
+
+body {
+  color: var(--text-default);
+  background-color: var(--background);
+}
+
 .breadcrumb-bar {
   height: 37px;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--border-muted);
   margin-left: -20px;
   margin-right: -20px;
   margin-top: -20px;
@@ -17,7 +172,7 @@ small {
   font-weight: 400;
   font-size: 0.9em;
   line-height: 1;
-  color: #9c9c9c;
+  color: var(--text-muted);
 }
 dl {
   margin-bottom: 2em;
@@ -58,37 +213,37 @@ span.card-pf-footer-text {
   width: 30px;
 }
 .rest-icon-sm {
-  border: 3px solid #89bf04 !important;
+  border: 3px solid var(--rest-accent) !important;
 }
 .soap-icon-sm {
-  border: 3px solid #39a5dc !important;
+  border: 3px solid var(--brand-blue) !important;
 }
 .event-icon-sm {
-  border: 3px solid #ec7a08 !important;
+  border: 3px solid var(--warning-500) !important;
 }
 .grpc-icon-sm {
-  border: 3px solid #379c9c !important;
+  border: 3px solid var(--grpc-accent) !important;
 }
 .graph-icon-sm {
-  border: 3px solid #e10098 !important;
+  border: 3px solid var(--graphql-accent) !important;
 }
 .generic-icon-sm {
-  border: 3px solid #9c27b0 !important;
+  border: 3px solid var(--generic-accent) !important;
 }
 
 .label-grpc {
-  background-color: #379c9c;
+  background-color: var(--grpc-accent);
 }
 .label-graph {
-  background-color: #e10098;
+  background-color: var(--graphql-accent);
 }
 .label-gene {
-  background-color: #9c27b0;
+  background-color: var(--generic-accent);
 }
 
 .section-label {
   text-transform: uppercase;
-  color: rgb(117, 117, 117);
+  color: var(--text-subtle);
   margin-top: 2em;
   margin-bottom: 1em;
 }
@@ -98,8 +253,8 @@ span.card-pf-footer-text {
 }
 
 .subsection-label {
-  color: rgb(117, 117, 117);
-  border-bottom: 1px solid rgb(220, 220, 220);
+  color: var(--text-subtle);
+  border-bottom: 1px solid var(--divider-light);
   padding-bottom: 10px;
   margin-top: 1em;
 }
@@ -116,20 +271,20 @@ span.card-pf-footer-text {
 }
 .bar {
   border: 1px;
-  border-bottom: 1px solid #CCC;
+  border-bottom: 1px solid var(--divider-muted);
   margin: 5px;
 }
 .bar-success {
-  background: #7BB33D;
+  background: var(--success-500);
 }
 .bar-success:hover {
-  background: #73A839;
+  background: var(--success-600);
 }
 .bar-failure {
-  background: #dd1f26;
+  background: var(--danger-500);
 }
 .bar-failure:hover {
-  background: #d41e24;
+  background: var(--danger-600);
 }
 
 #dayInvocationsBarChart {
@@ -140,11 +295,11 @@ span.card-pf-footer-text {
 }
 #dayInvocationsBarChart >* .axis line {
   stroke-width: 1px;
-  stroke: #eee;
+  stroke: var(--axis-line);
   shape-rendering: crispedges;
 }
 #dayInvocationsBarChart >* .axis text {
-  fill: #888;
+  fill: var(--axis-text);
 }
 #hourInvocationsBarChart {
   padding-right: 20px;
@@ -154,14 +309,14 @@ span.card-pf-footer-text {
 }
 #hourInvocationsBarChart >* .axis line {
   stroke-width: 1px;
-  stroke: #eee;
+  stroke: var(--axis-line);
   shape-rendering: crispedges;
 }
 #hourInvocationsBarChart >* .axis text {
-  fill: #888;
+  fill: var(--axis-text);
 }
 .invocations-bar > rect {
-  fill: #0088ce;
+  fill: var(--primary-500);
   fill-opacity: 0.7;
 }
 .invocations-bar > rect:hover {
@@ -182,11 +337,11 @@ span.card-pf-footer-text {
 .nav-tabs>li.second-tab.active>a, .nav-tabs>li.second-tab.active>a:active, .nav-tabs>li.second-tab.active>a:focus, .nav-tabs>li.second-tab.active>a:hover {
   background-color: transparent;
   border: 0!important;
-  color: #0088ce;
+  color: var(--primary-500);
 }
 
 .nav-tabs>li.second-tab.active>a:before, .nav-tabs>li.second-tab.active>a:focus:before, .nav-tabs>li.second-tab.active>a:hover:before {
-  background: #0088ce;
+  background: var(--primary-500);
   bottom: -1px;
   content: "";
   display: block;
@@ -196,7 +351,7 @@ span.card-pf-footer-text {
   right: 15px;
 }
 .nav-tabs>li.second-tab>a:active:before, .nav-tabs>li.second-tab>a:focus:before, .nav-tabs>li.second-tab>a:hover:before {
-  background: #bbb;
+  background: var(--border-accent);
   bottom: -1px;
   content: "";
   display: block;
@@ -271,7 +426,7 @@ pre.hljs {
 }
 
 .filter-select .btn-default {
-  background-color: #fff;
+  background-color: var(--background);
   background-image: none;
 }
 .filter-select .btn {
@@ -290,7 +445,7 @@ pre.hljs {
   text-align: left;
 }
 .filter-select .btn-default .placeholder {
-  color: #8b8d8f;
+  color: var(--placeholder-text);
   font-style: italic;
   font-weight: 400;
 }
@@ -326,13 +481,14 @@ pre.hljs {
   white-space: nowrap;
   word-wrap: normal;
   direction: ltr;
+  font-feature-settings: 'liga';
   -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
 }
 
 /** Reajust the Material elements style on Patternly */
 .mat-stepper-horizontal {
-  background-color: #fff !important;
+  background-color: var(--background) !important;
   font-family: "Open Sans", Helvetica, Arial, sans-serif !important;
 }
 .mat-stepper-horizontal-line {
@@ -342,24 +498,24 @@ pre.hljs {
   height: 0;
   margin: 0 -16px;
   min-width: 32px;
-  border-top-color: #bbb;
+  border-top-color: var(--border-accent);
 }
 .mat-horizontal-content-container {
   padding-top: 3em !important;
 }
 .mat-step-icon {
-  background-color: #fff !important;
-  border-color: #bbb !important;
+  background-color: var(--background) !important;
+  border-color: var(--border-accent) !important;
   border-style: solid !important;
   border-width: 1px;
-  color: #bbb !important;
+  color: var(--text-muted) !important;
 }
 .mat-step-icon-selected {
-  background-color: #39a5dc !important;
-  color: #fff !important;
+  background-color: var(--brand-blue) !important;
+  color: var(--accent-text) !important;
 }
 .mat-step-text-label {
+  color: var(--text-default);
   font-family: "Open Sans", Helvetica, Arial, sans-serif;
   font-size: 16px;
 }
-

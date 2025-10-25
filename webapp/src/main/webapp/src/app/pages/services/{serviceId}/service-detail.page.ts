@@ -25,6 +25,7 @@ import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 import { Observable, Subscription, interval } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
+import { CollapseModule } from 'ngx-bootstrap/collapse';
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef, BsModalService } from 'ngx-bootstrap/modal';
 import { TooltipModule } from 'ngx-bootstrap/tooltip';
@@ -39,6 +40,7 @@ import {
 import { ListConfig, ListModule } from '../../../components/patternfly-ng/list';
 
 import { EditLabelsDialogComponent } from '../../../components/edit-labels-dialog/edit-labels-dialog.component';
+import { CollapsibleLiveTracesComponent } from '../../../components/collapsible-live-traces/collapsible-live-traces.component';
 import { GradeIndexComponent } from '../../../components/grade-index/grade-index.component';
 import { LabelListComponent } from '../../../components/label-list/label-list.component';
 import { TimeAgoPipe } from '../../../components/time-ago.pipe';
@@ -75,6 +77,8 @@ import { ServicesService } from '../../../services/services.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
+    CollapseModule,
+    CollapsibleLiveTracesComponent,
     BsDropdownModule,
     ExchangesTabsetComponent,
     GradeIndexComponent,
@@ -100,6 +104,9 @@ export class ServiceDetailPageComponent implements OnInit {
   operationsListConfig!: ListConfig;
   notifications: Notification[] = [];
   urlType: string = 'raw';
+  // Deep-linking state from URL
+  private qpOperationName: string | null = null;
+  activeExchangeName: string | null = null;
 
   aiCopilotSamples: boolean = false;
   aiCopilotTaskId: string | null = null;
@@ -144,6 +151,10 @@ export class ServiceDetailPageComponent implements OnInit {
         return this.sortOperations(o1, o2);
       });
       this.updateAICopilotSamplesFlag(view);
+      // If deep-link operation present, expand it now that operations are loaded
+      if (this.qpOperationName) {
+        this.expandOperation(this.qpOperationName);
+      }
     });
 
     // Fallback
@@ -172,6 +183,18 @@ export class ServiceDetailPageComponent implements OnInit {
       showRadioButton: false,
       useExpandItems: true,
     } as ListConfig;
+
+    // Listen to query params for deep-link selection
+    this.route.queryParamMap.subscribe((qp) => {
+      const op = qp.get('operation');
+      const ex = qp.get('exchange');
+      this.qpOperationName = op;
+      this.activeExchangeName = ex;
+      // Try to expand the matching operation if view already loaded
+      if (op && this.operations) {
+        this.expandOperation(op);
+      }
+    });
   }
 
   private refreshServiceView(): void {
@@ -188,6 +211,18 @@ export class ServiceDetailPageComponent implements OnInit {
     });
     // Then trigger view reevaluation to update the samples list and the notifications toaster.
     this.ref.detectChanges();
+  }
+
+  // Expand operation row in the list if names match
+  private expandOperation(operationName: string): void {
+    if (!this.operations) return;
+    const item = this.operations.find((o) => o.name === operationName);
+    if (item) {
+      // Mark as expanded; ListComponent uses this flag
+      (item as any).expanded = true;
+      // Trigger change detection so child gets rendered
+      this.ref.detectChanges();
+    }
   }
 
   private updateAICopilotSamplesFlag(view: ServiceView): void {
@@ -400,6 +435,18 @@ export class ServiceDetailPageComponent implements OnInit {
           },
         });
     });
+  }
+
+  public openManageSamples(): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      serviceView: this.resolvedServiceView,
+      samplesMode: 'ALL',
+    };
+    this.modalRef = this.modalService.show(ManageSamplesDialogComponent, {
+      initialState,
+    });
+    this.modalRef.setClass('modal-lg');
   }
 
   public openManageAISamples(): void {
@@ -637,7 +684,7 @@ export class ServiceDetailPageComponent implements OnInit {
 
       // Result may still contain {} if no dispatchCriteria (because of SCRIPT)
       if (result.indexOf('{') != -1 && queryParameters != null) {
-        console.log('queryParameters: ' + queryParameters);
+        //console.log('queryParameters: ' + queryParameters);
         queryParameters.forEach((param) => {
           result = result.replace('{' + param.name + '}', param.value);
         });
@@ -935,7 +982,7 @@ export class ServiceDetailPageComponent implements OnInit {
       this.hasRepositoryTenancyFeatureEnabled() &&
       this.resolvedServiceView.service.metadata.labels
     ) {
-      console.log('hasRepositoryTenancyFeatureEnabled');
+      //console.log('hasRepositoryTenancyFeatureEnabled');
       const tenant =
         this.resolvedServiceView.service.metadata.labels[
           this.repositoryTenantLabel()
@@ -953,6 +1000,7 @@ export class ServiceDetailPageComponent implements OnInit {
       (this.resolvedServiceView.service.type === 'REST' ||
         this.resolvedServiceView.service.type === 'GRPC' ||
         this.resolvedServiceView.service.type === 'GRAPHQL' ||
+        this.resolvedServiceView.service.type === 'SOAP_HTTP' ||
         ((this.resolvedServiceView.service.type === 'EVENT' ||
           this.resolvedServiceView.service.type === 'GENERIC_EVENT') &&
           this.hasAsyncAPIFeatureEnabled()))

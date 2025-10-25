@@ -1,0 +1,75 @@
+/* Collapsible Live Traces Component Styles */
+
+.panel-container {
+  border-left: 1px solid #d1d1d1;
+  padding-left: 20px;
+  position: relative;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  cursor: ew-resize;
+  background: transparent;
+  z-index: 10;
+}
+
+.resize-indicator {
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 50px;
+  background: #ccc;
+}
+
+.toggle-button {
+  position: absolute;
+  left: -30px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px 6px;
+  border-radius: 3px;
+  z-index: 20;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  white-space: nowrap;
+}
+
+.toggle-button-text {
+  transform: rotate(180deg);
+  display: inline-block;
+}
+
+.toggle-button-icon {
+  margin-top: 10px;
+  padding-left: 2px;
+  transform: rotate(180deg);
+}
+.toggle-button-caret {
+  margin-bottom: 5px;
+}
+
+.content-container {
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
+  max-height: 1200px;
+}
+
+.separator-collapsed {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  /*border-left: 1px solid #d1d1d1;*/
+  margin-left: 10px;
+}
