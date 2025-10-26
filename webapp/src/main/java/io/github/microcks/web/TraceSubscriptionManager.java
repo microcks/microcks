@@ -19,6 +19,7 @@ import io.github.microcks.event.TraceEvent;
 import io.github.microcks.service.SpanStorageService;
 import io.github.microcks.util.tracing.SpanFilterUtil;
 
+import io.github.microcks.web.dto.SpanDataDTO;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.slf4j.Logger;
@@ -92,7 +93,10 @@ public class TraceSubscriptionManager {
 
       for (Subscription sub : subscriptions) {
          if (SpanFilterUtil.matchesTraceEvent(event, sub.serviceName(), sub.operationName(), sub.clientAddress())) {
-            List<SpanData> spanDataList = spans.stream().map(ReadableSpan::toSpanData).toList();
+            List<SpanData> spanDataList = spans.stream().map(ReadableSpan::toSpanData)
+                  .map(s -> (SpanData) new SpanDataDTO(s)
+
+                  ).toList();
 
             try {
                sub.emitter().send(SseEmitter.event().name("trace").data(spanDataList));
