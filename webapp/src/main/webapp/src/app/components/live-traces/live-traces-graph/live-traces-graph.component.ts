@@ -287,7 +287,7 @@ export class LiveTracesGraphComponent
 
     // Calculate tree dimensions (horizontal layout)
     const treeWidth = this.baseRadius + this.opRingRadius;
-    const treeHeight = 800; // Vertical spread
+    const treeHeight = Math.max(800, tracesMap.size * 90); // Vertical spread
     const tree = d3h
       .tree<any>()
       .size([treeHeight, treeWidth])
