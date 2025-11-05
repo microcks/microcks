@@ -30,13 +30,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Memory-optimized Data Transfer Object for SpanData that stores only essential fields needed for trace analysis.
- * This significantly reduces memory footprint by excluding:
- * - Resource information (system/host details)
- * - Link data (rarely used in storage)
- * - Instrumentation scope details (not needed for trace queries)
- * 
- * Only stores: span context, name, kind, status, timestamps, attributes, and events.
+ * Memory-optimized Data Transfer Object for SpanData that stores only essential fields needed for trace analysis. Only
+ * stores: span context, name, kind, status, timestamps, attributes, and events.
  */
 public class SpanDataDTO implements SpanData {
    // Essential fields for trace analysis

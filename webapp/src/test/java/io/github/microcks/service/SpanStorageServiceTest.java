@@ -470,13 +470,13 @@ class SpanStorageServiceTest {
    private SpanData createMockSpanData(String traceId, String spanId, Attributes attributes) {
       SpanData spanData = Mockito.mock(SpanData.class);
       SpanContext spanContext = Mockito.mock(SpanContext.class);
-      
+
       // Mock the SpanContext
       when(spanContext.getTraceId()).thenReturn(traceId);
       when(spanContext.getSpanId()).thenReturn(spanId);
       when(spanContext.getTraceFlags()).thenReturn(TraceFlags.getDefault());
       when(spanContext.getTraceState()).thenReturn(TraceState.getDefault());
-      
+
       when(spanData.getSpanContext()).thenReturn(spanContext);
       when(spanData.getAttributes()).thenReturn(attributes);
       when(spanData.getEndEpochNanos()).thenReturn(System.nanoTime());
