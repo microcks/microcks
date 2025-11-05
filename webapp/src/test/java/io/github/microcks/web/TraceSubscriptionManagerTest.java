@@ -94,7 +94,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List.of(createMockSpanWithServiceInfo(traceId, "span-1", serviceName, operationName));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, serviceName, operationName, clientAddress);
@@ -125,8 +125,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      ReadableSpan span = Mockito.mock(ReadableSpan.class);
-      List<ReadableSpan> spans = List.of(span);
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, differentService, differentOperation, clientAddress);
@@ -173,8 +172,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List
-            .of(createMockSpanWithServiceInfo(traceId, "span-1", actualServiceName, operationName));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, actualServiceName, operationName, clientAddress);
@@ -204,8 +202,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List
-            .of(createMockSpanWithServiceInfo(traceId, "span-1", serviceName, actualOperation));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, serviceName, actualOperation, clientAddress);
@@ -236,8 +233,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List
-            .of(createMockSpanWithServiceInfo(traceId, "span-1", actualServiceName, actualOperation));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, actualServiceName, actualOperation, clientAddress);
@@ -268,8 +264,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      ReadableSpan span = Mockito.mock(ReadableSpan.class);
-      List<ReadableSpan> spans = List.of(span);
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, actualServiceName, actualOperation, clientAddress);
@@ -311,7 +306,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List.of(createMockSpanWithServiceInfo(traceId, "span-1", serviceName, operationName));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       // Mock emitter to throw IOException when sending trace data
@@ -344,7 +339,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List.of(createMockSpanWithServiceInfo(traceId, "span-1", serviceName, operationName));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, serviceName, operationName, actualClientAddress);
@@ -373,7 +368,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List.of(createMockSpanWithServiceInfo(traceId, "span-1", serviceName, operationName));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, serviceName, operationName, clientAddress);
@@ -404,8 +399,7 @@ class TraceSubscriptionManagerTest {
       // Reset mock to clear the initial heartbeat call
       reset(mockEmitter);
 
-      List<ReadableSpan> spans = List
-            .of(createMockSpanWithServiceInfo(traceId, "span-1", actualServiceName, actualOperation));
+      List<SpanData> spans = List.of(Mockito.mock(SpanData.class));
       when(mockSpanStorageService.getSpansForTrace(traceId)).thenReturn(spans);
 
       TraceEvent event = new TraceEvent(traceId, actualServiceName, actualOperation, clientAddress);
@@ -417,18 +411,5 @@ class TraceSubscriptionManagerTest {
       verify(mockSpanStorageService).getSpansForTrace(traceId);
       // Should send trace event since complex regex matches
       verify(mockEmitter).send(any(SseEmitter.SseEventBuilder.class));
-   }
-
-   // Helper methods for creating mock spans
-
-   private ReadableSpan createMockSpanWithServiceInfo(String traceId, String spanId, String serviceName,
-         String operationName) {
-      ReadableSpan span = Mockito.mock(ReadableSpan.class);
-      SpanData spanData = Mockito.mock(SpanData.class);
-
-      // Only stub what's actually used by the TraceSubscriptionService
-      when(span.toSpanData()).thenReturn(spanData);
-
-      return span;
    }
 }

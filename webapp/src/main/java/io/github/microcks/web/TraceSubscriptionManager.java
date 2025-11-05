@@ -19,8 +19,6 @@ import io.github.microcks.event.TraceEvent;
 import io.github.microcks.service.SpanStorageService;
 import io.github.microcks.util.tracing.SpanFilterUtil;
 
-import io.github.microcks.web.dto.SpanDataDTO;
-import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -87,19 +85,14 @@ public class TraceSubscriptionManager {
    @EventListener
    public void onTraceUpdated(TraceEvent event) {
       log.trace("Received trace update event for traceId='{}'", event.traceId());
-      List<ReadableSpan> spans = spanStorageService.getSpansForTrace(event.traceId());
+      List<SpanData> spans = spanStorageService.getSpansForTrace(event.traceId());
       if (spans.isEmpty())
          return;
 
       for (Subscription sub : subscriptions) {
          if (SpanFilterUtil.matchesTraceEvent(event, sub.serviceName(), sub.operationName(), sub.clientAddress())) {
-            List<SpanData> spanDataList = spans.stream().map(ReadableSpan::toSpanData)
-                  .map(s -> (SpanData) new SpanDataDTO(s)
-
-                  ).toList();
-
             try {
-               sub.emitter().send(SseEmitter.event().name("trace").data(spanDataList));
+               sub.emitter().send(SseEmitter.event().name("trace").data(spans));
             } catch (IOException e) {
                sub.emitter().complete();
                subscriptions.remove(sub);
