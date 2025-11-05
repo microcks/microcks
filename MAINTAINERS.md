@@ -22,8 +22,8 @@ The following members are [code owners](https://github.com/microcks/.github/blob
 
 | Name | GitHub ID | Affiliation | Sub-Projects |
 |----------------------------------------------------------|-------------------------------------------------------------|-------------------|-------------------|
+| Harshvardhan Parmar | [Harsh4902](https://github.com/Harsh4902) | Yosemite Crew | [Microcks CLI](https://github.com/microcks/microcks-cli) |
 | Hugo Guerrero | [hguerrero](https://github.com/hguerrero) | Kong (Ex Red Hat) | [Docker Desktop Extension](https://github.com/microcks/microcks-docker-desktop-extension) |
-| Julien Breux | [JulienBreux](https://github.com/JulienBreux) | Google | [Microcks CLI](https://github.com/microcks/microcks-cli), [Microcks Go Client](https://github.com/microcks/microcks-go-client) |
 | Sebastien DEGODEZ | [SebastienDegodez](https://github.com/SebastienDegodez) | AXA France | [Testcontainers .NET](https://github.com/microcks/microcks-testcontainers-dotnet) |
 
 ## Emeritus
@@ -32,3 +32,4 @@ Below the list of Emeritus members are those who are no longer active but are re
 
 | Name | GitHub ID | Affiliation | Sub-Projects |
 |----------------------------------------------------------|-------------------------------------------------------------|-------------------|-------------------|
+| Julien Breux | [JulienBreux](https://github.com/JulienBreux) | Google | [Microcks CLI](https://github.com/microcks/microcks-cli), [Microcks Go Client](https://github.com/microcks/microcks-go-client) |
