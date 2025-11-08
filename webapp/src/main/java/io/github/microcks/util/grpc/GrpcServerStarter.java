@@ -35,7 +35,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import jakarta.annotation.Nullable;
 import jakarta.annotation.PostConstruct;
+
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -142,6 +144,7 @@ public class GrpcServerStarter {
                   }
                } catch (InterruptedException e) {
                   log.error("GRPC Server shutdown interrupted", e);
+                  Thread.currentThread().interrupt();
                }
             }
          });
@@ -189,6 +192,7 @@ public class GrpcServerStarter {
             latch.await();
          } catch (InterruptedException e) {
             log.error("GRPC Server awaiter interrupted.", e);
+            Thread.currentThread().interrupt();
          } finally {
             isRunning.set(false);
          }
@@ -198,6 +202,7 @@ public class GrpcServerStarter {
       awaitThread.start();
    }
 
+   @Nullable
    private static byte[] extractPrivateKeyIfAny(String privateKeyFilePath) throws IOException {
       String privateKey = Files.readString(Path.of(privateKeyFilePath));
       if (privateKey.startsWith(BEGIN_RSA_PRIVATE_KEY)) {

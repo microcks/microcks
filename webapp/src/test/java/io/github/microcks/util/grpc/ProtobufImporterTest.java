@@ -339,5 +339,6 @@ class ProtobufImporterTest {
       } catch (MockRepositoryImportException mrie) {
          fail("Resource definition import should not fail");
       }
+      assertEquals(17, resources.size());
    }
 }
