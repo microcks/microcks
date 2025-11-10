@@ -158,8 +158,8 @@ public class VariableReferenceExpression implements Expression {
             try {
                return variableValues[Integer.parseInt(arrayIndex)];
             } catch (ArrayIndexOutOfBoundsException ae) {
-               log.warn("Expression asked for {} but array is smaller ({}). Returning null.",
-                     arrayIndex, variableValues.length);
+               log.warn("Expression asked for {} but array is smaller ({}). Returning null.", arrayIndex,
+                     variableValues.length);
                return null;
             }
          }

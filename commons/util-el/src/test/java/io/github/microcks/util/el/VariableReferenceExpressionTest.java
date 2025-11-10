@@ -87,14 +87,14 @@ class VariableReferenceExpressionTest {
    @Test
    void testXPathValue() {
       String xmlString = """
-               <library>
-                  <name>My Personal Library</name>
-                  <books>
-                     <book><title>Title 1</title><author>Jane Doe</author></book>
-                     <book><title>Title 2</title><author>John Doe</author></book>
-                  </books>
-               </library>
-               """;
+            <library>
+               <name>My Personal Library</name>
+               <books>
+                  <book><title>Title 1</title><author>Jane Doe</author></book>
+                  <book><title>Title 2</title><author>John Doe</author></book>
+               </books>
+            </library>
+            """;
       EvaluableRequest request = new EvaluableRequest(xmlString, null);
 
       // Create new expression evaluating XML XPath.
