@@ -34,7 +34,6 @@
     <junit.version>5.10.2</junit.version>
     <jackson.version>2.19.2</jackson.version>
     <json-schema-validator.version>1.5.6</json-schema-validator.version>
-    <snakeyaml.version>2.2</snakeyaml.version>
     <avro.version>1.12.0</avro.version>
     <mockito.version>5.7.0</mockito.version>
   </properties>
@@ -44,26 +43,12 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
-
-    <!-- Force Snakeyaml here as Jackson still pulls 1.33 version full of CVEs -->
-    <dependency>
-      <groupId>org.yaml</groupId>
-      <artifactId>snakeyaml</artifactId>
-      <version>${snakeyaml.version}</version>
-    </dependency>
-
     <dependency>
       <groupId>com.fasterxml.jackson.dataformat</groupId>
       <artifactId>jackson-dataformat-yaml</artifactId>
       <version>${jackson.version}</version>
-      <!-- Avoid pull Snakeyaml here as it resolves 1.33, full of CVEs -->
-      <exclusions>
-        <exclusion>
-          <groupId>org.yaml</groupId>
-          <artifactId>snakeyaml</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
+
     <!-- import for networknt/json-schema-validator -->
     <dependency>
       <groupId>com.networknt</groupId>
