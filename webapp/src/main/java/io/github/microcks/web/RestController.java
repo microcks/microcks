@@ -22,11 +22,12 @@ import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResourceRepository;
 import io.github.microcks.repository.ServiceRepository;
-import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.ParameterConstraintUtil;
 import io.github.microcks.util.SafeLogger;
+import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.openapi.OpenAPISchemaValidator;
 import io.github.microcks.util.openapi.OpenAPITestRunner;
+import io.github.microcks.util.tracing.CommonAttributes;
 import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.util.tracing.TraceUtil;
 import io.github.microcks.util.openapi.SwaggerSchemaValidator;
@@ -53,8 +54,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
-import io.github.microcks.util.delay.DelaySpec;
 
 /**
  * A controller for mocking Rest responses.
@@ -236,34 +235,36 @@ public class RestController {
    /** Process REST mock invocation. */
    private ResponseEntity<byte[]> processMockInvocationRequest(MockInvocationContext ic, long startTime,
          DelaySpec delay, String body, HttpHeaders headers, HttpServletRequest request, HttpMethod method) {
+
       Span span = Span.current();
       TraceUtil.enableExplainTracing();
-      span.setAttribute("service.name", ic.service().getName());
-      span.setAttribute("service.version", ic.service().getVersion());
-      span.setAttribute("operation.name", ic.operation().getName());
-      span.setAttribute("operation.method", ic.operation().getMethod());
-      span.setAttribute("operation.id", IdBuilder.buildOperationId(ic.service(), ic.operation()));
+      span.setAttribute(CommonAttributes.SERVICE_NAME, ic.service().getName());
+      span.setAttribute(CommonAttributes.SERVICE_VERSION, ic.service().getVersion());
+      span.setAttribute(CommonAttributes.OPERATION_NAME, ic.operation().getName());
+      span.setAttribute(CommonAttributes.OPERATION_METHOD, ic.operation().getMethod());
+
       // Add an event for the invocation reception with a human-friendly message.
-      span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(),
-            TraceUtil
-                  .explainSpanEventBuilder(
-                        String.format("Received REST invocation %s %s", ic.operation().getMethod(), ic.resourcePath()))
-                  .put("http.method", request.getMethod())
-                  .put("query.string", request.getQueryString() != null ? request.getQueryString() : "empty")
-                  .put("body.length", body != null ? body.length() : 0)
-                  .put("body.content",
-                        body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
-                  .put("uri.full",
-                        request.getRequestURL().toString()
-                              + (request.getQueryString() != null ? "?" + request.getQueryString() : ""))
-                  .put("client.address", request.getRemoteAddr()).build());
+      span.addEvent(CommonEvents.INVOCATION_RECEIVED.getEventName(), TraceUtil
+            .explainSpanEventBuilder(
+                  String.format("Received REST invocation %s %s", ic.operation().getMethod(), ic.resourcePath()))
+            .put(CommonAttributes.HTTP_METHOD, request.getMethod())
+            .put(CommonAttributes.QUERY_STRING, request.getQueryString() != null ? request.getQueryString() : "empty")
+            .put(CommonAttributes.BODY_SIZE, body != null ? body.length() : 0)
+            .put(CommonAttributes.BODY_CONTENT,
+                  body != null ? (body.length() > 1000 ? body.substring(0, 1000) + "..." : body) : "empty")
+            .put(CommonAttributes.URI_FULL,
+                  request.getRequestURL().toString()
+                        + (request.getQueryString() != null ? "?" + request.getQueryString() : ""))
+            .put(CommonAttributes.CLIENT_ADDRESS, request.getRemoteAddr()).build());
+
       String violationMsg = validateParameterConstraintsIfAny(ic.operation(), request);
       if (violationMsg != null) {
          // if a constraint is violated, add an event and return a 400 error.
          span.addEvent(CommonEvents.PARAMETER_CONSTRAINT_VIOLATED.getEventName(),
                TraceUtil.explainSpanEventBuilder(violationMsg).build());
          span.setStatus(io.opentelemetry.api.trace.StatusCode.ERROR, "Parameter constraint violation");
-         span.setAttribute("http.status_code", 400);
+         span.setAttribute(CommonAttributes.ERROR_STATUS, 400);
+
          return new ResponseEntity<>((violationMsg + ". Check parameter constraints.").getBytes(),
                HttpStatus.BAD_REQUEST);
       }

@@ -20,7 +20,6 @@ import io.github.microcks.util.script.StringToStringsMap;
 import io.grpc.Context;
 import io.grpc.Metadata;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Set;
 
 import com.nimbusds.jose.util.StandardCharset;
@@ -30,8 +29,13 @@ import com.nimbusds.jose.util.StandardCharset;
  */
 public class GrpcMetadataUtil {
 
-   /* Key used to pass gRPC metadata from interceptor to server via context */
+   /** Key used to pass gRPC metadata from interceptor to server via context */
    public static final Context.Key<Metadata> METADATA_CTX_KEY = Context.key("grpc-metadata");
+
+   /** Key for remote address metadata entry in metadata. */
+   public static final Metadata.Key<String> REMOTE_ADDR_METADATA_KEY = Metadata.Key.of("remote-addr",
+         Metadata.ASCII_STRING_MARSHALLER);
+
 
    private GrpcMetadataUtil() {
       // Private constructor to hide the implicit public one.
@@ -42,10 +46,8 @@ public class GrpcMetadataUtil {
     * 
     * @param metadata The gRPC Metadata to convert
     * @return A StringToStringsMap containing all Metadata key-value pairs
-    * @throws UnsupportedEncodingException If metadata contains invalid binary value which could not be decoded into a
-    *                                      string.
     */
-   public static StringToStringsMap convertToMap(Metadata metadata) throws UnsupportedEncodingException {
+   public static StringToStringsMap convertToMap(Metadata metadata) {
       StringToStringsMap result = new HttpHeadersStringToStringsMap();
 
       Set<String> keys = metadata.keys();

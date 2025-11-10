@@ -35,10 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map;
 
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ADD_PROPERTIES_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_ITEMS_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_PROPERTIES_ELEMENT;
-import static io.github.microcks.util.JsonSchemaValidator.JSON_SCHEMA_REQUIRED_ELEMENT;
+import static io.github.microcks.util.JsonSchemaValidator.*;
 
 /**
  * Implementation of McpToolConverter for gRPC services.
@@ -80,7 +77,7 @@ public class GrpcMcpToolConverter extends McpToolConverter {
       ArrayNode requiredPropertiesNode = mapper.createArrayNode();
 
       // Initialize input schema with empty object.
-      inputSchemaNode.put("type", "object");
+      inputSchemaNode.put(JSON_SCHEMA_TYPE_ELEMENT, JSON_SCHEMA_OBJECT_TYPE);
       inputSchemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, schemaPropertiesNode);
       inputSchemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredPropertiesNode);
       inputSchemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
@@ -148,7 +145,7 @@ public class GrpcMcpToolConverter extends McpToolConverter {
             // We must convert to a type array.
             ObjectNode arraySchemaNode = mapper.createObjectNode();
 
-            arraySchemaNode.put("type", "array");
+            arraySchemaNode.put(JSON_SCHEMA_TYPE_ELEMENT, JSON_SCHEMA_ARRAY_TYPE);
             propertiesNode.set(fieldName, arraySchemaNode);
 
             if (isMessageType(fd.getType())) {
@@ -159,7 +156,7 @@ public class GrpcMcpToolConverter extends McpToolConverter {
                visitDescriptor(fd.getMessageType(), subitemsNode, requiredSubitemsPropertiesNode);
 
                // Add the required properties to the subschema.
-               subschemaNode.put("type", "object");
+               subschemaNode.put(JSON_SCHEMA_TYPE_ELEMENT, JSON_SCHEMA_OBJECT_TYPE);
                subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subitemsNode);
 
                // Add the items definition to the current property.
@@ -178,7 +175,7 @@ public class GrpcMcpToolConverter extends McpToolConverter {
                ObjectNode subpropertiesNode = mapper.createObjectNode();
                ArrayNode requiredSubpropertiesNode = mapper.createArrayNode();
 
-               subschemaNode.put("type", "object");
+               subschemaNode.put(JSON_SCHEMA_TYPE_ELEMENT, JSON_SCHEMA_OBJECT_TYPE);
                subschemaNode.set(JSON_SCHEMA_PROPERTIES_ELEMENT, subpropertiesNode);
                subschemaNode.set(JSON_SCHEMA_REQUIRED_ELEMENT, requiredSubpropertiesNode);
                subschemaNode.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
@@ -237,18 +234,11 @@ public class GrpcMcpToolConverter extends McpToolConverter {
    /** Convert a scalar Field Protobuf type into a MCP Json compatible one. */
    private static String toMcpJsonType(Descriptors.FieldDescriptor.Type fieldType) {
       switch (fieldType) {
-         case DOUBLE:
-         case FLOAT:
-         case INT64:
-         case UINT64:
-         case INT32:
-         case FIXED64:
-         case FIXED32:
+         case DOUBLE, FLOAT, INT64, UINT64, INT32, FIXED64, FIXED32:
             return "number";
          case BOOL:
             return "boolean";
-         case STRING:
-         case BYTES:
+         case STRING, BYTES:
          default:
             return "string";
       }

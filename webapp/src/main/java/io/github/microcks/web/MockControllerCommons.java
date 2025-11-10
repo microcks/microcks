@@ -38,6 +38,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -337,9 +338,9 @@ public class MockControllerCommons {
     * @param delay     The delay to wait for
     */
    public static void waitForDelay(Long startTime, DelaySpec delay) {
-      if (delay != null && delay.getBaseValue() > -1) {
-         DelayApplier delayStrategy = DelayApplierFactory.fromString(delay.getStrategyName());
-         Long waitDelay = delayStrategy.compute(delay.getBaseValue());
+      if (delay != null && delay.baseValue() > -1) {
+         DelayApplier delayStrategy = DelayApplierFactory.fromString(delay.strategyName());
+         Long waitDelay = delayStrategy.compute(delay.baseValue());
          log.debug("Mock delay is turned on, waiting if necessary...");
          long duration = System.currentTimeMillis() - startTime;
          if (duration < waitDelay) {
@@ -374,7 +375,7 @@ public class MockControllerCommons {
    }
 
    public static String composeServiceAndVersion(String serviceName, String version) {
-      return "/" + UriUtils.encodeFragment(serviceName, "UTF-8") + "/" + version;
+      return "/" + UriUtils.encodeFragment(serviceName, StandardCharsets.UTF_8) + "/" + version;
    }
 
    public static String extractResourcePath(HttpServletRequest request, String serviceAndVersion) {

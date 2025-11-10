@@ -20,6 +20,7 @@ import io.github.microcks.domain.Response;
 import io.github.microcks.domain.Service;
 import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.repository.ServiceStateRepository;
+import io.github.microcks.service.OpenTelemetryResolverService;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
@@ -38,6 +39,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.grpc.Metadata;
 import io.grpc.Status;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.roastedroot.quickjs4j.core.Engine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +62,11 @@ import java.util.TreeMap;
 
 import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.delay.DelayApplierOptions;
+import io.github.microcks.util.tracing.CommonAttributes;
+import io.github.microcks.util.tracing.CommonEvents;
+import io.github.microcks.util.tracing.TraceUtil;
+
+import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
  * A processor for handling gRPC invocations. It is responsible for applying the dispatching logic and finding the most
@@ -72,23 +84,26 @@ public class GrpcInvocationProcessor {
    private final ApplicationContext applicationContext;
    private final ObjectMapper mapper = new ObjectMapper();
 
-   private ScriptEngine scriptEngine;
+   private final ScriptEngine scriptEngine;
+   private final OpenTelemetryResolverService opentelemetryResolverService;
 
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
 
    /**
     * Build a GrpcInvocationProcessor with required dependencies.
-    * @param serviceStateRepository The repository to access service state
-    * @param responseRepository     The repository to access responses definitions
-    * @param applicationContext     The Spring application context
+    * @param serviceStateRepository       The repository to access service state
+    * @param responseRepository           The repository to access responses definitions
+    * @param applicationContext           The Spring application context
+    * @param opentelemetryResolverService The opentelemetry resolver
     */
    public GrpcInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
-         ApplicationContext applicationContext) {
+         ApplicationContext applicationContext, OpenTelemetryResolverService opentelemetryResolverService) {
       this.serviceStateRepository = serviceStateRepository;
       this.responseRepository = responseRepository;
       this.applicationContext = applicationContext;
       this.scriptEngine = new ScriptEngineManager().getEngineByExtension("groovy");
+      this.opentelemetryResolverService = opentelemetryResolverService;
    }
 
    /**
@@ -99,7 +114,12 @@ public class GrpcInvocationProcessor {
     * @param jsonBody  The request body expressed in JSON
     * @return A GrcpResponseResult containing the status, body or exception message of the response
     */
+   @WithSpan(kind = SpanKind.INTERNAL, value = "processInvocation")
    public GrpcResponseResult processInvocation(MockInvocationContext ic, long startTime, String jsonBody) {
+      // Mark current span as an explain Span
+      Span span = Span.current();
+      TraceUtil.enableExplainTracing();
+
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback this is the one who is holding the first pass rules.
       String dispatcher = ic.operation().getDispatcher();
@@ -110,7 +130,13 @@ public class GrpcInvocationProcessor {
          dispatcherRules = fallback.getDispatcherRules();
       }
 
-      //
+      // Add event about selected dispatcher.
+      span.addEvent(CommonEvents.DISPATCHER_SELECTED.getEventName(),
+            TraceUtil.explainSpanEventBuilder("Selected dispatcher and rules for this invocation")
+                  .put(CommonAttributes.DISPATCHER, dispatcher != null ? dispatcher : "none")
+                  .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules != null ? dispatcherRules : "none").build());
+
+      // Get metadata for current context.
       Metadata metadata = GrpcMetadataUtil.METADATA_CTX_KEY.get();
       DispatchContext dispatchContext = computeDispatchCriteria(ic.service(), dispatcher, dispatcherRules, jsonBody,
             metadata);
@@ -129,9 +155,12 @@ public class GrpcInvocationProcessor {
 
          // Setting delay to default one if not set.
          if (ic.operation().getDefaultDelay() != null) {
-            Long defaultDelay = ic.operation().getDefaultDelay();
-            // TODO: Get DefaultStrategy
-            DelaySpec delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
+            DelaySpec delay = new DelaySpec(ic.operation().getDefaultDelay(), ic.operation().getDefaultDelayStrategy());
+            span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
+                  TraceUtil.explainSpanEventBuilder("Configured response delay")
+                        .put(CommonAttributes.DELAY_VALUE, delay.baseValue())
+                        .put(CommonAttributes.DELAY_STRATEGY, delay.strategyName()).build());
+
             MockControllerCommons.waitForDelay(startTime, delay);
          }
 
@@ -161,58 +190,103 @@ public class GrpcInvocationProcessor {
       String dispatchCriteria = null;
       Map<String, Object> requestContext = null;
 
-      // Depending on dispatcher, evaluate request with rules.
-      if (dispatcher != null) {
-         switch (dispatcher) {
-            case DispatchStyles.QUERY_ARGS:
-               try {
-                  Map<String, String> paramsMap = mapper.readValue(jsonBody,
-                        TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
-                  dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
-               } catch (JsonProcessingException jpe) {
-                  log.error("Incoming body cannot be parsed as JSON", jpe);
-               }
-               break;
-            case DispatchStyles.JSON_BODY:
-               try {
-                  JsonEvaluationSpecification specification = JsonEvaluationSpecification
-                        .buildFromJsonString(dispatcherRules);
-                  dispatchCriteria = JsonExpressionEvaluator.evaluate(jsonBody, specification);
-               } catch (JsonMappingException jme) {
-                  log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification", jme);
-               }
-               break;
-            case DispatchStyles.SCRIPT:
-               log.info("Use the \"GROOVY\" Dispatch Style instead.");
-               // fallthrough
-            case DispatchStyles.GROOVY:
-               requestContext = new HashMap<>();
-               try {
-                  StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
-                  // Evaluating request with script coming from operation dispatcher rules.
-                  ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, jsonBody,
-                        requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
-                  dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
-               } catch (Exception e) {
-                  log.error("Error during Script evaluation", e);
-               }
-               break;
-            case DispatchStyles.JS:
-               requestContext = new HashMap<>();
-               try {
-                  StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
-                  // Evaluating request with script coming from operation dispatcher rules.
-                  Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(jsonBody, requestContext,
-                        new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
-                  dispatchCriteria = JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext);
-               } catch (Exception e) {
-                  log.error("Error during Script evaluation", e);
-               }
-               break;
-            default:
-               break;
+      // Create an INTERNAL child span explicitly because Spring AOP does not apply to private/self-invoked methods.
+      Tracer tracer = opentelemetryResolverService.getOpenTelemetry()
+            .getTracer(RestInvocationProcessor.class.getName());
+      Span childSpan = tracer.spanBuilder("computeDispatchCriteria").setSpanKind(SpanKind.INTERNAL).startSpan();
+
+      try (Scope ignored = childSpan.makeCurrent()) {
+         TraceUtil.enableExplainTracing();
+         // Depending on dispatcher, evaluate request with rules.
+
+         if (dispatcher != null) {
+            switch (dispatcher) {
+               case DispatchStyles.QUERY_ARGS:
+                  try {
+                     Map<String, String> paramsMap = mapper.readValue(jsonBody,
+                           TypeFactory.defaultInstance().constructMapType(TreeMap.class, String.class, String.class));
+                     dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules, paramsMap);
+                  } catch (JsonProcessingException jpe) {
+                     log.error("Incoming body cannot be parsed as JSON", jpe);
+                  }
+                  break;
+               case DispatchStyles.JSON_BODY:
+                  try {
+                     JsonEvaluationSpecification specification = JsonEvaluationSpecification
+                           .buildFromJsonString(dispatcherRules);
+                     dispatchCriteria = JsonExpressionEvaluator.evaluate(jsonBody, specification);
+                  } catch (JsonMappingException jme) {
+                     log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification",
+                           jme);
+                     Span.current().recordException(jme);
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(), TraceUtil
+                           .explainSpanEventBuilder("Failed to compute dispatch criteria using JSON_BODY dispatcher")
+                           .put(CommonAttributes.DISPATCHER, "JSON_BODY")
+                           .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                           .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
+                     Span.current().setStatus(StatusCode.ERROR, "Error during JSON_BODY evaluation");
+                  }
+                  break;
+               case DispatchStyles.SCRIPT:
+                  log.info("Use the \"GROOVY\" Dispatch Style instead.");
+                  // fallthrough
+               case DispatchStyles.GROOVY:
+                  requestContext = new HashMap<>();
+                  try {
+                     StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
+                     // Evaluating request with script coming from operation dispatcher rules.
+                     ScriptContext scriptContext = ScriptEngineBinder.buildEvaluationContext(scriptEngine, jsonBody,
+                           requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), headers,
+                           null);
+                     dispatchCriteria = (String) scriptEngine.eval(dispatcherRules, scriptContext);
+                  } catch (Exception e) {
+                     // Get current span and record failure
+                     Span.current().recordException(e);
+                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                           TraceUtil
+                                 .explainSpanEventBuilder("Failed to compute dispatch criteria using GROOVY dispatcher")
+                                 .put(CommonAttributes.DISPATCHER, "GROOVY")
+                                 .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                                 .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
+                     Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
+                     log.error("Error during Script evaluation", e);
+                  }
+                  break;
+               case DispatchStyles.JS:
+                  requestContext = new HashMap<>();
+                  try {
+                     StringToStringsMap headers = GrpcMetadataUtil.convertToMap(metadata);
+                     // Evaluating request with script coming from operation dispatcher rules.
+                     Engine scriptContext = JsScriptEngineBinder.buildEvaluationContext(jsonBody, requestContext,
+                           new ServiceStateStore(serviceStateRepository, service.getId()), headers, null);
+                     dispatchCriteria = JsScriptEngineBinder.invokeProcessFn(dispatcherRules, scriptContext);
+                  } catch (Exception e) {
+                     log.error("Error during Script evaluation", e);
+                  }
+                  break;
+               default:
+                  log.error("Unknown dispatcher type: {}", dispatcher);
+                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                        TraceUtil.explainSpanEventBuilder("Unknown dispatcher type encountered")
+                              .put(CommonAttributes.DISPATCHER, dispatcher)
+                              .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                              .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
+                  break;
+            }
+
+            if (dispatchCriteria != null) {
+               // Add an event about computed dispatch criteria.
+               Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                     TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using " + dispatcher + " dispatcher")
+                           .put(CommonAttributes.DISPATCHER, dispatcher)
+                           .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                           .put(CommonAttributes.DISPATCH_CRITERIA, dispatchCriteria).build());
+            }
          }
+      } finally {
+         childSpan.end();
       }
+
       return new DispatchContext(dispatchCriteria, requestContext);
    }
 
@@ -229,8 +303,15 @@ public class GrpcInvocationProcessor {
                dispatchContext.dispatchCriteria());
       }
 
+      Span.current().addEvent(CommonEvents.RESPONSE_LOOKUP_COMPLETED.getEventName(),
+            TraceUtil.explainSpanEventBuilder("Response lookup completed").put("response.found", !responses.isEmpty())
+                  .put("response.name", !responses.isEmpty() ? responses.getFirst().getName() : "null").build());
+
       if (responses.isEmpty() && fallback != null) {
          // If we've found nothing and got a fallback, that's the moment!
+         Span.current().addEvent(CommonEvents.FALLBACK_RESPONSE_USED.getEventName(),
+               TraceUtil.explainSpanEventBuilder("Using fallback response as no matching response was found")
+                     .put("fallback.name", fallback.getFallback()).build());
          responses = responseRepository.findByOperationIdAndName(IdBuilder.buildOperationId(service, grpcOperation),
                fallback.getFallback());
       }

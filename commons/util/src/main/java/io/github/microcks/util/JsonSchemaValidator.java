@@ -51,10 +51,14 @@ public class JsonSchemaValidator {
    public static final String JSON_SCHEMA_IDENTIFIER_ELEMENT = "$schema";
 
    public static final String JSON_SCHEMA_COMPONENTS_ELEMENT = "components";
+   public static final String JSON_SCHEMA_TYPE_ELEMENT = "type";
    public static final String JSON_SCHEMA_PROPERTIES_ELEMENT = "properties";
    public static final String JSON_SCHEMA_REQUIRED_ELEMENT = "required";
    public static final String JSON_SCHEMA_ITEMS_ELEMENT = "items";
    public static final String JSON_SCHEMA_ADD_PROPERTIES_ELEMENT = "additionalProperties";
+
+   public static final String JSON_SCHEMA_OBJECT_TYPE = "object";
+   public static final String JSON_SCHEMA_ARRAY_TYPE = "array";
 
    private static final ObjectMapper mapper = new ObjectMapper()
          .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)

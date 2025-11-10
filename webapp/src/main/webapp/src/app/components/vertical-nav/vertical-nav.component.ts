@@ -20,6 +20,7 @@ import {
   ViewEncapsulation,
   ChangeDetectionStrategy,
   AfterViewInit,
+  inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -29,6 +30,7 @@ import { filter } from 'rxjs/operators';
 
 import { BsDropdownModule } from 'ngx-bootstrap/dropdown';
 import { BsModalRef, BsModalService, ModalModule } from 'ngx-bootstrap/modal';
+import { HighlightLoader } from 'ngx-highlightjs';
 
 import { AboutModalConfig, AboutModalEvent, AboutModalModule } from '../patternfly-ng/modal';
 
@@ -62,6 +64,8 @@ declare let $: any;
 export class VerticalNavComponent implements OnInit, AfterViewInit {
   aboutConfig: AboutModalConfig = {};
   modalRef?: BsModalRef;
+
+  private hljsLoader: HighlightLoader = inject(HighlightLoader);
 
   constructor(
     protected authService: IAuthenticationService,
@@ -133,6 +137,17 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
           .parent()
           .removeClass('active');
       });
+
+    const theme = localStorage.getItem('microcks-theme');
+    if (theme && theme === 'dark') {
+      document.body.classList.remove('light');
+      document.body.classList.add('dark');
+      this.hljsLoader.setTheme('assets/styles/github-dark.min.css');
+    } else {
+      document.body.classList.remove('dark');
+      document.body.classList.add('light');
+      this.hljsLoader.setTheme('assets/styles/github.min.css');
+    }
   }
 
   ngAfterViewInit() {
@@ -211,5 +226,23 @@ export class VerticalNavComponent implements OnInit, AfterViewInit {
 
   public openQuickImportDialog(): void {
     this.uploaderDialogService.openArtifactUploader();
+  }
+
+  public themeIcon(): string {
+    return document.body.classList.contains('dark') ? 'fa fa-sun-o' : 'fa fa-moon-o';
+  }
+
+  public toggleDarkMode(): void {
+    if (document.body.classList.contains('dark')) {
+      document.body.classList.remove('dark');
+      document.body.classList.add('light');
+      this.hljsLoader.setTheme('assets/styles/github.min.css');
+      localStorage.setItem('microcks-theme', 'light');
+    } else {
+      document.body.classList.remove('light');
+      document.body.classList.add('dark');
+      this.hljsLoader.setTheme('assets/styles/github-dark.min.css');
+      localStorage.setItem('microcks-theme', 'dark');
+    }
   }
 }

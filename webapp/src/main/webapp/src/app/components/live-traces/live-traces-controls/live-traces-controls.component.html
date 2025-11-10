@@ -1,0 +1,86 @@
+<div class="controls">
+  <div class="form-inline">
+    <label for="serviceName" *ngIf="allowCustomization">Service:</label>
+    <input
+      *ngIf="allowCustomization"
+      id="serviceName"
+      type="text"
+      class="form-control form-control-sm"
+      [ngModel]="serviceName"
+      (ngModelChange)="onServiceNameChange($event)"
+      placeholder="Service name"
+      [disabled]="connected"
+    />
+    <label for="operationName" *ngIf="allowCustomization">Operation:</label>
+    <input
+      *ngIf="allowCustomization"
+      id="operationName"
+      type="text"
+      class="form-control form-control-sm"
+      [ngModel]="operationName"
+      (ngModelChange)="onOperationNameChange($event)"
+      placeholder="Operation name"
+      [disabled]="connected"
+    />
+    <label for="clientIpFilter">Client IP:</label>
+    <input
+      id="clientIpFilter"
+      type="text"
+      class="form-control form-control-sm"
+      [ngModel]="clientIpFilter"
+      (ngModelChange)="onClientIpFilterChange($event)"
+      placeholder="IP filter (regex)"
+      [disabled]="connected"
+    />
+  </div>
+  <div class="button-group">
+    <button
+      class="btn btn-default btn-sm"
+      (click)="onConnect()"
+      [disabled]="connected || !serviceName || !operationName"
+    >
+      <span class="fa fa-play"></span> Connect
+    </button>
+    <button
+      class="btn btn-default btn-sm"
+      (click)="onDisconnect()"
+      [disabled]="!connected"
+    >
+      <span class="fa fa-stop"></span> Disconnect
+    </button>
+    <button
+      class="btn btn-default btn-sm"
+      (click)="onPrefill()"
+      [disabled]="isLoading || !serviceName || !operationName"
+    >
+      <span
+        class="fa"
+        [class.fa-download]="!isLoading"
+        [class.fa-spinner]="isLoading"
+        [class.fa-spin]="isLoading"
+      ></span>
+      {{ isLoading ? "Loading..." : "Prefill" }}
+    </button>
+    <button
+      class="btn btn-default btn-sm"
+      (click)="onClear()"
+      [disabled]="traceCount === 0"
+    >
+      <span class="fa fa-trash"></span> Clear
+    </button>
+    <span
+      class="status"
+      [class.text-success]="connected"
+      [class.text-muted]="!connected"
+    >
+      {{ connected ? "Connected" : "Disconnected" }}
+      <span
+        class="recording-indicator"
+        [class.recording]="connected"
+        [class.not-recording]="!connected"
+      ></span>
+    </span>
+    <span class="count" *ngIf="totalEvents"> | {{ totalEvents }} event(s)</span>
+  </div>
+  <div *ngIf="error" class="text-danger">{{ error }}</div>
+</div>

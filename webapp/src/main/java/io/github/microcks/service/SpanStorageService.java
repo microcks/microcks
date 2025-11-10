@@ -16,9 +16,11 @@
 package io.github.microcks.service;
 
 import io.github.microcks.event.TraceEvent;
+import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.util.tracing.SpanFilterUtil;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.trace.data.EventData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -29,14 +31,17 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
  * Service for storing and retrieving OpenTelemetry spans organized by trace ID.
+ * @author Apoorva Srinivas Appadoo
  */
 @Service
 public class SpanStorageService {
 
+   /** A commons logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(SpanStorageService.class);
 
    /**
@@ -49,7 +54,7 @@ public class SpanStorageService {
     * Maximum number of traces to keep in memory to prevent memory leaks. When this limit is exceeded, oldest traces are
     * removed.
     */
-   private static final int MAX_TRACES = 1000;
+   private static final int MAX_TRACES = 500;
 
    /**
     * Maximum number of spans to keep per trace to prevent memory issues.
@@ -61,6 +66,10 @@ public class SpanStorageService {
     */
    private final ApplicationEventPublisher publisher;
 
+   /**
+    * BuIld a SpanStorageService with the given ApplicationEventPublisher.
+    * @param publisher the application event publisher
+    */
    public SpanStorageService(ApplicationEventPublisher publisher) {
       this.publisher = publisher;
    }
@@ -68,7 +77,6 @@ public class SpanStorageService {
 
    /**
     * Stores a span in the service, grouped by trace ID.
-    *
     * @param span The span to store
     */
    public void storeSpan(ReadableSpan span) {
@@ -91,9 +99,13 @@ public class SpanStorageService {
          spansByTraceId.remove(oldestTraceId);
       }
 
-      // Publish a notification if this is a root span (no parent)
-      if (!span.getParentSpanContext().isValid()) {
-         publisher.publishEvent(SpanFilterUtil.extractTraceEvent(traceId, spans));
+      // Publish a notification if this span matches an Invocation Received event (that's the demarcation we're looking for)
+      Optional<EventData> firstInvocationReceivedEvent = span.toSpanData().getEvents().stream()
+            .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
+      if (firstInvocationReceivedEvent.isPresent()) {
+         TraceEvent event = SpanFilterUtil.extractTraceEvent(traceId, spans);
+         log.trace("Published trace event: {}", event);
+         publisher.publishEvent(event);
       }
    }
 

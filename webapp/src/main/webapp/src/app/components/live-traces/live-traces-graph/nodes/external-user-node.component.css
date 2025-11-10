@@ -1,0 +1,51 @@
+.external-user-node {
+  width: 140px;
+  min-height: 80px;
+  border: 2px solid var(--user-accent);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--user-bg-start) 0%, var(--user-bg-end) 100%);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--user-accent) 20%, transparent);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  padding: 8px 4px;
+}
+
+.external-user-node:hover {
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--user-accent) 30%, transparent);
+}
+
+.node-icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+
+.node-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--user-accent-dark);
+  text-align: center;
+}
+
+.ip-filter-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 6px;
+  background: color-mix(in srgb, var(--user-accent) 15%, transparent);
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--user-accent-dark);
+}
+
+.filter-text {
+  font-weight: 500;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -14,7 +14,7 @@ import { HubPageComponent } from './pages/hub/hub.page';
 import { HubPackagePageComponent } from './pages/hub/package/package.page';
 import { HubAPIVersionPageComponent } from './pages/hub/package/apiVersion/apiVersion.page';
 import { AdminPageComponent } from './pages/admin/admin.page';
-import { LiveTracesComponent } from './components/live-traces/live-traces.component';
+import { TracesGraphPageComponent } from './pages/traces/traces-graph.page';
 
 export const routes: Routes = [
   {
@@ -75,7 +75,6 @@ export const routes: Routes = [
   },
   {
     path: 'traces',
-    component: LiveTracesComponent,
-    data: { allowCustomization: true }
+    component: TracesGraphPageComponent
   }
 ];

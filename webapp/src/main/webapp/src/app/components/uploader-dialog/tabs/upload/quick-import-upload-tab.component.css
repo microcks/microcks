@@ -2,14 +2,11 @@
   max-height: 300px;
   overflow-y: auto;
   overflow-x: hidden;
-  border: 1px solid var(--surface-border);
-  border-radius: 4px;
 }
 
 .file-item {
   padding: 10px;
   border-bottom: 1px solid var(--axis-line);
-  background-color: var(--surface-offwhite);
 }
 
 .file-item:last-child {

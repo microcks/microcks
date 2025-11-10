@@ -184,7 +184,8 @@ public class GraphQLController {
       List<GraphQLQueryResponse> graphqlResponses = new ArrayList<>();
       DelaySpec specifiedDelay = MockControllerCommons.getDelay(headers, requestedDelay, requestedDelayStrategy);
 
-      Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay.getBaseValue();
+      Long maxDelay = specifiedDelay == null ? 0L : specifiedDelay.baseValue();
+      String maxDelayStrategy = specifiedDelay == null ? null : specifiedDelay.strategyName();
 
       for (Selection<?> selection : graphqlOperation.getSelectionSet().getSelections()) {
          try {
@@ -201,6 +202,7 @@ public class GraphQLController {
             if (specifiedDelay == null && graphqlResponse.getOperationDelay() != null
                   && graphqlResponse.getOperationDelay() > maxDelay) {
                maxDelay = graphqlResponse.getOperationDelay();
+               maxDelayStrategy = graphqlResponse.getOperationDelayStrategy();
             }
          } catch (GraphQLQueryProcessingException e) {
             log.error("Caught a GraphQL processing exception", e);
@@ -235,7 +237,7 @@ public class GraphQLController {
       }
 
       // Waiting for delay if any.
-      DelaySpec waitMaxDelay = new DelaySpec(maxDelay, null);
+      DelaySpec waitMaxDelay = new DelaySpec(maxDelay, maxDelayStrategy);
       MockControllerCommons.waitForDelay(startTime, waitMaxDelay);
 
       String responseContent = null;
@@ -331,6 +333,7 @@ public class GraphQLController {
 
          // Complete GraphQLQueryResponse result.
          result.setOperationDelay(rOperation.getDefaultDelay());
+         result.setOperationDelayStrategy(rOperation.getDefaultDelayStrategy());
 
          if (responseResult.content() != null) {
             try {
@@ -422,6 +425,7 @@ public class GraphQLController {
       String operationName;
       String alias;
       Long operationDelay;
+      String operationDelayStrategy;
       Response response;
       JsonNode jsonResponse;
       URI proxyUrl;
@@ -448,6 +452,14 @@ public class GraphQLController {
 
       public void setOperationDelay(Long operationDelay) {
          this.operationDelay = operationDelay;
+      }
+
+      public String getOperationDelayStrategy() {
+         return operationDelayStrategy;
+      }
+
+      public void setOperationDelayStrategy(String operationDelayStrategy) {
+         this.operationDelayStrategy = operationDelayStrategy;
       }
 
       public JsonNode getJsonResponse() {

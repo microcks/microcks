@@ -437,6 +437,18 @@ export class ServiceDetailPageComponent implements OnInit {
     });
   }
 
+  public openManageSamples(): void {
+    const initialState = {
+      closeBtnName: 'Cancel',
+      serviceView: this.resolvedServiceView,
+      samplesMode: 'ALL',
+    };
+    this.modalRef = this.modalService.show(ManageSamplesDialogComponent, {
+      initialState,
+    });
+    this.modalRef.setClass('modal-lg');
+  }
+
   public openManageAISamples(): void {
     const initialState = {
       closeBtnName: 'Cancel',
@@ -672,7 +684,7 @@ export class ServiceDetailPageComponent implements OnInit {
 
       // Result may still contain {} if no dispatchCriteria (because of SCRIPT)
       if (result.indexOf('{') != -1 && queryParameters != null) {
-        console.log('queryParameters: ' + queryParameters);
+        //console.log('queryParameters: ' + queryParameters);
         queryParameters.forEach((param) => {
           result = result.replace('{' + param.name + '}', param.value);
         });
@@ -970,7 +982,7 @@ export class ServiceDetailPageComponent implements OnInit {
       this.hasRepositoryTenancyFeatureEnabled() &&
       this.resolvedServiceView.service.metadata.labels
     ) {
-      console.log('hasRepositoryTenancyFeatureEnabled');
+      //console.log('hasRepositoryTenancyFeatureEnabled');
       const tenant =
         this.resolvedServiceView.service.metadata.labels[
           this.repositoryTenantLabel()
@@ -988,6 +1000,7 @@ export class ServiceDetailPageComponent implements OnInit {
       (this.resolvedServiceView.service.type === 'REST' ||
         this.resolvedServiceView.service.type === 'GRPC' ||
         this.resolvedServiceView.service.type === 'GRAPHQL' ||
+        this.resolvedServiceView.service.type === 'SOAP_HTTP' ||
         ((this.resolvedServiceView.service.type === 'EVENT' ||
           this.resolvedServiceView.service.type === 'GENERIC_EVENT') &&
           this.hasAsyncAPIFeatureEnabled()))

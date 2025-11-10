@@ -17,7 +17,6 @@ package io.github.microcks.util.script;
 
 import io.github.microcks.service.StateStore;
 import io.github.microcks.util.http.HttpHeadersUtil;
-import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +27,8 @@ import javax.script.ScriptEngine;
 import javax.script.SimpleScriptContext;
 import java.util.Map;
 
+import static io.github.microcks.util.tracing.TraceUtil.addSpanLogEvent;
+import static io.github.microcks.util.tracing.TraceUtil.LogLevel;
 
 /**
  * Utility class that holds methods for creating binding environments and evaluation context for a JSR 233 ScriptEngine.
@@ -37,6 +38,8 @@ public class ScriptEngineBinder {
 
    /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(ScriptEngineBinder.class);
+
+   private static final String ENGINE_NAME = "groovy";
 
    /** Private constructor to hide the implicit public one. */
    private ScriptEngineBinder() {
@@ -55,29 +58,28 @@ public class ScriptEngineBinder {
 
       public void info(String msg) {
          delegate.info(msg);
-         addSpanLogEvent("INFO", msg, "groovy", null);
+         addSpanLogEvent(LogLevel.INFO, msg, ENGINE_NAME, null);
       }
 
       public void debug(String msg) {
          delegate.debug(msg);
-         addSpanLogEvent("DEBUG", msg, "groovy", null);
+         addSpanLogEvent(LogLevel.DEBUG, msg, ENGINE_NAME, null);
       }
 
       public void warn(String msg) {
          delegate.warn(msg);
-         addSpanLogEvent("WARN", msg, "groovy", null);
+         addSpanLogEvent(LogLevel.WARN, msg, ENGINE_NAME, null);
       }
 
       public void error(String msg) {
          delegate.error(msg);
-         addSpanLogEvent("ERROR", msg, "groovy", null);
+         addSpanLogEvent(LogLevel.ERROR, msg, ENGINE_NAME, null);
       }
 
       public void error(String msg, Throwable t) {
          delegate.error(msg, t);
-         addSpanLogEvent("ERROR", msg, "groovy", t);
+         addSpanLogEvent(LogLevel.ERROR, msg, ENGINE_NAME, t);
       }
-
    }
 
    /**

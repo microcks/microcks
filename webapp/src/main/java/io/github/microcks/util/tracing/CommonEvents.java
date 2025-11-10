@@ -20,6 +20,9 @@ public enum CommonEvents {
    /** Event emitted when an invocation is initially received by the system. */
    INVOCATION_RECEIVED("invocation_received"),
 
+   /** Event emitted when a body content has been correctly parsed, decrypted, converted, ... */
+   BODY_PARSED("body_parsed"),
+
    /** Event emitted when a dispatcher and its rules are selected for processing the invocation. */
    DISPATCHER_SELECTED("dispatcher_selected"),
 

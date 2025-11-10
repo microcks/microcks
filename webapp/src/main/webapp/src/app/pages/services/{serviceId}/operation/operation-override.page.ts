@@ -21,6 +21,9 @@ import { ActivatedRoute, Router, ParamMap, RouterLink } from '@angular/router';
 import { Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 
+import { TooltipConfig, TooltipModule } from 'ngx-bootstrap/tooltip';
+import { HighlightAuto } from 'ngx-highlightjs';
+
 import {
   Notification,
   NotificationEvent,
@@ -41,6 +44,7 @@ import {
 import { ServicesService } from '../../../../services/services.service';
 import { ConfigService } from '../../../../services/config.service';
 import { LiveTracesComponent } from '../../../../components/live-traces/live-traces.component';
+import { formatMockUrl } from '../../../../utils/format-utils';
 
 @Component({
   selector: 'app-operation-override-page',
@@ -49,8 +53,10 @@ import { LiveTracesComponent } from '../../../../components/live-traces/live-tra
   imports: [
     CommonModule,
     FormsModule,
+    HighlightAuto,
     RouterLink,
     ToastNotificationListComponent,
+    TooltipModule,
     LiveTracesComponent
   ],
 })
@@ -202,11 +208,12 @@ export class OperationOverridePageComponent implements OnInit {
           this.operation = operation;
           // Clone mutable properties from operation.
           this.newOperation = {} as Operation;
+          this.newOperation.name = this.operation.name;
           this.newOperation.defaultDelay = this.operation.defaultDelay || 0;
+          this.newOperation.defaultDelayStrategy = this.operation.defaultDelayStrategy || 'fixed';
           this.newOperation.dispatcher = this.operation?.dispatcher ?? '';
           this.newOperation.dispatcherRules = this.operation.dispatcherRules;
-          this.newOperation.parameterConstraints =
-            this.operation.parameterConstraints;
+          this.newOperation.parameterConstraints = this.operation.parameterConstraints;
           if (this.newOperation.parameterConstraints) {
             for (const constraint of this.newOperation.parameterConstraints) {
               this.paramConstraints[constraint.in].push(constraint);
@@ -228,10 +235,74 @@ export class OperationOverridePageComponent implements OnInit {
     return exchange as UnidirectionalEvent;
   }
 
+  public tryRequest(pair: RequestResponsePair):void {
+    // Build the URL to use for this request.
+    const url = formatMockUrl(this.resolvedServiceView, this.newOperation!,
+        'raw', pair.response.dispatchCriteria, pair.request.queryParameters);
+
+    // Build a base request object.    
+    let request = {} as any;
+
+    // Compute method depending on service type.
+    if (this.resolvedServiceView.service.type === ServiceType.REST) {
+      request.method = this.newOperation!.method;
+      if (request.content) {
+        if (request.content.startsWith('[') || request.content.startsWith('{')) {
+          request.headers = { 'Content-Type': 'application/json' };
+        } else if (request.content.startsWith('<')) {
+          request.headers = { 'Content-Type': 'application/xml' };
+        }
+      }
+    } else if (this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP) {
+      request.method = 'POST';
+      request.headers = { 'Content-Type': 'application/soap+xml' };
+    } else if (this.resolvedServiceView.service.type === ServiceType.GRAPHQL) {
+      request.method = 'POST';
+      request.headers = { 'Content-Type': 'application/json' };
+    }
+
+    // Add body if any.
+    if (pair.request.content != null && pair.request.content.length > 0) {
+      request.body = pair.request.content;
+    }
+
+    // Add request headers if any.
+    if (pair.request.headers != null) {
+      let headers: any = {};
+      for (const header of pair.request.headers) {
+        headers[header.name] = header.values.join(', ');
+      }
+      request.headers = headers;
+    }
+    
+    // Now just fetch the body.
+    fetch(url, request).then(res => {
+      this.notificationService.message(
+        NotificationType.SUCCESS,
+        'Request executed',
+        `Response status is ${res.status} ${res.statusText}`,
+        false
+      );
+    }).catch(err => {
+      if (err instanceof TypeError) {
+        // This is likely a CORS issue.
+        err.message = err.message + '. This may be a CORS issue.';
+      }
+      this.notificationService.message(
+        NotificationType.DANGER,
+        'Request failed',
+        'Error was: ' + err.message,
+        false
+      );
+    });
+  }
+
   public resetOperationProperties() {
     this.newOperation = {} as Operation;
     if (this.operation) {
+      this.newOperation.name = this.operation.name;
       this.newOperation.defaultDelay = this.operation?.defaultDelay ?? 0;
+      this.newOperation.defaultDelayStrategy = this.operation?.defaultDelayStrategy ?? 'fixed';
       this.newOperation.dispatcher = this.operation?.dispatcher ?? '';
       this.newOperation.dispatcherRules = this.operation.dispatcherRules;
     }
@@ -240,6 +311,7 @@ export class OperationOverridePageComponent implements OnInit {
     const operationProperties = {} as OperationMutableProperties;
     if (this.newOperation) {
       operationProperties.defaultDelay = this.newOperation.defaultDelay;
+      operationProperties.defaultDelayStrategy = this.newOperation.defaultDelayStrategy;
       operationProperties.dispatcher = this.newOperation.dispatcher;
       operationProperties.dispatcherRules = this.newOperation.dispatcherRules;
     }
@@ -252,10 +324,10 @@ export class OperationOverridePageComponent implements OnInit {
       operationProperties.parameterConstraints.push(this.paramConstraints.query[i]);
     }
 
-    console.log(
-      "[saveOperationProperties] operationProperties: " +
-        JSON.stringify(operationProperties)
-    );
+//     console.log(
+//       "[saveOperationProperties] operationProperties: " +
+//         JSON.stringify(operationProperties)
+//     );
     this.servicesSvc
       .updateServiceOperationProperties(
         this.resolvedServiceView.service,
@@ -267,7 +339,7 @@ export class OperationOverridePageComponent implements OnInit {
           this.notificationService.message(
             NotificationType.SUCCESS,
             this.operationName,
-            'Dispatch properies have been updated',
+            'Dispatch properties have been updated',
             false
           );
         },
@@ -323,6 +395,13 @@ export class OperationOverridePageComponent implements OnInit {
     return (
       this.resolvedServiceView.service.type === ServiceType.EVENT ||
       this.resolvedServiceView.service.type === ServiceType.GENERIC_EVENT
+    );
+  }
+  public isRequestTriable(): boolean {
+    return (
+      this.resolvedServiceView.service.type === ServiceType.REST ||
+      this.resolvedServiceView.service.type === ServiceType.SOAP_HTTP ||
+      this.resolvedServiceView.service.type === ServiceType.GRAPHQL
     );
   }
 

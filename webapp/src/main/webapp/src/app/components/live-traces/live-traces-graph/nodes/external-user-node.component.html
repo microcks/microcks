@@ -1,0 +1,11 @@
+<div class="external-user-node">
+  <div class="node-icon">👤</div>
+  <div class="node-label">External User</div>
+  @if (clientIpFilter()) {
+    <div class="ip-filter-indicator">
+      <span class="filter-icon fa fa-filter"></span>
+      <span class="filter-text">IP: {{ clientIpFilter() }}</span>
+    </div>
+  }
+  <handle type="source" position="right" />
+</div>

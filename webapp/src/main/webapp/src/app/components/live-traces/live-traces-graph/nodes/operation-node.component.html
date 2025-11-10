@@ -1,0 +1,29 @@
+<div class="operation-node" [class.expanded]="isExpanded()">
+  <div 
+    class="node-header" 
+    (click)="toggleExpand()"
+    (keydown.enter)="toggleExpand()"
+    (keydown.space)="toggleExpand()"
+    role="button"
+    tabindex="0"
+    [attr.aria-expanded]="isExpanded()"
+    aria-label="Toggle operation details">
+    <div class="expand-icon">{{ isExpanded() ? "▼" : "▶" }}</div>
+    <div class="node-icon"><span class="fa fa-cog"></span></div>
+    <div class="node-info">
+      <div class="node-label">{{ data()?.label }}</div>
+      <div class="trace-count">
+        {{ (data()?.traces$ | async)?.length || 0 }} trace(s)
+      </div>
+    </div>
+  </div>
+
+  @if (isExpanded() && data()?.traces$) {
+    <div class="traces-container" (wheel)="onWheel($event)">
+      <app-trace-group-list [traces]="(data()!.traces$ | async) || []">
+      </app-trace-group-list>
+    </div>
+  }
+
+  <handle type="target" position="left" />
+</div>

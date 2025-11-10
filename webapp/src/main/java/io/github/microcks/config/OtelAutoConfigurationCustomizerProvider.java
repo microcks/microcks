@@ -17,6 +17,7 @@ package io.github.microcks.config;
 
 import io.github.microcks.service.SpanStorageService;
 import io.github.microcks.util.otel.CustomExplainTraceProcessor;
+
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
@@ -69,6 +70,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @see CustomExplainTraceProcessor
  * @see SpanStorageService
+ * @author Apoorva Srinivas Appadoo
  */
 @Configuration
 public class OtelAutoConfigurationCustomizerProvider {

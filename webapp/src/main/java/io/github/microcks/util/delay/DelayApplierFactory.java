@@ -27,6 +27,17 @@ package io.github.microcks.util.delay;
  * @author SebastienDegodez
  */
 public class DelayApplierFactory {
+
+   /** Private constructor to hide the implicit public one and prevent instantiation. */
+   private DelayApplierFactory() {
+      // Hidden constructor
+   }
+
+   /**
+    * Creates a DelayApplier instance based on the provided strategy name.
+    * @param strategyName the name of the delay strategy
+    * @return an instance of DelayApplier corresponding to the strategy
+    */
    public static DelayApplier fromString(String strategyName) {
       if (strategyName == null || strategyName.equalsIgnoreCase(DelayApplierOptions.FIXED)) {
          return new FixedDelayApplier();

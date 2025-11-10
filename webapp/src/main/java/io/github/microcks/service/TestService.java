@@ -15,7 +15,17 @@
  */
 package io.github.microcks.service;
 
-import io.github.microcks.domain.*;
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.domain.Operation;
+import io.github.microcks.domain.Request;
+import io.github.microcks.domain.Response;
+import io.github.microcks.domain.Service;
+import io.github.microcks.domain.TestCaseResult;
+import io.github.microcks.domain.TestOptionals;
+import io.github.microcks.domain.TestResult;
+import io.github.microcks.domain.TestReturn;
+import io.github.microcks.domain.TestRunnerType;
+import io.github.microcks.domain.TestStepResult;
 import io.github.microcks.event.TestCompletionEvent;
 import io.github.microcks.repository.EventMessageRepository;
 import io.github.microcks.repository.RequestRepository;
@@ -27,10 +37,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Bean defining service operations around Test domain objects.
@@ -109,22 +121,19 @@ public class TestService {
    public TestCaseResult reportTestCaseResult(String testResultId, String operationName, List<TestReturn> testReturns) {
       log.info("Reporting a TestCaseResult for testResult {} on operation '{}'", testResultId, operationName);
       TestResult testResult = testResultRepository.findById(testResultId).orElse(null);
-      TestCaseResult updatedTestCaseResult = null;
+      AtomicReference<TestCaseResult> updatedTestCaseResult = new AtomicReference<>();
 
       // This part can be done safely with no race condition because we only
       // record new requests/responses corresponding to testReturns.
       // So just find the correct testCase to build a suitable id and then createTestReturns.
 
-      for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
-         // Ensure we have a testCaseResult matching operation name.
-         if (testCaseResult.getOperationName().equals(operationName)) {
-            // If results, we need to create requests/responses pairs and associate them to testCase.
-            if (testReturns != null && !testReturns.isEmpty()) {
-               String testCaseId = IdBuilder.buildTestCaseId(testResult, operationName);
-               createTestReturns(testReturns, testCaseId);
-            }
-            break;
-         }
+      if (testReturns != null && !testReturns.isEmpty()) {
+         TestResult finalTestResult = testResult;
+         testResult.getTestCaseResults().stream().filter(tcr -> tcr.getOperationName().equals(operationName))
+               .findFirst().ifPresent(tcr -> {
+                  String testCaseId = IdBuilder.buildTestCaseId(finalTestResult, operationName);
+                  createTestReturns(testReturns, testCaseId);
+               });
       }
 
       // There may be a race condition while updating testResult at each testReturn report.
@@ -136,24 +145,22 @@ public class TestService {
 
       while (!saved && times < 5) {
 
-         for (TestCaseResult testCaseResult : testResult.getTestCaseResults()) {
-            // Ensure we have a testCaseResult matching operation name.
-            if (testCaseResult.getOperationName().equals(operationName)) {
-               updatedTestCaseResult = testCaseResult;
-               // If results we now update the success flag and elapsed time of testCase?
-               if (testReturns == null || testReturns.isEmpty()) {
-                  log.info("testReturns are null or empty, setting elapsedTime to -1 and success to false for {}",
-                        operationName);
-                  testCaseResult.setElapsedTime(-1);
-                  testCaseResult.setSuccess(false);
-               } else {
-                  updateTestCaseResultWithReturns(testCaseResult, testReturns,
-                        TestRunnerType.ASYNC_API_SCHEMA != testResult.getRunnerType(),
-                        TestRunnerType.ASYNC_API_SCHEMA == testResult.getRunnerType());
-               }
-               break;
-            }
-         }
+         TestResult finalTestResult1 = testResult;
+         testResult.getTestCaseResults().stream().filter(tcr -> tcr.getOperationName().equals(operationName))
+               .findFirst().ifPresent(tcr -> {
+                  updatedTestCaseResult.set(tcr);
+                  // If results we now update the success flag and elapsed time of testCase?
+                  if (testReturns == null || testReturns.isEmpty()) {
+                     log.info("testReturns are null or empty, setting elapsedTime to -1 and success to false for {}",
+                           operationName);
+                     tcr.setElapsedTime(-1);
+                     tcr.setSuccess(false);
+                  } else {
+                     updateTestCaseResultWithReturns(tcr, testReturns,
+                           TestRunnerType.ASYNC_API_SCHEMA != finalTestResult1.getRunnerType(),
+                           TestRunnerType.ASYNC_API_SCHEMA == finalTestResult1.getRunnerType());
+                  }
+               });
 
          // Finally, update success, progress indicators and total time before saving and returning.
          try {
@@ -173,7 +180,7 @@ public class TestService {
             times++;
          }
       }
-      return updatedTestCaseResult;
+      return updatedTestCaseResult.get();
    }
 
    /** */
@@ -298,15 +305,14 @@ public class TestService {
       testResultRepository.save(testResult);
    }
 
+   // Suppress SonarCloud warning about catching InterruptedException: we absolutely need not propagate it to not lose data.
+   @SuppressWarnings("java:S2142")
    private void waitSomeRandomMS(int min, int max) {
-      Object semaphore = new Object();
       long timeout = ThreadLocalRandom.current().nextInt(min, max + 1);
-      synchronized (semaphore) {
-         try {
-            semaphore.wait(timeout);
-         } catch (Exception e) {
-            log.debug("waitSomeRandomMS semaphore was interrupted");
-         }
+      try {
+         Thread.sleep(Duration.ofMillis(timeout));
+      } catch (Exception e) {
+         log.debug("waitSomeRandomMS semaphore was interrupted");
       }
    }
 

@@ -31,6 +31,7 @@ import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.UTF8ContentTypeChecker;
+import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.JsonExpressionEvaluator;
@@ -39,6 +40,7 @@ import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 import io.github.microcks.util.el.EvaluableRequest;
 import io.github.microcks.util.script.JsScriptEngineBinder;
 import io.github.microcks.util.script.ScriptEngineBinder;
+import io.github.microcks.util.tracing.CommonAttributes;
 import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.service.OpenTelemetryResolverService;
 import io.github.microcks.util.tracing.TraceUtil;
@@ -50,7 +52,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.roastedroot.quickjs4j.core.Engine;
-import jakarta.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -61,6 +62,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -76,8 +79,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import io.github.microcks.util.delay.DelaySpec;
-import io.github.microcks.util.delay.DelayApplierOptions;
 import static io.github.microcks.util.tracing.CommonEvents.DISPATCH_CRITERIA_COMPUTED;
 
 /**
@@ -96,7 +97,7 @@ public class RestInvocationProcessor {
    private final ApplicationContext applicationContext;
    private final ProxyService proxyService;
 
-   private ScriptEngine scriptEngine;
+   private final ScriptEngine scriptEngine;
    private final OpenTelemetryResolverService opentelemetryResolverService;
 
    @Value("${mocks.enable-invocation-stats}")
@@ -107,10 +108,11 @@ public class RestInvocationProcessor {
 
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
-    * @param serviceStateRepository The repository to access service state
-    * @param responseRepository     The repository to access responses definitions
-    * @param applicationContext     The Spring application context
-    * @param proxyService           The proxy to external URLs or services
+    * @param serviceStateRepository       The repository to access service state
+    * @param responseRepository           The repository to access responses definitions
+    * @param applicationContext           The Spring application context
+    * @param proxyService                 The proxy to external URLs or services
+    * @param opentelemetryResolverService The opentelemetry resolver
     */
    public RestInvocationProcessor(ServiceStateRepository serviceStateRepository, ResponseRepository responseRepository,
          ApplicationContext applicationContext, ProxyService proxyService,
@@ -140,6 +142,7 @@ public class RestInvocationProcessor {
       // Mark current span as an explain Span
       Span span = Span.current();
       TraceUtil.enableExplainTracing();
+
       // We must find dispatcher and its rules. Default to operation ones but
       // if we have a Fallback or Proxy-Fallback this is the one who is holding the first pass rules.
       FallbackSpecification fallback = MockControllerCommons.getFallbackIfAny(ic.operation());
@@ -147,11 +150,11 @@ public class RestInvocationProcessor {
       String dispatcher = getDispatcher(ic, fallback, proxyFallback);
       String dispatcherRules = getDispatcherRules(ic, fallback, proxyFallback);
 
+      // Add event about selected dispatcher.
       span.addEvent(CommonEvents.DISPATCHER_SELECTED.getEventName(),
             TraceUtil.explainSpanEventBuilder("Selected dispatcher and rules for this invocation")
-                  .put("dispatcher", dispatcher != null ? dispatcher : "none")
-                  .put("dispatcher.rules", dispatcherRules != null ? dispatcherRules : "none").build());
-
+                  .put(CommonAttributes.DISPATCHER, dispatcher != null ? dispatcher : "none")
+                  .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules != null ? dispatcherRules : "none").build());
 
       DispatchContext dispatchContext = computeDispatchCriteria(ic.service(), dispatcher, dispatcherRules,
             getURIPattern(ic.operation().getName()), UriUtils.decode(ic.resourcePath(), StandardCharsets.UTF_8),
@@ -177,14 +180,13 @@ public class RestInvocationProcessor {
 
       // Setting delay to default one if not set.
       if (delay == null && ic.operation().getDefaultDelay() != null) {
-         Long defaultDelay = ic.operation().getDefaultDelay();
-         // TODO: Get DelayStrategy
-         delay = new DelaySpec(defaultDelay, DelayApplierOptions.FIXED);
+         delay = new DelaySpec(ic.operation().getDefaultDelay(), ic.operation().getDefaultDelayStrategy());
       }
+
       span.addEvent(CommonEvents.DELAY_CONFIGURED.getEventName(),
             TraceUtil.explainSpanEventBuilder("Configured response delay")
-                  .put("delay.value", delay != null ? delay.getBaseValue() : 0)
-                  .put("delay.strategy", delay != null ? delay.getStrategyName() : "N/A").build());
+                  .put(CommonAttributes.DELAY_VALUE, delay != null ? delay.baseValue() : 0)
+                  .put(CommonAttributes.DELAY_STRATEGY, delay != null ? delay.strategyName() : "N/A").build());
 
       // Check if we need to proxy the request.
       Optional<URI> proxyUrl = MockControllerCommons.getProxyUrlIfProxyIsNeeded(dispatcher, dispatcherRules,
@@ -194,6 +196,7 @@ public class RestInvocationProcessor {
                TraceUtil.explainSpanEventBuilder("Proxying request to external service")
                      .put("proxy.url", proxyUrl.get().toString()).put("proxy.method", ic.operation().getMethod())
                      .build());
+
          // Delay response here as the returning content will be returned directly.
          MockControllerCommons.waitForDelay(startTime, delay);
 
@@ -217,7 +220,8 @@ public class RestInvocationProcessor {
             // There is a dispatcher, but we found no response => return 400 as per #819 and #1132.
             span.addEvent(CommonEvents.NO_RESPONSE_FOUND.getEventName(),
                   TraceUtil.explainSpanEventBuilder("No matching response found for dispatch criteria")
-                        .put("dispatch.criteria", dispatchContext.dispatchCriteria()).put("error.status", 400).build());
+                        .put(CommonAttributes.DISPATCH_CRITERIA, dispatchContext.dispatchCriteria())
+                        .put(CommonAttributes.ERROR_STATUS, 400).build());
             span.setStatus(StatusCode.ERROR, "No matching response found for dispatch criteria");
             return new ResponseResult(HttpStatus.BAD_REQUEST, null,
                   String.format("The response %s does not exist!", dispatchContext.dispatchCriteria()).getBytes());
@@ -229,8 +233,9 @@ public class RestInvocationProcessor {
                : HttpStatus.OK);
 
          span.addEvent(CommonEvents.RESPONSE_SELECTED.getEventName(),
-               TraceUtil.explainSpanEventBuilder("Selected response to return").put("response.name", response.getName())
-                     .put("response.status", status.value())
+               TraceUtil.explainSpanEventBuilder("Selected response to return")
+                     .put(CommonAttributes.RESPONSE_NAME, response.getName())
+                     .put(CommonAttributes.RESPONSE_STATUS, status.value())
                      .put("response.mediaType", response.getMediaType() != null ? response.getMediaType() : "none")
                      .build());
 
@@ -312,22 +317,21 @@ public class RestInvocationProcessor {
          String uriPattern, String resourcePath, HttpServletRequest request, String body) {
       String dispatchCriteria = null;
       Map<String, Object> requestContext = null;
+
       // Create an INTERNAL child span explicitly because Spring AOP does not apply to private/self-invoked methods.
       Tracer tracer = opentelemetryResolverService.getOpenTelemetry()
             .getTracer(RestInvocationProcessor.class.getName());
       Span childSpan = tracer.spanBuilder("computeDispatchCriteria").setSpanKind(SpanKind.INTERNAL).startSpan();
+
       try (Scope ignored = childSpan.makeCurrent()) {
          TraceUtil.enableExplainTracing();
+
          // Depending on dispatcher, evaluate request with rules.
          if (dispatcher != null) {
             switch (dispatcher) {
                case DispatchStyles.SEQUENCE:
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
                         resourcePath);
-                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using SEQUENCE dispatcher")
-                              .put("dispatch.type", "SEQUENCE").put("dispatch.result", dispatchCriteria)
-                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.SCRIPT:
                   log.info("Use the \"GROOVY\" Dispatch Style instead.");
@@ -343,17 +347,15 @@ public class RestInvocationProcessor {
                            requestContext, new ServiceStateStore(serviceStateRepository, service.getId()), request,
                            uriParameters);
                      dispatchCriteria = (String) scriptEngine.eval(script, scriptContext);
-                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-                           TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using GROOVY dispatcher")
-                                 .put("dispatch.type", "GROOVY").put("dispatch.result", dispatchCriteria).build());
                   } catch (Exception e) {
                      // Get current span and record failure
                      Span.current().recordException(e);
                      Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
                            TraceUtil
                                  .explainSpanEventBuilder("Failed to compute dispatch criteria using GROOVY dispatcher")
-                                 .put("dispatch.type", "GROOVY").put("dispatch.result", "null")
-                                 .put("dispatch.script", dispatcherRules).build());
+                                 .put(CommonAttributes.DISPATCHER, "GROOVY")
+                                 .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                                 .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
                      Span.current().setStatus(StatusCode.ERROR, "Error during Script evaluation");
                      log.error("Error during Script evaluation", e);
                   }
@@ -374,47 +376,32 @@ public class RestInvocationProcessor {
                case DispatchStyles.URI_PARAMS:
                   String fullURI = request.getRequestURL() + "?" + request.getQueryString();
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using URI_PARAMS dispatcher")
-                              .put("dispatch.type", "URI_PARAMS").put("dispatch.result", dispatchCriteria)
-                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.URI_PARTS:
                   // /tenantId?t1/userId=x
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
                         resourcePath);
-                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using URI_PARTS dispatcher")
-                              .put("dispatch.type", "URI_PARTS").put("dispatch.result", dispatchCriteria)
-                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.URI_ELEMENTS:
                   dispatchCriteria = DispatchCriteriaHelper.extractFromURIPattern(dispatcherRules, uriPattern,
                         resourcePath);
                   fullURI = request.getRequestURL() + "?" + request.getQueryString();
                   dispatchCriteria += DispatchCriteriaHelper.extractFromURIParams(dispatcherRules, fullURI);
-                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using URI_ELEMENTS dispatcher")
-                              .put("dispatch.type", "URI_ELEMENTS").put("dispatch.result", dispatchCriteria)
-                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                case DispatchStyles.JSON_BODY:
                   try {
                      JsonEvaluationSpecification specification = JsonEvaluationSpecification
                            .buildFromJsonString(dispatcherRules);
                      dispatchCriteria = JsonExpressionEvaluator.evaluate(body, specification);
-                     Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-                           TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using JSON_BODY dispatcher")
-                                 .put("dispatch.type", "JSON_BODY").put("dispatch.result", dispatchCriteria)
-                                 .put("dispatch.rules", dispatcherRules).build());
                   } catch (JsonMappingException jme) {
                      log.error("Dispatching rules of operation cannot be interpreted as JsonEvaluationSpecification",
                            jme);
                      Span.current().recordException(jme);
                      Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(), TraceUtil
                            .explainSpanEventBuilder("Failed to compute dispatch criteria using JSON_BODY dispatcher")
-                           .put("dispatch.type", "JSON_BODY").put("dispatch.result", "null")
-                           .put("dispatch.rules", dispatcherRules).build());
+                           .put(CommonAttributes.DISPATCHER, "JSON_BODY")
+                           .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                           .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
                      Span.current().setStatus(StatusCode.ERROR, "Error during JSON_BODY evaluation");
                   }
                   break;
@@ -422,17 +409,24 @@ public class RestInvocationProcessor {
                   // Extract headers from request and put them into a simple map to reuse extractFromParamMap().
                   dispatchCriteria = DispatchCriteriaHelper.extractFromParamMap(dispatcherRules,
                         extractRequestHeaders(request));
-                  Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
-                        TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using QUERY_HEADER dispatcher")
-                              .put("dispatch.type", "QUERY_HEADER").put("dispatch.result", dispatchCriteria)
-                              .put("dispatch.rules", dispatcherRules).build());
                   break;
                default:
                   log.error("Unknown dispatcher type: {}", dispatcher);
                   Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
                         TraceUtil.explainSpanEventBuilder("Unknown dispatcher type encountered")
-                              .put("dispatch.type", dispatcher).put("dispatch.result", "null").build());
+                              .put(CommonAttributes.DISPATCHER, dispatcher)
+                              .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                              .put(CommonAttributes.DISPATCH_CRITERIA, "null").build());
                   break;
+            }
+
+            if (dispatchCriteria != null) {
+               // Add an event about computed dispatch criteria.
+               Span.current().addEvent(DISPATCH_CRITERIA_COMPUTED.getEventName(),
+                     TraceUtil.explainSpanEventBuilder("Computed dispatch criteria using " + dispatcher + " dispatcher")
+                           .put(CommonAttributes.DISPATCHER, dispatcher)
+                           .put(CommonAttributes.DISPATCHER_RULES, dispatcherRules)
+                           .put(CommonAttributes.DISPATCH_CRITERIA, dispatchCriteria).build());
             }
          }
       } finally {

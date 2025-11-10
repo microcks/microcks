@@ -21,6 +21,8 @@ import io.github.microcks.util.tracing.SpanFilterUtil;
 
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -35,9 +37,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * Service for managing subscriptions to trace updates via Server-Sent Events (SSE). Clients can subscribe with filters
  * on service name and operation name, and will receive updates when matching traces are updated.
+ * @author Apoorva Srinivas Appadoo
  */
 @Component
 public class TraceSubscriptionManager {
+
+   /** A commons logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(TraceSubscriptionManager.class);
 
    private final SpanStorageService spanStorageService;
    private final List<Subscription> subscriptions = new CopyOnWriteArrayList<>();
@@ -79,6 +85,7 @@ public class TraceSubscriptionManager {
     */
    @EventListener
    public void onTraceUpdated(TraceEvent event) {
+      log.trace("Received trace update event for traceId='{}'", event.traceId());
       List<ReadableSpan> spans = spanStorageService.getSpansForTrace(event.traceId());
       if (spans.isEmpty())
          return;

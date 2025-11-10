@@ -5,17 +5,23 @@ local development machine.
 
 ## OpenTelemetry configuration
 
-In order to enable OpenTelemetry on your Microcks instance, you'll have to define those 2 additional environment variables:
+In order to enable OpenTelemetry on your Microcks instance, you'll have to define those 1 environment variables:
 
-* `OTEL_JAVAAGENT_ENABLED` is set to false by default, so you'll have to explicitly set it to `true`
-* `OTEL_EXPORTER_OTLP_ENDPOINT` is set to a local dummy endpoint, so you'll have to set it to an OpenTelemetry collector endpoint
+* `OTEL_EXPORTER_OTLP_ENDPOINT` is by default set to a local dummy endpoint, so you'll have to set it to an OpenTelemetry collector endpoint
   of your environment. Something like `http://otel-collector.acme.com:4317` for example.
+
+Depending on the content your want to sent to this OpenTelemetry collector configuration, you may also need to set:
+
+* `OTEL_METRICS_EXPORTER` set to `otlp` - it is set to `none` by default and will not export any metric if not set
+* `OTEL_TRACES_EXPORTER` set to `otlp` - it is set to `none` by default and will not export any trace if not set
+* `OTEL_LOGS_EXPORTER` set to `otlp` - it is set to `none` by default and will not export any log if not set
 
 Optionally, you may override this following environment variables to fit your environment requirements:
 
 * `OTEL_METRIC_EXPORT_INTERVAL`, those default value is set to `10000`
-* `OTEL_EXPORTER_OTLP_TIMEOUT`, those default value is set to `7000` 
-* `OTEL_RESOURCE_ATTRIBUTES`, those default value is set to `service.name=microcks,service.namespace=microcks-ns,service.instance.id=my-microcks-dev,service.version=1.9.0`
+* `OTEL_EXPORTER_OTLP_TIMEOUT`, those default value is set to `10000` 
+* `OTEL_RESOURCE_ATTRIBUTES`, those default value is set to `service.name=microcks,service.namespace=microcks-ns,service.instance.id=my-microcks-dev,service.version=1.13.0`
+* `MANAGEMENT_OLTP_TRACING_SAMPLING_PROBABILITY`, those default value is set to `0.2` (meaning 20% of regular API requests are sampled)
 
 The above environment variables may be easily setup via the Microcks Helm Chart or Operator using the `microcks.env` properties.
 

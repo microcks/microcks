@@ -16,6 +16,8 @@
 package io.github.microcks.web;
 
 import io.github.microcks.service.SpanStorageService;
+import io.github.microcks.util.SafeLogger;
+
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.springframework.http.MediaType;
@@ -34,15 +36,23 @@ import java.util.Set;
 /**
  * REST controller for accessing trace and span information stored by the SpanStorageService. Provides endpoints to
  * retrieve traces, spans
+ * @author Apoorva Srinivas Appadoo
  */
 @RestController
 @RequestMapping("/api/traces")
 public class TracingController {
 
+   /** A safe logger for filtering user-controlled data in diagnostic messages. */
+   private static final SafeLogger log = SafeLogger.getLogger(TracingController.class);
+
    private final SpanStorageService spanStorageService;
    private final TraceSubscriptionManager traceSubscriptionManager;
 
-
+   /**
+    * Build a TracingController with the given SpanStorageService.
+    * @param spanStorageService       the span storage service
+    * @param traceSubscriptionManager the trace subscription manager
+    */
    public TracingController(SpanStorageService spanStorageService, TraceSubscriptionManager traceSubscriptionManager) {
       this.spanStorageService = spanStorageService;
       this.traceSubscriptionManager = traceSubscriptionManager;
@@ -50,7 +60,6 @@ public class TracingController {
 
    /**
     * Get all trace IDs currently stored.
-    *
     * @return Set of trace IDs
     */
    @GetMapping
@@ -60,7 +69,6 @@ public class TracingController {
 
    /**
     * Get all spans for a specific trace ID.
-    *
     * @param traceId The trace ID to look up
     * @return List of spans for the trace
     */
@@ -90,7 +98,6 @@ public class TracingController {
 
    /**
     * Clear all stored traces and spans.
-    *
     * @return Success message
     */
    @DeleteMapping

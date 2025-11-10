@@ -36,6 +36,7 @@ export const appConfig: ApplicationConfig = {
     
     provideHighlightOptions({
       coreLibraryLoader: () => import('highlight.js/lib/core'),
+      themePath: 'assets/styles/github.min.css',
       languages: {
         json: () => import('highlight.js/lib/languages/json'),
         xml: () => import('highlight.js/lib/languages/xml'),

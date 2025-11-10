@@ -53,6 +53,7 @@ export type Operation = {
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
+  defaultDelayStrategy: string;
   resourcePaths: string[];
   parameterConstraints: ParameterConstraint[];
 };
@@ -61,6 +62,7 @@ export type OperationMutableProperties = {
   dispatcher: string;
   dispatcherRules: string;
   defaultDelay: number;
+  defaultDelayStrategy: string;
   parameterConstraints: ParameterConstraint[];
 };
 
