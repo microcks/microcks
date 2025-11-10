@@ -84,21 +84,34 @@ public class SpanStorageService {
       String traceId = span.getSpanContext().getTraceId();
       SpanData spanData = span.toSpanData();
 
-      // Add the span to our collection
-      spansByTraceId.computeIfAbsent(traceId, k -> new ArrayList<>()).add(new SpanDataDTO(spanData));
+      // Add the span to our collection. Use a synchronized list for per-trace spans so concurrent
+      // additions/removals are thread-safe. Also synchronize on the list when doing size+remove
+      // operations to make them atomic.
+      List<SpanData> spans = spansByTraceId.computeIfAbsent(traceId,
+            k -> Collections.synchronizedList(new ArrayList<>()));
 
-      // Limit spans per trace to prevent memory issues
-      List<SpanData> spans = spansByTraceId.get(traceId);
-      if (spans.size() > MAX_SPANS_PER_TRACE) {
-         // Remove oldest span to cap memory
-         spans.removeFirst();
+      synchronized (spans) {
+         spans.add(new SpanDataDTO(spanData));
+
+         // Limit spans per trace to prevent memory issues
+         if (spans.size() > MAX_SPANS_PER_TRACE) {
+            // Remove oldest span to cap memory
+            spans.remove(0);
+         }
       }
 
-      // Limit total number of traces to prevent memory leaks
-      if (spansByTraceId.size() > MAX_TRACES) {
-         // Remove oldest trace this works because LinkedHashMap maintains insertion order
-         String oldestTraceId = spansByTraceId.keySet().iterator().next();
-         spansByTraceId.remove(oldestTraceId);
+      // Limit total number of traces to prevent memory leaks. Iteration over the
+      // synchronizedMap's keySet must be done while holding the map lock to avoid
+      // ConcurrentModificationException.
+      synchronized (spansByTraceId) {
+         if (spansByTraceId.size() > MAX_TRACES) {
+            // Remove oldest trace - LinkedHashMap preserves insertion order
+            var it = spansByTraceId.keySet().iterator();
+            if (it.hasNext()) {
+               it.next();
+               it.remove();
+            }
+         }
       }
 
       // Publish a notification if this span matches an Invocation Received event (that's the demarcation we're looking for)
@@ -138,9 +151,18 @@ public class SpanStorageService {
     */
    public List<String> queryTraceIdsBySpanAttributes(Map<AttributeKey<?>, Object> requiredAttributes) {
       if (requiredAttributes == null || requiredAttributes.isEmpty()) {
-         return new ArrayList<>(spansByTraceId.keySet());
+         synchronized (spansByTraceId) {
+            return new ArrayList<>(spansByTraceId.keySet());
+         }
       }
-      return spansByTraceId.entrySet().stream()
+
+      // Make a snapshot copy of entries to avoid holding the map lock for the whole
+      // streaming/processing and to prevent ConcurrentModificationException.
+      List<Map.Entry<String, List<SpanData>>> entries;
+      synchronized (spansByTraceId) {
+         entries = new ArrayList<>(spansByTraceId.entrySet());
+      }
+      return entries.stream()
             .filter(entry -> entry.getValue().stream()
                   .anyMatch(span -> requiredAttributes.entrySet().stream().allMatch(
                         reqAttr -> valuesEqualAttr(span.getAttributes().get(reqAttr.getKey()), reqAttr.getValue()))))
@@ -159,8 +181,12 @@ public class SpanStorageService {
     *         first)
     */
    public List<String> queryTraceIdsByPatterns(String serviceName, String operationName, String clientAddress) {
-      return spansByTraceId.entrySet().stream()
-            .map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
+      // Snapshot entries to avoid concurrent modification while streaming
+      List<Map.Entry<String, List<SpanData>>> entries;
+      synchronized (spansByTraceId) {
+         entries = new ArrayList<>(spansByTraceId.entrySet());
+      }
+      return entries.stream().map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
             .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
             .map(TraceEvent::traceId)
             // Sort by recency - most recent first
@@ -186,7 +212,9 @@ public class SpanStorageService {
     * @return Set of trace IDs
     */
    public Set<String> getAllTraceIds() {
-      return spansByTraceId.keySet();
+      synchronized (spansByTraceId) {
+         return Set.copyOf(spansByTraceId.keySet());
+      }
    }
 
    private int compareSpansByEndTime(String id1, String id2) {
