@@ -15,6 +15,12 @@
  */
 package io.github.microcks.util.el;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.xml.sax.InputSource;
+
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -24,12 +30,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.xml.sax.InputSource;
 
 /**
  * An implementation of {@code Expression} that deals with variable references. Such expression is able to evaluate
@@ -42,7 +42,7 @@ import org.xml.sax.InputSource;
 public class VariableReferenceExpression implements Expression {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(VariableReferenceExpression.class);
+   private static final Logger log = LoggerFactory.getLogger(VariableReferenceExpression.class);
 
    private static final String ARRAY_INDEX_REGEXP = "\\[(\\d+)\\]";
    private static final String MAP_INDEX_REGEXP = "\\[([\\.\\w-]+)\\]";
@@ -121,47 +121,62 @@ public class VariableReferenceExpression implements Expression {
 
       if (propertyPath != null) {
          if (variableValue.getClass().equals(String.class)) {
-            if (propertyPath.startsWith("/")) {
-               // This is a JSON Pointer or XPath expression to apply.
-               String variableString = String.valueOf(variableValue);
-
-               if (variableString.trim().startsWith("{") || variableString.trim().startsWith("[")) {
-                  variableValue = getJsonPointerValue(variableString, propertyPath);
-               } else if (variableString.trim().startsWith("<")) {
-                  variableValue = getXPathValue(variableString, propertyPath);
-               } else {
-                  log.warn("Got a path query expression but content seems not to be JSON nor XML...");
-                  variableValue = null;
-               }
-            }
+            variableValue = getStringValue(variableValue, propertyPath);
          } else if (variableValue.getClass().isArray()) {
-            if (propertyPath.matches(ARRAY_INDEX_REGEXP)) {
-               Matcher m = ARRAY_INDEX_PATTERN.matcher(propertyPath);
-               if (m.matches()) {
-                  String arrayIndex = m.group(1);
-                  Object[] variableValues = (Object[]) variableValue;
-                  try {
-                     variableValue = variableValues[Integer.parseInt(arrayIndex)];
-                  } catch (ArrayIndexOutOfBoundsException ae) {
-                     log.warn("Expression asked for " + arrayIndex + " but array is smaller (" + variableValues.length
-                           + "). Returning null.");
-                     variableValue = null;
-                  }
-               }
-            }
+            variableValue = getArrayValue(variableValue, propertyPath);
          } else if (Map.class.isAssignableFrom(variableValue.getClass())) {
-            if (propertyPath.matches(MAP_INDEX_REGEXP)) {
-               Matcher m = MAP_INDEX_PATTERN.matcher(propertyPath);
-               if (m.matches()) {
-                  String mapKey = m.group(1);
-                  Map variableValues = (Map) variableValue;
-                  variableValue = variableValues.get(mapKey);
-               }
-            }
+            variableValue = getMapValue(variableValue, propertyPath);
          }
       }
 
       return String.valueOf(variableValue);
+   }
+
+   private static String getStringValue(Object variableValue, String propertyPath) {
+      if (propertyPath.startsWith("/")) {
+         // This is a JSON Pointer or XPath expression to apply.
+         String variableString = String.valueOf(variableValue);
+
+         if (variableString.trim().startsWith("{") || variableString.trim().startsWith("[")) {
+            return getJsonPointerValue(variableString, propertyPath);
+         } else if (variableString.trim().startsWith("<")) {
+            return getXPathValue(variableString, propertyPath);
+         } else {
+            log.warn("Got a path query expression but content seems not to be JSON nor XML...");
+            return null;
+         }
+      }
+      return String.valueOf(variableValue);
+   }
+
+   private static Object getArrayValue(Object variableValue, String propertyPath) {
+      if (propertyPath.matches(ARRAY_INDEX_REGEXP)) {
+         Matcher m = ARRAY_INDEX_PATTERN.matcher(propertyPath);
+         if (m.matches()) {
+            String arrayIndex = m.group(1);
+            Object[] variableValues = (Object[]) variableValue;
+            try {
+               return variableValues[Integer.parseInt(arrayIndex)];
+            } catch (ArrayIndexOutOfBoundsException ae) {
+               log.warn("Expression asked for {} but array is smaller ({}). Returning null.",
+                     arrayIndex, variableValues.length);
+               return null;
+            }
+         }
+      }
+      return variableValue;
+   }
+
+   private static Object getMapValue(Object variableValue, String propertyPath) {
+      if (propertyPath.matches(MAP_INDEX_REGEXP)) {
+         Matcher m = MAP_INDEX_PATTERN.matcher(propertyPath);
+         if (m.matches()) {
+            String mapKey = m.group(1);
+            Map<?, ?> variableValues = (Map<?, ?>) variableValue;
+            return variableValues.get(mapKey);
+         }
+      }
+      return variableValue;
    }
 
    /**
@@ -181,7 +196,7 @@ public class VariableReferenceExpression implements Expression {
          result = method.invoke(obj);
       } catch (Exception e) {
          // Do nothing, we'll return the default value
-         log.warn(property + " property was requested on " + obj.getClass() + " but cannot find a valid getter", e);
+         log.warn("{} property was requested on {} but cannot find a valid getter", property, obj.getClass(), e);
       }
       return result;
    }
