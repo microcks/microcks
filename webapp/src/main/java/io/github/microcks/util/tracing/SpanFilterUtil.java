@@ -17,8 +17,8 @@ package io.github.microcks.util.tracing;
 
 import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.EventData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 
 import java.util.List;
 import java.util.Map;
@@ -89,18 +89,18 @@ public class SpanFilterUtil {
     * @param spans   the list of spans
     * @return the TraceEvent
     */
-   public static TraceEvent extractTraceEvent(String traceId, List<ReadableSpan> spans) {
+   public static TraceEvent extractTraceEvent(String traceId, List<SpanData> spans) {
       if (spans == null || spans.isEmpty()) {
          return null;
       }
       String service = null;
       String operation = null;
       String clientAddress = null;
-      for (ReadableSpan s : spans) {
-         if (s == null || s.toSpanData() == null) {
+      for (SpanData s : spans) {
+         if (s == null) {
             continue;
          }
-         Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
+         Map<AttributeKey<?>, Object> attributes = s.getAttributes().asMap();
 
          String serviceAttribute = (String) attributes.get(CommonAttributes.SERVICE_NAME);
          String operationAttribute = (String) attributes.get(CommonAttributes.OPERATION_NAME);
@@ -109,7 +109,7 @@ public class SpanFilterUtil {
          if (operationAttribute != null)
             operation = operationAttribute;
 
-         Optional<EventData> invocationReceivedEvent = s.toSpanData().getEvents().stream()
+         Optional<EventData> invocationReceivedEvent = s.getEvents().stream()
                .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
          if (invocationReceivedEvent.isPresent()) {
             String clientAddressAttribute = invocationReceivedEvent.get().getAttributes()

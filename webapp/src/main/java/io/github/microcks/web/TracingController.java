@@ -18,7 +18,6 @@ package io.github.microcks.web;
 import io.github.microcks.service.SpanStorageService;
 import io.github.microcks.util.SafeLogger;
 
-import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -74,11 +73,11 @@ public class TracingController {
     */
    @GetMapping("/{traceId}/spans")
    public ResponseEntity<List<SpanData>> getSpansForTrace(@PathVariable("traceId") String traceId) {
-      List<ReadableSpan> spans = spanStorageService.getSpansForTrace(traceId);
+      List<SpanData> spans = spanStorageService.getSpansForTrace(traceId);
       if (spans.isEmpty()) {
          return ResponseEntity.notFound().build();
       }
-      return ResponseEntity.ok(spans.stream().map(ReadableSpan::toSpanData).toList());
+      return ResponseEntity.ok(spans);
    }
 
    @GetMapping("/operations")
@@ -90,8 +89,7 @@ public class TracingController {
          return ResponseEntity.notFound().build();
       }
 
-      List<List<SpanData>> spansByTraceId = traceIds.stream().map(spanStorageService::getSpansForTrace)
-            .map(spans -> spans.stream().map(ReadableSpan::toSpanData).toList()).toList();
+      List<List<SpanData>> spansByTraceId = traceIds.stream().map(spanStorageService::getSpansForTrace).toList();
 
       return ResponseEntity.ok(spansByTraceId);
    }
@@ -105,7 +103,6 @@ public class TracingController {
       spanStorageService.clearAll();
       return ResponseEntity.ok("All traces and spans have been cleared");
    }
-
 
    @GetMapping(value = "/operations/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
    public SseEmitter streamTraces(@RequestParam("serviceName") String serviceName,

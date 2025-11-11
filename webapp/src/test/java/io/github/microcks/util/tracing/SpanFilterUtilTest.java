@@ -18,7 +18,6 @@ package io.github.microcks.util.tracing;
 import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import org.junit.jupiter.api.Test;
@@ -73,25 +72,20 @@ class SpanFilterUtilTest {
 
    @Test
    void testMatchesTraceEvent() {
-      // Mock a ReadableSpan with specific attributes
-      ReadableSpan mockSpan = mock(ReadableSpan.class);
+      // Mock a SpanData with specific attributes
       SpanData mockSpanData = mock(SpanData.class);
       EventData mockEventData = mock(EventData.class);
-
-      when(mockSpan.toSpanData()).thenReturn(mockSpanData);
 
       when(mockSpanData.getAttributes())
             .thenReturn(Attributes.builder().put(AttributeKey.stringKey("service.name"), "order-service")
                   .put(AttributeKey.stringKey("operation.name"), "createOrder").build());
-      when(mockSpan.getName()).thenReturn("createOrderSpan");
-      when(mockSpan.getSpanContext()).thenReturn(null); // Simplified for this test
 
       when(mockEventData.getName()).thenReturn("invocation_received");
       when(mockEventData.getAttributes())
             .thenReturn(Attributes.builder().put(AttributeKey.stringKey("client.address"), "128.0.0.1").build());
       when(mockSpanData.getEvents()).thenReturn(List.of(mockEventData));
 
-      List<ReadableSpan> spans = List.of(mockSpan);
+      List<SpanData> spans = List.of(mockSpanData);
       TraceEvent event = SpanFilterUtil.extractTraceEvent("trace-123", spans);
 
       assertNotNull(event);
