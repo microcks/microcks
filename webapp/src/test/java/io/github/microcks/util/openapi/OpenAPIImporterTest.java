@@ -2086,4 +2086,63 @@ class OpenAPIImporterTest {
          fail("Exception should not be thrown when parsing cookie parameters: " + e.getMessage());
       }
    }
+
+   @Test
+   void testOpenAPIWithExternalValueDataUriBinaryResponse() {
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter("target/test-classes/io/github/microcks/util/openapi/get-image-openapi.yaml",
+               null);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      // Check that basic service properties are there.
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      Service service = services.getFirst();
+      Operation operation = service.getOperations().getFirst();
+
+      // Check that messages have been correctly found.
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(1, exchanges.size());
+
+      // Validate the request and response
+      for (Exchange exchange : exchanges) {
+         if (exchange instanceof RequestResponsePair entry) {
+            Request request = entry.getRequest();
+            Response response = entry.getResponse();
+            assertNotNull(request);
+            assertNotNull(response);
+            assertEquals("EXAMPLE1", request.getName());
+            assertEquals("EXAMPLE1", response.getName());
+            assertEquals("/id=1", response.getDispatchCriteria());
+            assertEquals("200", response.getStatus());
+            assertEquals("image/png", response.getMediaType());
+
+            // Verify that the externalValue data URL was processed correctly
+            assertNotNull(response.getContent());
+            assertFalse(response.getContent().isEmpty(), "Response content should not be empty");
+
+            // The externalValue contains a data URL with base64-encoded PNG image
+            // Verify it starts with the PNG signature after base64 decoding
+            // data:image/png;base64,iVBORw0KGgo... should be processed
+            assertTrue(
+                  response.getContent().contains("iVBORw0KGgo")
+                        || response.getContent().startsWith("data:image/png;base64,"),
+                  "Response should contain base64-encoded PNG data or data URL");
+         } else {
+            fail("Exchange has the wrong type. Expecting RequestResponsePair");
+         }
+      }
+   }
 }

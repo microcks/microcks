@@ -26,10 +26,12 @@ import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.AbsoluteUrlMatcher;
+import io.github.microcks.util.DataUriUtil;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
 import io.github.microcks.util.SafeLogger;
+import io.github.microcks.util.UTF8ContentTypeChecker;
 import io.github.microcks.util.delay.DelaySpec;
 import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
@@ -70,6 +72,7 @@ import javax.script.ScriptEngineManager;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -100,6 +103,9 @@ public class RestInvocationProcessor {
 
    @Value("${mocks.enable-invocation-stats}")
    private Boolean enableInvocationStats;
+
+   @Value("${mocks.enable-binary-response-decode:false}")
+   private boolean enableBinaryResponseDecode;
 
    /**
     * Build a RestMockInvocationProcessor with required dependencies.
@@ -236,11 +242,10 @@ public class RestInvocationProcessor {
 
          // Deal with specific headers (content-type and redirect directive).
          HttpHeaders responseHeaders = getResponseHeaders(ic, body, request, dispatchContext, response);
-         String responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
+         byte[] responseContent = getResponseContent(ic, startTime, delay, body, request, dispatchContext, response);
 
          // Return response content.
-         return new ResponseResult(status, responseHeaders,
-               responseContent != null ? responseContent.getBytes(StandardCharsets.UTF_8) : null);
+         return new ResponseResult(status, responseHeaders, responseContent);
       }
 
       span.addEvent(CommonEvents.NO_RESPONSE_AVAILABLE.getEventName(), TraceUtil
@@ -517,19 +522,64 @@ public class RestInvocationProcessor {
       }
    }
 
-   private String getResponseContent(MockInvocationContext ic, long startTime, DelaySpec delay, String body,
+   /**
+    * Generates the response content to return, based on the media type (UTF-8 or Base64), applies an optional delay,
+    * and publishes an invocation event if enabled.
+    */
+   private byte[] getResponseContent(MockInvocationContext ic, long startTime, DelaySpec delay, String body,
          HttpServletRequest request, DispatchContext dispatchContext, Response response) {
-      // Render response content before waiting and returning.
-      String responseContent = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
-            dispatchContext.requestContext(), response);
 
-      // Delay response.
+      byte[] responseContent;
+
+      // Decide if we should treat content as UTF-8 (text) either because feature is disabled or media type is utf-8 encodable.
+      boolean treatAsUtf8 = !enableBinaryResponseDecode
+            || UTF8ContentTypeChecker.isUtf8Encodable(response.getMediaType());
+
+      if (treatAsUtf8) {
+         String content = MockControllerCommons.renderResponseContent(body, ic.resourcePath(), request,
+               dispatchContext.requestContext(), response);
+         responseContent = content != null ? content.getBytes(StandardCharsets.UTF_8) : null;
+
+      } else {
+         responseContent = tryDecodeExternalValueContent(response);
+      }
+
+      // Apply response delay and optionally publish the invocation event
+      handlePostProcessing(startTime, delay, ic, response);
+
+      return responseContent;
+   }
+
+   /* Attempts to decode the response content which is expected to be a data URI with Base64 encoded data. */
+   private byte[] tryDecodeExternalValueContent(Response response) {
+      if (response == null || response.getContent() == null) {
+         return null;
+      }
+      try {
+         return DataUriUtil.decodeDataUri(response.getContent());
+      } catch (IllegalArgumentException e) {
+         log.error("Error decoding response content as base64", e);
+         log.debug("Returning response content as is");
+
+         // Return raw content as UTF-8 if Base64 decoding fails
+         if (response.getContent() != null) {
+            return response.getContent().getBytes(StandardCharsets.UTF_8);
+         } else {
+            return null;
+         }
+      }
+   }
+
+   /**
+    * Applies an artificial delay before returning the response, and publishes a mock invocation event if statistics
+    * collection is enabled.
+    */
+   private void handlePostProcessing(long startTime, DelaySpec delay, MockInvocationContext ic, Response response) {
       MockControllerCommons.waitForDelay(startTime, delay);
 
       // Publish an invocation event before returning if enabled.
       if (Boolean.TRUE.equals(enableInvocationStats)) {
          MockControllerCommons.publishMockInvocation(applicationContext, this, ic.service(), response, startTime);
       }
-      return responseContent;
    }
 }
