@@ -121,13 +121,13 @@ class RestInvocationProcessorTest {
       }
 
       @Test
-      @DisplayName("should return a binary response from Base64 content")
-      void shouldReturnBinaryResponseFromBase64() {
+      @DisplayName("should return a binary response from data URI")
+      void shouldReturnBinaryResponseFromDataUri() {
          // Arrange
          var context = createMockContext("GET /file", "GET", "/file");
          byte[] binaryData = "binary-content".getBytes();
-         String base64Content = Base64.getEncoder().encodeToString(binaryData);
-         var mockResponse = createMockResponse("application/octet-stream", base64Content);
+         String dataUri = "data:application/octet-stream;base64," + Base64.getEncoder().encodeToString(binaryData);
+         var mockResponse = createMockResponse("application/octet-stream", dataUri);
 
          when(request.getRequestURL()).thenReturn(new StringBuffer("http://localhost/file"));
          when(responseRepo.findByOperationIdAndDispatchCriteria(any(), any())).thenReturn(List.of(mockResponse));

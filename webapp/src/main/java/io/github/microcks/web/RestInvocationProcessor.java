@@ -26,6 +26,7 @@ import io.github.microcks.repository.ServiceStateRepository;
 import io.github.microcks.service.ProxyService;
 import io.github.microcks.service.ServiceStateStore;
 import io.github.microcks.util.AbsoluteUrlMatcher;
+import io.github.microcks.util.DataUriUtil;
 import io.github.microcks.util.DispatchCriteriaHelper;
 import io.github.microcks.util.DispatchStyles;
 import io.github.microcks.util.IdBuilder;
@@ -540,7 +541,7 @@ public class RestInvocationProcessor {
          responseContent = content != null ? content.getBytes(StandardCharsets.UTF_8) : null;
 
       } else {
-         responseContent = tryDecodeBase64Content(response);
+         responseContent = tryDecodeExternalValueContent(response);
       }
 
       // Apply response delay and optionally publish the invocation event
@@ -549,16 +550,13 @@ public class RestInvocationProcessor {
       return responseContent;
    }
 
-   /**
-    * Attempts to decode the response content as Base64. If decoding fails, falls back to returning the raw content as
-    * UTF-8 bytes.
-    */
-   private byte[] tryDecodeBase64Content(Response response) {
+   /* Attempts to decode the response content which is expected to be a data URI with Base64 encoded data. */
+   private byte[] tryDecodeExternalValueContent(Response response) {
       if (response == null || response.getContent() == null) {
          return null;
       }
       try {
-         return Base64.getDecoder().decode(response.getContent());
+         return DataUriUtil.decodeDataUri(response.getContent());
       } catch (IllegalArgumentException e) {
          log.error("Error decoding response content as base64", e);
          log.debug("Returning response content as is");
