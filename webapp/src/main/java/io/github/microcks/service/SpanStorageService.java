@@ -96,7 +96,7 @@ public class SpanStorageService {
          // Limit spans per trace to prevent memory issues
          if (spans.size() > MAX_SPANS_PER_TRACE) {
             // Remove oldest span to cap memory
-            spans.remove(0);
+            spans.removeFirst();
          }
       }
 
@@ -181,16 +181,14 @@ public class SpanStorageService {
     *         first)
     */
    public List<String> queryTraceIdsByPatterns(String serviceName, String operationName, String clientAddress) {
-      // Snapshot entries to avoid concurrent modification while streaming
-      List<Map.Entry<String, List<SpanData>>> entries;
-      synchronized (spansByTraceId) {
-         entries = new ArrayList<>(spansByTraceId.entrySet());
-      }
-      return entries.stream().map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
-            .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
-            .map(TraceEvent::traceId)
-            // Sort by recency - most recent first
-            .sorted(this::compareSpansByEndTime).toList();
+     synchronized (spansByTraceId) {
+       return spansByTraceId.entrySet().stream().map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
+         .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
+         .map(TraceEvent::traceId)
+         // Sort by recency - most recent first
+         .sorted(this::compareSpansByEndTime).toList();
+     }
+
    }
 
    public static boolean valuesEqualAttr(Object actual, Object expected) {
@@ -212,9 +210,7 @@ public class SpanStorageService {
     * @return Set of trace IDs
     */
    public Set<String> getAllTraceIds() {
-      synchronized (spansByTraceId) {
          return Set.copyOf(spansByTraceId.keySet());
-      }
    }
 
    private int compareSpansByEndTime(String id1, String id2) {
