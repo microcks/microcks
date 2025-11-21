@@ -90,14 +90,12 @@ public class SpanStorageService {
       List<SpanData> spans = spansByTraceId.computeIfAbsent(traceId,
             k -> Collections.synchronizedList(new ArrayList<>()));
 
-      synchronized (spans) {
-         spans.add(new SpanDataDTO(spanData));
+      spans.add(new SpanDataDTO(spanData));
 
-         // Limit spans per trace to prevent memory issues
-         if (spans.size() > MAX_SPANS_PER_TRACE) {
-            // Remove oldest span to cap memory
-            spans.removeFirst();
-         }
+      // Limit spans per trace to prevent memory issues
+      if (spans.size() > MAX_SPANS_PER_TRACE) {
+         // Remove oldest span to cap memory
+         spans.removeFirst();
       }
 
       // Limit total number of traces to prevent memory leaks. Iteration over the
