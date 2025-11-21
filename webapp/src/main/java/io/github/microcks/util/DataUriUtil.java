@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 /**
  * Utility class for handling data URIs as defined in RFC 2397. Data URIs are commonly used in OpenAPI specifications to
- * embed binary data inline. Format: data:[<mediatype>][;base64],<data>
+ * embed binary data inline. Format: "data:[&#60;mediatype&#62;][;base64],&#60;data&#62;".
  *
  * @author microcks
  */
