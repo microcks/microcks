@@ -143,35 +143,6 @@ public class SpanStorageService {
    }
 
    /**
-    * Retrieves trace IDs that have spans matching all specified attributes.
-    *
-    * @param requiredAttributes Map of attribute key -> expected value
-    * @return A List of trace IDs that have spans matching all the provided attributes sorted by recency (most recent
-    *         first)
-    */
-   public List<String> queryTraceIdsBySpanAttributes(Map<AttributeKey<?>, Object> requiredAttributes) {
-      if (requiredAttributes == null || requiredAttributes.isEmpty()) {
-         synchronized (spansByTraceId) {
-            return new ArrayList<>(spansByTraceId.keySet());
-         }
-      }
-
-      // Make a snapshot copy of entries to avoid holding the map lock for the whole
-      // streaming/processing and to prevent ConcurrentModificationException.
-      List<Map.Entry<String, List<SpanData>>> entries;
-      synchronized (spansByTraceId) {
-         entries = new ArrayList<>(spansByTraceId.entrySet());
-      }
-      return entries.stream()
-            .filter(entry -> entry.getValue().stream()
-                  .anyMatch(span -> requiredAttributes.entrySet().stream().allMatch(
-                        reqAttr -> valuesEqualAttr(span.getAttributes().get(reqAttr.getKey()), reqAttr.getValue()))))
-            .map(Map.Entry::getKey)
-            // Sort by recency - most recent first
-            .sorted(this::compareSpansByEndTime).toList();
-   }
-
-   /**
     * Query trace IDs by span attributes with support for regex patterns.
     *
     * @param serviceName   Service name pattern (can be null, "*", or regex)

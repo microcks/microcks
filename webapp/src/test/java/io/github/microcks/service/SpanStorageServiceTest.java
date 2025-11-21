@@ -159,57 +159,6 @@ class SpanStorageServiceTest {
    }
 
    @Test
-   @DisplayName("Should query trace IDs by span attributes")
-   void shouldQueryTraceIdsBySpanAttributes() {
-      // Given
-      AttributeKey<String> serviceNameKey = AttributeKey.stringKey("service.name");
-      AttributeKey<String> operationKey = AttributeKey.stringKey("operation");
-
-      ReadableSpan span1 = createMockSpanWithAttributes("trace-1", "span-1",
-            Attributes.builder().put(serviceNameKey, "user-service").put(operationKey, "login").build());
-
-      ReadableSpan span2 = createMockSpanWithAttributes("trace-2", "span-2",
-            Attributes.builder().put(serviceNameKey, "user-service").put(operationKey, "logout").build());
-
-      ReadableSpan span3 = createMockSpanWithAttributes("trace-3", "span-3",
-            Attributes.builder().put(serviceNameKey, "order-service").put(operationKey, "create").build());
-
-      spanStorageService.storeSpan(span1);
-      spanStorageService.storeSpan(span2);
-      spanStorageService.storeSpan(span3);
-
-      // When
-      Map<AttributeKey<?>, Object> requiredAttributes = new HashMap<>();
-      requiredAttributes.put(serviceNameKey, "user-service");
-
-      List<String> matchingTraceIds = spanStorageService.queryTraceIdsBySpanAttributes(requiredAttributes);
-
-      // Then
-      assertEquals(2, matchingTraceIds.size());
-      assertTrue(matchingTraceIds.contains("trace-1"));
-      assertTrue(matchingTraceIds.contains("trace-2"));
-      assertFalse(matchingTraceIds.contains("trace-3"));
-   }
-
-   @Test
-   @DisplayName("Should return all trace IDs when no attributes specified")
-   void shouldReturnAllTraceIdsWhenNoAttributesSpecified() {
-      // Given
-      spanStorageService.storeSpan(createMockSpan("trace-1", "span-1"));
-      spanStorageService.storeSpan(createMockSpan("trace-2", "span-2"));
-      spanStorageService.storeSpan(createMockSpan("trace-3", "span-3"));
-
-      // When
-      List<String> allTraceIds = spanStorageService.queryTraceIdsBySpanAttributes(null);
-
-      // Then
-      assertEquals(3, allTraceIds.size());
-      assertTrue(allTraceIds.contains("trace-1"));
-      assertTrue(allTraceIds.contains("trace-2"));
-      assertTrue(allTraceIds.contains("trace-3"));
-   }
-
-   @Test
    @DisplayName("Should handle concurrent access safely")
    void shouldHandleConcurrentAccessSafely() throws InterruptedException {
       // Given
