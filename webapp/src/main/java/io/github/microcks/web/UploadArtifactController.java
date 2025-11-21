@@ -75,7 +75,8 @@ public class UploadArtifactController {
    @PostMapping(value = "/artifact/download")
    public ResponseEntity<String> importArtifact(@RequestParam(value = "url", required = true) String url,
          @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact,
-         @RequestParam(value = "secretName", required = false) String secretName) {
+         @RequestParam(value = "secretName", required = false) String secretName,
+         @RequestParam(value = "previewSlug", required = false) String previewSlug) {
       if (!url.isEmpty()) {
          List<Service> services = null;
 
@@ -97,7 +98,7 @@ public class UploadArtifactController {
                   new ReferenceResolver(url, secret, true,
                         RelativeReferenceURLBuilderFactory
                               .getRelativeReferenceURLBuilder(fileAndHeaders.getResponseHeaders())),
-                  new ArtifactInfo(url, mainArtifact));
+                  new ArtifactInfo(url, mainArtifact), previewSlug);
          } catch (IOException ioe) {
             log.error("Exception while retrieving remote item {}", url, ioe);
             return new ResponseEntity<>("Exception while retrieving remote item", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -122,7 +123,8 @@ public class UploadArtifactController {
 
    @PostMapping(value = "/artifact/upload")
    public ResponseEntity<String> importArtifact(@RequestParam(value = "file") MultipartFile file,
-         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
+         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact,
+         @RequestParam(value = "previewSlug", required = false) String previewSlug) {
       if (!file.isEmpty()) {
          log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
 
@@ -140,7 +142,7 @@ public class UploadArtifactController {
             // Now try importing services.
             ReferenceResolver referenceResolver = getDefaultReferenceResolver(file.getOriginalFilename());
             services = serviceService.importServiceDefinition(new File(localFile), referenceResolver,
-                  new ArtifactInfo(file.getOriginalFilename(), mainArtifact));
+                  new ArtifactInfo(file.getOriginalFilename(), mainArtifact), previewSlug);
 
 
          } catch (IOException ioe) {
