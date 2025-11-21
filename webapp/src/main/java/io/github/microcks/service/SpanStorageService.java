@@ -150,8 +150,11 @@ public class SpanStorageService {
     */
    public List<String> queryTraceIdsByPatterns(String serviceName, String operationName, String clientAddress) {
       // Copy current spans to avoid null pointer exceptions during filtering/sorting
-      Map<String, List<SpanData>> snapshot = new HashMap<>(spansByTraceId);
-      return snapshot.entrySet().stream()
+     Map<String, List<SpanData>> snapshot;
+     synchronized (spansByTraceId) {
+       snapshot = new HashMap<>(spansByTraceId);
+     }
+     return snapshot.entrySet().stream()
             .map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
             .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
             .map(TraceEvent::traceId)
