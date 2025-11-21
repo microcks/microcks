@@ -152,13 +152,14 @@ public class SpanStorageService {
     *         first)
     */
    public List<String> queryTraceIdsByPatterns(String serviceName, String operationName, String clientAddress) {
-     synchronized (spansByTraceId) {
-       return spansByTraceId.entrySet().stream().map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
-         .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
-         .map(TraceEvent::traceId)
-         // Sort by recency - most recent first
-         .sorted(this::compareSpansByEndTime).toList();
-     }
+      synchronized (spansByTraceId) {
+         return spansByTraceId.entrySet().stream()
+               .map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
+               .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
+               .map(TraceEvent::traceId)
+               // Sort by recency - most recent first
+               .sorted(this::compareSpansByEndTime).toList();
+      }
 
    }
 
@@ -181,7 +182,7 @@ public class SpanStorageService {
     * @return Set of trace IDs
     */
    public Set<String> getAllTraceIds() {
-         return Set.copyOf(spansByTraceId.keySet());
+      return Set.copyOf(spansByTraceId.keySet());
    }
 
    private int compareSpansByEndTime(String id1, String id2) {
