@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -148,15 +149,14 @@ public class SpanStorageService {
     *         first)
     */
    public List<String> queryTraceIdsByPatterns(String serviceName, String operationName, String clientAddress) {
-      synchronized (spansByTraceId) {
-         return spansByTraceId.entrySet().stream()
-               .map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
-               .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
-               .map(TraceEvent::traceId)
-               // Sort by recency - most recent first
-               .sorted(this::compareSpansByEndTime).toList();
-      }
-
+      // Copy current spans to avoid null pointer exceptions during filtering/sorting
+      Map<String, List<SpanData>> snapshot = new HashMap<>(spansByTraceId);
+      return snapshot.entrySet().stream()
+            .map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
+            .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
+            .map(TraceEvent::traceId)
+            // Sort by recency - most recent first (using snapshot to compute end times)
+            .sorted((id1, id2) -> compareSpansByEndTime(id1, id2, snapshot)).toList();
    }
 
    public static boolean valuesEqualAttr(Object actual, Object expected) {
@@ -181,7 +181,7 @@ public class SpanStorageService {
       return Set.copyOf(spansByTraceId.keySet());
    }
 
-   private int compareSpansByEndTime(String id1, String id2) {
+   private int compareSpansByEndTime(String id1, String id2, Map<String, List<SpanData>> spansByTraceId) {
       List<SpanData> spans1 = spansByTraceId.get(id1);
       List<SpanData> spans2 = spansByTraceId.get(id2);
       if (spans1.isEmpty() || spans2.isEmpty())
