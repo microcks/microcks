@@ -41,17 +41,7 @@ import io.github.microcks.repository.ServiceRepository;
 import io.github.microcks.repository.TestResultRepository;
 import io.github.microcks.security.AuthorizationChecker;
 import io.github.microcks.security.UserInfo;
-import io.github.microcks.util.DispatchStyles;
-import io.github.microcks.util.EntityAlreadyExistsException;
-import io.github.microcks.util.HTTPDownloader;
-import io.github.microcks.util.IdBuilder;
-import io.github.microcks.util.MockRepositoryImportException;
-import io.github.microcks.util.MockRepositoryImporter;
-import io.github.microcks.util.MockRepositoryImporterFactory;
-import io.github.microcks.util.ReferenceResolver;
-import io.github.microcks.util.RelativeReferenceURLBuilder;
-import io.github.microcks.util.RelativeReferenceURLBuilderFactory;
-import io.github.microcks.util.ResourceUtil;
+import io.github.microcks.util.*;
 import io.github.microcks.util.openapi.OpenAPISchemaBuilder;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -159,7 +149,7 @@ public class ServiceService {
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
    public List<Service> importServiceDefinition(String repositoryUrl, Secret repositorySecret,
-         boolean disableSSLValidation, boolean mainArtifact) throws MockRepositoryImportException {
+         boolean disableSSLValidation, boolean mainArtifact, String previewSlug) throws MockRepositoryImportException {
       log.info("Importing service definitions from {}", repositoryUrl);
       File localFile = null;
       Map<String, List<String>> fileProperties = null;
@@ -185,21 +175,24 @@ public class ServiceService {
       // Initialize a reference resolver to the folder of this repositoryUrl.
       ReferenceResolver referenceResolver = new ReferenceResolver(repositoryUrl, repositorySecret, disableSSLValidation,
             referenceURLBuilder);
-      return importServiceDefinition(localFile, referenceResolver, new ArtifactInfo(artifactName, mainArtifact));
+      return importServiceDefinition(localFile, referenceResolver, new ArtifactInfo(artifactName, mainArtifact),
+            previewSlug);
    }
 
 
    /**
     * Import definitions of services and bounded resources and messages into Microcks repository. This uses a
     * MockRepositoryImporter under hood.
+    *
     * @param repositoryFile    The File for mock repository.
     * @param referenceResolver The Resolver to be used during import (may be null).
     * @param artifactInfo      The essential information on Artifact to import.
+    * @param previewSlug
     * @return The list of imported Services
     * @throws MockRepositoryImportException if something goes wrong (URL not reachable nor readable, etc...)
     */
    public List<Service> importServiceDefinition(File repositoryFile, ReferenceResolver referenceResolver,
-         ArtifactInfo artifactInfo) throws MockRepositoryImportException {
+         ArtifactInfo artifactInfo, String previewSlug) throws MockRepositoryImportException {
       // Retrieve the correct importer based on file path.
       MockRepositoryImporter importer = null;
       try {
@@ -213,6 +206,7 @@ public class ServiceService {
 
       List<Service> services = importer.getServiceDefinitions();
       for (Service service : services) {
+         service = PreviewUtil.tagPreviewService(service, previewSlug);
          Service existingService = serviceRepository.findByNameAndVersion(service.getName(), service.getVersion());
          log.debug("Service [{}, {}] exists ? {}", service.getName(), service.getVersion(), existingService != null);
 

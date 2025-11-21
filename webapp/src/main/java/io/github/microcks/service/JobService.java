@@ -76,7 +76,7 @@ public class JobService {
       List<Service> services = null;
       try {
          services = serviceService.importServiceDefinition(job.getRepositoryUrl(), jobSecret,
-               job.isRepositoryDisableSSLValidation(), job.isMainArtifact());
+               job.isRepositoryDisableSSLValidation(), job.isMainArtifact(), null);
       } catch (MockRepositoryImportException mrie) {
          log.warn("MockRepositoryImportException while importing job '{}' : {}", job.getName(), mrie.getMessage());
          job.setLastImportError(mrie.getMessage());

@@ -76,7 +76,7 @@ public class GraphQLMcpToolConverterTest {
       File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/graphql/github.graphql");
       // Extract service and resource. + tool converters.
       List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
-            new ArtifactInfo("petstore-1.0.graphql", true));
+            new ArtifactInfo("petstore-1.0.graphql", true), null);
       servicev1 = services.getFirst();
       List<Resource> resources = resourceRepository.findByServiceIdAndType(servicev1.getId(),
             ResourceType.GRAPHQL_SCHEMA);
@@ -89,7 +89,8 @@ public class GraphQLMcpToolConverterTest {
       ParserOptions
             .setDefaultParserOptions(ParserOptions.getDefaultParserOptions().transform(opts -> opts.maxTokens(100000)));
 
-      services = serviceService.importServiceDefinition(artifactFilev2, null, new ArtifactInfo("github.graphql", true));
+      services = serviceService.importServiceDefinition(artifactFilev2, null, new ArtifactInfo("github.graphql", true),
+            null);
       servicev2 = services.getFirst();
       resources = resourceRepository.findByServiceIdAndType(servicev2.getId(), ResourceType.GRAPHQL_SCHEMA);
       toolConverterv2 = new GraphQLMcpToolConverter(servicev2, resources.getFirst(), graphQLInvocationProcessor,
