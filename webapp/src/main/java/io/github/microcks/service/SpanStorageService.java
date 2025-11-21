@@ -101,16 +101,14 @@ public class SpanStorageService {
       // Limit total number of traces to prevent memory leaks. Iteration over the
       // synchronizedMap's keySet must be done while holding the map lock to avoid
       // ConcurrentModificationException.
-      synchronized (spansByTraceId) {
-         if (spansByTraceId.size() > MAX_TRACES) {
-            // Remove oldest trace - LinkedHashMap preserves insertion order
-            var it = spansByTraceId.keySet().iterator();
-            if (it.hasNext()) {
-               it.next();
-               it.remove();
-            }
+      if (spansByTraceId.size() > MAX_TRACES) {
+         // Remove oldest trace this works because LinkedHashMap maintains insertion order
+         synchronized (spansByTraceId) {
+            String oldestTraceId = spansByTraceId.keySet().iterator().next();
+            spansByTraceId.remove(oldestTraceId);
          }
       }
+
 
       // Publish a notification if this span matches an Invocation Received event (that's the demarcation we're looking for)
       Optional<EventData> firstInvocationReceivedEvent = spanData.getEvents().stream()
