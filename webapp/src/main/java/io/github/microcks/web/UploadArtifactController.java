@@ -123,7 +123,8 @@ public class UploadArtifactController {
 
    @PostMapping(value = "/artifact/upload")
    public ResponseEntity<String> importArtifact(@RequestParam(value = "file") MultipartFile file,
-         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact) {
+         @RequestParam(value = "mainArtifact", defaultValue = "true") boolean mainArtifact,
+         @RequestParam(value = "previewSlug", required = false) String previewSlug) {
       if (!file.isEmpty()) {
          log.debug("Content type of {} is {}", file.getOriginalFilename(), file.getContentType());
 
@@ -141,7 +142,7 @@ public class UploadArtifactController {
             // Now try importing services.
             ReferenceResolver referenceResolver = getDefaultReferenceResolver(file.getOriginalFilename());
             services = serviceService.importServiceDefinition(new File(localFile), referenceResolver,
-                  new ArtifactInfo(file.getOriginalFilename(), mainArtifact), null);
+                  new ArtifactInfo(file.getOriginalFilename(), mainArtifact), previewSlug);
 
 
          } catch (IOException ioe) {
