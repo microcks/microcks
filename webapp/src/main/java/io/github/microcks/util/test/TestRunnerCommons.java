@@ -40,7 +40,12 @@ import java.util.Set;
 public class TestRunnerCommons {
 
    /** A simple logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(TestRunnerCommons.class);
+   private static final Logger log = LoggerFactory.getLogger(TestRunnerCommons.class);
+
+   /** Private constructor for utility class. */
+   private TestRunnerCommons() {
+      // Utility class with static
+   }
 
    /**
     * Render the request content using the Expression Language compatible {@code TemplateEngine} if required. If
