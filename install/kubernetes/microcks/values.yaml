@@ -10,6 +10,13 @@ gatewayRefNamespace:
 gatewayRefSectionName: https
 grpcGatewayRefSectionName: grpc
 
+# Specify custom service account for the microcks specific deployments.
+serviceAccount:
+  # The name of the service account to use.
+  name: default
+  # Specifies whether a service account should be created (if not default).
+  create: true
+
 microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
@@ -54,6 +61,7 @@ microcks:
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
 
+  # Adjust resources requests/limits according to your cluster capacity
   resources:
     requests:
       cpu: 200m
