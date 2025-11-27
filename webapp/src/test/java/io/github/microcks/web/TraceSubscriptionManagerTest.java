@@ -17,7 +17,6 @@ package io.github.microcks.web;
 
 import io.github.microcks.event.TraceEvent;
 import io.github.microcks.service.SpanStorageService;
-import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.SpanData;
 
 import org.junit.jupiter.api.BeforeEach;

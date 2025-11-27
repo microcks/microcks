@@ -18,7 +18,6 @@ package io.github.microcks.service;
 import io.github.microcks.event.TraceEvent;
 import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.util.tracing.SpanFilterUtil;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.SpanData;
