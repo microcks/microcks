@@ -254,7 +254,7 @@ jobs:
           COSIGN_EXPERIMENTAL: "true"
           COSIGN_YES: "true"
         run: |
-          cosign sign quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
-          cosign sign docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
-          cosign sign quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
-          cosign sign docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
+          cosign sign --new-bundle-format=false --use-signing-config=false quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
+          cosign sign --new-bundle-format=false --use-signing-config=false docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
+          cosign sign --new-bundle-format=false --use-signing-config=false quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
+          cosign sign --new-bundle-format=false --use-signing-config=false docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
