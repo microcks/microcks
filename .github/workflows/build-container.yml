@@ -87,7 +87,7 @@ jobs:
         env:
           DIGEST: ${{ steps.build-and-push-webapp.outputs.digest }}
           TAGS: quay.io/microcks/microcks:${{env.IMAGE_TAG}} docker.io/microcks/microcks:${{env.IMAGE_TAG}}
-          COSIGN_EXPERIMENTAL: "true"
+          #COSIGN_EXPERIMENTAL: "true"
         run: |
           images=""
           for tag in ${TAGS}; do
