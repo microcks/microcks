@@ -93,7 +93,7 @@ jobs:
           for tag in ${TAGS}; do
             images+="${tag}@${DIGEST} "
           done
-          cosign sign --yes ${images}
+          cosign sign --new-bundle-format=false --use-signing-config=false --yes ${images}
 
       - name: Package async minion in prod mode
         run: |
