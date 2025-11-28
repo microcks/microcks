@@ -15,6 +15,8 @@
  */
 package io.github.microcks.util.graphql;
 
+import io.github.microcks.util.JsonSchemaValidator;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,14 +29,11 @@ import graphql.schema.idl.RuntimeWiring;
 import graphql.schema.idl.SchemaGenerator;
 import graphql.schema.idl.SchemaParser;
 import graphql.schema.idl.TypeDefinitionRegistry;
-import io.github.microcks.util.JsonSchemaValidator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static io.github.microcks.util.JsonSchemaValidator.*;
 
 /**
  * Helper class for validating Json objects against their GraphQL schema. Supported version of GraphQL schema is
@@ -43,13 +42,15 @@ import java.util.List;
  */
 public class GraphQLSchemaValidator {
 
-   /** A commons logger for diagnostic messages. */
-   private static Logger log = LoggerFactory.getLogger(GraphQLSchemaValidator.class);
-
+   /** Name of 'data' element in GraphQL response. */
    public static final String GRAPHQL_RESPONSE_DATA = "data";
 
    /** Have a static mapper to avoid initialization cost. */
    private static final ObjectMapper mapper = new ObjectMapper();
+
+   /** Private constructor for utility class. */
+   private GraphQLSchemaValidator() {
+   }
 
    /**
     * Build a JSON Schema that should apply to a GraphQL response giving the API GraphQL SDL and the query
@@ -58,9 +59,8 @@ public class GraphQLSchemaValidator {
     * @param schemaText The text representation of a GraphQL Schema
     * @param query      The text representation of a GraphQL query
     * @return The Jackson JsonNode representing the Json schema for response
-    * @throws IOException if parsing of either schema of query fails
     */
-   public static JsonNode buildResponseJsonSchema(String schemaText, String query) throws IOException {
+   public static JsonNode buildResponseJsonSchema(String schemaText, String query) {
       TypeDefinitionRegistry registry = new SchemaParser().parse(schemaText);
       GraphQLSchema schema = new SchemaGenerator().makeExecutableSchema(registry, RuntimeWiring.MOCKED_WIRING);
 
@@ -70,7 +70,7 @@ public class GraphQLSchemaValidator {
 
       ObjectNode jsonSchema = initResponseJsonSchema();
       QueryVisitor visitor = new JsonSchemaBuilderQueryVisitor(
-            (ObjectNode) jsonSchema.get("properties").get(GRAPHQL_RESPONSE_DATA));
+            (ObjectNode) jsonSchema.get(JSON_SCHEMA_PROPERTIES_ELEMENT).get(GRAPHQL_RESPONSE_DATA));
 
       queryTraversal.visitPreOrder(visitor);
       return jsonSchema;
@@ -93,14 +93,14 @@ public class GraphQLSchemaValidator {
 
       jsonSchema.put(JsonSchemaValidator.JSON_SCHEMA_IDENTIFIER_ELEMENT,
             JsonSchemaValidator.JSON_V12_SCHEMA_IDENTIFIER);
-      jsonSchema.put("type", "object");
-      jsonSchema.put("additionalProperties", false);
-      jsonSchema.putArray("required").add(GRAPHQL_RESPONSE_DATA);
+      jsonSchema.put(JSON_SCHEMA_TYPE_ELEMENT, "object");
+      jsonSchema.put(JSON_SCHEMA_ADD_PROPERTIES_ELEMENT, false);
+      jsonSchema.putArray(JSON_SCHEMA_REQUIRED_ELEMENT).add(GRAPHQL_RESPONSE_DATA);
 
-      ObjectNode properties = jsonSchema.putObject("properties");
+      ObjectNode properties = jsonSchema.putObject(JSON_SCHEMA_PROPERTIES_ELEMENT);
       ObjectNode data = properties.putObject(GRAPHQL_RESPONSE_DATA);
-      data.put("type", "object");
-      data.putObject("properties");
+      data.put(JSON_SCHEMA_TYPE_ELEMENT, "object");
+      data.putObject(JSON_SCHEMA_PROPERTIES_ELEMENT);
 
       return jsonSchema;
    }
