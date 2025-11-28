@@ -74,8 +74,7 @@ public class EvaluationContext {
    @SuppressWarnings("unchecked")
    public <T extends ELFunction> Class<T> lookupFunction(String name) {
       Object function = variables.get(name);
-      if (function instanceof Class<?> functionClazz
-            && ELFunction.class.isAssignableFrom(functionClazz)) {
+      if (function instanceof Class<?> functionClazz && ELFunction.class.isAssignableFrom(functionClazz)) {
          return (Class<T>) functionClazz;
       }
       return null;
