@@ -17,8 +17,8 @@ package io.github.microcks.util.tracing;
 
 import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.EventData;
-import io.opentelemetry.sdk.trace.data.SpanData;
 
 import java.util.List;
 import java.util.Map;
@@ -89,40 +89,58 @@ public class SpanFilterUtil {
     * @param spans   the list of spans
     * @return the TraceEvent
     */
-   public static TraceEvent extractTraceEvent(String traceId, List<SpanData> spans) {
+   public static TraceEvent extractTraceEvent(String traceId, List<ReadableSpan> spans) {
       if (spans == null || spans.isEmpty()) {
          return null;
       }
+
       String service = null;
       String operation = null;
       String clientAddress = null;
-      for (SpanData s : spans) {
-         if (s == null) {
-            continue;
-         }
-         Map<AttributeKey<?>, Object> attributes = s.getAttributes().asMap();
 
-         String serviceAttribute = (String) attributes.get(CommonAttributes.SERVICE_NAME);
-         String operationAttribute = (String) attributes.get(CommonAttributes.OPERATION_NAME);
-         if (serviceAttribute != null)
-            service = serviceAttribute;
-         if (operationAttribute != null)
-            operation = operationAttribute;
+      for (ReadableSpan s : spans) {
+         if (isValidSpan(s)) {
+            Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
 
-         Optional<EventData> invocationReceivedEvent = s.getEvents().stream()
-               .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
-         if (invocationReceivedEvent.isPresent()) {
-            String clientAddressAttribute = invocationReceivedEvent.get().getAttributes()
-                  .get(CommonAttributes.CLIENT_ADDRESS);
-            if (clientAddressAttribute != null) {
-               clientAddress = clientAddressAttribute;
+            service = extractAttributeIfPresent(attributes, CommonAttributes.SERVICE_NAME, service);
+            operation = extractAttributeIfPresent(attributes, CommonAttributes.OPERATION_NAME, operation);
+            clientAddress = extractClientAddress(s, clientAddress);
+
+            if (allAttributesFound(service, operation, clientAddress)) {
+               break;
             }
          }
+      }
 
-         if (service != null && operation != null && clientAddress != null) {
-            break;
+      return new TraceEvent(traceId, service, operation, clientAddress);
+   }
+
+   private static boolean isValidSpan(ReadableSpan span) {
+      return span != null && span.toSpanData() != null;
+   }
+
+   private static String extractAttributeIfPresent(Map<AttributeKey<?>, Object> attributes, AttributeKey<String> key,
+         String currentValue) {
+      String attributeValue = (String) attributes.get(key);
+      return attributeValue != null ? attributeValue : currentValue;
+   }
+
+   private static String extractClientAddress(ReadableSpan span, String currentClientAddress) {
+      Optional<EventData> invocationReceivedEvent = span.toSpanData().getEvents().stream()
+            .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
+
+      if (invocationReceivedEvent.isPresent()) {
+         String clientAddressAttribute = invocationReceivedEvent.get().getAttributes()
+               .get(CommonAttributes.CLIENT_ADDRESS);
+         if (clientAddressAttribute != null) {
+            return clientAddressAttribute;
          }
       }
-      return new TraceEvent(traceId, service, operation, clientAddress);
+
+      return currentClientAddress;
+   }
+
+   private static boolean allAttributesFound(String service, String operation, String clientAddress) {
+      return service != null && operation != null && clientAddress != null;
    }
 }
