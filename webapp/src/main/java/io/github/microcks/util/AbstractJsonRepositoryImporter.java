@@ -268,6 +268,13 @@ public abstract class AbstractJsonRepositoryImporter {
             }
             externalRefs.add(filePath);
          }
+      } else if (node.has("externalValue")) {
+         String ref = node.path("externalValue").asText();
+         // check if the ref is a relative file or an absolute URL
+         if (!ref.startsWith("./") && !ref.startsWith("#") && !ref.startsWith("http://")
+               && !ref.startsWith("https://")) {
+            externalRefs.add(ref);
+         }
       } else {
          // Iterate on all other children.
          Iterator<JsonNode> children = node.elements();

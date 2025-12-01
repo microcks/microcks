@@ -17,6 +17,9 @@ package io.github.microcks.util;
 
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CodingErrorAction;
 
 public class UTF8ContentTypeChecker {
    private static final Pattern UTF8_ENCODABLE_PATTERN = Pattern.compile(
@@ -28,5 +31,23 @@ public class UTF8ContentTypeChecker {
          return false;
       Matcher matcher = UTF8_ENCODABLE_PATTERN.matcher(contentType.trim());
       return matcher.matches();
+   }
+
+   /**
+    * Checks if the given byte array is valid UTF-8.
+    * @param data The byte array to check.
+    * @return true if valid UTF-8, false otherwise.
+    */
+   public static boolean isValidUTF8(byte[] data) {
+      CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
+      decoder.onMalformedInput(CodingErrorAction.REPORT);
+      decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
+
+      try {
+         decoder.decode(java.nio.ByteBuffer.wrap(data));
+         return true;
+      } catch (Exception e) {
+         return false;
+      }
    }
 }
