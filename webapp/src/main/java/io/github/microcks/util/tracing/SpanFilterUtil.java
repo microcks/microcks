@@ -17,8 +17,8 @@ package io.github.microcks.util.tracing;
 
 import io.github.microcks.event.TraceEvent;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.EventData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 
 import java.util.List;
 import java.util.Map;
@@ -89,7 +89,7 @@ public class SpanFilterUtil {
     * @param spans   the list of spans
     * @return the TraceEvent
     */
-   public static TraceEvent extractTraceEvent(String traceId, List<ReadableSpan> spans) {
+   public static TraceEvent extractTraceEvent(String traceId, List<SpanData> spans) {
       if (spans == null || spans.isEmpty()) {
          return null;
       }
@@ -98,9 +98,9 @@ public class SpanFilterUtil {
       String operation = null;
       String clientAddress = null;
 
-      for (ReadableSpan s : spans) {
+      for (SpanData s : spans) {
          if (isValidSpan(s)) {
-            Map<AttributeKey<?>, Object> attributes = s.toSpanData().getAttributes().asMap();
+            Map<AttributeKey<?>, Object> attributes = s.getAttributes().asMap();
 
             service = extractAttributeIfPresent(attributes, CommonAttributes.SERVICE_NAME, service);
             operation = extractAttributeIfPresent(attributes, CommonAttributes.OPERATION_NAME, operation);
@@ -115,8 +115,8 @@ public class SpanFilterUtil {
       return new TraceEvent(traceId, service, operation, clientAddress);
    }
 
-   private static boolean isValidSpan(ReadableSpan span) {
-      return span != null && span.toSpanData() != null;
+   private static boolean isValidSpan(SpanData span) {
+      return span != null;
    }
 
    private static String extractAttributeIfPresent(Map<AttributeKey<?>, Object> attributes, AttributeKey<String> key,
@@ -125,8 +125,8 @@ public class SpanFilterUtil {
       return attributeValue != null ? attributeValue : currentValue;
    }
 
-   private static String extractClientAddress(ReadableSpan span, String currentClientAddress) {
-      Optional<EventData> invocationReceivedEvent = span.toSpanData().getEvents().stream()
+   private static String extractClientAddress(SpanData span, String currentClientAddress) {
+      Optional<EventData> invocationReceivedEvent = span.getEvents().stream()
             .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
 
       if (invocationReceivedEvent.isPresent()) {
