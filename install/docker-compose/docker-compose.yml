@@ -2,15 +2,14 @@ services:
   mongo:
     image: mongo:4.4.29
     container_name: microcks-db
-#    volumes:
-#      - "~/tmp/microcks-data:/data/db"
+    volumes:
+      - "~/tmp/microcks-data:/data/db"
     healthcheck:
       test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 1s
       retries: 3
-    ports:
-      - "27017:27017"
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.0.0
     container_name: microcks-sso
