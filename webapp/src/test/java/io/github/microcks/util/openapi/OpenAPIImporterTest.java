@@ -2145,4 +2145,46 @@ class OpenAPIImporterTest {
          }
       }
    }
+
+   @Test
+   void testOpenAPIWithRemoteExternalValueBinaryResponse() {
+      ReferenceResolver resolver = new ReferenceResolver(
+            "https://raw.githubusercontent.com/StartUpNationLabs/microcks/refs/heads/feat/add-relative-and-remote-data-in-external-value/webapp/src/test/resources/io/github/microcks/util/openapi/get-image-openapi-remote-externalvalue.yaml",
+            null, true);
+
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/get-image-openapi-remote-externalvalue.yaml",
+               resolver);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
+      }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      Service service = services.getFirst();
+      Operation operation = service.getOperations().getFirst();
+
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(1, exchanges.size());
+
+      Exchange exchange = exchanges.getFirst();
+      assertInstanceOf(RequestResponsePair.class, exchange);
+      RequestResponsePair entry = (RequestResponsePair) exchange;
+      Response response = entry.getResponse();
+      assertEquals("200", response.getStatus());
+      assertEquals("image/png", response.getMediaType());
+      assertNotNull(response.getContent());
+      assertTrue(response.getContent().startsWith("data:application/octet-stream;base64,"));
+   }
 }
