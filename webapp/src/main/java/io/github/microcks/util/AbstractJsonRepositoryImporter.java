@@ -270,9 +270,8 @@ public abstract class AbstractJsonRepositoryImporter {
          }
       } else if (node.has("externalValue")) {
          String ref = node.path("externalValue").asText();
-         // check if the ref is a relative file or an absolute URL
-         if (!ref.startsWith("./") && !ref.startsWith("#") && !ref.startsWith("http://")
-               && !ref.startsWith("https://")) {
+         // check if it's an external ref (does not start with "data:")
+         if (!ref.startsWith("data:")) {
             externalRefs.add(ref);
          }
       } else {
@@ -286,7 +285,7 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /** Get the JsonNode for reference within the specification. */
-   private JsonNode getNodeForRef(String reference) {
+   protected JsonNode getNodeForRef(String reference) {
       if (reference.startsWith("#/")) {
          return rootSpecification.at(reference.substring(1));
       }
