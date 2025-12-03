@@ -18,11 +18,16 @@ package io.github.microcks.minion.async.consumer;
 import com.google.protobuf.Duration;
 import com.google.pubsub.v1.*;
 import io.github.microcks.minion.async.AsyncTestSpecification;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.api.gax.rpc.NotFoundException;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
@@ -51,7 +56,7 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
    private final Logger logger = Logger.getLogger(getClass());
 
    /** The string for Regular Expression that helps validating acceptable endpoints. */
-   public static final String ENDPOINT_PATTERN_STRING = "googlepubsub://(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
+   public static final String ENDPOINT_PATTERN_STRING = "googlepubsub://((?<emulator>[a-zA-Z0-9-_]+(:\\d+)?)/)?(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
 
@@ -64,6 +69,7 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
    protected Map<String, String> optionsMap;
 
    private CredentialsProvider credentialsProvider;
+   private TransportChannelProvider channelProvider;
 
    private SubscriptionName subscriptionName;
 
@@ -107,11 +113,16 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
          consumer.ack();
       };
 
-      // Create a new subscriber for subscription.
-      subscriber = Subscriber
+      Subscriber.Builder subBuilder = Subscriber
             .newBuilder(ProjectSubscriptionName.of(subscriptionName.getProject(), subscriptionName.getSubscription()),
                   receiver)
-            .setCredentialsProvider(credentialsProvider).build();
+            .setCredentialsProvider(credentialsProvider);
+
+      if (channelProvider != null) {
+         subBuilder.setChannelProvider(channelProvider);
+      }
+      // Create a new subscriber for subscription.
+      subscriber = subBuilder.build();
       subscriber.startAsync().awaitRunning();
 
       // Wait and stop async receiver.
@@ -134,6 +145,7 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       // Call matcher.find() to be able to use named expressions.
       matcher.find();
 
+      String emulator = matcher.group("emulator");
       String projectId = matcher.group("projectId");
       String topic = matcher.group("topic");
       String options = matcher.group("options");
@@ -143,8 +155,13 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
          optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
       }
 
-      // Build credential provider from secret token.
-      if (specification.getSecret() != null && specification.getSecret().getToken() != null) {
+      if (emulator != null && emulator.length() > 0) {
+         credentialsProvider = NoCredentialsProvider.create();
+         ManagedChannel channel = ManagedChannelBuilder.forTarget(emulator).usePlaintext().build();
+         channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+
+      } else if (specification.getSecret() != null && specification.getSecret().getToken() != null) {
+         // Build credential provider from secret token.
          byte[] decode = Base64.getDecoder().decode(specification.getSecret().getToken());
          ByteArrayInputStream is = new ByteArrayInputStream(decode);
          credentialsProvider = FixedCredentialsProvider
@@ -157,9 +174,12 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       TopicName topicName = TopicName.of(projectId, topic);
       subscriptionName = SubscriptionName.of(projectId, topic + SUBSCRIPTION_PREFIX);
 
-      SubscriptionAdminSettings subscriptionAdminSettings = SubscriptionAdminSettings.newBuilder()
-            .setCredentialsProvider(credentialsProvider).build();
-      SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(subscriptionAdminSettings);
+      SubscriptionAdminSettings.Builder sasBuilder = SubscriptionAdminSettings.newBuilder()
+            .setCredentialsProvider(credentialsProvider);
+      if (channelProvider != null) {
+         sasBuilder.setTransportChannelProvider(channelProvider);
+      }
+      SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(sasBuilder.build());
 
       try {
          subscriptionAdminClient.getSubscription(subscriptionName);
