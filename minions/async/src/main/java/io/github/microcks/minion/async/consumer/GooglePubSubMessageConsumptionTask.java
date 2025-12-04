@@ -56,7 +56,7 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
    private final Logger logger = Logger.getLogger(getClass());
 
    /** The string for Regular Expression that helps validating acceptable endpoints. */
-   public static final String ENDPOINT_PATTERN_STRING = "googlepubsub://((?<emulator>[a-zA-Z0-9-_]+(:\\d+)?)/)?(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
+   public static final String ENDPOINT_PATTERN_STRING = "googlepubsub://((?<emulator>[^:]+(:\\d+)?)/)?(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
 
