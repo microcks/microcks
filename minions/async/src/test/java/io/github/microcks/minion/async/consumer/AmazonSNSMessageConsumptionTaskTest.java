@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+
 /**
  * This is a test case for AmazonSNSMessageConsumptionTask.
  * @author laurent
@@ -29,7 +30,8 @@ class AmazonSNSMessageConsumptionTaskTest {
    void testAcceptEndpoint() {
       assertTrue(AmazonSNSMessageConsumptionTask.acceptEndpoint("sns://us-east-1/topicName"));
       assertTrue(AmazonSNSMessageConsumptionTask.acceptEndpoint("sns://eu-west-3/example-topic.fifo"));
-      assertTrue(AmazonSNSMessageConsumptionTask.acceptEndpoint("sns://us-east-1/topicName?overrideUrl=http://localhost:4566"));
+      assertTrue(AmazonSNSMessageConsumptionTask
+            .acceptEndpoint("sns://us-east-1/topicName?overrideUrl=http://localhost:4566"));
    }
 
    @Test
