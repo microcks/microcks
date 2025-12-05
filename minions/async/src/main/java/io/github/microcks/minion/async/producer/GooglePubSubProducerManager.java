@@ -20,6 +20,17 @@ import io.github.microcks.domain.Header;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.util.el.TemplateEngine;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.jboss.logging.Logger;
+
 import com.google.api.core.ApiFuture;
 import com.google.api.core.ApiFutureCallback;
 import com.google.api.core.ApiFutures;
@@ -28,7 +39,10 @@ import com.google.api.gax.core.ExecutorProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.api.gax.rpc.NotFoundException;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.TopicAdminClient;
@@ -37,18 +51,11 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.jboss.logging.Logger;
 
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Google Cloud PubSub implementation of producer for async event messages.
@@ -76,6 +83,7 @@ public class GooglePubSubProducerManager {
          .setExecutorThreadCount(1).build();
 
    CredentialsProvider credentialsProvider;
+   TransportChannelProvider channelProvider;
 
    @ConfigProperty(name = "googlepubsub.project")
    String project;
@@ -90,7 +98,16 @@ public class GooglePubSubProducerManager {
    @PostConstruct
    public void create() throws Exception {
       try {
-         if (serviceAccountLocation != null && serviceAccountLocation.length() > 0) {
+         String hostport = System.getenv("PUBSUB_EMULATOR_HOST");
+         if (hostport != null && hostport.length() > 0) {
+            logger.infof("Using Google PubSub emulator at %s", hostport);
+
+            ManagedChannel channel = ManagedChannelBuilder.forTarget(hostport).usePlaintext().build();
+            channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+            credentialsProvider = NoCredentialsProvider.create();
+
+         } else if (serviceAccountLocation != null && serviceAccountLocation.length() > 0) {
+
             FileInputStream is = new FileInputStream(serviceAccountLocation);
             credentialsProvider = FixedCredentialsProvider
                   .create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
@@ -117,9 +134,13 @@ public class GooglePubSubProducerManager {
             // Ensure topic exists on PubSub.
             TopicName topicName = TopicName.of(project, topic);
 
-            TopicAdminSettings topicAdminSettings = TopicAdminSettings.newBuilder()
-                  .setCredentialsProvider(credentialsProvider).build();
-            TopicAdminClient topicAdminClient = TopicAdminClient.create(topicAdminSettings);
+            TopicAdminSettings.Builder tasBuilder = TopicAdminSettings.newBuilder()
+                  .setCredentialsProvider(credentialsProvider);
+            if (channelProvider != null) {
+               tasBuilder.setTransportChannelProvider(channelProvider);
+            }
+
+            TopicAdminClient topicAdminClient = TopicAdminClient.create(tasBuilder.build());
 
             ensureTopicExists(topicAdminClient, topicName);
          }
@@ -212,8 +233,12 @@ public class GooglePubSubProducerManager {
 
    private Publisher createPublisher(String topic) {
       try {
-         return Publisher.newBuilder(TopicName.of(project, topic)).setExecutorProvider(executorProvider)
-               .setCredentialsProvider(credentialsProvider).build();
+         Publisher.Builder pubBuilder = Publisher.newBuilder(TopicName.of(project, topic))
+               .setExecutorProvider(executorProvider).setCredentialsProvider(credentialsProvider);
+         if (channelProvider != null) {
+            pubBuilder = pubBuilder.setChannelProvider(channelProvider);
+         }
+         return pubBuilder.build();
       } catch (IOException ioe) {
          logger.errorf("IOException while creating a Publisher for topic %s", topic);
          throw new RuntimeException("IOException while creating a Publisher for topic ", ioe);
