@@ -20,8 +20,12 @@ import java.util.regex.Matcher;
 
 public class UTF8ContentTypeChecker {
    private static final Pattern UTF8_ENCODABLE_PATTERN = Pattern.compile(
-         "^(text/[a-z0-9.+-]+|application/([a-z0-9.+-]*\\+(json|xml)|json|xml|javascript|x-www-form-urlencoded))(\\s*;.*)?$",
+         "^(text/[a-z0-9.+-]+|application/([a-z0-9.+-]+\\+)?(json|xml)|application/(javascript|x-www-form-urlencoded))(\\s*;.*)?$",
          Pattern.CASE_INSENSITIVE);
+
+   private UTF8ContentTypeChecker() {
+      // Private constructor to prevent instantiation
+   }
 
    public static boolean isUtf8Encodable(String contentType) {
       if (contentType == null)
