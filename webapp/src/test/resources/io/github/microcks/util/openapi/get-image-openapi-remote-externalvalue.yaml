@@ -1,0 +1,34 @@
+openapi: 3.0.3
+info:
+   title: Get Image Api
+   version: 1.0.0
+
+paths:
+   /image/{id}:
+      get:
+         summary: Get an Image By Id
+         parameters:
+            -  name: id
+               in: path
+               required: true
+               description: ID of the image to retrieve
+               schema:
+                  type: string
+               examples:
+                  EXAMPLE1:
+                     value: 1
+         responses:
+            '200':
+               description: The resized image
+               content:
+                  image/png:
+                     schema:
+                        type: string
+                        format: binary
+                     examples:
+                       EXAMPLE1:
+                         externalValue: ./microcks-banner.png
+            '404':
+               description: Image not found
+            '500':
+               description: Server error

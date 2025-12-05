@@ -268,6 +268,12 @@ public abstract class AbstractJsonRepositoryImporter {
             }
             externalRefs.add(filePath);
          }
+      } else if (node.has("externalValue")) {
+         String ref = node.path("externalValue").asText();
+         // check if it's an external ref (does not start with "data:")
+         if (!ref.startsWith("data:")) {
+            externalRefs.add(ref);
+         }
       } else {
          // Iterate on all other children.
          Iterator<JsonNode> children = node.elements();
@@ -279,7 +285,7 @@ public abstract class AbstractJsonRepositoryImporter {
    }
 
    /** Get the JsonNode for reference within the specification. */
-   private JsonNode getNodeForRef(String reference) {
+   protected JsonNode getNodeForRef(String reference) {
       if (reference.startsWith("#/")) {
          return rootSpecification.at(reference.substring(1));
       }
