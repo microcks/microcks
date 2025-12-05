@@ -93,36 +93,54 @@ public class SpanFilterUtil {
       if (spans == null || spans.isEmpty()) {
          return null;
       }
+
       String service = null;
       String operation = null;
       String clientAddress = null;
+
       for (SpanData s : spans) {
-         if (s == null) {
-            continue;
-         }
-         Map<AttributeKey<?>, Object> attributes = s.getAttributes().asMap();
+         if (isValidSpan(s)) {
+            Map<AttributeKey<?>, Object> attributes = s.getAttributes().asMap();
 
-         String serviceAttribute = (String) attributes.get(CommonAttributes.SERVICE_NAME);
-         String operationAttribute = (String) attributes.get(CommonAttributes.OPERATION_NAME);
-         if (serviceAttribute != null)
-            service = serviceAttribute;
-         if (operationAttribute != null)
-            operation = operationAttribute;
+            service = extractAttributeIfPresent(attributes, CommonAttributes.SERVICE_NAME, service);
+            operation = extractAttributeIfPresent(attributes, CommonAttributes.OPERATION_NAME, operation);
+            clientAddress = extractClientAddress(s, clientAddress);
 
-         Optional<EventData> invocationReceivedEvent = s.getEvents().stream()
-               .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
-         if (invocationReceivedEvent.isPresent()) {
-            String clientAddressAttribute = invocationReceivedEvent.get().getAttributes()
-                  .get(CommonAttributes.CLIENT_ADDRESS);
-            if (clientAddressAttribute != null) {
-               clientAddress = clientAddressAttribute;
+            if (allAttributesFound(service, operation, clientAddress)) {
+               break;
             }
          }
+      }
 
-         if (service != null && operation != null && clientAddress != null) {
-            break;
+      return new TraceEvent(traceId, service, operation, clientAddress);
+   }
+
+   private static boolean isValidSpan(SpanData span) {
+      return span != null;
+   }
+
+   private static String extractAttributeIfPresent(Map<AttributeKey<?>, Object> attributes, AttributeKey<String> key,
+         String currentValue) {
+      String attributeValue = (String) attributes.get(key);
+      return attributeValue != null ? attributeValue : currentValue;
+   }
+
+   private static String extractClientAddress(SpanData span, String currentClientAddress) {
+      Optional<EventData> invocationReceivedEvent = span.getEvents().stream()
+            .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
+
+      if (invocationReceivedEvent.isPresent()) {
+         String clientAddressAttribute = invocationReceivedEvent.get().getAttributes()
+               .get(CommonAttributes.CLIENT_ADDRESS);
+         if (clientAddressAttribute != null) {
+            return clientAddressAttribute;
          }
       }
-      return new TraceEvent(traceId, service, operation, clientAddress);
+
+      return currentClientAddress;
+   }
+
+   private static boolean allAttributesFound(String service, String operation, String clientAddress) {
+      return service != null && operation != null && clientAddress != null;
    }
 }
