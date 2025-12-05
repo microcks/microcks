@@ -15,24 +15,29 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-import com.google.protobuf.Duration;
-import com.google.pubsub.v1.*;
 import io.github.microcks.minion.async.AsyncTestSpecification;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 
-import com.google.api.gax.rpc.FixedTransportChannelProvider;
-import com.google.api.gax.rpc.NotFoundException;
-import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
+import com.google.api.gax.rpc.NotFoundException;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
+import com.google.protobuf.Duration;
+import com.google.pubsub.v1.ExpirationPolicy;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.Subscription;
+import com.google.pubsub.v1.SubscriptionName;
+import com.google.pubsub.v1.TopicName;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import org.jboss.logging.Logger;
 
 import java.io.ByteArrayInputStream;
