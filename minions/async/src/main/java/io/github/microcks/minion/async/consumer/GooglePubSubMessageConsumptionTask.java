@@ -56,13 +56,19 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
    private final Logger logger = Logger.getLogger(getClass());
 
    /** The string for Regular Expression that helps validating acceptable endpoints. */
-   public static final String ENDPOINT_PATTERN_STRING = "googlepubsub://((?<emulator>[^:]+(:\\d+)?)/)?(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
+   public static final String ENDPOINT_PATTERN_STRING = "googlepubsub://(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
 
    private static final String CLOUD_OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
    private static final String SUBSCRIPTION_PREFIX = "-microcks-test";
+
+   /**
+    * emulatorHost is an option key (for the endpoint specification) that allows the test to specify a PubSub emulator
+    * to use instead of Google Cloud
+    */
+   public static final String EMULATOR_HOST_OPTION = "emulatorHost";
 
    private AsyncTestSpecification specification;
 
@@ -145,7 +151,6 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       // Call matcher.find() to be able to use named expressions.
       matcher.find();
 
-      String emulator = matcher.group("emulator");
       String projectId = matcher.group("projectId");
       String topic = matcher.group("topic");
       String options = matcher.group("options");
@@ -155,9 +160,10 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
          optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
       }
 
-      if (emulator != null && emulator.length() > 0) {
+      if (hasOption(EMULATOR_HOST_OPTION)) {
          credentialsProvider = NoCredentialsProvider.create();
-         ManagedChannel channel = ManagedChannelBuilder.forTarget(emulator).usePlaintext().build();
+         ManagedChannel channel = ManagedChannelBuilder.forTarget(optionsMap.get(EMULATOR_HOST_OPTION)).usePlaintext()
+               .build();
          channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
 
       } else if (specification.getSecret() != null && specification.getSecret().getToken() != null) {
@@ -198,5 +204,17 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       } finally {
          subscriptionAdminClient.close();
       }
+   }
+
+   /**
+    * Safe method for checking if an option has been set.
+    * @param optionKey Check if that option is available in options map.
+    * @return true if option is present, false if undefined.
+    */
+   protected boolean hasOption(String optionKey) {
+      if (optionsMap != null) {
+         return optionsMap.containsKey(optionKey);
+      }
+      return false;
    }
 }
