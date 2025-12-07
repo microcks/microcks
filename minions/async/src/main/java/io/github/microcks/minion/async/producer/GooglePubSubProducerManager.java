@@ -97,14 +97,14 @@ public class GooglePubSubProducerManager {
    public void create() throws Exception {
       try {
          String hostport = System.getenv("PUBSUB_EMULATOR_HOST");
-         if (hostport != null && hostport.length() > 0) {
+         if (hostport != null && !hostport.isEmpty()) {
             logger.infof("Using Google PubSub emulator at %s", hostport);
 
             ManagedChannel channel = ManagedChannelBuilder.forTarget(hostport).usePlaintext().build();
             channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
             credentialsProvider = NoCredentialsProvider.create();
 
-         } else if (serviceAccountLocation != null && serviceAccountLocation.length() > 0) {
+         } else if (serviceAccountLocation != null && !serviceAccountLocation.isEmpty()) {
 
             FileInputStream is = new FileInputStream(serviceAccountLocation);
             credentialsProvider = FixedCredentialsProvider

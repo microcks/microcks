@@ -15,33 +15,12 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-import io.apicurio.registry.serde.SerdeConfig;
-import io.apicurio.registry.serde.avro.AvroKafkaSerializer;
-import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import io.github.microcks.minion.async.AsyncTestSpecification;
 
-import org.apache.avro.Schema;
-import org.apache.avro.generic.GenericData;
-import org.apache.avro.generic.GenericRecord;
-import org.apache.avro.generic.IndexedRecord;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -53,16 +32,12 @@ class KafkaMessageConsumptionTaskTest {
 
    @Test
    void testAcceptEndpoint() {
-      AsyncTestSpecification specification = new AsyncTestSpecification();
-      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
-
       assertTrue(KafkaMessageConsumptionTask.acceptEndpoint("kafka://localhost/testTopic"));
 
       assertTrue(KafkaMessageConsumptionTask.acceptEndpoint("kafka://localhost:9092/testTopic"));
 
       assertTrue(
             KafkaMessageConsumptionTask.acceptEndpoint("kafka://localhost/testTopic?securityProtocol=SASL_PLAINTEXT"));
-      ;
 
       assertTrue(KafkaMessageConsumptionTask
             .acceptEndpoint("kafka://localhost:9094/testTopic?securityProtocol=SASL_PLAINTEXT"));
@@ -73,9 +48,6 @@ class KafkaMessageConsumptionTaskTest {
 
    @Test
    void testAcceptEndpointFailures() {
-      AsyncTestSpecification specification = new AsyncTestSpecification();
-      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
-
       assertFalse(KafkaMessageConsumptionTask.acceptEndpoint("localhost:9092/testTopic"));
 
       assertFalse(KafkaMessageConsumptionTask.acceptEndpoint("ssl://localhost:9092/testTopic"));
@@ -109,7 +81,6 @@ class KafkaMessageConsumptionTaskTest {
             "kafka://localhost/testTopic?registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO&startOffset=100");
       String options = "registryUrl=http://localhost:8888&registryUsername=reg-user&registryAuthCredSource=USER_INFO&startOffset=100";
 
-      KafkaMessageConsumptionTask task = new KafkaMessageConsumptionTask(specification);
       Map<String, String> optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
 
       assertNotNull(optionsMap);

@@ -24,11 +24,11 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -41,7 +41,6 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * AMQP 0.9.1 (ie. RabbitMQ) implementation of producer for async event messages.
- * 
  * @author laurent
  */
 @ApplicationScoped
@@ -88,7 +87,7 @@ public class AMQPProducerManager {
       ConnectionFactory factory = new ConnectionFactory();
       factory.setUri("amqp://" + amqpServer);
 
-      if (amqpUsername != null && amqpUsername.length() > 0 && amqpPassword != null && amqpPassword.length() > 0) {
+      if (amqpUsername != null && !amqpUsername.isEmpty() && amqpPassword != null && !amqpPassword.isEmpty()) {
          logger.infof("Connecting to AMQP broker with user '%s'", amqpUsername);
          factory.setUsername(amqpUsername);
          factory.setPassword(amqpPassword);
@@ -150,7 +149,7 @@ public class AMQPProducerManager {
     */
    public Set<Header> renderEventMessageHeaders(TemplateEngine engine, Set<Header> headers) {
       if (headers != null && !headers.isEmpty()) {
-         Set<Header> renderedHeaders = new HashSet<>(headers.size());
+         Set<Header> renderedHeaders = HashSet.newHashSet(headers.size());
 
          for (Header header : headers) {
             Optional<String> optionalValue = header.getValues().stream().findFirst();

@@ -15,6 +15,11 @@
  */
 package io.github.microcks.minion.async.producer;
 
+import io.github.microcks.domain.EventMessage;
+import io.github.microcks.minion.async.AsyncMockDefinition;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -23,11 +28,6 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttPersistenceException;
 import org.jboss.logging.Logger;
 
-import io.github.microcks.domain.EventMessage;
-import io.github.microcks.minion.async.AsyncMockDefinition;
-
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -76,7 +76,7 @@ public class MQTTProducerManager {
     */
    protected IMqttClient createClient() throws Exception {
       MqttConnectOptions options = new MqttConnectOptions();
-      if (mqttUsername != null && mqttUsername.length() > 0 && mqttPassword != null && mqttPassword.length() > 0) {
+      if (mqttUsername != null && !mqttUsername.isEmpty() && mqttPassword != null && !mqttPassword.isEmpty()) {
          logger.infof("Connecting to MQTT broker with user '%s'", mqttUsername);
          options.setUserName(mqttUsername);
          options.setPassword(mqttPassword.toCharArray());

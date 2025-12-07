@@ -15,30 +15,19 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-import io.github.microcks.domain.Secret;
-import io.github.microcks.minion.async.AsyncTestSpecification;
-
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
-import java.util.Properties;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * This is a test case for MQTTMessageConsumptionTask.
  * @author laurent
  */
-public class MQTTMessageConsumptionTaskTest {
+class MQTTMessageConsumptionTaskTest {
 
    @Test
-   public void testAcceptEndpoint() {
-      AsyncTestSpecification specification = new AsyncTestSpecification();
-      MQTTMessageConsumptionTask task = new MQTTMessageConsumptionTask(specification);
-
+   void testAcceptEndpoint() {
       assertTrue(MQTTMessageConsumptionTask.acceptEndpoint("mqtt://localhost/testTopic"));
 
       assertTrue(MQTTMessageConsumptionTask.acceptEndpoint("mqtt://localhost:1883/testTopic"));
@@ -57,10 +46,7 @@ public class MQTTMessageConsumptionTaskTest {
    }
 
    @Test
-   public void testAcceptEndpointFailures() {
-      AsyncTestSpecification specification = new AsyncTestSpecification();
-      MQTTMessageConsumptionTask task = new MQTTMessageConsumptionTask(specification);
-
+   void testAcceptEndpointFailures() {
       assertFalse(MQTTMessageConsumptionTask.acceptEndpoint("localhost:1883/testTopic"));
 
       assertFalse(MQTTMessageConsumptionTask.acceptEndpoint("ssl://localhost:1883/testTopic"));
