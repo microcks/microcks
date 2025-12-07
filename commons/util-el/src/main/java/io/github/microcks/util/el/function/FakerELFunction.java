@@ -18,6 +18,7 @@ package io.github.microcks.util.el.function;
 import io.github.microcks.util.el.EvaluationContext;
 
 import net.datafaker.Faker;
+
 /**
  * This is a base class for function that are using Datafaker (see <a href="https://www.datafaker.net">Datafaker</a>).
  * This base class provides a convenient method for retrieving or lazy loading a Faker that will be put into
