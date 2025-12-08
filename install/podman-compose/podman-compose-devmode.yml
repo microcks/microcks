@@ -42,6 +42,7 @@ services:
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_ENABLED=false
+      #- LOGGING_LEVEL_IO_GITHUB_MICROCKS=DEBUG
       #- MAX_UPLOAD_FILE_SIZE=3MB
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
