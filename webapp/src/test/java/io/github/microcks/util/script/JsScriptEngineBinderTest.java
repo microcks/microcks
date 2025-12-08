@@ -50,11 +50,51 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
    }
 
    @Test
-   void testRequestContentHeadersAreBound() {
+   void testRequestHeaderIsBound() {
       String script = JsScriptEngineBinder.wrapIntoFunction("""
             const fooHeader = mockRequest.getRequestHeader("foo");
             log.info("header: " + fooHeader[0]);
             return fooHeader[0];
+            """);
+
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("foo", "bar");
+
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+      assertEquals("bar", result);
+   }
+
+   @Test
+   void testNoExceptionOnMissingRequestHeader() {
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const fooHeader = mockRequest.getRequestHeader("foo");
+            if (fooHeader && fooHeader.length > 0) {
+               log.info("header: " + fooHeader[0]);
+               return fooHeader[0];
+            }
+            return "no-foo";
+            """);
+
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      request.addHeader("baz", "bar");
+
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+      assertEquals("no-foo", result);
+   }
+
+   @Test
+   void testRequestHeadersAreBound() {
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const headers = mockRequest.getRequestHeaders();
+            log.info("header: " + JSON.stringify(headers));
+            if (headers["foo"]) {
+               return headers.foo[0];
+            }
+            return "no-foo";
             """);
 
       MockHttpServletRequest request = new MockHttpServletRequest();
@@ -103,7 +143,7 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
    }
 
    @Test
-   void testUriParametersAreBound() {
+   void testUriParameterIsBound() {
       String script = JsScriptEngineBinder.wrapIntoFunction("""
             const fooParam = mockRequest.getURIParameter("foo");
             log.info("uri parameter: " + fooParam);
@@ -118,6 +158,28 @@ class JsScriptEngineBinderTest extends AbstractBaseIT {
       String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
 
       assertEquals("bar", result);
+   }
+
+   @Test
+   void testUriParametersAreBound() {
+      String script = JsScriptEngineBinder.wrapIntoFunction("""
+            const params = mockRequest.getURIParameters();
+            log.info("uri parameters: " + JSON.stringify(params));
+            if (params && params.foo === "bar" && params.baz === "xyz") {
+               return "params-ok";
+            }
+            return "params-ko";
+            """);
+
+      MockHttpServletRequest request = new MockHttpServletRequest();
+      Map<String, String> uriParameters = new HashMap<>();
+      uriParameters.put("foo", "bar");
+      uriParameters.put("baz", "xyz");
+
+      Engine engine = JsScriptEngineBinder.buildEvaluationContext("content", null, null, request, uriParameters);
+      String result = JsScriptEngineBinder.invokeProcessFn(script, engine);
+
+      assertEquals("params-ok", result);
    }
 
    @Test

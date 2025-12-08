@@ -18,9 +18,9 @@ package io.github.microcks.service;
 import io.github.microcks.event.TraceEvent;
 import io.github.microcks.util.tracing.CommonEvents;
 import io.github.microcks.util.tracing.SpanFilterUtil;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.EventData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +49,7 @@ public class SpanStorageService {
     * Thread-safe LinkedHashMap storing lists of spans grouped by trace ID. LinkedHashMap maintains insertion order to
     * allow eviction. Key: trace ID (String), Value: List of spans for that trace
     */
-   private final Map<String, List<ReadableSpan>> spansByTraceId = Collections.synchronizedMap(new LinkedHashMap<>());
+   private final Map<String, List<SpanData>> spansByTraceId = Collections.synchronizedMap(new LinkedHashMap<>());
 
    /**
     * Maximum number of traces to keep in memory to prevent memory leaks. When this limit is exceeded, oldest traces are
@@ -81,26 +82,36 @@ public class SpanStorageService {
     */
    public void storeSpan(ReadableSpan span) {
       String traceId = span.getSpanContext().getTraceId();
+      SpanData spanData = span.toSpanData();
 
-      // Add the span to our collection
-      spansByTraceId.computeIfAbsent(traceId, k -> new ArrayList<>()).add(span);
+      // Add the span to our collection. Use a synchronized list for per-trace spans so concurrent
+      // additions/removals are thread-safe. Also synchronize on the list when doing size+remove
+      // operations to make them atomic.
+      List<SpanData> spans = spansByTraceId.computeIfAbsent(traceId,
+            k -> Collections.synchronizedList(new ArrayList<>()));
+
+      spans.add(new SpanDataDTO(spanData));
 
       // Limit spans per trace to prevent memory issues
-      List<ReadableSpan> spans = spansByTraceId.get(traceId);
       if (spans.size() > MAX_SPANS_PER_TRACE) {
          // Remove oldest span to cap memory
          spans.removeFirst();
       }
 
-      // Limit total number of traces to prevent memory leaks
+      // Limit total number of traces to prevent memory leaks. Iteration over the
+      // synchronizedMap's keySet must be done while holding the map lock to avoid
+      // ConcurrentModificationException.
       if (spansByTraceId.size() > MAX_TRACES) {
          // Remove oldest trace this works because LinkedHashMap maintains insertion order
-         String oldestTraceId = spansByTraceId.keySet().iterator().next();
-         spansByTraceId.remove(oldestTraceId);
+         synchronized (spansByTraceId) {
+            String oldestTraceId = spansByTraceId.keySet().iterator().next();
+            spansByTraceId.remove(oldestTraceId);
+         }
       }
 
+
       // Publish a notification if this span matches an Invocation Received event (that's the demarcation we're looking for)
-      Optional<EventData> firstInvocationReceivedEvent = span.toSpanData().getEvents().stream()
+      Optional<EventData> firstInvocationReceivedEvent = spanData.getEvents().stream()
             .filter(e -> CommonEvents.INVOCATION_RECEIVED.getEventName().equals(e.getName())).findFirst();
       if (firstInvocationReceivedEvent.isPresent()) {
          TraceEvent event = SpanFilterUtil.extractTraceEvent(traceId, spans);
@@ -115,7 +126,7 @@ public class SpanStorageService {
     * @param traceId The trace ID to look up
     * @return A list of spans for the given trace ID, or an empty list if no spans found
     */
-   public List<ReadableSpan> getSpansForTrace(String traceId) {
+   public List<SpanData> getSpansForTrace(String traceId) {
       return spansByTraceId.getOrDefault(traceId, new ArrayList<>());
    }
 
@@ -128,27 +139,6 @@ public class SpanStorageService {
    }
 
    /**
-    * Retrieves trace IDs that have spans matching all specified attributes.
-    *
-    * @param requiredAttributes Map of attribute key -> expected value
-    * @return A List of trace IDs that have spans matching all the provided attributes sorted by recency (most recent
-    *         first)
-    */
-   public List<String> queryTraceIdsBySpanAttributes(Map<AttributeKey<?>, Object> requiredAttributes) {
-      if (requiredAttributes == null || requiredAttributes.isEmpty()) {
-         return new ArrayList<>(spansByTraceId.keySet());
-      }
-      return spansByTraceId.entrySet().stream()
-            .filter(entry -> entry.getValue().stream()
-                  .anyMatch(span -> requiredAttributes.entrySet().stream()
-                        .allMatch(reqAttr -> valuesEqualAttr(span.toSpanData().getAttributes().get(reqAttr.getKey()),
-                              reqAttr.getValue()))))
-            .map(Map.Entry::getKey)
-            // Sort by recency - most recent first
-            .sorted(this::compareSpansByEndTime).toList();
-   }
-
-   /**
     * Query trace IDs by span attributes with support for regex patterns.
     *
     * @param serviceName   Service name pattern (can be null, "*", or regex)
@@ -158,12 +148,17 @@ public class SpanStorageService {
     *         first)
     */
    public List<String> queryTraceIdsByPatterns(String serviceName, String operationName, String clientAddress) {
-      return spansByTraceId.entrySet().stream()
+      // Copy current spans to avoid null pointer exceptions during filtering/sorting
+      Map<String, List<SpanData>> snapshot;
+      synchronized (spansByTraceId) {
+         snapshot = new HashMap<>(spansByTraceId);
+      }
+      return snapshot.entrySet().stream()
             .map(entry -> SpanFilterUtil.extractTraceEvent(entry.getKey(), entry.getValue()))
             .filter(event -> SpanFilterUtil.matchesTraceEvent(event, serviceName, operationName, clientAddress))
             .map(TraceEvent::traceId)
-            // Sort by recency - most recent first
-            .sorted(this::compareSpansByEndTime).toList();
+            // Sort by recency - most recent first (using snapshot to compute end times)
+            .sorted((id1, id2) -> compareSpansByEndTime(id1, id2, snapshot)).toList();
    }
 
    public static boolean valuesEqualAttr(Object actual, Object expected) {
@@ -185,16 +180,16 @@ public class SpanStorageService {
     * @return Set of trace IDs
     */
    public Set<String> getAllTraceIds() {
-      return spansByTraceId.keySet();
+      return Set.copyOf(spansByTraceId.keySet());
    }
 
-   private int compareSpansByEndTime(String id1, String id2) {
-      List<ReadableSpan> spans1 = spansByTraceId.get(id1);
-      List<ReadableSpan> spans2 = spansByTraceId.get(id2);
+   private int compareSpansByEndTime(String id1, String id2, Map<String, List<SpanData>> spansByTraceId) {
+      List<SpanData> spans1 = spansByTraceId.get(id1);
+      List<SpanData> spans2 = spansByTraceId.get(id2);
       if (spans1.isEmpty() || spans2.isEmpty())
          return 0;
-      long endTime1 = spans1.stream().mapToLong(s -> s.toSpanData().getEndEpochNanos()).max().orElse(0);
-      long endTime2 = spans2.stream().mapToLong(s -> s.toSpanData().getEndEpochNanos()).max().orElse(0);
+      long endTime1 = spans1.stream().mapToLong(SpanData::getEndEpochNanos).max().orElse(0);
+      long endTime2 = spans2.stream().mapToLong(SpanData::getEndEpochNanos).max().orElse(0);
       return Long.compare(endTime2, endTime1); // Descending order
    }
 }

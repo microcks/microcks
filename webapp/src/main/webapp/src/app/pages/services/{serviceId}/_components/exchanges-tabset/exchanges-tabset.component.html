@@ -236,6 +236,12 @@
               <code><small>{{ getReqRespPair(exchange).response.status }}: {{getReqRespPair(exchange).response.mediaType}}</small></code>
             </dd>
           </dl>
+          <dl class="dl-horizontal left" *ngIf="view.service.type === 'GRPC'" >
+            <dt>Response Code and Type:</dt>
+            <dd style="margin-left: 0;">
+              <code><small>{{ getReqRespPair(exchange).response.status }}: {{ getGRPCMediaType(getReqRespPair(exchange)) }}</small></code>
+            </dd>
+          </dl>
           <pre *ngIf="getReqRespPair(exchange).response.content" class="hljs"><code [highlightAuto]="prettyPrintIfJSON(getReqRespPair(exchange).response.content)" [languages]="hlLang"></code></pre>
           <table class="table table-condensed" width="100%" *ngIf="getReqRespPair(exchange).response.headers">
             <thead>

@@ -401,7 +401,7 @@ public class TestRunnerService {
             asyncApiRunner.setAsyncMinionUrl(asyncMinionUrl);
             return asyncApiRunner;
          case GRPC_PROTOBUF:
-            GrpcTestRunner grpcRunner = new GrpcTestRunner(resourceRepository);
+            GrpcTestRunner grpcRunner = new GrpcTestRunner(resourceRepository, responseRepository, true);
             grpcRunner.setSecret(secret);
             grpcRunner.setTimeout(runnerTimeout);
             return grpcRunner;

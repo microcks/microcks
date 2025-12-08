@@ -10,6 +10,13 @@ gatewayRefNamespace:
 gatewayRefSectionName: https
 grpcGatewayRefSectionName: grpc
 
+# Specify custom service account for the microcks specific deployments.
+serviceAccount:
+  # The name of the service account to use.
+  name: default
+  # Specifies whether a service account should be created (if not default).
+  create: true
+
 microcks:
   url: microcks-microcks.192.168.99.100.nip.io
   #url: microcks-microcks.192.168.64.6.nip.io
@@ -47,13 +54,14 @@ microcks:
   image:
     registry: quay.io
     repository: microcks/microcks
-    tag: 1.13.0
+    tag: nightly
     digest:
   replicas: 1
 
   # Uncomment to change Microcks Service to a NodePort
   #serviceType: NodePort
 
+  # Adjust resources requests/limits according to your cluster capacity
   resources:
     requests:
       cpu: 200m
@@ -98,7 +106,7 @@ postman:
   image:
     registry: quay.io
     repository: microcks/microcks-postman-runtime
-    tag: 0.7.0
+    tag: 0.7.1
     digest:
   replicas: 1
   resources:
@@ -252,7 +260,7 @@ features:
     image:
       registry: quay.io
       repository: microcks/microcks-async-minion
-      tag: 1.13.0
+      tag: nightly
       digest:
 
     env:

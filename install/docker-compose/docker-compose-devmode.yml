@@ -11,7 +11,7 @@ services:
       retries: 3
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:0.7.0
+    image: quay.io/microcks/microcks-postman-runtime:0.7.1
     container_name: microcks-postman-runtime
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -43,7 +43,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:1.13.0
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
@@ -58,6 +58,7 @@ services:
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_ENABLED=false
+      #- LOGGING_LEVEL_IO_GITHUB_MICROCKS=DEBUG
       #- MAX_UPLOAD_FILE_SIZE=3MB
       - ASYNC_MINION_URL=http://microcks-async-minion:8081
       - KAFKA_BOOTSTRAP_SERVER=kafka:19092
@@ -73,13 +74,15 @@ services:
       - app
     ports:
       - "8081:8081"
-    image: quay.io/microcks/microcks-async-minion:1.13.0
+    image: quay.io/microcks/microcks-async-minion:nightly
     container_name: microcks-async-minion
     restart: on-failure
     volumes:
       - "./config:/deployments/config"
     environment:
       - QUARKUS_PROFILE=docker-compose
+      #- QUARKUS_LOG_CONSOLE_LEVEL=DEBUG
+      #- QUARKUS_LOG_CATEGORY__IO_GITHUB_MICROCKS__LEVEL=DEBUG
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/q/health/ready"]
       start_period: 10s

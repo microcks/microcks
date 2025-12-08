@@ -81,6 +81,8 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    private static final String HEADERS_NODE = "headers";
    private static final String EXAMPLES_NODE = "examples";
    private static final String EXAMPLE_VALUE_NODE = "value";
+   private static final String EXAMPLE_EXTERNAL_VALUE_NODE = "externalValue";
+
 
    /**
     * Build a new importer.
@@ -657,6 +659,9 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
    private JsonNode getExampleValue(JsonNode example) {
       if (example.has(EXAMPLE_VALUE_NODE)) {
          return followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
+      }
+      if (example.has(EXAMPLE_EXTERNAL_VALUE_NODE)) {
+         return followRefIfAny(example.path(EXAMPLE_EXTERNAL_VALUE_NODE));
       }
       if (example.has("$ref")) {
          JsonNode component = followRefIfAny(example);

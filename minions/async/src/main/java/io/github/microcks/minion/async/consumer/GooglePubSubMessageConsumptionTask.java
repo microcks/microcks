@@ -15,19 +15,29 @@
  */
 package io.github.microcks.minion.async.consumer;
 
-import com.google.protobuf.Duration;
-import com.google.pubsub.v1.*;
 import io.github.microcks.minion.async.AsyncTestSpecification;
 
-import com.google.api.gax.rpc.NotFoundException;
 import com.google.api.gax.core.CredentialsProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
+import com.google.api.gax.rpc.NotFoundException;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
 import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
+import com.google.protobuf.Duration;
+import com.google.pubsub.v1.ExpirationPolicy;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.Subscription;
+import com.google.pubsub.v1.SubscriptionName;
+import com.google.pubsub.v1.TopicName;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import org.jboss.logging.Logger;
 
 import java.io.ByteArrayInputStream;
@@ -59,11 +69,18 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
 
    private static final String SUBSCRIPTION_PREFIX = "-microcks-test";
 
+   /**
+    * emulatorHost is an option key (for the endpoint specification) that allows the test to specify a PubSub emulator
+    * to use instead of Google Cloud
+    */
+   public static final String EMULATOR_HOST_OPTION = "emulatorHost";
+
    private AsyncTestSpecification specification;
 
    protected Map<String, String> optionsMap;
 
    private CredentialsProvider credentialsProvider;
+   private TransportChannelProvider channelProvider;
 
    private SubscriptionName subscriptionName;
 
@@ -107,11 +124,16 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
          consumer.ack();
       };
 
-      // Create a new subscriber for subscription.
-      subscriber = Subscriber
+      Subscriber.Builder subBuilder = Subscriber
             .newBuilder(ProjectSubscriptionName.of(subscriptionName.getProject(), subscriptionName.getSubscription()),
                   receiver)
-            .setCredentialsProvider(credentialsProvider).build();
+            .setCredentialsProvider(credentialsProvider);
+
+      if (channelProvider != null) {
+         subBuilder.setChannelProvider(channelProvider);
+      }
+      // Create a new subscriber for subscription.
+      subscriber = subBuilder.build();
       subscriber.startAsync().awaitRunning();
 
       // Wait and stop async receiver.
@@ -143,8 +165,14 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
          optionsMap = ConsumptionTaskCommons.initializeOptionsMap(options);
       }
 
-      // Build credential provider from secret token.
-      if (specification.getSecret() != null && specification.getSecret().getToken() != null) {
+      if (hasOption(EMULATOR_HOST_OPTION)) {
+         credentialsProvider = NoCredentialsProvider.create();
+         ManagedChannel channel = ManagedChannelBuilder.forTarget(optionsMap.get(EMULATOR_HOST_OPTION)).usePlaintext()
+               .build();
+         channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+
+      } else if (specification.getSecret() != null && specification.getSecret().getToken() != null) {
+         // Build credential provider from secret token.
          byte[] decode = Base64.getDecoder().decode(specification.getSecret().getToken());
          ByteArrayInputStream is = new ByteArrayInputStream(decode);
          credentialsProvider = FixedCredentialsProvider
@@ -157,9 +185,12 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       TopicName topicName = TopicName.of(projectId, topic);
       subscriptionName = SubscriptionName.of(projectId, topic + SUBSCRIPTION_PREFIX);
 
-      SubscriptionAdminSettings subscriptionAdminSettings = SubscriptionAdminSettings.newBuilder()
-            .setCredentialsProvider(credentialsProvider).build();
-      SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(subscriptionAdminSettings);
+      SubscriptionAdminSettings.Builder sasBuilder = SubscriptionAdminSettings.newBuilder()
+            .setCredentialsProvider(credentialsProvider);
+      if (channelProvider != null) {
+         sasBuilder.setTransportChannelProvider(channelProvider);
+      }
+      SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create(sasBuilder.build());
 
       try {
          subscriptionAdminClient.getSubscription(subscriptionName);
@@ -178,5 +209,17 @@ public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTas
       } finally {
          subscriptionAdminClient.close();
       }
+   }
+
+   /**
+    * Safe method for checking if an option has been set.
+    * @param optionKey Check if that option is available in options map.
+    * @return true if option is present, false if undefined.
+    */
+   protected boolean hasOption(String optionKey) {
+      if (optionsMap != null) {
+         return optionsMap.containsKey(optionKey);
+      }
+      return false;
    }
 }

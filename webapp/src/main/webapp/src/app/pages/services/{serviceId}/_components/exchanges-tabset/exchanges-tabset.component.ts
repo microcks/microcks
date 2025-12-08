@@ -96,6 +96,16 @@ export class ExchangesTabsetComponent {
     return exchange as UnidirectionalEvent;
   }
 
+  getGRPCMediaType(exchange: RequestResponsePair): string | null {
+    if (exchange.response.mediaType && !exchange.response.mediaType.startsWith('application/json')) {
+      return exchange.response.mediaType;
+    }
+    if (exchange.response.status == '200' || exchange.response.status == '0') {
+      return 'application/x-protobuf';
+    }
+    return null;
+  }
+
   private normalizeName(val: string | null | undefined): string | null {
     if (val == null) return null;
     try {

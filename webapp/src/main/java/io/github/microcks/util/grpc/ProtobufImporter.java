@@ -36,10 +36,10 @@ import org.slf4j.LoggerFactory;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -79,15 +79,18 @@ public class ProtobufImporter implements MockRepositoryImporter {
    public ProtobufImporter(String protoFilePath, ReferenceResolver referenceResolver) throws IOException {
       this.referenceResolver = referenceResolver;
 
+      String fileSeparator = FileSystems.getDefault().getSeparator();
+
       // Move proto file to a unique subdir that matches its package name (to avoid conflicts)
       // This will allow protoc to find the relative imports we will download later on.
       Path protoPath = Paths.get(protoFilePath);
       packageServices = getPackage(protoPath);
       if (packageServices.packageName != null) {
-         String packagePath = packageServices.packageName.replace(".", "/");
+         String packagePath = packageServices.packageName.replace(".", fileSeparator);
 
          String uuid = UUID.randomUUID().toString();
-         Path newProtoPath = protoPath.getParent().resolve(uuid + "/" + packagePath + "/" + protoPath.getFileName());
+         Path newProtoPath = protoPath.getParent()
+               .resolve(uuid + fileSeparator + packagePath + fileSeparator + protoPath.getFileName());
 
          try {
             Files.createDirectories(newProtoPath.getParent());
@@ -99,8 +102,8 @@ public class ProtobufImporter implements MockRepositoryImporter {
 
          // Prepare file, path and name for easier process.
          File protoFile = new File(protoFilePath);
-         protoDirectory = protoPath.getParent().resolve(uuid + "/").toFile().getAbsolutePath();
-         protoFileName = packagePath + "/" + protoFile.getName();
+         protoDirectory = protoPath.getParent().resolve(uuid + fileSeparator).toFile().getAbsolutePath();
+         protoFileName = packagePath + fileSeparator + protoFile.getName();
 
          // Now switch the proto and file paths.
          protoFilePath = newProtoPath.toString();
@@ -131,10 +134,12 @@ public class ProtobufImporter implements MockRepositoryImporter {
          }
 
          // Run Protoc.
-         int result = Protoc.runProtoc(args);
+         Protoc.runProtoc(args);
 
          File protoFileB = new File(protoDirectory, protoFileName + BINARY_DESCRIPTOR_EXT);
-         fds = DescriptorProtos.FileDescriptorSet.parseFrom(new FileInputStream(protoFileB));
+         try (var is = new FileInputStream(protoFileB)) {
+            fds = DescriptorProtos.FileDescriptorSet.parseFrom(is);
+         }
       } catch (InterruptedException ie) {
          log.error("Protobuf schema compilation has been interrupted on {}", protoFilePath);
          Thread.currentThread().interrupt();
@@ -358,7 +363,7 @@ public class ProtobufImporter implements MockRepositoryImporter {
     * Download a remote import reference and write it to local file system. Progressively resolve its own imports.
     */
    private void downloadImportReferenceAndProgress(Path importPath, String importStr,
-         List<File> resolvedImportsLocalFiles, String rootBaseUrl) throws FileNotFoundException, IOException {
+         List<File> resolvedImportsLocalFiles, String rootBaseUrl) throws IOException {
       referenceResolver.setBaseRepositoryUrl(rootBaseUrl);
       String importContent = referenceResolver.getReferenceContent(importStr, StandardCharsets.UTF_8);
       if (!Files.exists(importPath)) {

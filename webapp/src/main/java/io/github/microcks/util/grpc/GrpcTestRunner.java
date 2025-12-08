@@ -26,6 +26,7 @@ import io.github.microcks.domain.Service;
 import io.github.microcks.domain.TestResult;
 import io.github.microcks.domain.TestReturn;
 import io.github.microcks.repository.ResourceRepository;
+import io.github.microcks.repository.ResponseRepository;
 import io.github.microcks.util.test.AbstractTestRunner;
 import io.github.microcks.util.test.TestRunnerCommons;
 
@@ -48,7 +49,6 @@ import io.grpc.MethodDescriptor;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.TlsChannelCredentials;
-import io.grpc.Status.Code;
 import io.grpc.stub.ClientCalls;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +57,7 @@ import org.springframework.http.HttpMethod;
 import javax.net.ssl.X509TrustManager;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -73,52 +74,35 @@ import java.util.concurrent.TimeUnit;
  */
 public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
-   /* Call Option used to pass gRPC Metadata from client invocation to header client interceptor */
+   /** A simple logger for diagnostic messages. */
+   private static final Logger log = LoggerFactory.getLogger(GrpcTestRunner.class);
+
+   /** Call Option used to pass gRPC Metadata from client invocation to header client interceptor */
    public static final String CUSTOM_CALL_OPTION_NAME = "request-metadata";
+   /** Call Option key for passing Metadata. */
    public static final CallOptions.Key<Metadata> METADATA_CUSTOM_CALL_OPTION = CallOptions.Key
          .createWithDefault(CUSTOM_CALL_OPTION_NAME, null);
 
-   class HeaderInterceptor implements ClientInterceptor {
+   private final ResourceRepository resourceRepository;
+   private final ResponseRepository responseRepository;
 
-      @Override
-      public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method,
-            CallOptions callOptions, Channel next) {
-         return new ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
-            /**
-             * Extension of the AttachHeadersInterceptor by allowing custom headers on each request, passed through via
-             * custom CallOption.
-             */
-            @Override
-            public void start(Listener<RespT> responseListener, Metadata headers) {
-               // Extract custom headers from CallOptions
-               Metadata customHeaders = callOptions.getOption(METADATA_CUSTOM_CALL_OPTION);
-               if (customHeaders != null) {
-                  log.debug("Adding headers to client request: {}", customHeaders.keys());
-                  headers.merge(customHeaders);
-               }
-               super.start(responseListener, headers);
-            }
-         };
-
-      }
-
-   }
-
-   /** A simple logger for diagnostic messages. */
-   private final static Logger log = LoggerFactory.getLogger(GrpcTestRunner.class);
+   private final boolean validateResponseCode;
 
    private long timeout = 10000L;
-
    private Secret secret;
 
-   private final ResourceRepository resourceRepository;
 
    /**
     * Build a new GrpcTestRunner.
-    * @param resourceRepository Access to resources repository
+    * @param resourceRepository   Access to resources repository
+    * @param responseRepository   Access to response repository
+    * @param validateResponseCode whether to validate response code
     */
-   public GrpcTestRunner(ResourceRepository resourceRepository) {
+   public GrpcTestRunner(ResourceRepository resourceRepository, ResponseRepository responseRepository,
+         boolean validateResponseCode) {
       this.resourceRepository = resourceRepository;
+      this.responseRepository = responseRepository;
+      this.validateResponseCode = validateResponseCode;
    }
 
    /**
@@ -154,41 +138,10 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
       String fullMethodName = service.getName() + "/" + operation.getName();
 
       // Build a new GRPC Channel from endpoint URL.
-      URL endpoint = new URL(endpointUrl);
+      URL endpoint = new URI(endpointUrl).toURL();
+      ManagedChannel originChannel = buildManagedChannel(endpoint);
 
-      ManagedChannel originChannel;
-      if (endpointUrl.startsWith("https://") || endpoint.getPort() == 443) {
-         TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
-         if (secret != null && secret.getCaCertPem() != null) {
-            // Install a trust manager with custom CA certificate.
-            tlsBuilder.trustManager(new ByteArrayInputStream(secret.getCaCertPem().getBytes(StandardCharsets.UTF_8)));
-         } else {
-            // Install a trust manager that accepts everything and does not validate certificate chains.
-            tlsBuilder.trustManager(new X509TrustManager() {
-               public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                  return null;
-               }
-
-               public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                  // Accept everything.
-               }
-
-               public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                  // Accept everything.
-               }
-            });
-         }
-         // Build a Channel using the TLS Builder.
-         originChannel = Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), tlsBuilder.build())
-               .build();
-      } else {
-         // Build a simple Channel using no creds (now default to plain text so usePlainText() is no longer necessary).
-         originChannel = Grpc
-               .newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), InsecureChannelCredentials.create())
-               .build();
-      }
-      // Add a custom header interceptor which adds the request-specific headers to
-      // every operation
+      // Add a custom header interceptor which adds the request-specific headers to every operation.
       ClientInterceptor headerInterceptor = new HeaderInterceptor();
       Channel channel = ClientInterceptors.intercept(originChannel, headerInterceptor);
 
@@ -225,7 +178,7 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          int code = TestReturn.SUCCESS_CODE;
          String message = null;
          String contentResponse = null;
-         String statusCode = null;
+         Status status = Status.OK;
 
          reqBuilder.clear();
          resBuilder.clear();
@@ -234,35 +187,50 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
          parser.merge(request.getContent(), reqBuilder);
          byte[] requestBytes = reqBuilder.build().toByteArray();
 
+         // Build CallOptions with deadline from timeout and secret.
          CallOptions callOptions = CallOptions.DEFAULT.withDeadline(Deadline.after(timeout, TimeUnit.MILLISECONDS));
+         callOptions = addSecretToCall(secret, callOptions);
 
-         if (secret != null && secret.getToken() != null) {
-            log.debug("Secret contains token and maybe token header, adding them as call credentials");
-            callOptions = callOptions
-                  .withCallCredentials(new TokenCallCredentials(secret.getToken(), secret.getTokenHeader()));
-         }
          // Add all headers as customOptions to callOptions
          Set<Header> headers = TestRunnerCommons.collectHeaders(testResult, request, operation);
          callOptions = callOptions.withOption(METADATA_CUSTOM_CALL_OPTION, convertHeadersToMetadata(headers));
 
          // Actually execute request.
          long startTime = System.currentTimeMillis();
+
+         // Prepare response bytes holder.
          byte[] responseBytes = null;
          try {
             responseBytes = ClientCalls.blockingUnaryCall(channel,
                   GrpcUtil.buildGenericUnaryMethodDescriptor(fullMethodName), callOptions, requestBytes);
          } catch (StatusRuntimeException sre) {
-            log.error("StatusRuntimeException while executing grpc request {} on {}", fullMethodName, endpointUrl, sre);
-            code = TestReturn.FAILURE_CODE;
-            Status status = sre.getStatus();
-            statusCode = status.getCode().name();
-            message = String.format("Request failed with %s and description %s", statusCode, status.getDescription());
+            log.debug("StatusRuntimeException while executing grpc request {} on {}", fullMethodName, endpointUrl, sre);
+            status = sre.getStatus();
+            contentResponse = status.getDescription();
+            message = String.format("Request failed with '%s' and description '%s'", status.getCode().name(),
+                  contentResponse);
          }
          long duration = System.currentTimeMillis() - startTime;
 
-         // If still in success, validate and parse response
-         if (code == TestReturn.SUCCESS_CODE) {
-            statusCode = Code.OK.name();
+         // If required, compare response code to expected ones.
+         if (validateResponseCode) {
+            // If we have to validate response code, don't consider this as a failure.
+            Response expectedResponse = responseRepository.findById(request.getResponseId()).orElse(null);
+            if (expectedResponse != null) {
+               log.debug("Response expected status code: {}", expectedResponse.getStatus());
+               // Beware of people putting 200 as expected code instead of OK.
+               if (!String.valueOf(status.getCode().value()).equals(expectedResponse.getStatus())
+                     && (!status.isOk() && "200".equals(expectedResponse.getStatus()))) {
+                  log.debug("Response Status does not match expected one, returning failure");
+                  message = String.format("Response Status does not match expected one. Expecting %s but got %d",
+                        expectedResponse.getStatus(), status.getCode().value());
+                  code = TestReturn.FAILURE_CODE;
+               }
+            }
+         }
+
+         // If still in success and no content yet, validate and parse response.
+         if (code == TestReturn.SUCCESS_CODE && responseBytes != null) {
             contentResponse = new String(responseBytes, StandardCharsets.UTF_8);
 
             try {
@@ -280,23 +248,13 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
 
          // Create a Response object for returning.
          Response response = new Response();
-         response.setStatus(statusCode);
+         response.setStatus(status.getCode().name());
          response.setMediaType("application/x-protobuf");
          response.setContent(contentResponse);
 
          results.add(new TestReturn(code, duration, message, request, response));
       }
       return results;
-   }
-
-   private static Metadata convertHeadersToMetadata(Set<Header> headers) {
-      Metadata metadata = new Metadata();
-      for (Header header : headers) {
-         for (String value : header.getValues()) {
-            metadata.put(Metadata.Key.of(header.getName(), Metadata.ASCII_STRING_MARSHALLER), value);
-         }
-      }
-      return metadata;
    }
 
    /**
@@ -307,4 +265,85 @@ public class GrpcTestRunner extends AbstractTestRunner<HttpMethod> {
       return HttpMethod.POST;
    }
 
+
+   /** A gRPC ClientInterceptor that attaches headers to each request. */
+   static class HeaderInterceptor implements ClientInterceptor {
+
+      @Override
+      @SuppressWarnings("java:S119") // Suppress warning about generic type names because we're following community conventions.
+      public <ReqT, RespT> ClientCall<ReqT, RespT> interceptCall(MethodDescriptor<ReqT, RespT> method,
+            CallOptions callOptions, Channel next) {
+         return new ForwardingClientCall.SimpleForwardingClientCall<ReqT, RespT>(next.newCall(method, callOptions)) {
+            /**
+             * Extension of the AttachHeadersInterceptor by allowing custom headers on each request, passed through via
+             * custom CallOption.
+             */
+            @Override
+            public void start(Listener<RespT> responseListener, Metadata headers) {
+               // Extract custom headers from CallOptions
+               Metadata customHeaders = callOptions.getOption(METADATA_CUSTOM_CALL_OPTION);
+               if (customHeaders != null) {
+                  log.debug("Adding headers to client request: {}", customHeaders.keys());
+                  headers.merge(customHeaders);
+               }
+               super.start(responseListener, headers);
+            }
+         };
+
+      }
+
+   }
+
+   /** Create a managed channel for the endpoint. */
+   private ManagedChannel buildManagedChannel(URL endpoint) throws IOException {
+      if (endpoint.getProtocol().startsWith("https") || endpoint.getPort() == 443) {
+         TlsChannelCredentials.Builder tlsBuilder = TlsChannelCredentials.newBuilder();
+         if (secret != null && secret.getCaCertPem() != null) {
+            // Install a trust manager with custom CA certificate.
+            tlsBuilder.trustManager(new ByteArrayInputStream(secret.getCaCertPem().getBytes(StandardCharsets.UTF_8)));
+         } else {
+            // Install a trust manager that accepts everything and does not validate certificate chains.
+            tlsBuilder.trustManager(new X509TrustManager() {
+               public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                  return null;
+               }
+
+               public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                  // Accept everything.
+               }
+
+               public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                  // Accept everything.
+               }
+            });
+         }
+         // Build a Channel using the TLS Builder.
+         return Grpc.newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), tlsBuilder.build()).build();
+      }
+
+      // Build a simple Channel using no creds (now default to plain text so usePlainText() is no longer necessary).
+      return Grpc
+            .newChannelBuilderForAddress(endpoint.getHost(), endpoint.getPort(), InsecureChannelCredentials.create())
+            .build();
+   }
+
+   /** Add secret credentials to call options if any. */
+   private CallOptions addSecretToCall(Secret secret, CallOptions callOptions) {
+      if (secret != null && secret.getToken() != null) {
+         log.debug("Secret contains token and maybe token header, adding them as call credentials");
+         return callOptions.withCallCredentials(new TokenCallCredentials(secret.getToken(), secret.getTokenHeader()));
+      }
+      return callOptions;
+   }
+
+   /** Convert a set of Headers to gRPC Metadata. */
+   private static Metadata convertHeadersToMetadata(Set<Header> headers) {
+      Metadata metadata = new Metadata();
+      for (Header header : headers) {
+         for (String value : header.getValues()) {
+            metadata.put(Metadata.Key.of(header.getName(), Metadata.ASCII_STRING_MARSHALLER), value);
+         }
+      }
+      return metadata;
+   }
 }

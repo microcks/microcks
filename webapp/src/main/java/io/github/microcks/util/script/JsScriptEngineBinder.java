@@ -26,6 +26,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.github.microcks.util.tracing.TraceUtil;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.opentelemetry.api.trace.StatusCode;
 import io.roastedroot.quickjs4j.annotations.Builtins;
 import io.roastedroot.quickjs4j.annotations.GuestFunction;
@@ -68,6 +70,7 @@ import static io.github.microcks.util.tracing.TraceUtil.LogLevel;
  */
 public class JsScriptEngineBinder {
 
+   /** A simple logger for diagnostic messages. */
    private static final Logger log = LoggerFactory.getLogger(JsScriptEngineBinder.class);
 
    private static final String ENGINE_NAME = "javascript";
@@ -186,13 +189,36 @@ public class JsScriptEngineBinder {
       }
 
       @HostFunction
+      public String getRequestContent() {
+         return this.delegate.getRequestContent();
+      }
+
+      @HostFunction
       public JsonNode getRequestHeader(String key) {
          ArrayNode arr = mapper.createArrayNode();
          StringToStringsMap reqHeaders = this.delegate.getRequestHeaders();
-         for (String str : reqHeaders.get(key)) {
-            arr.add(str);
+         if (reqHeaders != null && reqHeaders.get(key) != null) {
+            for (String str : reqHeaders.get(key)) {
+               arr.add(str);
+            }
          }
          return arr;
+      }
+
+      @HostFunction
+      public JsonNode getRequestHeaders() {
+         ObjectNode on = mapper.createObjectNode();
+         StringToStringsMap reqHeaders = this.delegate.getRequestHeaders();
+         if (reqHeaders != null) {
+            for (String key : reqHeaders.keySet()) {
+               ArrayNode arr = mapper.createArrayNode();
+               for (String str : reqHeaders.get(key)) {
+                  arr.add(str);
+               }
+               on.set(key, arr);
+            }
+         }
+         return on;
       }
 
       @HostFunction
@@ -206,6 +232,17 @@ public class JsScriptEngineBinder {
             return null;
          }
          return this.delegate.getURIParameters().get(key);
+      }
+
+      @HostFunction
+      public JsonNode getURIParameters() {
+         ObjectNode on = mapper.createObjectNode();
+         if (this.delegate.getURIParameters() != null) {
+            for (Map.Entry<String, String> entry : this.delegate.getURIParameters().entrySet()) {
+               on.put(entry.getKey(), entry.getValue());
+            }
+         }
+         return on;
       }
    }
 

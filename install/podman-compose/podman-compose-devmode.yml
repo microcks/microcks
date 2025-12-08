@@ -14,7 +14,7 @@ services:
       retries: 3
 
   postman:
-    image: quay.io/microcks/microcks-postman-runtime:0.7.0
+    image: quay.io/microcks/microcks-postman-runtime:0.7.1
     container_name: microcks-postman-runtime
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -27,7 +27,7 @@ services:
     depends_on:
       - mongo
       - postman
-    image: quay.io/microcks/microcks:1.13.0
+    image: quay.io/microcks/microcks:nightly
     container_name: microcks
     volumes:
       - "./config:/deployments/config"
@@ -42,6 +42,7 @@ services:
       - TEST_CALLBACK_URL=http://microcks:8080
       - SERVICES_UPDATE_INTERVAL=0 0 0/2 * * *
       - KEYCLOAK_ENABLED=false
+      #- LOGGING_LEVEL_IO_GITHUB_MICROCKS=DEBUG
       #- MAX_UPLOAD_FILE_SIZE=3MB
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]

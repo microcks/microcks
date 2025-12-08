@@ -384,7 +384,12 @@
 
         <p>Google PubSub Test Endpoint have the following form with no optional parameters:</p>
 
-        <pre><code>googlepubsub://google-platform-project.name/topic.name</code></pre>
+        <pre><code>googlepubsub://google-platform-project.name/topic.name[?param1=value1]</code></pre>
+
+        <p>Here are the optional parameters available:</p>
+        <ul>
+          <li><code>emulatorHost</code>: The Google Pub/Sub Emulator host as provided in the <code>PUBSUB_EMULATOR_HOST</code> environment variable. Check <a href="https://docs.cloud.google.com/pubsub/docs/emulator" target="blank">Pub/Sub Emulator documentation</a>.</li>
+        </ul>
       </div>
 
       <div *ngIf="testEndpoint && testEndpoint.startsWith('sqs:')">

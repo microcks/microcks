@@ -26,10 +26,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -122,10 +122,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Code
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
       - name: Set up JDK 21
-        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5.1.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -247,14 +247,14 @@ jobs:
           echo "microcks-uber-async-minion=$(crane digest quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }})" >> $GITHUB_OUTPUT
           
       - name: Install Cosign
-        uses: sigstore/cosign-installer@d7543c93d881b35a8faa02e8e3605f69b7a1ce62 # v3.10.0
+        uses: sigstore/cosign-installer@faadad0cce49287aee09b3a48701e75088a2c6ad # v4.0.0
 
       - name: Sign images with with GitHub OIDC Token
         env:
           COSIGN_EXPERIMENTAL: "true"
           COSIGN_YES: "true"
         run: |
-          cosign sign quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
-          cosign sign docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
-          cosign sign quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
-          cosign sign docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
+          cosign sign --new-bundle-format=false --use-signing-config=false quay.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
+          cosign sign --new-bundle-format=false --use-signing-config=false docker.io/microcks/microcks-uber:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber }}
+          cosign sign --new-bundle-format=false --use-signing-config=false quay.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}
+          cosign sign --new-bundle-format=false --use-signing-config=false docker.io/microcks/microcks-uber-async-minion:${{ env.IMAGE_TAG }}@${{ steps.digests.outputs.microcks-uber-async-minion }}

@@ -37,9 +37,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -77,17 +75,19 @@ class SpanStorageServiceTest {
       spanStorageService.storeSpan(span2);
 
       // Then
-      List<ReadableSpan> retrievedSpans = spanStorageService.getSpansForTrace(traceId);
+      List<SpanData> retrievedSpans = spanStorageService.getSpansForTrace(traceId);
       assertEquals(2, retrievedSpans.size());
-      assertTrue(retrievedSpans.contains(span1));
-      assertTrue(retrievedSpans.contains(span2));
+      // The service stores a DTO wrapper around SpanData (SpanDataDTO). Compare on properties
+      // rather than object identity.
+      assertTrue(retrievedSpans.stream().anyMatch(s -> s.getSpanId().equals("span-1")));
+      assertTrue(retrievedSpans.stream().anyMatch(s -> s.getSpanId().equals("span-2")));
    }
 
    @Test
    @DisplayName("Should return empty list for non-existent trace ID")
    void shouldReturnEmptyListForNonExistentTraceId() {
       // When
-      List<ReadableSpan> spans = spanStorageService.getSpansForTrace("non-existent-trace");
+      List<SpanData> spans = spanStorageService.getSpansForTrace("non-existent-trace");
 
       // Then
       assertTrue(spans.isEmpty());
@@ -107,7 +107,7 @@ class SpanStorageServiceTest {
       }
 
       // Then
-      List<ReadableSpan> spans = spanStorageService.getSpansForTrace(traceId);
+      List<SpanData> spans = spanStorageService.getSpansForTrace(traceId);
       assertEquals(maxSpansPerTrace, spans.size());
    }
 
@@ -157,57 +157,6 @@ class SpanStorageServiceTest {
    }
 
    @Test
-   @DisplayName("Should query trace IDs by span attributes")
-   void shouldQueryTraceIdsBySpanAttributes() {
-      // Given
-      AttributeKey<String> serviceNameKey = AttributeKey.stringKey("service.name");
-      AttributeKey<String> operationKey = AttributeKey.stringKey("operation");
-
-      ReadableSpan span1 = createMockSpanWithAttributes("trace-1", "span-1",
-            Attributes.builder().put(serviceNameKey, "user-service").put(operationKey, "login").build());
-
-      ReadableSpan span2 = createMockSpanWithAttributes("trace-2", "span-2",
-            Attributes.builder().put(serviceNameKey, "user-service").put(operationKey, "logout").build());
-
-      ReadableSpan span3 = createMockSpanWithAttributes("trace-3", "span-3",
-            Attributes.builder().put(serviceNameKey, "order-service").put(operationKey, "create").build());
-
-      spanStorageService.storeSpan(span1);
-      spanStorageService.storeSpan(span2);
-      spanStorageService.storeSpan(span3);
-
-      // When
-      Map<AttributeKey<?>, Object> requiredAttributes = new HashMap<>();
-      requiredAttributes.put(serviceNameKey, "user-service");
-
-      List<String> matchingTraceIds = spanStorageService.queryTraceIdsBySpanAttributes(requiredAttributes);
-
-      // Then
-      assertEquals(2, matchingTraceIds.size());
-      assertTrue(matchingTraceIds.contains("trace-1"));
-      assertTrue(matchingTraceIds.contains("trace-2"));
-      assertFalse(matchingTraceIds.contains("trace-3"));
-   }
-
-   @Test
-   @DisplayName("Should return all trace IDs when no attributes specified")
-   void shouldReturnAllTraceIdsWhenNoAttributesSpecified() {
-      // Given
-      spanStorageService.storeSpan(createMockSpan("trace-1", "span-1"));
-      spanStorageService.storeSpan(createMockSpan("trace-2", "span-2"));
-      spanStorageService.storeSpan(createMockSpan("trace-3", "span-3"));
-
-      // When
-      List<String> allTraceIds = spanStorageService.queryTraceIdsBySpanAttributes(null);
-
-      // Then
-      assertEquals(3, allTraceIds.size());
-      assertTrue(allTraceIds.contains("trace-1"));
-      assertTrue(allTraceIds.contains("trace-2"));
-      assertTrue(allTraceIds.contains("trace-3"));
-   }
-
-   @Test
    @DisplayName("Should handle concurrent access safely")
    void shouldHandleConcurrentAccessSafely() throws InterruptedException {
       // Given
@@ -242,7 +191,7 @@ class SpanStorageServiceTest {
 
       // Verify we can read all stored spans without exceptions
       for (String traceId : allTraceIds) {
-         List<ReadableSpan> spans = spanStorageService.getSpansForTrace(traceId);
+         List<SpanData> spans = spanStorageService.getSpansForTrace(traceId);
          assertEquals(1, spans.size());
       }
    }
@@ -280,7 +229,7 @@ class SpanStorageServiceTest {
       spanStorageService.storeSpan(createMockSpan("trace-1", "span-1-2"));
 
       // Then - Verify the trace is still there and has multiple spans
-      List<ReadableSpan> trace1Spans = spanStorageService.getSpansForTrace("trace-1");
+      List<SpanData> trace1Spans = spanStorageService.getSpansForTrace("trace-1");
       assertEquals(2, trace1Spans.size());
    }
 
@@ -406,7 +355,7 @@ class SpanStorageServiceTest {
       ReadableSpan span = Mockito.mock(ReadableSpan.class);
       SpanContext spanContext = Mockito.mock(SpanContext.class);
       SpanContext invalidParentContext = Mockito.mock(SpanContext.class);
-      SpanData spanData = createMockSpanData(attributes);
+      SpanData spanData = createMockSpanData(traceId, spanId, attributes);
       EventData eventData = Mockito.mock(EventData.class);
 
       // Mock the SpanContext to return the correct trace ID
@@ -446,7 +395,7 @@ class SpanStorageServiceTest {
       ReadableSpan span = Mockito.mock(ReadableSpan.class);
       SpanContext spanContext = Mockito.mock(SpanContext.class);
       SpanContext parentSpanContext = Mockito.mock(SpanContext.class);
-      SpanData spanData = createMockSpanData(Attributes.empty());
+      SpanData spanData = createMockSpanData(traceId, spanId, Attributes.empty());
 
       // Mock the SpanContext to return the correct trace and span IDs
       when(spanContext.getTraceId()).thenReturn(traceId);
@@ -465,8 +414,17 @@ class SpanStorageServiceTest {
       return span;
    }
 
-   private SpanData createMockSpanData(Attributes attributes) {
+   private SpanData createMockSpanData(String traceId, String spanId, Attributes attributes) {
       SpanData spanData = Mockito.mock(SpanData.class);
+      SpanContext spanContext = Mockito.mock(SpanContext.class);
+
+      // Mock the SpanContext
+      when(spanContext.getTraceId()).thenReturn(traceId);
+      when(spanContext.getSpanId()).thenReturn(spanId);
+      when(spanContext.getTraceFlags()).thenReturn(TraceFlags.getDefault());
+      when(spanContext.getTraceState()).thenReturn(TraceState.getDefault());
+
+      when(spanData.getSpanContext()).thenReturn(spanContext);
       when(spanData.getAttributes()).thenReturn(attributes);
       when(spanData.getEndEpochNanos()).thenReturn(System.nanoTime());
       when(spanData.getName()).thenReturn("test-span");

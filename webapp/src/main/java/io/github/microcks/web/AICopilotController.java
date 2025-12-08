@@ -32,12 +32,10 @@ import io.github.microcks.util.MockRepositoryExporterFactory;
 import io.github.microcks.util.SafeLogger;
 import io.github.microcks.util.ai.AICopilot;
 
-import org.apache.catalina.User;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -97,7 +94,7 @@ public class AICopilotController {
    }
 
    @GetMapping(value = "/samples/{id:.+}")
-   public ResponseEntity<?> getSamplesSuggestions(@PathVariable("id") String serviceId,
+   public ResponseEntity<Object> getSamplesSuggestions(@PathVariable("id") String serviceId,
          @RequestParam(value = "operation", required = false) String operationName, UserInfo userInfo) {
       log.debug("Retrieving service with id {}", serviceId);
 
@@ -151,7 +148,7 @@ public class AICopilotController {
             taskStatus.put(taskId, TaskStatus.PENDING);
             copilotRunnerService.generateSamplesForService(service, resources.getFirst(), userInfo)
                   .thenApply(success -> {
-                     if (success) {
+                     if (Boolean.TRUE.equals(success)) {
                         taskStatus.put(taskId, TaskStatus.SUCCESS);
                      } else {
                         taskStatus.put(taskId, TaskStatus.FAILURE);
@@ -167,7 +164,7 @@ public class AICopilotController {
 
 
    @GetMapping(value = "/samples/task/{id}/status")
-   public ResponseEntity<?> getGenerationTaskStatus(@PathVariable("id") String taskId) {
+   public ResponseEntity<String> getGenerationTaskStatus(@PathVariable("id") String taskId) {
       log.debug("Retrieving status for task {}", taskId);
       TaskStatus status = taskStatus.get(taskId);
       if (status == null) {
@@ -188,7 +185,7 @@ public class AICopilotController {
    }
 
    @PostMapping(value = "/samples/{id:.+}")
-   public ResponseEntity<?> addSamplesSuggestions(@PathVariable("id") String serviceId,
+   public ResponseEntity<Object> addSamplesSuggestions(@PathVariable("id") String serviceId,
          @RequestParam(value = "operation") String operationName, @RequestBody List<Exchange> exchanges,
          UserInfo userInfo) {
       log.debug("Adding new AI samples to service {} and operation {}", serviceId, operationName);
@@ -201,7 +198,7 @@ public class AICopilotController {
    }
 
    @PostMapping(value = "/samples/{id:.+}/cleanup")
-   public ResponseEntity<?> removeExchanges(@PathVariable("id") String serviceId,
+   public ResponseEntity<Object> removeExchanges(@PathVariable("id") String serviceId,
          @RequestBody ExchangeSelection exchangeSelection, UserInfo userInfo) {
       log.debug("Cleaning AI samples from service {} and multiple operations", serviceId);
       boolean result = serviceService.removeAICopilotExchangesFromService(serviceId, exchangeSelection, userInfo);
