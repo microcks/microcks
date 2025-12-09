@@ -9,6 +9,7 @@
   padding: 6px 8px;
   background: var(--surface-muted);
   border-bottom: 1px solid var(--border-accent);
+  user-select: none;
 }
 
 .traces .trace.error .trace-header {
@@ -42,6 +43,7 @@
 
 .traces .trace-body {
   padding: 6px 8px;
+  user-select: text;
 }
 
 .traces .section-title {
@@ -69,6 +71,69 @@
 .traces ul.kv .v {
   color: var(--status-success);
   word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.traces ul.kv .v-large-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--status-success);
+}
+
+.traces ul.kv .v-full {
+  display: block;
+  margin-top: 4px;
+  margin-left: 0;
+}
+
+.traces ul.kv .v-full pre {
+  margin: 0;
+  padding: 8px;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-accent);
+  border-radius: 3px;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.traces ul.kv .pfng-list-expand {
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-default);
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 4px;
+  user-select: none;
+  gap: 4px;
+  background: none;
+  border: none;
+  font-family: inherit;
+}
+
+.traces ul.kv .pfng-list-expand:hover {
+  color: var(--link-color);
+}
+
+.traces ul.kv .pfng-list-expand:focus {
+  outline: none;
+}
+
+.traces ul.kv .pfng-list-expand .expand-text {
+  font-size: 13px;
+  font-family: monospace;
+}
+
+.traces ul.kv .pfng-list-expand .fa-angle-right {
+  transition: transform 0.2s ease;
+  font-size: 15px;
+}
+
+.traces ul.kv .pfng-list-expand .fa-angle-right.fa-angle-down {
+  transform: rotate(90deg);
 }
 
 .traces ul.events {
