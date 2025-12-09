@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
@@ -39,6 +39,8 @@ import { Secret } from '../../../../models/secret.model';
  * - Close dialog on success and surface notifications
  */
 export class QuickImportDownloadTabComponent implements OnInit {
+  /** Optional pre-filled URL input */
+  @Input() prefillUrl?: string;
   /** Reactive form holding url, secretName, and secondary flag */
   form: FormGroup;
   /** Loaded list of available secrets for dropdown */
@@ -61,6 +63,13 @@ export class QuickImportDownloadTabComponent implements OnInit {
   ngOnInit(): void {
     // Load secrets immediately so dropdown is populated
     this.secretsSvc.getSecrets(1).subscribe(results => this.secrets = results);
+    if (this.prefillUrl) {
+      this.form.patchValue({ url: this.prefillUrl.trim() });
+    }
+  }
+
+  setUrl(url: string): void {
+    this.form.patchValue({ url: url.trim() });
   }
 
   /** Convenience getters */
@@ -97,7 +106,7 @@ export class QuickImportDownloadTabComponent implements OnInit {
     this.http.post('/api/artifact/download', body.toString(), { headers, responseType: 'text' })
       .subscribe({
         next: (response: string) => {
-          // parse response 
+          // parse response
           const jsonResponse = JSON.parse(response);
           this.notifications.message(
             NotificationType.SUCCESS,

@@ -25,8 +25,12 @@ export interface UploaderDialogOptions {
   closeBtnName?: string;
   /** Pre-selected files to add to the uploader (only first file will be used) */
   preSelectedFiles?: File[];
+  /** Pre-filled URL for the download tab */
+  prefillUrl?: string;
+  /** Tab to activate when opening the dialog */
+  activeTab?: 'upload' | 'download';
   /** Additional initial state for the dialog */
-  initialState?: any;
+  initialState?: UploaderDialogOptions;
 }
 
 @Injectable({
@@ -34,18 +38,18 @@ export interface UploaderDialogOptions {
 })
 /**
  * Service for managing the artifact uploader dialog within the application.
- * 
+ *
  * Provides methods to open the uploader dialog, add files to an open dialog,
  * check dialog state, and register/unregister page refresh callbacks for specific routes.
- * 
+ *
  * Handles dialog lifecycle, including invoking custom close callbacks and
  * route-specific refresh logic when the dialog is closed.
  *
  */
 export class UploaderDialogService {
-  
+
   private currentModalRef: BsModalRef | null = null;
-  
+
   // Registry of page refresh callbacks by route
   private refreshCallbacks = new Map<string, () => void>();
 
@@ -59,29 +63,33 @@ export class UploaderDialogService {
    * @param options Configuration options for the dialog
    * @returns The modal reference
    */
-  openArtifactUploader(options: UploaderDialogOptions = {}): BsModalRef {
+  openArtifactUploader(options: UploaderDialogOptions = {
+    activeTab: 'upload'
+  }): BsModalRef {
     const initialState = {
       preSelectedFiles: options.preSelectedFiles,
+      prefillUrl: options.prefillUrl,
+      activeTab: options.activeTab,
       ...options.initialState
     };
-    
+
   const modalRef = this.modalService.show(QuickImportDialogComponent, { initialState });
     this.currentModalRef = modalRef;
-    
+
     if (modalRef.content) {
       modalRef.content.closeBtnName = options.closeBtnName || 'Close';
       if (options.preSelectedFiles) {
         modalRef.content.preSelectedFiles = options.preSelectedFiles;
       }
     }
-    
+
     // Subscribe to modal close event
     modalRef.onHidden?.subscribe(() => {
       // Call the provided callback
       if (options.onClose) {
         options.onClose();
       }
-      
+
       // Also call the registered page refresh callback if available
       const currentRoute = this.getCurrentRouteKey();
       const refreshCallback = this.refreshCallbacks.get(currentRoute);
@@ -94,7 +102,7 @@ export class UploaderDialogService {
     modalRef.onHidden?.subscribe(() => {
       this.currentModalRef = null;
     });
-    
+
     return modalRef;
   }
 
@@ -125,6 +133,37 @@ export class UploaderDialogService {
 
     console.warn('Component does not have addFiles method');
     return false;
+  }
+
+  /** Prefill the download tab URL if the dialog is already open. */
+  prefillDownloadUrlInOpenDialog(url: string): boolean {
+    if (!this.currentModalRef || !this.currentModalRef.content) {
+      return false;
+    }
+
+    const component = this.currentModalRef.content as QuickImportDialogComponent;
+    if (component.setDownloadUrl) {
+      component.setDownloadUrl(url);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Opens the artifact uploader dialog with the Download tab active and URL prefilled.
+   */
+  openArtifactDownloadWithUrl(url: string, options: UploaderDialogOptions = {}): BsModalRef {
+    return this.openArtifactUploader({
+      ...options,
+      prefillUrl: url,
+      activeTab: 'download',
+      initialState: {
+        ...(options.initialState || {}),
+        prefillUrl: url,
+        activeTab: 'download'
+      }
+    });
   }
 
   /**

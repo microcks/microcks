@@ -45,6 +45,12 @@ export class DragDropService {
   private dragOverSubject = new Subject<boolean>();
   public dragOver$ = this.dragOverSubject.asObservable();
 
+  private boundHandleDragEnter = this.handleDragEnter.bind(this);
+  private boundHandleDragOver = this.handleDragOver.bind(this);
+  private boundHandleDragLeave = this.handleDragLeave.bind(this);
+  private boundHandleDrop = this.handleDrop.bind(this);
+  private boundHandlePaste = this.handlePaste.bind(this);
+
   constructor(
     private router: Router,
     private ngZone: NgZone,
@@ -55,17 +61,18 @@ export class DragDropService {
 
   private initializeGlobalDragDrop(): void {
     // Prevent default drag behaviors on document
-    document.addEventListener('dragenter', this.handleDragEnter.bind(this));
-    document.addEventListener('dragover', this.handleDragOver.bind(this));
-    document.addEventListener('dragleave', this.handleDragLeave.bind(this));
-    document.addEventListener('drop', this.handleDrop.bind(this));
+    document.addEventListener('dragenter', this.boundHandleDragEnter);
+    document.addEventListener('dragover', this.boundHandleDragOver);
+    document.addEventListener('dragleave', this.boundHandleDragLeave);
+    document.addEventListener('drop', this.boundHandleDrop);
+    document.addEventListener('paste', this.boundHandlePaste);
   }
 
   private handleDragEnter(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (this.hasFiles(e)) {
+
+    if (this.hasFilesOrUrls(e)) {
       this.dragOverSubject.next(true);
     }
   }
@@ -73,8 +80,8 @@ export class DragDropService {
   private handleDragOver(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (this.hasFiles(e)) {
+
+    if (this.hasFilesOrUrls(e)) {
       if (e.dataTransfer) {
         e.dataTransfer.dropEffect = 'copy';
       }
@@ -84,7 +91,7 @@ export class DragDropService {
   private handleDragLeave(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Only hide the overlay if we're leaving the document
     if (e.clientX === 0 && e.clientY === 0) {
       this.dragOverSubject.next(false);
@@ -94,18 +101,48 @@ export class DragDropService {
   private handleDrop(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-    
+
     this.dragOverSubject.next(false);
-    
-    if (this.hasFiles(e) && e.dataTransfer?.files) {
-      const files = Array.from(e.dataTransfer.files);
+
+    const files = e.dataTransfer?.files ? Array.from(e.dataTransfer.files) : [];
+    const url = this.extractUrlFromDataTransfer(e.dataTransfer);
+
+    if (files.length > 0) {
       this.handleFileDrop(files);
+      return;
+    }
+
+    if (url) {
+      this.handleUrlDrop(url);
     }
   }
 
-  private hasFiles(e: DragEvent): boolean {
+  private handlePaste(e: ClipboardEvent): void {
+    // Avoid hijacking paste inside form fields
+    const target = e.target as Element | null;
+    if (target && this.isEditableElement(target)) {
+      return;
+    }
+
+    const files = e.clipboardData?.files ? Array.from(e.clipboardData.files) : [];
+    const url = this.extractUrlFromDataTransfer(e.clipboardData);
+
+    if (files.length > 0) {
+      e.preventDefault();
+      this.handleFileDrop(files);
+      return;
+    }
+
+    if (url) {
+      e.preventDefault();
+      this.handleUrlDrop(url);
+    }
+  }
+
+  private hasFilesOrUrls(e: DragEvent): boolean {
     if (!e.dataTransfer) return false;
-    return Array.from(e.dataTransfer.types).includes('Files');
+    const types = Array.from(e.dataTransfer.types);
+    return types.includes('Files') || types.includes('text/uri-list') || types.includes('text/plain');
   }
 
   private handleFileDrop(files: File[]): void {
@@ -128,17 +165,70 @@ export class DragDropService {
             preSelectedFiles: files,
             onClose: () => {
                 this.router.navigate(['/services']);
-            }
+            },
+            activeTab: 'upload'
         });
     });
   }
 
+  private handleUrlDrop(url: string): void {
+    this.ngZone.run(() => {
+      if (this.uploaderDialogService.isDialogOpen()) {
+        const patched = this.uploaderDialogService.prefillDownloadUrlInOpenDialog(url);
+        if (patched) {
+          return;
+        }
+      }
+
+      this.uploaderDialogService.openArtifactDownloadWithUrl(url, {
+        onClose: () => {
+          this.router.navigate(['/services']);
+        }
+      });
+    });
+  }
+
+  private extractUrlFromDataTransfer(dataTransfer: DataTransfer | null): string | null {
+    if (!dataTransfer) {
+      return null;
+    }
+
+    const uriList = dataTransfer.getData('text/uri-list');
+    if (uriList && this.isHttpUrl(uriList)) {
+      return uriList.trim();
+    }
+
+    const text = dataTransfer.getData('text/plain');
+    if (text && this.isHttpUrl(text)) {
+      return text.trim();
+    }
+
+    return null;
+  }
+
+  private isEditableElement(element: Element): boolean {
+    const tagName = element.tagName.toLowerCase();
+    const editableTags = ['input', 'textarea'];
+    const isContentEditable = (element as HTMLElement).isContentEditable;
+    return editableTags.includes(tagName) || isContentEditable;
+  }
+
+  private isHttpUrl(value: string): boolean {
+    try {
+      const parsed = new URL(value.trim());
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  }
+
   destroy(): void {
-    document.removeEventListener('dragenter', this.handleDragEnter.bind(this));
-    document.removeEventListener('dragover', this.handleDragOver.bind(this));
-    document.removeEventListener('dragleave', this.handleDragLeave.bind(this));
-    document.removeEventListener('drop', this.handleDrop.bind(this));
-    
+    document.removeEventListener('dragenter', this.boundHandleDragEnter);
+    document.removeEventListener('dragover', this.boundHandleDragOver);
+    document.removeEventListener('dragleave', this.boundHandleDragLeave);
+    document.removeEventListener('drop', this.boundHandleDrop);
+    document.removeEventListener('paste', this.boundHandlePaste);
+
     this.dragOverSubject.complete();
   }
 }
