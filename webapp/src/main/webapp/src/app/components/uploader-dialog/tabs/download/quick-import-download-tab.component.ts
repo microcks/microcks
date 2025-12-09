@@ -106,7 +106,7 @@ export class QuickImportDownloadTabComponent implements OnInit {
     this.http.post('/api/artifact/download', body.toString(), { headers, responseType: 'text' })
       .subscribe({
         next: (response: string) => {
-          // parse response
+          // parse response 
           const jsonResponse = JSON.parse(response);
           this.notifications.message(
             NotificationType.SUCCESS,

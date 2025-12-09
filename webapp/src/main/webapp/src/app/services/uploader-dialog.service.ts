@@ -72,17 +72,17 @@ export class UploaderDialogService {
       activeTab: options.activeTab,
       ...options.initialState
     };
-
-  const modalRef = this.modalService.show(QuickImportDialogComponent, { initialState });
+    
+    const modalRef = this.modalService.show(QuickImportDialogComponent, { initialState });
     this.currentModalRef = modalRef;
-
+    
     if (modalRef.content) {
       modalRef.content.closeBtnName = options.closeBtnName || 'Close';
       if (options.preSelectedFiles) {
         modalRef.content.preSelectedFiles = options.preSelectedFiles;
       }
     }
-
+    
     // Subscribe to modal close event
     modalRef.onHidden?.subscribe(() => {
       // Call the provided callback
@@ -97,12 +97,12 @@ export class UploaderDialogService {
         refreshCallback();
       }
     });
-
+    
     // Clear the reference when modal is closed
     modalRef.onHidden?.subscribe(() => {
       this.currentModalRef = null;
     });
-
+    
     return modalRef;
   }
 
@@ -124,13 +124,13 @@ export class UploaderDialogService {
       console.warn('No modal reference or content available for uploader dialog');
       return false;
     }
-
-  const component = this.currentModalRef.content as QuickImportDialogComponent;
+    
+    const component = this.currentModalRef.content as QuickImportDialogComponent;
     if (component.addFiles) {
       component.addFiles(files);
       return true;
     }
-
+    
     console.warn('Component does not have addFiles method');
     return false;
   }
@@ -140,13 +140,13 @@ export class UploaderDialogService {
     if (!this.currentModalRef || !this.currentModalRef.content) {
       return false;
     }
-
+    
     const component = this.currentModalRef.content as QuickImportDialogComponent;
     if (component.setDownloadUrl) {
       component.setDownloadUrl(url);
       return true;
     }
-
+    
     return false;
   }
 

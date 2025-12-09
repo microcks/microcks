@@ -71,7 +71,7 @@ export class DragDropService {
   private handleDragEnter(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-
+    
     if (this.hasFilesOrUrls(e)) {
       this.dragOverSubject.next(true);
     }
@@ -80,7 +80,7 @@ export class DragDropService {
   private handleDragOver(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-
+    
     if (this.hasFilesOrUrls(e)) {
       if (e.dataTransfer) {
         e.dataTransfer.dropEffect = 'copy';
@@ -91,7 +91,7 @@ export class DragDropService {
   private handleDragLeave(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-
+    
     // Only hide the overlay if we're leaving the document
     if (e.clientX === 0 && e.clientY === 0) {
       this.dragOverSubject.next(false);
@@ -101,17 +101,17 @@ export class DragDropService {
   private handleDrop(e: DragEvent): void {
     e.preventDefault();
     e.stopPropagation();
-
+    
     this.dragOverSubject.next(false);
-
+    
     const files = e.dataTransfer?.files ? Array.from(e.dataTransfer.files) : [];
     const url = this.extractUrlFromDataTransfer(e.dataTransfer);
-
+    
     if (files.length > 0) {
       this.handleFileDrop(files);
       return;
     }
-
+    
     if (url) {
       this.handleUrlDrop(url);
     }
@@ -123,16 +123,16 @@ export class DragDropService {
     if (target && this.isEditableElement(target)) {
       return;
     }
-
+    
     const files = e.clipboardData?.files ? Array.from(e.clipboardData.files) : [];
     const url = this.extractUrlFromDataTransfer(e.clipboardData);
-
+    
     if (files.length > 0) {
       e.preventDefault();
       this.handleFileDrop(files);
       return;
     }
-
+    
     if (url) {
       e.preventDefault();
       this.handleUrlDrop(url);
@@ -150,7 +150,7 @@ export class DragDropService {
       console.warn('No valid API specification files found in the dropped files.');
       return;
     }
-
+    
     // Check if uploader dialog is already open
     if (this.uploaderDialogService.isDialogOpen()) {
       // Add files to existing dialog within Angular zone
@@ -159,7 +159,7 @@ export class DragDropService {
       });
       return;
     }
-
+    
     this.ngZone.run(() => {
         this.uploaderDialogService.openArtifactUploader({
             preSelectedFiles: files,
@@ -179,7 +179,7 @@ export class DragDropService {
           return;
         }
       }
-
+      
       this.uploaderDialogService.openArtifactDownloadWithUrl(url, {
         onClose: () => {
           this.router.navigate(['/services']);
@@ -192,17 +192,17 @@ export class DragDropService {
     if (!dataTransfer) {
       return null;
     }
-
+    
     const uriList = dataTransfer.getData('text/uri-list');
     if (uriList && this.isHttpUrl(uriList)) {
       return uriList.trim();
     }
-
+    
     const text = dataTransfer.getData('text/plain');
     if (text && this.isHttpUrl(text)) {
       return text.trim();
     }
-
+    
     return null;
   }
 
@@ -228,7 +228,7 @@ export class DragDropService {
     document.removeEventListener('dragleave', this.boundHandleDragLeave);
     document.removeEventListener('drop', this.boundHandleDrop);
     document.removeEventListener('paste', this.boundHandlePaste);
-
+    
     this.dragOverSubject.complete();
   }
 }
