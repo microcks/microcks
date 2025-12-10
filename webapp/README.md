@@ -19,9 +19,8 @@ If you chose to run [MongoDB](https://mongodb.com) and [Keycloak](https://keyclo
 need to open a first terminal and run:
 
 ```shell
-$ cd dev
-$ ./start-mongodb-docker.sh
-# or ./start-mongodb-podman.sh if you prefer Podman
+$ ./dev/start-mongodb-docker.sh
+# or ./dev/start-mongodb-podman.sh if you prefer Podman
 ```
 
 MongoDB is started on port `27017`.
@@ -30,9 +29,8 @@ Keycloak is optional depending on your will to try out authentication and author
 If you need Keycloak, open a second terminal and run:
 
 ```shell
-$ cd dev
-$ ./start-keycloak.sh
-# or ./start-keycloak-podman.sh if you prefer Podman
+$ ./dev/start-keycloak-docker.sh
+# or ./dev/start-keycloak-podman.sh if you prefer Podman
 ```
 
 Keycloak is started on port `8180`.
@@ -42,7 +40,7 @@ Keycloak is started on port `8180`.
 In a terminal, start frontend GUI server using NG :
 
 ```shell
-$ cd src/main/webapp
+$ cd webapp/src/main/webapp
 $ npm install --legacy-peer-deps
 $ ng serve
 ```
