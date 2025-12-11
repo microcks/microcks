@@ -86,4 +86,10 @@ public class DataUriUtil {
          return data.getBytes(StandardCharsets.UTF_8);
       }
    }
+
+   /** Build a data URI from binary content. */
+   public static String buildDataUri(byte[] contentBytes) {
+      String base64Data = Base64.getEncoder().encodeToString(contentBytes);
+      return "data:application/octet-stream;base64," + base64Data;
+   }
 }

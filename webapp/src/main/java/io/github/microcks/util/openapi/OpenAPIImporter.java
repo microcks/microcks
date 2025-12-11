@@ -661,7 +661,13 @@ public class OpenAPIImporter extends AbstractJsonRepositoryImporter implements M
          return followRefIfAny(example.path(EXAMPLE_VALUE_NODE));
       }
       if (example.has(EXAMPLE_EXTERNAL_VALUE_NODE)) {
-         return followRefIfAny(example.path(EXAMPLE_EXTERNAL_VALUE_NODE));
+         // if the externalValue node does not start with "data:" it is a remote or relative URL so we must getNodeForRef for it else just return the node
+         String externalValue = example.path(EXAMPLE_EXTERNAL_VALUE_NODE).asText();
+         if (externalValue.startsWith("data:")) {
+            return example.path(EXAMPLE_EXTERNAL_VALUE_NODE);
+         } else {
+            return getNodeForRef(externalValue);
+         }
       }
       if (example.has("$ref")) {
          JsonNode component = followRefIfAny(example);

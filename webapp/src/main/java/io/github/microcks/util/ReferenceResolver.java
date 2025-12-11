@@ -154,6 +154,12 @@ public class ReferenceResolver {
       }
       // Keep track on how we resolved this relativePath.
       relativeResolvedReferences.put(relativePath, referenceFile);
+      // Check for binary content.
+      byte[] contentBytes = Files.readAllBytes(referenceFile.toPath());
+      if (!UTF8ContentTypeChecker.isValidUTF8(contentBytes)) {
+         // If binary, return a data URI representation.
+         return DataUriUtil.buildDataUri(contentBytes);
+      }
 
       return Files.readString(referenceFile.toPath(), encoding);
    }
