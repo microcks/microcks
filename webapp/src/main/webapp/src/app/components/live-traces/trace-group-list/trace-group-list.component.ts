@@ -29,6 +29,8 @@ export class TraceGroupListComponent {
   @Input() traces: ReadableSpan[][] = [];
 
   openedTraces = new Set<string>();
+  expandedAttributes = new Set<string>();
+  readonly MAX_VALUE_LENGTH = 200; // Characters threshold for collapsible content
 
   trackByTrace(index: number, trace: ReadableSpan[]): string {
     return trace[0].spanContext().traceId;
@@ -43,6 +45,10 @@ export class TraceGroupListComponent {
       : "no-time";
 
     return `${e.traceId}/${e.spanId}/${e.event.name}/${t}`;
+  }
+
+  trackByAttribute(index: number, kv: { key: string; value: any }): string {
+    return kv.key;
   }
 
   getEventTitle(e: TimedEvent): string {
@@ -128,24 +134,6 @@ export class TraceGroupListComponent {
     return `${hh}:${mm}:${ss}.${ms}`;
   }
 
-  getEventSpanId(trace: ReadableSpan[], e: TimedEvent): string {
-    for (const span of trace) {
-      if (span.events?.includes(e)) {
-        return span.spanContext().spanId;
-      }
-    }
-    return "";
-  }
-
-  getEventSpanName(trace: ReadableSpan[], e: TimedEvent): string {
-    for (const span of trace) {
-      if (span.events?.includes(e)) {
-        return span.name;
-      }
-    }
-    return "";
-  }
-
   getTraceError(trace: ReadableSpan[]): string | null {
     for (const span of trace) {
       if (span.status && span.status.code === 2) {
@@ -210,5 +198,58 @@ export class TraceGroupListComponent {
 
   getTraceId(trace: ReadableSpan[]): string {
     return trace[0].spanContext().traceId;
+  }
+
+  // Format value for display, handling JSON, strings with \n, etc.
+  formatAttributeValue(value: any): string {
+    if (value === undefined || value === null) return 'null';
+    if (typeof value === 'string') return value;
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  }
+
+  // Check if the value should be collapsible (large or multiline)
+  isValueLarge(value: any): boolean {
+    const formatted = this.formatAttributeValue(value);
+    return formatted.length > this.MAX_VALUE_LENGTH || formatted.includes('\n');
+  }
+
+  // Get truncated preview of a large value
+  getValuePreview(value: any): string {
+    const formatted = this.formatAttributeValue(value);
+    if (formatted.length <= this.MAX_VALUE_LENGTH && !formatted.includes('\n')) {
+      return formatted;
+    }
+
+    // For multiline, show first non empty line truncated
+    const firstLine = formatted.split('\n').find(line => line.trim().length > 0);
+    if (firstLine && firstLine.length > this.MAX_VALUE_LENGTH) {
+      return firstLine.substring(0, this.MAX_VALUE_LENGTH) + '...';
+    }
+    return firstLine + '...';
+  }
+
+  // Generate unique key for attribute expansion state
+  getAttributeKey(traceId: string, spanId: string, eventName: string, attrKey: string): string {
+    return `${traceId}:${spanId}:${eventName}:${attrKey}`;
+  }
+
+  // Toggle attribute expansion
+  toggleAttribute(traceId: string, spanId: string, eventName: string, attrKey: string): void {
+    const key = this.getAttributeKey(traceId, spanId, eventName, attrKey);
+    if (this.expandedAttributes.has(key)) {
+      this.expandedAttributes.delete(key);
+    } else {
+      this.expandedAttributes.add(key);
+    }
+  }
+
+  // Check if attribute is expanded
+  isAttributeExpanded(traceId: string, spanId: string, eventName: string, attrKey: string): boolean {
+    const key = this.getAttributeKey(traceId, spanId, eventName, attrKey);
+    return this.expandedAttributes.has(key);
   }
 }
