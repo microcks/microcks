@@ -71,14 +71,14 @@ public class GrpcMcpToolConverterTest {
       File artifactFilev2 = new File("target/test-classes/io/github/microcks/util/grpc/petstore-v2.proto");
       // Extract service and resource. + tool converters.
       List<Service> services = serviceService.importServiceDefinition(artifactFilev1, null,
-            new ArtifactInfo("petstore-v1.proto", true));
+            new ArtifactInfo("petstore-v1.proto", true), null);
       servicev1 = services.getFirst();
       List<Resource> resources = resourceRepository.findByServiceIdAndType(servicev1.getId(),
             ResourceType.PROTOBUF_DESCRIPTOR);
       toolConverterv1 = new GrpcMcpToolConverter(servicev1, resources.getFirst(), null, new ObjectMapper());
       // For v2.
       services = serviceService.importServiceDefinition(artifactFilev2, null,
-            new ArtifactInfo("petstore-v2.proto", true));
+            new ArtifactInfo("petstore-v2.proto", true), null);
       servicev2 = services.getFirst();
       resources = resourceRepository.findByServiceIdAndType(servicev2.getId(), ResourceType.PROTOBUF_DESCRIPTOR);
       toolConverterv2 = new GrpcMcpToolConverter(servicev2, resources.getFirst(), null, new ObjectMapper());
