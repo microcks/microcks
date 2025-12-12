@@ -49,6 +49,9 @@ data:
     {{- if .Values.features.async.sns.region }}
     features.feature.async-api.endpoint-SNS={{ .Values.features.async.sns.region }}{{ if .Values.features.async.sns.endpointOverride }} at {{ .Values.features.async.sns.endpointOverride }}{{ end }}
     {{- end }}
+    {{- if .Values.features.openapi.docTemplate }}
+    features.feature.openapi.doc-template={{ .Values.features.openapi.docTemplate }}
+    {{- end }}
 
     features.feature.ai-copilot.enabled={{ .Values.features.aiCopilot.enabled }}
   application.properties: |-
@@ -127,7 +130,7 @@ data:
     {{- end }}
 
     {{- if and (.Values.microcks.grpcEnableTLS) (not .Values.gatewayRoutes) }}
-    
+
     # Grpc server properties
     grpc.server.certChainFilePath=/deployments/config/grpc/tls.crt
     grpc.server.privateKeyFilePath=/deployments/config/grpc/tls.key
@@ -157,7 +160,7 @@ data:
     <configuration scan="true">
       <!-- Stop output INFO at start -->
       <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
-    
+
       <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
           <charset>utf-8</charset>
@@ -523,7 +526,7 @@ data:
         {{- if .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
     %kube.kafka.sasl.login.callback.handler.class={{ .Values.features.async.kafka.authentication.saslLoginCallbackHandlerClass }}
         {{- end }}
-    
+
     %kube.mp.messaging.incoming.microcks-services-updates.security.protocol=SASL_SSL
       {{- if .Values.features.async.kafka.authentication.truststoreSecretRef }}
     %kube.mp.messaging.incoming.microcks-services-updates.ssl.truststore.location=/deployments/config/kafka/truststore/{{ .Values.features.async.kafka.authentication.truststoreSecretRef.storeKey }}
