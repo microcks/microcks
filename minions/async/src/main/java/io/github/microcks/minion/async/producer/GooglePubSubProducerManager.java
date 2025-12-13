@@ -206,6 +206,7 @@ public class GooglePubSubProducerManager {
 
       // Produce operation name part of topic name.
       String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
+      operationName = operationName.replace('/', '-');
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
