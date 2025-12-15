@@ -34,6 +34,7 @@ import io.github.microcks.util.dispatcher.FallbackSpecification;
 import io.github.microcks.util.dispatcher.JsonEvaluationSpecification;
 import io.github.microcks.util.dispatcher.ProxyFallbackSpecification;
 
+import groovy.transform.ASTTest;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -41,6 +42,8 @@ import org.springframework.aot.hint.TypeReference;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Profile;
+
+import java.util.Arrays;
 
 /**
  * A configuration for providing native compilation hints to Graal VM.
@@ -93,11 +96,11 @@ public class NativeConfiguration {
                MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
-         hints.reflection().registerType(McpSchema.class, MemberCategory.PUBLIC_CLASSES);
-         hints.reflection().registerType(McpSchema.InitializeRequest.class, MemberCategory.DECLARED_FIELDS,
-               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
-         hints.reflection().registerType(McpSchema.CallToolRequest.class, MemberCategory.DECLARED_FIELDS,
-               MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         // Register all inner classes in io.github.microcks.util.ai.McpSchema class.
+         Arrays.stream(io.github.microcks.util.ai.McpSchema.class.getClasses()).forEach(clazz -> {
+            hints.reflection().registerType(clazz, MemberCategory.DECLARED_FIELDS,
+                  MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+         });
 
          hints.reflection().registerType(
                TypeReference.of("org.springframework.security.web.access.HandlerMappingIntrospectorRequestTransformer"),
