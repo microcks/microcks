@@ -100,6 +100,11 @@ public class NativeConfiguration {
          Arrays.stream(io.github.microcks.util.ai.McpSchema.class.getClasses()).forEach(clazz -> {
             hints.reflection().registerType(clazz, MemberCategory.DECLARED_FIELDS,
                   MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+            // Then recurse on subclasses as well...
+            Arrays.stream(clazz.getClasses()).forEach(aClazz -> {
+               hints.reflection().registerType(aClazz, MemberCategory.DECLARED_FIELDS,
+                     MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+            });
          });
 
          hints.reflection().registerType(
