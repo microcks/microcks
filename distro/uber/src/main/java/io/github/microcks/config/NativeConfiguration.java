@@ -93,6 +93,7 @@ public class NativeConfiguration {
                MemberCategory.DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS,
                MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
 
+         hints.reflection().registerType(McpSchema.class, MemberCategory.PUBLIC_CLASSES);
          hints.reflection().registerType(McpSchema.InitializeRequest.class, MemberCategory.DECLARED_FIELDS,
                MemberCategory.INVOKE_DECLARED_METHODS, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
          hints.reflection().registerType(McpSchema.CallToolRequest.class, MemberCategory.DECLARED_FIELDS,
