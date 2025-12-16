@@ -97,7 +97,7 @@ export class HourInvocationsBarChartComponent implements OnInit, OnChanges {
 
       // compute index for extracting stats
       const startIndex = newHour * 60;
-      const endIndex = ((++newHour) * 60) - 1;
+      const endIndex = (newHour + 1) * 60;
 
       // transform minute object into an array of object(k, v) ascending sorted.
       /*
@@ -113,7 +113,7 @@ export class HourInvocationsBarChartComponent implements OnInit, OnChanges {
         .map(([key, value]) => ({ key, value, total: value }))
         .sort((a, b) => d3.ascending(parseInt(a.key), parseInt(b.key)))
         .slice(startIndex, endIndex);
-      
+
       const max = d3.max(minuteData, (d: { key: string; value: any, total: any; }) => d.total);
       x.domain(d3.range(60).map((v) => v.toString()));
       y.domain([0, max || 100]);
