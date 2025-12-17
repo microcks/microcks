@@ -18,18 +18,12 @@ package io.github.microcks.minion.async.producer;
 
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +44,6 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -65,7 +58,7 @@ import static org.testcontainers.shaded.org.awaitility.Awaitility.await;
  * @author laurent
  */
 @Testcontainers
-public class AmazonSQSProducerManagerIT {
+class AmazonSQSProducerManagerIT {
 
    private static final String QUEUE_NAME = "UsersignedupAPI-030-user-signedup";
    private static final Network NETWORK = Network.newNetwork();
@@ -80,7 +73,7 @@ public class AmazonSQSProducerManagerIT {
    @BeforeEach
    void beforeEach() {
       sqsClient = SqsClient.builder().endpointOverride(localStackContainer.getEndpoint())
-            .endpointOverride(localStackContainer.getEndpoint()).region(Region.of(localStackContainer.getRegion()))
+            .region(Region.of(localStackContainer.getRegion()))
             .credentialsProvider(StaticCredentialsProvider.create(
                   AwsBasicCredentials.create(localStackContainer.getAccessKey(), localStackContainer.getSecretKey())))
             .build();
@@ -153,7 +146,7 @@ public class AmazonSQSProducerManagerIT {
                return false;
             });
 
-      // Consume messages on queue during 1 second.
+      // Consume messages on queue during 2 seconds.
       List<String> messages = consumeMessagesFromQueue(sqsClient, String.valueOf(queueUrl), 2000);
 
       // Assert.
@@ -183,48 +176,5 @@ public class AmazonSQSProducerManagerIT {
          }
       }
       return messages;
-   }
-
-   private static class FakeMicrocksAPIConnector implements MicrocksAPIConnector {
-
-      private String serviceId;
-      private String asyncAPIContent;
-
-      FakeMicrocksAPIConnector(String serviceId, String asyncAPIContent) {
-         this.serviceId = serviceId;
-         this.asyncAPIContent = asyncAPIContent;
-      }
-
-      @Override
-      public KeycloakConfig getKeycloakConfig() {
-         return null;
-      }
-
-      @Override
-      public List<Service> listServices(String authorization, int page, int size) {
-         return null;
-      }
-
-      @Override
-      public ServiceView getService(String authorization, String serviceId, boolean messages) {
-         return null;
-      }
-
-      @Override
-      public List<Resource> getResources(String serviceId) {
-         if (this.serviceId.equals(serviceId)) {
-            Resource resource = new Resource();
-            resource.setId("578497d2-2695-4aff-b7c6-ff7b9a373aa9");
-            resource.setType(ResourceType.ASYNC_API_SPEC);
-            resource.setContent(this.asyncAPIContent);
-            return List.of(resource);
-         }
-         return Collections.emptyList();
-      }
-
-      @Override
-      public TestCaseResult reportTestCaseResult(String testResultId, TestCaseReturnDTO testCaseReturn) {
-         return null;
-      }
    }
 }

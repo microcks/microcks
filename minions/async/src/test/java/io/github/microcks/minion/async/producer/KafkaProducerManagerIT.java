@@ -17,18 +17,12 @@ package io.github.microcks.minion.async.producer;
 
 import io.github.microcks.domain.EventMessage;
 import io.github.microcks.domain.Operation;
-import io.github.microcks.domain.Resource;
-import io.github.microcks.domain.ResourceType;
 import io.github.microcks.domain.Service;
 import io.github.microcks.domain.ServiceType;
-import io.github.microcks.domain.ServiceView;
-import io.github.microcks.domain.TestCaseResult;
 import io.github.microcks.minion.async.AsyncMockDefinition;
 import io.github.microcks.minion.async.AsyncMockRepository;
 import io.github.microcks.minion.async.SchemaRegistry;
-import io.github.microcks.minion.async.client.KeycloakConfig;
 import io.github.microcks.minion.async.client.MicrocksAPIConnector;
-import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 import io.github.microcks.util.AvroUtil;
 
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
@@ -65,6 +59,7 @@ import org.testcontainers.utility.DockerImageName;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -262,7 +257,7 @@ class KafkaProducerManagerIT {
       }
 
       // Check that schemas have been put into registry.
-      URL url = new URL(kafkaProducerManager.schemaRegistryUrl.get() + "/subjects");
+      URL url = URI.create(kafkaProducerManager.schemaRegistryUrl.get() + "/subjects").toURL();
       HttpURLConnection httpConn = (HttpURLConnection) url.openConnection();
       httpConn.setRequestMethod("GET");
       httpConn.setRequestProperty(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON.getMediaType());
@@ -376,49 +371,6 @@ class KafkaProducerManagerIT {
          fail("Exception while connecting to Kafka broker", e);
       }
       return messages;
-   }
-
-   private static class FakeMicrocksAPIConnector implements MicrocksAPIConnector {
-
-      private String serviceId;
-      private String asyncAPIContent;
-
-      FakeMicrocksAPIConnector(String serviceId, String asyncAPIContent) {
-         this.serviceId = serviceId;
-         this.asyncAPIContent = asyncAPIContent;
-      }
-
-      @Override
-      public KeycloakConfig getKeycloakConfig() {
-         return null;
-      }
-
-      @Override
-      public List<Service> listServices(String authorization, int page, int size) {
-         return null;
-      }
-
-      @Override
-      public ServiceView getService(String authorization, String serviceId, boolean messages) {
-         return null;
-      }
-
-      @Override
-      public List<Resource> getResources(String serviceId) {
-         if (this.serviceId.equals(serviceId)) {
-            Resource resource = new Resource();
-            resource.setId("578497d2-2695-4aff-b7c6-ff7b9a373aa9");
-            resource.setType(ResourceType.ASYNC_API_SPEC);
-            resource.setContent(this.asyncAPIContent);
-            return List.of(resource);
-         }
-         return Collections.emptyList();
-      }
-
-      @Override
-      public TestCaseResult reportTestCaseResult(String testResultId, TestCaseReturnDTO testCaseReturn) {
-         return null;
-      }
    }
 
    private static class FakeConfig implements Config {
