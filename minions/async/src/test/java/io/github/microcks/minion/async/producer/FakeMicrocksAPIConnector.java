@@ -26,6 +26,7 @@ import io.github.microcks.minion.async.client.dto.TestCaseReturnDTO;
 
 import java.util.Collections;
 import java.util.List;
+
 /**
  * A fake implementation of MicrocksAPIConnector for testing purposes.
  * @author laurent
