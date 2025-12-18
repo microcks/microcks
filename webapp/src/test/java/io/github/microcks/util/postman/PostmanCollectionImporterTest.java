@@ -83,8 +83,7 @@ class PostmanCollectionImporterTest {
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
-               fail("No exception should be thrown when importing message definitions.");
+               fail("No exception should be thrown when importing message definitions.", e);
             }
             assertEquals(1, exchanges.size());
             Exchange exchange = exchanges.get(0);
@@ -336,8 +335,7 @@ class PostmanCollectionImporterTest {
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
-               fail("No exception should be thrown when importing message definitions.");
+               fail("No exception should be thrown when importing message definitions.", e);
             }
             assertEquals(2, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
@@ -379,8 +377,7 @@ class PostmanCollectionImporterTest {
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
-               fail("No exception should be thrown when importing message definitions.");
+               fail("No exception should be thrown when importing message definitions.", e);
             }
             assertEquals(2, exchanges.size());
             assertEquals(2, operation.getResourcePaths().size());

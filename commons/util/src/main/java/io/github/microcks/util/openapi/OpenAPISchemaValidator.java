@@ -278,18 +278,19 @@ public class OpenAPISchemaValidator {
       if (contentNode == null || contentNode.isMissingNode()) {
          // If no exact matching, try loose matching browsing the content types.
          // We may have 'application/json; charset=utf-8' on one side and 'application/json;charset=UTF-8' on the other.
-         Iterator<Map.Entry<String, JsonNode>> contents = responseCodeNode.path("content").fields();
-         while (contents.hasNext()) {
-            Map.Entry<String, JsonNode> contentTypeNode = contents.next();
-            if (contentTypeNode.getKey().replace(" ", "").equalsIgnoreCase(contentType.replace(" ", ""))) {
-               return contentTypeNode.getValue();
+         Iterator<String> contentNames = responseCodeNode.path("content").fieldNames();
+         while (contentNames.hasNext()) {
+            String contentName = contentNames.next();
+            if (contentName.replace(" ", "").equalsIgnoreCase(contentType.replace(" ", ""))) {
+               return responseCodeNode.path("content").get(contentName);
             }
          }
 
          // If no match here, it's maybe contentType contains charset but not the spec.
          // Remove charset information and try again.
-         if (contentType.contains("charset=") && contentType.indexOf(";") > 0) {
-            return getMessageContentNode(responseCodeNode, contentType.substring(0, contentType.indexOf(";")));
+         int semicolonIndex = contentType.indexOf(";");
+         if (contentType.contains("charset=") && semicolonIndex > 0) {
+            return getMessageContentNode(responseCodeNode, contentType.substring(0, semicolonIndex));
          }
       }
       return contentNode;
@@ -306,8 +307,7 @@ public class OpenAPISchemaValidator {
          if (jsonNode.has(structure) && jsonNode.path(structure).isArray()) {
             ArrayNode arrayNode = (ArrayNode) jsonNode.path(structure);
             for (int i = 0; i < arrayNode.size(); i++) {
-               JsonNode structureNode = arrayNode.get(i);
-               structureNode = convertOpenAPISchemaToJsonSchema(structureNode);
+               convertOpenAPISchemaToJsonSchema(arrayNode.get(i));
             }
          }
       }
@@ -332,8 +332,7 @@ public class OpenAPISchemaValidator {
    /** Deal with converting properties of a Json node object. */
    private static void convertProperties(Iterator<JsonNode> properties) {
       while (properties.hasNext()) {
-         JsonNode property = properties.next();
-         property = convertOpenAPISchemaToJsonSchema(property);
+         convertOpenAPISchemaToJsonSchema(properties.next());
       }
    }
 
@@ -349,8 +348,7 @@ public class OpenAPISchemaValidator {
    private static boolean isOneOfNullable(ArrayNode oneOf) {
       for (Iterator<JsonNode> it = oneOf.iterator(); it.hasNext();) {
          JsonNode current = it.next();
-         if (current.isObject() && ((ObjectNode) current).has("type")
-               && ((ObjectNode) current).get("type").asText().equals("null")) {
+         if (current.isObject() && current.has("type") && current.get("type").asText().equals("null")) {
             return true;
          }
       }
@@ -359,14 +357,11 @@ public class OpenAPISchemaValidator {
 
    /** Deal with converting type of a Json node object. */
    private static void convertType(JsonNode node) {
-      if (node.has("type") && !node.path("type").asText().equals("object")) {
-
+      if (node.has("type") && !node.path("type").asText().equals("object") && node.path(NULLABLE).asBoolean()) {
          // Convert nullable in additional type and remove node.
-         if (node.path(NULLABLE).asBoolean()) {
-            String type = node.path("type").asText();
-            ArrayNode typeArray = ((ObjectNode) node).putArray("type");
-            typeArray.add(type).add("null");
-         }
+         String type = node.path("type").asText();
+         ArrayNode typeArray = ((ObjectNode) node).putArray("type");
+         typeArray.add(type).add("null");
       }
 
       // Handle OneOf, AnyOf & AllOf.

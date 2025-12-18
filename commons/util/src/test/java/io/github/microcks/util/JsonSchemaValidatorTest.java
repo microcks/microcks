@@ -15,10 +15,11 @@
  */
 package io.github.microcks.util;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,8 +37,8 @@ class JsonSchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema.json"));
+         schemaText = Files.readString(new File("target/test-classes/io/github/microcks/util/car-schema.json").toPath(),
+               StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -56,8 +57,8 @@ class JsonSchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema.json"));
+         schemaText = Files.readString(new File("target/test-classes/io/github/microcks/util/car-schema.json").toPath(),
+               StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {
@@ -86,8 +87,9 @@ class JsonSchemaValidatorTest {
 
       try {
          // Load schema from file.
-         schemaText = FileUtils
-               .readFileToString(new File("target/test-classes/io/github/microcks/util/car-schema-no-addon.json"));
+         schemaText = Files.readString(
+               new File("target/test-classes/io/github/microcks/util/car-schema-no-addon.json").toPath(),
+               StandardCharsets.UTF_8);
          // Validate Json according schema.
          valid = JsonSchemaValidator.isJsonValid(schemaText, jsonText);
       } catch (Exception e) {

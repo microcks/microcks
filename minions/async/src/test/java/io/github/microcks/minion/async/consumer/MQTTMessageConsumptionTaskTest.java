@@ -62,9 +62,9 @@ class MQTTMessageConsumptionTaskTest {
     * @Test public void testTLSConnection() { try { MqttConnectOptions connectOptions = new MqttConnectOptions();
     * connectOptions.setAutomaticReconnect(false); connectOptions.setCleanSession(true);
     * connectOptions.setConnectionTimeout(10);
-    * 
+    *
     * connectOptions.setUserName("admin"); connectOptions.setPassword("admin".toCharArray());
-    * 
+    *
     * AsyncTestSpecification specification = new AsyncTestSpecification(); Secret secret = new Secret();
     * secret.setCaCertPem("-----BEGIN CERTIFICATE-----\n" +
     * "MIIDTTCCAjWgAwIBAgIEZ3f4vzANBgkqhkiG9w0BAQsFADBXMQswCQYDVQQGEwJG\n" +
@@ -87,22 +87,22 @@ class MQTTMessageConsumptionTaskTest {
     * "cPDGdmeplII2oAxj1qrAIFtaUZyyhDOmFFpQYm27+bYh\n" + "-----END CERTIFICATE-----"); specification.setSecret(secret);
     * File trustStore = ConsumptionTaskCommons.installBrokerCertificate(specification);
     * System.err.println("Using trustStore: " + trustStore.getAbsolutePath());
-    * 
+    *
     * Properties sslProperties = new Properties(); sslProperties.put("com.ibm.ssl.trustStore",
     * trustStore.getAbsolutePath()); sslProperties.put("com.ibm.ssl.trustStorePassword",
     * ConsumptionTaskCommons.TRUSTSTORE_PASSWORD); sslProperties.put("com.ibm.ssl.trustStoreType", "JKS");
     * connectOptions.setSSLProperties(sslProperties);
-    * 
+    *
     * IMqttClient subscriber = new
     * MqttClient("ssl://artemis-my-acceptor-0-svc-rte-microcks.apps.cluster-87b8.87b8.example.opentlc.com:443",
     * "microcks-async-minion-test-" + System.currentTimeMillis()); subscriber.connect(connectOptions);
-    * 
+    *
     * // Start subscribing to the server endpoint topic. subscriber.subscribe("streetlights-event-lighting-measured",
     * (topic, mqttMessage) -> { System.err.println("Received a new MQTT Message: " + new
     * String(mqttMessage.getPayload())); });
-    * 
+    *
     * Thread.sleep(10000L);
-    * 
+    *
     * } catch (Throwable t) { t.printStackTrace(); fail(); } }
     */
 }

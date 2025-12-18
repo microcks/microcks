@@ -33,7 +33,7 @@ public class ServiceState {
    private String serviceId;
    private String key;
    private String value;
-   @Indexed(expireAfterSeconds = 0)
+   @Indexed(expireAfter = "0s")
    private Date expireAt;
 
 

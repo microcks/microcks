@@ -80,8 +80,7 @@ class PostmanWorkspaceCollectionImporterTest {
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
-               fail("No exception should be thrown when importing message definitions.");
+               fail("No exception should be thrown when importing message definitions.", e);
             }
             assertEquals(1, exchanges.size());
             Exchange exchange = exchanges.get(0);

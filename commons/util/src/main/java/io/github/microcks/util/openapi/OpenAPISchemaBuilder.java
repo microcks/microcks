@@ -23,8 +23,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.microcks.util.JsonSchemaValidator;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Helper class for building/inferring a Json Schema from Json node object.
@@ -73,12 +71,10 @@ public class OpenAPISchemaBuilder {
             parentNodeSchemaNode.put(JSON_SCHEMA_TYPE, JSON_SCHEMA_OBJECT_TYPE);
             ObjectNode propertiesNodeSchemaNode = parentNodeSchemaNode.putObject(JSON_SCHEMA_PROPERTIES);
 
-            Iterator<Map.Entry<String, JsonNode>> fieldsNodes = currentNode.fields();
-            while (fieldsNodes.hasNext()) {
-               Map.Entry<String, JsonNode> fieldsNode = fieldsNodes.next();
-               ObjectNode fieldNodeSchemaNode = propertiesNodeSchemaNode.putObject(fieldsNode.getKey());
-               traverseNode(fieldsNode.getValue(), fieldNodeSchemaNode, mapper);
-            }
+            currentNode.fieldNames().forEachRemaining(fieldName -> {
+               ObjectNode fieldNodeSchemaNode = propertiesNodeSchemaNode.putObject(fieldName);
+               traverseNode(currentNode.get(fieldName), fieldNodeSchemaNode, mapper);
+            });
             break;
          case ARRAY:
             parentNodeSchemaNode.put(JSON_SCHEMA_TYPE, JSON_SCHEMA_ARRAY_TYPE);

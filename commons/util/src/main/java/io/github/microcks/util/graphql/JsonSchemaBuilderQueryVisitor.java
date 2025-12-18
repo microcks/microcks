@@ -24,6 +24,7 @@ import graphql.analysis.QueryVisitorFragmentSpreadEnvironment;
 import graphql.analysis.QueryVisitorInlineFragmentEnvironment;
 import graphql.language.Type;
 import graphql.language.TypeName;
+import graphql.language.Node;
 import graphql.schema.GraphQLEnumType;
 import graphql.schema.GraphQLEnumValueDefinition;
 import graphql.schema.GraphQLObjectType;
@@ -72,7 +73,8 @@ public class JsonSchemaBuilderQueryVisitor implements QueryVisitor {
       // Even if type is marked as optional in the GraphQL Schema, it must be present and
       // serialized as null into the Json response. We have to unwrap it first.
       GraphQLOutputType outputType = queryVisitorFieldEnvironment.getFieldDefinition().getType();
-      Type definitionType = queryVisitorFieldEnvironment.getFieldDefinition().getDefinition().getType();
+      Type<? extends Node<?>> definitionType = queryVisitorFieldEnvironment.getFieldDefinition().getDefinition()
+            .getType();
       if (TypeUtil.isNonNull(definitionType)) {
          definitionType = TypeUtil.unwrapOne(definitionType);
       }

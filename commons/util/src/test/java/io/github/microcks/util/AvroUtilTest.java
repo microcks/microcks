@@ -227,9 +227,6 @@ class AvroUtilTest {
       userv1.put("age", 42);
 
       assertFalse(AvroUtil.validate(v2Schema, userv1));
-      // The Avro validate method fails because it does not validate the field name
-      // just the position. This make it not usable in our context.
-      //assertFalse(GenericData.get().validate(v2Schema, userv1));
 
       List<String> errors = AvroUtil.getValidationErrors(v2Schema, userv1);
       assertEquals(1, errors.size());

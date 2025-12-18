@@ -107,7 +107,6 @@ class TracingControllerIT extends AbstractBaseIT {
 
 
          // Verify span data structure - we expect at least one span with name "GET /rest/pastry-details/1.0.0/pastry"
-         System.out.println(spansResponse.getBody());
          assertThat(spansResponse.getBody().toString()).contains("/rest/pastry-details/1.0.0/pastry")
                .contains("processInvocation").contains("explain-trace")
                .contains("Selected dispatcher and rules for this invocation")

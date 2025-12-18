@@ -45,7 +45,7 @@ class EvaluationContextTest {
       context.registerFunction("now", NowELFunction.class);
 
       Class<ELFunction> functionClazz = context.lookupFunction("now");
-      ELFunction function = functionClazz.newInstance();
+      ELFunction function = functionClazz.getDeclaredConstructor().newInstance();
 
       assertEquals(NowELFunction.class, function.getClass());
 

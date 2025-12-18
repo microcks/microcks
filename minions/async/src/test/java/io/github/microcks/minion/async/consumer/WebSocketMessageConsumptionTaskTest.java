@@ -51,14 +51,14 @@ public class WebSocketMessageConsumptionTaskTest {
 
    /*
     * @Test public void testBasicReceive() {
-    * 
+    *
     * try { WebSocketClient client = new WebSocketClient(); //Session session =
     * ContainerProvider.getWebSocketContainer().connectToServer(client,
     * URI.create("ws://localhost:8081/api/ws/User+signed-up+WebSocket+API/0.1.9/user/signedup")); Session session =
     * ContainerProvider.getWebSocketContainer().connectToServer(client, URI.create("ws://localhost:4000/websocket"));
-    * 
+    *
     * Thread.sleep(10000L);
-    * 
+    *
     * List<ConsumedMessage> messages = client.getMessages(); for (int i=0; i<messages.size(); i++) {
     * System.err.println("Received: " + new String(messages.get(i).getPayload(), "UTF-8")); } } catch (Exception e) {
     * e.printStackTrace(); } }

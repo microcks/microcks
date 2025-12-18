@@ -146,7 +146,6 @@ class AMQPMessageConsumptionTaskIT {
             Map<String, Object> props = new HashMap<>();
             props.put("severity", "info");
             //        headers.put("x-match", "any");
-            System.out.println("Sending ...");
             sendMessageIntoExchange(exchangeName, "headers", "", false, props);
          } catch (IOException | TimeoutException | InterruptedException e) {
             throw new RuntimeException("Error while sending message to queue", e);
@@ -175,7 +174,6 @@ class AMQPMessageConsumptionTaskIT {
          try {
             Thread.sleep(secondsToWait);
             Map<String, Object> headers = new HashMap<>();
-            System.out.println("Sending ...");
             sendMessageIntoExchange(exchangeName, "headers", "", false, headers);
          } catch (IOException | TimeoutException | InterruptedException e) {
             throw new RuntimeException("Error while sending message to queue", e);
@@ -235,7 +233,6 @@ class AMQPMessageConsumptionTaskIT {
       new Thread(() -> {
          try {
             Thread.sleep(secondsToWait);
-            System.out.println("Sending ...");
             sendMessageIntoExchange(exchangeName, "fanout", "", false, null);
          } catch (IOException | TimeoutException | InterruptedException e) {
             throw new RuntimeException("Error while sending message to queue", e);

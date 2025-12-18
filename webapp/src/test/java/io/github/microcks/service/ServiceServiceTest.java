@@ -75,8 +75,7 @@ class ServiceServiceTest {
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       assertNotNull(services);
@@ -492,8 +491,7 @@ class ServiceServiceTest {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films.graphql");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films.graphql", true));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       assertNotNull(services);
@@ -521,8 +519,7 @@ class ServiceServiceTest {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/graphql/films-postman.json");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("films-postman.json", false));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       // Inspect Service own attributes.
@@ -637,8 +634,7 @@ class ServiceServiceTest {
          File artifactFile = new File("target/test-classes/io/github/microcks/util/grpc/hello-v1.proto");
          services = service.importServiceDefinition(artifactFile, null, new ArtifactInfo("hello-v1.proto", true));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       assertNotNull(services);
@@ -671,8 +667,7 @@ class ServiceServiceTest {
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("HelloService.postman.json", false));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       // Inspect Service own attributes.
@@ -791,8 +786,7 @@ class ServiceServiceTest {
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-raw-openapi.yaml", true));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       try {
@@ -800,8 +794,7 @@ class ServiceServiceTest {
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-postman.json", false));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       try {
@@ -809,8 +802,7 @@ class ServiceServiceTest {
          services = service.importServiceDefinition(artifactFile, null,
                new ArtifactInfo("weather-forecast-metadata.yaml", false));
       } catch (MockRepositoryImportException mrie) {
-         mrie.printStackTrace();
-         fail("No MockRepositoryImportException should have be thrown");
+         fail("No MockRepositoryImportException should have be thrown", mrie);
       }
 
       // Inspect Service own attributes.

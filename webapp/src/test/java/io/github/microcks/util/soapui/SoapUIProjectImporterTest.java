@@ -92,8 +92,7 @@ class SoapUIProjectImporterTest {
       try {
          exchanges = importer.getMessageDefinitions(service, operation);
       } catch (Exception e) {
-         e.printStackTrace();
-         fail("No exception should be thrown when importing message definitions.");
+         fail("No exception should be thrown when importing message definitions.", e);
       }
       assertEquals(2, exchanges.size());
       for (Exchange exchange : exchanges) {

@@ -238,20 +238,18 @@ public class AvroUtil {
     * @return True if the object is compliant with supplied schema, false otherwise.
     */
    public static boolean validate(Schema schema, Object datum) {
-      switch (schema.getType()) {
-         case RECORD:
-            if (datum instanceof GenericRecord genericRecord) {
-               for (Schema.Field f : schema.getFields()) {
-                  if (!genericRecord.hasField(f.name()))
-                     return false;
-                  if (!validate(f.schema(), genericRecord.get(f.pos())))
-                     return false;
-               }
-               return true;
+      if (schema.getType() == Schema.Type.RECORD) {
+         if (datum instanceof GenericRecord genericRecord) {
+            for (Schema.Field f : schema.getFields()) {
+               if (!genericRecord.hasField(f.name()))
+                  return false;
+               if (!validate(f.schema(), genericRecord.get(f.pos())))
+                  return false;
             }
-         default:
-            return GenericData.get().validate(schema, datum);
+            return true;
+         }
       }
+      return GenericData.get().validate(schema, datum);
    }
 
    /**

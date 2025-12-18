@@ -23,7 +23,7 @@ import org.w3c.dom.ls.LSResourceResolver;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.net.URL;
+import java.net.URI;
 import java.util.Map;
 
 /**
@@ -63,8 +63,9 @@ public class XmlSchemaURLResolver implements LSResourceResolver {
             sanitizedSystemId = systemId.substring(2);
          }
          try {
-            URL resourceURL = new URL(baseResourceURL + (baseResourceURL.endsWith("/") ? "" : "/") + sanitizedSystemId);
-            resourceStream = resourceURL.openStream();
+            URI resourceURI = URI
+                  .create(baseResourceURL + (baseResourceURL.endsWith("/") ? "" : "/") + sanitizedSystemId);
+            resourceStream = resourceURI.toURL().openStream();
          } catch (Exception e) {
             log.error("Failed to open stream on {}/{}", baseResourceURL, sanitizedSystemId, e);
          }
@@ -91,7 +92,6 @@ public class XmlSchemaURLResolver implements LSResourceResolver {
       private String publicId;
       private String baseURI;
       private String encoding;
-      private boolean certifiedText;
 
       @Override
       public Reader getCharacterStream() {
@@ -170,7 +170,7 @@ public class XmlSchemaURLResolver implements LSResourceResolver {
 
       @Override
       public void setCertifiedText(boolean certifiedText) {
-         this.certifiedText = certifiedText;
+         // No-op: certifiedText is not used in this implementation
       }
    }
 }

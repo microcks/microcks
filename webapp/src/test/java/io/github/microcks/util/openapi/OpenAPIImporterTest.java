@@ -486,8 +486,7 @@ class OpenAPIImporterTest {
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
-               fail("No exception should be thrown when importing message definitions.");
+               fail("No exception should be thrown when importing message definitions.", e);
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
@@ -639,8 +638,7 @@ class OpenAPIImporterTest {
             try {
                exchanges = importer.getMessageDefinitions(service, operation);
             } catch (Exception e) {
-               e.printStackTrace();
-               fail("No exception should be thrown when importing message definitions.");
+               fail("No exception should be thrown when importing message definitions.", e);
             }
             assertEquals(1, exchanges.size());
             assertEquals(1, operation.getResourcePaths().size());
@@ -1756,8 +1754,7 @@ class OpenAPIImporterTest {
             }
          }
       } catch (Exception e) {
-         e.printStackTrace();
-         fail("Exception should not be thrown");
+         fail("Exception should not be thrown", e);
       }
    }
 
