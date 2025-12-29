@@ -17,25 +17,25 @@ package io.github.microcks.minion.async.consumer;
 
 import io.github.microcks.minion.async.AsyncTestSpecification;
 
-import com..api.gax.core.CredentialsProvider;
-import com..api.gax.core.FixedCredentialsProvider;
-import com..api.gax.core.NoCredentialsProvider;
-import com..api.gax.grpc.GrpcTransportChannel;
-import com..api.gax.rpc.FixedTransportChannelProvider;
-import com..api.gax.rpc.NotFoundException;
-import com..api.gax.rpc.TransportChannelProvider;
-import com..auth.oauth2.Credentials;
-import com..cloud.pubsub.v1.MessageReceiver;
-import com..cloud.pubsub.v1.Subscriber;
-import com..cloud.pubsub.v1.SubscriptionAdminClient;
-import com..cloud.pubsub.v1.SubscriptionAdminSettings;
-import com..protobuf.Duration;
-import com..pubsub.v1.ExpirationPolicy;
-import com..pubsub.v1.ProjectSubscriptionName;
-import com..pubsub.v1.PushConfig;
-import com..pubsub.v1.Subscription;
-import com..pubsub.v1.SubscriptionName;
-import com..pubsub.v1.TopicName;
+import com.google.api.gax.core.CredentialsProvider;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
+import com.google.api.gax.rpc.NotFoundException;
+import com.google.api.gax.rpc.TransportChannelProvider;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.pubsub.v1.MessageReceiver;
+import com.google.cloud.pubsub.v1.Subscriber;
+import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
+import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
+import com.google.protobuf.Duration;
+import com.google.pubsub.v1.ExpirationPolicy;
+import com.google.pubsub.v1.ProjectSubscriptionName;
+import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.Subscription;
+import com.google.pubsub.v1.SubscriptionName;
+import com.google.pubsub.v1.TopicName;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import org.jboss.logging.Logger;
@@ -50,28 +50,28 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on  Cloud PubSub. Endpoint URL
+ * An implementation of <code>MessageConsumptionTask</code> that consumes a queue on Google Cloud PubSub. Endpoint URL
  * should be specified using the following form:
- * <code>pubsub://{projectId}/{topic}[?option1=value1&amp;option2=value2]</code>
+ * <code>googlepubsub://{projectId}/{topic}[?option1=value1&amp;option2=value2]</code>
  * @author laurent
  */
-public class PubSubMessageConsumptionTask implements MessageConsumptionTask {
+public class GooglePubSubMessageConsumptionTask implements MessageConsumptionTask {
 
    /** Get a JBoss logging logger. */
    private final Logger logger = Logger.getLogger(getClass());
 
    /** The string for Regular Expression that helps validating acceptable endpoints. */
-   public static final String ENDPOINT_PATTERN_STRING = "pubsub://(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
+   public static final String ENDPOINT_PATTERN_STRING = "googlepubsub://(?<projectId>[a-zA-Z0-9-_]+)/(?<topic>[a-zA-Z0-9-_\\.]+)(\\?(?<options>.+))?";
    /** The Pattern for matching groups within the endpoint regular expression. */
    public static final Pattern ENDPOINT_PATTERN = Pattern.compile(ENDPOINT_PATTERN_STRING);
 
-   private static final String CLOUD_OAUTH_SCOPE = "https://www.apis.com/auth/cloud-platform";
+   private static final String CLOUD_OAUTH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
 
    private static final String SUBSCRIPTION_PREFIX = "-microcks-test";
 
    /**
     * emulatorHost is an option key (for the endpoint specification) that allows the test to specify a PubSub emulator
-    * to use instead of  Cloud
+    * to use instead of Google Cloud
     */
    public static final String EMULATOR_HOST_OPTION = "emulatorHost";
 
@@ -90,7 +90,7 @@ public class PubSubMessageConsumptionTask implements MessageConsumptionTask {
     * Creates a new consumption task from an Async test specification.
     * @param testSpecification The specification holding endpointURL and timeout.
     */
-   public PubSubMessageConsumptionTask(AsyncTestSpecification testSpecification) {
+   public GooglePubSubMessageConsumptionTask(AsyncTestSpecification testSpecification) {
       this.specification = testSpecification;
    }
 
@@ -150,7 +150,7 @@ public class PubSubMessageConsumptionTask implements MessageConsumptionTask {
       }
    }
 
-   /** Initialize  Pub Sub consumer from test properties. */
+   /** Initialize Google Pub Sub consumer from test properties. */
    private void initializePubSubSubscriber() throws Exception {
       Matcher matcher = ENDPOINT_PATTERN.matcher(specification.getEndpointUrl().trim());
       // Call matcher.find() to be able to use named expressions.
@@ -176,7 +176,7 @@ public class PubSubMessageConsumptionTask implements MessageConsumptionTask {
          byte[] decode = Base64.getDecoder().decode(specification.getSecret().getToken());
          ByteArrayInputStream is = new ByteArrayInputStream(decode);
          credentialsProvider = FixedCredentialsProvider
-               .create(Credentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
+               .create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
       } else {
          credentialsProvider = NoCredentialsProvider.create();
       }
@@ -197,8 +197,8 @@ public class PubSubMessageConsumptionTask implements MessageConsumptionTask {
       } catch (NotFoundException nfe) {
          logger.infof("Subscription {%s} does not exist yet, creating it", subscriptionName);
 
-         // Customize subscription to avoid retention and let  auto-cleanup it.
-         // Put the durations to the minimum values accepted by  cloud.
+         // Customize subscription to avoid retention and let google auto-cleanup it.
+         // Put the durations to the minimum values accepted by Google cloud.
          Subscription subscriptionRequest = Subscription.newBuilder().setName(subscriptionName.toString())
                .setTopic(topicName.toString()).setPushConfig(PushConfig.getDefaultInstance()).setAckDeadlineSeconds(10)
                .setRetainAckedMessages(false).setMessageRetentionDuration(Duration.newBuilder().setSeconds(600).build())
