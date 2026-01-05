@@ -26,7 +26,7 @@ public class UTF8ContentTypeChecker {
          "^(text/[a-z0-9.+-]+|application/([a-z0-9.+-]*\\+(json|xml)|json|xml|javascript|x-www-form-urlencoded))(\\s*;.*)?$",
          Pattern.CASE_INSENSITIVE);
 
-   public static boolean isUtf8Encodable(String contentType) {
+   public static boolean isUTF8Encodable(String contentType) {
       if (contentType == null)
          return false;
       Matcher matcher = UTF8_ENCODABLE_PATTERN.matcher(contentType.trim());
