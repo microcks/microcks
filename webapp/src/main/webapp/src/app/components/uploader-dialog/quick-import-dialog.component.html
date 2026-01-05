@@ -8,17 +8,17 @@
 </div>
 <div class="modal-body">
   <tabset>
-    <tab>
+    <tab [active]="activeTab === 'upload'" (select)="onTabSelect('upload')">
       <ng-template tabHeading>
         <span class="fa fa-upload"></span> Upload Artifact
       </ng-template>
       <app-quick-import-upload-tab [preSelectedFiles]="preSelectedFiles"></app-quick-import-upload-tab>
     </tab>
-    <tab>
+    <tab [active]="activeTab === 'download'" (select)="onTabSelect('download')">
       <ng-template tabHeading>
         <span class="fa fa-download"></span> Download Artifact
       </ng-template>
-      <app-quick-import-download-tab></app-quick-import-download-tab>
+      <app-quick-import-download-tab [prefillUrl]="prefillUrl"></app-quick-import-download-tab>
     </tab>
   </tabset>
 </div>
