@@ -2107,7 +2107,6 @@ class OpenAPIImporterTest {
       Service service = services.getFirst();
       Operation operation = service.getOperations().getFirst();
 
-      // Check that messages have been correctly found.
       List<Exchange> exchanges = null;
       try {
          exchanges = importer.getMessageDefinitions(service, operation);
@@ -2116,33 +2115,78 @@ class OpenAPIImporterTest {
       }
       assertEquals(1, exchanges.size());
 
-      // Validate the request and response
-      for (Exchange exchange : exchanges) {
-         if (exchange instanceof RequestResponsePair entry) {
-            Request request = entry.getRequest();
-            Response response = entry.getResponse();
-            assertNotNull(request);
-            assertNotNull(response);
-            assertEquals("EXAMPLE1", request.getName());
-            assertEquals("EXAMPLE1", response.getName());
-            assertEquals("/id=1", response.getDispatchCriteria());
-            assertEquals("200", response.getStatus());
-            assertEquals("image/png", response.getMediaType());
+      Exchange exchange = exchanges.getFirst();
+      assertInstanceOf(RequestResponsePair.class, exchange);
+      RequestResponsePair entry = (RequestResponsePair) exchange;
+      Response response = entry.getResponse();
+      Request request = entry.getRequest();
 
-            // Verify that the externalValue data URL was processed correctly
-            assertNotNull(response.getContent());
-            assertFalse(response.getContent().isEmpty(), "Response content should not be empty");
+      assertNotNull(request);
+      assertNotNull(response);
+      assertEquals("EXAMPLE1", request.getName());
+      assertEquals("EXAMPLE1", response.getName());
+      assertEquals("/id=1", response.getDispatchCriteria());
+      assertEquals("200", response.getStatus());
+      assertEquals("image/png", response.getMediaType());
 
-            // The externalValue contains a data URL with base64-encoded PNG image
-            // Verify it starts with the PNG signature after base64 decoding
-            // data:image/png;base64,iVBORw0KGgo... should be processed
-            assertTrue(
-                  response.getContent().contains("iVBORw0KGgo")
-                        || response.getContent().startsWith("data:image/png;base64,"),
-                  "Response should contain base64-encoded PNG data or data URL");
-         } else {
-            fail("Exchange has the wrong type. Expecting RequestResponsePair");
-         }
+      // Verify that the externalValue data URL was processed correctly
+      assertNotNull(response.getContent());
+      assertFalse(response.getContent().isEmpty(), "Response content should not be empty");
+
+      // The externalValue contains a data URL with base64-encoded PNG image
+      // Verify it starts with the PNG signature after base64 decoding
+      // data:image/png;base64,iVBORw0KGgo... should be processed
+      assertTrue(
+            response.getContent().contains("iVBORw0KGgo") || response.getContent().startsWith("data:image/png;base64,"),
+            "Response should contain base64-encoded PNG data or data URL");
+
+   }
+
+   @Test
+   void testOpenAPIWithRemoteExternalValueBinaryResponse() {
+      ReferenceResolver resolver = new ReferenceResolver(
+            "https://raw.githubusercontent.com/StartUpNationLabs/microcks/refs/heads/feat/add-relative-and-remote-data-in-external-value/webapp/src/test/resources/io/github/microcks/util/openapi/get-image-openapi-remote-externalvalue.yaml",
+            null, true);
+
+      OpenAPIImporter importer = null;
+      try {
+         importer = new OpenAPIImporter(
+               "target/test-classes/io/github/microcks/util/openapi/get-image-openapi-remote-externalvalue.yaml",
+               resolver);
+      } catch (IOException ioe) {
+         fail("Exception should not be thrown");
       }
+
+      List<Service> services = null;
+      try {
+         services = importer.getServiceDefinitions();
+      } catch (MockRepositoryImportException e) {
+         fail("Exception should not be thrown");
+      }
+      Service service = services.getFirst();
+      Operation operation = service.getOperations().getFirst();
+
+      List<Exchange> exchanges = null;
+      try {
+         exchanges = importer.getMessageDefinitions(service, operation);
+      } catch (Exception e) {
+         fail("No exception should be thrown when importing message definitions.");
+      }
+      assertEquals(1, exchanges.size());
+
+      Exchange exchange = exchanges.getFirst();
+      assertInstanceOf(RequestResponsePair.class, exchange);
+      RequestResponsePair entry = (RequestResponsePair) exchange;
+      Response response = entry.getResponse();
+      Request request = entry.getRequest();
+      assertEquals("200", response.getStatus());
+      assertEquals("image/png", response.getMediaType());
+      assertEquals("EXAMPLE1", request.getName());
+      assertEquals("EXAMPLE1", response.getName());
+      assertEquals("/id=1", response.getDispatchCriteria());
+      assertEquals("200", response.getStatus());
+      assertEquals("image/png", response.getMediaType());
+      assertNotNull(response.getContent());
+      assertTrue(response.getContent().startsWith("data:application/octet-stream;base64,"));
    }
 }
