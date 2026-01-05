@@ -15,6 +15,9 @@
  */
 package io.github.microcks.util;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CoderResult;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.nio.charset.StandardCharsets;
@@ -37,8 +40,10 @@ public class UTF8ContentTypeChecker {
       return matcher.matches();
    }
 
+
    /**
-    * Checks if the given byte array is valid UTF-8.
+    * Checks if the given byte array is valid UTF-8. Uses incremental decoding with a small buffer to minimize memory
+    * allocation while still failing early on invalid input.
     * @param data The byte array to check.
     * @return true if valid UTF-8, false otherwise.
     */
@@ -47,9 +52,19 @@ public class UTF8ContentTypeChecker {
       decoder.onMalformedInput(CodingErrorAction.REPORT);
       decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
 
+      ByteBuffer in = ByteBuffer.wrap(data);
+      CharBuffer out = CharBuffer.allocate(1024);
+
       try {
-         decoder.decode(java.nio.ByteBuffer.wrap(data));
-         return true;
+         while (in.hasRemaining()) {
+            CoderResult result = decoder.decode(in, out, true);
+            if (result.isError()) {
+               return false;
+            }
+            out.clear();
+         }
+         CoderResult result = decoder.flush(out);
+         return !result.isError();
       } catch (Exception e) {
          return false;
       }

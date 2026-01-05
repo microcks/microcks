@@ -161,7 +161,7 @@ public class ReferenceResolver {
          return DataUriUtil.buildDataUri(contentBytes);
       }
 
-      return Files.readString(referenceFile.toPath(), encoding);
+      return new String(contentBytes, encoding);
    }
 
    /**
