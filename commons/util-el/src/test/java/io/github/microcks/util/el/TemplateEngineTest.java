@@ -125,4 +125,31 @@ class TemplateEngineTest {
 
       assertEquals("{ \"id\": \"8\", \"accountName\": \"test\" }", result);
    }
+
+   @Test
+   void testFallbackExpressionTemplate() {
+      // Prepare request with body and params.
+      EvaluableRequest request = new EvaluableRequest("{ \"foo\": \"value\" }", null);
+      request.setParams(Map.of("foo", "paramValue"));
+
+      // Prepare an engine with request variable.
+      TemplateEngine engine = TemplateEngineFactory.getTemplateEngine();
+      engine.getContext().setVariable("request", request);
+
+      // Matching case with body.
+      String result = engine.getValue("{ \"result\": \"{{ request.body/foo || 'default' }}\" }");
+      assertEquals("{ \"result\": \"value\" }", result);
+
+      // Fallback case with body.
+      result = engine.getValue("{ \"result\": \"{{ request.body/bar || 'default' }}\" }");
+      assertEquals("{ \"result\": \"default\" }", result);
+
+      // Matching case with params.
+      result = engine.getValue("{ \"result\": \"{{ request.params[foo] || 'default' }}\" }");
+      assertEquals("{ \"result\": \"paramValue\" }", result);
+
+      // Matching case with params.
+      result = engine.getValue("{ \"result\": \"{{ request.params[bar] || 'default' }}\" }");
+      assertEquals("{ \"result\": \"default\" }", result);
+   }
 }

@@ -30,7 +30,7 @@ public class TemplateEngine {
    private String expressionPrefix = DEFAULT_EXPRESSION_PREFIX;
    private String expressionSuffix = DEFAULT_EXPRESSION_SUFFIX;
 
-   private EvaluationContext context = new EvaluationContext();
+   private final EvaluationContext context = new EvaluationContext();
 
    protected TemplateEngine() {
    }

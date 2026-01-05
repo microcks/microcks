@@ -28,7 +28,10 @@ import com.google.api.gax.core.ExecutorProvider;
 import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.core.InstantiatingExecutorProvider;
 import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.api.gax.rpc.NotFoundException;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.TopicAdminClient;
@@ -37,11 +40,13 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.TopicName;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import jakarta.annotation.PostConstruct;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.enterprise.context.ApplicationScoped;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Collections;
@@ -76,12 +81,15 @@ public class GooglePubSubProducerManager {
          .setExecutorThreadCount(1).build();
 
    CredentialsProvider credentialsProvider;
+   TransportChannelProvider channelProvider;
 
    @ConfigProperty(name = "googlepubsub.project")
    String project;
 
    @ConfigProperty(name = "googlepubsub.service-account-location")
    String serviceAccountLocation;
+
+   String emulatorHostPort;
 
    /**
     * Initialize the PubSub connection post construction.
@@ -90,7 +98,16 @@ public class GooglePubSubProducerManager {
    @PostConstruct
    public void create() throws Exception {
       try {
-         if (serviceAccountLocation != null && serviceAccountLocation.length() > 0) {
+         String hostPort = emulatorHostPort != null ? emulatorHostPort : System.getenv("PUBSUB_EMULATOR_HOST");
+         if (hostPort != null && !hostPort.isEmpty()) {
+            logger.infof("Using Google PubSub emulator at %s", hostPort);
+
+            ManagedChannel channel = ManagedChannelBuilder.forTarget(hostPort).usePlaintext().build();
+            channelProvider = FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
+            credentialsProvider = NoCredentialsProvider.create();
+
+         } else if (serviceAccountLocation != null && !serviceAccountLocation.isEmpty()) {
+
             FileInputStream is = new FileInputStream(serviceAccountLocation);
             credentialsProvider = FixedCredentialsProvider
                   .create(GoogleCredentials.fromStream(is).createScoped(CLOUD_OAUTH_SCOPE));
@@ -117,9 +134,13 @@ public class GooglePubSubProducerManager {
             // Ensure topic exists on PubSub.
             TopicName topicName = TopicName.of(project, topic);
 
-            TopicAdminSettings topicAdminSettings = TopicAdminSettings.newBuilder()
-                  .setCredentialsProvider(credentialsProvider).build();
-            TopicAdminClient topicAdminClient = TopicAdminClient.create(topicAdminSettings);
+            TopicAdminSettings.Builder tasBuilder = TopicAdminSettings.newBuilder()
+                  .setCredentialsProvider(credentialsProvider);
+            if (channelProvider != null) {
+               tasBuilder.setTransportChannelProvider(channelProvider);
+            }
+
+            TopicAdminClient topicAdminClient = TopicAdminClient.create(tasBuilder.build());
 
             ensureTopicExists(topicAdminClient, topicName);
          }
@@ -187,6 +208,7 @@ public class GooglePubSubProducerManager {
 
       // Produce operation name part of topic name.
       String operationName = ProducerManager.getDestinationOperationPart(definition.getOperation(), eventMessage);
+      operationName = operationName.replace('/', '-');
 
       // Aggregate the 3 parts using '_' as delimiter.
       return serviceName + "-" + versionName + "-" + operationName;
@@ -212,8 +234,12 @@ public class GooglePubSubProducerManager {
 
    private Publisher createPublisher(String topic) {
       try {
-         return Publisher.newBuilder(TopicName.of(project, topic)).setExecutorProvider(executorProvider)
-               .setCredentialsProvider(credentialsProvider).build();
+         Publisher.Builder pubBuilder = Publisher.newBuilder(TopicName.of(project, topic))
+               .setExecutorProvider(executorProvider).setCredentialsProvider(credentialsProvider);
+         if (channelProvider != null) {
+            pubBuilder = pubBuilder.setChannelProvider(channelProvider);
+         }
+         return pubBuilder.build();
       } catch (IOException ioe) {
          logger.errorf("IOException while creating a Publisher for topic %s", topic);
          throw new RuntimeException("IOException while creating a Publisher for topic ", ioe);

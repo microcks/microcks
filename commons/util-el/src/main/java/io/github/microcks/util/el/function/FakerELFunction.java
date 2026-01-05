@@ -15,8 +15,9 @@
  */
 package io.github.microcks.util.el.function;
 
-import net.datafaker.Faker;
 import io.github.microcks.util.el.EvaluationContext;
+
+import net.datafaker.Faker;
 
 /**
  * This is a base class for function that are using Datafaker (see <a href="https://www.datafaker.net">Datafaker</a>).
@@ -34,15 +35,13 @@ public abstract class FakerELFunction implements ELFunction {
     * @return A Faker implementation ready to use.
     */
    protected Faker retrieveFaker(EvaluationContext evaluationContext) {
-      Faker faker;
       Object fakerObject = evaluationContext.lookupVariable(FAKER_VARIABLE_NAME);
-      if (fakerObject instanceof Faker) {
-         faker = (Faker) fakerObject;
-      } else {
-         // Build a new Faker and store it into context for later fakers.
-         faker = new Faker();
-         evaluationContext.setVariable(FAKER_VARIABLE_NAME, faker);
+      if (fakerObject instanceof Faker faker) {
+         return faker;
       }
+      // Build a new Faker and store it into context for later fakers.
+      Faker faker = new Faker();
+      evaluationContext.setVariable(FAKER_VARIABLE_NAME, faker);
       return faker;
    }
 }

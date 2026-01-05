@@ -37,7 +37,7 @@ public class FallbackExpression implements Expression {
       String result = null;
       for (Expression expression : expressions) {
          result = expression.getValue(context);
-         if (result != null && !result.isEmpty()) {
+         if (result != null && !result.isEmpty() && !"null".equals(result)) {
             break;
          }
       }

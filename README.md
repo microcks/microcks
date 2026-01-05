@@ -12,7 +12,7 @@
 
 Microcks is a platform for turning your API and microservices assets - *OpenAPI specs*, *AsyncAPI specs*, *gRPC protobuf*, *GraphQL schema*, *Postman collections*, *SoapUI projects* - into live mocks in seconds.
 
-It also reuses these assets to run compliance and non-regression tests against your API implementation. We provide integrations with *Jenkins*, *GitHub Actions*, *Tekton* and many others through a simple CLI.
+It also reuses these assets to run contract conformance and non-regression tests against your API implementation. We provide integrations with *Jenkins*, *GitHub Actions*, *Tekton* and many others through a simple CLI.
 
 [![LFX Health Score](https://img.shields.io/static/v1?label=Health%20Score&message=Healthy&color=A7F3D0&logo=linuxfoundation&logoColor=white&style=flat)](https://insights.linuxfoundation.org/project/microcks/repository/microcks-microcks) [![LFX Contributors](https://img.shields.io/static/v1?label=Contributors&message=761&color=0094FF&logo=linuxfoundation&logoColor=white&style=flat)](https://insights.linuxfoundation.org/project/microcks/repository/microcks-microcks) [![LFX Active Contributors](https://img.shields.io/static/v1?label=Active%20contributors%20(1Y)&message=208&color=0094FF&logo=linuxfoundation&logoColor=white&style=flat)](https://insights.linuxfoundation.org/project/microcks/repository/microcks-microcks)
 
@@ -25,7 +25,7 @@ To get involved with our community, please familiarize yourself with the project
 
 ## Build Status
 
-The current development version is `1.13.0-SNAPSHOT` on branch `1.13.x`. 
+The current development version is `1.13.2-SNAPSHOT` on branch `1.13.x`. 
 
 [![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/microcks/microcks/build-verify.yml?branch=1.11.x&logo=github&style=for-the-badge)](https://github.com/microcks/microcks/actions)
 
@@ -61,8 +61,8 @@ Here are the naming conventions we're using for current releases, ongoing develo
 
 | Status      | Version           | Branch   | Container images tags |
 | ----------- |-------------------|----------|-----------------------|
-| Stable      | `1.12.1`          | `master` | `1.12.1`, `latest`    |
-| Dev         | `1.13.0-SNAPSHOT` | `1.13.x` | `nightly`             |
+| Stable      | `1.13.1`          | `master` | `1.13.1`, `latest`    |
+| Dev         | `1.13.2-SNAPSHOT` | `1.13.x` | `nightly`             |
 | Maintenance | `1.12.2-SNAPSHOT` | `1.12.x` | `maintenance`         |
 
 Have a look at our [tested configurations](TESTED_CONFIGURATIONS.md) to know more about the versions of dependencies 

@@ -23,9 +23,23 @@
             <span class="evt-span">in <code>{{ e.spanId }}</code> • {{ e.spanName }}</span>
           </div>
           <ul class="kv" *ngIf="hasNonMessageAttributes(e.event.attributes)">
-            <li *ngFor="let kv of getNonMessageAttributes(e.event.attributes)">
+            <li *ngFor="let kv of getNonMessageAttributes(e.event.attributes); trackBy: trackByAttribute">
               <span class="k">{{ kv.key }}</span>
-              <span class="v">{{ kv.value | json }}</span>
+              <span class="v" *ngIf="!isValueLarge(kv.value)">{{ formatAttributeValue(kv.value) }}</span>
+              <span class="v-large-inline" *ngIf="isValueLarge(kv.value)">
+                <span class="v" *ngIf="!isAttributeExpanded(e.traceId, e.spanId, e.event.name, kv.key)">{{ getValuePreview(kv.value) }}</span>
+                <button
+                  type="button"
+                  class="pfng-list-expand"
+                  (click)="toggleAttribute(e.traceId, e.spanId, e.event.name, kv.key); $event.stopPropagation()"
+                  [title]="isAttributeExpanded(e.traceId, e.spanId, e.event.name, kv.key) ? 'Collapse' : 'Expand'">
+                  <span class="fa fa-angle-right" [class.fa-angle-down]="isAttributeExpanded(e.traceId, e.spanId, e.event.name, kv.key)"></span>
+                  <span class="expand-text">{{ isAttributeExpanded(e.traceId, e.spanId, e.event.name, kv.key) ? 'Collapse' : 'Expand' }}</span>
+                </button>
+              </span>
+              <div class="v-full" *ngIf="isValueLarge(kv.value) && isAttributeExpanded(e.traceId, e.spanId, e.event.name, kv.key)">
+                <pre class="v">{{ formatAttributeValue(kv.value) }}</pre>
+              </div>
             </li>
           </ul>
         </li>

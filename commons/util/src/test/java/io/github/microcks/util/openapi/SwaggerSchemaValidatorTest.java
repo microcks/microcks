@@ -20,6 +20,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,15 +35,23 @@ class SwaggerSchemaValidatorTest {
    @Test
    void testFullProcedureFromSwaggerResource() {
       String openAPIText = null;
-      String jsonText = "{\n" + "  \"name\": \"Rodenbach\",\n" + "  \"country\": \"Belgium\",\n"
-            + "  \"type\": \"Fruit\",\n" + "  \"rating\": 4.3,\n" + "  \"status\": \"available\"\n" + "}";
+      String jsonText = """
+            {
+               "name": "Rodenbach",
+               "country": "Belgium",
+               "type": "Fruit",
+               "rating": 4.3,
+               "status": "available"
+            }
+            """;
       JsonNode openAPISpec = null;
       JsonNode contentNode = null;
 
       try {
          // Load full specification from file.
          openAPIText = FileUtils.readFileToString(
-               new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml"));
+               new File("target/test-classes/io/github/microcks/util/openapi/beer-catalog-api-swagger.yaml"),
+               StandardCharsets.UTF_8);
          // Extract JSON nodes using OpenAPISchemaValidator methods.
          openAPISpec = OpenAPISchemaValidator.getJsonNodeForSchema(openAPIText);
          contentNode = OpenAPISchemaValidator.getJsonNode(jsonText);

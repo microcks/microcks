@@ -64,6 +64,8 @@ services:
       - JAVA_OPTIONS=-Dspring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:18080/realms/microcks -Dspring.security.oauth2.resourceserver.jwt.jwk-set-uri=http://keycloak:8080/realms/microcks/protocol/openid-connect/certs
       - ASYNC_MINION_URL=http://microcks-async-minion:8081
       - KAFKA_BOOTSTRAP_SERVER=kafka:19092
+      #- LOGGING_LEVEL_IO_GITHUB_MICROCKS=DEBUG
+      #- MAX_UPLOAD_FILE_SIZE=3MB
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
       start_period: 35s
@@ -83,6 +85,8 @@ services:
       - "./config:/deployments/config"
     environment:
       - QUARKUS_PROFILE=docker-compose
+      #- QUARKUS_LOG_CONSOLE_LEVEL=DEBUG
+      #- QUARKUS_LOG_CATEGORY__IO_GITHUB_MICROCKS__LEVEL=DEBUG
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8081/q/health/ready"]
       start_period: 10s
